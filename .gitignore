@@ -1,0 +1,78 @@
+# Unity-generated state
+/QuestFlight/[Ll]ibrary/
+/QuestFlight/[Tt]emp/
+/QuestFlight/[Oo]bj/
+/QuestFlight/[Ll]ogs/
+/QuestFlight/[Bb]uild/
+/QuestFlight/[Bb]uilds/
+/QuestFlight/[Uu]ser[Ss]ettings/
+/QuestFlight/MemoryCaptures/
+/QuestFlight/Recordings/
+/QuestFlight/.utmp/
+
+# IDE and generated project files
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Builds, packages, captures, and machine evidence
+*.apk
+*.aab
+*.appx
+*.unitypackage
+/artifacts/
+/captures/
+/coverage/
+/test-results/
+/**/Screenshots/
+/**/VideoCaptures/
+/**/logcat/
+
+# Raw downloads and caches never belong in the product repository
+/downloads/
+/raw-downloads/
+/source-archives/
+/**/RawDownloads/
+/**/SourceArchives/
+/**/PackageCache/
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+
+# Rights quarantine. Cleared assets use an audited canonical path instead.
+/QuestFlight/Assets/LocalOnly/
+/QuestFlight/Assets/**/LocalOnly/
+/QuestFlight/Assets/**/Restricted/
+/QuestFlight/Assets/**/Uncleared/
+
+# Signing material and local configuration
+*.keystore
+*.jks
+*.p12
+*.pfx
+.env
+.env.*
+
+# OS noise
+.DS_Store
+Thumbs.db
+Desktop.ini
