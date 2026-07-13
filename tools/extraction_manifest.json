@@ -1,0 +1,464 @@
+{
+  "schema_version": 1,
+  "source_ref": "cd4131fa7732a6db2d7387921dfef33e2c206970",
+  "source_project_prefix": "QuestFlightLab/",
+  "description": "Allowlist for the clean T2-QuestFlight product extraction. The exact verified CC BY 4.0 aircraft payload is rights-gated and native JSBSim is intentionally absent.",
+  "entries": [
+    {
+      "source": "QuestFlightLab/Assets/Scenes/ProductionVerticalSlice.unity",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+      "kind": "file",
+      "classification": "approved_local_aircraft_shell",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Production/Profiles/ImportedC172PilotSeatProfile.asset",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Production/Materials/SeatCalibrationPanel.mat",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Runtime/ProductionVerticalSliceRoot.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Runtime/PilotSeatProfile.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Runtime/ProductionSeatCalibrationController.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Runtime/AircraftReferenceFrameRig.cs",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Runtime/TrackedXrCameraPoseDriver.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Runtime/TrackedXrControllerPoseDrivers.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Runtime/CockpitViewpointPersistence.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "authored_composition"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Aircraft/AircraftVisibilityProfileController.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "aircraft_presentation"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Aircraft/ProductionAircraftControlAnimator.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "aircraft_presentation"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Aircraft/ProductionAircraftLightingController.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "aircraft_presentation"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Aircraft/ProductionAircraftViewController.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "aircraft_presentation"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Input/GamepadInputReader.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Input/DeterministicGamepadInputSource.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Runtime/AircraftControlState.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Runtime/GamepadInputSnapshot.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/AircraftState.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/AircraftUnitConversions.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/C172StyleAircraftConfig.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/C172StyleAircraftConfig.asset",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/SimpleAircraftPhysics.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/Backends/IFlightDynamicsBackend.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/Backends/FlightDynamicsAuthority.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/Backends/FlightDynamicsCoordinator.cs",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/Backends/FlightDynamicsTypes.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/Backends/FlightDynamicsInitialConditionProvider.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/Backends/FlightFrameConversions.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/Backends/FixedStepAccumulator.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Flight/Backends/UnityPrototypeFlightBackend.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "input_physics"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Production/Environment/**",
+      "kind": "glob",
+      "classification": "approved_production",
+      "group": "environment"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Environment/ProductionEnvironmentRoot.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "environment"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Environment/MountainTemporalStabilityProbe.cs",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "environment"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionMacroGround.shader",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "environment"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "environment"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionStableWater.shader",
+      "kind": "file",
+      "classification": "approved_production",
+      "group": "environment"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/GroundMaterials/dry_ground_01_diff_1k.jpg",
+      "kind": "file",
+      "classification": "approved_cc0",
+      "group": "environment"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/GroundMaterials/sparse_grass_diff_1k.jpg",
+      "kind": "file",
+      "classification": "approved_cc0",
+      "group": "environment"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/GroundMaterials/withered_grass_diff_1k.jpg",
+      "kind": "file",
+      "classification": "approved_cc0",
+      "group": "environment"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_terrain_rings.json",
+      "kind": "file",
+      "classification": "approved_public_data_derivative",
+      "group": "environment"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_reference_context.json",
+      "kind": "file",
+      "classification": "approved_public_data_derivative",
+      "group": "environment"
+    },
+    {
+      "source": "tools/kbdu_environment/**",
+      "kind": "glob",
+      "classification": "approved_tooling",
+      "group": "environment_tooling",
+      "destination_root": "repository"
+    },
+    {
+      "source": "docs/ASSET_SOURCES.md",
+      "kind": "file",
+      "classification": "approved_provenance",
+      "group": "provenance",
+      "destination_root": "repository"
+    },
+    {
+      "source": "docs/ENVIRONMENT_DATA_SOURCES.md",
+      "kind": "file",
+      "classification": "approved_provenance",
+      "group": "provenance",
+      "destination_root": "repository"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Editor/ProductionVisualQaBatchRunner.cs",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "qa_build"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Editor/ProductionEnvironmentEditorTests.cs",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "qa_build"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Tests/EditMode/ProductionEnvironmentEditModeTests.cs",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "qa_build"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Tests/PlayMode/ProductionVerticalSliceAcceptancePlayModeTests.cs",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "qa_build"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Tests/PlayMode/ProductionVerticalSliceAircraftPlayModeTests.cs",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "qa_build"
+    },
+    {
+      "source": "QuestFlightLab/Assets/Scripts/Runtime/QuestTemporalVisualGateRecorder.cs",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "qa_build"
+    },
+    {
+      "source": "scripts/run_production_visual_qa.ps1",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "qa_build",
+      "destination_root": "repository"
+    },
+    {
+      "source": "scripts/run_quest_temporal_visual_gate.ps1",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "qa_build",
+      "destination_root": "repository"
+    },
+    {
+      "source": "scripts/run_unity_tests.ps1",
+      "kind": "file",
+      "classification": "approved_requires_product_cleanup",
+      "group": "qa_build",
+      "destination_root": "repository"
+    },
+    {
+      "source": "tools/visual_qa_analyze.py",
+      "kind": "file",
+      "classification": "approved_tooling",
+      "group": "qa_build",
+      "destination_root": "repository"
+    }
+  ],
+  "rights_gated_entries": [
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
+      "kind": "file",
+      "classification": "approved_third_party_cc_by_4_0",
+      "group": "aircraft_rights_gate",
+      "enabled": true,
+      "disabled_classification": "approved_local_development_only",
+      "reason": "Enable only after the independent rights report proves source identity, CC-BY-4.0 terms, and required attribution."
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/SOURCE.txt",
+      "kind": "file",
+      "classification": "approved_third_party_cc_by_4_0",
+      "group": "aircraft_rights_gate",
+      "enabled": false,
+      "disabled_classification": "approved_local_development_only",
+      "reason": "Enable with the GLB only after the independent rights report is complete."
+    }
+  ],
+  "product_authored_entries": [
+    {
+      "path": "Assets/Scripts/Input/ProductControlInput.cs",
+      "classification": "approved_product_authored",
+      "reason": "Clean control adapter replacing the excluded USB2BLE mapper."
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductDemoPilot.cs",
+      "classification": "approved_product_authored",
+      "reason": "Minimal deterministic product demo loop replacing the R&D demo pilot."
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductAttribution.cs",
+      "classification": "approved_product_authored",
+      "reason": "Runtime-accessible Credits/About attribution metadata."
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductRuntimePolicy.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product runtime policy that does not construct serialized hierarchy."
+    }
+  ],
+  "product_replacements": [
+    {
+      "source": "scripts/build_production_quest.ps1",
+      "destination": "scripts/build_production_quest.ps1",
+      "classification": "product_replacement_not_copied",
+      "reason": "The R&D wrapper assumes the legacy project layout. The clean product owns a separated build script at the same repository-relative path."
+    },
+    {
+      "source": "QuestFlightLab/Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/SOURCE.txt",
+      "destination": "docs/aircraft_rights_report.md",
+      "classification": "superseded_provenance_not_copied",
+      "reason": "The stale R&D note says personal placeholder/unclear. It is replaced by the primary-source CC BY 4.0 rights report, asset-license record, and third-party notice; the GLB's embedded Sketchfab metadata and inventory hash remain preserved."
+    }
+  ],
+  "hard_exclusions": {
+    "path_segments": [
+      "Library",
+      "Temp",
+      "Obj",
+      "Logs",
+      "Builds",
+      "PackageCache",
+      "PackagesCache",
+      "Downloads",
+      "RawDownloads"
+    ],
+    "extensions": [
+      ".apk",
+      ".aab",
+      ".log",
+      ".mp4",
+      ".mov",
+      ".avi",
+      ".webm",
+      ".zip",
+      ".7z",
+      ".rar",
+      ".tar",
+      ".gz"
+    ],
+    "case_insensitive_fragments": [
+      "Assets/Scenes/InputLab.unity",
+      "QuestFirstViewRuntimeRepair",
+      "KbduInspiredWorldBuilder",
+      "RealKbduEnvironmentBuilder",
+      "GaussianSplat",
+      "SplatSceneryProvider",
+      "Usb2Ble",
+      "HOTAS",
+      "Training",
+      "PlaytestHud",
+      "JSBSim",
+      "FlightDynamicsRuntimeBootstrap",
+      "FlightBackendSelector",
+      "EditorSidecar",
+      "legacy water",
+      "screenrecord",
+      "screenshot",
+      "logcat",
+      "raw_capture"
+    ]
+  },
+  "dependency_roots": [
+    "QuestFlightLab/Assets/Scenes/ProductionVerticalSlice.unity"
+  ]
+}

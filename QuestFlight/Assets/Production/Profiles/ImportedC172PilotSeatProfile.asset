@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a235a9ecbc743943b865f32dbaf980b, type: 3}
+  m_Name: ImportedC172PilotSeatProfile
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Runtime.PilotSeatProfile
+  aircraftId: imported_c172
+  seatAnchorLocalPosition: {x: -0.28, y: 0.72, z: 0}
+  nominalEyeLocalPosition: {x: -0.28, y: 0.94, z: -0.18}
+  minimumCalibrationOffset: {x: -0.25, y: -0.3, z: -0.35}
+  maximumCalibrationOffset: {x: 0.25, y: 0.3, z: 0.35}
+  maximumCalibrationYawDegrees: 15
+  instrumentPanelReferencePoint: {x: -0.28, y: 0.94, z: 0.317}
+  instrumentPanelReferenceNormal: {x: 0, y: 0, z: -1}
+  glareShieldReferencePoint: {x: -0.28, y: 0.98, z: 0.3}
+  windshieldHorizonReferencePoint: {x: -0.28, y: 1.12, z: 0.72}
+  minimumOutsideViewRatio: 0.2
+  targetEyeToPanelDistanceMeters: 0.497

@@ -1,0 +1,771 @@
+{
+  "dependencies": [
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/BoulderReservoir_NaturalShoreBank_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "0e9621c3d2ea13f4396e8469804903f2"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/BoulderReservoir_OSM_AuthoritativeWater_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "9adf30d07a69af340bd274a2db6be902"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_000_RealContext_0_aeroway_asphalt_000_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "a72649ada754e4e45a2b2028b0ee54fa"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_001_RealContext_0_aeroway_asphalt_063_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "f5cc8ee05696700478b755d7ecf2ddfa"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_002_RealContext_0_aeroway_gravel_001_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "b4b48d3b387c6524594d3b0510e75840"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_003_RealContext_0_building_building_footprint_003_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "8aea8f6c3d565fb49956bafb9b1776e4"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_004_RealContext_0_building_building_footprint_012_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "546163a3051acae4bab05177e7cb44b8"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_005_RealContext_0_building_building_footprint_019_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "4fc82248d5da62d44a3be3604b619814"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_006_RealContext_0_building_building_footprint_027_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "ea336475f683fd242b32ae6111313d43"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_007_RealContext_0_building_building_footprint_035_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "d3bcf809e31d45b4a897eb648cb20ca5"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_008_RealContext_0_building_building_footprint_042_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "3127b37b06430584ba34f9751ccb56b6"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_009_RealContext_0_building_building_footprint_050_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "2af53ca8586324841a6c78513bf8d304"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_010_RealContext_0_building_building_footprint_058_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "a93a2116c244ee04eba59b3b09a6bb26"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_011_RealContext_0_building_building_footprint_064_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "3a975dd1ef384eb4aa7d46e269005323"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_012_RealContext_0_building_building_footprint_072_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "7a9a7d25de2db5d4b8f597352f264770"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_013_RealContext_0_building_building_footprint_079_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "dbfba0be319d84246bc7b187658dd7d5"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_014_RealContext_0_building_building_footprint_086_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "7f53ecc861415d04e8bb8e9ec517c3d4"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_015_RealContext_0_building_building_footprint_092_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "4c3caddeab6f8e6408e97fb27c773c66"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_016_RealContext_0_building_building_footprint_099_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "05f27ec04254aae40b84ea9f664272a5"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_017_RealContext_0_building_building_footprint_106_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "b919de2b926ba7c449718101b3af1778"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_018_RealContext_0_building_building_footprint_113_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "7f8791281367c06429c4ae5d6f038562"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_019_RealContext_0_road_asphalt_014_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "cae54b81e96adde4f8c37da5305b2e6f"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_020_RealContext_0_road_asphalt_029_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "95ee37f3853b91a46ab3b60c770d1fc2"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_021_RealContext_0_road_asphalt_036_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "61b279e1ed7ace248bfd07e9c0305441"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_022_RealContext_0_road_asphalt_044_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "c2f6fea6789c7b84cb92ac152f707093"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_023_RealContext_0_road_asphalt_052_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "e10a7b33baf89724aa63667dca359d74"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_024_RealContext_0_road_asphalt_059_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "a8b7e0dec43fe0b49984e7a2f4796788"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_025_RealContext_0_road_asphalt_066_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "8a3e313cebe9e7548a5b98167c5d543d"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_026_RealContext_0_road_asphalt_074_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "35cd72e1d9fb35d41aca483b7775968a"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_027_RealContext_0_road_asphalt_081_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "90090a0d0c2ff3a49b286218fed17c3c"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_028_RealContext_0_road_asphalt_087_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "ed9c6aef9c894304a825e7197011ffea"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_029_RealContext_0_road_asphalt_101_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "9a5743021d317ca448941270b7829652"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_030_RealContext_0_road_asphalt_107_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "67c54452568335d45adb122b4b332301"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_031_RealContext_0_road_asphalt_114_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "1b661381f9bdd7a47a596c3ac1224a6f"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_032_RealContext_0_road_concrete_007_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "824b528d4caa4dd4984393bb869fdc82"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_033_RealContext_0_road_concrete_015_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "9c178cf6c2902b14ba538dabc59b3c1a"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_034_RealContext_0_road_concrete_022_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "d6d95f8638e124648bb4d554242fbe34"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_035_RealContext_0_road_concrete_030_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "889d8ef8e03484a468353b5d6f496dca"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_036_RealContext_0_road_concrete_037_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "c7bc49f90bae72343b6d67d7377fc6e6"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_037_RealContext_0_road_concrete_045_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "56884ac577d926d40ac040e53000d426"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_038_RealContext_0_road_concrete_053_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "62ba6ae5ccd22a543aceb9b063ca8ae9"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_039_RealContext_0_road_concrete_060_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "0bcd2090e69568a42b5a2e8dd8ee5cbe"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_040_RealContext_0_road_concrete_067_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "1b65c8d37f4058d4ca3159cb24cf419a"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_041_RealContext_0_road_concrete_075_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "cf7d010984f67ff478b06d766dfbdaf6"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_042_RealContext_0_road_concrete_088_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "122725c606e81774b8896f1d29b0f716"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_043_RealContext_0_road_concrete_095_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "99c3922a00c85fb448e73728fd70d9d2"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_044_RealContext_0_road_concrete_102_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "c601e897ddf3caa4ba449b9eaa0184ca"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_045_RealContext_0_road_concrete_108_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "58680be5312d1c24880d48c66b0ee782"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_046_RealContext_0_road_concrete_115_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "3bd0e4e6b7477e64c8ab76c9e654dc2c"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_047_RealContext_0_road_gravel_016_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "be0c3cf3d40562440b7e82bfd139d0eb"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_048_RealContext_0_road_gravel_023_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "23c71d3895fcd0d41965e94463cb0818"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_049_RealContext_0_road_gravel_031_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "3da91efc989a45d45bc17358b9533a97"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_050_RealContext_0_road_gravel_038_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "08e2f9385ac40334a8a194c24ab8c301"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_051_RealContext_0_road_gravel_046_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "ce73ada35f55be04999788f10a46383c"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_052_RealContext_0_road_gravel_054_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "a67c4eea8b96264478f09b124963bac7"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_053_RealContext_0_road_gravel_061_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "8c25dce95560b9b499fc3759485a367b"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_054_RealContext_0_road_gravel_068_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "e23349e96d359ae4d8f116a6a7221175"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_055_RealContext_0_road_gravel_076_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "a7ab757948f33cb4a85c8445098e394b"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_056_RealContext_0_road_gravel_082_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "fe736be9d2655444e812b20fecb7249e"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_057_RealContext_0_road_gravel_089_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "546de1d299c66b646afbbe7e3c0fc4bf"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_058_RealContext_0_road_gravel_103_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "5ccf4b4b84107414d8eb19a20c9e10ac"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_059_RealContext_0_road_gravel_109_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "3e3acfffc34145c4fb9f906533beaad8"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_060_RealContext_0_road_gravel_116_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "58c7a6d383d7f9b41804a443c0677b77"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_061_RealContext_1_building_building_footprint_120_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "90ba98a06068ceb4abbf1a7139191904"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_062_RealContext_1_building_building_footprint_126_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "a8617ca7f4d75064db2785ad09d242b7"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_063_RealContext_1_building_building_footprint_143_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "997c3b6def5bb87408e8d33c7b5e6ddc"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_064_RealContext_1_road_asphalt_121_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "5bdf7c38c243884478861095157e9385"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_065_RealContext_1_road_asphalt_128_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "9f12c605247d3de4d846bdf6ed188d5d"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_066_RealContext_1_road_asphalt_145_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "3dbcc45b6a86102499543868b48b4cf3"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_067_RealContext_1_road_asphalt_150_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "39399090267f76c4fbdc155832599066"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_068_RealContext_1_road_asphalt_166_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "c02e64ae176a2924ba5c57e36bcbc35d"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_069_RealContext_1_road_concrete_122_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "ca706e20a27ba494aa2aa86534dbc6db"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_070_RealContext_1_road_concrete_146_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "cc50fdbcf4757ef42b06bde03be6162f"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_071_RealContext_1_road_concrete_151_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "00b689da6240f1d4d9a2c0b96bb9ed21"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Context_072_RealContext_1_road_gravel_152_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "611a0a9f5bbc168489c9ea59e84d8c5b"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/FAA_KBDU_Runway_08_26_Authoritative_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "faf33b15a6537f14680212dcd99d246a"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/FAA_KBDU_Runway_08_26_ControlledDepthMarkings_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "a2b25f6dc6505404ba6f82866fe660ee"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/SparseCottonwoodContext_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "7100065552fbaee48b0b9b9fd81b8c8c"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Terrain_AirportPatch_USGS_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "cb947caef262d0f428df3da9e67f2f29"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Terrain_Far24km_Immutable_USGS_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "f7e9defd4f2f8134ea4ed04d496c0495"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Terrain_Mid12km_USGS_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "4f672962bf8d5274ab31831c906c0bb3"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Generated/Terrain_Near4km_USGS_Mesh.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "ac227d332fd5abf489d5ed0739ba982c"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Materials/Production_Asphalt.mat",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "78e4501405c67c5429f4785056582ec4"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Materials/Production_BoulderReservoir_Opaque.mat",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "6be2be2a773c68b498f3bb7f55712bdd"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Materials/Production_Building.mat",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "ef0467b0e5f185644a7ce2509eaf2b83"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Materials/Production_FarTerrain_Immutable.mat",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "8596dfd02d4f2e2429474a9ac5404cb1"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Materials/Production_Gravel.mat",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "cc7a3c5e5cac2cf4fbba11f66f89f258"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Materials/Production_MacroGround.mat",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "7e5caf86a94f2cc408ff3c92ff732449"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Materials/Production_Runway_Asphalt.mat",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "b590db4beadbb5b428b623c26fe609ea"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Materials/Production_Runway_ControlledDepthMarking.mat",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "e921064e36b86b748a9a068d8a53ef64"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Materials/Production_Vegetation.mat",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "545be95e900cf3240adc99de3194ed7e"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Materials/Production_WaterBank.mat",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "025e5cd7bc5e96b44bf97c540127d2d9"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "0315be09e712c7d49848ec8e1d3e0d0d"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Environment/Textures/ProductionKbduMacroAlbedo.png",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "8f67d3bb7be034042b0ba2bf85ef8751"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Materials/SeatCalibrationPanel.mat",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+      "reference_guid": "cc14b2fa90a9e4a4ab36cd80a7f0001d"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+      "classification": "approved_local_aircraft_shell",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "9ddca3288e7d32e4a8c09d8c410d9d44"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Production/Profiles/ImportedC172PilotSeatProfile.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "aee041ad9a9d3334ea5a212385ea3758"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Resources/C172StyleAircraftConfig.asset",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+      "reference_guid": "c483f23bbaf65bf46beefe0dd65f7006"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/GroundMaterials/dry_ground_01_diff_1k.jpg",
+      "classification": "approved_cc0",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/Materials/Production_WaterBank.mat",
+      "reference_guid": "220ccf9a23766f1459dc3466e51cbdd4"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/GroundMaterials/sparse_grass_diff_1k.jpg",
+      "classification": "approved_cc0",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/Materials/Production_WaterBank.mat",
+      "reference_guid": "ab1810d7539994f40a8038ba3bb4e7f0"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/GroundMaterials/withered_grass_diff_1k.jpg",
+      "classification": "approved_cc0",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/Materials/Production_WaterBank.mat",
+      "reference_guid": "b0010fed8caac464193afe47db3cea77"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionMacroGround.shader",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/Materials/Production_WaterBank.mat",
+      "reference_guid": "7861834a1732cce4c93cd3929c935389"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/Materials/Production_Runway_ControlledDepthMarking.mat",
+      "reference_guid": "b52ed91c275ecae45a0d40482e4e33b5"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionStableWater.shader",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/Materials/Production_BoulderReservoir_Opaque.mat",
+      "reference_guid": "2f132de85c3c2b146966cabf8b715c2a"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
+      "classification": "approved_third_party_cc_by_4_0",
+      "reached_from": "QuestFlightLab/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+      "reference_guid": "d312be0fd0ba928458dd86cbe967956b"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "classification": "approved_requires_product_cleanup",
+      "reached_from": "QuestFlightLab/Assets/Scenes/ProductionVerticalSlice.unity",
+      "reference_guid": "3b6f9c2008441944fb08b63e4cd783ad"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scenes/ProductionVerticalSlice.unity",
+      "classification": "approved_production",
+      "reached_from": null,
+      "reference_guid": null
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Aircraft/AircraftVisibilityProfileController.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "4063ccaa6f58aab4b8198ed8bff31732"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Aircraft/ProductionAircraftControlAnimator.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "83c4f48774e3c3f47b13c31bec1848d0"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Aircraft/ProductionAircraftLightingController.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+      "reference_guid": "b93e95eff734e00448bb974a5de7259c"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Aircraft/ProductionAircraftViewController.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+      "reference_guid": "3607d135d8682f24eb7963d5d81ea9ba"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Environment/ProductionEnvironmentRoot.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+      "reference_guid": "fbe4cd052923ee648835908aabe434e8"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Flight/AircraftState.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "fb21139fce555d8478633885d652edd5"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Flight/Backends/FlightDynamicsCoordinator.cs",
+      "classification": "approved_requires_product_cleanup",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "d48e3ec7bb4127f4f95315a2b0b1bc24"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Flight/Backends/FlightDynamicsInitialConditionProvider.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+      "reference_guid": "0a1d767b2eb24dc39f231ae8e7646c8d"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Flight/C172StyleAircraftConfig.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Resources/C172StyleAircraftConfig.asset",
+      "reference_guid": "94e06aef029fa324fa7b095eea470c77"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Flight/FlightTelemetry.cs",
+      "classification": "unknown_unclassified_dependency",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "67a792fef9d117b4187de3fba3beb454"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Flight/SimpleAircraftPhysics.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+      "reference_guid": "2c7bb0f5cfb3ce44ab2c711910720f37"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Input/DeterministicGamepadInputSource.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "1e2a3af198e44fb43be968121f6f0eff"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Input/GamepadInputReader.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "70ac1ebaf15e5d24c9764ebfcd6e8480"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Input/Usb2BleInputMapper.cs",
+      "classification": "excluded_legacy_dependency",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "19eedb46c32a1e044a8849a594645e25"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Runtime/AircraftReferenceFrameRig.cs",
+      "classification": "approved_requires_product_cleanup",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "a918c54035f94e349cf14e449a77b185"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Runtime/PilotSeatProfile.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Production/Profiles/ImportedC172PilotSeatProfile.asset",
+      "reference_guid": "1a235a9ecbc743943b865f32dbaf980b"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Runtime/ProductionSeatCalibrationController.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "70f57bc5d6e834e4f9a09dd6a0b8de12"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Runtime/ProductionVerticalSliceRoot.cs",
+      "classification": "approved_production",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "cf03b525516184e4bb0f746a0f90f6ae"
+    },
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Runtime/ShortPlaytestDemoPilot.cs",
+      "classification": "unknown_unclassified_dependency",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "461c679a3d3448cb8861315a113b3965"
+    }
+  ],
+  "roots": [
+    "QuestFlightLab/Assets/Scenes/ProductionVerticalSlice.unity"
+  ],
+  "schema_version": 1,
+  "source_commit": "cd4131fa7732a6db2d7387921dfef33e2c206970",
+  "unresolved_guids": [
+    "0000000000000000e000000000000000",
+    "0000000000000000f000000000000000",
+    "c2fadf230d1919748a9aa21d40f74619",
+    "e0cb9aa70a22847b5925ee5f067c10a9"
+  ]
+}

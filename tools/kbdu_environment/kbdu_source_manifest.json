@@ -1,0 +1,928 @@
+{
+  "budgets": {
+    "terrain": {
+      "expected_terrain_triangles": 54768,
+      "height_samples": 30304,
+      "maximum_height_samples": 35000,
+      "maximum_terrain_triangles": 65000
+    },
+    "vectors": {
+      "candidate_part_count": 12727,
+      "category_counts": {
+        "aeroway": 68,
+        "barrier": 83,
+        "building": 2500,
+        "landcover": 71,
+        "road": 2000,
+        "water": 800
+      },
+      "dropped_or_budget_trimmed_parts": 7205,
+      "output_feature_count": 5522,
+      "output_point_count": 31533,
+      "raw_element_counts": {
+        "osm_airport.json": 6009,
+        "osm_context.json": 7041
+      }
+    }
+  },
+  "coverage": {
+    "airport_context_width_meters": 4400.0,
+    "far_context_width_meters": 24000.0,
+    "mid_context_width_meters": 12000.0
+  },
+  "derived_assets": [
+    {
+      "bytes": 85113,
+      "path": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_terrain_rings.json",
+      "sha256": "712fccb9bcbaf0b79f6f8bf8e7a9f59c05b022fe9e478b022d8ca2595aa767b7"
+    },
+    {
+      "bytes": 1781886,
+      "path": "QuestFlightLab/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_reference_context.json",
+      "sha256": "5d0d0c3c71532b5106119b8e647e303e12bdeb662960ef78543050166bb8e3e0"
+    }
+  ],
+  "generated_from_snapshot": "20260710T214309Z",
+  "generated_from_snapshot_utc": "2026-07-10T21:43:09.865867Z",
+  "label": "KBDU-inspired / not for navigation",
+  "license_summary": [
+    {
+      "attribution": "Federal Aviation Administration (FAA); USDOT Bureau of Transportation Statistics (BTS)",
+      "source": "FAA / USDOT BTS NTAD airport and runway data",
+      "status": "United States government work; unrestricted public use"
+    },
+    {
+      "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+      "source": "USGS 3DEP Bare Earth DEM dynamic service",
+      "status": "USGS-authored data; public domain / no use restrictions"
+    },
+    {
+      "attribution": "USGS, USDA, The National Map: Orthoimagery",
+      "source": "USGS/USDA NAIP Plus imagery availability",
+      "status": "Public domain; availability queried but no imagery pixels downloaded or committed"
+    },
+    {
+      "attribution": "© OpenStreetMap contributors",
+      "source": "OpenStreetMap",
+      "status": "ODbL-1.0",
+      "url": "https://www.openstreetmap.org/copyright"
+    }
+  ],
+  "limitations": [
+    "Not for navigation; FAA/OSM/USGS source dates and accuracy differ.",
+    "No aerial imagery or Google-derived content is included.",
+    "Runtime terrain loader, material blending, culling, and LOD transition behavior require integrated Unity validation.",
+    "Reference geometry is simplified, clipped, and quantized for a standalone Quest prototype.",
+    "OSM completeness and tag accuracy vary; this asset is not an aeronautical database.",
+    "Building heights are used only when explicitly tagged; untagged buildings need conservative runtime defaults.",
+    "NAIP availability was proven, but imagery was not committed because a seam-safe tiled/ASTC path is not yet validated."
+  ],
+  "origin": {
+    "elevation_msl_meters": 1611.7824,
+    "latitude_degrees": 40.03936527,
+    "longitude_degrees": -105.22608958,
+    "source_elevation_feet": 5288
+  },
+  "pipeline": "QuestFlightLab KBDU environment pipeline v1",
+  "prohibited_sources_confirmation": "No Google Maps, Google Earth, or Street View-derived content is used.",
+  "raw_data_policy": "Raw FAA/USGS/OSM responses are stored outside Git. Paths below are snapshot-relative and verified by SHA256.",
+  "schema_version": 1,
+  "source_data": [
+    {
+      "agency": "FAA / USDOT BTS",
+      "bytes": 2217,
+      "id": "faa_ntad_airport",
+      "license": {
+        "attribution": "Federal Aviation Administration (FAA); USDOT Bureau of Transportation Statistics (BTS)",
+        "name": "United States government work; unrestricted public use",
+        "spdx": "LicenseRef-US-Government-Work-Public-Domain",
+        "url": "https://services.arcgis.com/xOi1kZaI0eWDREZv/ArcGIS/rest/services/Runways_View/FeatureServer/0"
+      },
+      "method": "GET",
+      "notes": "Official FAA-derived airport reference point and field metadata, bounded by ARPT_ID=BDU.",
+      "path": "faa_airport.geojson",
+      "request_sha256": "7a9e0d7671fce511b8e48b249bed2ce40cfa975ddcf3697d90997c7831db062e",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "43d735c2b82b48e5773c31b27ced0563180dd63500d36beff4aeca29c9838278",
+      "url": "https://services.arcgis.com/xOi1kZaI0eWDREZv/ArcGIS/rest/services/NTAD_Aviation_Facilities/FeatureServer/0/query?where=ARPT_ID%3D%27BDU%27&outFields=%2A&returnGeometry=true&outSR=4326&f=geojson"
+    },
+    {
+      "agency": "FAA / USDOT BTS",
+      "bytes": 2337,
+      "id": "faa_ntad_runways",
+      "license": {
+        "attribution": "Federal Aviation Administration (FAA); USDOT Bureau of Transportation Statistics (BTS)",
+        "name": "United States government work; unrestricted public use",
+        "spdx": "LicenseRef-US-Government-Work-Public-Domain",
+        "url": "https://services.arcgis.com/xOi1kZaI0eWDREZv/ArcGIS/rest/services/Runways_View/FeatureServer/0"
+      },
+      "method": "GET",
+      "notes": "Official FAA-derived runway geometry and attributes, bounded by ARPT_ID=BDU.",
+      "path": "faa_runways.geojson",
+      "request_sha256": "7a9e0d7671fce511b8e48b249bed2ce40cfa975ddcf3697d90997c7831db062e",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "f1f2c8cc37f920399fbddd11e99bf53763e28a74482c9b3804c5fd0486918ced",
+      "url": "https://services.arcgis.com/xOi1kZaI0eWDREZv/ArcGIS/rest/services/Runways_View/FeatureServer/0/query?where=ARPT_ID%3D%27BDU%27&outFields=%2A&returnGeometry=true&outSR=4326&f=geojson"
+    },
+    {
+      "agency": "QuestFlightLab deterministic pipeline",
+      "bytes": 1144,
+      "id": "naip_imagery_decision",
+      "license": {
+        "attribution": "USGS, USDA, The National Map: Orthoimagery",
+        "name": "USGS/USDA The National Map orthoimagery; public domain",
+        "spdx": "LicenseRef-US-Government-Work-Public-Domain",
+        "url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer"
+      },
+      "method": "generated decision",
+      "notes": "Exact automated imagery gate decision and fallback rationale; no raw imagery is stored.",
+      "path": "naip_imagery_decision.json",
+      "request_sha256": "6d7e9c2e76067179f73708b53fc3b5be0957431b9a26cdc7bb01d6c363c12dc0",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "e42528b838d2d016413ac89671d520b097a05ac717cb2147e6bea9ae469a04cd",
+      "url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer"
+    },
+    {
+      "agency": "OpenStreetMap contributors via Overpass API",
+      "bytes": 4497843,
+      "id": "osm_airport",
+      "license": {
+        "attribution": "© OpenStreetMap contributors",
+        "name": "Open Database License 1.0",
+        "spdx": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      "method": "POST",
+      "notes": "Bounded vector extract; exact Overpass QL is stored in osm_queries.json.",
+      "path": "osm_airport.json",
+      "request_sha256": "250655736485ee3aadf5c5f888bb64f7331b36a3e7e05f6b8ad3245a30580c6e",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "e1677f58c73a6ab62b5266c853c4e790ccf92c5bfe86f7bdb8cfbadc3981a25d",
+      "url": "https://overpass-api.de/api/interpreter"
+    },
+    {
+      "agency": "OpenStreetMap contributors via Overpass API",
+      "bytes": 6520176,
+      "id": "osm_context",
+      "license": {
+        "attribution": "© OpenStreetMap contributors",
+        "name": "Open Database License 1.0",
+        "spdx": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      "method": "POST",
+      "notes": "Bounded vector extract; exact Overpass QL is stored in osm_queries.json.",
+      "path": "osm_context.json",
+      "request_sha256": "a8db1b472dec1173dc54df633ca2ca166cef785dc441394221d6e1f0daa8aa60",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "2c4a4afe035e88f0b2db466a82e3fd20f25e76905e3e56233e73789ed1a69eda",
+      "url": "https://overpass-api.de/api/interpreter"
+    },
+    {
+      "agency": "QuestFlightLab deterministic pipeline",
+      "bytes": 1395,
+      "id": "osm_query_definitions",
+      "license": {
+        "attribution": "© OpenStreetMap contributors",
+        "name": "Open Database License 1.0",
+        "spdx": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      "method": "generated query definition",
+      "notes": "Exact bounded Overpass QL used for this snapshot.",
+      "path": "osm_queries.json",
+      "request_sha256": "6adf1783b052f74406dcd76383fe4e880f0d46f3fe34a6c2f4ba7c01db381229",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "d867dcf463b99ec3951c0e2c7203219d6cea107e0da1ed9963b7403fb4b3fe6b",
+      "url": "https://overpass-api.de/api/interpreter"
+    },
+    {
+      "agency": "QuestFlightLab deterministic pipeline",
+      "bytes": 5530354,
+      "id": "usgs_3dep_sample_request_index",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "generated request index",
+      "notes": "Local ENU sample coordinates and exact WGS84 request positions; raw source heights are in the numbered response files.",
+      "path": "usgs_sample_index.json",
+      "request_sha256": "a720885a568c1048ccedd29bfbb3d11539e3d29d3f8584d03c778a9faa410423",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "53048c3d5b9908511845bbf45c56830ec1df3254dd19155ae3de9a825411339d",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165472,
+      "id": "usgs_3dep_samples_000",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 0..899.",
+      "path": "usgs_samples_000.json",
+      "request_sha256": "50cb1c7f15d6834e072487e71f3bd6587cf6d9546318fbfed135f336b8dc270c",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "98e78d0ef284ae888256f05dc1a48374a74a9e98ff65279856aa1620bb34e323",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165392,
+      "id": "usgs_3dep_samples_001",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 900..1799.",
+      "path": "usgs_samples_001.json",
+      "request_sha256": "03a7151211622599c137fad5ac17cac5aba24bd4ceacf030cb026db02b335f11",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "9769d792f9d65a0d8da34585fd2e0b71975ff0d9b985c1910f8e407b30ddcdbe",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165578,
+      "id": "usgs_3dep_samples_002",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 1800..2699.",
+      "path": "usgs_samples_002.json",
+      "request_sha256": "21d9ed0c7195c58d64614e54112b2e9af8885ef5a536a08bd8f801e77b7ebde5",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "cd8f77e6054e5586606dd90d15413f6e97e486db69f52e23c30cc8d23345de23",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165565,
+      "id": "usgs_3dep_samples_003",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 2700..3599.",
+      "path": "usgs_samples_003.json",
+      "request_sha256": "c53b2a61aa10bd6aa5cde679a408165eec6b50acd6f7e6bc6e501094c5d04207",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "b02f3be11755b1a7576e737cd86710baf06f57973bf6987f91f0174780891d03",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165480,
+      "id": "usgs_3dep_samples_004",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 3600..4499.",
+      "path": "usgs_samples_004.json",
+      "request_sha256": "f0352077cd444ea0d79cd51a29189b540afc8e9ded94e35e64d8c10c8e255eca",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "b8f380662b132f6b647e570555b46baa3408662090fada322d6b7a56d190f3cd",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165225,
+      "id": "usgs_3dep_samples_005",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 4500..5399.",
+      "path": "usgs_samples_005.json",
+      "request_sha256": "af3e790911eb02539617aaab63ac68e9615ef044f5208139dc64f5a4029ff328",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "0a442a03226dde3f4e51241839138cbd31a0f4f00e89ac77d47ede0d59ab4e01",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165374,
+      "id": "usgs_3dep_samples_006",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 5400..6299.",
+      "path": "usgs_samples_006.json",
+      "request_sha256": "25afa014b4302506feb67b94484ce2366fab7ad128740542d083a886acdb5028",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "fab7a534c6c12d21ea542d14c4728a45d6b0008f3f7dd6e3aff7f6cbb7d7ac7c",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165104,
+      "id": "usgs_3dep_samples_007",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 6300..7199.",
+      "path": "usgs_samples_007.json",
+      "request_sha256": "ae45f4cc02a8b62083faf711311fe0ecf1a30a210807d8b855354235187184e2",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "a6d49bf8ffdd7c49a0bad1141bfcd3d9b1215153213e9936d82f0bd1b40cb857",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165264,
+      "id": "usgs_3dep_samples_008",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 7200..8099.",
+      "path": "usgs_samples_008.json",
+      "request_sha256": "37c3a262317d47c74f44e4590dde98e44f986771545dcf441e2c7fc781d6c9fe",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "2e1b5d257693a7a2d3c7eedd615f292322ae52a07cc367df80460d0572c942a8",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165255,
+      "id": "usgs_3dep_samples_009",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 8100..8999.",
+      "path": "usgs_samples_009.json",
+      "request_sha256": "40a0b55d230bab3b8fda5d2585e3c2676f6cab4639efe609ae3074b2b8b9d52a",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "251ffe6583b0161ef2cca06e8e5d077bcc24807884517979767967e3f57d82e2",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165200,
+      "id": "usgs_3dep_samples_010",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 9000..9899.",
+      "path": "usgs_samples_010.json",
+      "request_sha256": "10816ab9aeb6a9f866a3f8320f7f7297280b71197d8d1df327424bad5dcc179c",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "7e3707cac35405cb1f7123bacbb963a7e9fe8dd8dfb808a1560b8818c38daaa9",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165193,
+      "id": "usgs_3dep_samples_011",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 9900..10799.",
+      "path": "usgs_samples_011.json",
+      "request_sha256": "ade665179c50f512dbe9f42929c64210ca6f4a94c46fde5dd38b85121da1ce05",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "85fee7d09a588ac2fac7c0793011845c5a3bf8e8495a1b821db455d833be627d",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 164903,
+      "id": "usgs_3dep_samples_012",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 10800..11699.",
+      "path": "usgs_samples_012.json",
+      "request_sha256": "1b3ef818666191aeea073f390f27befdaf803df69bb10075d737d5d9225c506a",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "b9f446671a76fe533cc1c8bbadbe0a0660154bc54832de74c7ca68f652017c0e",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 164936,
+      "id": "usgs_3dep_samples_013",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 11700..12599.",
+      "path": "usgs_samples_013.json",
+      "request_sha256": "9ba04f41a8a6e8f4d746898b1ba8852fcc7dc3b8bb0f58ffe2dee2461286b645",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "0f160281956855d9ee8cbbfc6d13cd0e7af37ec326dd2a256acfb009bbf095af",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165580,
+      "id": "usgs_3dep_samples_014",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 12600..13499.",
+      "path": "usgs_samples_014.json",
+      "request_sha256": "857a710b4eea673b93d333a2a1f95697a3cdbe6c214891ecbf82ad5f4efd9621",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "054d76dc58946d8118113c6c99d955880c4991808ba9dee9375dc40b5aa5f60e",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165534,
+      "id": "usgs_3dep_samples_015",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 13500..14399.",
+      "path": "usgs_samples_015.json",
+      "request_sha256": "eb29c840178f8f3407700708130eb4aea6fb5ed62f83a22e0fac1615442c04f7",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "1614544a04cf168f83b18633d0d3f03802ae77781162b6ed43d7f5f3b5e31060",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165942,
+      "id": "usgs_3dep_samples_016",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 14400..15299.",
+      "path": "usgs_samples_016.json",
+      "request_sha256": "4b3dc7aaa0908a17b93786906b6e9dd8dce16b18b7b259bb03caeba79f6af794",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "57607006c24cf06e5f5681c7648c766c8896ed96245361527c88914a70623456",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 164863,
+      "id": "usgs_3dep_samples_017",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 15300..16199.",
+      "path": "usgs_samples_017.json",
+      "request_sha256": "c955c27ce93534ce6c27d16c53f2dbb153ed2b0893ed431ee5bc514107850a6e",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "9a5aa98aadb1b4b3d30e9f882849f232fe0725ce4220ec74dfc3aa982d591465",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 164995,
+      "id": "usgs_3dep_samples_018",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 16200..17099.",
+      "path": "usgs_samples_018.json",
+      "request_sha256": "7b9b3c6fc8d49e0872777bfbe2729057cd3787d00767e0b03169ac2068656161",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "9d508b2a55469cf92b0be0ee8f7a90c32f72caddcc8524bbd51835f2911aecf2",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 164922,
+      "id": "usgs_3dep_samples_019",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 17100..17999.",
+      "path": "usgs_samples_019.json",
+      "request_sha256": "b745262880e9225bb2fb4f77483ba7c14e2786a778b7679ecabaa872f895e808",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "124c085c605f92ccfcb20ef0e52cc2496ad42fbaba9b3b30f6f060f49a42dd7f",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 164907,
+      "id": "usgs_3dep_samples_020",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 18000..18899.",
+      "path": "usgs_samples_020.json",
+      "request_sha256": "10a4f74b710c9b03cc4b189222566d9f16c2f75634a88c4594b73674b0626894",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "5004c5990ec44621a92b5f2ffe8f2594bfab56ba7e2a855044edb5b13c181caa",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165005,
+      "id": "usgs_3dep_samples_021",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 18900..19799.",
+      "path": "usgs_samples_021.json",
+      "request_sha256": "4971806cd3fc4e56a471cc9b115f31e78d36cd02f2820325b377b643d041113a",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "45641e39ee435898653fbd88682174a58eadeede9a2bdb454345c0b11d842063",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165176,
+      "id": "usgs_3dep_samples_022",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 19800..20699.",
+      "path": "usgs_samples_022.json",
+      "request_sha256": "880a894207cbd2a98d849344af3973bb0fccbaa8de659f4ffcd6adea14b773ac",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "c032eb8e654f609dd770416d3705e7747a62c97c1a442e372c7937906b0d2ed8",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165107,
+      "id": "usgs_3dep_samples_023",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 20700..21599.",
+      "path": "usgs_samples_023.json",
+      "request_sha256": "53c56a1729baa8e71ad8d2d52e87aa84ecc544de44fd6506d640c98eeaa182cd",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "d5d9697639019e9cf4c0faedd8f51817e37f45ffa9e9260a3c8aaa5f1e808e85",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165109,
+      "id": "usgs_3dep_samples_024",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 21600..22499.",
+      "path": "usgs_samples_024.json",
+      "request_sha256": "6c99c7f0d47832ba3a3dd722d7c293863eae5dfe19a9d6da21f0a9dc498b578f",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "6d92d9d8fe71abe9424883f0190b117266a3425e633b5727bf5db5ffee9bacfe",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165149,
+      "id": "usgs_3dep_samples_025",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 22500..23399.",
+      "path": "usgs_samples_025.json",
+      "request_sha256": "382b6ded741067ae8a5d8d6159e78744dcc9b29a74eba406d04c5408d94a3e7d",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "f9eaf42d2d492838315e79ea28134cbf2484751ad889a52899601f2f5cb42587",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165086,
+      "id": "usgs_3dep_samples_026",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 23400..24299.",
+      "path": "usgs_samples_026.json",
+      "request_sha256": "76953d0c51ac1cd55acca5210ccc317f03a49a39e10c5f18aba0846c05a93b0f",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "efb0f4cdfd36de4860d09a666dffa639a759ab5b8c6961492e15397002b8421f",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165109,
+      "id": "usgs_3dep_samples_027",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 24300..25199.",
+      "path": "usgs_samples_027.json",
+      "request_sha256": "54491dbdf6f6211093c1365c17114e98398048b4912b40385504359df244d573",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "fe67801ad15c2c3258487e9ec71e9511a2491c0446c134b87585897b6eb7bac4",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 164994,
+      "id": "usgs_3dep_samples_028",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 25200..26099.",
+      "path": "usgs_samples_028.json",
+      "request_sha256": "a7a8ff552797be826aa36f313f4a094db70c437213eb9e524a1d8a8725e302be",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "25757db2b207e04e1e57e7503c8669ad43eb90b9248f5e3287561fdefd5b1bbd",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 164795,
+      "id": "usgs_3dep_samples_029",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 26100..26999.",
+      "path": "usgs_samples_029.json",
+      "request_sha256": "bb1212831acc7f736e8515e8124cf0e77a56fc9ffaf6fc0327fc22ad81b9f6b6",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "be93befffbde7ed67a95ffdb611805f0e86845e0dab9a543ea70d48c792d0af1",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 164882,
+      "id": "usgs_3dep_samples_030",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 27000..27899.",
+      "path": "usgs_samples_030.json",
+      "request_sha256": "3b0b486c6a7d13e5185a8681238efca90f5f3b68a4a0b6d2d05568201ddf4b74",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "19b6730feec79abee2fb0a7ae089a2f14a098e760e939c439e6a2d0eb0b22634",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 165109,
+      "id": "usgs_3dep_samples_031",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 27900..28799.",
+      "path": "usgs_samples_031.json",
+      "request_sha256": "9f982aa236f25c035936963b6a660f9cee78962602a6d87f777d6d3bfe7dddb7",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "5526d7d8bd77438c0eb058f6030cb7a5f69d13ed2b0b29bfd4374d8176231ab7",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 102418,
+      "id": "usgs_3dep_samples_032",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "POST",
+      "notes": "Bounded 3DEP bilinear samples; point index 28800..29358.",
+      "path": "usgs_samples_032.json",
+      "request_sha256": "15f8753cf8863ae81c50facf35e46d712d72f13b686211a80c50a749c109efeb",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "e0a557d80018110d5d59e692c0202aed62f57bb375a5deb55be3106437acf160",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
+    },
+    {
+      "agency": "USGS",
+      "bytes": 12974,
+      "id": "usgs_3dep_service_metadata",
+      "license": {
+        "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+        "name": "USGS-authored data; public domain / no use restrictions",
+        "spdx": "LicenseRef-USGS-Public-Domain",
+        "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services"
+      },
+      "method": "GET",
+      "notes": "3DEP Bare Earth DEM dynamic service metadata captured with the raw snapshot.",
+      "path": "usgs_3dep_service.json",
+      "request_sha256": "96e148af695cb9b3d81865278a313244c0ec8b766dea65348a69fcd3c0b8e7e7",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "d454148c69783db1b4816f48d1279d7c248b8e26ec70d4156a9874b49fd9d570",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer?f=pjson"
+    },
+    {
+      "agency": "USGS / USDA",
+      "bytes": 3740,
+      "id": "usgs_naip_plus_kbdu_availability",
+      "license": {
+        "attribution": "USGS, USDA, The National Map: Orthoimagery",
+        "name": "USGS/USDA The National Map orthoimagery; public domain",
+        "spdx": "LicenseRef-US-Government-Work-Public-Domain",
+        "url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer"
+      },
+      "method": "GET",
+      "notes": "One bounded automated availability query over the 4000 m KBDU inner ring; no imagery pixels downloaded.",
+      "path": "naip_availability.json",
+      "request_sha256": "d477014ca5f3d5848a7a4c128d792422fadb02b825def45ee0a7cb38f28644f8",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "6239ddadaa9aa062f2280c2229986e4549631032f7971ac16a7dedb7be560dab",
+      "url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/query?where=1%3D1&geometry=-105.2495241818%2C40.0213551625%2C-105.2026549782%2C40.0573705844&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=OBJECTID%2CName%2CState%2CYear%2Craster_name%2Cdownload_url%2Cacquisition_date%2Cagency%2Cvendor%2Cresolution_value%2Cresolution_units&returnGeometry=false&orderByFields=Year+DESC&resultRecordCount=10&f=json"
+    },
+    {
+      "agency": "USGS / USDA",
+      "bytes": 9028,
+      "id": "usgs_naip_plus_service_metadata",
+      "license": {
+        "attribution": "USGS, USDA, The National Map: Orthoimagery",
+        "name": "USGS/USDA The National Map orthoimagery; public domain",
+        "spdx": "LicenseRef-US-Government-Work-Public-Domain",
+        "url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer"
+      },
+      "method": "GET",
+      "notes": "Official NAIP Plus ImageServer metadata captured for the bounded availability decision.",
+      "path": "naip_service.json",
+      "request_sha256": "96e148af695cb9b3d81865278a313244c0ec8b766dea65348a69fcd3c0b8e7e7",
+      "retrieved_utc": "2026-07-10T21:43:09.865867Z",
+      "sha256": "a636ef944cf99e9fab0f9ffa0825e06307eb6ada37472af0da42ffcfb017f45b",
+      "url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer?f=pjson"
+    }
+  ],
+  "toolchain": [
+    {
+      "bytes": 2879,
+      "path": "tools/kbdu_environment/config.json",
+      "sha256": "31a22c259b2474ae06e815791d764720fd616835e4efc22622526af6ff8b9336"
+    },
+    {
+      "bytes": 12265,
+      "path": "tools/kbdu_environment/kbdu_common.py",
+      "sha256": "9fee7876e16474afd0d71e0d4d89a88d147aa12e5f0aee3babfa6e657941b68b"
+    },
+    {
+      "bytes": 26119,
+      "path": "tools/kbdu_environment/fetch_kbdu_sources.py",
+      "sha256": "c2d736b9cae55a7eb6ddcdf9df56c4e2e953ee0b9767bc7ead5f881c90899a79"
+    },
+    {
+      "bytes": 44173,
+      "path": "tools/kbdu_environment/process_kbdu_environment.py",
+      "sha256": "25e383ae35b2dcb4f44f9ba40a70bf39a40c42d52bedbd1c65c0d63d245ba885"
+    },
+    {
+      "bytes": 16675,
+      "path": "tools/kbdu_environment/validate_kbdu_assets.py",
+      "sha256": "368287cd2c689df981fb88fe151834f6e81d8e1292a9e8f9727564c069ec9539"
+    },
+    {
+      "bytes": 8037,
+      "path": "tools/kbdu_environment/render_kbdu_preview.py",
+      "sha256": "041e29b27a0b9663666bc11bcbbe0a4e88eba6c5f07d93b20c60e0283e350e2d"
+    },
+    {
+      "bytes": 6337,
+      "path": "tools/kbdu_environment/README.md",
+      "sha256": "9e8711312216d8147cebce1090509184b75f6b29012e6d20154b93688946fa6d"
+    },
+    {
+      "bytes": 5585,
+      "path": "tools/kbdu_environment/tests/test_kbdu_pipeline.py",
+      "sha256": "76bc75cc95669cdad50d6bd234274bd82929e1d94715abc9e3de1763c2f9d856"
+    },
+    {
+      "bytes": 7673,
+      "path": "QuestFlightLab/Assets/Scripts/Environment/RealKbduEnvironmentData.cs",
+      "sha256": "7749e3ab20f3d5750f43e4a9524ca9d942d407f9cc0b0ddd31af5370e30c805b"
+    },
+    {
+      "bytes": 77671,
+      "path": "QuestFlightLab/Assets/Scripts/Environment/RealKbduEnvironmentBuilder.cs",
+      "sha256": "9baaa75985d712abf1bcd1789f64a707f54c27e105b8bb2381b8dde1ab403f3f"
+    },
+    {
+      "bytes": 32717,
+      "path": "QuestFlightLab/Assets/Scripts/Environment/KbduInspiredWorldBuilder.cs",
+      "sha256": "6d83049dc9bd2e85454731f09881a79e7a44c66774109f4c78ab46580016218f"
+    },
+    {
+      "bytes": 13037,
+      "path": "QuestFlightLab/Assets/Tests/PlayMode/RealKbduEnvironmentPlayModeTests.cs",
+      "sha256": "376c9a90e025ea0bba4e9ab533bd1ae22a7162a173d580eb566df6da8406eeea"
+    }
+  ]
+}

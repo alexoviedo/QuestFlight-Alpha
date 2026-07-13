@@ -1,0 +1,661 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1382263287756593760
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6993516738122474674}
+  - component: {fileID: 8037600527752877075}
+  m_Layer: 0
+  m_Name: ProductionVerticalSliceRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6993516738122474674
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382263287756593760}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7682851496159033737}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8037600527752877075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382263287756593760}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf03b525516184e4bb0f746a0f90f6ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Runtime.ProductionVerticalSliceRoot
+  architectureVersion: production_vertical_slice_v2
+  aircraftRig: {fileID: 2514889943979819941}
+  pilotSeatProfile: {fileID: 11400000, guid: aee041ad9a9d3334ea5a212385ea3758, type: 2}
+  seatCalibration: {fileID: 5763377087430501911}
+  visibilityProfiles: {fileID: 5376976391610670570}
+  controlAnimator: {fileID: 4340938266922456249}
+  flightDynamicsCoordinator: {fileID: 742791276885309778}
+  environmentRoot: {fileID: 3570322925851413670}
+  runwayRoot: {fileID: 983608951115090136}
+--- !u!1 &1766485041325464483
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 983608951115090136}
+  m_Layer: 0
+  m_Name: RunwayRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &983608951115090136
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1766485041325464483}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7682851496159033737}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1891347455280266108
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7682851496159033737}
+  - component: {fileID: 8162433188052807021}
+  - component: {fileID: 2904265607946797926}
+  m_Layer: 0
+  m_Name: ProductionWorldRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7682851496159033737
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1891347455280266108}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6993516738122474674}
+  - {fileID: 3570322925851413670}
+  - {fileID: 983608951115090136}
+  - {fileID: 5937614573924068515}
+  - {fileID: 7286426379529828188}
+  - {fileID: 4136578284577866536}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8162433188052807021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1891347455280266108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2386b25f5c092974b8eed807252c0a9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.ProductAttribution
+--- !u!114 &2904265607946797926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1891347455280266108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ccf1273a0cc4aedb3db4fbac9c84c39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Runtime.QuestTemporalVisualGateRecorder
+  readinessTimeoutSeconds: 90
+  warmupSeconds: 90
+  measurementSeconds: 60
+  productionRoot: {fileID: 8037600527752877075}
+  mountainProbe: {fileID: 8692981709044316689}
+--- !u!1 &3972055758679815465
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5937614573924068515}
+  - component: {fileID: 5234429300093683575}
+  - component: {fileID: 9105462521216613047}
+  - component: {fileID: 1171423066720843826}
+  - component: {fileID: 5025774026687160251}
+  m_Layer: 0
+  m_Name: ProductionInputRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5937614573924068515
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3972055758679815465}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7682851496159033737}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5234429300093683575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3972055758679815465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70ac1ebaf15e5d24c9764ebfcd6e8480, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Input.GamepadInputReader
+  preferMostRecentGamepad: 1
+--- !u!114 &9105462521216613047
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3972055758679815465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e2a3af198e44fb43be968121f6f0eff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Input.DeterministicGamepadInputSource
+--- !u!114 &1171423066720843826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3972055758679815465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b9f0ee4ba005d9418089af83e74f15d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Input.ProductControlInput
+  gamepad: {fileID: 5234429300093683575}
+  deterministicInput: {fileID: 9105462521216613047}
+  deterministicMode: 0
+  invertElevator: 1
+  defaultThrottle: 0.1
+  throttleRatePerSecond: 0.35
+  trimRatePerSecond: 0.35
+  flapStep: 0.25
+--- !u!114 &5025774026687160251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3972055758679815465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fee0bfed60f5e614189e3764e302be71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.ProductDemoPilot
+  productInput: {fileID: 1171423066720843826}
+  deterministicInput: {fileID: 9105462521216613047}
+  autoStartDemo: 1
+  loopDurationSeconds: 72
+--- !u!1 &4720842442686471622
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3570322925851413670}
+  m_Layer: 0
+  m_Name: EnvironmentRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3570322925851413670
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4720842442686471622}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1137309467954344692}
+  m_Father: {fileID: 7682851496159033737}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5429415594376052865
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8751000700171358784}
+  - component: {fileID: 2375097098290893549}
+  m_Layer: 0
+  m_Name: Sun
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8751000700171358784
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5429415594376052865}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.39098036, y: -0.25180724, z: 0.112111814, w: 0.87815624}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4136578284577866536}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!108 &2375097098290893549
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5429415594376052865}
+  m_Enabled: 1
+  serializedVersion: 12
+  m_Type: 1
+  m_Color: {r: 1, g: 0.95, b: 0.86, a: 1}
+  m_Intensity: 1.05
+  m_Range: 10
+  m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
+  m_CookieSize2D: {x: 0.5, y: 0.5}
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
+--- !u!1 &7761020554564162558
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4136578284577866536}
+  m_Layer: 0
+  m_Name: ProductionLightingRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4136578284577866536
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7761020554564162558}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8751000700171358784}
+  m_Father: {fileID: 7682851496159033737}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &2592926023598875923
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7682851496159033737}
+    m_Modifications:
+    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: controls
+      value: 
+      objectReference: {fileID: 1171423066720843826}
+    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: groundHeightMeters
+      value: 1.0274717
+      objectReference: {fileID: 0}
+    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: runwayResetEuler.x
+      value: 0.13375312
+      objectReference: {fileID: 0}
+    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: runwayResetEuler.y
+      value: 89.971725
+      objectReference: {fileID: 0}
+    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: runwayResetEuler.z
+      value: -0.000000006670125
+      objectReference: {fileID: 0}
+    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: runwayResetPosition.x
+      value: -554.73395
+      objectReference: {fileID: 0}
+    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: runwayResetPosition.y
+      value: 1.0274717
+      objectReference: {fileID: 0}
+    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: runwayResetPosition.z
+      value: -30.63398
+      objectReference: {fileID: 0}
+    - target: {fileID: 2289500013244068266, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: mapperFallback
+      value: 
+      objectReference: {fileID: 1171423066720843826}
+    - target: {fileID: 3005309151451274305, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: controls
+      value: 
+      objectReference: {fileID: 1171423066720843826}
+    - target: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -554.73395
+      objectReference: {fileID: 0}
+    - target: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.0274717
+      objectReference: {fileID: 0}
+    - target: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -30.63398
+      objectReference: {fileID: 0}
+    - target: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.70728076
+      objectReference: {fileID: 0}
+    - target: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.00082554994
+      objectReference: {fileID: 0}
+    - target: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7069318
+      objectReference: {fileID: 0}
+    - target: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.0008251427
+      objectReference: {fileID: 0}
+    - target: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6090694490867546566, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: headingDegrees
+      value: 89.97173309326172
+      objectReference: {fileID: 0}
+    - target: {fileID: 6090694490867546566, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: latitudeDegrees
+      value: 40.03908926386693
+      objectReference: {fileID: 0}
+    - target: {fileID: 6090694490867546566, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: longitudeDegrees
+      value: -105.23258782786134
+      objectReference: {fileID: 0}
+    - target: {fileID: 6090694490867546566, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: altitudeMslMeters
+      value: 1612.834029671736
+      objectReference: {fileID: 0}
+    - target: {fileID: 6090694490867546566, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: terrainElevationMslMeters
+      value: 1611.584029671736
+      objectReference: {fileID: 0}
+    - target: {fileID: 7411373742601669578, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: m_Name
+      value: AircraftSimulationRoot
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+--- !u!114 &742791276885309778 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3005309151451274305, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d48e3ec7bb4127f4f95315a2b0b1bc24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightDynamicsCoordinator
+--- !u!114 &2514889943979819941 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 80294514084062902, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a918c54035f94e349cf14e449a77b185, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Runtime.AircraftReferenceFrameRig
+--- !u!114 &4340938266922456249 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2289500013244068266, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83c4f48774e3c3f47b13c31bec1848d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.ProductionAircraftControlAnimator
+--- !u!114 &5376976391610670570 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7594537855643793657, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4063ccaa6f58aab4b8198ed8bff31732, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.AircraftVisibilityProfileController
+--- !u!114 &5763377087430501911 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7782304371405062916, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70f57bc5d6e834e4f9a09dd6a0b8de12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Runtime.ProductionSeatCalibrationController
+--- !u!4 &7286426379529828188 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &6183554003487197170
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 3570322925851413670}
+    m_Modifications:
+    - target: {fileID: 6492199952949179654, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6492199952949179654, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6492199952949179654, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6492199952949179654, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6492199952949179654, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6492199952949179654, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6492199952949179654, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6492199952949179654, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6492199952949179654, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6492199952949179654, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6748123971487528466, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+      propertyPath: m_Name
+      value: ProductionEnvironmentRoot
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+--- !u!4 &1137309467954344692 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6492199952949179654, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+  m_PrefabInstance: {fileID: 6183554003487197170}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8692981709044316689 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3275182717276356067, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+  m_PrefabInstance: {fileID: 6183554003487197170}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b67a64e7414948e9b0b0534b888be274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.MountainTemporalStabilityProbe

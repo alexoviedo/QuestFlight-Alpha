@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Production_WaterBank
+  m_Shader: {fileID: 4800000, guid: 7861834a1732cce4c93cd3929c935389, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _DryGrassTex:
+        m_Texture: {fileID: 2800000, guid: b0010fed8caac464193afe47db3cea77, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GreenGrassTex:
+        m_Texture: {fileID: 2800000, guid: ab1810d7539994f40a8038ba3bb4e7f0, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MacroAlbedo:
+        m_Texture: {fileID: 2800000, guid: 8f67d3bb7be034042b0ba2bf85ef8751, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 8f67d3bb7be034042b0ba2bf85ef8751, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SoilTex:
+        m_Texture: {fileID: 2800000, guid: 220ccf9a23766f1459dc3466e51cbdd4, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _DetailFadeEnd: 1800
+    - _DetailFadeStart: 280
+    - _GreenBlend: 0.08
+    - _LocalContrast: 1.16
+    - _MacroBrightness: 1.08
+    - _MacroInfluence: 0.65
+    - _MacroSaturation: 1.12
+    - _MicroScale: 0.06666667
+    - _RegionalContrast: 1.08
+    - _Roughness: 0.9
+    - _SoilBlend: 0.62
+    m_Colors:
+    - _MacroWorldMinInvSize: {r: -6000, g: -6000, b: 0.00008333333, a: 0.00008333333}
+    - _Tint: {r: 1.05, g: 0.82, b: 0.5, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

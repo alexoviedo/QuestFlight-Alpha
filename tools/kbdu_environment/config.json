@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "airport": {
+    "faa_id": "BDU",
+    "icao_id": "KBDU",
+    "label": "KBDU-inspired / not for navigation",
+    "origin": {
+      "latitude_degrees": 40.03936527,
+      "longitude_degrees": -105.22608958,
+      "elevation_msl_meters": 1611.7824,
+      "source_elevation_feet": 5288
+    }
+  },
+  "terrain": {
+    "height_quantization_meters": 0.1,
+    "skirt_depth_meters": 12.0,
+    "layers": [
+      {
+        "id": "airport_patch",
+        "kind": "patch",
+        "min_x_meters": -800.0,
+        "max_x_meters": 800.0,
+        "min_z_meters": -300.0,
+        "max_z_meters": 300.0,
+        "spacing_meters": 10.0,
+        "priority": 0
+      },
+      {
+        "id": "inner_4km",
+        "kind": "ring",
+        "inner_radius_meters": 0.0,
+        "outer_radius_meters": 2000.0,
+        "spacing_meters": 40.0,
+        "priority": 1,
+        "cutout_layer": "airport_patch"
+      },
+      {
+        "id": "mid_12km",
+        "kind": "ring",
+        "inner_radius_meters": 2000.0,
+        "outer_radius_meters": 6000.0,
+        "spacing_meters": 150.0,
+        "priority": 2
+      },
+      {
+        "id": "far_24km",
+        "kind": "ring",
+        "inner_radius_meters": 6000.0,
+        "outer_radius_meters": 12000.0,
+        "spacing_meters": 400.0,
+        "priority": 3
+      }
+    ],
+    "runway_blend": {
+      "paved_core_margin_meters": 4.0,
+      "paved_outer_margin_meters": 40.0,
+      "paved_end_margin_meters": 55.0,
+      "other_core_margin_meters": 2.0,
+      "other_outer_margin_meters": 18.0,
+      "other_end_margin_meters": 30.0
+    },
+    "budgets": {
+      "maximum_layers": 4,
+      "maximum_height_samples": 35000,
+      "maximum_terrain_triangles": 65000,
+      "maximum_asset_bytes": 300000
+    }
+  },
+  "vector_context": {
+    "airport_half_extent_meters": 2200.0,
+    "mid_half_extent_meters": 6000.0,
+    "far_half_extent_meters": 12000.0,
+    "quantization_meters": 0.5,
+    "simplification_meters": {
+      "aeroway": 0.5,
+      "building": 1.0,
+      "barrier": 2.0,
+      "road": 7.0,
+      "water": 6.0,
+      "landcover": 18.0
+    },
+    "budgets": {
+      "maximum_features": 6000,
+      "maximum_points": 70000,
+      "maximum_asset_bytes": 2500000,
+      "maximum_features_by_category": {
+        "aeroway": 200,
+        "building": 2500,
+        "barrier": 200,
+        "road": 2000,
+        "water": 800,
+        "landcover": 300
+      }
+    }
+  },
+  "imagery": {
+    "availability_half_extent_meters": 2000.0,
+    "decision": "availability_probe_only",
+    "maximum_committed_macro_texture_bytes": 750000,
+    "fallback": {
+      "default_material_id": "dry_prairie",
+      "source": "deterministic project-authored palette assigned from OSM landuse, natural, highway, aeroway, and surface tags"
+    }
+  },
+  "network": {
+    "timeout_seconds": 180,
+    "retries": 4,
+    "usgs_sample_batch_size": 900
+  }
+}

@@ -1,0 +1,545 @@
+{
+    "schemaVersion": 1,
+    "sourceCommit": "cd4131fa7732a6db2d7387921dfef33e2c206970",
+    "scenePath": "Assets/Scenes/ProductionVerticalSlice.unity",
+    "ready": true,
+    "approvedCount": 128,
+    "packageCount": 5,
+    "conditionalLocalCount": 0,
+    "rejectedCount": 0,
+    "unknownCount": 0,
+    "dependencies": [
+        {
+            "assetPath": "Assets/Production/Environment/Generated/BoulderReservoir_NaturalShoreBank_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/BoulderReservoir_OSM_AuthoritativeWater_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_000_RealContext_0_aeroway_asphalt_000_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_001_RealContext_0_aeroway_asphalt_063_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_002_RealContext_0_aeroway_gravel_001_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_003_RealContext_0_building_building_footprint_003_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_004_RealContext_0_building_building_footprint_012_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_005_RealContext_0_building_building_footprint_019_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_006_RealContext_0_building_building_footprint_027_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_007_RealContext_0_building_building_footprint_035_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_008_RealContext_0_building_building_footprint_042_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_009_RealContext_0_building_building_footprint_050_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_010_RealContext_0_building_building_footprint_058_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_011_RealContext_0_building_building_footprint_064_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_012_RealContext_0_building_building_footprint_072_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_013_RealContext_0_building_building_footprint_079_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_014_RealContext_0_building_building_footprint_086_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_015_RealContext_0_building_building_footprint_092_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_016_RealContext_0_building_building_footprint_099_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_017_RealContext_0_building_building_footprint_106_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_018_RealContext_0_building_building_footprint_113_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_019_RealContext_0_road_asphalt_014_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_020_RealContext_0_road_asphalt_029_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_021_RealContext_0_road_asphalt_036_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_022_RealContext_0_road_asphalt_044_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_023_RealContext_0_road_asphalt_052_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_024_RealContext_0_road_asphalt_059_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_025_RealContext_0_road_asphalt_066_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_026_RealContext_0_road_asphalt_074_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_027_RealContext_0_road_asphalt_081_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_028_RealContext_0_road_asphalt_087_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_029_RealContext_0_road_asphalt_101_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_030_RealContext_0_road_asphalt_107_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_031_RealContext_0_road_asphalt_114_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_032_RealContext_0_road_concrete_007_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_033_RealContext_0_road_concrete_015_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_034_RealContext_0_road_concrete_022_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_035_RealContext_0_road_concrete_030_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_036_RealContext_0_road_concrete_037_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_037_RealContext_0_road_concrete_045_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_038_RealContext_0_road_concrete_053_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_039_RealContext_0_road_concrete_060_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_040_RealContext_0_road_concrete_067_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_041_RealContext_0_road_concrete_075_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_042_RealContext_0_road_concrete_088_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_043_RealContext_0_road_concrete_095_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_044_RealContext_0_road_concrete_102_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_045_RealContext_0_road_concrete_108_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_046_RealContext_0_road_concrete_115_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_047_RealContext_0_road_gravel_016_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_048_RealContext_0_road_gravel_023_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_049_RealContext_0_road_gravel_031_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_050_RealContext_0_road_gravel_038_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_051_RealContext_0_road_gravel_046_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_052_RealContext_0_road_gravel_054_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_053_RealContext_0_road_gravel_061_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_054_RealContext_0_road_gravel_068_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_055_RealContext_0_road_gravel_076_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_056_RealContext_0_road_gravel_082_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_057_RealContext_0_road_gravel_089_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_058_RealContext_0_road_gravel_103_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_059_RealContext_0_road_gravel_109_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_060_RealContext_0_road_gravel_116_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_061_RealContext_1_building_building_footprint_120_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_062_RealContext_1_building_building_footprint_126_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_063_RealContext_1_building_building_footprint_143_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_064_RealContext_1_road_asphalt_121_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_065_RealContext_1_road_asphalt_128_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_066_RealContext_1_road_asphalt_145_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_067_RealContext_1_road_asphalt_150_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_068_RealContext_1_road_asphalt_166_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_069_RealContext_1_road_concrete_122_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_070_RealContext_1_road_concrete_146_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_071_RealContext_1_road_concrete_151_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Context_072_RealContext_1_road_gravel_152_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/FAA_KBDU_Runway_08_26_Authoritative_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/FAA_KBDU_Runway_08_26_ControlledDepthMarkings_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/SparseCottonwoodContext_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Terrain_AirportPatch_USGS_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Terrain_Far24km_Immutable_USGS_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Terrain_Mid12km_USGS_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Generated/Terrain_Near4km_USGS_Mesh.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Materials/Production_Asphalt.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Materials/Production_BoulderReservoir_Opaque.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Materials/Production_Building.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Materials/Production_FarTerrain_Immutable.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Materials/Production_Gravel.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Materials/Production_MacroGround.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Materials/Production_Runway_Asphalt.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Materials/Production_Runway_ControlledDepthMarking.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Materials/Production_Vegetation.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Materials/Production_WaterBank.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/ProductionEnvironmentRoot.prefab",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Textures/ProductionKbduMacroAlbedo.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Materials/SeatCalibrationPanel.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+            "classification": "approved_production_aircraft_rig"
+        },
+        {
+            "assetPath": "Assets/Production/Profiles/ImportedC172PilotSeatProfile.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Resources/C172StyleAircraftConfig.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Resources/QuestFlightLab/Environment/GroundMaterials/dry_ground_01_diff_1k.jpg",
+            "classification": "approved_cc0"
+        },
+        {
+            "assetPath": "Assets/Resources/QuestFlightLab/Environment/GroundMaterials/sparse_grass_diff_1k.jpg",
+            "classification": "approved_cc0"
+        },
+        {
+            "assetPath": "Assets/Resources/QuestFlightLab/Environment/GroundMaterials/withered_grass_diff_1k.jpg",
+            "classification": "approved_cc0"
+        },
+        {
+            "assetPath": "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionMacroGround.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionStableWater.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
+            "classification": "approved_third_party_cc_by_4_0"
+        },
+        {
+            "assetPath": "Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+            "classification": "approved_product_cleaned"
+        },
+        {
+            "assetPath": "Assets/Scenes/ProductionVerticalSlice.unity",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/AircraftVisibilityProfileController.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/ProductionAircraftControlAnimator.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/ProductionAircraftLightingController.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/ProductionAircraftViewController.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/MountainTemporalStabilityProbe.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/ProductionEnvironmentRoot.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Flight/AircraftState.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Flight/Backends/FlightDynamicsCoordinator.cs",
+            "classification": "approved_product_cleaned"
+        },
+        {
+            "assetPath": "Assets/Scripts/Flight/Backends/FlightDynamicsInitialConditionProvider.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Flight/C172StyleAircraftConfig.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Flight/SimpleAircraftPhysics.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Input/DeterministicGamepadInputSource.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Input/GamepadInputReader.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Input/ProductControlInput.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Product/ProductAttribution.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Product/ProductDemoPilot.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Runtime/AircraftReferenceFrameRig.cs",
+            "classification": "approved_product_cleaned"
+        },
+        {
+            "assetPath": "Assets/Scripts/Runtime/PilotSeatProfile.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Runtime/ProductionSeatCalibrationController.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Runtime/ProductionVerticalSliceRoot.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Runtime/QuestTemporalVisualGateRecorder.cs",
+            "classification": "approved_product_cleaned"
+        },
+        {
+            "assetPath": "Packages/com.unity.cloud.gltfast/Editor/Scripts/GltfImporter.cs",
+            "classification": "unity_package_dependency"
+        },
+        {
+            "assetPath": "Packages/com.unity.cloud.gltfast/Runtime/Shader/Built-In/glTFPbrMetallicRoughness.shader",
+            "classification": "unity_package_dependency"
+        },
+        {
+            "assetPath": "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/TrackedPoseDriver@4x.png",
+            "classification": "unity_package_dependency"
+        },
+        {
+            "assetPath": "Packages/com.unity.inputsystem/InputSystem/Plugins/XR/TrackedPoseDriver.cs",
+            "classification": "unity_package_dependency"
+        },
+        {
+            "assetPath": "Packages/com.unity.xr.core-utils/Runtime/XROrigin.cs",
+            "classification": "unity_package_dependency"
+        }
+    ]
+}

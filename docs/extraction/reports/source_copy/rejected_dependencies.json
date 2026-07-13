@@ -1,0 +1,12 @@
+{
+  "rejected_dependencies": [
+    {
+      "asset_path": "QuestFlightLab/Assets/Scripts/Input/Usb2BleInputMapper.cs",
+      "classification": "excluded_legacy_dependency",
+      "reached_from": "QuestFlightLab/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab",
+      "reference_guid": "19eedb46c32a1e044a8849a594645e25"
+    }
+  ],
+  "schema_version": 1,
+  "source_commit": "cd4131fa7732a6db2d7387921dfef33e2c206970"
+}
