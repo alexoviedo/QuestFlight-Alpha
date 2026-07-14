@@ -55,9 +55,51 @@ Snapshot: `20260710T214309Z`. Label: `KBDU-inspired / not for navigation`.
 - The compact derivative database `kbdu_reference_context.json` must remain available in machine-readable form under ODbL-1.0 when a build derived from it is publicly distributed.
 - The baked meshes and macro image are Produced Works. Their public display still carries the OSM attribution notice; project code and independently authored material/shader work are not relicensed as ODbL database content.
 
-### NAIP availability only
+### Frozen extraction NAIP availability-only record
 
-The pipeline queried USGS/USDA NAIP Plus availability, but downloaded and committed no imagery pixels. The decision record SHA-256 is `e42528b838d2d016413ac89671d520b097a05ac717cb2147e6bea9ae469a04cd`; it is provenance, not runtime imagery.
+The frozen extraction pipeline queried USGS/USDA NAIP Plus availability, but downloaded and committed no imagery pixels at that milestone. The decision record SHA-256 is `e42528b838d2d016413ac89671d520b097a05ac717cb2147e6bea9ae469a04cd`; it is retained as historical provenance and is not rewritten to describe the later standalone recovery.
+
+### Standalone recovery NAIP derivatives
+
+The standalone recovery added bounded natural-color derivatives from the official USGS NAIP Plus ImageServer. Catalog records identify USDA-FSA APFO imagery acquired 2019-09-19 at 0.6 m source resolution. United States government works are public domain; courtesy credit is `USGS, USDA, The National Map: Orthoimagery`.
+
+| Runtime derivative | Coverage / import | SHA-256 |
+| --- | --- | --- |
+| `KBDU_NAIP_2019_Near4km_4096.jpg` (6,320,221 bytes) | 4 km × 4 km, 4096², ASTC 6×6, mipmapped/streamed | `446e5c7fa13fc653de1f3e8404829c0e54b7e919fe99ebfba79d747a0b1dadea` |
+| `KBDU_NAIP_2019_Mid12km_2048.jpg` (1,873,985 bytes) | 12 km × 12 km, 2048², ASTC 6×6, mipmapped/streamed | `d75316cb03a8ddcdc6d326186f9fc5e936d19d90ffc4e42ffe627888aa8593cd` |
+
+Exact raster IDs, corrected requested/returned extents, raw external hashes, processing settings, color-match statistics, output hashes, and the no-Google confirmation are pinned in `tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json`.
+
+### Project-authored standalone airport art
+
+| Product source/runtime asset | Terms | SHA-256 |
+| --- | --- | --- |
+| `tools/kbdu_airport_art/source/KBDU_AirportKit.blend` | Project-owned original work; Blender source | `48b07cf7d54e56c7607a4839c27cc3ea0d089a9472dfa225a12c7bc1693e0c24` |
+| `KBDU_AirportKit.glb` | Project-owned generated geometry; no external mesh input | `d16a398e150aa069a4eedbdb9d0604bc807b4d6175a5e002baeaa44ea1547c5d` |
+| `KBDU_AirportSharedAtlas.png` | Project-owned generated pixels | `fdc5d4d8198a355e48cfdf3df4a17e3d8a92d271a1322970583fee965ecddfaf` |
+| `KBDU_RunwaySurface_Albedo.jpg` | Project-owned deterministic procedural pixels | `6a3cfa432f8556830879b6ee615b080f499c5682f5f2157c40b47f683b64c3b3` |
+| `KBDU_RunwaySurface_MetallicSmoothness.png` | Project-owned deterministic procedural pixels | `599b4281144eb5861467a190d2d52f377f2b95dc5867623a86fc049ab091b031` |
+
+The exact combined Unity mesh hashes and their source-manifest links are recorded in `tools/kbdu_airport_art/kbdu_environment_integration_manifest.json`.
+
+### Standalone far-terrain post-pass
+
+The far mesh is a deterministic project-authored mesh derived from the frozen public-domain USGS 3DEP grid. The committed 241×241/100 m height package SHA-256 is `23eac876f89605fa291ecfbf23216ad8a248beaa9df277b01c47cae149551226`; the final serialized mesh is 5,210,555 bytes with SHA-256 `989317a3dbd870536e995e443b634f48083f06ab9fdb11eb4316339add988d96`. The 100 m grid is bilinear resampling for mesh density and baked-normal continuity, not additional source elevation detail.
+
+The 60,038-byte `Terrain_AirportPatch_Near_Transition_Mesh.asset` is a deterministic project-authored seam interpolation between the existing public-domain USGS-derived airport patch and near terrain. It adds no source data and has SHA-256 `8524212a4814473cc25733babeb0457b1f667b5913981726a3676e3364791c2a`. Its exact size/hash and the other standalone recovery meshes are pinned in `tools/kbdu_airport_art/kbdu_environment_integration_manifest.json`.
+
+### Native JSBSim package binaries
+
+These four development-gated binaries are built from JSBSim 1.3.1 revision `3b25f25e49b42d0489c04ac805674fc1450ca579` and the project C ABI wrapper. JSBSim and the linked package are distributed under GNU LGPL-2.1-or-later; source/revision/build/license records and all 18 package payload hashes are pinned by `Packages/com.alexoviedo.questflight.jsbsim/SOURCE_MANIFEST.json` (SHA-256 `4b5ea046f70fb1b51ba762f1d7fc3dd4365354686287b59d7600f71434340d21`).
+
+| Package binary | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `Runtime/Plugins/Windows/x86_64/JSBSim.dll` | 2,007,040 | `9f80c6af748ede9c0addff022ce78337dfa2930046e3a8cfe155cc610b942bc7` |
+| `Runtime/Plugins/Windows/x86_64/qfl_jsbsim_native.dll` | 37,888 | `5ee4ccd81cc296a946c843cacf0ea5ab0d132c78c3dba3c9056eeddb612c83d4` |
+| `Runtime/Plugins/Android/arm64-v8a/libJSBSim.so` | 2,446,528 | `38c2fe56ba86568763caab81d62a4e3096d4b8fd2222d19ee824934fbc4af8a1` |
+| `Runtime/Plugins/Android/arm64-v8a/libqfl_jsbsim_native.so` | 49,000 | `bf5f10df987a2411e0889b307eca4cd7fe08feef3c1427bfc1da7ce098162bb5` |
+
+The standalone recovery's 11 new true-binary commit candidates total 13,348,076 bytes. Their sorted `path<TAB>bytes<TAB>lowercase-sha256` inventory digest is `65bd12083bc99ed2c1e401dd6d62adf28515229a1c0117809004a47cd7b6394d`; all Unity/package binaries have paired metadata and all 11 match Git LFS rules.
 
 ## Baked production environment integrity
 
@@ -78,9 +120,9 @@ Key deterministic outputs from the frozen source:
 
 The complete frozen R&D `Assets/Production/Environment` non-`.meta` inventory contains 97 files and 11,303,670 bytes. Its inventory digest is `aeb0804cb12e65db9aaf18897ec20c01dabc8aa74192b65800eb88a8c70bf2db`, computed as SHA-256 over UTF-8 lines sorted by frozen R&D repository-relative path in the form `path<TAB>bytes<TAB>lowercase-file-sha256`, joined with LF and no trailing LF.
 
-## Current clean-product post-pass ledger
+## Historical clean-product post-pass ledger (2026-07-12)
 
-The frozen extraction ledger above remains immutable provenance. The one targeted clean-product visual pass changed only project-authored YAML/shader assets; the licensed GLB and raster textures remained byte-identical. Current reviewed hashes are:
+The frozen extraction ledger above remains immutable provenance. The one targeted clean-product visual pass completed on 2026-07-12 changed only project-authored YAML/shader assets; the licensed GLB and raster textures remained byte-identical. These hashes describe that historical milestone, not the later standalone-recovery state:
 
 | Product asset | SHA-256 |
 | --- | --- |
@@ -96,12 +138,12 @@ The frozen extraction ledger above remains immutable provenance. The one targete
 | `ProductionMacroGround.shader` | `e5e9f81c4beb2c26f34d5ca7b4b539f366aa12d6519f057fd4dfe03a62c4901f` |
 | `ProductionStableWater.shader` | `a4eb553c7d84d849565fae9ee7eab20b79570d609b56223e5e70d0e23c54bac7` |
 
-The current `QuestFlight/Assets/Production/Environment` non-`.meta` inventory contains 97 files and 11,281,449 bytes. Its product-repository-relative inventory digest is `5758adcfeed1d97412b4ec853a8b16d13185c2d7a31e465eefa206eaeafc2d5a`, using the same sorted-line algorithm documented above.
+At that milestone, `QuestFlight/Assets/Production/Environment` contained 97 non-`.meta` files and 11,281,449 bytes. Its product-repository-relative inventory digest was `5758adcfeed1d97412b4ec853a8b16d13185c2d7a31e465eefa206eaeafc2d5a`, using the same sorted-line algorithm documented above.
 
 ## Exclusions
 
 - No Google Maps, Google Earth, or Street View content.
-- No NAIP/orthophoto pixels.
+- No raw NAIP/orthophoto downloads or lossless processing intermediates; only the two optimized, provenance-recorded public-domain derivatives above.
 - No raw FAA, USGS, OSM, DEM, imagery, or download archives.
 - No legacy splat/capture data.
 - No binary runtime asset whose creator, source, terms, or exact content hash is unclear.

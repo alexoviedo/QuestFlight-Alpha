@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "label": "KBDU orthophoto macro environment / not for navigation",
+  "origin": {
+    "latitude_degrees": 40.03936527,
+    "longitude_degrees": -105.22608958,
+    "elevation_msl_meters": 1611.7824
+  },
+  "source": {
+    "agency": "USGS / USDA Farm Service Agency",
+    "service_name": "USGSNAIPPlus",
+    "service_url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer",
+    "catalog_year": 2019,
+    "acquisition_date": "2019-09-19",
+    "resolution_meters": 0.6,
+    "raster_ids": [30800, 30804, 30805, 32832, 32834, 32836, 32837, 32838, 32839],
+    "raster_function": "NaturalColor",
+    "license_name": "United States government work / public domain",
+    "license_spdx": "LicenseRef-US-Government-Work-Public-Domain",
+    "license_url": "https://www.usgs.gov/science/science-explorer/maps-and-mapping/navigating-the-national-map",
+    "credit": "USGS, USDA, The National Map: Orthoimagery"
+  },
+  "zones": [
+    {
+      "id": "near_4km",
+      "half_extent_meters": 2000.0,
+      "atlas_size_pixels": 4096,
+      "tile_grid": 2,
+      "output_name": "KBDU_NAIP_2019_Near4km_4096.jpg",
+      "jpeg_quality": 90
+    },
+    {
+      "id": "mid_12km",
+      "half_extent_meters": 6000.0,
+      "atlas_size_pixels": 2048,
+      "tile_grid": 1,
+      "output_name": "KBDU_NAIP_2019_Mid12km_2048.jpg",
+      "jpeg_quality": 88
+    }
+  ],
+  "color_normalization": {
+    "brightness": 0.98,
+    "contrast": 1.04,
+    "saturation": 0.92,
+    "red_gain": 1.02,
+    "green_gain": 0.99,
+    "blue_gain": 0.95,
+    "mid_overlap_gain_min": 0.9,
+    "mid_overlap_gain_max": 1.1,
+    "mid_overlap_offset_limit": 10.0
+  },
+  "unity": {
+    "android_astc_block": "6x6",
+    "mipmaps": true,
+    "streaming_mipmaps": true,
+    "filter_mode": "trilinear",
+    "anisotropy": 4,
+    "wrap_mode": "clamp",
+    "maximum_runtime_texture_bytes": 14000000,
+    "maximum_committed_near_bytes": 14000000,
+    "maximum_committed_mid_bytes": 5000000
+  }
+}

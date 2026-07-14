@@ -1,0 +1,191 @@
+{
+  "constraints": {
+    "airport_lod_crossfade": false,
+    "android_texture_format": "ASTC_6x6",
+    "far_runtime_lod": false,
+    "google_derived_content": false,
+    "raw_downloads_committed": false,
+    "unclear_license_assets": false
+  },
+  "generated_utc": "2026-07-14T01:22:58Z",
+  "label": "Standalone Quest KBDU environment integration / not for navigation",
+  "licenses": {
+    "airport_and_runway": "Project-owned original procedural work; no external mesh or texture input",
+    "far_terrain": "USGS 3DEP United States government work / public domain; deterministic project-authored resampling and mesh",
+    "orthophotos": "USGS/USDA NAIP United States government work / public domain",
+    "unity_authored_meshes": "Project-owned deterministic derivatives of the recorded sources"
+  },
+  "runtime_binary_assets": {
+    "airport_kit": [
+      {
+        "bytes": 170112,
+        "path": "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_AirportKit.glb",
+        "sha256": "d16a398e150aa069a4eedbdb9d0604bc807b4d6175a5e002baeaa44ea1547c5d"
+      },
+      {
+        "bytes": 233753,
+        "path": "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_AirportSharedAtlas.png",
+        "sha256": "fdc5d4d8198a355e48cfdf3df4a17e3d8a92d271a1322970583fee965ecddfaf"
+      }
+    ],
+    "orthophotos": [
+      {
+        "bytes": 6320221,
+        "path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
+        "sha256": "446e5c7fa13fc653de1f3e8404829c0e54b7e919fe99ebfba79d747a0b1dadea"
+      },
+      {
+        "bytes": 1873985,
+        "path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Mid12km_2048.jpg",
+        "sha256": "d75316cb03a8ddcdc6d326186f9fc5e936d19d90ffc4e42ffe627888aa8593cd"
+      }
+    ],
+    "runway_textures": [
+      {
+        "bytes": 54868,
+        "path": "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_RunwaySurface_Albedo.jpg",
+        "sha256": "6a3cfa432f8556830879b6ee615b080f499c5682f5f2157c40b47f683b64c3b3"
+      },
+      {
+        "bytes": 19719,
+        "path": "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_RunwaySurface_MetallicSmoothness.png",
+        "sha256": "599b4281144eb5861467a190d2d52f377f2b95dc5867623a86fc049ab091b031"
+      }
+    ],
+    "unity_authored_meshes": [
+      {
+        "bytes": 5210555,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/Terrain_Far24km_Immutable_USGS_Mesh.asset",
+        "sha256": "989317a3dbd870536e995e443b634f48083f06ab9fdb11eb4316339add988d96"
+      },
+      {
+        "bytes": 23520,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Fence_Signage_LOD0_Combined.asset",
+        "sha256": "e932aa5873e9570ed6542b35fa7a60821e5c9d9e0b7022436553935098862086"
+      },
+      {
+        "bytes": 16224,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Fence_Signage_LOD1_Combined.asset",
+        "sha256": "5f198bcb6e90b70529e15a06bbbab53a5fe18da416bb3f555a68dacdf821e0f4"
+      },
+      {
+        "bytes": 8926,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Fence_Signage_LOD2_Combined.asset",
+        "sha256": "cf6f6f546e5b78b1926d625fa62365f5a444c40554cfdb561432d4885c6e3d72"
+      },
+      {
+        "bytes": 23643,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Fuel_Service_LOD0_Combined.asset",
+        "sha256": "faac5ed458f6304c1eda641d11ae09b6f86d3d19be6d0ca44a7b49a0b402adaa"
+      },
+      {
+        "bytes": 14523,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Fuel_Service_LOD1_Combined.asset",
+        "sha256": "7cc084605c353b0895b75d252305eea591141e36955b492331df3fbac9bddb32"
+      },
+      {
+        "bytes": 10735,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Fuel_Service_LOD2_Combined.asset",
+        "sha256": "f40336e35349e581b81dc1c1c55fa41d2cdbb32b0bdba8cba43237012543a484"
+      },
+      {
+        "bytes": 27434,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_A_Gable_LOD0_Combined.asset",
+        "sha256": "899e5f0275251e47bb8677e0e121fa6d724b92170975bc5d06b999afe48bb1f8"
+      },
+      {
+        "bytes": 13035,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_A_Gable_LOD1_Combined.asset",
+        "sha256": "772851e7634e2f90305d2550b800cf9528c59f4a660a6db875398bcbb90e6ee8"
+      },
+      {
+        "bytes": 7566,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_A_Gable_LOD2_Combined.asset",
+        "sha256": "d8f6b33b97268c00dade9babfe3d1fa3ac0449079d479e3e400fbd62c0ad803a"
+      },
+      {
+        "bytes": 27445,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_B_Wide_LOD0_Combined.asset",
+        "sha256": "ce360c15c1d22bce30b3853fb1d517757a7223cddfafab7c23eef37086d3e9d2"
+      },
+      {
+        "bytes": 13046,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_B_Wide_LOD1_Combined.asset",
+        "sha256": "596d8e22bf5e9ca0cdedcf6220203df0855386875deccaf50be8ef62925ee918"
+      },
+      {
+        "bytes": 7577,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_B_Wide_LOD2_Combined.asset",
+        "sha256": "96eca8ecac3bdd0a5efa161beb7147fe59e99d9dc69c9708424acc679a030eb2"
+      },
+      {
+        "bytes": 33204,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_C_Quonset_LOD0_Combined.asset",
+        "sha256": "d824d1f4406a7b4dfe1aa6edafdc9e83b34d34099c01d2e9f6ef33a7a5f7932b"
+      },
+      {
+        "bytes": 15925,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_C_Quonset_LOD1_Combined.asset",
+        "sha256": "46b37e7c92dc1645d0bb74e78025e42c510a2184e5f26f4f4abef9d786f35cdf"
+      },
+      {
+        "bytes": 8537,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_C_Quonset_LOD2_Combined.asset",
+        "sha256": "3e15cbb525c1fd1e2d4716fd4a3aaec051453a8fc6f07c6945888c59874d69da"
+      },
+      {
+        "bytes": 8859,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Production_SparseCottonwood_LOD0.asset",
+        "sha256": "f5cc72adf29596b731505282fb897bb9049d9a4fff5439cd8538989bf72958b1"
+      },
+      {
+        "bytes": 5055,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Production_SparseCottonwood_LOD1.asset",
+        "sha256": "ca8de2c72f3513304672fc2dc2022a45452fa3871eee4877bf96a04aaaf04e07"
+      },
+      {
+        "bytes": 27353,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Ramp_Props_LOD0_Combined.asset",
+        "sha256": "0e0293be7fd6d6134acfedf9d4a0eedd239e25d6f98e576e795f86faaad3dc72"
+      },
+      {
+        "bytes": 11235,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Ramp_Props_LOD1_Combined.asset",
+        "sha256": "a413b55d80bbaf5c3d138f574a6288195547c842940138bce103f2bb0d1c73d9"
+      },
+      {
+        "bytes": 8899,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Ramp_Props_LOD2_Combined.asset",
+        "sha256": "871f468a7a0158f821eb4dabb0a9568422f6eff562b436322dc7c99a2534f9bb"
+      },
+      {
+        "bytes": 60038,
+        "path": "QuestFlight/Assets/Production/Environment/Generated/StandaloneRecovery/Terrain_AirportPatch_Near_Transition_Mesh.asset",
+        "sha256": "8524212a4814473cc25733babeb0457b1f667b5913981726a3676e3364791c2a"
+      }
+    ]
+  },
+  "schema_version": 1,
+  "source_manifests": {
+    "airport": {
+      "bytes": 2359,
+      "path": "tools/kbdu_airport_art/kbdu_airport_art_manifest.json",
+      "sha256": "d2f5045a0575d47b5e9210f561f699c61f2ee140ec3b20ebf77d36ba6572fad8"
+    },
+    "far_dem": {
+      "bytes": 158245,
+      "path": "tools/kbdu_orthophoto/kbdu_far_dem_100m.json",
+      "sha256": "23eac876f89605fa291ecfbf23216ad8a248beaa9df277b01c47cae149551226"
+    },
+    "orthophoto": {
+      "bytes": 16988,
+      "path": "tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json",
+      "sha256": "ae7ac8a13defaeb751a4cac141e419ee8eea30a6beb8020f106698fe4cc67c77"
+    },
+    "runway": {
+      "bytes": 1279,
+      "path": "tools/kbdu_airport_art/kbdu_runway_art_manifest.json",
+      "sha256": "2c7dc6d6700e36133c6234d65a280df28738f402535961fdc739fb43429af7cd"
+    }
+  }
+}

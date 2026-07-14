@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Production_FarTerrain_Immutable
-  m_Shader: {fileID: 4800000, guid: 7861834a1732cce4c93cd3929c935389, type: 3}
+  m_Shader: {fileID: 4800000, guid: 843b3375530d4b5da13e6a798845d95b, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -54,10 +54,16 @@ Material:
     - _MacroSaturation: 1
     - _MicroScale: 0.06666667
     - _RegionalContrast: 1
-    - _Roughness: 0.9
+    - _Roughness: 0.91
     - _SoilBlend: 0.18
+    - _VariationScale: 0.00072
     m_Colors:
+    - _ElevationRange: {r: -110, g: 980, b: 0, a: 0}
+    - _HighColor: {r: 0.43, g: 0.42, b: 0.37, a: 1}
+    - _LowColor: {r: 0.29, g: 0.31, b: 0.2, a: 1}
     - _MacroWorldMinInvSize: {r: -6000, g: -6000, b: 0.00008333333, a: 0.00008333333}
+    - _MidColor: {r: 0.39, g: 0.35, b: 0.23, a: 1}
+    - _RockColor: {r: 0.34, g: 0.35, b: 0.34, a: 1}
     - _Tint: {r: 0.4862745, g: 0.5019608, b: 0.43137255, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

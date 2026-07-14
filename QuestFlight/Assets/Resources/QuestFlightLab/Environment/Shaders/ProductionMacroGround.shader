@@ -4,11 +4,15 @@ Shader "QuestFlightLab/Production Macro Ground"
     {
         [HideInInspector] _MainTex ("Compatibility", 2D) = "white" {}
         _MacroAlbedo ("Unique 12 km macro albedo", 2D) = "gray" {}
+        _NearOrthophoto ("Unique 4 km orthophoto", 2D) = "gray" {}
         _DryGrassTex ("Dry grass CC0", 2D) = "white" {}
         _GreenGrassTex ("Sparse grass CC0", 2D) = "white" {}
         _SoilTex ("Dry soil CC0", 2D) = "white" {}
         _Tint ("Land-cover tint", Color) = (1,1,1,1)
         _MacroWorldMinInvSize ("Macro min XZ / inverse size", Vector) = (-6000,-6000,0.0000833333,0.0000833333)
+        _NearWorldMinInvSize ("Near min XZ / inverse size", Vector) = (-2000,-2000,0.00025,0.00025)
+        _NearBlendStartEnd ("Near orthophoto blend start/end", Vector) = (1750,2000,0,0)
+        _OrthophotoEnabled ("Orthophoto enabled", Range(0,1)) = 0
         _MacroInfluence ("Macro influence", Range(0,1)) = 1
         _MacroBrightness ("Macro brightness", Range(0.75,1.35)) = 1
         _MacroSaturation ("Macro saturation", Range(0.5,1.6)) = 1
@@ -42,11 +46,15 @@ Shader "QuestFlightLab/Production Macro Ground"
             #include "Lighting.cginc"
 
             sampler2D _MacroAlbedo;
+            sampler2D _NearOrthophoto;
             sampler2D _DryGrassTex;
             sampler2D _GreenGrassTex;
             sampler2D _SoilTex;
             fixed4 _Tint;
             float4 _MacroWorldMinInvSize;
+            float4 _NearWorldMinInvSize;
+            float4 _NearBlendStartEnd;
+            half _OrthophotoEnabled;
             half _MacroInfluence;
             half _MacroBrightness;
             half _MacroSaturation;
@@ -109,7 +117,15 @@ Shader "QuestFlightLab/Production Macro Ground"
             fixed4 frag(v2f input) : SV_Target
             {
                 float2 macroUv = saturate((input.worldPosition.xz - _MacroWorldMinInvSize.xy) * _MacroWorldMinInvSize.zw);
-                fixed3 authoredMacro = tex2D(_MacroAlbedo, macroUv).rgb;
+                float2 nearUv = saturate((input.worldPosition.xz - _NearWorldMinInvSize.xy) * _NearWorldMinInvSize.zw);
+                fixed3 midOrthophoto = tex2D(_MacroAlbedo, macroUv).rgb;
+                fixed3 nearOrthophoto = tex2D(_NearOrthophoto, nearUv).rgb;
+                half nearExtent = max(abs(input.worldPosition.x), abs(input.worldPosition.z));
+                half nearWeight = (1.0 - smoothstep(
+                    _NearBlendStartEnd.x,
+                    max(_NearBlendStartEnd.x + 1.0, _NearBlendStartEnd.y),
+                    nearExtent)) * _OrthophotoEnabled;
+                fixed3 authoredMacro = lerp(midOrthophoto, nearOrthophoto, nearWeight);
                 // The same unique, nonrepeating macro map is separated into 3 km, 375 m, and
                 // native bands. This restores field/land-cover scale without another texture,
                 // runtime tile, camera-relative lookup, or periodic procedural pattern.

@@ -107,6 +107,22 @@ namespace QuestFlightLab.Environment
 
         public bool TryValidateContract(out string report)
         {
+            return TryValidateContract(!Application.isEditor, out report);
+        }
+
+        /// <summary>
+        /// Exercises the built-player validation path from Editor tests. Unity static batching can
+        /// replace a visual MeshFilter's sharedMesh with a combined player mesh, so the player must
+        /// use the Editor-verified serialized bake budget while retaining every geometric tolerance
+        /// and missing-reference check.
+        /// </summary>
+        public bool TryValidateBuiltPlayerContract(out string report)
+        {
+            return TryValidateContract(true, out report);
+        }
+
+        private bool TryValidateContract(bool builtPlayerStaticBatchSafe, out string report)
+        {
             List<string> failures = new List<string>();
             Require(nearProductionZone != null, "NearProductionZone_4km is not bound", failures);
             Require(midContextZone != null, "MidContextZone_12km is not bound", failures);
@@ -118,12 +134,17 @@ namespace QuestFlightLab.Environment
                 "near terrain must contain the baked airport patch and 4 km USGS ring", failures);
             Require(HasMesh(midTerrainMesh), "12 km USGS mid terrain mesh is missing", failures);
             Require(HasMesh(farTerrainMesh), "immutable 24 km USGS far terrain mesh is missing", failures);
-            Require(farTerrainMesh == null || (farTerrainMesh.sharedMesh != null &&
-                    farTerrainSourceVertexCount == farTerrainMesh.sharedMesh.vertexCount),
-                "far-terrain smoothing changed vertex topology", failures);
-            Require(farTerrainMesh == null || (farTerrainMesh.sharedMesh != null &&
-                    farTerrainSourceIndexCount == (int)farTerrainMesh.sharedMesh.GetIndexCount(0)),
-                "far-terrain smoothing changed index topology", failures);
+            Require(farTerrainSourceVertexCount > 0, "far-terrain source vertex count is missing", failures);
+            Require(farTerrainSourceIndexCount > 0, "far-terrain source index count is missing", failures);
+            if (!builtPlayerStaticBatchSafe)
+            {
+                Require(farTerrainMesh == null || (farTerrainMesh.sharedMesh != null &&
+                        farTerrainSourceVertexCount == farTerrainMesh.sharedMesh.vertexCount),
+                    "far-terrain smoothing changed vertex topology", failures);
+                Require(farTerrainMesh == null || (farTerrainMesh.sharedMesh != null &&
+                        farTerrainSourceIndexCount == (int)farTerrainMesh.sharedMesh.GetIndexCount(0)),
+                    "far-terrain smoothing changed index topology", failures);
+            }
             Require(!string.IsNullOrEmpty(farTerrainSourceTopologyHash) &&
                     string.Equals(farTerrainSourceTopologyHash, farTerrainBakedTopologyHash, StringComparison.Ordinal),
                 "far-terrain smoothing changed triangle identity/order", failures);
@@ -140,9 +161,12 @@ namespace QuestFlightLab.Environment
                 "runway marking mesh is missing", failures);
             Require(runwayCollisionSurface != null && runwayCollisionSurface.sharedMesh != null,
                 "physical runway collision mesh is missing", failures);
-            Require(runwayPavement != null && runwayCollisionSurface != null &&
-                    ReferenceEquals(runwayPavement.sharedMesh, runwayCollisionSurface.sharedMesh),
-                "visual and physical runway must share exactly one mesh asset", failures);
+            if (!builtPlayerStaticBatchSafe)
+            {
+                Require(runwayPavement != null && runwayCollisionSurface != null &&
+                        ReferenceEquals(runwayPavement.sharedMesh, runwayCollisionSurface.sharedMesh),
+                    "visual and physical runway must share exactly one mesh asset", failures);
+            }
             Require(Mathf.Abs(runwayLengthMeters - 1249.68f) <= 3f,
                 $"FAA runway length is implausible ({runwayLengthMeters:0.00} m)", failures);
             Require(Mathf.Abs(runwayWidthMeters - 22.86f) <= 0.05f,
@@ -200,7 +224,25 @@ namespace QuestFlightLab.Environment
                     !ContainsComponentNamed(transform, "SplatSceneryProvider"),
                 "production prefab contains a legacy runtime scenery provider", failures);
 
-            ProductionEnvironmentBudget actual = CalculateBudget();
+            Require(bakedRendererCount > 0, "serialized bake renderer count is missing", failures);
+            Require(bakedTriangleCount > 0, "serialized bake triangle count is missing", failures);
+            Require(bakedMaterialCount > 0, "serialized bake material count is missing", failures);
+            Require(bakedTextureCount > 0, "serialized bake texture count is missing", failures);
+            Require(!string.IsNullOrWhiteSpace(bakeUtc), "serialized bake timestamp is missing", failures);
+            Require(!string.IsNullOrWhiteSpace(bakeToolVersion), "serialized bake tool version is missing", failures);
+
+            ProductionEnvironmentBudget actual = builtPlayerStaticBatchSafe
+                ? new ProductionEnvironmentBudget(bakedRendererCount, bakedTriangleCount, bakedMaterialCount)
+                : CalculateBudget();
+            if (!builtPlayerStaticBatchSafe)
+            {
+                Require(bakedRendererCount == actual.rendererCount,
+                    $"serialized renderer budget is stale ({bakedRendererCount} baked, {actual.rendererCount} authored)", failures);
+                Require(bakedTriangleCount == actual.triangleCount,
+                    $"serialized triangle budget is stale ({bakedTriangleCount} baked, {actual.triangleCount} authored)", failures);
+                Require(bakedMaterialCount == actual.materialCount,
+                    $"serialized material budget is stale ({bakedMaterialCount} baked, {actual.materialCount} authored)", failures);
+            }
             Require(actual.rendererCount <= MaximumRenderers,
                 $"renderer budget exceeded ({actual.rendererCount}/{MaximumRenderers})", failures);
             Require(actual.triangleCount <= MaximumVisibleTriangles,
@@ -209,7 +251,8 @@ namespace QuestFlightLab.Environment
                 $"material budget exceeded ({actual.materialCount}/{MaximumMaterials})", failures);
 
             report = failures.Count == 0
-                ? $"renderers={actual.rendererCount}, triangles={actual.triangleCount}, materials={actual.materialCount}, " +
+                ? $"budgetSource={(builtPlayerStaticBatchSafe ? "serializedBake" : "authoredRenderers")}, " +
+                  $"renderers={actual.rendererCount}, triangles={actual.triangleCount}, materials={actual.materialCount}, " +
                   $"runwayGap={measuredRunwayToTerrainMaximumGapMeters:0.0000}m, markingGap={measuredMarkingToRunwayMaximumGapMeters:0.0000}m"
                 : string.Join("; ", failures);
             return failures.Count == 0;

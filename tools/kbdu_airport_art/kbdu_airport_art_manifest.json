@@ -1,0 +1,79 @@
+{
+  "creator": "T2 QuestFlight project-authored deterministic Blender generator",
+  "generator": {
+    "bytes": 18456,
+    "path": "tools/kbdu_airport_art/generate_kbdu_airport_kit.py",
+    "sha256": "a1a65de3fe42113f5ebc0118d071340b70e87b44919d3e8fa8a8b02f9f86f339"
+  },
+  "geometry": {
+    "asset_roots": [
+      "Fence_Signage_LOD0",
+      "Fence_Signage_LOD1",
+      "Fence_Signage_LOD2",
+      "Fuel_Service_LOD0",
+      "Fuel_Service_LOD1",
+      "Fuel_Service_LOD2",
+      "Hangar_A_Gable_LOD0",
+      "Hangar_A_Gable_LOD1",
+      "Hangar_A_Gable_LOD2",
+      "Hangar_B_Wide_LOD0",
+      "Hangar_B_Wide_LOD1",
+      "Hangar_B_Wide_LOD2",
+      "Hangar_C_Quonset_LOD0",
+      "Hangar_C_Quonset_LOD1",
+      "Hangar_C_Quonset_LOD2",
+      "Ramp_Props_LOD0",
+      "Ramp_Props_LOD1",
+      "Ramp_Props_LOD2"
+    ],
+    "mesh_renderers_by_lod": {
+      "LOD0": 45,
+      "LOD1": 31,
+      "LOD2": 16
+    },
+    "shared_materials": [
+      "KBDU_AirportSharedAtlas"
+    ],
+    "triangles_by_lod": {
+      "LOD0": 936,
+      "LOD1": 428,
+      "LOD2": 212
+    }
+  },
+  "integration": {
+    "gpu_instancing_compatible": true,
+    "lod_thresholds": [
+      0.58,
+      0.24,
+      0.06
+    ],
+    "notes": "Static meshes have no armatures, animation, runtime generators, or camera-relative behavior.",
+    "shared_material_count": 1
+  },
+  "license": "Project-owned original work; no external mesh or texture assets",
+  "outputs": [
+    {
+      "bytes": 170112,
+      "path": "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_AirportKit.glb",
+      "sha256": "d16a398e150aa069a4eedbdb9d0604bc807b4d6175a5e002baeaa44ea1547c5d"
+    },
+    {
+      "bytes": 233753,
+      "path": "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_AirportSharedAtlas.png",
+      "sha256": "fdc5d4d8198a355e48cfdf3df4a17e3d8a92d271a1322970583fee965ecddfaf"
+    },
+    {
+      "bytes": 134962,
+      "path": "tools/kbdu_airport_art/source/KBDU_AirportKit.blend",
+      "sha256": "48b07cf7d54e56c7607a4839c27cc3ea0d089a9472dfa225a12c7bc1693e0c24"
+    }
+  ],
+  "preview_external": "external-artifact/kbdu_airport_art/kbdu_airport_kit_lod0_preview.png",
+  "schema_version": 1,
+  "tool": {
+    "build_hash": "ec6e62d40fa9",
+    "license": "GNU GPL; generated project-owned output is not a Blender program derivative",
+    "name": "Blender",
+    "version": "5.1.2"
+  }
+}

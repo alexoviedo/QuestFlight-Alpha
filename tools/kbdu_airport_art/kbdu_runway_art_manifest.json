@@ -1,0 +1,37 @@
+{
+  "content": [
+    "multi-scale asphalt variation",
+    "bounded centerline rubber/wear",
+    "transverse joints",
+    "sparse cracks",
+    "packed metallic/smoothness"
+  ],
+  "creator": "T2 QuestFlight deterministic project-authored generator",
+  "generator": {
+    "bytes": 5613,
+    "path": "tools/kbdu_airport_art/generate_runway_surface.py",
+    "sha256": "ba070e7d4149d2b82d4ffeadd3cc4dc09293423ec6d9667d2b0e951696098a1d"
+  },
+  "integration": {
+    "android_format": "ASTC_6x6 with mipmaps",
+    "mesh_or_collider_changes": false,
+    "preserve_existing_controlled_depth_markings": true,
+    "shared_material": "Production_Runway_Asphalt",
+    "z_offset_changes": false
+  },
+  "license": "Project-owned original procedural pixels; no external texture input",
+  "outputs": [
+    {
+      "bytes": 54868,
+      "path": "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_RunwaySurface_Albedo.jpg",
+      "sha256": "6a3cfa432f8556830879b6ee615b080f499c5682f5f2157c40b47f683b64c3b3"
+    },
+    {
+      "bytes": 19719,
+      "path": "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_RunwaySurface_MetallicSmoothness.png",
+      "sha256": "599b4281144eb5861467a190d2d52f377f2b95dc5867623a86fc049ab091b031"
+    }
+  ],
+  "schema_version": 1,
+  "seed": 20260713
+}

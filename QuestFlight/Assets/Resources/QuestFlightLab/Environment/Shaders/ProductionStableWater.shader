@@ -91,7 +91,9 @@ Shader "QuestFlightLab/Production Stable Water"
                 half broadGlint = pow(sunAlignment, lerp(18.0, 6.0, _Roughness));
                 half specular = (tightGlint * 0.72 + broadGlint * 0.18) *
                     (1.0 - _Roughness) * _GlintStrength;
-                half broadVariation = 0.5 + 0.5 * sin(input.worldPosition.x * 0.0019 + input.worldPosition.z * 0.0027);
+                half broadVariation = 0.5 +
+                    0.25 * sin(input.worldPosition.x * 0.0019 + input.worldPosition.z * 0.0027) +
+                    0.25 * cos(input.worldPosition.x * 0.0011 - input.worldPosition.z * 0.0023);
                 float2 basinCoordinate =
                     (input.worldPosition.xz - _BasinCenterExtent.xy) /
                     max(_BasinCenterExtent.zw, float2(1.0, 1.0));
@@ -104,8 +106,12 @@ Shader "QuestFlightLab/Production Stable Water"
                 half rippleBands = 0.5 +
                     0.25 * sin(input.worldPosition.x * 0.041 + input.worldPosition.z * 0.026) +
                     0.25 * sin(input.worldPosition.x * 0.017 - input.worldPosition.z * 0.053);
+                half altitudeReadableBands = 0.5 +
+                    0.30 * sin(input.worldPosition.x * 0.0024 + input.worldPosition.z * 0.0035) +
+                    0.20 * cos(input.worldPosition.x * 0.0014 - input.worldPosition.z * 0.0021);
+                half surfacePattern = saturate(lerp(rippleBands, altitudeReadableBands, 0.72));
                 fixed3 baseColor = lerp(_ShoreColor.rgb, _Color.rgb, depthBlend);
-                baseColor *= lerp(1.0 - _SurfaceVariation, 1.0 + _SurfaceVariation, saturate(rippleBands));
+                baseColor *= lerp(1.0 - _SurfaceVariation, 1.0 + _SurfaceVariation, surfacePattern);
                 half skyResponse = saturate(fresnel * 0.58 + (1.0 - normal.y) * 0.34);
                 baseColor = lerp(baseColor, _HorizonColor.rgb, skyResponse);
                 half3 ambient = ShadeSH9(half4(normal, 1.0));

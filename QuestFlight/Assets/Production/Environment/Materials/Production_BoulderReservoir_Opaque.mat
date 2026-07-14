@@ -30,16 +30,16 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _DepthContrast: 0.78
-    - _GlintStrength: 0.42
-    - _RippleStrength: 0.68
-    - _Roughness: 0.38
-    - _SurfaceVariation: 0.14
+    - _DepthContrast: 0.92
+    - _GlintStrength: 0.34
+    - _RippleStrength: 0.48
+    - _Roughness: 0.54
+    - _SurfaceVariation: 0.16
     - _ZWrite: 1
     m_Colors:
     - _BasinCenterExtent: {r: 249.5625, g: 4307.6875, b: 1062.5625, a: 857.1875}
-    - _Color: {r: 0.085, g: 0.24, b: 0.32, a: 1}
-    - _HorizonColor: {r: 0.52, g: 0.67, b: 0.72, a: 1}
-    - _ShoreColor: {r: 0.31, g: 0.48, b: 0.43, a: 1}
+    - _Color: {r: 0.095, g: 0.275, b: 0.345, a: 1}
+    - _HorizonColor: {r: 0.55, g: 0.68, b: 0.71, a: 1}
+    - _ShoreColor: {r: 0.33, g: 0.49, b: 0.42, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

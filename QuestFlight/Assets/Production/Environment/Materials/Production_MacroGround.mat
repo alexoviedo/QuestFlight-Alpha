@@ -32,11 +32,15 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MacroAlbedo:
-        m_Texture: {fileID: 2800000, guid: 8f67d3bb7be034042b0ba2bf85ef8751, type: 3}
+        m_Texture: {fileID: 2800000, guid: b038dd6747f54e94b9b70ce2f8a591e6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: 8f67d3bb7be034042b0ba2bf85ef8751, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NearOrthophoto:
+        m_Texture: {fileID: 2800000, guid: 91d2ab1fc7e94a97b2bd8de9a2e13d31, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SoilTex:
@@ -45,19 +49,22 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _DetailFadeEnd: 1800
-    - _DetailFadeStart: 280
+    - _DetailFadeEnd: 1250
+    - _DetailFadeStart: 180
     - _GreenBlend: 0.2
-    - _LocalContrast: 1.32
-    - _MacroBrightness: 1.12
+    - _LocalContrast: 1.02
+    - _MacroBrightness: 0.94
     - _MacroInfluence: 1
-    - _MacroSaturation: 1.22
+    - _MacroSaturation: 0.94
     - _MicroScale: 0.06666667
-    - _RegionalContrast: 1.2
+    - _OrthophotoEnabled: 1
+    - _RegionalContrast: 1.04
     - _Roughness: 0.9
     - _SoilBlend: 0.18
     m_Colors:
     - _MacroWorldMinInvSize: {r: -6000, g: -6000, b: 0.00008333333, a: 0.00008333333}
+    - _NearBlendStartEnd: {r: 1750, g: 2000, b: 0, a: 0}
+    - _NearWorldMinInvSize: {r: -2000, g: -2000, b: 0.00025, a: 0.00025}
     - _Tint: {r: 1.04, g: 1, b: 0.94, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

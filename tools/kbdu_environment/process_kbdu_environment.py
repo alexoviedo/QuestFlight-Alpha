@@ -870,7 +870,7 @@ def build_manifest(
         Path(__file__).with_name("tests") / "test_kbdu_pipeline.py",
         repo / "QuestFlight/Assets/Scripts/Environment/ProductionEnvironmentRoot.cs",
         repo / "QuestFlight/Assets/Editor/ProductionEnvironmentEditorTests.cs",
-        repo / "QuestFlight/Assets/Tests/EditMode/ProductionEnvironmentEditModeTests.cs",
+        repo / "QuestFlight/Assets/Editor/Tests/ProductionEnvironmentEditModeTests.cs",
     ]
     tools = []
     for path in tool_paths:

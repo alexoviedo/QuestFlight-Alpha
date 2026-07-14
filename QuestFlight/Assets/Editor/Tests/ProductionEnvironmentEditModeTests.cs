@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+// Keep this fixture under Assets/Editor so Unity's implicit Editor test assembly discovers it.
 using System;
 using System.IO;
 using System.Linq;
@@ -22,7 +23,7 @@ namespace QuestFlightLab.Tests.EditMode
                 ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
                 Assert.That(contract, Is.Not.Null);
                 Assert.That(contract.TryValidateContract(out string report), Is.True, report);
-                Assert.That(contract.bakeToolVersion, Is.EqualTo("production-environment-v2.2"));
+                Assert.That(contract.bakeToolVersion, Is.EqualTo("standalone_environment_art_v2"));
                 Assert.That(contract.bakeUtc, Is.Not.Empty);
             });
         }
@@ -145,8 +146,8 @@ namespace QuestFlightLab.Tests.EditMode
             GameObject prefab = LoadPrefab();
             ProductionEnvironmentRoot contract = prefab.GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.uniqueMacroAlbedo, Is.Not.Null);
-            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(1024));
-            Assert.That(contract.uniqueMacroAlbedo.height, Is.EqualTo(1024));
+            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(2048));
+            Assert.That(contract.uniqueMacroAlbedo.height, Is.EqualTo(2048));
             Assert.That(contract.macroRepeatedTileSimilarity, Is.LessThan(0.985f));
             string path = AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo);
             TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);

@@ -49,6 +49,112 @@ namespace QuestFlightLab.EditorTests
         }
 
         [Test]
+        public void BuiltPlayerContractAllowsTheStaticBatchedRunwayMeshIdentityRewrite()
+        {
+            WithInstance(root =>
+            {
+                ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
+                Mesh authoredVisualMesh = contract.runwayPavement.sharedMesh;
+                Mesh staticBatchedVisualMesh = Object.Instantiate(authoredVisualMesh);
+                staticBatchedVisualMesh.name = authoredVisualMesh.name + "_PlayerStaticBatch";
+                try
+                {
+                    contract.runwayPavement.sharedMesh = staticBatchedVisualMesh;
+
+                    Assert.That(contract.TryValidateContract(out string editorReport), Is.False,
+                        "Editor validation must retain the exact authored visual/collider mesh identity check.");
+                    Assert.That(editorReport, Does.Contain("visual and physical runway must share exactly one mesh asset"));
+
+                    Assert.That(contract.TryValidateBuiltPlayerContract(out string playerReport), Is.True, playerReport);
+                    Assert.That(playerReport, Does.Contain("budgetSource=serializedBake"));
+                }
+                finally
+                {
+                    contract.runwayPavement.sharedMesh = authoredVisualMesh;
+                    Object.DestroyImmediate(staticBatchedVisualMesh);
+                }
+            });
+        }
+
+        [Test]
+        public void BuiltPlayerContractUsesSerializedFarTopologyAfterStaticBatchMeshRewrite()
+        {
+            WithInstance(root =>
+            {
+                ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
+                Mesh authoredFarMesh = contract.farTerrainMesh.sharedMesh;
+                Mesh staticBatchedFarMesh = Object.Instantiate(authoredFarMesh);
+                staticBatchedFarMesh.name = "Combined Mesh (root: scene)";
+                Vector3[] vertices = staticBatchedFarMesh.vertices;
+                Array.Resize(ref vertices, vertices.Length + 1);
+                staticBatchedFarMesh.vertices = vertices;
+                try
+                {
+                    contract.farTerrainMesh.sharedMesh = staticBatchedFarMesh;
+
+                    Assert.That(contract.TryValidateContract(out string editorReport), Is.False,
+                        "Editor validation must retain the exact authored far-terrain vertex topology check.");
+                    Assert.That(editorReport, Does.Contain("far-terrain smoothing changed vertex topology"));
+
+                    Assert.That(contract.TryValidateBuiltPlayerContract(out string playerReport), Is.True, playerReport);
+                    Assert.That(playerReport, Does.Contain("budgetSource=serializedBake"));
+                }
+                finally
+                {
+                    contract.farTerrainMesh.sharedMesh = authoredFarMesh;
+                    Object.DestroyImmediate(staticBatchedFarMesh);
+                }
+            });
+        }
+
+        [Test]
+        public void BuiltPlayerContractStillRejectsMissingRunwayGeometryToleranceAndBakeEvidence()
+        {
+            WithInstance(root =>
+            {
+                ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
+                Assert.That(contract.TryValidateBuiltPlayerContract(out string baselineReport), Is.True, baselineReport);
+
+                Mesh colliderMesh = contract.runwayCollisionSurface.sharedMesh;
+                contract.runwayCollisionSurface.sharedMesh = null;
+                Assert.That(contract.TryValidateBuiltPlayerContract(out string missingMeshReport), Is.False);
+                Assert.That(missingMeshReport, Does.Contain("physical runway collision mesh is missing"));
+                contract.runwayCollisionSurface.sharedMesh = colliderMesh;
+
+                float collisionDisagreement = contract.measuredCollisionSurfaceDisagreementMeters;
+                contract.measuredCollisionSurfaceDisagreementMeters = 0.01f;
+                Assert.That(contract.TryValidateBuiltPlayerContract(out string toleranceReport), Is.False);
+                Assert.That(toleranceReport, Does.Contain("runway collider disagrees with visual mesh"));
+                contract.measuredCollisionSurfaceDisagreementMeters = collisionDisagreement;
+
+                int bakedTriangles = contract.bakedTriangleCount;
+                contract.bakedTriangleCount = ProductionEnvironmentRoot.MaximumVisibleTriangles + 1;
+                Assert.That(contract.TryValidateBuiltPlayerContract(out string budgetReport), Is.False);
+                Assert.That(budgetReport, Does.Contain("triangle budget exceeded"));
+                contract.bakedTriangleCount = bakedTriangles;
+
+                string bakeToolVersion = contract.bakeToolVersion;
+                contract.bakeToolVersion = string.Empty;
+                Assert.That(contract.TryValidateBuiltPlayerContract(out string provenanceReport), Is.False);
+                Assert.That(provenanceReport, Does.Contain("serialized bake tool version is missing"));
+                contract.bakeToolVersion = bakeToolVersion;
+
+                string bakedTopologyHash = contract.farTerrainBakedTopologyHash;
+                contract.farTerrainBakedTopologyHash = "player-topology-corruption";
+                Assert.That(contract.TryValidateBuiltPlayerContract(out string topologyReport), Is.False);
+                Assert.That(topologyReport, Does.Contain("far-terrain smoothing changed triangle identity/order"));
+                contract.farTerrainBakedTopologyHash = bakedTopologyHash;
+            });
+        }
+
+        [Test]
+        public void MountainStaticFlagPolicyRemainsStrictInEditorOnly()
+        {
+            Assert.That(MountainTemporalStabilityProbe.RequiresAuthoredStaticFlag(true), Is.True);
+            Assert.That(MountainTemporalStabilityProbe.RequiresAuthoredStaticFlag(false), Is.False);
+        }
+
+        [Test]
         public void VisualCorrectionBakeRejectsMalformedContextAndPreservesFarTopology()
         {
             GameObject contractObject = LoadPrefab();
@@ -82,7 +188,8 @@ namespace QuestFlightLab.EditorTests
         {
             ProductionEnvironmentRoot contract = LoadPrefab().GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.uniqueMacroAlbedo, Is.Not.Null);
-            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(1024));
+            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(2048),
+                "The bounded mid-zone macro texture is authored at the standalone recovery target resolution");
             Assert.That(contract.macroRepeatedTileSimilarity, Is.LessThan(0.985f));
             TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo));
             Assert.That(importer.mipmapEnabled, Is.True);
@@ -210,6 +317,19 @@ namespace QuestFlightLab.EditorTests
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ProductionEnvironmentRoot.PrefabAssetPath);
             Assert.That(prefab, Is.Not.Null);
             return prefab;
+        }
+
+        private static void WithInstance(Action<GameObject> assertion)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(LoadPrefab());
+            try
+            {
+                assertion(instance);
+            }
+            finally
+            {
+                Object.DestroyImmediate(instance);
+            }
         }
     }
 }
