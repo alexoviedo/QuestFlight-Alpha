@@ -1,0 +1,13 @@
+aircraft/c172x/c172x.xml
+aircraft/c172x/c172ap.xml
+aircraft/c172x/elevator_doublet_init.xml
+aircraft/c172x/output.xml
+aircraft/c172x/reset00.xml
+aircraft/c172x/reset01.xml
+aircraft/c172x/reset_at_rest.xml
+engine/eng_io320.xml
+engine/prop_75in2f.xml
+systems/GNCUtilities.xml
+systems/Autopilot.xml
+COPYING.txt
+SOURCE_REVISION.txt

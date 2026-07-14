@@ -6,7 +6,8 @@ namespace QuestFlightLab.Flight.Backends
 {
     public enum FlightDynamicsBackendKind
     {
-        UnityPrototype = 0
+        UnityPrototype = 0,
+        JSBSimNativeDevelopment = 1
     }
 
     [Serializable]

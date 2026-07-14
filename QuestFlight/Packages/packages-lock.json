@@ -1,5 +1,13 @@
 {
   "dependencies": {
+    "com.alexoviedo.questflight.jsbsim": {
+      "version": "file:com.alexoviedo.questflight.jsbsim",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.modules.unitywebrequest": "1.0.0"
+      }
+    },
     "com.unity.burst": {
       "version": "1.8.27",
       "depth": 1,

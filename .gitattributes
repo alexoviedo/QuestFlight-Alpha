@@ -21,6 +21,10 @@
 *.mat text eol=lf merge=unityyamlmerge
 *.meta text eol=lf merge=unityyamlmerge
 
+# Frozen JSBSim runtime payload hashes cover the exact promoted package bytes.
+# Preserve those bounded data files byte-for-byte instead of normalizing CRLF.
+QuestFlight/Packages/com.alexoviedo.questflight.jsbsim/RuntimeData/** -text -eol whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof
+
 # Binary product assets must enter through Git LFS after rights review.
 *.glb filter=lfs diff=lfs merge=lfs -text
 *.gltf filter=lfs diff=lfs merge=lfs -text

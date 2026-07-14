@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using AlexOviedo.QuestFlight.JSBSim;
 using QuestFlightLab.Input;
 using QuestFlightLab.Runtime;
 using UnityEngine;
@@ -6,14 +8,17 @@ using UnityEngine;
 namespace QuestFlightLab.Flight.Backends
 {
     /// <summary>
-    /// Product fixed-step coordinator. The clean repository intentionally compiles one backend,
-    /// UnityPrototypeFlightBackend, so selection and fallback cannot create competing authorities.
+    /// Sole product fixed-step authority. The serialized release request remains
+    /// UnityPrototype. Editor/development players may prefer the promoted native
+    /// package, with fail-closed fallback under this same authority lease.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class FlightDynamicsCoordinator : MonoBehaviour
     {
         [Header("Single product authority")]
         public FlightDynamicsBackendKind requestedBackend = FlightDynamicsBackendKind.UnityPrototype;
+        [Tooltip("Editor/development builds only. Release builds always resolve to UnityPrototype.")]
+        public bool preferNativeInDevelopment = true;
         public Transform simulationRoot;
         public Transform presentationRoot;
         public AircraftState aircraftState;
@@ -28,17 +33,19 @@ namespace QuestFlightLab.Flight.Backends
         [Min(30f)] public float simulationRateHz = 120f;
         [Range(1, 16)] public int maxStepsPerFixedUpdate = 8;
 
-        public FlightDynamicsBackendKind ActiveBackendKind => FlightDynamicsBackendKind.UnityPrototype;
+        public FlightDynamicsBackendKind ActiveBackendKind =>
+            _backend?.Kind ?? FlightDynamicsBackendKind.UnityPrototype;
         public bool IsInitialized => _backend != null && _backend.IsInitialized;
         public bool CoordinatorOwnsPresentationInterpolation => ShouldCoordinatorInterpolate(simulationRoot, presentationRoot);
         public string LastError { get; private set; } = string.Empty;
-        public string FallbackReason => string.Empty;
+        public string FallbackReason { get; private set; } = string.Empty;
         public FlightDynamicsState CurrentState => _currentState;
-        public FlightDynamicsControlSnapshot LastAppliedControls { get; private set; } = FlightDynamicsControlSnapshot.NeutralIdle;
+        public FlightDynamicsControlSnapshot LastAppliedControls { get; private set; } =
+            FlightDynamicsControlSnapshot.NeutralIdle;
         public FlightDynamicsInitialConditions LastResetInitialConditions { get; private set; }
         public double DroppedSimulationSeconds => _accumulator?.DroppedSeconds ?? 0.0;
 
-        private UnityPrototypeFlightBackend _backend;
+        private IFlightDynamicsBackend _backend;
         private FlightDynamicsAuthorityLease _authorityLease;
         private FixedStepAccumulator _accumulator;
         private FlightDynamicsState _previousState;
@@ -46,10 +53,27 @@ namespace QuestFlightLab.Flight.Backends
         private FlightDynamicsInitialConditions _configuredInitialConditions;
         private bool _hasConfiguredInitialConditions;
         private Action<double> _stepBackendAction;
+        private string _preparedNativeDataRoot = string.Empty;
+        private string _nativePreparationError = string.Empty;
+        private bool _authoredPrototypeEnabled;
+        private bool _prototypeEnabledStateCaptured;
         private static readonly AircraftControlState NeutralIdleControls = AircraftControlState.Neutral(0.10f);
+
+        public static bool DevelopmentBuildAllowsNative
+        {
+            get
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
 
         private void Awake()
         {
+            CapturePrototypeEnabledState();
             if (!HasAuthoredReferences(out string error))
             {
                 LastError = error;
@@ -59,6 +83,11 @@ namespace QuestFlightLab.Flight.Backends
             }
             _stepBackendAction = StepBackendUnchecked;
             EnforceSinglePresentationOwner();
+            if (ResolveEffectiveBackend(requestedBackend, preferNativeInDevelopment,
+                    DevelopmentBuildAllowsNative) == FlightDynamicsBackendKind.JSBSimNativeDevelopment)
+            {
+                unityPrototype.enabled = false;
+            }
         }
 
         public bool HasAuthoredReferences(out string error)
@@ -78,46 +107,103 @@ namespace QuestFlightLab.Flight.Backends
             }
             if (requestedBackend != FlightDynamicsBackendKind.UnityPrototype)
             {
-                error = "The product coordinator must request UnityPrototype.";
+                error = "The serialized product coordinator must request UnityPrototype.";
+                return false;
+            }
+            if (!preferNativeInDevelopment)
+            {
+                error = "The product prefab must serialize the development-only native preference.";
                 return false;
             }
             error = string.Empty;
             return true;
         }
 
-        private void Start() => InitializeSelectedBackend();
+        private IEnumerator Start()
+        {
+            FlightDynamicsBackendKind desired = ResolveEffectiveBackend(
+                requestedBackend,
+                preferNativeInDevelopment,
+                DevelopmentBuildAllowsNative);
+            if (desired == FlightDynamicsBackendKind.JSBSimNativeDevelopment &&
+                !JSBSimRuntimeData.TryGetPreparedDataRoot(out _preparedNativeDataRoot, out _nativePreparationError))
+            {
+                bool prepared = false;
+                yield return JSBSimRuntimeData.Prepare((success, root, error) =>
+                {
+                    prepared = success;
+                    _preparedNativeDataRoot = root ?? string.Empty;
+                    _nativePreparationError = error ?? string.Empty;
+                });
+                if (!prepared && string.IsNullOrWhiteSpace(_nativePreparationError))
+                    _nativePreparationError = "Native JSBSim runtime data preparation failed.";
+            }
+            InitializeSelectedBackend();
+        }
 
         public bool InitializeSelectedBackend()
         {
+            CapturePrototypeEnabledState();
             ShutdownBackend();
-            requestedBackend = FlightDynamicsBackendKind.UnityPrototype;
+            FallbackReason = string.Empty;
+            LastError = string.Empty;
             RefreshConfiguredInitialConditions();
             if (!FlightDynamicsAuthority.TryAcquire(simulationRoot, this, out _authorityLease, out string authorityError))
                 return Fail(authorityError);
 
             double fixedStep = 1.0 / Mathf.Max(30f, simulationRateHz);
             _accumulator = new FixedStepAccumulator(fixedStep, maxStepsPerFixedUpdate);
-            _backend = new UnityPrototypeFlightBackend();
-            FlightDynamicsBackendContext context = new FlightDynamicsBackendContext
-            {
-                simulationRoot = simulationRoot,
-                aircraftState = aircraftState,
-                unityPrototype = unityPrototype,
-                localOrigin = GeodeticReference.Kbdu,
-                fixedDeltaTimeSeconds = fixedStep
-            };
-            if (!_backend.Initialize(context)) return ReleaseAndFail(_backend.LastError);
-            _backend.SetAtmosphere(FlightDynamicsAtmosphere.Calm);
-            if (!_backend.Reset(_configuredInitialConditions)) return ReleaseAndFail(_backend.LastError);
+            FlightDynamicsBackendContext context = CreateContext(fixedStep);
+            FlightDynamicsBackendKind desired = ResolveEffectiveBackend(
+                requestedBackend,
+                preferNativeInDevelopment,
+                DevelopmentBuildAllowsNative);
 
-            LastResetInitialConditions = _configuredInitialConditions;
-            ApplyControls(NeutralIdleControls);
-            _currentState = _backend.CurrentState;
-            _previousState = _currentState;
-            ApplyLegacyState(_currentState);
-            LastError = string.Empty;
-            Debug.Log($"[QuestFlight][FlightAuthority] Unity prototype; fixed step={fixedStep * 1000.0:0.###} ms.");
+            if (desired == FlightDynamicsBackendKind.JSBSimNativeDevelopment)
+            {
+                if (string.IsNullOrWhiteSpace(_preparedNativeDataRoot))
+                    JSBSimRuntimeData.TryGetPreparedDataRoot(out _preparedNativeDataRoot, out _nativePreparationError);
+                if (!string.IsNullOrWhiteSpace(_preparedNativeDataRoot))
+                {
+                    unityPrototype.enabled = false;
+                    IFlightDynamicsBackend native = new JSBSimNativeDevelopmentBackend(_preparedNativeDataRoot);
+                    if (TryInitializeBackend(native, context, _configuredInitialConditions, out string nativeError))
+                    {
+                        CompleteInitialization(fixedStep);
+                        return true;
+                    }
+                    native.Dispose();
+                    FallbackReason = "Native JSBSim initialization failed: " + nativeError;
+                }
+                else
+                {
+                    FallbackReason = "Native JSBSim data preparation failed: " + _nativePreparationError;
+                }
+                Debug.LogWarning("[QuestFlight][FlightAuthority] " + FallbackReason +
+                                 " Falling back to Unity prototype.", this);
+            }
+
+            RestorePrototypeEnabledState();
+            IFlightDynamicsBackend prototype = new UnityPrototypeFlightBackend();
+            if (!TryInitializeBackend(prototype, context, _configuredInitialConditions, out string prototypeError))
+            {
+                prototype.Dispose();
+                return ReleaseAndFail(prototypeError);
+            }
+            CompleteInitialization(fixedStep);
             return true;
+        }
+
+        public static FlightDynamicsBackendKind ResolveEffectiveBackend(
+            FlightDynamicsBackendKind serializedRequest,
+            bool preferNativeInDevelopment,
+            bool developmentBuildAllowsNative)
+        {
+            if (!developmentBuildAllowsNative) return FlightDynamicsBackendKind.UnityPrototype;
+            if (preferNativeInDevelopment) return FlightDynamicsBackendKind.JSBSimNativeDevelopment;
+            return serializedRequest == FlightDynamicsBackendKind.JSBSimNativeDevelopment
+                ? FlightDynamicsBackendKind.JSBSimNativeDevelopment
+                : FlightDynamicsBackendKind.UnityPrototype;
         }
 
         private void FixedUpdate()
@@ -162,14 +248,69 @@ namespace QuestFlightLab.Flight.Backends
         {
             if (!IsInitialized) return Fail("Cannot reset flight dynamics before backend initialization.");
             if (!_hasConfiguredInitialConditions) RefreshConfiguredInitialConditions();
-            if (!_backend.Reset(_configuredInitialConditions)) return Fail(_backend.LastError);
+            if (!_backend.Reset(_configuredInitialConditions))
+            {
+                if (_backend.Kind == FlightDynamicsBackendKind.JSBSimNativeDevelopment &&
+                    TryRuntimeFallback(_backend.LastError)) return true;
+                return Fail(_backend.LastError);
+            }
             LastResetInitialConditions = _configuredInitialConditions;
             ApplyControls(NeutralIdleControls);
             _currentState = _backend.CurrentState;
             _previousState = _currentState;
             _accumulator?.Reset();
+            ApplyBackendPose(_currentState);
             ApplyLegacyState(_currentState);
             return true;
+        }
+
+        private bool TryInitializeBackend(
+            IFlightDynamicsBackend candidate,
+            FlightDynamicsBackendContext context,
+            FlightDynamicsInitialConditions initialConditions,
+            out string error)
+        {
+            if (!candidate.Initialize(context))
+            {
+                error = candidate.LastError;
+                return false;
+            }
+            candidate.SetAtmosphere(FlightDynamicsAtmosphere.Calm);
+            if (!candidate.Reset(initialConditions))
+            {
+                error = candidate.LastError;
+                return false;
+            }
+            candidate.SetControls(NeutralIdleControls);
+            _backend = candidate;
+            LastResetInitialConditions = initialConditions;
+            LastAppliedControls = FlightDynamicsControlSnapshot.From(NeutralIdleControls);
+            _currentState = candidate.CurrentState;
+            _previousState = _currentState;
+            ApplyBackendPose(_currentState);
+            ApplyLegacyState(_currentState);
+            error = string.Empty;
+            return true;
+        }
+
+        private void CompleteInitialization(double fixedStep)
+        {
+            LastError = string.Empty;
+            Debug.Log($"[QuestFlight][FlightAuthority] {_backend.DisplayName}; " +
+                      $"fixed step={fixedStep * 1000.0:0.###} ms; " +
+                      $"release request={requestedBackend}.");
+        }
+
+        private FlightDynamicsBackendContext CreateContext(double fixedStep)
+        {
+            return new FlightDynamicsBackendContext
+            {
+                simulationRoot = simulationRoot,
+                aircraftState = aircraftState,
+                unityPrototype = unityPrototype,
+                localOrigin = GeodeticReference.Kbdu,
+                fixedDeltaTimeSeconds = fixedStep
+            };
         }
 
         private void ApplyControls(AircraftControlState state)
@@ -180,14 +321,92 @@ namespace QuestFlightLab.Flight.Backends
 
         private bool StepBackend(double fixedDeltaTimeSeconds)
         {
+            if (_backend == null || !_backend.IsInitialized) return false;
             _previousState = _currentState;
-            if (!_backend.Advance(fixedDeltaTimeSeconds)) return Fail(_backend.LastError);
+            if (!_backend.Advance(fixedDeltaTimeSeconds))
+            {
+                if (_backend.Kind == FlightDynamicsBackendKind.JSBSimNativeDevelopment &&
+                    TryRuntimeFallback(_backend.LastError)) return true;
+                return Fail(_backend.LastError);
+            }
             _currentState = _backend.CurrentState;
+            ApplyBackendPose(_currentState);
             ApplyLegacyState(_currentState);
             return true;
         }
 
-        private void StepBackendUnchecked(double fixedDeltaTimeSeconds) => StepBackend(fixedDeltaTimeSeconds);
+        private bool TryRuntimeFallback(string nativeError)
+        {
+            FlightDynamicsState nativeState = _currentState;
+            AircraftControlState activeControls = controls != null ? controls.Current : NeutralIdleControls;
+            _backend?.Dispose();
+            _backend = null;
+            RestorePrototypeEnabledState();
+
+            IFlightDynamicsBackend prototype = new UnityPrototypeFlightBackend();
+            double fixedStep = _accumulator?.StepSeconds ?? 1.0 / Mathf.Max(30f, simulationRateHz);
+            if (!prototype.Initialize(CreateContext(fixedStep)))
+            {
+                string fallbackError = prototype.LastError;
+                prototype.Dispose();
+                return Fail("Native JSBSim failed ('" + nativeError +
+                            "') and Unity fallback initialization failed ('" + fallbackError + "').");
+            }
+            prototype.SetAtmosphere(FlightDynamicsAtmosphere.Calm);
+            FlightDynamicsInitialConditions continuation = InitialConditionsFromState(nativeState);
+            if (!prototype.Reset(continuation))
+            {
+                string fallbackError = prototype.LastError;
+                prototype.Dispose();
+                return Fail("Native JSBSim failed ('" + nativeError +
+                            "') and Unity fallback reset failed ('" + fallbackError + "').");
+            }
+            prototype.SetControls(activeControls);
+            _backend = prototype;
+            LastAppliedControls = FlightDynamicsControlSnapshot.From(activeControls);
+            LastResetInitialConditions = continuation;
+            _currentState = prototype.CurrentState;
+            _previousState = _currentState;
+            ApplyBackendPose(_currentState);
+            ApplyLegacyState(_currentState);
+            FallbackReason = "Native JSBSim runtime failure: " + nativeError;
+            LastError = string.Empty;
+            Debug.LogWarning("[QuestFlight][FlightAuthority] " + FallbackReason +
+                             " Continued with Unity prototype under the existing authority lease.", this);
+            return true;
+        }
+
+        private static FlightDynamicsInitialConditions InitialConditionsFromState(FlightDynamicsState state)
+        {
+            double verticalFeetPerSecond = state.verticalSpeedFeetPerMinute / 60.0;
+            double horizontalFeetPerSecond = state.groundSpeedKnots * 1.6878098571;
+            return new FlightDynamicsInitialConditions
+            {
+                latitudeDegrees = state.latitudeDegrees,
+                longitudeDegrees = state.longitudeDegrees,
+                altitudeMslMeters = state.altitudeMslMeters,
+                terrainElevationMslMeters = state.altitudeMslMeters - Math.Max(0.0, state.altitudeAglMeters),
+                calibratedAirspeedKnots = Math.Max(0.0, state.calibratedAirspeedKnots),
+                headingDegrees = state.headingDegrees,
+                pitchDegrees = state.pitchDegrees,
+                bankDegrees = state.bankDegrees,
+                flightPathAngleDegrees = Math.Atan2(verticalFeetPerSecond,
+                    Math.Max(0.01, horizontalFeetPerSecond)) * FlightFrameConversions.RadiansToDegrees,
+                engineRunning = state.engineRpm > 100.0
+            };
+        }
+
+        private void StepBackendUnchecked(double fixedDeltaTimeSeconds)
+        {
+            if (!IsInitialized) return;
+            if (!StepBackend(fixedDeltaTimeSeconds)) enabled = false;
+        }
+
+        private void ApplyBackendPose(FlightDynamicsState state)
+        {
+            if (simulationRoot == null) return;
+            simulationRoot.SetPositionAndRotation(state.positionUnityMeters, state.rotationUnity);
+        }
 
         private void ApplyLegacyState(FlightDynamicsState state)
         {
@@ -222,10 +441,24 @@ namespace QuestFlightLab.Flight.Backends
             if (rig != null && rig.enabled) presentationRoot = simulationRoot;
         }
 
+        private void CapturePrototypeEnabledState()
+        {
+            if (_prototypeEnabledStateCaptured || unityPrototype == null) return;
+            _authoredPrototypeEnabled = unityPrototype.enabled;
+            _prototypeEnabledStateCaptured = true;
+        }
+
+        private void RestorePrototypeEnabledState()
+        {
+            if (_prototypeEnabledStateCaptured && unityPrototype != null)
+                unityPrototype.enabled = _authoredPrototypeEnabled;
+        }
+
         private bool ReleaseAndFail(string message)
         {
             _backend?.Dispose();
             _backend = null;
+            RestorePrototypeEnabledState();
             _authorityLease?.Dispose();
             _authorityLease = null;
             return Fail(message);
@@ -233,17 +466,21 @@ namespace QuestFlightLab.Flight.Backends
 
         private bool Fail(string message)
         {
-            LastError = string.IsNullOrWhiteSpace(message) ? "Unity prototype backend failed." : message;
+            LastError = string.IsNullOrWhiteSpace(message) ? "Flight dynamics backend failed." : message;
             Debug.LogError("[QuestFlight][FlightAuthority] " + LastError, this);
             return false;
         }
 
-        private void OnDestroy() => ShutdownBackend();
+        private void OnDestroy()
+        {
+            ShutdownBackend();
+        }
 
         private void ShutdownBackend()
         {
             _backend?.Dispose();
             _backend = null;
+            RestorePrototypeEnabledState();
             LastAppliedControls = FlightDynamicsControlSnapshot.NeutralIdle;
             _authorityLease?.Dispose();
             _authorityLease = null;
