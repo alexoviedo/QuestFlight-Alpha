@@ -110,12 +110,16 @@ namespace QuestFlightLab.Editor
                 ViewProfile.Cockpit, context.rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true),
                 new Rect(0.43f, 0.28f, 0.14f, 0.70f)));
 
-            Bounds hangarBounds = ClosestNamedRendererBounds(
-                context.environment.airportContext, context.runwayMidpoint, "building", "hangar");
+            Bounds hangarBounds = CombinedNamedRendererBounds(
+                context.environment.airportContext, "AirportArtProduction");
             Vector3 hangarTarget = hangarBounds.center;
-            Vector3 hangarCamera = hangarTarget - context.runwayForward * 145f + context.runwayRight * 110f + Vector3.up * 68f;
+            float airportExtent = Mathf.Max(hangarBounds.extents.x, hangarBounds.extents.z);
+            Vector3 hangarCamera = hangarTarget
+                                   - context.runwayForward * (airportExtent * 0.85f + 70f)
+                                   + context.runwayRight * (airportExtent * 0.65f + 60f)
+                                   + Vector3.up * (airportExtent * 0.38f + 60f);
             trace.traces.Add(TracePose(
-                context, outputDir, "apron_vertical_slab", hangarCamera, LookAt(hangarCamera, hangarTarget), 48f,
+                context, outputDir, "apron_vertical_slab", hangarCamera, LookAt(hangarCamera, hangarTarget), 52f,
                 ViewProfile.External, context.environment.GetComponentsInChildren<Renderer>(true),
                 new Rect(0.25f, 0.0f, 0.50f, 0.90f)));
 
@@ -346,11 +350,9 @@ namespace QuestFlightLab.Editor
             Quaternion pilotForward = aircraft.rotation;
             Bounds runwayBounds = context.environment.runwayPavement.GetComponent<Renderer>().bounds;
             Bounds waterBounds = context.environment.boulderReservoirSurface.GetComponent<Renderer>().bounds;
-            Bounds hangarBounds = ClosestNamedRendererBounds(
+            Bounds hangarBounds = CombinedNamedRendererBounds(
                 context.environment.airportContext,
-                context.runwayMidpoint,
-                "building",
-                "hangar");
+                "AirportArtProduction");
 
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "01_default_cockpit", "Default cockpit", "cockpit", pilotEye, pilotForward, 72f, ViewProfile.Cockpit));
@@ -369,35 +371,39 @@ namespace QuestFlightLab.Editor
             Vector3 runwayCloseCamera = runwayBounds.center - context.runwayForward * 80f + context.runwayRight * 8f + Vector3.up * 2.1f;
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "05_runway_surface_markings", "Runway surface and controlled-depth markings", "runway",
-                runwayCloseCamera, LookAt(runwayCloseCamera, runwayBounds.center + context.runwayForward * 120f), 45f, ViewProfile.External));
+                runwayCloseCamera, LookAt(runwayCloseCamera, runwayBounds.center + context.runwayForward * 120f), 45f, ViewProfile.Environment));
 
             Vector3 hangarTarget = hangarBounds.center;
-            Vector3 hangarCamera = hangarTarget - context.runwayForward * 145f + context.runwayRight * 110f + Vector3.up * 68f;
+            float airportExtent = Mathf.Max(hangarBounds.extents.x, hangarBounds.extents.z);
+            Vector3 hangarCamera = hangarTarget
+                                   - context.runwayForward * (airportExtent * 0.85f + 70f)
+                                   + context.runwayRight * (airportExtent * 0.65f + 60f)
+                                   + Vector3.up * (airportExtent * 0.38f + 60f);
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "06_apron_hangars", "Apron and hangars", "scenery",
-                hangarCamera, LookAt(hangarCamera, hangarTarget), 48f, ViewProfile.External));
+                hangarCamera, LookAt(hangarCamera, hangarTarget), 52f, ViewProfile.Environment));
 
             Vector3 waterTarget = waterBounds.center;
             Vector3 waterCamera = waterTarget + new Vector3(460f, 320f, -520f);
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "07_boulder_reservoir", "Boulder Reservoir and shoreline", "water",
-                waterCamera, LookAt(waterCamera, waterTarget), 50f, ViewProfile.External));
+                waterCamera, LookAt(waterCamera, waterTarget), 50f, ViewProfile.Environment));
 
             Vector3 nearCamera = context.runwayMidpoint - context.runwayForward * 430f - context.runwayRight * 250f + Vector3.up * 280f;
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "08_near_terrain", "Near production terrain", "scenery",
-                nearCamera, LookAt(nearCamera, context.runwayMidpoint + context.runwayForward * 300f), 55f, ViewProfile.External));
+                nearCamera, LookAt(nearCamera, context.runwayMidpoint + context.runwayForward * 300f), 55f, ViewProfile.Environment));
 
             Vector3 patternCamera = context.runwayMidpoint - context.runwayRight * 900f + Vector3.up * 520f;
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "09_pattern_altitude_macro", "Pattern-altitude unique macro terrain", "scenery",
-                patternCamera, LookAt(patternCamera, context.runwayMidpoint + context.runwayRight * 500f), 58f, ViewProfile.External));
+                patternCamera, LookAt(patternCamera, context.runwayMidpoint + context.runwayRight * 500f), 58f, ViewProfile.Environment));
 
             Vector3 horizonCamera = context.runwayMidpoint + Vector3.up * 620f;
             Vector3 westHorizon = horizonCamera + Vector3.left * 12000f + Vector3.up * 300f;
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "10_stable_mountain_horizon", "Immutable Front Range horizon", "mountain",
-                horizonCamera, LookAt(horizonCamera, westHorizon), 52f, ViewProfile.External));
+                horizonCamera, LookAt(horizonCamera, westHorizon), 52f, ViewProfile.Environment));
 
             Vector3 aircraftTarget = aircraft.position + Vector3.up * 1.1f;
             Vector3 externalCamera = aircraftTarget - aircraft.forward * 12f + aircraft.right * 8f + Vector3.up * 4.5f;
@@ -475,6 +481,14 @@ namespace QuestFlightLab.Editor
         {
             if (shot.profile == ViewProfile.Cockpit) context.visibility?.SetCockpitView();
             else context.visibility?.SetExternalView();
+            Renderer[] environmentHiddenRenderers = Array.Empty<Renderer>();
+            bool[] environmentHiddenStates = Array.Empty<bool>();
+            if (shot.profile == ViewProfile.Environment)
+            {
+                environmentHiddenRenderers = context.rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true);
+                environmentHiddenStates = environmentHiddenRenderers.Select(renderer => renderer.enabled).ToArray();
+                foreach (Renderer renderer in environmentHiddenRenderers) renderer.enabled = false;
+            }
             if (shot.controls != null)
             {
                 context.animator?.CaptureAuthoredRestPosesForValidation();
@@ -541,6 +555,8 @@ namespace QuestFlightLab.Editor
             }
             finally
             {
+                for (int index = 0; index < environmentHiddenRenderers.Length; index++)
+                    environmentHiddenRenderers[index].enabled = environmentHiddenStates[index];
                 Object.DestroyImmediate(texture);
             }
         }
@@ -825,11 +841,27 @@ namespace QuestFlightLab.Editor
         {
             Renderer renderer = root != null
                 ? root.GetComponentsInChildren<Renderer>(true)
-                    .Where(candidate => tokens.Any(token => candidate.name.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0))
+                    .Where(candidate => tokens.Any(token =>
+                        HierarchyPath(candidate.transform).IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0))
                     .OrderBy(candidate => (candidate.bounds.center - reference).sqrMagnitude)
                     .FirstOrDefault()
                 : null;
             return renderer != null ? renderer.bounds : new Bounds(reference + Vector3.right * 180f, new Vector3(80f, 20f, 80f));
+        }
+
+        private static Bounds CombinedNamedRendererBounds(Transform root, params string[] tokens)
+        {
+            Renderer[] renderers = root != null
+                ? root.GetComponentsInChildren<Renderer>(true)
+                    .Where(candidate => tokens.Any(token =>
+                        HierarchyPath(candidate.transform).IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0))
+                    .ToArray()
+                : Array.Empty<Renderer>();
+            if (renderers.Length == 0)
+                throw new InvalidOperationException("Required authored renderer hierarchy is missing: " + string.Join(",", tokens));
+            Bounds bounds = renderers[0].bounds;
+            for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
+            return bounds;
         }
 
         private static string HierarchyPath(Transform transform)
@@ -839,7 +871,7 @@ namespace QuestFlightLab.Editor
             return string.Join("/", names.ToArray());
         }
 
-        private enum ViewProfile { Cockpit, External }
+        private enum ViewProfile { Cockpit, External, Environment }
 
         private sealed class VisualContext
         {

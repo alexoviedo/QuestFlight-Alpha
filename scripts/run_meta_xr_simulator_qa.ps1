@@ -1,0 +1,394 @@
+[CmdletBinding()]
+param(
+    [string]$ArtifactRoot,
+    [string]$ReplayRoot,
+    [string[]]$SessionId = @(),
+    [switch]$AuditOnly,
+    [switch]$RebuildPlayer,
+    [switch]$AllowMissingRecordings,
+    [switch]$LiveSmokeWhenRecordingsMissing,
+    [string]$RecordSession,
+    [int]$SessionTimeoutSeconds = 240,
+    [int]$CaptureWidth = 1440,
+    [int]$CaptureHeight = 1440
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$unityProject = Join-Path $repoRoot "QuestFlight"
+if ([string]::IsNullOrWhiteSpace($ArtifactRoot)) {
+    $stamp = [DateTime]::UtcNow.ToString("yyyyMMdd_HHmmss")
+    $ArtifactRoot = Join-Path (Split-Path -Parent $repoRoot) "T2-QuestFlight-product-artifacts\standalone_recovery_$stamp"
+}
+$ArtifactRoot = [IO.Path]::GetFullPath($ArtifactRoot)
+$simulatorRoot = Join-Path $ArtifactRoot "meta_xr_simulator"
+$outputDirectory = Join-Path $simulatorRoot "qa_run"
+$sessionOutputRoot = Join-Path $outputDirectory "sessions"
+$logRoot = Join-Path $outputDirectory "logs"
+$replayEvidenceRoot = Join-Path $outputDirectory "replays"
+$playerPath = Join-Path $simulatorRoot "player\QuestFlightMetaXrSimulatorQA.exe"
+$buildReportPath = Join-Path $simulatorRoot "player\simulator_dev_build.json"
+$runReportPath = Join-Path $outputDirectory "simulator_qa_run_report.json"
+if ([string]::IsNullOrWhiteSpace($ReplayRoot)) {
+    $ReplayRoot = Join-Path $simulatorRoot "recordings"
+}
+$ReplayRoot = [IO.Path]::GetFullPath($ReplayRoot)
+New-Item -ItemType Directory -Path $outputDirectory,$sessionOutputRoot,$logRoot,$replayEvidenceRoot,$ReplayRoot -Force | Out-Null
+
+$sessionCatalog = @(
+    [ordered]@{ id = "cockpit_neutral"; description = "Cockpit neutral forward view"; delaySeconds = 4; startDemo = $false },
+    [ordered]@{ id = "head_pan"; description = "Slow head pan left/right/up/down"; delaySeconds = 8; startDemo = $false },
+    [ordered]@{ id = "rear_view"; description = "180-degree rearward view"; delaySeconds = 6; startDemo = $false },
+    [ordered]@{ id = "viewpoint_calibration"; description = "Viewpoint menu open/adjust/save/reset"; delaySeconds = 10; startDemo = $false },
+    [ordered]@{ id = "control_surface_sweep"; description = "Control-surface sweep"; delaySeconds = 8; startDemo = $false },
+    [ordered]@{ id = "taxi"; description = "Taxi"; delaySeconds = 7; startDemo = $true },
+    [ordered]@{ id = "takeoff_roll"; description = "Takeoff roll"; delaySeconds = 20; startDemo = $true },
+    [ordered]@{ id = "rotation_climb"; description = "Rotation and climb"; delaySeconds = 34; startDemo = $true },
+    [ordered]@{ id = "shallow_turns"; description = "Shallow left/right turns"; delaySeconds = 55; startDemo = $false },
+    [ordered]@{ id = "final_approach"; description = "Final approach"; delaySeconds = 120; startDemo = $false }
+)
+if ($SessionId.Count -gt 0) {
+    $unknown = $SessionId | Where-Object { $_ -notin $sessionCatalog.id }
+    if ($unknown.Count -gt 0) { throw "Unknown simulator session id(s): $($unknown -join ', ')" }
+    $sessionCatalog = @($sessionCatalog | Where-Object { $_.id -in $SessionId })
+}
+if (-not [string]::IsNullOrWhiteSpace($RecordSession)) {
+    if ($RecordSession -notin $sessionCatalog.id -and $RecordSession -notin @(
+        "cockpit_neutral", "head_pan", "rear_view", "viewpoint_calibration", "control_surface_sweep",
+        "taxi", "takeoff_roll", "rotation_climb", "shallow_turns", "final_approach")) {
+        throw "Unknown simulator recording id: $RecordSession"
+    }
+    $sessionCatalog = @($sessionCatalog | Where-Object { $_.id -eq $RecordSession })
+}
+
+function Get-RegistryOpenXrRuntime {
+    param([Microsoft.Win32.RegistryView]$View)
+    $baseKey = [Microsoft.Win32.RegistryKey]::OpenBaseKey(
+        [Microsoft.Win32.RegistryHive]::LocalMachine,
+        $View)
+    try {
+        $key = $baseKey.OpenSubKey("SOFTWARE\Khronos\OpenXR\1", $false)
+        if ($null -eq $key) { return $null }
+        try { return [string]$key.GetValue("ActiveRuntime", $null) }
+        finally { $key.Dispose() }
+    }
+    finally { $baseKey.Dispose() }
+}
+
+function Get-OpenXrRegistrySnapshot {
+    [ordered]@{
+        runtime64 = Get-RegistryOpenXrRuntime -View ([Microsoft.Win32.RegistryView]::Registry64)
+        runtime32 = Get-RegistryOpenXrRuntime -View ([Microsoft.Win32.RegistryView]::Registry32)
+    }
+}
+
+function Get-MetaXrSimulatorInstallation {
+    $root = Join-Path $env:ProgramFiles "MetaXRSimulator"
+    if (-not (Test-Path -LiteralPath $root -PathType Container)) { return $null }
+    return Get-ChildItem -LiteralPath $root -Directory | ForEach-Object {
+        $exe = Join-Path $_.FullName "MetaXRSimulator.exe"
+        $manifest = Join-Path $_.FullName "meta_openxr_simulator.json"
+        if ((Test-Path -LiteralPath $exe -PathType Leaf) -and (Test-Path -LiteralPath $manifest -PathType Leaf)) {
+            $version = $null
+            [void][version]::TryParse(($_.Name -replace '^v', ''), [ref]$version)
+            [pscustomobject]@{ Directory = $_.FullName; Executable = $exe; Manifest = $manifest; Version = $version }
+        }
+    } | Sort-Object Version -Descending | Select-Object -First 1
+}
+
+function Get-UnityExecutable {
+    $projectVersionPath = Join-Path $unityProject "ProjectSettings\ProjectVersion.txt"
+    $versionLine = Get-Content -LiteralPath $projectVersionPath | Where-Object { $_ -match '^m_EditorVersion:' } | Select-Object -First 1
+    $unityVersion = ($versionLine -split ':', 2)[1].Trim()
+    $candidates = @(@(
+        (Join-Path $env:ProgramFiles "Unity\Hub\Editor\$unityVersion\Editor\Unity.exe"),
+        (Join-Path ${env:ProgramFiles(x86)} "Unity\Hub\Editor\$unityVersion\Editor\Unity.exe")
+    ) | Where-Object { $_ -and (Test-Path -LiteralPath $_ -PathType Leaf) })
+    if ($candidates.Count -eq 0) { throw "Unity $unityVersion was not found in a Unity Hub editor directory." }
+    return $candidates[0]
+}
+
+function Assert-UnitySlotAvailable {
+    $lockPath = Join-Path $unityProject "Temp\UnityLockfile"
+    $unityProcesses = @(Get-Process -Name Unity -ErrorAction SilentlyContinue)
+    if ((Test-Path -LiteralPath $lockPath) -or $unityProcesses.Count -gt 0) {
+        throw "Unity is already running or the product lockfile exists. Coordinate the shared Editor slot before launching simulator QA."
+    }
+}
+
+function New-DevelopmentProjectCopy {
+    $copyStamp = [DateTime]::UtcNow.ToString("yyyyMMdd_HHmmss")
+    $copyRoot = Join-Path $simulatorRoot "dev_project_$copyStamp"
+    New-Item -ItemType Directory -Path $copyRoot -Force | Out-Null
+    foreach ($name in @("Assets", "Packages", "ProjectSettings")) {
+        $source = Join-Path $unityProject $name
+        Copy-Item -LiteralPath $source -Destination $copyRoot -Recurse -Force
+    }
+    return $copyRoot
+}
+
+function Build-SimulatorDevelopmentPlayer {
+    Assert-UnitySlotAvailable
+    $unityExe = Get-UnityExecutable
+    $devProject = New-DevelopmentProjectCopy
+    $buildLog = Join-Path $logRoot "unity_simulator_dev_build.log"
+    $previous = [ordered]@{
+        allow = $env:QFL_META_XR_SIMULATOR_ALLOW_DEV_COPY
+        expected = $env:QFL_META_XR_SIMULATOR_EXPECTED_PROJECT_ROOT
+        player = $env:QFL_META_XR_SIMULATOR_PLAYER_PATH
+        report = $env:QFL_META_XR_SIMULATOR_BUILD_REPORT
+    }
+    try {
+        $env:QFL_META_XR_SIMULATOR_ALLOW_DEV_COPY = "1"
+        $env:QFL_META_XR_SIMULATOR_EXPECTED_PROJECT_ROOT = $devProject
+        $env:QFL_META_XR_SIMULATOR_PLAYER_PATH = $playerPath
+        $env:QFL_META_XR_SIMULATOR_BUILD_REPORT = $buildReportPath
+        $arguments = @(
+            "-batchmode",
+            "-quit",
+            "-buildTarget", "StandaloneWindows64",
+            "-projectPath", ('"{0}"' -f $devProject),
+            "-executeMethod", "QuestFlightLab.Editor.MetaXrSimulatorQaBuild.BuildPlayer",
+            "-logFile", ('"{0}"' -f $buildLog)
+        )
+        $process = Start-Process -FilePath $unityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+        if (-not $process.WaitForExit(900000)) {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            throw "Meta XR Simulator development player build exceeded 900 seconds. See $buildLog"
+        }
+        if ($process.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $playerPath -PathType Leaf)) {
+            throw "Meta XR Simulator development player build failed (exit $($process.ExitCode)). See $buildLog"
+        }
+    }
+    finally {
+        $env:QFL_META_XR_SIMULATOR_ALLOW_DEV_COPY = $previous.allow
+        $env:QFL_META_XR_SIMULATOR_EXPECTED_PROJECT_ROOT = $previous.expected
+        $env:QFL_META_XR_SIMULATOR_PLAYER_PATH = $previous.player
+        $env:QFL_META_XR_SIMULATOR_BUILD_REPORT = $previous.report
+    }
+}
+
+function Set-SessionCaptureConfiguration {
+    param(
+        [string]$PersistentPath,
+        [string]$Mode,
+        [string]$VrsPath
+    )
+    $parent = Split-Path -Parent $PersistentPath
+    New-Item -ItemType Directory -Path $parent -Force | Out-Null
+    $data = [ordered]@{}
+    if (Test-Path -LiteralPath $PersistentPath -PathType Leaf) {
+        try { $data = Get-Content -LiteralPath $PersistentPath -Raw | ConvertFrom-Json -AsHashtable }
+        catch { throw "Meta XR Simulator persistent configuration is invalid JSON: $PersistentPath" }
+    }
+    if ($Mode -eq "live") {
+        [void]$data.Remove("session_capture")
+        $data | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $PersistentPath -Encoding utf8
+        return
+    }
+    $sessionCapture = [ordered]@{
+        delay_start_ms = 1000
+        exec_state = $Mode
+        quit_buffer_ms = 1500
+        quit_when_complete = $true
+    }
+    if ($Mode -eq "replay") { $sessionCapture.replay_path = $VrsPath }
+    if ($Mode -eq "record") { $sessionCapture.record_path = $VrsPath }
+    $data.session_capture = $sessionCapture
+    $data | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $PersistentPath -Encoding utf8
+}
+
+function Invoke-SimulatorSession {
+    param(
+        [System.Collections.IDictionary]$Session,
+        [string]$Mode,
+        [string]$VrsPath,
+        [object]$Installation,
+        [string]$PersistentPath
+    )
+    $id = [string]$Session.id
+    $sessionDirectory = Join-Path $sessionOutputRoot $id
+    New-Item -ItemType Directory -Path $sessionDirectory -Force | Out-Null
+    $playerLog = Join-Path $logRoot ("{0}_player.log" -f $id)
+    $persistentExisted = Test-Path -LiteralPath $PersistentPath -PathType Leaf
+    $persistentBytes = if ($persistentExisted) { [IO.File]::ReadAllBytes($PersistentPath) } else { $null }
+    $envNames = @(
+        "XR_RUNTIME_JSON", "QFL_META_XR_SIMULATOR_QA_DIR", "QFL_META_XR_SIMULATOR_SESSION",
+        "QFL_META_XR_SIMULATOR_REPLAY_PATH", "QFL_META_XR_SIMULATOR_CAPTURE_DELAY_SECONDS",
+        "QFL_META_XR_SIMULATOR_CAPTURE_WIDTH", "QFL_META_XR_SIMULATOR_CAPTURE_HEIGHT",
+        "QFL_META_XR_SIMULATOR_START_DEMO", "QFL_META_XR_SIMULATOR_EXIT_AFTER_CAPTURE"
+    )
+    $environmentBefore = @{}
+    foreach ($name in $envNames) { $environmentBefore[$name] = [Environment]::GetEnvironmentVariable($name, "Process") }
+    $frontend = $null
+    $player = $null
+    $timedOut = $false
+    try {
+        Set-SessionCaptureConfiguration -PersistentPath $PersistentPath -Mode $Mode -VrsPath $VrsPath
+        $env:XR_RUNTIME_JSON = $Installation.Manifest
+        $env:QFL_META_XR_SIMULATOR_QA_DIR = $sessionDirectory
+        $env:QFL_META_XR_SIMULATOR_SESSION = $id
+        $env:QFL_META_XR_SIMULATOR_REPLAY_PATH = if ($Mode -eq "replay") { $VrsPath } else { "" }
+        $env:QFL_META_XR_SIMULATOR_CAPTURE_DELAY_SECONDS = [string]$Session.delaySeconds
+        $env:QFL_META_XR_SIMULATOR_CAPTURE_WIDTH = [string]$CaptureWidth
+        $env:QFL_META_XR_SIMULATOR_CAPTURE_HEIGHT = [string]$CaptureHeight
+        $env:QFL_META_XR_SIMULATOR_START_DEMO = if ([bool]$Session.startDemo) { "1" } else { "0" }
+        $env:QFL_META_XR_SIMULATOR_EXIT_AFTER_CAPTURE = if ($Mode -eq "record") { "0" } else { "1" }
+
+        $alreadyRunning = @(Get-Process -Name "MetaXRSimulator" -ErrorAction SilentlyContinue).Count -gt 0
+        if (-not $alreadyRunning) {
+            $windowStyle = if ($Mode -eq "record") { "Normal" } else { "Hidden" }
+            $frontend = Start-Process -FilePath $Installation.Executable -PassThru -WindowStyle $windowStyle
+            Start-Sleep -Seconds 2
+        }
+        $arguments = @(
+            "-logFile", ('"{0}"' -f $playerLog),
+            "-screen-width", "1440",
+            "-screen-height", "900",
+            "-screen-fullscreen", "0"
+        )
+        $playerWindowStyle = if ($Mode -eq "record") { "Normal" } else { "Hidden" }
+        $player = Start-Process -FilePath $playerPath -ArgumentList $arguments -PassThru -WindowStyle $playerWindowStyle
+        if (-not $player.WaitForExit($SessionTimeoutSeconds * 1000)) {
+            $timedOut = $true
+            Stop-Process -Id $player.Id -Force -ErrorAction SilentlyContinue
+        }
+        $exitCode = if ($timedOut) { 124 } else { $player.ExitCode }
+        $sessionReportPath = Join-Path $sessionDirectory ("{0}_session_report.json" -f $id)
+        $sessionReport = if (Test-Path -LiteralPath $sessionReportPath -PathType Leaf) {
+            Get-Content -LiteralPath $sessionReportPath -Raw | ConvertFrom-Json
+        } else { $null }
+        return [ordered]@{
+            id = $id
+            mode = $Mode
+            vrsPath = $VrsPath
+            outputDirectory = $sessionDirectory
+            playerLog = $playerLog
+            playerExitCode = $exitCode
+            timedOut = $timedOut
+            sessionReportPath = $sessionReportPath
+            sessionReportPresent = $null -ne $sessionReport
+            productConnected = $null -ne $sessionReport -and [bool]$sessionReport.xrDeviceActive -and [bool]$sessionReport.stereoEnabled
+            runtimeName = if ($sessionReport) { [string]$sessionReport.openXrRuntimeName } else { $null }
+            sessionPassed = $null -ne $sessionReport -and [bool]$sessionReport.passed
+        }
+    }
+    finally {
+        if ($player -and -not $player.HasExited) { Stop-Process -Id $player.Id -Force -ErrorAction SilentlyContinue }
+        if ($frontend -and -not $frontend.HasExited) { Stop-Process -Id $frontend.Id -Force -ErrorAction SilentlyContinue }
+        foreach ($name in $envNames) {
+            [Environment]::SetEnvironmentVariable($name, $environmentBefore[$name], "Process")
+        }
+        if ($persistentExisted) { [IO.File]::WriteAllBytes($PersistentPath, $persistentBytes) }
+        elseif (Test-Path -LiteralPath $PersistentPath -PathType Leaf) { Remove-Item -LiteralPath $PersistentPath -Force }
+    }
+}
+
+$installation = Get-MetaXrSimulatorInstallation
+$runtimeBefore = Get-OpenXrRegistrySnapshot
+$persistentPath = Join-Path $env:APPDATA "MetaXR\MetaXrSimulator\persistent_data.json"
+$persistentInitiallyExisted = Test-Path -LiteralPath $persistentPath -PathType Leaf
+$persistentInitialHash = if ($persistentInitiallyExisted) { (Get-FileHash -LiteralPath $persistentPath -Algorithm SHA256).Hash } else { $null }
+$sessionRuns = @()
+$missingRecordings = @()
+$copiedReplays = @()
+$classification = "NOT_RUN"
+$playerBuilt = Test-Path -LiteralPath $playerPath -PathType Leaf
+$caughtError = $null
+
+try {
+    if ($null -eq $installation) { throw "Meta XR Simulator is not installed." }
+    & (Join-Path $PSScriptRoot "setup_meta_xr_simulator.ps1") -ArtifactRoot $ArtifactRoot -AuditOnly
+    if ($LASTEXITCODE -ne 0) { throw "Meta XR Simulator setup audit failed." }
+
+    foreach ($session in $sessionCatalog) {
+        $vrs = Join-Path $ReplayRoot ("{0}.vrs" -f $session.id)
+        if (-not (Test-Path -LiteralPath $vrs -PathType Leaf)) { $missingRecordings += [string]$session.id }
+    }
+    if ($AuditOnly) {
+        $classification = if ($missingRecordings.Count -eq 0) { "READY_TO_REPLAY" } else { "BLOCKED_MISSING_RECORDINGS" }
+    }
+    else {
+        if ($RebuildPlayer -or -not $playerBuilt) {
+            Build-SimulatorDevelopmentPlayer
+            $playerBuilt = Test-Path -LiteralPath $playerPath -PathType Leaf
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($RecordSession)) {
+            $session = $sessionCatalog | Where-Object { $_.id -eq $RecordSession } | Select-Object -First 1
+            $recordPath = Join-Path $ReplayRoot ("{0}.vrs" -f $RecordSession)
+            Write-Host "Interactive one-time recording: $RecordSession"
+            Write-Host "Use Meta XR Simulator input controls, stop recording in its Record panel, then close the development player."
+            $sessionRuns += Invoke-SimulatorSession -Session $session -Mode "record" -VrsPath $recordPath -Installation $installation -PersistentPath $persistentPath
+            $classification = if (Test-Path -LiteralPath $recordPath -PathType Leaf) { "RECORDING_CREATED_REPLAY_NOT_YET_VERIFIED" } else { "BLOCKED_RECORDING_NOT_CREATED" }
+        }
+        else {
+            foreach ($session in $sessionCatalog) {
+                $vrs = Join-Path $ReplayRoot ("{0}.vrs" -f $session.id)
+                if (-not (Test-Path -LiteralPath $vrs -PathType Leaf)) { continue }
+                $evidenceCopy = Join-Path $replayEvidenceRoot ("{0}.vrs" -f $session.id)
+                Copy-Item -LiteralPath $vrs -Destination $evidenceCopy -Force
+                $copiedReplays += $evidenceCopy
+                $sessionRuns += Invoke-SimulatorSession -Session $session -Mode "replay" -VrsPath $vrs -Installation $installation -PersistentPath $persistentPath
+            }
+            if ($sessionRuns.Count -eq 0 -and $LiveSmokeWhenRecordingsMissing) {
+                # A live neutral connection/capture proves the player can create a Meta
+                # OpenXR stereo session. It is explicitly not counted as replay coverage.
+                $smoke = $sessionCatalog | Where-Object { $_.id -eq "cockpit_neutral" } | Select-Object -First 1
+                $sessionRuns += Invoke-SimulatorSession -Session $smoke -Mode "live" -VrsPath "" -Installation $installation -PersistentPath $persistentPath
+            }
+            $failedRuns = @($sessionRuns | Where-Object { -not $_.sessionPassed })
+            if ($missingRecordings.Count -gt 0) { $classification = "BLOCKED_MISSING_RECORDINGS" }
+            elseif ($failedRuns.Count -gt 0) { $classification = "FAIL_SIMULATOR_SESSION_GATE" }
+            else { $classification = "PASS_ALL_RECORDED_SIMULATOR_SESSIONS" }
+        }
+    }
+}
+catch {
+    $caughtError = $_.Exception.ToString()
+    $classification = "FAIL_SIMULATOR_ORCHESTRATION"
+}
+finally {
+    $runtimeAfter = Get-OpenXrRegistrySnapshot
+    $persistentAfterExists = Test-Path -LiteralPath $persistentPath -PathType Leaf
+    $persistentAfterHash = if ($persistentAfterExists) { (Get-FileHash -LiteralPath $persistentPath -Algorithm SHA256).Hash } else { $null }
+    $runtimePreserved = $runtimeBefore.runtime64 -eq $runtimeAfter.runtime64 -and $runtimeBefore.runtime32 -eq $runtimeAfter.runtime32
+    $persistentRestored = $persistentInitiallyExisted -eq $persistentAfterExists -and $persistentInitialHash -eq $persistentAfterHash
+
+    $report = [ordered]@{
+        schemaVersion = 1
+        generatedUtc = [DateTime]::UtcNow.ToString("O")
+        classification = $classification
+        repository = $repoRoot
+        artifactRoot = $ArtifactRoot
+        simulatorVersion = if ($installation) { $installation.Version.ToString() } else { $null }
+        simulatorExecutable = if ($installation) { $installation.Executable } else { $null }
+        simulatorRuntimeManifest = if ($installation) { $installation.Manifest } else { $null }
+        playerPath = $playerPath
+        playerBuilt = $playerBuilt
+        shippingAndroidConfigurationChanged = $false
+        activationMethod = "Per-process XR_RUNTIME_JSON"
+        activeRuntimeBefore = $runtimeBefore
+        activeRuntimeAfter = $runtimeAfter
+        activeRuntimePreserved = $runtimePreserved
+        persistentConfigurationPath = $persistentPath
+        persistentConfigurationRestored = $persistentRestored
+        replayRoot = $ReplayRoot
+        requiredSessionIds = @($sessionCatalog.id)
+        missingRecordings = $missingRecordings
+        replayEvidenceCopies = $copiedReplays
+        sessionRuns = $sessionRuns
+        orchestrationError = $caughtError
+        timingEvidenceScope = "Simulator API/stereo/tracking/composition evidence only; never Quest GPU, thermal, or frame-performance evidence."
+    }
+    $report | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $runReportPath -Encoding utf8
+}
+
+Write-Host "Meta XR Simulator QA run report: $runReportPath"
+if ($classification -eq "PASS_ALL_RECORDED_SIMULATOR_SESSIONS" -or
+    $classification -eq "READY_TO_REPLAY" -or
+    $classification -eq "RECORDING_CREATED_REPLAY_NOT_YET_VERIFIED") { exit 0 }
+if ($AllowMissingRecordings -and $classification -eq "BLOCKED_MISSING_RECORDINGS") { exit 0 }
+exit 2

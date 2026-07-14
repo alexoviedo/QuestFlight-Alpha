@@ -7,7 +7,13 @@ Run from the repository root:
 .\scripts\run_unity_tests.ps1 -TestPlatform EditMode
 .\scripts\run_unity_tests.ps1 -TestPlatform PlayMode
 .\scripts\run_production_visual_qa.ps1
+.\scripts\run_quest_performance_budget.ps1
 .\scripts\build_production_quest.ps1
+.\scripts\run_standalone_quest_gate.ps1
 ```
 
-Machine gates prove dependency, serialization, reference, budget, image-integrity, and build contracts. They do not prove stereo temporal stability, comfort, visual quality, handling fidelity, or sustained Quest frame timing. Those claims require the three-launch worn gate and the 90-second warmup plus 60-second measurement.
+`validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence.
+
+`run_standalone_quest_gate.ps1` is the one-command physical Quest gate. It detects one authorized Quest 3, builds when needed, installs and launches the production APK, reports possible Horizon/Guardian or controller dialogs, waits for readiness, preserves the exact 90-second warmup and 60-second measurement, and collects Unity frame series, VrApi CPU/GPU/stale/tear fields, thermal state, logcat, screenshots, and product evidence. It always writes both summaries before returning and exits nonzero for an attempted `FAIL_*` temporal result; explicit blocked/not-run results remain preserved and distinct from the machine-pass/human-witness-required result. Use `-Unattended` only when no human witness is available; that mode cannot promote comfort, controller, Guardian, or worn-display acceptance.
+
+Editor and Meta XR Simulator gates prove dependency, serialization, budget, image-integrity, stereo API, tracking, input, composition, and build contracts within their stated limits. They do not prove comfort, handling fidelity, sustained Quest frame timing, thermals, or worn visual quality. Those claims require the physical headset.

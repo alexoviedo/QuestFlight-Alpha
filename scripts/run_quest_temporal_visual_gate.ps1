@@ -301,10 +301,13 @@ function Get-RuntimeEvidenceSummary {
       averageGpuFrameMs = [double](Get-ObjectProperty $report 'averageGpuFrameMs' 0)
       p95GpuFrameMs = [double](Get-ObjectProperty $report 'p95GpuFrameMs' 0)
       gpuTimingSamples = [int](Get-ObjectProperty $report 'gpuTimingSamples' 0)
+      allocationRecorderAvailable = [bool](Get-ObjectProperty $report 'allocationRecorderAvailable' $false)
+      averageGcAllocatedBytesPerFrame = [long](Get-ObjectProperty $report 'averageGcAllocatedBytesPerFrame' ([long]::MaxValue))
+      maxGcAllocatedBytesPerFrame = [long](Get-ObjectProperty $report 'maxGcAllocatedBytesPerFrame' ([long]::MaxValue))
       drawCalls = $(if ($runtimeDraw -gt 0) { $runtimeDraw } else { $auditDraw })
-      drawCallSource = $(if ($runtimeDraw -gt 0) { 'Unity runtime profiler counter' } else { 'QuestRenderBudgetAudit instancing estimate' })
+      drawCallSource = $(if ($runtimeDraw -gt 0) { 'Unity runtime profiler counter' } else { 'QuestRenderBudgetAudit effective visible material-submesh slots before batching/instancing' })
       visibleTriangles = $(if ($runtimeTriangles -gt 0) { $runtimeTriangles } else { $auditTriangles })
-      triangleSource = $(if ($runtimeTriangles -gt 0) { 'Unity runtime profiler counter' } else { 'QuestRenderBudgetAudit frustum estimate' })
+      triangleSource = $(if ($runtimeTriangles -gt 0) { 'Unity runtime profiler counter' } else { 'QuestRenderBudgetAudit effective visible material-submesh triangle indices' })
       activeRenderers = [int](Get-ObjectProperty $report 'activeRendererCount' 0)
       activeLodGroups = [int](Get-ObjectProperty $report 'activeLodGroupCount' 0)
       crossFadeLodGroups = [int](Get-ObjectProperty $report 'crossFadeLodGroupCount' 0)
@@ -369,6 +372,9 @@ function Get-RuntimeEvidenceSummary {
     averageGpuFrameMs = [double](Get-ObjectProperty $report 'averageGpuFrameMs' 0)
     p95GpuFrameMs = [double](Get-ObjectProperty $report 'p95GpuFrameMs' 0)
     gpuTimingSamples = $(if ([double](Get-ObjectProperty $report 'averageGpuFrameMs' 0) -gt 0.01) { [int](Get-ObjectProperty $report 'frameTimingManagerSamples' 0) } else { 0 })
+    allocationRecorderAvailable = $false
+    averageGcAllocatedBytesPerFrame = [long]::MaxValue
+    maxGcAllocatedBytesPerFrame = [long]::MaxValue
     drawCalls = [long](Get-ObjectProperty $budget 'estimatedInstancedDrawCalls' 0)
     drawCallSource = 'QuestRenderBudgetAudit instancing estimate'
     visibleTriangles = [long](Get-ObjectProperty $budget 'estimatedFrustumTriangles' 0)
@@ -423,19 +429,41 @@ function Get-FaultSummary {
   $pidRegex = if ([string]::IsNullOrWhiteSpace($AppPid)) { '\d+' } else { [regex]::Escape($AppPid) }
   $crash = $LogText -match "(?is)(FATAL EXCEPTION.{0,2000}$packageRegex|Fatal signal \d+.{0,500}(?:$packageRegex|pid\s+$pidRegex)|Force finishing activity.{0,300}$packageRegex)"
   $anr = $LogText -match "(?is)(ANR in\s+$packageRegex|am_anr.{0,500}$packageRegex)"
-  $oom = $LogText -match "(?is)(OutOfMemoryError.{0,1000}(?:$packageRegex|$pidRegex)|lowmemorykiller.{0,500}(?:$packageRegex|$pidRegex))"
-  $unityExceptions = @($LogText -split "`r?`n" | Where-Object {
+  $lines = @($LogText -split "`r?`n")
+  # A system-wide logcat commonly contains low-memory kills for unrelated
+  # background packages. Require the OOM signal and this app's package/PID on
+  # the same log line so nearby system traffic cannot fail the product gate.
+  $oomLines = @($lines | Where-Object {
+    $_ -match '(?i)(OutOfMemoryError|lowmemorykiller|oom_reaper)' -and
+    ($_ -match $packageRegex -or $_ -match "\b$pidRegex\b")
+  })
+  $unityExceptions = @($lines | Where-Object {
     $_ -match "\s+$pidRegex\s+\d+\s+[EAWID]\s+Unity\s*:.*(?:Exception|Error):" -and
     $_ -notmatch 'Evidence write failed'
   })
-  $thermalTextWarning = $LogText -match '(?i)(thermal[^\r\n]*(?:throttl|critical|severe)|THROTTLING)'
+  # Treat dumpsys status and VrApi PLS as the primary thermal signals. Logcat
+  # only contributes explicit critical/severe/emergency/shutdown events or an
+  # affirmative active/enabled/started throttling event; class names and empty
+  # `*Throttling {}` configuration messages are not thermal failures.
+  $thermalWarningLines = @($lines | Where-Object {
+    $_ -match '(?i)(thermal|temperature)' -and
+    ($_ -match '(?i)(critical|severe|emergency|shutdown|status\s*[:=]\s*[1-6])' -or
+      $_ -match '(?i)(throttl(?:e|ing)[^\r\n]*(?:active|enabled|started)|(?:active|enabled|started)[^\r\n]*throttl(?:e|ing))')
+  })
+  $guardianDialogLines = @($lines | Where-Object {
+    $_ -match '(?i)(GuardianDialogActivity|GuardianDialogMgr[^\r\n]*requestDialog|GUARDIAN_TRACKING_LOST)'
+  })
   return [pscustomobject]@{
     crash = [bool]$crash
     anr = [bool]$anr
-    oom = [bool]$oom
+    oom = $oomLines.Count -gt 0
+    oomLines = @($oomLines | Select-Object -Unique)
     unityExceptionCount = $unityExceptions.Count
     unityExceptionLines = @($unityExceptions | Select-Object -Unique)
-    thermalWarningInLog = [bool]$thermalTextWarning
+    thermalWarningInLog = $thermalWarningLines.Count -gt 0
+    thermalWarningLines = @($thermalWarningLines | Select-Object -Unique)
+    guardianDialogDetected = $guardianDialogLines.Count -gt 0
+    guardianDialogLines = @($guardianDialogLines | Select-Object -Unique -First 20)
   }
 }
 
@@ -614,9 +642,12 @@ function Write-GateSummary {
   $drawPass = $runtimeAvailable -and [long](Get-ObjectProperty $Runtime 'drawCalls' ([long]::MaxValue)) -le $RequiredDrawCalls
   $trianglePass = $runtimeAvailable -and [long](Get-ObjectProperty $Runtime 'visibleTriangles' ([long]::MaxValue)) -le $RequiredVisibleTriangles
   $materialPass = $runtimeAvailable -and [int](Get-ObjectProperty $Runtime 'sceneMaterialCount' 0) -le $RequiredSceneMaterials
+  $allocationPass = $runtimeAvailable -and
+    [bool](Get-ObjectProperty $Runtime 'allocationRecorderAvailable' $false) -and
+    [long](Get-ObjectProperty $Runtime 'maxGcAllocatedBytesPerFrame' ([long]::MaxValue)) -eq 0
   $durationPass = $runtimeAvailable -and [double](Get-ObjectProperty $Runtime 'warmupSeconds' 0) -ge 90.0 -and [double](Get-ObjectProperty $Runtime 'measuredSeconds' 0) -ge 60.0
   $faultFree = -not $Faults.crash -and -not $Faults.anr -and -not $Faults.oom -and $Faults.unityExceptionCount -eq 0
-  $machinePass = $p95Pass -and $overPass -and $drawPass -and $trianglePass -and $materialPass -and $durationPass -and $faultFree -and -not $ThermalWarning
+  $machinePass = $p95Pass -and $overPass -and $drawPass -and $trianglePass -and $materialPass -and $allocationPass -and $durationPass -and $faultFree -and -not $ThermalWarning
 
   $workloadSource = 'unavailable'
   $workloadAverage = 0.0
@@ -676,6 +707,7 @@ function Write-GateSummary {
       drawCallsMax = $RequiredDrawCalls
       visibleTrianglesMax = $RequiredVisibleTriangles
       sceneMaterialsMax = $RequiredSceneMaterials
+      steadyStateGcAllocatedBytesPerFrameMax = 0
     }
     deliveredCadenceGate = [ordered]@{
       passed = $machinePass
@@ -686,6 +718,7 @@ function Write-GateSummary {
       drawCallsPassed = $drawPass
       visibleTrianglesPassed = $trianglePass
       sceneMaterialsPassed = $materialPass
+      zeroSteadyStateGcAllocationsPassed = $allocationPass
       faultFree = $faultFree
       thermalPassed = -not $ThermalWarning
     }
@@ -722,7 +755,14 @@ function Write-GateSummary {
       disclosure = 'adb screenrecord can add compositor/encoder overhead. Runtime per-frame and VrApi values are retained with this flag; rerun with -SkipScreenRecording for an unrecorded performance control if a hard gate is marginal.'
       recorderDisclosure = 'The Unity recorder preallocates struct samples and reuses its yield instruction; it performs no intentional per-frame managed allocation.'
     }
-    pulledEvidence = @($PulledEvidence | ForEach-Object { [pscustomobject]@{ devicePath = $_.devicePath; localPath = $_.localPath; pulled = $_.pulled; bytes = $_.bytes } })
+    pulledEvidence = @($PulledEvidence | Where-Object { $null -ne $_ } | ForEach-Object {
+      [pscustomobject]@{
+        devicePath = Get-ObjectProperty $_ 'devicePath' ''
+        localPath = Get-ObjectProperty $_ 'localPath' ''
+        pulled = [bool](Get-ObjectProperty $_ 'pulled' $false)
+        bytes = [long](Get-ObjectProperty $_ 'bytes' 0)
+      }
+    })
     logcatPath = $LogcatPath
     metricSemantics = [ordered]@{
       deliveredInterval = 'Unity Time.unscaledDeltaTime is the delivered-frame cadence. At synchronized 72 Hz it naturally centers near 13.889 ms, so it is reported separately from execution workload.'
@@ -752,6 +792,7 @@ function Write-GateSummary {
     [void]$md.AppendLine("- Frames over 13.889 ms: $($Runtime.framesOverBudget) / $($Runtime.sampleCount) ($(Format-Number ([double]$Runtime.framesOverBudgetRatio * 100) '0.00')%)")
     [void]$md.AppendLine("- Workload average / p95: $(Format-Number $Runtime.averageWorkloadMs '0.000') / $(Format-Number $Runtime.p95WorkloadMs '0.000') ms")
     [void]$md.AppendLine("- Draw calls: $($Runtime.drawCalls) ($($Runtime.drawCallSource)); visible triangles: $($Runtime.visibleTriangles) ($($Runtime.triangleSource)); scene materials: $(Get-ObjectProperty $Runtime 'sceneMaterialCount' 0)")
+    [void]$md.AppendLine("- GC allocation recorder / average / maximum: $($Runtime.allocationRecorderAvailable) / $($Runtime.averageGcAllocatedBytesPerFrame) / $($Runtime.maxGcAllocatedBytesPerFrame) bytes per frame")
     [void]$md.AppendLine("- Production scene / architecture / backend: $(Get-ObjectProperty $Runtime 'productionVerticalSliceActive' $false) / $(Get-ObjectProperty $Runtime 'productionArchitectureVersion' '') / $(Get-ObjectProperty $Runtime 'authoritativePhysicsBackend' '')")
     [void]$md.AppendLine("- Active renderers / LOD groups / crossfade LOD groups: $($Runtime.activeRenderers) / $($Runtime.activeLodGroups) / $($Runtime.crossFadeLodGroups)")
     [void]$md.AppendLine("- Water surfaces / transparent water slots / materials / triangles: $($Runtime.waterRenderers) / $($Runtime.transparentWaterRenderers) / $($Runtime.waterMaterials) / $($Runtime.waterTriangles)")
@@ -896,9 +937,18 @@ try {
   [ordered]@{ options = @(
     [ordered]@{ key = 'qfl_scenery_mode'; value = $LaunchSceneryMode }
   ) } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $launchOptionsPath -Encoding UTF8
-  Invoke-Adb -Arguments @('shell', 'mkdir', '-p', "/sdcard/Android/data/$PackageId/files/QuestFlight") | Out-Null
-  Invoke-Adb -Arguments @('push', $launchOptionsPath, "/sdcard/Android/data/$PackageId/files/QuestFlight/launch_options.json") |
-    Set-Content -LiteralPath (Join-Path $OutputDir 'adb_push_launch_options.txt') -Encoding UTF8
+  # Do not create the application evidence directory through adb. A directory
+  # created by the shell user is readable but not writable by the release app
+  # on scoped storage, which prevents the recorder from writing its report.
+  # The option is supplied below as an intent extra; retain the local JSON as
+  # evidence of the exact value. Clean up only the obsolete shell-owned file
+  # from older gate versions, then remove its parent only if it is empty so the
+  # application can create and own the directory itself.
+  $remoteEvidenceRoot = "/sdcard/Android/data/$PackageId/files/QuestFlight"
+  Invoke-Adb -Arguments @('shell', 'rm', '-f', "$remoteEvidenceRoot/launch_options.json") -AllowFailure | Out-Null
+  Invoke-Adb -Arguments @('shell', 'rmdir', $remoteEvidenceRoot) -AllowFailure | Out-Null
+  Set-Content -LiteralPath (Join-Path $OutputDir 'launch_options_transport.txt') `
+    -Value 'qfl_scenery_mode is supplied through the Activity intent extra; no shell-owned app evidence directory was created.' -Encoding UTF8
 
   if (-not $StaticEvidenceOnly -and -not $SuppressOperatorPrompt -and -not $NoHumanWitness) { Write-Host $OperatorRequest }
   Invoke-Adb -Arguments @('logcat', '-c') | Out-Null
@@ -1012,7 +1062,8 @@ New-Item -ItemType Directory -Force -Path $pullRoot | Out-Null
 if (-not [string]::IsNullOrWhiteSpace($logText)) {
   $pulledEvidence = Pull-CurrentEvidencePaths -LogText $logText -DestinationRoot $pullRoot
 }
-$pulledEvidence | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $OutputDir 'pulled_evidence_manifest.json') -Encoding UTF8
+ConvertTo-Json -InputObject @($pulledEvidence) -Depth 6 |
+  Set-Content -LiteralPath (Join-Path $OutputDir 'pulled_evidence_manifest.json') -Encoding UTF8
 
 $vrApiResult = Get-VrApiEvidence -LogcatPath $logcatPath -ExplicitAppPid $appPid -CsvPath (Join-Path $OutputDir 'vrapi_app_samples.csv')
 $runtime = Get-RuntimeEvidenceSummary -EvidenceRoot $pullRoot

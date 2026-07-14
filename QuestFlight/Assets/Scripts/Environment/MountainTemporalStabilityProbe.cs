@@ -237,6 +237,9 @@ namespace QuestFlightLab.Environment
             LastReport = CreateReport();
             int expectedSamples = Mathf.CeilToInt(Mathf.Max(1f, automaticCaptureSeconds) * 90f * Mathf.Max(1, _bindings.Count));
             LastReport.frameSamples = new List<MountainRendererFrameSample>(expectedSamples);
+            // Revalidate the renderer set before the allocation-sensitive capture begins. Per-frame
+            // samples still detect identity/transform/material changes, and EndCapture scans again.
+            ScanRendererSetAndLegacySources();
         }
 
         public void CaptureFrameNow()
@@ -244,11 +247,6 @@ namespace QuestFlightLab.Environment
             if (!_capturing) BeginCapture(_camera);
             _camera = ResolveCamera(_camera);
             _sampledFrames++;
-
-            if (_sampledFrames == 1 || _sampledFrames % 30 == 0)
-            {
-                ScanRendererSetAndLegacySources();
-            }
 
             foreach (RendererBinding binding in _bindings)
             {
@@ -446,8 +444,18 @@ namespace QuestFlightLab.Environment
                 AddViolation($"Camera-facing/billboard/impostor terrain is forbidden: {baseline.parentHierarchy}.");
             if (baseline.ditherKeywordOrShader)
                 AddViolation($"Dither/crossfade material path is forbidden on terrain: {baseline.parentHierarchy}.");
-            if (!baseline.staticGameObject)
+            if (RequiresAuthoredStaticFlag(Application.isEditor) && !baseline.staticGameObject)
                 AddViolation($"Authoritative terrain object is not marked static: {baseline.parentHierarchy}.");
+        }
+
+        /// <summary>
+        /// Unity's player static-batching conversion can clear GameObject.isStatic after consuming
+        /// the authored flag. The flag is therefore an Editor authoring invariant only; player QA
+        /// continues to enforce mesh, topology, transform, material, renderer-set, and LOD stability.
+        /// </summary>
+        public static bool RequiresAuthoredStaticFlag(bool applicationIsEditor)
+        {
+            return applicationIsEditor;
         }
 
         private MountainRendererBaseline CreateBaseline(Renderer renderer, MeshFilter filter, LODGroup lodGroup, LOD[] lods)

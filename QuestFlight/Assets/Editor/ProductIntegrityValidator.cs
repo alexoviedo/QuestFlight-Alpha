@@ -87,7 +87,6 @@ namespace QuestFlight.Editor
             "ProductionEnvironmentPrefabBaker",
             "Gaussian",
             "Splat",
-            "JSBSim",
             "Training",
             "DebugHud",
             "DebugHUD",
@@ -95,6 +94,13 @@ namespace QuestFlight.Editor
             "USB2BLE",
             "HOTAS"
         };
+
+        private static readonly HashSet<string> ApprovedJsbsimProductAssets =
+            new HashSet<string>(StringComparer.Ordinal)
+            {
+                "Assets/Scripts/Flight/Backends/JSBSimNativeDevelopmentBackend.cs",
+                "Assets/Editor/Tests/JSBSimPromotionEditModeTests.cs"
+            };
 
         private static readonly string[] ForbiddenSceneComponentNames =
         {
@@ -288,6 +294,10 @@ namespace QuestFlight.Editor
             foreach (string token in ForbiddenAssetPathTokens)
                 if (path.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0)
                     report.failures.Add($"excluded R&D asset is present: {path} ({token})");
+            foreach (string path in assets.Where(path =>
+                         path.IndexOf("JSBSim", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                         !ApprovedJsbsimProductAssets.Contains(path)))
+                report.failures.Add($"unapproved JSBSim asset is present: {path}");
 
             Regex guidPattern = new Regex(@"guid:\s*([0-9a-f]{32})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             foreach (string path in assets.Where(IsTextSerializedUnityAsset))
@@ -427,6 +437,8 @@ namespace QuestFlight.Editor
                 {
                     Require(coordinators[0].requestedBackend == FlightDynamicsBackendKind.UnityPrototype,
                         "the sole coordinator must request UnityPrototypeFlightBackend", report);
+                    Require(coordinators[0].preferNativeInDevelopment,
+                        "the sole coordinator must serialize the development-only native JSBSim preference", report);
                     Require(coordinators[0].HasAuthoredReferences(out string authorityBindingError),
                         "flight-authority references are not fully serialized: " + authorityBindingError, report);
                 }

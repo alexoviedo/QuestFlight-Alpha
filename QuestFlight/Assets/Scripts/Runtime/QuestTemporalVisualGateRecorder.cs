@@ -34,6 +34,8 @@ namespace QuestFlightLab.Runtime
         public int estimatedInstancedDrawCalls;
         public long estimatedFrustumTriangles;
         public int uniqueMaterialCount;
+        public string drawCountSemantics;
+        public string triangleCountSemantics;
     }
 
     public static class QuestRenderBudgetAudit
@@ -51,21 +53,41 @@ namespace QuestFlightLab.Runtime
                 : renderers.Where(renderer => GeometryUtility.TestPlanesAABB(frustum, renderer.bounds)).ToArray();
             HashSet<Material> materials = new HashSet<Material>();
             long triangles = 0;
+            int drawCalls = 0;
             foreach (Renderer renderer in visible)
             {
-                foreach (Material material in renderer.sharedMaterials)
+                Material[] sharedMaterials = renderer.sharedMaterials;
+                foreach (Material material in sharedMaterials)
                     if (material != null) materials.Add(material);
-                MeshFilter filter = renderer.GetComponent<MeshFilter>();
-                if (filter?.sharedMesh == null) continue;
-                for (int subMesh = 0; subMesh < filter.sharedMesh.subMeshCount; subMesh++)
-                    triangles += (long)filter.sharedMesh.GetIndexCount(subMesh) / 3L;
+
+                Mesh mesh = renderer is SkinnedMeshRenderer skinned
+                    ? skinned.sharedMesh
+                    : renderer is MeshRenderer
+                        ? renderer.GetComponent<MeshFilter>()?.sharedMesh
+                        : null;
+                if (mesh == null || mesh.subMeshCount == 0) continue;
+
+                // Unity maps each material slot to the corresponding submesh and maps
+                // surplus material slots to the final submesh. Count only non-null,
+                // effectively rendered slots so a multi-submesh mesh is neither collapsed
+                // to one draw nor counted once in full for every material.
+                for (int materialSlot = 0; materialSlot < sharedMaterials.Length; materialSlot++)
+                {
+                    if (sharedMaterials[materialSlot] == null) continue;
+                    int subMesh = Mathf.Min(materialSlot, mesh.subMeshCount - 1);
+                    drawCalls++;
+                    if (mesh.GetTopology(subMesh) == MeshTopology.Triangles)
+                        triangles += (long)mesh.GetIndexCount(subMesh) / 3L;
+                }
             }
             return new RenderBudgetSnapshot
             {
                 activeRendererCount = renderers.Length,
-                estimatedInstancedDrawCalls = visible.Length,
+                estimatedInstancedDrawCalls = drawCalls,
                 estimatedFrustumTriangles = triangles,
-                uniqueMaterialCount = materials.Count
+                uniqueMaterialCount = materials.Count,
+                drawCountSemantics = "Visible non-null MeshRenderer/SkinnedMeshRenderer material-submesh slots before batching or instancing.",
+                triangleCountSemantics = "Triangle topology indices for the same effective rendered material-submesh slots."
             };
         }
     }
@@ -248,6 +270,12 @@ namespace QuestFlightLab.Runtime
             while (Time.realtimeSinceStartup - warmupStarted < warmupSeconds) yield return null;
 
             QuestTemporalVisualGateReport report = CreateReport(readiness, Time.realtimeSinceStartup - readinessStarted);
+            // Allocate all observer-owned steady-state storage before the allocation recorder starts.
+            // The gate must measure the product workload, not allocations introduced by its own probe.
+            int expectedFrameSamples = Mathf.CeilToInt(Mathf.Max(1f, measurementSeconds) * 144f) + 16;
+            report.frameSamples.Capacity = Mathf.Max(report.frameSamples.Capacity, expectedFrameSamples);
+            WaitForEndOfFrame waitForEndOfFrame = new WaitForEndOfFrame();
+            FrameTiming[] timingBuffer = new FrameTiming[1];
             LastReport = report;
             if (mountainProbe != null)
             {
@@ -276,12 +304,11 @@ namespace QuestFlightLab.Runtime
             int sequence = 0;
             while (Time.realtimeSinceStartup - measurementStarted < measurementSeconds)
             {
-                yield return new WaitForEndOfFrame();
+                yield return waitForEndOfFrame;
                 FrameTimingManager.CaptureFrameTimings();
-                FrameTiming[] timing = new FrameTiming[1];
-                uint count = FrameTimingManager.GetLatestTimings(1, timing);
-                float cpu = count > 0 ? (float)timing[0].cpuFrameTime : 0f;
-                float gpu = count > 0 ? (float)timing[0].gpuFrameTime : 0f;
+                uint count = FrameTimingManager.GetLatestTimings(1, timingBuffer);
+                float cpu = count > 0 ? (float)timingBuffer[0].cpuFrameTime : 0f;
+                float gpu = count > 0 ? (float)timingBuffer[0].gpuFrameTime : 0f;
                 report.frameSamples.Add(new QuestTemporalFrameSample
                 {
                     sequence = sequence++,

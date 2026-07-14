@@ -69,6 +69,7 @@ namespace QuestFlightLab.Tests.PlayMode
 
             FlightDynamicsCoordinator coordinator = ComponentsInWorld<FlightDynamicsCoordinator>(world).Single();
             Assert.That(coordinator.requestedBackend, Is.EqualTo(FlightDynamicsBackendKind.UnityPrototype));
+            Assert.That(coordinator.preferNativeInDevelopment, Is.True);
             Assert.That(coordinator.simulationRoot, Is.EqualTo(rig.transform));
             Assert.That(coordinator.presentationRoot, Is.EqualTo(rig.transform));
             Assert.That(coordinator.initialConditionProvider, Is.Not.Null);
