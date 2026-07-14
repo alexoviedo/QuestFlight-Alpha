@@ -394,6 +394,86 @@
       "path": "Assets/Scripts/Product/ProductRuntimePolicy.cs",
       "classification": "approved_product_authored",
       "reason": "Product runtime policy that does not construct serialized hierarchy."
+    },
+    {
+      "path": "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionFarTerrain.shader",
+      "classification": "approved_product_authored",
+      "reason": "Quest-safe fixed far-terrain shader authored for the standalone recovery pass."
+    },
+    {
+      "path": "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionSparseVegetation.shader",
+      "classification": "approved_product_authored",
+      "reason": "Quest-safe sparse-vegetation shader authored for the standalone recovery pass."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_ButtonPlate_MAT_-3879712564025455224.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_Buttons_MAT_5848668965762625865.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_GlassMat_New_-8047257934222504514.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_Interior_Body_MAT_3992800033531730471.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_MI_Glass1_-7336442739054310687.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_Meter_01_MAT_7515756384451954381.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_New_Mat_-3503549811397914274.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_New_Mat_01_8844457045159653726.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_Paddle_MAT_-8680491767069482703.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_SeatBelt_MAT_2451713696749756519.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_SeatGear_MAT_1937983516004373915.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_Seats_MAT_-3372726601580832069.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_Steering_MAT_-1494450411544164266.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/Cockpit_White_New_Static_5379052021959119566.mat",
+      "classification": "approved_product_authored",
+      "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
     }
   ],
   "product_replacements": [

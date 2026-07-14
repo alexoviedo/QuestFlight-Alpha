@@ -47,6 +47,10 @@ if (git -C $SourceRepo status --porcelain) { throw 'R&D source working tree is n
 
 Push-Location $repoRoot
 try {
+  Invoke-Checked 'standalone Quest gate classification policy tests' {
+    & .\scripts\tests\test_standalone_quest_gate_policy.ps1
+  }
+
   Invoke-Checked 'extractor unit tests' { python -B -m unittest discover -s tools/tests -v }
 
   Invoke-Checked 'KBDU data pipeline unit tests' {
@@ -86,7 +90,10 @@ try {
 
   & .\scripts\run_unity_tests.ps1 -TestPlatform EditMode -ArtifactDir (Join-Path $ArtifactDir 'editmode') -TimeoutSeconds 900
   & .\scripts\run_unity_tests.ps1 -TestPlatform PlayMode -ArtifactDir (Join-Path $ArtifactDir 'playmode') -TimeoutSeconds 900
-  & .\scripts\run_production_visual_qa.ps1 -ArtifactDir (Join-Path $ArtifactDir 'visual_qa') -TimeoutSeconds 900
+  $visualQaDir = Join-Path $ArtifactDir 'visual_qa'
+  & .\scripts\run_production_visual_qa.ps1 -ArtifactDir $visualQaDir -TimeoutSeconds 900
+  & .\scripts\run_quest_performance_budget.ps1 -ArtifactDir (Join-Path $ArtifactDir 'performance_budget') `
+    -SkipVisualQa -VisualQaReport (Join-Path $visualQaDir 'visual_qa_report.json') -TimeoutSeconds 900
   & .\scripts\build_production_quest.ps1 -ArtifactDir (Join-Path $ArtifactDir 'build') -TimeoutSeconds 1800
 
   $tracked = @(git ls-files)
@@ -94,8 +101,16 @@ try {
     $_ -match '(^|/)(Library|Temp|Obj|Logs|Builds|PackageCache)(/|$)|\.(apk|aab|mp4|mov|log|zip|7z)$'
   })
   if ($forbidden.Count -gt 0) { throw "Forbidden tracked paths: $($forbidden -join ', ')" }
+  $approvedJsbsimPromotion = @(
+    '^QuestFlight/Packages/com\.alexoviedo\.questflight\.jsbsim/',
+    '^QuestFlight/Assets/Scripts/Flight/Backends/JSBSimNativeDevelopmentBackend\.cs(\.meta)?$',
+    '^QuestFlight/Assets/Editor/Tests/JSBSimPromotionEditModeTests\.cs(\.meta)?$',
+    '^docs/NATIVE_JSBSIM_PROMOTION_GATE\.md$'
+  ) -join '|'
   $legacy = @($tracked | Where-Object {
-    $_ -match 'InputLab|QuestFirstViewRuntimeRepair|Usb2Ble|HOTAS|GaussianSplat|SplatSceneryProvider|JSBSim|FlightDynamicsRuntimeBootstrap|ShortPlaytestDemoPilot|FlightTelemetry'
+    $_ -match 'InputLab|QuestFirstViewRuntimeRepair|Usb2Ble|HOTAS|GaussianSplat|SplatSceneryProvider|FlightDynamicsRuntimeBootstrap|ShortPlaytestDemoPilot|FlightTelemetry' -or
+    ($_ -match 'JSBSim' -and
+      $_ -notmatch $approvedJsbsimPromotion)
   })
   if ($legacy.Count -gt 0) { throw "Legacy product files leaked into Git: $($legacy -join ', ')" }
   if ($RequireCleanGit -and (git status --porcelain)) { throw 'Product Git working tree is not clean' }
@@ -112,6 +127,7 @@ try {
     editMode = 'PASS'
     playMode = 'PASS'
     visualQa = 'PASS_MACHINE_HUMAN_REVIEW_REQUIRED'
+    staticQuestPerformanceBudget = 'PASS_PLANNING_ONLY_HEADSET_MEASUREMENT_REQUIRED'
     androidBuild = 'PASS'
     cleanGitRequired = [bool]$RequireCleanGit
   } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $ArtifactDir 'validation_summary.json') -Encoding UTF8
