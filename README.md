@@ -11,7 +11,10 @@ T2 QuestFlight is a private, early product vertical slice for Meta Quest 3. It c
 - Touch-based seat calibration and standard gamepad/deterministic input;
 - standalone Quest 3 build target.
 
-The project has no training lessons, USB2BLE/HOTAS dependency, Gaussian splats, native JSBSim authority, or legacy runtime scene repair.
+The project has no training lessons, USB2BLE/HOTAS dependency, Gaussian splats,
+native JSBSim release authority, or legacy runtime scene repair. A bounded
+native JSBSim package is available only behind the sole coordinator in
+Editor/development builds and falls back to the authoritative Unity prototype.
 
 ## Open and validate
 
@@ -28,6 +31,8 @@ The audited KOG_THORNS Cessna172 model is CC BY 4.0 and is committed through Git
 
 ## Status and claims
 
-The clean standalone APK and machine gates pass, but the lead-reviewed visual result is 5/10 and therefore did not qualify for worn Quest acceptance. The current product decision is to evaluate this clean vertical slice as PCVR before investing in further standalone rendering work.
+Standalone Quest 3 is the sole shipping target. The earlier PCVR recommendation was based on a visual-score precondition, not measured standalone hardware failure, and is superseded. PCVR, Quest Link, Air Link, remote rendering, Windows shipping builds, and required-PC runtime dependencies are not supported product fallbacks.
+
+Meta XR Simulator and a Windows/OpenXR development executable or Unity Play Mode may be used only for repeatable development and visual regression. Simulator timing is not Quest performance evidence. Worn Quest frame, thermal, comfort, and controller acceptance still require a physical headset before release. See `docs/STANDALONE_QUEST_PRODUCT_REQUIREMENTS.md`.
 
 This prototype is not FAA approved, not for navigation, does not provide legal training credit, and does not claim certified C172 fidelity, production photorealism, broad device compatibility, or final Quest performance. See `docs/KNOWN_LIMITATIONS.md`.

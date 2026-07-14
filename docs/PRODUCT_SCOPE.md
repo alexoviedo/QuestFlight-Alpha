@@ -2,21 +2,30 @@
 
 ## Included
 
-- standalone Quest 3 vertical slice;
+- standalone Quest 3 as the sole shipping target;
+- self-contained Android ARM64, Vulkan, and OpenXR runtime architecture;
 - one C172-style aircraft/cockpit presentation path;
 - one KBDU-inspired authored scene and environment;
 - Unity prototype flight authority;
 - deterministic demo and standard gamepad input;
 - seat-relative viewpoint calibration;
 - production build, Visual QA, and Quest temporal gates.
+- Meta XR Simulator solely as a development, stereo-composition, tracking, input, and visual-regression tool.
 
 ## Excluded from v1
 
 - training curriculum or training-credit claims;
 - USB2BLE, HOTAS, and hardware-integration experiments;
 - Gaussian splats;
-- native/sidecar JSBSim authority or runtime backend selection;
+- native JSBSim as a release default, sidecar process, required-PC service, or
+  second flight authority. The bounded embedded package may run behind the sole
+  coordinator only in Editor/development builds and must fail closed to the
+  Unity prototype;
 - legacy R&D scenes, runtime repair, procedural fallback world construction, debug HUDs, and verbose evidence overlays;
 - airport/world expansion unrelated to the vertical slice.
+- PCVR, Quest Link, Air Link, Windows shipping builds, remote rendering, and any required-PC product dependency;
+- simulator/editor timing represented as Quest hardware performance.
+
+If the standalone target must change, the allowed product decisions are to continue standalone Quest, narrow its feature or visual scope, or pause/stop. PCVR is not a supported fallback. Actual Quest frame-time, thermal, comfort, and controller acceptance requires physical-headset evidence before release.
 
 The application is not FAA approved and is not for navigation or legal pilot-training credit.

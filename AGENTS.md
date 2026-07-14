@@ -15,3 +15,14 @@
 - The Unity prototype backend remains authoritative until the unchanged native JSBSim promotion gate passes.
 - Preserve paired Unity `.meta` files and GUIDs for extracted assets.
 - Keep restricted or unclear-rights aircraft assets local and uncommitted.
+- Standalone Quest 3 is the sole shipping target.
+- Do not introduce PCVR, Quest Link, Air Link, remote-rendering, or required-PC product dependencies.
+- Meta XR Simulator is a development and visual-regression tool only.
+- Simulator performance is never presented as Quest hardware performance.
+- Product visual changes require inspected stereo simulator captures and standard Visual QA.
+- Actual Quest frame and thermal acceptance requires the physical headset when available.
+- The shipping product must remain self-contained Android ARM64, Vulkan, and OpenXR.
+- The product scene remains explicitly authored and serialized.
+- Legacy R&D systems may not reenter the product dependency closure.
+- The Unity prototype backend remains authoritative until native JSBSim passes every promotion gate.
+- Do not commit raw orthophotos, source archives, caches, generated builds, or unclear-license assets.
