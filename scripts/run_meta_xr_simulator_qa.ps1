@@ -8,6 +8,7 @@ param(
     [switch]$AllowMissingRecordings,
     [switch]$LiveSmokeWhenRecordingsMissing,
     [string]$RecordSession,
+    [string]$DevelopmentScratchRoot,
     [int]$SessionTimeoutSeconds = 240,
     [int]$CaptureWidth = 1440,
     [int]$CaptureHeight = 1440
@@ -23,6 +24,12 @@ if ([string]::IsNullOrWhiteSpace($ArtifactRoot)) {
     $ArtifactRoot = Join-Path (Split-Path -Parent $repoRoot) "T2-QuestFlight-product-artifacts\standalone_recovery_$stamp"
 }
 $ArtifactRoot = [IO.Path]::GetFullPath($ArtifactRoot)
+$DevelopmentScratchRoot = if ([string]::IsNullOrWhiteSpace($DevelopmentScratchRoot)) {
+    Join-Path ([IO.Path]::GetTempPath()) "QuestFlight\MetaXrSimulator"
+} else {
+    $DevelopmentScratchRoot
+}
+$DevelopmentScratchRoot = [IO.Path]::GetFullPath($DevelopmentScratchRoot)
 $simulatorRoot = Join-Path $ArtifactRoot "meta_xr_simulator"
 $outputDirectory = Join-Path $simulatorRoot "qa_run"
 $sessionOutputRoot = Join-Path $outputDirectory "sessions"
@@ -36,6 +43,10 @@ if ([string]::IsNullOrWhiteSpace($ReplayRoot)) {
 }
 $ReplayRoot = [IO.Path]::GetFullPath($ReplayRoot)
 New-Item -ItemType Directory -Path $outputDirectory,$sessionOutputRoot,$logRoot,$replayEvidenceRoot,$ReplayRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $DevelopmentScratchRoot -Force | Out-Null
+$developmentCopyPath = $null
+$developmentCopyRemoved = $false
+$developmentCleanupError = $null
 
 $sessionCatalog = @(
     [ordered]@{ id = "cockpit_neutral"; description = "Cockpit neutral forward view"; delaySeconds = 4; startDemo = $false },
@@ -120,13 +131,33 @@ function Assert-UnitySlotAvailable {
 
 function New-DevelopmentProjectCopy {
     $copyStamp = [DateTime]::UtcNow.ToString("yyyyMMdd_HHmmss")
-    $copyRoot = Join-Path $simulatorRoot "dev_project_$copyStamp"
+    $copyRoot = Join-Path $DevelopmentScratchRoot ("dev_project_{0}_{1}" -f $copyStamp, $PID)
+    $scratchPrefix = $DevelopmentScratchRoot.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (-not $copyRoot.StartsWith($scratchPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Simulator development copy escaped its scratch root: $copyRoot"
+    }
+    $script:developmentCopyPath = $copyRoot
     New-Item -ItemType Directory -Path $copyRoot -Force | Out-Null
     foreach ($name in @("Assets", "Packages", "ProjectSettings")) {
         $source = Join-Path $unityProject $name
         Copy-Item -LiteralPath $source -Destination $copyRoot -Recurse -Force
     }
     return $copyRoot
+}
+
+function Remove-DevelopmentProjectCopy {
+    param([string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path) -or -not (Test-Path -LiteralPath $Path -PathType Container)) { return }
+    $scratch = [IO.Path]::GetFullPath($DevelopmentScratchRoot).TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+    $candidate = [IO.Path]::GetFullPath($Path)
+    $prefix = $scratch + [IO.Path]::DirectorySeparatorChar
+    $leaf = [IO.Path]::GetFileName($candidate)
+    if (-not $candidate.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -or
+        $leaf -notmatch '^dev_project_\d{8}_\d{6}_\d+$') {
+        throw "Refusing to remove unverified simulator development copy: $candidate"
+    }
+    Remove-Item -LiteralPath $candidate -Recurse -Force
+    $script:developmentCopyRemoved = -not (Test-Path -LiteralPath $candidate)
 }
 
 function Build-SimulatorDevelopmentPlayer {
@@ -167,6 +198,8 @@ function Build-SimulatorDevelopmentPlayer {
         $env:QFL_META_XR_SIMULATOR_EXPECTED_PROJECT_ROOT = $previous.expected
         $env:QFL_META_XR_SIMULATOR_PLAYER_PATH = $previous.player
         $env:QFL_META_XR_SIMULATOR_BUILD_REPORT = $previous.report
+        try { Remove-DevelopmentProjectCopy -Path $devProject }
+        catch { $script:developmentCleanupError = $_.Exception.Message }
     }
 }
 
@@ -368,6 +401,9 @@ finally {
         simulatorRuntimeManifest = if ($installation) { $installation.Manifest } else { $null }
         playerPath = $playerPath
         playerBuilt = $playerBuilt
+        developmentScratchRoot = $DevelopmentScratchRoot
+        developmentProjectRemoved = $developmentCopyRemoved
+        developmentCleanupError = $developmentCleanupError
         shippingAndroidConfigurationChanged = $false
         activationMethod = "Per-process XR_RUNTIME_JSON"
         activeRuntimeBefore = $runtimeBefore
