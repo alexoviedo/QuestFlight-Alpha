@@ -1,0 +1,157 @@
+{
+  "schema": "questflight.photoreal_sky.v1",
+  "evaluated_utc": "2026-07-16T21:42:00Z",
+  "license": {
+    "name": "CC0 1.0 Universal",
+    "spdx": "CC0-1.0",
+    "official_poly_haven_license_url": "https://polyhaven.com/license",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/"
+  },
+  "approved_candidate_evaluation": [
+    {
+      "asset_id": "kloofendal_38d_partly_cloudy_puresky",
+      "name": "Kloofendal 38d Partly Cloudy (Pure Sky)",
+      "asset_url": "https://polyhaven.com/a/kloofendal_38d_partly_cloudy_puresky",
+      "info_api_url": "https://api.polyhaven.com/info/kloofendal_38d_partly_cloudy_puresky",
+      "files_api_url": "https://api.polyhaven.com/files/kloofendal_38d_partly_cloudy_puresky",
+      "official_attributes": {
+        "time_of_day": "midday",
+        "weather": "partly_cloudy",
+        "light_type": "natural",
+        "contrast": "high",
+        "pure_sky": true
+      },
+      "official_files_hash": "6de64489e7b408f8b3ab416b06ceaf5f45d8bc6f",
+      "decision": "not_selected",
+      "reason": "Strong directional sun and high contrast are less compatible with the requested moderate-contrast runway visibility."
+    },
+    {
+      "asset_id": "kloppenheim_03_puresky",
+      "name": "Kloppenheim 03 (Pure Sky)",
+      "asset_url": "https://polyhaven.com/a/kloppenheim_03_puresky",
+      "info_api_url": "https://api.polyhaven.com/info/kloppenheim_03_puresky",
+      "files_api_url": "https://api.polyhaven.com/files/kloppenheim_03_puresky",
+      "official_attributes": {
+        "time_of_day": "midday",
+        "weather": "partly_cloudy",
+        "light_type": "natural",
+        "contrast": "medium",
+        "pure_sky": true
+      },
+      "official_files_hash": "aa54d38dc6385dfbdb4a2bc3fc2ebbfbba13bb50",
+      "decision": "selected",
+      "reason": "The official medium-contrast, midday, partly-cloudy classification best matches bright Colorado daytime while retaining photographic cloud structure."
+    },
+    {
+      "asset_id": "aristea_wreck_puresky",
+      "name": "Aristea Wreck (Pure Sky)",
+      "asset_url": "https://polyhaven.com/a/aristea_wreck_puresky",
+      "info_api_url": "https://api.polyhaven.com/info/aristea_wreck_puresky",
+      "files_api_url": "https://api.polyhaven.com/files/aristea_wreck_puresky",
+      "official_attributes": {
+        "time_of_day": "midday",
+        "weather": "partly_cloudy",
+        "light_type": "natural",
+        "contrast": "medium",
+        "pure_sky": true
+      },
+      "official_files_hash": "f786ccfc0c55e83454c2528f6dc472fbf4838f72",
+      "decision": "not_selected",
+      "reason": "The uneven high broken-cloud field and softer sun make the sky less neutral for runway and mountain-lighting integration."
+    }
+  ],
+  "selected_source": {
+    "asset_id": "kloppenheim_03_puresky",
+    "name": "Kloppenheim 03 (Pure Sky)",
+    "authors": {
+      "Greg Zaal": "Original",
+      "Jarod Guest": "Sky Edits"
+    },
+    "source_file": "kloppenheim_03_puresky_4k.hdr",
+    "official_download_url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/kloppenheim_03_puresky_4k.hdr",
+    "retrieved_utc": "2026-07-16T21:42:00Z",
+    "width": 4096,
+    "height": 2048,
+    "bytes": 19682492,
+    "official_md5": "09c9e57a51e6eed81ac70e194d58eab2",
+    "verified_md5": "09c9e57a51e6eed81ac70e194d58eab2",
+    "sha256": "f906a7334e5d57007fa5516bd141df2ada8fdc3d2ba0c8bdf445d64f1bbb010a",
+    "git_policy": "Raw 4K source is external under the milestone artifact root and must not be committed."
+  },
+  "runtime_derivative": {
+    "path": "QuestFlight/Assets/Production/Environment/Sky/Kloppenheim03_PureSky_2K.hdr",
+    "width": 2048,
+    "height": 1024,
+    "bytes": 5430234,
+    "sha256": "ffd28511add85d9508b51f50d3bbe4d822f4a5240800edb4f014edb75abdb1aa",
+    "processing": "Linear-radiance 2x2 box filter followed by Radiance RGBE scanline RLE; no tone mapping or clipping.",
+    "processing_tool": "tools/sky_atmosphere/build_hdri_derivative.py",
+    "maximum_luminance_uv": [
+      0.600341796875,
+      0.17431640625
+    ],
+    "maximum_luminance_elevation_degrees": 58.623046875,
+    "equirectangular_wrap_mean_abs_rgb_relative": 0.002178668975830078,
+    "equirectangular_wrap_p99_abs_rgb_relative": 0.022050781175494194
+  },
+  "unity_import": {
+    "texture_shape": "TextureCube",
+    "cubemap_generation": "Cylindrical",
+    "linear_hdr": true,
+    "mipmaps": true,
+    "filter": "Trilinear",
+    "wrap": "Clamp",
+    "android_max_face_size": 1024,
+    "android_format": "ASTC_HDR_6x6",
+    "estimated_android_mipped_cubemap_bytes": 3757728,
+    "skybox_shader": "Skybox/Cubemap",
+    "skybox_material": "QuestFlight/Assets/Production/Environment/Sky/Kloppenheim03_PureSky_Skybox.mat"
+  },
+  "external_evidence": {
+    "root": "photoreal_environment_v1_20260716_153934/workstream_a",
+    "api_snapshots": [
+      {
+        "file": "poly_haven_candidate_evaluation/kloofendal_38d_partly_cloudy_puresky.info.json",
+        "sha256": "3d19a52d2681834d11eccc80dcfcefce975252a4c67777bd9d0fc01d2db3f1c2"
+      },
+      {
+        "file": "poly_haven_candidate_evaluation/kloofendal_38d_partly_cloudy_puresky.files.json",
+        "sha256": "a3f13b676ae5dae0ff116ced852bb23f50ade51810dd64f2df5ed32ecc323abe"
+      },
+      {
+        "file": "poly_haven_candidate_evaluation/kloppenheim_03_puresky.info.json",
+        "sha256": "16800f44f94193370f6083af9ca31802df23b70a4d0de077048b1c692bebaf32"
+      },
+      {
+        "file": "poly_haven_candidate_evaluation/kloppenheim_03_puresky.files.json",
+        "sha256": "d8a70fb5fd2326313931ab26363371fbab4d7b00225eec5f3053d359a4f7f39a"
+      },
+      {
+        "file": "poly_haven_candidate_evaluation/aristea_wreck_puresky.info.json",
+        "sha256": "4f5b43842da05402a6197cf15e094b6e6de4ce1b1581b0bbb7a81bc60841b888"
+      },
+      {
+        "file": "poly_haven_candidate_evaluation/aristea_wreck_puresky.files.json",
+        "sha256": "9066fe29c4a6f7a33bab487f3b8cf8c106cda9168a5aa09bf1aae547a5316304"
+      }
+    ],
+    "candidate_previews": [
+      {
+        "file": "poly_haven_candidate_evaluation/kloofendal_38d_partly_cloudy_puresky.tonemapped.jpg",
+        "sha256": "bc87febf264a912cbd8c6fe9b36b8b0d4a4cd1cf971545e6ea4529bd4225787e"
+      },
+      {
+        "file": "poly_haven_candidate_evaluation/kloppenheim_03_puresky.tonemapped.jpg",
+        "sha256": "a4aec1c5a8fd956cf35797c35aed3dfd53f8b4936a0cd7d137f23202e737ce8d"
+      },
+      {
+        "file": "poly_haven_candidate_evaluation/aristea_wreck_puresky.tonemapped.jpg",
+        "sha256": "2ce7b16702afaecb17e0560cd2051fcb91e511ecd35c46a86546199d9a56dd81"
+      }
+    ],
+    "derivative_report": "sky_derivative_report.json",
+    "derivative_preview": "Kloppenheim03_PureSky_2K_tonemapped_preview.png",
+    "unity_authoring_log": "unity_sky_asset_authoring.log"
+  },
+  "acceptance_boundary": "Asset provenance, linear-radiance conversion, Unity import, and source-wrap continuity are validated. Product sky, sun alignment, cubemap seams, stereo stability, and performance are not accepted until lead-owned scene integration and Quest/simulator captures."
+}
