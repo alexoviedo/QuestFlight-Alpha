@@ -123,7 +123,7 @@ function Find-AppPidInLog {
   }
   if ($candidates.Count -eq 0) {
     foreach ($line in $Lines) {
-      if ($line -notmatch 'VrApi\s*:.*Fov=2.*SF=1\.00') { continue }
+      if ($line -notmatch 'VrApi\s*:.*FPS=.*SF=1\.00') { continue }
       $match = [regex]::Match($line, '^\S+\s+\S+\s+(\d+)\s+\d+\s+[A-Z]\s+VrApi\s*:')
       if ($match.Success) { $candidates += $match.Groups[1].Value }
     }
@@ -173,9 +173,11 @@ function Get-VrApiEvidence {
     $processIdValue = $prefix.Groups[1].Value
     $metrics = $prefix.Groups[2].Value
     if (-not [string]::IsNullOrWhiteSpace($appPid) -and $processIdValue -ne $appPid) { continue }
-    # Quest vrshell emits a second VrApi row with Fov=0/SF=0.60. Requiring the
-    # app characteristics keeps compositor metrics out even if a PID inference fails.
-    if ($metrics -notmatch 'Fov=2' -or $metrics -notmatch 'SF=1\.00') { continue }
+    # The app PID is the identity boundary. Quest firmware has emitted the
+    # product row with both Fov=2 and Fov=0, so Fov is telemetry rather than an
+    # identity discriminator. SF=1.00 remains a fallback guard against vrshell
+    # compositor rows when PID inference must use VrApi output.
+    if ($metrics -notmatch 'SF=1\.00') { continue }
 
     $fps = Get-RegexDouble $metrics 'FPS=([0-9.]+)/'
     $refresh = Get-RegexDouble $metrics 'FPS=[0-9.]+/([0-9.]+)'
@@ -184,6 +186,7 @@ function Get-VrApiEvidence {
     $clocks = [regex]::Match($metrics, ',(\d+)/(\d+)MHz')
     $samples += [pscustomobject]@{
       pid = [int]$processIdValue
+      fovFieldValue = Get-RegexInt $metrics 'Fov=(\d+)' -1
       fps = $fps
       refreshHz = $refresh
       deliveredIntervalFromFpsMs = $(if ($fps -gt 0) { 1000.0 / $fps } else { 0.0 })
@@ -224,6 +227,7 @@ function Get-VrApiEvidence {
     appPid = $appPid
     exactMeasurementWindow = [bool]$window.exact
     sampleCount = $samples.Count
+    observedFovFieldValues = @($samples | ForEach-Object { $_.fovFieldValue } | Sort-Object -Unique)
     averageFps = Get-Average @($samples | ForEach-Object { $_.fps })
     p05Fps = Get-Percentile @($samples | ForEach-Object { $_.fps }) 0.05
     averageDeliveredIntervalFromFpsMs = Get-Average @($samples | ForEach-Object { $_.deliveredIntervalFromFpsMs })
@@ -254,7 +258,7 @@ function Get-VrApiEvidence {
     averageCflPrimaryMs = Get-Average @($samples | ForEach-Object { $_.cflPrimaryMs })
     p95CflSecondaryMs = Get-Percentile @($samples | ForEach-Object { $_.cflSecondaryMs }) 0.95
     p95IcflP95Ms = Get-Percentile @($samples | ForEach-Object { $_.icflP95Ms }) 0.95
-    semantics = 'App, CPU&GPU, GPU%, CPU%, stale, tear, clocks, levels, and thermal fields are VrApi app-row values (Fov=2, SF=1.00) filtered to the app PID. GD is reported as direct GPU duration only when nonzero.'
+    semantics = 'App, CPU&GPU, GPU%, CPU%, stale, tear, clocks, levels, and thermal fields are VrApi rows filtered to the app PID and SF=1.00. Fov is recorded as telemetry because supported Quest firmware has emitted product rows with both Fov=0 and Fov=2. GD is direct GPU duration only when nonzero.'
   }
   return [pscustomobject]@{ summary = $summary; samples = @($samples) }
 }
@@ -767,7 +771,7 @@ function Write-GateSummary {
     metricSemantics = [ordered]@{
       deliveredInterval = 'Unity Time.unscaledDeltaTime is the delivered-frame cadence. At synchronized 72 Hz it naturally centers near 13.889 ms, so it is reported separately from execution workload.'
       workload = 'Unity FrameTimingManager CPU/GPU values are workload evidence, but CPU may include XR wait and Quest GPU values may be zero.'
-      vrApi = 'VrApi is filtered to the app PID plus Fov=2/SF=1.00 and sliced between the measurement-start and evidence-written markers.'
+      vrApi = 'VrApi is filtered to the app PID plus SF=1.00 and sliced between the measurement-start and evidence-written markers. Fov is recorded but is not used as an app-identity filter.'
       acceptance = 'The requested average/p95/over-budget thresholds are evaluated against the delivered per-frame series without silently substituting another metric.'
     }
   }

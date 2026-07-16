@@ -50,6 +50,9 @@ try {
   Invoke-Checked 'standalone Quest gate classification policy tests' {
     & .\scripts\tests\test_standalone_quest_gate_policy.ps1
   }
+  Invoke-Checked 'Quest VrApi parser regression tests' {
+    & .\scripts\tests\test_quest_temporal_vrapi_parser.ps1
+  }
 
   Invoke-Checked 'extractor unit tests' { python -B -m unittest discover -s tools/tests -v }
 
