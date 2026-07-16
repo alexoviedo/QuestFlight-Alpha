@@ -11,9 +11,13 @@
     "service_name": "USGSNAIPPlus",
     "service_url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer",
     "catalog_year": 2019,
-    "acquisition_date": "2019-09-19",
+    "acquisition_dates": ["2019-08-03", "2019-09-19"],
     "resolution_meters": 0.6,
-    "raster_ids": [30800, 30804, 30805, 32832, 32834, 32836, 32837, 32838, 32839],
+    "raster_ids": [
+      30800, 30801, 30802, 30803, 30804, 30805, 30806, 30807, 30809, 30811,
+      32802, 32803, 32806, 32807, 32811, 32832, 32833, 32834, 32835, 32836,
+      32837, 32838, 32839, 32841, 32843
+    ],
     "raster_function": "NaturalColor",
     "license_name": "United States government work / public domain",
     "license_spdx": "LicenseRef-US-Government-Work-Public-Domain",
@@ -27,17 +31,35 @@
       "atlas_size_pixels": 4096,
       "tile_grid": 2,
       "output_name": "KBDU_NAIP_2019_Near4km_4096.jpg",
-      "jpeg_quality": 90
+      "jpeg_quality": 90,
+      "maximum_committed_bytes": 14000000
     },
     {
       "id": "mid_12km",
       "half_extent_meters": 6000.0,
+      "atlas_size_pixels": 4096,
+      "tile_grid": 2,
+      "output_name": "KBDU_NAIP_2019_Mid12km_4096.jpg",
+      "jpeg_quality": 89,
+      "maximum_committed_bytes": 14000000
+    },
+    {
+      "id": "far_24km",
+      "half_extent_meters": 12000.0,
       "atlas_size_pixels": 2048,
       "tile_grid": 1,
-      "output_name": "KBDU_NAIP_2019_Mid12km_2048.jpg",
-      "jpeg_quality": 88
+      "output_name": "KBDU_NAIP_2019_Far24km_2048.jpg",
+      "jpeg_quality": 87,
+      "maximum_committed_bytes": 5000000
     }
   ],
+  "terrain_pyramid": {
+    "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Z=north",
+    "boundary_metric": "max(abs(world_x_meters), abs(world_z_meters))",
+    "near_to_mid_blend_meters": [1650.0, 2000.0],
+    "mid_to_far_blend_meters": [5000.0, 6000.0],
+    "diagnostic_modes": ["macro_level", "blend_weight", "texel_density_and_boundaries"]
+  },
   "color_normalization": {
     "brightness": 0.98,
     "contrast": 1.04,
@@ -56,8 +78,6 @@
     "filter_mode": "trilinear",
     "anisotropy": 4,
     "wrap_mode": "clamp",
-    "maximum_runtime_texture_bytes": 14000000,
-    "maximum_committed_near_bytes": 14000000,
-    "maximum_committed_mid_bytes": 5000000
+    "maximum_runtime_texture_bytes": 25000000
   }
 }

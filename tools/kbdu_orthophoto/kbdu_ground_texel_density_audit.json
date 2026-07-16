@@ -1,0 +1,194 @@
+{
+  "adjacency_checks": [
+    {
+      "inner_zone_id": "near_4km",
+      "maximum_ratio": 4.0,
+      "outer_zone_id": "mid_12km",
+      "overlap_blending_present": true,
+      "passed": true,
+      "texel_density_ratio": 3.0
+    },
+    {
+      "inner_zone_id": "mid_12km",
+      "maximum_ratio": 4.0,
+      "outer_zone_id": "far_24km",
+      "overlap_blending_present": true,
+      "passed": true,
+      "texel_density_ratio": 4.0
+    }
+  ],
+  "fail_conditions": [
+    "adjacent texel-density ratio exceeds 4x",
+    "adjacent levels lack a nonzero overlap blend",
+    "mipmaps or continuous ENU world-space UVs are absent",
+    "the far macro texture is missing"
+  ],
+  "label": "GroundTexelDensityAudit",
+  "overlap_pixel_diagnostics": [
+    {
+      "absolute_mean_channel_delta": [
+        0.228481,
+        0.386219,
+        0.563439
+      ],
+      "inner_channel_statistics": [
+        {
+          "mean": 99.873608,
+          "standard_deviation": 54.859207
+        },
+        {
+          "mean": 104.691711,
+          "standard_deviation": 40.61584
+        },
+        {
+          "mean": 82.9011,
+          "standard_deviation": 37.585555
+        }
+      ],
+      "inner_zone_id": "near_4km",
+      "maximum_absolute_mean_channel_delta": 0.563439,
+      "mean_absolute_pixel_error": [
+        6.492626,
+        5.481548,
+        5.092392
+      ],
+      "outer_overlap_channel_statistics": [
+        {
+          "mean": 100.102089,
+          "standard_deviation": 53.970922
+        },
+        {
+          "mean": 105.07793,
+          "standard_deviation": 40.10621
+        },
+        {
+          "mean": 83.464539,
+          "standard_deviation": 37.412867
+        }
+      ],
+      "outer_zone_id": "mid_12km",
+      "passed_color_mean_continuity": true
+    },
+    {
+      "absolute_mean_channel_delta": [
+        0.140842,
+        0.070362,
+        0.193543
+      ],
+      "inner_channel_statistics": [
+        {
+          "mean": 99.50901,
+          "standard_deviation": 48.172321
+        },
+        {
+          "mean": 105.023403,
+          "standard_deviation": 33.248414
+        },
+        {
+          "mean": 82.1497,
+          "standard_deviation": 29.831465
+        }
+      ],
+      "inner_zone_id": "mid_12km",
+      "maximum_absolute_mean_channel_delta": 0.193543,
+      "mean_absolute_pixel_error": [
+        7.08691,
+        5.380001,
+        5.494926
+      ],
+      "outer_overlap_channel_statistics": [
+        {
+          "mean": 99.368168,
+          "standard_deviation": 47.16208
+        },
+        {
+          "mean": 105.093765,
+          "standard_deviation": 33.0363
+        },
+        {
+          "mean": 82.343243,
+          "standard_deviation": 30.250474
+        }
+      ],
+      "outer_zone_id": "far_24km",
+      "passed_color_mean_continuity": true
+    }
+  ],
+  "passed": true,
+  "projection_assumption": "Planning estimate only: 1832 vertical eye pixels, 90 degree vertical FOV, 10 m cockpit oblique slant sample and 431 m pattern-altitude slant sample. Unity/Quest runtime streaming may select different mips.",
+  "schema_version": 1,
+  "zones": [
+    {
+      "android_compression": "ASTC_6x6",
+      "anisotropy": 4,
+      "coverage_meters": 4000.0,
+      "estimated_mip_at_cockpit_height": 0.0,
+      "estimated_mip_at_pattern_altitude": 0.0,
+      "half_extent_meters": 2000.0,
+      "id": "near_4km",
+      "meters_per_texel": 0.9765625,
+      "mipmaps": true,
+      "runtime_resolution_pixels": [
+        4096,
+        4096
+      ],
+      "streaming_mipmaps": true,
+      "texture_path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
+      "texture_sha256": "446e5c7fa13fc653de1f3e8404829c0e54b7e919fe99ebfba79d747a0b1dadea",
+      "world_min_inverse_size": [
+        -2000.0,
+        -2000.0,
+        0.00025,
+        0.00025
+      ]
+    },
+    {
+      "android_compression": "ASTC_6x6",
+      "anisotropy": 4,
+      "coverage_meters": 12000.0,
+      "estimated_mip_at_cockpit_height": 0.0,
+      "estimated_mip_at_pattern_altitude": 0.0,
+      "half_extent_meters": 6000.0,
+      "id": "mid_12km",
+      "meters_per_texel": 2.9296875,
+      "mipmaps": true,
+      "runtime_resolution_pixels": [
+        4096,
+        4096
+      ],
+      "streaming_mipmaps": true,
+      "texture_path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Mid12km_4096.jpg",
+      "texture_sha256": "5e8d6edbcc5dc937c78b5fb8e4a5f8f7a06bda726b4509684e237f2b17fbdf9a",
+      "world_min_inverse_size": [
+        -6000.0,
+        -6000.0,
+        8.333333333333333e-05,
+        8.333333333333333e-05
+      ]
+    },
+    {
+      "android_compression": "ASTC_6x6",
+      "anisotropy": 4,
+      "coverage_meters": 24000.0,
+      "estimated_mip_at_cockpit_height": 0.0,
+      "estimated_mip_at_pattern_altitude": 0.0,
+      "half_extent_meters": 12000.0,
+      "id": "far_24km",
+      "meters_per_texel": 11.71875,
+      "mipmaps": true,
+      "runtime_resolution_pixels": [
+        2048,
+        2048
+      ],
+      "streaming_mipmaps": true,
+      "texture_path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Far24km_2048.jpg",
+      "texture_sha256": "799be878d5c6be73b5596cbea70ee4e122859a528231608e40796f1020617b33",
+      "world_min_inverse_size": [
+        -12000.0,
+        -12000.0,
+        4.1666666666666665e-05,
+        4.1666666666666665e-05
+      ]
+    }
+  ]
+}

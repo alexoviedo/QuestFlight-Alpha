@@ -117,7 +117,7 @@ def main() -> int:
             f"{config['unity']['maximum_runtime_texture_bytes']:,} bytes"
         )
 
-    canvas = Image.new("RGB", (2048, 1080), (28, 31, 34))
+    canvas = Image.new("RGB", (1024 * len(preview_images), 1080), (28, 31, 34))
     draw = ImageDraw.Draw(canvas)
     x = 0
     for zone_id, preview in preview_images:
@@ -150,6 +150,8 @@ def main() -> int:
         "reproject_crop_imagery.py",
         "color_normalize_imagery.py",
         "build_orthophoto_atlas.py",
+        "build_terrain_pyramid_contract.py",
+        "build_context_assets.py",
         "validate_orthophoto_assets.py",
     ):
         path = Path(__file__).resolve().parent / name
@@ -190,7 +192,7 @@ def main() -> int:
         },
         "raw_data_policy": (
             "Raw ImageServer exports, lossless intermediates, previews, package caches, and fetch receipts remain external. "
-            "Only the two optimized JPEG runtime derivatives and this provenance manifest enter the repository."
+            "Only the three optimized JPEG runtime derivatives and this provenance manifest enter the repository."
         ),
         "prohibited_sources_confirmation": "No Google Maps, Google Earth, Street View, paid, or unclear-license imagery is used.",
         "limitations": [

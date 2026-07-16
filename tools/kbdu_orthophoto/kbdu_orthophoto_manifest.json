@@ -1,9 +1,9 @@
 {
   "budgets": {
     "draw_call_delta_if_integrated": 0,
-    "estimated_android_astc_mip_chain_bytes": 12459248,
+    "estimated_android_astc_mip_chain_bytes": 22420784,
     "material_delta_if_integrated": 0,
-    "maximum_runtime_texture_bytes": 14000000,
+    "maximum_runtime_texture_bytes": 25000000,
     "triangle_delta_if_integrated": 0
   },
   "derived_assets": [
@@ -54,7 +54,7 @@
     {
       "android_import": {
         "anisotropy": 4,
-        "estimated_mip_chain_bytes": 2497712,
+        "estimated_mip_chain_bytes": 9961536,
         "filter": "trilinear",
         "format": "ASTC_6x6",
         "mipmaps": true,
@@ -67,33 +67,77 @@
         -105.15574878940667,
         40.09336678358586
       ],
-      "bytes": 1873985,
+      "bytes": 7273113,
       "channel_statistics": [
         {
-          "mean": 100.306301,
-          "standard_deviation": 47.702992
+          "mean": 100.037674,
+          "standard_deviation": 47.436037
         },
         {
-          "mean": 105.633446,
-          "standard_deviation": 32.962351
+          "mean": 105.555965,
+          "standard_deviation": 32.631553
         },
         {
-          "mean": 82.53194,
-          "standard_deviation": 29.510201
+          "mean": 82.689537,
+          "standard_deviation": 29.264407
         }
       ],
       "coverage_meters": 12000.0,
-      "decoded_pixel_sha256": "8f038e7580ea2564ae67d16b25f3a3549eaf922018a6d1e344010dca4873646c",
+      "decoded_pixel_sha256": "a0ee82744cf5db50b6cdae349c95129febb6532f01856e46e8ed354aec3cbd66",
+      "dimensions_pixels": [
+        4096,
+        4096
+      ],
+      "jpeg_quality": 89,
+      "jpeg_subsampling": "4:2:2",
+      "nominal_meters_per_pixel": 2.9296875,
+      "path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Mid12km_4096.jpg",
+      "sha256": "5e8d6edbcc5dc937c78b5fb8e4a5f8f7a06bda726b4509684e237f2b17fbdf9a",
+      "zone_id": "mid_12km"
+    },
+    {
+      "android_import": {
+        "anisotropy": 4,
+        "estimated_mip_chain_bytes": 2497712,
+        "filter": "trilinear",
+        "format": "ASTC_6x6",
+        "mipmaps": true,
+        "streaming_mipmaps": true,
+        "wrap": "clamp"
+      },
+      "bbox_wgs84": [
+        -105.36688214425344,
+        39.93123316841624,
+        -105.08529701574655,
+        40.14732481978453
+      ],
+      "bytes": 1705067,
+      "channel_statistics": [
+        {
+          "mean": 100.981453,
+          "standard_deviation": 45.743666
+        },
+        {
+          "mean": 103.766262,
+          "standard_deviation": 31.970835
+        },
+        {
+          "mean": 78.926224,
+          "standard_deviation": 26.719585
+        }
+      ],
+      "coverage_meters": 24000.0,
+      "decoded_pixel_sha256": "0dbc8d8f13b373a0e5e00b9f1a67de539da9875c4c8be49c8287f2a7edf6855c",
       "dimensions_pixels": [
         2048,
         2048
       ],
-      "jpeg_quality": 88,
+      "jpeg_quality": 87,
       "jpeg_subsampling": "4:2:2",
-      "nominal_meters_per_pixel": 5.859375,
-      "path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Mid12km_2048.jpg",
-      "sha256": "d75316cb03a8ddcdc6d326186f9fc5e936d19d90ffc4e42ffe627888aa8593cd",
-      "zone_id": "mid_12km"
+      "nominal_meters_per_pixel": 11.71875,
+      "path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Far24km_2048.jpg",
+      "sha256": "799be878d5c6be73b5596cbea70ee4e122859a528231608e40796f1020617b33",
+      "zone_id": "far_24km"
     }
   ],
   "label": "KBDU orthophoto macro environment / not for navigation",
@@ -109,100 +153,6 @@
   },
   "processing": {
     "color_normalization": {
-      "mid_after": [
-        {
-          "mean": 100.306301,
-          "standard_deviation": 47.702992
-        },
-        {
-          "mean": 105.633446,
-          "standard_deviation": 32.962351
-        },
-        {
-          "mean": 82.53194,
-          "standard_deviation": 29.510201
-        }
-      ],
-      "mid_before": [
-        {
-          "mean": 102.650753,
-          "standard_deviation": 46.876642
-        },
-        {
-          "mean": 111.570812,
-          "standard_deviation": 32.36309
-        },
-        {
-          "mean": 90.496712,
-          "standard_deviation": 30.134422
-        }
-      ],
-      "mid_overlap_before_match": [
-        {
-          "mean": 101.478325,
-          "standard_deviation": 53.537683
-        },
-        {
-          "mean": 106.253525,
-          "standard_deviation": 39.540153
-        },
-        {
-          "mean": 84.432899,
-          "standard_deviation": 36.690929
-        }
-      ],
-      "mid_overlap_linear_gain": [
-        1.0039905,
-        1.00224238,
-        1.00237944
-      ],
-      "mid_overlap_linear_offset": [
-        -1.47935102,
-        -1.27254765,
-        -1.19429933
-      ],
-      "near_after": [
-        {
-          "mean": 100.403923,
-          "standard_deviation": 53.751325
-        },
-        {
-          "mean": 105.219238,
-          "standard_deviation": 39.628817
-        },
-        {
-          "mean": 83.439503,
-          "standard_deviation": 36.778233
-        }
-      ],
-      "near_before": [
-        {
-          "mean": 101.777637,
-          "standard_deviation": 52.568926
-        },
-        {
-          "mean": 110.050552,
-          "standard_deviation": 39.050713
-        },
-        {
-          "mean": 90.431423,
-          "standard_deviation": 37.719121
-        }
-      ],
-      "near_overlap_target": [
-        {
-          "mean": 100.403923,
-          "standard_deviation": 53.751325
-        },
-        {
-          "mean": 105.219238,
-          "standard_deviation": 39.628817
-        },
-        {
-          "mean": 83.439503,
-          "standard_deviation": 36.778233
-        }
-      ],
       "outputs": [
         {
           "bytes": 32229742,
@@ -210,9 +160,102 @@
           "sha256": "6b8c3ca6ed57c430a04b93c9a7dcd9d7c34595e5fe4e74235bc64d8aad9da7e1"
         },
         {
-          "bytes": 9468011,
+          "bytes": 36179047,
           "path": "mid_12km_normalized.png",
-          "sha256": "5704538790760428346266566fc3c11d33b99727d5c9883c598a828570331a7a"
+          "sha256": "bfb681eae05fc7fc369d52c8d665dd30b692f0e0b138027c5384aec5b3251c67"
+        },
+        {
+          "bytes": 9328488,
+          "path": "far_24km_normalized.png",
+          "sha256": "01ab03c702c9db75b3a9767b55d0ab9362c0cfcf953d1dff7635fe567880716c"
+        }
+      ],
+      "overlap_matches": [
+        {
+          "inner_footprint_ratio": 0.3333333333333333,
+          "inner_overlap_target": [
+            {
+              "mean": 100.403923,
+              "standard_deviation": 53.751325
+            },
+            {
+              "mean": 105.219238,
+              "standard_deviation": 39.628817
+            },
+            {
+              "mean": 83.439503,
+              "standard_deviation": 36.778233
+            }
+          ],
+          "inner_zone_id": "near_4km",
+          "outer_linear_gain": [
+            0.99950377,
+            0.99830658,
+            0.9986892
+          ],
+          "outer_linear_offset": [
+            -0.47018288,
+            -0.32190652,
+            -0.36070992
+          ],
+          "outer_overlap_before_match": [
+            {
+              "mean": 100.924187,
+              "standard_deviation": 53.778011
+            },
+            {
+              "mean": 105.720173,
+              "standard_deviation": 39.696039
+            },
+            {
+              "mean": 83.910202,
+              "standard_deviation": 36.826505
+            }
+          ],
+          "outer_zone_id": "mid_12km"
+        },
+        {
+          "inner_footprint_ratio": 0.5,
+          "inner_overlap_target": [
+            {
+              "mean": 100.037674,
+              "standard_deviation": 47.436037
+            },
+            {
+              "mean": 105.555965,
+              "standard_deviation": 32.631553
+            },
+            {
+              "mean": 82.689537,
+              "standard_deviation": 29.264407
+            }
+          ],
+          "inner_zone_id": "mid_12km",
+          "outer_linear_gain": [
+            0.99687993,
+            0.99184133,
+            0.99417669
+          ],
+          "outer_linear_offset": [
+            -1.37993655,
+            -0.59384593,
+            -0.72983747
+          ],
+          "outer_overlap_before_match": [
+            {
+              "mean": 101.735031,
+              "standard_deviation": 47.584504
+            },
+            {
+              "mean": 107.022976,
+              "standard_deviation": 32.899973
+            },
+            {
+              "mean": 83.907997,
+              "standard_deviation": 29.435821
+            }
+          ],
+          "outer_zone_id": "far_24km"
         }
       ],
       "schema_version": 1,
@@ -226,6 +269,113 @@
         "mid_overlap_offset_limit": 10.0,
         "red_gain": 1.02,
         "saturation": 0.92
+      },
+      "zones": {
+        "far_24km": {
+          "after": [
+            {
+              "mean": 100.981453,
+              "standard_deviation": 45.743666
+            },
+            {
+              "mean": 103.766262,
+              "standard_deviation": 31.970835
+            },
+            {
+              "mean": 78.926224,
+              "standard_deviation": 26.719585
+            }
+          ],
+          "before": [
+            {
+              "mean": 104.270763,
+              "standard_deviation": 45.12375
+            },
+            {
+              "mean": 110.041931,
+              "standard_deviation": 31.763213
+            },
+            {
+              "mean": 86.534306,
+              "standard_deviation": 27.212934
+            }
+          ],
+          "output": {
+            "bytes": 9328488,
+            "path": "far_24km_normalized.png",
+            "sha256": "01ab03c702c9db75b3a9767b55d0ab9362c0cfcf953d1dff7635fe567880716c"
+          }
+        },
+        "mid_12km": {
+          "after": [
+            {
+              "mean": 100.037674,
+              "standard_deviation": 47.436037
+            },
+            {
+              "mean": 105.555965,
+              "standard_deviation": 32.631553
+            },
+            {
+              "mean": 82.689537,
+              "standard_deviation": 29.264407
+            }
+          ],
+          "before": [
+            {
+              "mean": 102.054615,
+              "standard_deviation": 46.913054
+            },
+            {
+              "mean": 110.971764,
+              "standard_deviation": 32.393507
+            },
+            {
+              "mean": 89.886478,
+              "standard_deviation": 30.174258
+            }
+          ],
+          "output": {
+            "bytes": 36179047,
+            "path": "mid_12km_normalized.png",
+            "sha256": "bfb681eae05fc7fc369d52c8d665dd30b692f0e0b138027c5384aec5b3251c67"
+          }
+        },
+        "near_4km": {
+          "after": [
+            {
+              "mean": 100.403923,
+              "standard_deviation": 53.751325
+            },
+            {
+              "mean": 105.219238,
+              "standard_deviation": 39.628817
+            },
+            {
+              "mean": 83.439503,
+              "standard_deviation": 36.778233
+            }
+          ],
+          "before": [
+            {
+              "mean": 101.777637,
+              "standard_deviation": 52.568926
+            },
+            {
+              "mean": 110.050552,
+              "standard_deviation": 39.050713
+            },
+            {
+              "mean": 90.431423,
+              "standard_deviation": 37.719121
+            }
+          ],
+          "output": {
+            "bytes": 32229742,
+            "path": "near_4km_normalized.png",
+            "sha256": "6b8c3ca6ed57c430a04b93c9a7dcd9d7c34595e5fe4e74235bc64d8aad9da7e1"
+          }
+        }
       }
     },
     "pillow": "11.3.0",
@@ -233,9 +383,9 @@
     "python": "3.13.13",
     "tool_files": [
       {
-        "bytes": 1984,
+        "bytes": 2747,
         "path": "tools/kbdu_orthophoto/config.json",
-        "sha256": "d840141a6fc5bcce92447b6524c05f911beec85f909d75bc0be622baedb26d3d"
+        "sha256": "410fd42271e346e52ef453c75425e8521592e8d6f2e1c43bdfda4ce0793574d5"
       },
       {
         "bytes": 15,
@@ -248,9 +398,9 @@
         "sha256": "ab1ce36356875cdb15fde998625a437bb05d3f4e3251850ad5f84c1eb1092674"
       },
       {
-        "bytes": 10965,
+        "bytes": 11555,
         "path": "tools/kbdu_orthophoto/fetch_naip_imagery.py",
-        "sha256": "b34f241741cf2f03bf8d68cc1d8baa7c63a2b8775c47773d43cb32bd5fe7c21f"
+        "sha256": "8b9087186b4ac1826d8456f6939833db241fcf0c4616bfddbd84e7c76aeaf7e8"
       },
       {
         "bytes": 5909,
@@ -258,27 +408,40 @@
         "sha256": "7572548e7ee2fd6038b00943067d257119ec754262ca2c621b35481d703a55a3"
       },
       {
-        "bytes": 4699,
+        "bytes": 5296,
         "path": "tools/kbdu_orthophoto/color_normalize_imagery.py",
-        "sha256": "3d8d1e4666fa9d0038c58ccd3fd0bea485b21f7a5d5a7ec9cd75d1da48a933e9"
+        "sha256": "723163221fb5d4e439eb5044903924a55173221ad348c5dae3168f4ddbd28fd6"
       },
       {
-        "bytes": 8873,
+        "bytes": 8977,
         "path": "tools/kbdu_orthophoto/build_orthophoto_atlas.py",
-        "sha256": "d78d2aff444c52d7b819fb3d483a9d152d6228659bcfd8192e2a072172f302bd"
+        "sha256": "1cd342e81ea6f381b6de21efb9636a10c5da21841b219fe4a0f02cb1ceee5d43"
       },
       {
-        "bytes": 4444,
+        "bytes": 10958,
+        "path": "tools/kbdu_orthophoto/build_terrain_pyramid_contract.py",
+        "sha256": "cba8370d565a817217a4aa90e85911a5ead5113ba49eea05996340719ff0b48b"
+      },
+      {
+        "bytes": 14171,
+        "path": "tools/kbdu_orthophoto/build_context_assets.py",
+        "sha256": "695750b891066bbca6cfadd55c040c14d33de557e7f41bd01d6fb4f7924823fa"
+      },
+      {
+        "bytes": 4685,
         "path": "tools/kbdu_orthophoto/validate_orthophoto_assets.py",
-        "sha256": "aceb2ea8dd79e9f908ddafb10d86f55410344f215216c0825601e6ed0ba30bfd"
+        "sha256": "c08ef634347489a9d1d838c2a63a12ae38fb2ae542fcd3283db898d3d9351e6f"
       }
     ]
   },
   "prohibited_sources_confirmation": "No Google Maps, Google Earth, Street View, paid, or unclear-license imagery is used.",
-  "raw_data_policy": "Raw ImageServer exports, lossless intermediates, previews, package caches, and fetch receipts remain external. Only the two optimized JPEG runtime derivatives and this provenance manifest enter the repository.",
+  "raw_data_policy": "Raw ImageServer exports, lossless intermediates, previews, package caches, and fetch receipts remain external. Only the three optimized JPEG runtime derivatives and this provenance manifest enter the repository.",
   "schema_version": 1,
   "source": {
-    "acquisition_date": "2019-09-19",
+    "acquisition_dates": [
+      "2019-08-03",
+      "2019-09-19"
+    ],
     "agency": "USGS / USDA Farm Service Agency",
     "catalog_features": [
       {
@@ -289,6 +452,42 @@
         "agency": "USDA",
         "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030003",
         "raster_name": "m_3910506_ne_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910506_nw_13_060_20190919",
+        "OBJECTID": 30801,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030004",
+        "raster_name": "m_3910506_nw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910506_se_13_060_20190919",
+        "OBJECTID": 30802,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030006",
+        "raster_name": "m_3910506_se_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910506_sw_13_060_20190919",
+        "OBJECTID": 30803,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030005",
+        "raster_name": "m_3910506_sw_13_060_20190919",
         "resolution_units": "METER",
         "resolution_value": 0.6,
         "vendor": "USDA-FSA-APFO"
@@ -318,6 +517,114 @@
         "vendor": "USDA-FSA-APFO"
       },
       {
+        "Name": "m_3910507_se_13_060_20190919",
+        "OBJECTID": 30806,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030155",
+        "raster_name": "m_3910507_se_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910507_sw_13_060_20190919",
+        "OBJECTID": 30807,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030156",
+        "raster_name": "m_3910507_sw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910508_nw_13_060_20190803",
+        "OBJECTID": 30809,
+        "Year": 2019,
+        "acquisition_date": 1564790400000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029917",
+        "raster_name": "m_3910508_nw_13_060_20190803",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910508_sw_13_060_20190803",
+        "OBJECTID": 30811,
+        "Year": 2019,
+        "acquisition_date": 1564790400000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029918",
+        "raster_name": "m_3910508_sw_13_060_20190803",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010554_se_13_060_20190919",
+        "OBJECTID": 32802,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029805",
+        "raster_name": "m_4010554_se_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010554_sw_13_060_20190919",
+        "OBJECTID": 32803,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029809",
+        "raster_name": "m_4010554_sw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010555_se_13_060_20190919",
+        "OBJECTID": 32806,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029829",
+        "raster_name": "m_4010555_se_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010555_sw_13_060_20190919",
+        "OBJECTID": 32807,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029730",
+        "raster_name": "m_4010555_sw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010556_sw_13_060_20190803",
+        "OBJECTID": 32811,
+        "Year": 2019,
+        "acquisition_date": 1564790400000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029763",
+        "raster_name": "m_4010556_sw_13_060_20190803",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
         "Name": "m_4010562_ne_13_060_20190919",
         "OBJECTID": 32832,
         "Year": 2019,
@@ -330,6 +637,18 @@
         "vendor": "USDA-FSA-APFO"
       },
       {
+        "Name": "m_4010562_nw_13_060_20190919",
+        "OBJECTID": 32833,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029652",
+        "raster_name": "m_4010562_nw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
         "Name": "m_4010562_se_13_060_20190919",
         "OBJECTID": 32834,
         "Year": 2019,
@@ -337,6 +656,18 @@
         "agency": "USDA",
         "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029705",
         "raster_name": "m_4010562_se_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010562_sw_13_060_20190919",
+        "OBJECTID": 32835,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029706",
+        "raster_name": "m_4010562_sw_13_060_20190919",
         "resolution_units": "METER",
         "resolution_value": 0.6,
         "vendor": "USDA-FSA-APFO"
@@ -388,9 +719,33 @@
         "resolution_units": "METER",
         "resolution_value": 0.6,
         "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010564_nw_13_060_20190803",
+        "OBJECTID": 32841,
+        "Year": 2019,
+        "acquisition_date": 1564790400000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029753",
+        "raster_name": "m_4010564_nw_13_060_20190803",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010564_sw_13_060_20190803",
+        "OBJECTID": 32843,
+        "Year": 2019,
+        "acquisition_date": 1564790400000,
+        "agency": "USDA",
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029756",
+        "raster_name": "m_4010564_sw_13_060_20190803",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
       }
     ],
-    "catalog_sha256": "71e99ce4f721e99e7dabcbb62e9d50bdb3576d10a40b8e8f2cdba220c2ba898f",
+    "catalog_sha256": "8514e8e019abedfc1c44e3c003142c7df2733582616fb111aefc7caae61c33b7",
     "catalog_year": 2019,
     "credit": "USGS, USDA, The National Map: Orthoimagery",
     "license_name": "United States government work / public domain",
@@ -399,14 +754,30 @@
     "raster_function": "NaturalColor",
     "raster_ids": [
       30800,
+      30801,
+      30802,
+      30803,
       30804,
       30805,
+      30806,
+      30807,
+      30809,
+      30811,
+      32802,
+      32803,
+      32806,
+      32807,
+      32811,
       32832,
+      32833,
       32834,
+      32835,
       32836,
       32837,
       32838,
-      32839
+      32839,
+      32841,
+      32843
     ],
     "raw_tiles": [
       {
@@ -429,7 +800,7 @@
         ],
         "file_name": "near_4km_r0_c0_2048.png",
         "maximum_extent_error_degrees": 4.405364961712621e-13,
-        "request_sha256": "8d25dc4b4e841b952577490b995ed8b7f5295cf21c7a24a94414be0f059ccadc",
+        "request_sha256": "31209d13a4998e8dbff2e28d6e5a28d30fb159db47811d97b3eaf870a9a8d7fc",
         "sha256": "62ea9954f9955ad2a0cfe0e566d0d90d5555ab8ee83a96a52e2a12e35133810c",
         "zone_id": "near_4km"
       },
@@ -453,7 +824,7 @@
         ],
         "file_name": "near_4km_r0_c1_2048.png",
         "maximum_extent_error_degrees": 4.547473508864641e-13,
-        "request_sha256": "e6b222577a53037baf92eef7dadbd1e03aa46560ba76b0f7069cec0f38f2f088",
+        "request_sha256": "3bd55240c8c3748b9f3d8b642b51dfb8c8adbcb475ca8c3c953bf32491085af0",
         "sha256": "725d58aadf2cdefaac20dfe8100b1401092a129838bfcf263d7afa2472074dbe",
         "zone_id": "near_4km"
       },
@@ -477,7 +848,7 @@
         ],
         "file_name": "near_4km_r1_c0_2048.png",
         "maximum_extent_error_degrees": 4.405364961712621e-13,
-        "request_sha256": "bfbd440299fb7c5ad372086fdf44fb98d0f1f5959502da0819bee0707f695847",
+        "request_sha256": "760b239b9d9b47248d851c123187d706fbcbbe64c2d10b25fe7c527cb09f3f6d",
         "sha256": "6acdaff5e80d86d05c9c6bee61ca26892e15c09c80b222e4a4a3f0c871c20ed5",
         "zone_id": "near_4km"
       },
@@ -501,37 +872,133 @@
         ],
         "file_name": "near_4km_r1_c1_2048.png",
         "maximum_extent_error_degrees": 4.547473508864641e-13,
-        "request_sha256": "0ba60bdd090566cef9fb4fc4120a9308a5dd777a322c9a67ce257c096d2202b8",
+        "request_sha256": "38ff99d07c6bbb584f92cd1f94e83516e757d56ceee3329fa8905e65ce402b9e",
         "sha256": "e595a16e119cb38c1df438ce656bbb37b88b28327ac36afdc2ddb7e68882defd",
         "zone_id": "near_4km"
       },
       {
         "actual_bbox_wgs84": [
           -105.296430370593,
-          39.985320618434,
-          -105.155748789407,
+          40.03934370101,
+          -105.22608958,
           40.093366783586
         ],
         "bbox_wgs84": [
           -105.29643037059333,
-          39.98532061843375,
-          -105.15574878940667,
+          40.0393437010098,
+          -105.22608958000001,
           40.09336678358586
         ],
-        "bytes": 9426686,
+        "bytes": 8674546,
         "dimensions_pixels": [
           2048,
           2048
         ],
         "file_name": "mid_12km_r0_c0_2048.png",
         "maximum_extent_error_degrees": 3.268496584496461e-13,
-        "request_sha256": "8aeaefdae8ecc12b39f9934bd42477bb4ba7f02e4d2884ec136cad98d3a9b70c",
-        "sha256": "7634b43b037336457acecc6ef90c8f6480fa6710560a725ba87a86163ec1d58e",
+        "request_sha256": "d3fe56426fb160fc2408c259ab6b692137e5a7abf2e92de580145a6e6337e191",
+        "sha256": "79914ad1a1dafcac192f1838f952fb04548c142f6f5f77a9e16d8e8ae11cd131",
         "zone_id": "mid_12km"
+      },
+      {
+        "actual_bbox_wgs84": [
+          -105.22608958,
+          40.03934370101,
+          -105.155748789407,
+          40.093366783586
+        ],
+        "bbox_wgs84": [
+          -105.22608958000001,
+          40.0393437010098,
+          -105.15574878940669,
+          40.09336678358586
+        ],
+        "bytes": 8699337,
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "file_name": "mid_12km_r0_c1_2048.png",
+        "maximum_extent_error_degrees": 3.126388037344441e-13,
+        "request_sha256": "733972007a4046aeb75cfd071ce7b015405c322d6c2ae3dc04fd66f739f4eab2",
+        "sha256": "fdbfdcb9ba4ca648bcd0d1cf5eff8a249f123abb30a9e4215b6579f82c2113cc",
+        "zone_id": "mid_12km"
+      },
+      {
+        "actual_bbox_wgs84": [
+          -105.296430370593,
+          39.985320618434,
+          -105.22608958,
+          40.03934370101
+        ],
+        "bbox_wgs84": [
+          -105.29643037059333,
+          39.98532061843375,
+          -105.22608958000001,
+          40.0393437010098
+        ],
+        "bytes": 9903475,
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "file_name": "mid_12km_r1_c0_2048.png",
+        "maximum_extent_error_degrees": 3.268496584496461e-13,
+        "request_sha256": "4c5480fefac37843da2eb5122194f3c7ddd441b93658b98d21eb9f9c04765d74",
+        "sha256": "a4fe09e332cf27c794d6a3a72be3c3384546030c58748b0d11b4b3b494778b87",
+        "zone_id": "mid_12km"
+      },
+      {
+        "actual_bbox_wgs84": [
+          -105.22608958,
+          39.985320618434,
+          -105.155748789407,
+          40.03934370101
+        ],
+        "bbox_wgs84": [
+          -105.22608958000001,
+          39.98532061843375,
+          -105.15574878940669,
+          40.0393437010098
+        ],
+        "bytes": 8710100,
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "file_name": "mid_12km_r1_c1_2048.png",
+        "maximum_extent_error_degrees": 3.126388037344441e-13,
+        "request_sha256": "41e5da9f725e6ddaa2b582bc8d7d517cd69e2643139479472e204b6d8c9dfadb",
+        "sha256": "f9e8bfde050dd17b07cae21c1992095f59a47ec329b08e5f31df92f07f24cb5b",
+        "zone_id": "mid_12km"
+      },
+      {
+        "actual_bbox_wgs84": [
+          -105.366882144253,
+          39.931233168416,
+          -105.085297015747,
+          40.147324819785
+        ],
+        "bbox_wgs84": [
+          -105.36688214425344,
+          39.93123316841624,
+          -105.08529701574655,
+          40.14732481978453
+        ],
+        "bytes": 9263842,
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "file_name": "far_24km_r0_c0_2048.png",
+        "maximum_extent_error_degrees": 4.689582056016661e-13,
+        "request_sha256": "e3432a3cbb6982fd38ddca0f79f2d5082eb1e41a3db233674630a43db0cd62f4",
+        "sha256": "2937f2d942a98e6b71edd6eb158fc168870ebb9ab54aba9bda87a32e025ae9d2",
+        "zone_id": "far_24km"
       }
     ],
     "resolution_meters": 0.6,
-    "retrieved_utc": "2026-07-13T20:55:24.588426Z",
+    "retrieved_utc": "2026-07-16T21:51:03.570776Z",
     "service_metadata_sha256": "45f59a5ccfa7aa1d0153fb00230a54de72ca8eb02d17f839894f80771335f024",
     "service_name": "USGSNAIPPlus",
     "service_url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer"

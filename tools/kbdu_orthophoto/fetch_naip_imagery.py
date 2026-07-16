@@ -97,8 +97,8 @@ def main() -> int:
     if "USGS" not in credit or "USDA" not in credit:
         raise RuntimeError(f"Unexpected source credit from USGSNAIPPlus: {credit!r}")
 
-    mid_zone = next(zone for zone in config["zones"] if zone["id"] == "mid_12km")
-    west, south, east, north = zone_bbox(config, float(mid_zone["half_extent_meters"]))
+    widest_zone = max(config["zones"], key=lambda zone: float(zone["half_extent_meters"]))
+    west, south, east, north = zone_bbox(config, float(widest_zone["half_extent_meters"]))
     catalog_parameters = [
         ("where", f"Category=1 AND Year={int(source['catalog_year'])} AND agency='USDA'"),
         ("geometry", f"{west:.12f},{south:.12f},{east:.12f},{north:.12f}"),
@@ -137,6 +137,20 @@ def main() -> int:
             raise RuntimeError(f"Unexpected catalog lineage: {attributes}")
         if float(attributes.get("resolution_value") or 999) > float(source["resolution_meters"]):
             raise RuntimeError(f"Catalog resolution is coarser than pinned source: {attributes}")
+    expected_acquisition_dates = sorted(source.get("acquisition_dates", []))
+    observed_acquisition_dates = sorted(
+        {
+            datetime.fromtimestamp(int(feature["attributes"]["acquisition_date"]) / 1000, timezone.utc)
+            .date()
+            .isoformat()
+            for feature in features
+        }
+    )
+    if observed_acquisition_dates != expected_acquisition_dates:
+        raise RuntimeError(
+            "Pinned NAIP acquisition dates changed: "
+            f"expected {expected_acquisition_dates}, observed {observed_acquisition_dates}"
+        )
 
     mosaic_rule = json.dumps(
         {

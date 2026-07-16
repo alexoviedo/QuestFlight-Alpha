@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply a bounded natural-color grade and match the mid mosaic to the near overlap."""
+"""Apply one bounded grade and match every outer level to its inner footprint."""
 
 from __future__ import annotations
 
@@ -29,28 +29,31 @@ def apply_base_grade(image: Image.Image, settings: dict) -> Image.Image:
     return Image.merge("RGB", corrected)
 
 
-def overlap_adjustment(near: Image.Image, mid: Image.Image, settings: dict) -> tuple[list[float], list[float], list[dict], list[dict]]:
-    # The near 4 km footprint occupies the central third of the 12 km mid image.
-    left = mid.width // 3
-    upper = mid.height // 3
-    right = mid.width - left
-    lower = mid.height - upper
-    mid_overlap = mid.crop((left, upper, right, lower))
-    near_stats = image_channel_stats(near)
-    mid_stats = image_channel_stats(mid_overlap)
+def overlap_adjustment(
+    inner: Image.Image,
+    outer: Image.Image,
+    footprint_ratio: float,
+    settings: dict,
+) -> tuple[list[float], list[float], list[dict], list[dict]]:
+    overlap_size = max(1, round(outer.width * footprint_ratio))
+    left = (outer.width - overlap_size) // 2
+    upper = (outer.height - overlap_size) // 2
+    outer_overlap = outer.crop((left, upper, left + overlap_size, upper + overlap_size))
+    inner_stats = image_channel_stats(inner)
+    outer_stats = image_channel_stats(outer_overlap)
     gains: list[float] = []
     offsets: list[float] = []
     minimum = float(settings["mid_overlap_gain_min"])
     maximum = float(settings["mid_overlap_gain_max"])
     offset_limit = float(settings["mid_overlap_offset_limit"])
-    for near_channel, mid_channel in zip(near_stats, mid_stats):
-        raw_gain = near_channel["standard_deviation"] / max(mid_channel["standard_deviation"], 1e-6)
+    for inner_channel, outer_channel in zip(inner_stats, outer_stats):
+        raw_gain = inner_channel["standard_deviation"] / max(outer_channel["standard_deviation"], 1e-6)
         gain = max(minimum, min(maximum, raw_gain))
-        raw_offset = near_channel["mean"] - mid_channel["mean"] * gain
+        raw_offset = inner_channel["mean"] - outer_channel["mean"] * gain
         offset = max(-offset_limit, min(offset_limit, raw_offset))
         gains.append(gain)
         offsets.append(offset)
-    return gains, offsets, near_stats, mid_stats
+    return gains, offsets, inner_stats, outer_stats
 
 
 def apply_linear_channels(image: Image.Image, gains: list[float], offsets: list[float]) -> Image.Image:
@@ -70,43 +73,54 @@ def main() -> int:
     work_dir = require_external_directory(args.work_dir)
     settings = config["color_normalization"]
 
-    near_input = work_dir / "near_4km_reprojected.png"
-    mid_input = work_dir / "mid_12km_reprojected.png"
-    with Image.open(near_input) as source:
-        source.load()
-        near_before = image_channel_stats(source)
-        near = apply_base_grade(source, settings)
-    with Image.open(mid_input) as source:
-        source.load()
-        mid_before = image_channel_stats(source)
-        mid_base = apply_base_grade(source, settings)
-
-    gains, offsets, near_overlap_stats, mid_overlap_stats = overlap_adjustment(near, mid_base, settings)
-    mid = apply_linear_channels(mid_base, gains, offsets)
-    near_output = work_dir / "near_4km_normalized.png"
-    mid_output = work_dir / "mid_12km_normalized.png"
-    near.save(near_output, format="PNG", optimize=False, compress_level=6)
-    mid.save(mid_output, format="PNG", optimize=False, compress_level=6)
+    normalized: dict[str, Image.Image] = {}
+    zone_reports: dict[str, dict] = {}
+    overlap_matches: list[dict] = []
+    for index, zone in enumerate(config["zones"]):
+        zone_id = zone["id"]
+        input_path = work_dir / f"{zone_id}_reprojected.png"
+        with Image.open(input_path) as source:
+            source.load()
+            before = image_channel_stats(source)
+            image = apply_base_grade(source, settings)
+        if index:
+            inner_zone = config["zones"][index - 1]
+            inner_id = inner_zone["id"]
+            footprint_ratio = float(inner_zone["half_extent_meters"]) / float(zone["half_extent_meters"])
+            gains, offsets, inner_stats, outer_stats = overlap_adjustment(
+                normalized[inner_id], image, footprint_ratio, settings
+            )
+            image = apply_linear_channels(image, gains, offsets)
+            overlap_matches.append(
+                {
+                    "inner_zone_id": inner_id,
+                    "outer_zone_id": zone_id,
+                    "inner_footprint_ratio": footprint_ratio,
+                    "inner_overlap_target": inner_stats,
+                    "outer_overlap_before_match": outer_stats,
+                    "outer_linear_gain": [round(value, 8) for value in gains],
+                    "outer_linear_offset": [round(value, 8) for value in offsets],
+                }
+            )
+        normalized[zone_id] = image
+        output_path = work_dir / f"{zone_id}_normalized.png"
+        image.save(output_path, format="PNG", optimize=False, compress_level=6)
+        zone_reports[zone_id] = {
+            "before": before,
+            "after": image_channel_stats(image),
+            "output": file_record(output_path, relative_to=work_dir),
+        }
 
     report = {
         "schema_version": 1,
         "settings": settings,
-        "near_before": near_before,
-        "near_after": image_channel_stats(near),
-        "mid_before": mid_before,
-        "mid_after": image_channel_stats(mid),
-        "near_overlap_target": near_overlap_stats,
-        "mid_overlap_before_match": mid_overlap_stats,
-        "mid_overlap_linear_gain": [round(value, 8) for value in gains],
-        "mid_overlap_linear_offset": [round(value, 8) for value in offsets],
-        "outputs": [
-            file_record(near_output, relative_to=work_dir),
-            file_record(mid_output, relative_to=work_dir),
-        ],
+        "zones": zone_reports,
+        "overlap_matches": overlap_matches,
+        "outputs": [zone_reports[zone["id"]]["output"] for zone in config["zones"]],
     }
     atomic_write_json(work_dir / "color_normalization_report.json", report)
-    print(near_output)
-    print(mid_output)
+    for zone in config["zones"]:
+        print(work_dir / f"{zone['id']}_normalized.png")
     return 0
 
 
