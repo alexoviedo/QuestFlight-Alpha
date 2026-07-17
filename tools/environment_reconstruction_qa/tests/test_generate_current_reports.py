@@ -47,14 +47,16 @@ class CurrentReportAdapterTests(unittest.TestCase):
                 self.assertFalse(report["evidenceComplete"], name)
                 self.assertTrue(report["evidenceBlockers"], name)
 
-    def test_water_is_incomplete_and_building_requires_matching_unity_evidence(self) -> None:
+    def test_water_inventory_is_current_and_building_requires_matching_unity_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             output = pathlib.Path(temporary)
             self.generate(output)
             water = json.loads((output / "water_coverage_report.json").read_text(encoding="utf-8"))
             building = json.loads((output / "building_coverage_report.json").read_text(encoding="utf-8"))
-            self.assertEqual([], water["features"])
-            self.assertIsNone(water["missingSignificantFeatureCount"])
+            self.assertEqual(800, len(water["features"]))
+            self.assertEqual(277, sum(1 for item in water["features"] if item["represented"]))
+            self.assertEqual(0, water["missingSignificantFeatureCount"])
+            self.assertIn("WATER_ORTHOPHOTO_RECONCILIATION_UNPROVEN", {item["code"] for item in water["evidenceBlockers"]})
             self.assertIn("BUILDING_EVIDENCE_INCOMPLETE", {item["code"] for item in building["evidenceBlockers"]})
             mid = next(item for item in building["zones"] if item["id"] == "mid_4_6km")
             self.assertTrue(mid["coverageEvidenceComplete"])
@@ -71,10 +73,31 @@ class CurrentReportAdapterTests(unittest.TestCase):
             placement = json.loads((first / "placement_validation.json").read_text(encoding="utf-8"))
             building = json.loads((first / "building_coverage_report.json").read_text(encoding="utf-8"))
             hlod = json.loads((first / "hlod_validation_report.json").read_text(encoding="utf-8"))
-            self.assertEqual(27928, placement["aggregateValidation"]["fullInventoryRowCount"])
+            provenance = json.loads((first / "environment_reconstruction_adapter_provenance.json").read_text(encoding="utf-8"))
+            self.assertEqual(28336, placement["aggregateValidation"]["fullInventoryRowCount"])
+            self.assertEqual(277, len(placement["representedWaterStableIds"]))
             self.assertTrue(building["evidenceComplete"])
-            self.assertEqual(56, len(hlod["cells"]))
-            self.assertIn("HLOD_RECIPE_HASH_MISMATCH", {item["code"] for item in hlod["evidenceBlockers"]})
+            self.assertEqual(25, len(hlod["cells"]))
+            self.assertTrue(hlod["evidenceComplete"])
+            input_paths = {item["path"].replace("\\", "/") for item in provenance["inputs"]}
+            self.assertTrue(any("placement_validation_final/placement_validation.json" in path for path in input_paths))
+            self.assertTrue(any("hlod_serialized_audit_final/hlod_render_budget_report.json" in path for path in input_paths))
+            self.assertFalse(any("placement_validation_after_root_seating" in path for path in input_paths))
+
+            gate_arguments = [
+                sys.executable,
+                str(TOOL_ROOT / "validate_environment_reconstruction.py"),
+            ]
+            for category, name in zip(
+                ("surface", "placement", "building", "vegetation", "water", "hlod", "budgets"),
+                REPORT_NAMES,
+                strict=True,
+            ):
+                gate_arguments.extend((f"--{category}", str(first / name)))
+            gate_arguments.extend(("--output-dir", str(base / "gate")))
+            subprocess.run(gate_arguments, check=False, capture_output=True, text=True)
+            summary = json.loads((base / "gate" / "environment_reconstruction_qa_report.json").read_text(encoding="utf-8"))
+            self.assertNotIn("WATER_PLACEMENT_MISMATCH", {item["code"] for item in summary["issues"]})
 
 
 if __name__ == "__main__":

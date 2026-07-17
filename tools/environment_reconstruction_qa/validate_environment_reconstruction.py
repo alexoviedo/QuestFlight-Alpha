@@ -763,6 +763,11 @@ def validate_hlod(result: CategoryResult, data: dict[str, Any]) -> None:
 
 
 def validate_budgets(result: CategoryResult, data: dict[str, Any]) -> None:
+    blocker_codes = {
+        item.get("code")
+        for item in data.get("evidenceBlockers", [])
+        if isinstance(item, dict)
+    }
     comparisons = (
         ("maximumVisibleDrawCalls", "visibleDrawCalls", "DRAW_CALL_BUDGET"),
         ("maximumVisibleTriangles", "visibleTriangles", "TRIANGLE_BUDGET"),
@@ -772,6 +777,11 @@ def validate_budgets(result: CategoryResult, data: dict[str, Any]) -> None:
         ("steadyStateManagedAllocations", "steadyStateManagedAllocations", "STEADY_STATE_ALLOCATION"),
     )
     for key, limit_key, code in comparisons:
+        if key == "steadyStateManagedAllocations" and "STEADY_STATE_ALLOCATION_UNMEASURED" in blocker_codes:
+            # An explicit evidence blocker is the truthful state for an unmeasured
+            # runtime metric; do not manufacture a numeric value or duplicate it
+            # with a schema error.
+            continue
         value = require_number(result, data, key, "")
         if value is not None:
             result.metrics[key] = value
@@ -861,6 +871,12 @@ def validate_cross_report_consistency(
         for item in instances
         if isinstance(item, dict) and item.get("category") in {"water_body", "waterway"}
     }
+    if not placement_water_ids:
+        aggregate_water_ids = placement.get("representedWaterStableIds")
+        if isinstance(aggregate_water_ids, list):
+            placement_water_ids = {
+                item for item in aggregate_water_ids if isinstance(item, str) and item.strip()
+            }
     water = reports.get("water", {})
     water_features = water.get("features") if isinstance(water.get("features"), list) else []
     represented_water_ids = {

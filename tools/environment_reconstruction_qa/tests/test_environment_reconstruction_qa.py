@@ -442,6 +442,21 @@ class EnvironmentReconstructionQaTests(unittest.TestCase):
                 report = self.validate(reports)
                 self.assertIn(expected_code, self.codes(report))
 
+    def test_explicit_unmeasured_allocation_blocker_does_not_require_invented_number(self) -> None:
+        reports = passing_reports()
+        reports["budgets"]["evidenceComplete"] = False
+        reports["budgets"]["evidenceBlockers"] = [
+            {
+                "code": "STEADY_STATE_ALLOCATION_UNMEASURED",
+                "message": "Runtime allocation evidence was not collected.",
+            }
+        ]
+        reports["budgets"]["steadyStateManagedAllocations"] = None
+        report = self.validate(reports)
+        codes = self.codes(report)
+        self.assertIn("STEADY_STATE_ALLOCATION_UNMEASURED", codes)
+        self.assertNotIn("INVALID_NUMBER", codes)
+
 
 if __name__ == "__main__":
     unittest.main()
