@@ -37,6 +37,9 @@ namespace QuestFlightLab.Environment
         public MeshFilter midTerrainMesh;
         public MeshFilter farTerrainMesh;
         public Texture2D uniqueMacroAlbedo;
+        public ProductionTerrainSurfaceAsset authoritativeTerrainSurface;
+        public ProductionPlacementManifest productionPlacementManifest;
+        public AirportParkingStandManifest airportParkingStandManifest;
         public Vector2 macroWorldMinimumMeters = new Vector2(-6000f, -6000f);
         public Vector2 macroWorldSizeMeters = new Vector2(MidCoverageMeters, MidCoverageMeters);
         [Range(0f, 1f)] public float macroRepeatedTileSimilarity;
@@ -65,9 +68,12 @@ namespace QuestFlightLab.Environment
         public int bakedRunwayThresholdStripeQuadCount;
         public int bakedRunwayMarkingQuadCount;
 
-        [Header("Essential water only")]
+        [Header("Authoritative bounded water")]
         public MeshFilter boulderReservoirSurface;
         public MeshFilter boulderReservoirShoreBank;
+        public TextAsset waterFeatureManifestV2;
+        public MeshFilter otherWaterFeaturesSurfaceV2;
+        public MeshFilter otherWaterFeaturesShoreBankV2;
         public int retainedWaterBodyCount;
         public int discardedMinorWaterFeatureCount;
         public float minimumWaterTerrainSeparationMeters;
@@ -151,6 +157,14 @@ namespace QuestFlightLab.Environment
             Require(farTerrainSmoothingPassCount == 2,
                 $"far terrain must use two conservative offline smoothing passes, found {farTerrainSmoothingPassCount}", failures);
             Require(uniqueMacroAlbedo != null, "unique nonrepeating macro albedo is missing", failures);
+            Require(authoritativeTerrainSurface != null,
+                "authoritative production terrain-surface asset is missing", failures);
+            Require(productionPlacementManifest != null && productionPlacementManifest.entries != null &&
+                    productionPlacementManifest.entries.Length > 0,
+                "production placement manifest is missing or empty", failures);
+            Require(airportParkingStandManifest != null && airportParkingStandManifest.stands != null &&
+                    airportParkingStandManifest.stands.Length >= 3,
+                "airport parking-stand manifest is missing or incomplete", failures);
             Require(macroWorldSizeMeters.x >= MidCoverageMeters && macroWorldSizeMeters.y >= MidCoverageMeters,
                 "macro albedo does not cover the 12 km production context", failures);
             Require(macroRepeatedTileSimilarity < 0.985f,
@@ -191,9 +205,14 @@ namespace QuestFlightLab.Environment
                     renderer.name.IndexOf("RealContext_0_road_asphalt_021", StringComparison.Ordinal) < 0),
                 "production context still contains a duplicate land-cover or known malformed road renderer", failures);
 
-            Require(retainedWaterBodyCount == 1, $"expected only Boulder Reservoir, found {retainedWaterBodyCount} water bodies", failures);
+            Require(retainedWaterBodyCount > 1,
+                $"bounded V2 water coverage is incomplete ({retainedWaterBodyCount} represented features)", failures);
+            Require(waterFeatureManifestV2 != null,
+                "V2 water-feature source manifest is missing", failures);
             Require(HasMesh(boulderReservoirSurface), "Boulder Reservoir surface is missing", failures);
             Require(HasMesh(boulderReservoirShoreBank), "Boulder Reservoir shore bank is missing", failures);
+            Require(HasMesh(otherWaterFeaturesSurfaceV2), "V2 non-reservoir water surface is missing", failures);
+            Require(HasMesh(otherWaterFeaturesShoreBankV2), "V2 non-reservoir shore-bank mesh is missing", failures);
             if (boulderReservoirSurface != null)
             {
                 Material water = boulderReservoirSurface.GetComponent<Renderer>()?.sharedMaterial;
@@ -204,6 +223,15 @@ namespace QuestFlightLab.Environment
                     "Boulder Reservoir must use the production-only static water shader", failures);
                 Require(water != null && (!water.HasProperty("_ZWrite") || water.GetFloat("_ZWrite") > 0.5f),
                     "water material must use ZWrite", failures);
+            }
+            if (otherWaterFeaturesSurfaceV2 != null)
+            {
+                Material water = otherWaterFeaturesSurfaceV2.GetComponent<Renderer>()?.sharedMaterial;
+                Require(water != null && water.renderQueue < (int)RenderQueue.Transparent,
+                    "V2 water material must remain in an opaque render queue", failures);
+                Require(water != null && water.shader != null &&
+                        string.Equals(water.shader.name, ProductionWaterShaderName, StringComparison.Ordinal),
+                    "V2 water features must use the production static water shader", failures);
             }
             Require(boulderReservoirShorelineClosed,
                 "Boulder Reservoir smoothed shoreline is not closed", failures);

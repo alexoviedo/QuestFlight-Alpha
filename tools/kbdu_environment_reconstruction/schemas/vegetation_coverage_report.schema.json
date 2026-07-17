@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "accepted_placement_count": {"maximum": 700, "minimum": 200, "type": "integer"},
+    "exclusion_pixel_counts": {"type": "object"},
+    "legacy_candidate_count_replaced": {"const": 246},
+    "schema_version": {"const": 1},
+    "status": {"enum": ["PASS", "FAIL"]}
+  },
+  "required": ["schema_version", "status", "accepted_placement_count", "legacy_candidate_count_replaced", "exclusion_pixel_counts"],
+  "title": "KBDU vegetation V2 coverage report",
+  "type": "object"
+}

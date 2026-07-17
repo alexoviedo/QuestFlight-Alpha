@@ -24,7 +24,12 @@ namespace QuestFlightLab.Tests.EditMode
                 ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
                 Assert.That(contract, Is.Not.Null);
                 Assert.That(contract.TryValidateContract(out string report), Is.True, report);
-                Assert.That(contract.bakeToolVersion, Is.EqualTo("photoreal_environment_v1"));
+                Assert.That(contract.bakeToolVersion, Is.EqualTo("environment_reconstruction_v2"));
+                Assert.That(contract.authoritativeTerrainSurface, Is.Not.Null);
+                Assert.That(contract.productionPlacementManifest, Is.Not.Null);
+                Assert.That(contract.productionPlacementManifest.entries.Length, Is.EqualTo(28336));
+                Assert.That(contract.airportParkingStandManifest, Is.Not.Null);
+                Assert.That(contract.airportParkingStandManifest.stands.Length, Is.EqualTo(5));
                 Assert.That(contract.bakeUtc, Is.Not.Empty);
             });
         }
@@ -115,15 +120,18 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void EssentialWaterRetainsOnlyBoulderReservoirAndOpaqueStableShoreInterface()
+        public void BoundedWaterRetainsReservoirAndBatchedV2CoverageWithOpaqueStableShoreInterface()
         {
             WithInstance(root =>
             {
                 ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
-                Assert.That(contract.retainedWaterBodyCount, Is.EqualTo(1));
-                Assert.That(contract.discardedMinorWaterFeatureCount, Is.GreaterThan(100));
-                Assert.That(contract.essentialWater.GetComponentsInChildren<MeshRenderer>(true).Length, Is.EqualTo(2),
-                    "One surface and one natural shoreline bank are expected.");
+                Assert.That(contract.retainedWaterBodyCount, Is.GreaterThan(1));
+                Assert.That(contract.discardedMinorWaterFeatureCount, Is.GreaterThan(0));
+                Assert.That(contract.waterFeatureManifestV2, Is.Not.Null);
+                Assert.That(contract.otherWaterFeaturesSurfaceV2, Is.Not.Null);
+                Assert.That(contract.otherWaterFeaturesShoreBankV2, Is.Not.Null);
+                Assert.That(contract.essentialWater.GetComponentsInChildren<MeshRenderer>(true).Length, Is.EqualTo(4),
+                    "The reservoir pair and batched remaining-water pair are expected.");
                 Assert.That(contract.boulderReservoirSurface.name, Does.Contain("BoulderReservoir"));
                 Assert.That(contract.boulderReservoirShoreBank.name, Does.Contain("ShoreBank"));
                 Material water = contract.boulderReservoirSurface.GetComponent<Renderer>().sharedMaterial;
@@ -201,20 +209,38 @@ namespace QuestFlightLab.Tests.EditMode
         [Test]
         public void ProductionShadersHaveNoCompilerErrorsOrFallbackAssignment()
         {
-            Shader ground = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader");
-            Shader marking = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader");
-            Assert.That(ground, Is.Not.Null);
-            Assert.That(marking, Is.Not.Null);
-            Assert.That(ground.isSupported, Is.True);
-            Assert.That(marking.isSupported, Is.True);
-            Assert.That(ShaderUtil.GetShaderMessages(ground)
-                .Where(item => string.Equals(item.severity.ToString(), "Error", StringComparison.OrdinalIgnoreCase))
-                .Select(item => item.message), Is.Empty);
-            Assert.That(ShaderUtil.GetShaderMessages(marking)
-                .Where(item => string.Equals(item.severity.ToString(), "Error", StringComparison.OrdinalIgnoreCase))
-                .Select(item => item.message), Is.Empty);
+            string[] shaderPaths =
+            {
+                "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionMacroGround.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionSparseVegetation.shader"
+            };
+            Shader[] shaders = shaderPaths
+                .Select(path => AssetDatabase.LoadAssetAtPath<Shader>(path))
+                .ToArray();
+            for (int index = 0; index < shaders.Length; index++)
+            {
+                Shader shader = shaders[index];
+                Assert.That(shader, Is.Not.Null, shaderPaths[index]);
+                Assert.That(shader.isSupported, Is.True, shaderPaths[index]);
+                Assert.That(ShaderUtil.GetShaderMessages(shader)
+                    .Where(item => string.Equals(item.severity.ToString(), "Error", StringComparison.OrdinalIgnoreCase))
+                    .Select(item => item.message), Is.Empty, shaderPaths[index]);
+            }
+            Shader ground = shaders[0];
+            Shader marking = shaders[2];
+            Material groundPropertyProbe = new Material(ground);
+            try
+            {
+                Assert.That(groundPropertyProbe.HasProperty("_NearSourceNormal"), Is.True);
+                Assert.That(groundPropertyProbe.HasProperty("_NearSourceNormalStrength"), Is.True);
+                Assert.That(groundPropertyProbe.HasProperty("_NearSourceNormalFadeStartEnd"), Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(groundPropertyProbe);
+            }
             GameObject prefab = LoadPrefab();
             ProductionEnvironmentRoot contract = prefab.GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.nearTerrainMeshes[0].GetComponent<Renderer>().sharedMaterial.shader, Is.SameAs(ground));
@@ -229,6 +255,9 @@ namespace QuestFlightLab.Tests.EditMode
                 "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader",
                 "Assets/Production/Environment/PhotorealTerrainV1/KBDU_OsmBuildingContext.shader",
                 "Assets/Production/Environment/PhotorealTerrainV1/KBDU_OpaqueVegetationContext.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionMacroGround.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionSparseVegetation.shader",
                 "Assets/Resources/QuestFlightLab/Environment/Shaders/AircraftRunwayBlobShadow.shader"
             };
             string projectRoot = Directory.GetParent(Application.dataPath).FullName;
@@ -248,6 +277,11 @@ namespace QuestFlightLab.Tests.EditMode
                 foreach (string token in requiredTokens)
                     Assert.That(source, Does.Contain(token), $"{assetPath} must preserve {token} for Quest single-pass instanced rendering.");
             }
+
+            string terrainSource = File.ReadAllText(Path.Combine(projectRoot, shaderPaths[0]));
+            Assert.That(terrainSource, Does.Contain("tex2Dgrad(_NearSourceNormal, nearUv"));
+            Assert.That(terrainSource, Does.Contain("nearWeight * _NearSourceNormalStrength"));
+            Assert.That(terrainSource, Does.Contain("_NearSourceNormalFadeStartEnd"));
         }
 
         [TestCase(QuestTemporalVisualGateRecorder.SkyOnlyIsolationProfile)]

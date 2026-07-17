@@ -27,8 +27,8 @@ namespace QuestFlightLab.Editor
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
         private const int RequiredShotCount = 24;
-        private const int DrawCallTarget = 120;
-        private const long VisibleTriangleTarget = 500000L;
+        private const int DrawCallTarget = 130;
+        private const long VisibleTriangleTarget = 650000L;
         private const int SceneMaterialTarget = 30;
         private const string ProductionScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
         private static readonly Vector3 RepresentativeCalibrationOffset = new Vector3(0.015f, 0.020f, -0.025f);

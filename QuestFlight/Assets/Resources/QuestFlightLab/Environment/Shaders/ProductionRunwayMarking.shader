@@ -21,14 +21,29 @@ Shader "QuestFlightLab/Production Runway Marking"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_fog
+            #pragma multi_compile_instancing
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
             fixed4 _Color;
-            struct appdata { float4 vertex : POSITION; half3 normal : NORMAL; };
-            struct v2f { float4 position : SV_POSITION; half3 worldNormal : TEXCOORD0; UNITY_FOG_COORDS(1) };
+            struct appdata
+            {
+                float4 vertex : POSITION;
+                half3 normal : NORMAL;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+            struct v2f
+            {
+                float4 position : SV_POSITION;
+                half3 worldNormal : TEXCOORD0;
+                UNITY_FOG_COORDS(1)
+                UNITY_VERTEX_OUTPUT_STEREO
+            };
             v2f vert(appdata input)
             {
+                UNITY_SETUP_INSTANCE_ID(input);
                 v2f output;
+                UNITY_INITIALIZE_OUTPUT(v2f, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
                 output.position = UnityObjectToClipPos(input.vertex);
                 output.worldNormal = UnityObjectToWorldNormal(input.normal);
                 UNITY_TRANSFER_FOG(output, output.position);
@@ -36,6 +51,8 @@ Shader "QuestFlightLab/Production Runway Marking"
             }
             fixed4 frag(v2f input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
                 half3 normal = normalize(input.worldNormal);
                 half diffuse = saturate(dot(normal, normalize(_WorldSpaceLightPos0.xyz)));
                 fixed4 output = fixed4(_Color.rgb * (ShadeSH9(half4(normal, 1.0)) + _LightColor0.rgb * diffuse), 1.0);

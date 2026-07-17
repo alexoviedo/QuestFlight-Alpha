@@ -1,0 +1,183 @@
+{
+  "label": "KBDU project-owned procedural regional vegetation library",
+  "license": "Project-authored; repository license",
+  "material_contract": {
+    "opaque_only": true,
+    "path": "vegetation_meshes/KBDU_VegetationShared.mtl",
+    "sha256": "9bc39f427446720ec729dd82b994273b77eefab2cd808dc4aed8d36d78751884",
+    "shared_material_slots": [
+      "bark_shared",
+      "foliage_deciduous_shared",
+      "foliage_conifer_shared",
+      "foliage_shrub_shared"
+    ]
+  },
+  "schema_version": 1,
+  "species": [
+    {
+      "canonical_height_meters": 11.0,
+      "crown_range_meters": [
+        3.0,
+        5.0
+      ],
+      "foliage_material": "foliage_deciduous_shared",
+      "form": "broad_deciduous",
+      "height_range_meters": [
+        8.0,
+        14.0
+      ],
+      "id": "plains_cottonwood",
+      "lods": [
+        {
+          "bytes": 21831,
+          "lod": 0,
+          "path": "vegetation_meshes/plains_cottonwood_LOD0.obj",
+          "sha256": "8b6fdec05fedc46ea41736a52a3057d4336382f9a31e5521d52f413e1762195e",
+          "triangles": 744,
+          "vertices": 394
+        },
+        {
+          "bytes": 4698,
+          "lod": 1,
+          "path": "vegetation_meshes/plains_cottonwood_LOD1.obj",
+          "sha256": "92cbff633f23aa1e57b0121708814c139a7e2798a3c1e7d60d0ab07196685dab",
+          "triangles": 160,
+          "vertices": 94
+        },
+        {
+          "bytes": 992,
+          "lod": 2,
+          "path": "vegetation_meshes/plains_cottonwood_LOD2.obj",
+          "sha256": "9c981cd2b5c7f152907d2c9bc909275f823f44d944145ce2b6cf87831058ec45",
+          "triangles": 24,
+          "vertices": 20
+        }
+      ]
+    },
+    {
+      "canonical_height_meters": 6.0,
+      "crown_range_meters": [
+        2.5,
+        4.0
+      ],
+      "foliage_material": "foliage_deciduous_shared",
+      "form": "riparian_deciduous",
+      "height_range_meters": [
+        4.0,
+        8.0
+      ],
+      "id": "narrowleaf_willow",
+      "lods": [
+        {
+          "bytes": 17587,
+          "lod": 0,
+          "path": "vegetation_meshes/narrowleaf_willow_LOD0.obj",
+          "sha256": "019c00f4a345fca6ae180f177fbd28cdc7a1a96448dba71aa2893566de8c5391",
+          "triangles": 600,
+          "vertices": 320
+        },
+        {
+          "bytes": 4708,
+          "lod": 1,
+          "path": "vegetation_meshes/narrowleaf_willow_LOD1.obj",
+          "sha256": "2f660c5da21f077f810b6c478ec2bb846fea4789151c342276e9ecb7d14281c6",
+          "triangles": 160,
+          "vertices": 94
+        },
+        {
+          "bytes": 996,
+          "lod": 2,
+          "path": "vegetation_meshes/narrowleaf_willow_LOD2.obj",
+          "sha256": "e655a605b25db08cd57badde64e02971643cb9652b86a582a234f9cf170e353a",
+          "triangles": 24,
+          "vertices": 20
+        }
+      ]
+    },
+    {
+      "canonical_height_meters": 5.5,
+      "crown_range_meters": [
+        1.8,
+        3.0
+      ],
+      "foliage_material": "foliage_conifer_shared",
+      "form": "compact_conifer",
+      "height_range_meters": [
+        4.0,
+        7.0
+      ],
+      "id": "rocky_mountain_juniper",
+      "lods": [
+        {
+          "bytes": 13358,
+          "lod": 0,
+          "path": "vegetation_meshes/rocky_mountain_juniper_LOD0.obj",
+          "sha256": "4517156cb3486d79fff80d2406cd86db4cb25875fbf55273c24ddb063cbe199d",
+          "triangles": 456,
+          "vertices": 246
+        },
+        {
+          "bytes": 4699,
+          "lod": 1,
+          "path": "vegetation_meshes/rocky_mountain_juniper_LOD1.obj",
+          "sha256": "5121e11394dd42fd0a7f10eccb7d9cc4bfbce0a94a49966893eb383e7de55b8d",
+          "triangles": 160,
+          "vertices": 94
+        },
+        {
+          "bytes": 995,
+          "lod": 2,
+          "path": "vegetation_meshes/rocky_mountain_juniper_LOD2.obj",
+          "sha256": "23d725e9e5b569d928dfd9416c94e87ff65ba9ad68e818fb5e22dd46a6cbc999",
+          "triangles": 24,
+          "vertices": 20
+        }
+      ]
+    },
+    {
+      "canonical_height_meters": 1.7,
+      "crown_range_meters": [
+        1.0,
+        2.0
+      ],
+      "foliage_material": "foliage_shrub_shared",
+      "form": "multi_lobe_shrub",
+      "height_range_meters": [
+        1.0,
+        2.4
+      ],
+      "id": "rabbitbrush_shrub",
+      "lods": [
+        {
+          "bytes": 17581,
+          "lod": 0,
+          "path": "vegetation_meshes/rabbitbrush_shrub_LOD0.obj",
+          "sha256": "656014a18ac5d791b586e16353bef50da8809a89136b20bc8010bc60f8b9d158",
+          "triangles": 600,
+          "vertices": 320
+        },
+        {
+          "bytes": 4698,
+          "lod": 1,
+          "path": "vegetation_meshes/rabbitbrush_shrub_LOD1.obj",
+          "sha256": "583917bb04f5fb86bd360251319ae1b0901b3b8d030e8f11732ac5e16cfc2c32",
+          "triangles": 160,
+          "vertices": 94
+        },
+        {
+          "bytes": 990,
+          "lod": 2,
+          "path": "vegetation_meshes/rabbitbrush_shrub_LOD2.obj",
+          "sha256": "fd43ce50f0b03af2326e6544d27995e7f7d5ee76ce36a583ba7d70962a9ebcc9",
+          "triangles": 24,
+          "vertices": 20
+        }
+      ]
+    }
+  ],
+  "stereo_geometry_contract": {
+    "camera_facing_billboards": false,
+    "closed_crown_volume": true,
+    "top_and_oblique_views_supported": true
+  }
+}

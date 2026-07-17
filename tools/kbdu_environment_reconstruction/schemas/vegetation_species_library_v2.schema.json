@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "license": {"const": "Project-authored; repository license"},
+    "material_contract": {"type": "object"},
+    "schema_version": {"const": 1},
+    "species": {
+      "items": {
+        "properties": {
+          "lods": {"items": {"type": "object"}, "maxItems": 3, "minItems": 3, "type": "array"}
+        },
+        "required": ["id", "lods", "height_range_meters", "crown_range_meters"],
+        "type": "object"
+      },
+      "maxItems": 5,
+      "minItems": 3,
+      "type": "array"
+    },
+    "stereo_geometry_contract": {"type": "object"}
+  },
+  "required": ["schema_version", "license", "material_contract", "species", "stereo_geometry_contract"],
+  "title": "KBDU project-owned vegetation species library V2",
+  "type": "object"
+}

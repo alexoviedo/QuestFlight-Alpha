@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -17,8 +19,11 @@ namespace QuestFlight.Editor
         private const string Root = "Assets/Production/Environment/PhotorealTerrainV1";
         private const string Generated = Root + "/Generated";
         private const string ContextPath =
-            "Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_reference_context.json";
-        private const string RecipePath = Root + "/KBDU_ContextBatchRecipe.json";
+            "Assets/Production/Environment/ReconstructionV2/KBDU_ReferenceContextV2.json";
+        private const string RecipePath =
+            "Assets/Production/Environment/ReconstructionV2/KBDU_ContextBatchRecipeV2.json";
+        private const string RuntimeRecipePath =
+            "Assets/Production/Environment/ReconstructionV2/KBDU_RuntimeHlodRecipeV2.json";
         private const string AtlasPath = Root + "/KBDU_ContextAtlas.png";
         private const string NearPath =
             "Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg";
@@ -29,6 +34,16 @@ namespace QuestFlight.Editor
         private const string DetailPath =
             "Assets/Resources/QuestFlightLab/Environment/GroundMaterials/withered_grass_diff_1k.jpg";
         private const string ParkedAircraftModelPath = Root + "/KBDU_ParkedAircraft_LODs.glb";
+        private const int NonContextDrawSlots = 99;
+        private const long NonContextTriangles = 551958;
+        private const int MaximumVisibleDrawSlots = 130;
+        private const long MaximumVisibleTriangles = 650000;
+        private const int MaximumSingleMeshVertices = 200000;
+        private const int NonContextSerializedRenderers = 99;
+        private const long NonContextSerializedTriangles = 551958;
+        private const int MaximumSerializedRenderers = 180;
+        private const long MaximumSerializedTriangles = 700000;
+        private const int PlannedWaterRendererReserve = 2;
 
         [MenuItem("QuestFlight/Product/Author KBDU Photoreal Terrain Assets")]
         public static void RunInteractive() => AuthorAssets();
@@ -73,6 +88,7 @@ namespace QuestFlight.Editor
             try
             {
                 AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                ValidateRuntimeSourcePlan();
                 EnsureFolder(Generated);
                 CreateContextMaterials();
                 CreateContextMeshes();
@@ -93,6 +109,7 @@ namespace QuestFlight.Editor
         private static void AuthorAssets()
         {
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            ValidateRuntimeSourcePlan();
             EnsureFolder(Generated);
             ConfigureTexture(NearPath, 4096, true, 8, true, -0.15f);
             ConfigureTexture(MidPath, 4096, true, 8, true, -0.15f);
@@ -109,15 +126,15 @@ namespace QuestFlight.Editor
 
         private static void ValidateAssets()
         {
-            ContextRecipe recipe = ReadJson<ContextRecipe>(RecipePath);
-            int batchCount = recipe.building_batches.Length + recipe.vegetation_batches.Length +
-                             recipe.parked_aircraft_batches.Length;
+            RuntimeInputs inputs = ValidateRuntimeSourcePlan();
+            int batchCount = inputs.Runtime.building_runtime_batches.Length +
+                             inputs.Runtime.vegetation_runtime_batches.Length +
+                             inputs.Runtime.parked_aircraft_runtime_batches.Length;
             string[] meshGuids = AssetDatabase.FindAssets("t:Mesh", new[] { Generated });
-            if (meshGuids.Length != batchCount * 2)
+            if (meshGuids.Length != batchCount * 3)
                 throw new InvalidOperationException(
-                    "Generated context mesh count is " + meshGuids.Length + ", expected " + batchCount * 2);
-            long lod0Triangles = 0;
-            long lod1Triangles = 0;
+                    "Generated context mesh count is " + meshGuids.Length + ", expected " + batchCount * 3);
+            Dictionary<string, long[]> trianglesByBatch = new Dictionary<string, long[]>(StringComparer.Ordinal);
             foreach (string guid in meshGuids)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
@@ -126,31 +143,52 @@ namespace QuestFlight.Editor
                     throw new InvalidOperationException("Generated mesh is empty or split: " + path);
                 if (mesh.GetIndexCount(0) % 3 != 0)
                     throw new InvalidOperationException("Generated mesh has non-triangle indices: " + path);
-                if (mesh.vertexCount > 60000)
+                if (mesh.vertexCount > MaximumSingleMeshVertices)
                     throw new InvalidOperationException("Generated batch is too large for bounded culling: " + path);
                 Bounds bounds = mesh.bounds;
                 if (!Finite(bounds.center) || !Finite(bounds.extents))
                     throw new InvalidOperationException("Generated mesh has nonfinite bounds: " + path);
                 long triangles = (long)mesh.GetIndexCount(0) / 3L;
-                if (path.EndsWith("_LOD0.asset", StringComparison.Ordinal)) lod0Triangles += triangles;
-                else if (path.EndsWith("_LOD1.asset", StringComparison.Ordinal)) lod1Triangles += triangles;
-                else throw new InvalidOperationException("Generated mesh has an unexpected LOD name: " + path);
+                int lod = path.EndsWith("_LOD0.asset", StringComparison.Ordinal) ? 0 :
+                    path.EndsWith("_LOD1.asset", StringComparison.Ordinal) ? 1 :
+                    path.EndsWith("_LOD2.asset", StringComparison.Ordinal) ? 2 : -1;
+                if (lod < 0) throw new InvalidOperationException("Generated mesh has an unexpected LOD name: " + path);
+                string batchId = Path.GetFileNameWithoutExtension(path);
+                batchId = batchId.Substring(0, batchId.Length - 5);
+                if (!trianglesByBatch.TryGetValue(batchId, out long[] values))
+                {
+                    values = new long[3];
+                    trianglesByBatch.Add(batchId, values);
+                }
+                values[lod] = triangles;
             }
-            if (lod0Triangles > 74000 || lod1Triangles > 35000)
+            long contextWorstCaseTriangles = trianglesByBatch.Values.Sum(values => values.Max());
+            long contextAggregateTriangles = trianglesByBatch.Values.Sum(values => values.Sum());
+            if (trianglesByBatch.Count != batchCount ||
+                NonContextTriangles + contextWorstCaseTriangles > MaximumVisibleTriangles)
                 throw new InvalidOperationException(
-                    "Generated context triangle budget exceeded: LOD0=" + lod0Triangles + ", LOD1=" + lod1Triangles);
+                    "Generated context triangle budget exceeded: context=" + contextWorstCaseTriangles +
+                    ", integrated=" + (NonContextTriangles + contextWorstCaseTriangles));
+            if (NonContextDrawSlots + batchCount + PlannedWaterRendererReserve > MaximumVisibleDrawSlots)
+                throw new InvalidOperationException("Generated context renderer-slot budget exceeded: " + batchCount);
+            if (NonContextSerializedRenderers + batchCount * 3 + PlannedWaterRendererReserve > MaximumSerializedRenderers ||
+                NonContextSerializedTriangles + contextAggregateTriangles > MaximumSerializedTriangles)
+                throw new InvalidOperationException(
+                    "Generated aggregate serialized budget exceeded: renderers=" +
+                    (NonContextSerializedRenderers + batchCount * 3 + PlannedWaterRendererReserve) + ", triangles=" +
+                    (NonContextSerializedTriangles + contextAggregateTriangles));
 
             GameObject prefab = LoadRequired<GameObject>(Root + "/KBDU_BatchedContext.prefab");
             LODGroup[] groups = prefab.GetComponentsInChildren<LODGroup>(true);
             MeshRenderer[] renderers = prefab.GetComponentsInChildren<MeshRenderer>(true);
-            if (groups.Length != batchCount || renderers.Length != batchCount * 2)
+            if (groups.Length != batchCount || renderers.Length != batchCount * 3)
                 throw new InvalidOperationException(
                     "Batched context prefab hierarchy is incomplete: groups=" + groups.Length +
                     ", renderers=" + renderers.Length);
             foreach (LODGroup group in groups)
             {
-                if (group.fadeMode != LODFadeMode.None || group.animateCrossFading || group.GetLODs().Length != 2)
-                    throw new InvalidOperationException("Context LOD must have two non-crossfaded levels: " + group.name);
+                if (group.fadeMode != LODFadeMode.None || group.animateCrossFading || group.GetLODs().Length != 3)
+                    throw new InvalidOperationException("Context LOD must have three non-crossfaded levels: " + group.name);
             }
             HashSet<Material> materials = new HashSet<Material>(renderers.Select(renderer => renderer.sharedMaterial));
             if (materials.Count != 3 || materials.Any(material => material == null))
@@ -162,8 +200,153 @@ namespace QuestFlight.Editor
             ValidateDetailTextureImport();
             Debug.Log(
                 "[QuestFlight][KBDUPhotorealTerrainValidation] batches=" + batchCount +
-                ", LOD0 triangles=" + lod0Triangles + ", LOD1 triangles=" + lod1Triangles +
+                ", context worst-case triangles=" + contextWorstCaseTriangles +
+                ", integrated planning triangles=" + (NonContextTriangles + contextWorstCaseTriangles) +
+                ", aggregate serialized triangles=" + (NonContextSerializedTriangles + contextAggregateTriangles) +
                 ", materials=" + materials.Count + ".");
+        }
+
+        private static RuntimeInputs ValidateRuntimeSourcePlan()
+        {
+            ContextDocument context = ReadJson<ContextDocument>(ContextPath);
+            ContextRecipe logical = ReadJson<ContextRecipe>(RecipePath);
+            RuntimeHlodRecipe runtime = ReadJson<RuntimeHlodRecipe>(RuntimeRecipePath);
+            if (context.openstreetmap == null || context.openstreetmap.features == null)
+                throw new InvalidOperationException("V2 reference context does not contain OSM features");
+            if (logical.building_batches == null || logical.vegetation_batches == null ||
+                logical.parked_aircraft_batches == null)
+                throw new InvalidOperationException("V2 logical recipe does not contain all context categories");
+            if (runtime.building_runtime_batches == null || runtime.vegetation_runtime_batches == null ||
+                runtime.parked_aircraft_runtime_batches == null || runtime.static_budget == null)
+                throw new InvalidOperationException("Runtime HLOD recipe is incomplete");
+            if (!string.Equals(runtime.source_logical_recipe_sha256, ComputeSha256(RecipePath), StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(runtime.source_context_sha256, ComputeSha256(ContextPath), StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Runtime HLOD recipe is stale relative to its logical recipe or context source");
+
+            Dictionary<string, BuildingBatch> logicalBuildings = logical.building_batches
+                .ToDictionary(batch => batch.id, StringComparer.Ordinal);
+            HashSet<string> coveredBuildings = new HashSet<string>(StringComparer.Ordinal);
+            foreach (RuntimeBuildingBatch batch in runtime.building_runtime_batches)
+            {
+                if (string.IsNullOrWhiteSpace(batch.id) || batch.logical_batch_ids == null || batch.logical_batch_ids.Length == 0)
+                    throw new InvalidOperationException("Runtime building batch identity/coverage is incomplete");
+                ValidateLodPolicy(batch.id, batch.lod_policy);
+                foreach (string logicalId in batch.logical_batch_ids)
+                {
+                    if (!logicalBuildings.ContainsKey(logicalId))
+                        throw new InvalidOperationException("Runtime HLOD references an unknown logical building cell: " + logicalId);
+                    if (!coveredBuildings.Add(logicalId))
+                        throw new InvalidOperationException("Runtime HLOD duplicates a logical building cell: " + logicalId);
+                }
+            }
+            if (!coveredBuildings.SetEquals(logicalBuildings.Keys))
+                throw new InvalidOperationException("Runtime HLOD does not preserve every 250 m logical building cell");
+
+            ValidateSimpleRuntimeCoverage(
+                "vegetation",
+                logical.vegetation_batches.Select(batch => batch.id),
+                runtime.vegetation_runtime_batches);
+            VegetationPlacement[] logicalVegetation = logical.vegetation_batches
+                .SelectMany(batch => batch.placements).ToArray();
+            HashSet<string> stableVegetationIds = new HashSet<string>(
+                logicalVegetation.Select(placement => placement.stable_id), StringComparer.Ordinal);
+            HashSet<string> logicalSpecies = new HashSet<string>(
+                logicalVegetation.Select(placement => placement.species_id), StringComparer.Ordinal);
+            if (logicalVegetation.Length != runtime.vegetation_placement_count ||
+                stableVegetationIds.Count != logicalVegetation.Length ||
+                runtime.vegetation_species_ids == null ||
+                !logicalSpecies.SetEquals(runtime.vegetation_species_ids))
+                throw new InvalidOperationException(
+                    "Runtime HLOD does not preserve vegetation placement/species identity");
+            ValidateSimpleRuntimeCoverage(
+                "parked aircraft",
+                logical.parked_aircraft_batches.Select(batch => batch.id),
+                runtime.parked_aircraft_runtime_batches);
+
+            int batchCount = runtime.building_runtime_batches.Length +
+                             runtime.vegetation_runtime_batches.Length +
+                             runtime.parked_aircraft_runtime_batches.Length;
+            long plannedAggregateTriangles = runtime.building_runtime_batches
+                .Sum(batch => batch.lod_policy.Sum(policy => policy.estimated_triangles)) +
+                runtime.vegetation_runtime_batches
+                    .Sum(batch => batch.lod_policy.Sum(policy => policy.estimated_triangles)) +
+                runtime.parked_aircraft_runtime_batches
+                    .Sum(batch => batch.lod_policy.Sum(policy => policy.estimated_triangles));
+            BudgetEstimates estimates = runtime.static_budget.estimates;
+            BudgetLimits limits = runtime.static_budget.limits;
+            if (!string.Equals(runtime.static_budget.status, "PASS", StringComparison.Ordinal) ||
+                estimates == null || limits == null || estimates.context_batch_count != batchCount ||
+                estimates.integrated_visible_draw_slots != NonContextDrawSlots + batchCount + PlannedWaterRendererReserve ||
+                estimates.integrated_aggregate_serialized_renderers !=
+                    NonContextSerializedRenderers + batchCount * 3 + PlannedWaterRendererReserve ||
+                estimates.integrated_aggregate_serialized_triangles != NonContextSerializedTriangles + plannedAggregateTriangles ||
+                estimates.integrated_visible_draw_slots > limits.visible_draw_slots ||
+                estimates.integrated_visible_triangles > limits.visible_triangles ||
+                estimates.integrated_visible_materials > limits.visible_materials ||
+                estimates.integrated_texture_memory_bytes > limits.texture_memory_bytes ||
+                estimates.integrated_transparent_material_slots > limits.transparent_material_slots ||
+                estimates.integrated_aggregate_serialized_renderers > limits.aggregate_serialized_renderers ||
+                estimates.integrated_aggregate_serialized_triangles > limits.aggregate_serialized_triangles ||
+                estimates.maximum_single_mesh_vertices > MaximumSingleMeshVertices ||
+                limits.visible_draw_slots > MaximumVisibleDrawSlots ||
+                limits.visible_triangles > MaximumVisibleTriangles ||
+                limits.aggregate_serialized_renderers > MaximumSerializedRenderers ||
+                limits.aggregate_serialized_triangles > MaximumSerializedTriangles)
+                throw new InvalidOperationException("Runtime HLOD static budget contract is invalid or over budget");
+
+            return new RuntimeInputs(context, logical, runtime, logicalBuildings);
+        }
+
+        private static void ValidateSimpleRuntimeCoverage(
+            string label,
+            IEnumerable<string> logicalIds,
+            RuntimeSimpleBatch[] runtimeBatches)
+        {
+            HashSet<string> expected = new HashSet<string>(logicalIds, StringComparer.Ordinal);
+            HashSet<string> covered = new HashSet<string>(StringComparer.Ordinal);
+            foreach (RuntimeSimpleBatch batch in runtimeBatches)
+            {
+                ValidateLodPolicy(batch.id, batch.lod_policy);
+                if (batch.logical_batch_ids == null)
+                    throw new InvalidOperationException("Runtime " + label + " coverage is missing");
+                foreach (string logicalId in batch.logical_batch_ids)
+                {
+                    if (!expected.Contains(logicalId) || !covered.Add(logicalId))
+                        throw new InvalidOperationException("Runtime " + label + " coverage is unknown or duplicated: " + logicalId);
+                }
+            }
+            if (!covered.SetEquals(expected))
+                throw new InvalidOperationException("Runtime HLOD does not preserve every logical " + label + " batch");
+        }
+
+        private static void ValidateLodPolicy(string batchId, RuntimeLodPolicy[] policies)
+        {
+            if (policies == null || policies.Length != 3)
+                throw new InvalidOperationException("Runtime batch must define exactly three LOD policies: " + batchId);
+            float previousHeight = 2f;
+            for (int index = 0; index < policies.Length; index++)
+            {
+                RuntimeLodPolicy policy = policies[index];
+                if (!string.Equals(policy.level, "LOD" + index, StringComparison.Ordinal) ||
+                    string.IsNullOrWhiteSpace(policy.algorithm) || policy.estimated_triangles <= 0 ||
+                    policy.estimated_vertices <= 0 || policy.screen_relative_height <= 0f ||
+                    policy.screen_relative_height >= previousHeight)
+                    throw new InvalidOperationException("Runtime LOD policy is invalid: " + batchId + " LOD" + index);
+                previousHeight = policy.screen_relative_height;
+            }
+        }
+
+        private static string ComputeSha256(string assetPath)
+        {
+            string fullPath = Path.Combine(Directory.GetCurrentDirectory(), assetPath.Replace('/', Path.DirectorySeparatorChar));
+            using (SHA256 algorithm = SHA256.Create())
+            using (FileStream stream = File.OpenRead(fullPath))
+            {
+                byte[] digest = algorithm.ComputeHash(stream);
+                StringBuilder value = new StringBuilder(digest.Length * 2);
+                foreach (byte item in digest) value.Append(item.ToString("x2"));
+                return value.ToString();
+            }
         }
 
         private static void ValidateTextureImport(string path, int maximumSize)
@@ -295,83 +478,145 @@ namespace QuestFlight.Editor
 
         private static void CreateContextMeshes()
         {
-            ContextDocument context = ReadJson<ContextDocument>(ContextPath);
-            ContextRecipe recipe = ReadJson<ContextRecipe>(RecipePath);
-            if (context.openstreetmap == null || context.openstreetmap.features == null)
-                throw new InvalidOperationException("OSM context does not contain features");
-            if (recipe.building_batches == null || recipe.vegetation_batches == null ||
-                recipe.parked_aircraft_batches == null)
-                throw new InvalidOperationException("KBDU context recipe does not contain batches");
-
+            RuntimeInputs inputs = ValidateRuntimeSourcePlan();
+            Dictionary<string, VegetationBatch> vegetationById = inputs.Logical.vegetation_batches
+                .ToDictionary(batch => batch.id, StringComparer.Ordinal);
+            Dictionary<string, ParkedAircraftBatch> aircraftById = inputs.Logical.parked_aircraft_batches
+                .ToDictionary(batch => batch.id, StringComparer.Ordinal);
+            List<PendingMesh> pending = new List<PendingMesh>();
             int buildingCount = 0;
             int vegetationCount = 0;
             int parkedAircraftCount = 0;
-            HashSet<string> desiredMeshPaths = new HashSet<string>(StringComparer.Ordinal);
-            foreach (BuildingBatch batch in recipe.building_batches)
+            try
             {
-                Mesh lod0 = BuildBuildingBatch(batch, context, false);
-                Mesh lod1 = BuildBuildingBatch(batch, context, true);
-                string lod0Path = Generated + "/" + batch.id + "_LOD0.asset";
-                string lod1Path = Generated + "/" + batch.id + "_LOD1.asset";
-                SaveMesh(lod0, lod0Path);
-                SaveMesh(lod1, lod1Path);
-                desiredMeshPaths.Add(lod0Path);
-                desiredMeshPaths.Add(lod1Path);
-                buildingCount += batch.buildings.Length;
+                foreach (RuntimeBuildingBatch runtimeBatch in inputs.Runtime.building_runtime_batches)
+                {
+                    BuildingRecord[] records = runtimeBatch.logical_batch_ids
+                        .SelectMany(id => inputs.LogicalBuildings[id].buildings).ToArray();
+                    for (int lod = 0; lod < 3; lod++)
+                    {
+                        RuntimeLodPolicy policy = runtimeBatch.lod_policy[lod];
+                        AddPending(
+                            pending,
+                            runtimeBatch.id,
+                            lod,
+                            policy,
+                            BuildBuildingBatch(runtimeBatch.id, records, inputs.Context, policy.algorithm));
+                    }
+                    buildingCount += records.Length;
+                }
+                foreach (RuntimeSimpleBatch runtimeBatch in inputs.Runtime.vegetation_runtime_batches)
+                {
+                    VegetationBatch batch = new VegetationBatch
+                    {
+                        id = runtimeBatch.id,
+                        placements = runtimeBatch.logical_batch_ids
+                            .SelectMany(id => vegetationById[id].placements).ToArray()
+                    };
+                    if (batch.placements.Length != runtimeBatch.placement_count)
+                        throw new InvalidOperationException(
+                            "Runtime vegetation batch placement count is stale: " + runtimeBatch.id);
+                    for (int lod = 0; lod < 3; lod++)
+                        AddPending(pending, runtimeBatch.id, lod, runtimeBatch.lod_policy[lod], BuildVegetationBatch(batch, lod));
+                    vegetationCount += batch.placements.Length;
+                }
+                GameObject parkedAircraftSource = LoadRequired<GameObject>(ParkedAircraftModelPath);
+                foreach (RuntimeSimpleBatch runtimeBatch in inputs.Runtime.parked_aircraft_runtime_batches)
+                {
+                    ParkedAircraftBatch batch = aircraftById[runtimeBatch.logical_batch_ids.Single()];
+                    for (int lod = 0; lod < 3; lod++)
+                        AddPending(pending, runtimeBatch.id, lod, runtimeBatch.lod_policy[lod], BuildParkedAircraftBatch(batch, parkedAircraftSource, lod));
+                    parkedAircraftCount += batch.placements.Length;
+                }
+
+                long contextWorstCaseTriangles = pending.GroupBy(item => item.BatchId)
+                    .Sum(group => group.Max(item => item.Triangles));
+                long contextAggregateTriangles = pending.Sum(item => item.Triangles);
+                int batchCount = pending.Select(item => item.BatchId).Distinct(StringComparer.Ordinal).Count();
+                if (NonContextDrawSlots + batchCount + PlannedWaterRendererReserve > MaximumVisibleDrawSlots ||
+                    NonContextTriangles + contextWorstCaseTriangles > MaximumVisibleTriangles ||
+                    NonContextSerializedRenderers + batchCount * 3 + PlannedWaterRendererReserve > MaximumSerializedRenderers ||
+                    NonContextSerializedTriangles + contextAggregateTriangles > MaximumSerializedTriangles)
+                    throw new InvalidOperationException(
+                        "Generated runtime HLOD exceeds the integrated static budget: slots=" +
+                        (NonContextDrawSlots + batchCount + PlannedWaterRendererReserve) + ", triangles=" +
+                        (NonContextTriangles + contextWorstCaseTriangles) + ", serialized renderers=" +
+                        (NonContextSerializedRenderers + batchCount * 3 + PlannedWaterRendererReserve) + ", serialized triangles=" +
+                        (NonContextSerializedTriangles + contextAggregateTriangles));
+
+                HashSet<string> desiredMeshPaths = new HashSet<string>(pending.Select(item => item.Path), StringComparer.Ordinal);
+                foreach (PendingMesh item in pending)
+                {
+                    SaveMesh(item.Mesh, item.Path);
+                    item.Mesh = null;
+                }
+                foreach (string guid in AssetDatabase.FindAssets("t:Mesh", new[] { Generated }))
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    if (!desiredMeshPaths.Contains(path)) AssetDatabase.DeleteAsset(path);
+                }
+                Debug.Log(
+                    "[QuestFlight][KBDUPhotorealTerrain] Authored " + batchCount +
+                    " deterministic three-level runtime HLOD batches preserving " + buildingCount +
+                    " buildings, " + vegetationCount + " vegetation placements, and " + parkedAircraftCount +
+                    " parked aircraft; planning slots=" +
+                    (NonContextDrawSlots + batchCount + PlannedWaterRendererReserve) +
+                    ", planning triangles=" + (NonContextTriangles + contextWorstCaseTriangles) +
+                    "; no product scene or environment prefab was modified.");
             }
-            foreach (VegetationBatch batch in recipe.vegetation_batches)
+            finally
             {
-                Mesh lod0 = BuildVegetationBatch(batch, false);
-                Mesh lod1 = BuildVegetationBatch(batch, true);
-                string lod0Path = Generated + "/" + batch.id + "_LOD0.asset";
-                string lod1Path = Generated + "/" + batch.id + "_LOD1.asset";
-                SaveMesh(lod0, lod0Path);
-                SaveMesh(lod1, lod1Path);
-                desiredMeshPaths.Add(lod0Path);
-                desiredMeshPaths.Add(lod1Path);
-                vegetationCount += batch.placements.Length;
+                foreach (PendingMesh item in pending)
+                    if (item.Mesh != null) UnityEngine.Object.DestroyImmediate(item.Mesh);
             }
-            GameObject parkedAircraftSource = LoadRequired<GameObject>(ParkedAircraftModelPath);
-            foreach (ParkedAircraftBatch batch in recipe.parked_aircraft_batches)
+        }
+
+        private static void AddPending(
+            ICollection<PendingMesh> pending,
+            string batchId,
+            int lod,
+            RuntimeLodPolicy policy,
+            Mesh mesh)
+        {
+            long triangles = (long)mesh.GetIndexCount(0) / 3L;
+            if (triangles != policy.estimated_triangles || mesh.vertexCount != policy.estimated_vertices)
             {
-                Mesh lod0 = BuildParkedAircraftBatch(batch, parkedAircraftSource, false);
-                Mesh lod1 = BuildParkedAircraftBatch(batch, parkedAircraftSource, true);
-                string lod0Path = Generated + "/" + batch.id + "_LOD0.asset";
-                string lod1Path = Generated + "/" + batch.id + "_LOD1.asset";
-                SaveMesh(lod0, lod0Path);
-                SaveMesh(lod1, lod1Path);
-                desiredMeshPaths.Add(lod0Path);
-                desiredMeshPaths.Add(lod1Path);
-                parkedAircraftCount += batch.placements.Length;
+                UnityEngine.Object.DestroyImmediate(mesh);
+                throw new InvalidOperationException(
+                    "Runtime HLOD estimate mismatch for " + batchId + " LOD" + lod +
+                    ": actual=" + triangles + "/" + mesh.vertexCount +
+                    ", expected=" + policy.estimated_triangles + "/" + policy.estimated_vertices);
             }
-            foreach (string guid in AssetDatabase.FindAssets("t:Mesh", new[] { Generated }))
+            if (mesh.vertexCount > MaximumSingleMeshVertices)
             {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                if (!desiredMeshPaths.Contains(path)) AssetDatabase.DeleteAsset(path);
+                UnityEngine.Object.DestroyImmediate(mesh);
+                throw new InvalidOperationException("Runtime HLOD mesh exceeds the vertex cap: " + batchId + " LOD" + lod);
             }
-            Debug.Log(
-                "[QuestFlight][KBDUPhotorealTerrain] Authored " + recipe.building_batches.Length +
-                " two-LOD OSM building batches (" + buildingCount + " footprints) and " +
-                recipe.vegetation_batches.Length + " two-LOD opaque vegetation batches (" +
-                vegetationCount + " trees), plus " + parkedAircraftCount +
-                " exterior-only static parked aircraft in one two-LOD batch; no product scene or environment prefab was modified.");
+            pending.Add(new PendingMesh
+            {
+                BatchId = batchId,
+                Lod = lod,
+                Mesh = mesh,
+                Path = Generated + "/" + batchId + "_LOD" + lod + ".asset",
+                Triangles = triangles
+            });
         }
 
         private static void CreateContextPrefab()
         {
-            ContextRecipe recipe = ReadJson<ContextRecipe>(RecipePath);
+            RuntimeInputs inputs = ValidateRuntimeSourcePlan();
             Material buildingMaterial = LoadRequired<Material>(Root + "/KBDU_OsmBuildings.mat");
             Material vegetationMaterial = LoadRequired<Material>(Root + "/KBDU_ContextVegetation.mat");
             Material parkedAircraftMaterial = LoadRequired<Material>(Root + "/KBDU_ParkedAircraft.mat");
             GameObject root = new GameObject("KBDU_BatchedContext");
             try
             {
-                foreach (BuildingBatch batch in recipe.building_batches)
-                    AddBatchLod(root.transform, batch.id, buildingMaterial, 0.08f, 0.025f);
-                foreach (VegetationBatch batch in recipe.vegetation_batches)
-                    AddBatchLod(root.transform, batch.id, vegetationMaterial, 0.10f, 0.035f);
-                foreach (ParkedAircraftBatch batch in recipe.parked_aircraft_batches)
-                    AddBatchLod(root.transform, batch.id, parkedAircraftMaterial, 0.12f, 0.03f);
+                foreach (RuntimeBuildingBatch batch in inputs.Runtime.building_runtime_batches)
+                    AddBatchLod(root.transform, batch.id, buildingMaterial, batch.lod_policy);
+                foreach (RuntimeSimpleBatch batch in inputs.Runtime.vegetation_runtime_batches)
+                    AddBatchLod(root.transform, batch.id, vegetationMaterial, batch.lod_policy);
+                foreach (RuntimeSimpleBatch batch in inputs.Runtime.parked_aircraft_runtime_batches)
+                    AddBatchLod(root.transform, batch.id, parkedAircraftMaterial, batch.lod_policy);
                 PrefabUtility.SaveAsPrefabAsset(root, Root + "/KBDU_BatchedContext.prefab");
             }
             finally
@@ -384,20 +629,21 @@ namespace QuestFlight.Editor
             Transform parent,
             string batchId,
             Material material,
-            float lod0Height,
-            float lod1Height)
+            RuntimeLodPolicy[] policies)
         {
             GameObject batch = new GameObject(batchId);
             batch.transform.SetParent(parent, false);
             Renderer lod0 = AddMeshRenderer(batch.transform, "LOD0", batchId + "_LOD0", material);
             Renderer lod1 = AddMeshRenderer(batch.transform, "LOD1", batchId + "_LOD1", material);
+            Renderer lod2 = AddMeshRenderer(batch.transform, "LOD2", batchId + "_LOD2", material);
             LODGroup group = batch.AddComponent<LODGroup>();
             group.fadeMode = LODFadeMode.None;
             group.animateCrossFading = false;
             group.SetLODs(new[]
             {
-                new LOD(lod0Height, new[] { lod0 }),
-                new LOD(lod1Height, new[] { lod1 })
+                new LOD(policies[0].screen_relative_height, new[] { lod0 }),
+                new LOD(policies[1].screen_relative_height, new[] { lod1 }),
+                new LOD(policies[2].screen_relative_height, new[] { lod2 })
             });
             group.RecalculateBounds();
         }
@@ -421,45 +667,65 @@ namespace QuestFlight.Editor
             return renderer;
         }
 
-        private static Mesh BuildBuildingBatch(BuildingBatch batch, ContextDocument context, bool lowDetail)
+        private static Mesh BuildBuildingBatch(
+            string batchId,
+            IReadOnlyList<BuildingRecord> records,
+            ContextDocument context,
+            string algorithm)
         {
             List<Vector3> vertices = new List<Vector3>();
             List<Vector3> normals = new List<Vector3>();
             List<Vector2> uvs = new List<Vector2>();
             List<int> indices = new List<int>();
             float quantization = context.coordinate_quantization_meters;
-            foreach (BuildingRecord record in batch.buildings)
+            if (algorithm.StartsWith("cluster_boxes_", StringComparison.Ordinal) &&
+                algorithm.EndsWith("m", StringComparison.Ordinal))
             {
-                if (record.feature_index < 0 || record.feature_index >= context.openstreetmap.features.Length)
-                    throw new InvalidOperationException("Building feature index is out of range: " + record.feature_index);
-                ContextFeature feature = context.openstreetmap.features[record.feature_index];
-                List<Vector2> footprint = DecodeFootprint(feature.points_q, quantization);
-                if (footprint.Count < 3) continue;
-                if (lowDetail)
+                string numeric = algorithm.Substring("cluster_boxes_".Length);
+                numeric = numeric.Substring(0, numeric.Length - 1);
+                if (!float.TryParse(numeric, System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out float clusterSize) || clusterSize <= 0f)
+                    throw new InvalidOperationException("Invalid runtime cluster algorithm: " + algorithm);
+                SortedDictionary<long, BuildingCluster> clusters = new SortedDictionary<long, BuildingCluster>();
+                foreach (BuildingRecord record in records)
                 {
-                    float minX = footprint.Min(point => point.x);
-                    float maxX = footprint.Max(point => point.x);
-                    float minZ = footprint.Min(point => point.y);
-                    float maxZ = footprint.Max(point => point.y);
-                    footprint = new List<Vector2>
+                    ContextFeature feature = BuildingFeature(record, context);
+                    List<Vector2> footprint = DecodeFootprint(feature.points_q, quantization);
+                    if (footprint.Count < 3) continue;
+                    Vector2 centroid = footprint.Aggregate(Vector2.zero, (sum, point) => sum + point) / footprint.Count;
+                    int cellX = Mathf.FloorToInt(centroid.x / clusterSize);
+                    int cellZ = Mathf.FloorToInt(centroid.y / clusterSize);
+                    long key = ((long)cellX << 32) ^ (uint)cellZ;
+                    if (!clusters.TryGetValue(key, out BuildingCluster cluster))
                     {
-                        new Vector2(minX, minZ), new Vector2(minX, maxZ),
-                        new Vector2(maxX, maxZ), new Vector2(maxX, minZ)
-                    };
+                        cluster = new BuildingCluster(record.facade_tile, record.roof_tile);
+                        clusters.Add(key, cluster);
+                    }
+                    cluster.Add(footprint, record.base_y_meters, Mathf.Max(3.2f, feature.render_height_meters));
                 }
-                EnsureClockwise(footprint);
-                AddExtrudedBuilding(
-                    footprint,
-                    record.base_y_meters,
-                    Mathf.Max(3.2f, feature.render_height_meters),
-                    record.facade_tile,
-                    record.roof_tile,
-                    vertices,
-                    normals,
-                    uvs,
-                    indices);
+                foreach (BuildingCluster cluster in clusters.Values)
+                    AddExtrudedBuilding(cluster.Rectangle(), cluster.AverageBase,
+                        Mathf.Max(3.2f, cluster.MaximumTop - cluster.AverageBase),
+                        cluster.FacadeTile, cluster.RoofTile, vertices, normals, uvs, indices);
             }
-            Mesh mesh = new Mesh { name = batch.id + (lowDetail ? "_LOD1" : "_LOD0") };
+            else
+            {
+                bool boxes = string.Equals(algorithm, "building_boxes", StringComparison.Ordinal);
+                if (!boxes && !string.Equals(algorithm, "detailed_footprints", StringComparison.Ordinal))
+                    throw new InvalidOperationException("Unsupported runtime building algorithm: " + algorithm);
+                foreach (BuildingRecord record in records)
+                {
+                    ContextFeature feature = BuildingFeature(record, context);
+                    List<Vector2> footprint = DecodeFootprint(feature.points_q, quantization);
+                    if (footprint.Count < 3) continue;
+                    if (boxes) footprint = BoundingRectangle(footprint);
+                    EnsureClockwise(footprint);
+                    AddExtrudedBuilding(
+                        footprint, record.base_y_meters, Mathf.Max(3.2f, feature.render_height_meters),
+                        record.facade_tile, record.roof_tile, vertices, normals, uvs, indices);
+                }
+            }
+            Mesh mesh = new Mesh { name = batchId + "_" + algorithm };
             mesh.indexFormat = vertices.Count > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
             mesh.SetVertices(vertices);
             mesh.SetNormals(normals);
@@ -467,6 +733,26 @@ namespace QuestFlight.Editor
             mesh.SetTriangles(indices, 0, true);
             mesh.RecalculateBounds();
             return mesh;
+        }
+
+        private static ContextFeature BuildingFeature(BuildingRecord record, ContextDocument context)
+        {
+            if (record.feature_index < 0 || record.feature_index >= context.openstreetmap.features.Length)
+                throw new InvalidOperationException("Building feature index is out of range: " + record.feature_index);
+            return context.openstreetmap.features[record.feature_index];
+        }
+
+        private static List<Vector2> BoundingRectangle(IReadOnlyList<Vector2> footprint)
+        {
+            float minX = footprint.Min(point => point.x);
+            float maxX = footprint.Max(point => point.x);
+            float minZ = footprint.Min(point => point.y);
+            float maxZ = footprint.Max(point => point.y);
+            return new List<Vector2>
+            {
+                new Vector2(minX, minZ), new Vector2(minX, maxZ),
+                new Vector2(maxX, maxZ), new Vector2(maxX, minZ)
+            };
         }
 
         private static void AddExtrudedBuilding(
@@ -528,9 +814,9 @@ namespace QuestFlight.Editor
         private static Mesh BuildParkedAircraftBatch(
             ParkedAircraftBatch batch,
             GameObject sourceModel,
-            bool lowDetail)
+            int lod)
         {
-            string lodName = lowDetail ? "ParkedAircraft_LOD1" : "ParkedAircraft_LOD0";
+            string lodName = lod == 0 ? "ParkedAircraft_LOD0" : "ParkedAircraft_LOD1";
             MeshFilter sourceFilter = sourceModel.GetComponentsInChildren<MeshFilter>(true)
                 .SingleOrDefault(filter => filter.name.StartsWith(lodName, StringComparison.Ordinal));
             if (sourceFilter == null || sourceFilter.sharedMesh == null)
@@ -548,13 +834,32 @@ namespace QuestFlight.Editor
             List<Color32> colors = new List<Color32>(sourceVertices.Length * batch.placements.Length);
             List<int> indices = new List<int>(sourceTriangles.Length * batch.placements.Length);
             Matrix4x4 sourceToRoot = sourceModel.transform.worldToLocalMatrix * sourceFilter.transform.localToWorldMatrix;
+            if (lod == 2)
+            {
+                List<Vector3> boxVertices = new List<Vector3>();
+                List<Color32> boxColors = new List<Color32>();
+                List<int> boxIndices = new List<int>();
+                Bounds sourceBounds = TransformBounds(source.bounds, sourceToRoot);
+                foreach (ParkedAircraftPlacement placement in batch.placements)
+                {
+                    Color32 color = PlacementColor(placement, batch.id);
+                    Quaternion rotation = Quaternion.Euler(0f, placement.yaw_degrees, 0f);
+                    Vector3 center = new Vector3(placement.x_meters, placement.base_y_meters, placement.z_meters) +
+                                     rotation * sourceBounds.center;
+                    AddColoredBox(center, sourceBounds.size, color, boxVertices, boxColors, boxIndices);
+                }
+                Mesh boxMesh = new Mesh { name = batch.id + "_LOD2" };
+                boxMesh.indexFormat = boxVertices.Count > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
+                boxMesh.SetVertices(boxVertices);
+                boxMesh.SetColors(boxColors);
+                boxMesh.SetTriangles(boxIndices, 0, true);
+                boxMesh.RecalculateNormals();
+                boxMesh.RecalculateBounds();
+                return boxMesh;
+            }
             foreach (ParkedAircraftPlacement placement in batch.placements)
             {
-                if (placement.color_rgba == null || placement.color_rgba.Length != 4)
-                    throw new InvalidOperationException("Parked-aircraft color contract is invalid in " + batch.id);
-                Color32 color = new Color32(
-                    (byte)placement.color_rgba[0], (byte)placement.color_rgba[1],
-                    (byte)placement.color_rgba[2], (byte)placement.color_rgba[3]);
+                Color32 color = PlacementColor(placement, batch.id);
                 Matrix4x4 placementMatrix = Matrix4x4.TRS(
                     new Vector3(placement.x_meters, placement.base_y_meters, placement.z_meters),
                     Quaternion.Euler(0f, placement.yaw_degrees, 0f),
@@ -570,7 +875,7 @@ namespace QuestFlight.Editor
                 foreach (int sourceIndex in sourceTriangles) indices.Add(start + sourceIndex);
             }
 
-            Mesh mesh = new Mesh { name = batch.id + (lowDetail ? "_LOD1" : "_LOD0") };
+            Mesh mesh = new Mesh { name = batch.id + "_LOD" + lod };
             mesh.indexFormat = vertices.Count > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
             mesh.SetVertices(vertices);
             mesh.SetNormals(normals);
@@ -580,7 +885,27 @@ namespace QuestFlight.Editor
             return mesh;
         }
 
-        private static Mesh BuildVegetationBatch(VegetationBatch batch, bool lowDetail)
+        private static Color32 PlacementColor(ParkedAircraftPlacement placement, string batchId)
+        {
+            if (placement.color_rgba == null || placement.color_rgba.Length != 4)
+                throw new InvalidOperationException("Parked-aircraft color contract is invalid in " + batchId);
+            return new Color32(
+                (byte)placement.color_rgba[0], (byte)placement.color_rgba[1],
+                (byte)placement.color_rgba[2], (byte)placement.color_rgba[3]);
+        }
+
+        private static Bounds TransformBounds(Bounds source, Matrix4x4 matrix)
+        {
+            Bounds result = new Bounds(matrix.MultiplyPoint3x4(source.center), Vector3.zero);
+            Vector3 extents = source.extents;
+            for (int x = -1; x <= 1; x += 2)
+            for (int y = -1; y <= 1; y += 2)
+            for (int z = -1; z <= 1; z += 2)
+                result.Encapsulate(matrix.MultiplyPoint3x4(source.center + Vector3.Scale(extents, new Vector3(x, y, z))));
+            return result;
+        }
+
+        private static Mesh BuildVegetationBatch(VegetationBatch batch, int lod)
         {
             List<Vector3> vertices = new List<Vector3>();
             List<Color32> colors = new List<Color32>();
@@ -589,7 +914,17 @@ namespace QuestFlight.Editor
             {
                 VegetationPlacement placement = batch.placements[placementIndex];
                 Vector3 origin = new Vector3(placement.x_meters, placement.base_y_meters, placement.z_meters);
-                if (lowDetail)
+                if (lod == 2)
+                {
+                    AddOctahedralCrown(
+                        origin,
+                        placement.height_meters,
+                        placement.crown_radius_meters,
+                        vertices,
+                        colors,
+                        indices);
+                }
+                else if (lod == 1)
                 {
                     AddColoredBox(
                         origin + Vector3.up * placement.height_meters * 0.23f,
@@ -729,7 +1064,7 @@ namespace QuestFlight.Editor
                     }
                 }
             }
-            Mesh mesh = new Mesh { name = batch.id + (lowDetail ? "_LOD1" : "_LOD0") };
+            Mesh mesh = new Mesh { name = batch.id + "_LOD" + lod };
             mesh.indexFormat = vertices.Count > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
             mesh.SetVertices(vertices);
             mesh.SetColors(colors);
@@ -1070,6 +1405,150 @@ namespace QuestFlight.Editor
             }
         }
 
+        private sealed class RuntimeInputs
+        {
+            public RuntimeInputs(
+                ContextDocument context,
+                ContextRecipe logical,
+                RuntimeHlodRecipe runtime,
+                Dictionary<string, BuildingBatch> logicalBuildings)
+            {
+                Context = context;
+                Logical = logical;
+                Runtime = runtime;
+                LogicalBuildings = logicalBuildings;
+            }
+
+            public ContextDocument Context { get; }
+            public ContextRecipe Logical { get; }
+            public RuntimeHlodRecipe Runtime { get; }
+            public Dictionary<string, BuildingBatch> LogicalBuildings { get; }
+        }
+
+        private sealed class PendingMesh
+        {
+            public string BatchId;
+            public int Lod;
+            public Mesh Mesh;
+            public string Path;
+            public long Triangles;
+        }
+
+        private sealed class BuildingCluster
+        {
+            private float minX = float.PositiveInfinity;
+            private float minZ = float.PositiveInfinity;
+            private float maxX = float.NegativeInfinity;
+            private float maxZ = float.NegativeInfinity;
+            private float baseSum;
+            private int count;
+
+            public BuildingCluster(int facadeTile, int roofTile)
+            {
+                FacadeTile = facadeTile;
+                RoofTile = roofTile;
+            }
+
+            public int FacadeTile { get; }
+            public int RoofTile { get; }
+            public float MaximumTop { get; private set; } = float.NegativeInfinity;
+            public float AverageBase => baseSum / count;
+
+            public void Add(IReadOnlyList<Vector2> footprint, float baseY, float height)
+            {
+                foreach (Vector2 point in footprint)
+                {
+                    minX = Mathf.Min(minX, point.x);
+                    minZ = Mathf.Min(minZ, point.y);
+                    maxX = Mathf.Max(maxX, point.x);
+                    maxZ = Mathf.Max(maxZ, point.y);
+                }
+                baseSum += baseY;
+                count++;
+                MaximumTop = Mathf.Max(MaximumTop, baseY + height);
+            }
+
+            public List<Vector2> Rectangle() => new List<Vector2>
+            {
+                new Vector2(minX, minZ), new Vector2(minX, maxZ),
+                new Vector2(maxX, maxZ), new Vector2(maxX, minZ)
+            };
+        }
+
+        [Serializable]
+        private sealed class RuntimeHlodRecipe
+        {
+            public string source_logical_recipe_sha256;
+            public string source_context_sha256;
+            public RuntimeBuildingBatch[] building_runtime_batches;
+            public RuntimeSimpleBatch[] vegetation_runtime_batches;
+            public RuntimeSimpleBatch[] parked_aircraft_runtime_batches;
+            public int vegetation_placement_count;
+            public string[] vegetation_species_ids;
+            public StaticBudget static_budget;
+        }
+
+        [Serializable]
+        private sealed class RuntimeBuildingBatch
+        {
+            public string id;
+            public string[] logical_batch_ids;
+            public RuntimeLodPolicy[] lod_policy;
+        }
+
+        [Serializable]
+        private sealed class RuntimeSimpleBatch
+        {
+            public string id;
+            public string[] logical_batch_ids;
+            public RuntimeLodPolicy[] lod_policy;
+            public int placement_count;
+        }
+
+        [Serializable]
+        private sealed class RuntimeLodPolicy
+        {
+            public string level;
+            public string algorithm;
+            public long estimated_triangles;
+            public int estimated_vertices;
+            public float screen_relative_height;
+        }
+
+        [Serializable]
+        private sealed class StaticBudget
+        {
+            public string status;
+            public BudgetLimits limits;
+            public BudgetEstimates estimates;
+        }
+
+        [Serializable]
+        private sealed class BudgetLimits
+        {
+            public int aggregate_serialized_renderers;
+            public long aggregate_serialized_triangles;
+            public int visible_draw_slots;
+            public long visible_triangles;
+            public int visible_materials;
+            public long texture_memory_bytes;
+            public int transparent_material_slots;
+        }
+
+        [Serializable]
+        private sealed class BudgetEstimates
+        {
+            public int context_batch_count;
+            public long maximum_single_mesh_vertices;
+            public int integrated_aggregate_serialized_renderers;
+            public long integrated_aggregate_serialized_triangles;
+            public int integrated_visible_draw_slots;
+            public long integrated_visible_triangles;
+            public int integrated_visible_materials;
+            public long integrated_texture_memory_bytes;
+            public int integrated_transparent_material_slots;
+        }
+
         [Serializable]
         private sealed class ContextDocument
         {
@@ -1132,6 +1611,8 @@ namespace QuestFlight.Editor
             public float height_meters;
             public float crown_radius_meters;
             public string zone;
+            public string stable_id;
+            public string species_id;
         }
 
         [Serializable]

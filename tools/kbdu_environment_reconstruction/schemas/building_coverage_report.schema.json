@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "cell_size_meters": {"maximum": 300, "minimum": 200, "type": "number"},
+    "checkpoint_source_limitations": {"type": "object"},
+    "schema_version": {"const": 1},
+    "v2_acceptance_status": {"enum": ["PASS", "FAIL_COVERAGE_THRESHOLDS"]},
+    "zones": {
+      "properties": {
+        "0-2km": {"type": "object"},
+        "2-4km": {"type": "object"},
+        "4-6km": {"type": "object"}
+      },
+      "required": ["0-2km", "2-4km", "4-6km"],
+      "type": "object"
+    }
+  },
+  "required": ["schema_version", "cell_size_meters", "zones", "checkpoint_source_limitations", "v2_acceptance_status"],
+  "title": "KBDU building coverage report",
+  "type": "object"
+}

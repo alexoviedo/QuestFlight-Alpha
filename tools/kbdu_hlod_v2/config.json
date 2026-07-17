@@ -1,0 +1,147 @@
+{
+  "android_astc_texture_format": 50,
+  "astc_block_size": 6,
+  "cell_size_meters_range": [
+    200.0,
+    300.0
+  ],
+  "limits": {
+    "aggregate_serialized_renderers": 180,
+    "aggregate_serialized_triangles": 700000,
+    "texture_memory_bytes": 230686720,
+    "transparent_material_slots": 3,
+    "visible_draw_slots": 130,
+    "visible_materials": 30,
+    "visible_triangles": 650000
+  },
+  "material_paths": [
+    "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_OsmBuildings.mat",
+    "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ContextVegetation.mat",
+    "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraft.mat"
+  ],
+  "paths": {
+    "building_coverage": "tools/kbdu_environment_reconstruction/building_coverage_report.json",
+    "context_atlas": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ContextAtlas.png",
+    "mesh_root": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated",
+    "placement_manifest": "tools/kbdu_environment_reconstruction/production_placement_manifest.json",
+    "prefab": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_BatchedContext.prefab",
+    "recipe": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_RuntimeHlodRecipeV2.json",
+    "vegetation_manifest": "tools/kbdu_environment_reconstruction/vegetation_distribution_manifest.json"
+  },
+  "required_lod_levels": [
+    "LOD0",
+    "LOD1",
+    "LOD2"
+  ],
+  "required_shader_tokens": [
+    "#pragma multi_compile_instancing",
+    "UNITY_VERTEX_INPUT_INSTANCE_ID",
+    "UNITY_VERTEX_OUTPUT_STEREO",
+    "UNITY_SETUP_INSTANCE_ID",
+    "UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO",
+    "UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX"
+  ],
+  "shader_paths": [
+    "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_OsmBuildingContext.shader",
+    "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_OpaqueVegetationContext.shader"
+  ],
+  "runtime_hlod": {
+    "context_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ReferenceContextV2.json",
+    "context_texture_memory_bytes": 626288,
+    "logical_cell_size_meters": 250,
+    "logical_recipe_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ContextBatchRecipeV2.json",
+    "maximum_single_mesh_vertices": 200000,
+    "non_context_static_baseline": {
+      "provenance": "Actual Unity serialized scene evidence reports 99 non-context renderers (45 direct environment plus 54 aircraft) and 551958 non-context aggregate triangles after subtracting the authored 40-group context. These values are used conservatively as visible planning baselines.",
+      "texture_memory_bytes": 171721360,
+      "transparent_material_slots": 2,
+      "visible_draw_slots": 99,
+      "visible_materials": 27,
+      "visible_triangles": 551958
+    },
+    "non_context_serialized_baseline": {
+      "aggregate_renderers": 99,
+      "aggregate_triangles": 551958,
+      "provenance": "Unity EditMode serialized scene measured 219 renderers and 685141 triangles; subtracting the authored 40-group/120-renderer, 133183-triangle context gives 99 renderers and 551958 triangles."
+    },
+    "parked_aircraft_estimates": {
+      "LOD0": {
+        "triangles": 9600,
+        "vertices": 11592
+      },
+      "LOD1": {
+        "triangles": 2700,
+        "vertices": 3804
+      },
+      "LOD2": {
+        "triangles": 36,
+        "vertices": 72
+      }
+    },
+    "parked_aircraft_screen_relative_heights": [
+      0.12,
+      0.03,
+      0.006
+    ],
+    "planned_product_reserve": {
+      "aggregate_serialized_renderers": 2,
+      "aggregate_serialized_triangles": 0,
+      "visible_draw_slots": 2,
+      "visible_triangles": 0
+    },
+    "runtime_recipe_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_RuntimeHlodRecipeV2.json",
+    "vegetation_aggregation_factor": 6,
+    "vegetation_required_species": [
+      "narrowleaf_willow",
+      "plains_cottonwood",
+      "rabbitbrush_shrub",
+      "rocky_mountain_juniper"
+    ],
+    "vegetation_screen_relative_heights": [
+      0.1,
+      0.035,
+      0.007
+    ],
+    "zones": {
+      "0-2km": {
+        "aggregation_factor": 6,
+        "algorithms": {
+          "LOD0": "detailed_footprints",
+          "LOD1": "cluster_boxes_50m",
+          "LOD2": "cluster_boxes_150m"
+        },
+        "screen_relative_heights": [
+          0.35,
+          0.12,
+          0.02
+        ]
+      },
+      "2-4km": {
+        "aggregation_factor": 16,
+        "algorithms": {
+          "LOD0": "cluster_boxes_100m",
+          "LOD1": "cluster_boxes_200m",
+          "LOD2": "cluster_boxes_400m"
+        },
+        "screen_relative_heights": [
+          0.95,
+          0.4,
+          0.02
+        ]
+      },
+      "4-6km": {
+        "aggregation_factor": 24,
+        "algorithms": {
+          "LOD0": "cluster_boxes_200m",
+          "LOD1": "cluster_boxes_400m",
+          "LOD2": "cluster_boxes_800m"
+        },
+        "screen_relative_heights": [
+          0.99,
+          0.75,
+          0.02
+        ]
+      }
+    }
+  }
+}

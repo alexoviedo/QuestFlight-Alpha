@@ -55,6 +55,7 @@ htmlcov/
 /**/RawDownloads/
 /**/SourceArchives/
 /**/PackageCache/
+/tools/kbdu_environment_reconstruction/osm_buildings_6km_source.json
 *.zip
 *.7z
 *.rar

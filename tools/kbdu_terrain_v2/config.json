@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "origin": {
+    "latitude_degrees": 40.03936527,
+    "longitude_degrees": -105.22608958,
+    "elevation_msl_meters": 1611.7824
+  },
+  "source": {
+    "agency": "U.S. Geological Survey",
+    "dataset": "3D Elevation Program Bare Earth DEM Dynamic Service",
+    "service_url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer",
+    "license": "United States government work; public domain / no use restrictions",
+    "credit": "USGS, The National Map: 3D Elevation Program"
+  },
+  "near_zone": {
+    "half_extent_meters": 2000.0,
+    "source_size_pixels": 4001,
+    "runtime_spacing_meters": 25.0,
+    "normal_map_size_pixels": 1024
+  },
+  "airport_zone": {
+    "minimum_enu_meters": [-800.0, -300.0],
+    "maximum_enu_meters": [800.0, 300.0],
+    "runtime_spacing_meters": 5.0
+  },
+  "runway_08_26": {
+    "end_08_enu_meters": [-629.757, -30.671],
+    "end_26_enu_meters": [620.628, -30.054],
+    "end_08_height_relative_meters": -0.0473916,
+    "end_26_height_relative_meters": -2.966337,
+    "half_width_meters": 11.43,
+    "core_margin_meters": 4.0,
+    "outer_margin_meters": 40.0
+  },
+  "runtime_budgets": {
+    "maximum_combined_terrain_triangles": 170000,
+    "maximum_normal_map_astc_bytes": 750000
+  }
+}

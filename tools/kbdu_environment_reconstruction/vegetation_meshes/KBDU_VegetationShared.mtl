@@ -1,0 +1,17 @@
+# Project-owned shared opaque vegetation material family
+newmtl bark_shared
+Kd 0.24 0.17 0.10
+Ns 4
+illum 1
+newmtl foliage_deciduous_shared
+Kd 0.24 0.38 0.16
+Ns 3
+illum 1
+newmtl foliage_conifer_shared
+Kd 0.18 0.30 0.16
+Ns 3
+illum 1
+newmtl foliage_shrub_shared
+Kd 0.40 0.43 0.20
+Ns 2
+illum 1

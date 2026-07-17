@@ -1,0 +1,322 @@
+{
+  "distribution_source": {
+    "accepted_placement_count": 377,
+    "classification": "natural-color excess-green/darkness/saturation/local-texture fallback; no NIR channel available",
+    "legacy_candidate_count_replaced": 246,
+    "mask_contract": {
+      "active_3d_radius_meters": 1500.0,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "exclusion_codes": {
+        "apron": 128,
+        "building": 32,
+        "none": 0,
+        "open_water": 96,
+        "parking": 224,
+        "road": 64,
+        "runway_safety": 192,
+        "taxiway": 160
+      },
+      "exclusion_path": "vegetation_exclusion_mask_v2.png",
+      "exclusion_sha256": "e56614a3fb172d5b229d92c2f226bf236ce422baa429558bd9832925af0911df",
+      "likelihood_path": "vegetation_likelihood_mask_v2.png",
+      "likelihood_sha256": "6bafc9f348f9393e15881fb68b0ef7b3a8d793acd6e74a573d7b1f83b0f3eab8",
+      "likelihood_threshold": 190,
+      "meters_per_pixel": 11.71875,
+      "suitability_path": "vegetation_suitability_mask_v2.png",
+      "suitability_sha256": "5d5ce817911a8925a42b24b150b897279504041ad4d80b1c65628b78acd3644c"
+    },
+    "source": {
+      "classification": "natural-color excess-green/darkness/saturation/local-texture fallback; no NIR channel available",
+      "image_license": "United States government work / public domain; USGS, USDA, The National Map: Orthoimagery",
+      "image_path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Mid12km_4096.jpg",
+      "image_sha256": "5e8d6edbcc5dc937c78b5fb8e4a5f8f7a06bda726b4509684e237f2b17fbdf9a",
+      "osm_context_path": "tools/kbdu_environment_reconstruction/KBDU_ReferenceContextV2.json",
+      "osm_context_sha256": "584a47ebde144760bb70c4f4a20bfd58baa591e368a1093164cc464506a8f104",
+      "osm_license": "ODbL-1.0; \u00a9 OpenStreetMap contributors"
+    },
+    "status": "PASS_NATURAL_COLOR_FALLBACK"
+  },
+  "exclusion_policy": {
+    "aircraft_parking_clearance_meters": 8.0,
+    "apron_clearance_meters": 5.0,
+    "building_clearance_meters": 4.0,
+    "open_water_clearance_meters": 5.0,
+    "road_clearance_meters": 8.0,
+    "runway_safety_clearance_meters": 30.0,
+    "taxiway_clearance_meters": 12.0
+  },
+  "label": "KBDU deterministic multiscale vegetation distribution contract",
+  "lod_policy": [
+    {
+      "id": "LOD0",
+      "maximum_distance_meters": 250.0,
+      "minimum_distance_meters": 0.0,
+      "representation": "species_3d_high",
+      "target_triangles_per_instance": [
+        1000,
+        3000
+      ]
+    },
+    {
+      "id": "LOD1",
+      "maximum_distance_meters": 600.0,
+      "minimum_distance_meters": 250.0,
+      "representation": "species_3d_simplified",
+      "target_triangles_per_instance": [
+        250,
+        800
+      ]
+    },
+    {
+      "id": "LOD2",
+      "maximum_distance_meters": 1500.0,
+      "minimum_distance_meters": 600.0,
+      "representation": "fixed_canopy_cluster_or_multi_angle_impostor",
+      "target_triangles_per_instance": [
+        24,
+        160
+      ]
+    },
+    {
+      "id": "FAR",
+      "maximum_distance_meters": null,
+      "minimum_distance_meters": 1500.0,
+      "representation": "orthophoto_only",
+      "target_triangles_per_instance": [
+        0,
+        0
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "species_library": {
+    "license": "Project-authored; repository license",
+    "material_contract": {
+      "opaque_only": true,
+      "path": "vegetation_meshes/KBDU_VegetationShared.mtl",
+      "sha256": "9bc39f427446720ec729dd82b994273b77eefab2cd808dc4aed8d36d78751884",
+      "shared_material_slots": [
+        "bark_shared",
+        "foliage_deciduous_shared",
+        "foliage_conifer_shared",
+        "foliage_shrub_shared"
+      ]
+    },
+    "species": [
+      {
+        "canonical_height_meters": 11.0,
+        "crown_range_meters": [
+          3.0,
+          5.0
+        ],
+        "foliage_material": "foliage_deciduous_shared",
+        "form": "broad_deciduous",
+        "height_range_meters": [
+          8.0,
+          14.0
+        ],
+        "id": "plains_cottonwood",
+        "lods": [
+          {
+            "bytes": 21831,
+            "lod": 0,
+            "path": "vegetation_meshes/plains_cottonwood_LOD0.obj",
+            "sha256": "8b6fdec05fedc46ea41736a52a3057d4336382f9a31e5521d52f413e1762195e",
+            "triangles": 744,
+            "vertices": 394
+          },
+          {
+            "bytes": 4698,
+            "lod": 1,
+            "path": "vegetation_meshes/plains_cottonwood_LOD1.obj",
+            "sha256": "92cbff633f23aa1e57b0121708814c139a7e2798a3c1e7d60d0ab07196685dab",
+            "triangles": 160,
+            "vertices": 94
+          },
+          {
+            "bytes": 992,
+            "lod": 2,
+            "path": "vegetation_meshes/plains_cottonwood_LOD2.obj",
+            "sha256": "9c981cd2b5c7f152907d2c9bc909275f823f44d944145ce2b6cf87831058ec45",
+            "triangles": 24,
+            "vertices": 20
+          }
+        ]
+      },
+      {
+        "canonical_height_meters": 6.0,
+        "crown_range_meters": [
+          2.5,
+          4.0
+        ],
+        "foliage_material": "foliage_deciduous_shared",
+        "form": "riparian_deciduous",
+        "height_range_meters": [
+          4.0,
+          8.0
+        ],
+        "id": "narrowleaf_willow",
+        "lods": [
+          {
+            "bytes": 17587,
+            "lod": 0,
+            "path": "vegetation_meshes/narrowleaf_willow_LOD0.obj",
+            "sha256": "019c00f4a345fca6ae180f177fbd28cdc7a1a96448dba71aa2893566de8c5391",
+            "triangles": 600,
+            "vertices": 320
+          },
+          {
+            "bytes": 4708,
+            "lod": 1,
+            "path": "vegetation_meshes/narrowleaf_willow_LOD1.obj",
+            "sha256": "2f660c5da21f077f810b6c478ec2bb846fea4789151c342276e9ecb7d14281c6",
+            "triangles": 160,
+            "vertices": 94
+          },
+          {
+            "bytes": 996,
+            "lod": 2,
+            "path": "vegetation_meshes/narrowleaf_willow_LOD2.obj",
+            "sha256": "e655a605b25db08cd57badde64e02971643cb9652b86a582a234f9cf170e353a",
+            "triangles": 24,
+            "vertices": 20
+          }
+        ]
+      },
+      {
+        "canonical_height_meters": 5.5,
+        "crown_range_meters": [
+          1.8,
+          3.0
+        ],
+        "foliage_material": "foliage_conifer_shared",
+        "form": "compact_conifer",
+        "height_range_meters": [
+          4.0,
+          7.0
+        ],
+        "id": "rocky_mountain_juniper",
+        "lods": [
+          {
+            "bytes": 13358,
+            "lod": 0,
+            "path": "vegetation_meshes/rocky_mountain_juniper_LOD0.obj",
+            "sha256": "4517156cb3486d79fff80d2406cd86db4cb25875fbf55273c24ddb063cbe199d",
+            "triangles": 456,
+            "vertices": 246
+          },
+          {
+            "bytes": 4699,
+            "lod": 1,
+            "path": "vegetation_meshes/rocky_mountain_juniper_LOD1.obj",
+            "sha256": "5121e11394dd42fd0a7f10eccb7d9cc4bfbce0a94a49966893eb383e7de55b8d",
+            "triangles": 160,
+            "vertices": 94
+          },
+          {
+            "bytes": 995,
+            "lod": 2,
+            "path": "vegetation_meshes/rocky_mountain_juniper_LOD2.obj",
+            "sha256": "23d725e9e5b569d928dfd9416c94e87ff65ba9ad68e818fb5e22dd46a6cbc999",
+            "triangles": 24,
+            "vertices": 20
+          }
+        ]
+      },
+      {
+        "canonical_height_meters": 1.7,
+        "crown_range_meters": [
+          1.0,
+          2.0
+        ],
+        "foliage_material": "foliage_shrub_shared",
+        "form": "multi_lobe_shrub",
+        "height_range_meters": [
+          1.0,
+          2.4
+        ],
+        "id": "rabbitbrush_shrub",
+        "lods": [
+          {
+            "bytes": 17581,
+            "lod": 0,
+            "path": "vegetation_meshes/rabbitbrush_shrub_LOD0.obj",
+            "sha256": "656014a18ac5d791b586e16353bef50da8809a89136b20bc8010bc60f8b9d158",
+            "triangles": 600,
+            "vertices": 320
+          },
+          {
+            "bytes": 4698,
+            "lod": 1,
+            "path": "vegetation_meshes/rabbitbrush_shrub_LOD1.obj",
+            "sha256": "583917bb04f5fb86bd360251319ae1b0901b3b8d030e8f11732ac5e16cfc2c32",
+            "triangles": 160,
+            "vertices": 94
+          },
+          {
+            "bytes": 990,
+            "lod": 2,
+            "path": "vegetation_meshes/rabbitbrush_shrub_LOD2.obj",
+            "sha256": "fd43ce50f0b03af2326e6544d27995e7f7d5ee76ce36a583ba7d70962a9ebcc9",
+            "triangles": 24,
+            "vertices": 20
+          }
+        ]
+      }
+    ],
+    "status": "PROJECT_OWNED_PROCEDURAL_LOD0_LOD1_LOD2_AUTHORED"
+  },
+  "stereo_policy": {
+    "billboard_lighting_follows_head_rotation": false,
+    "center_eye_frame_selection": true,
+    "single_vertical_billboard_allowed": false,
+    "top_down_and_oblique_canopy_required": true
+  },
+  "validation": {
+    "accepted_placement_count": 377,
+    "active_3d_radius_meters": 1500.0,
+    "candidate_rejection_counts": {
+      "below_threshold": 989884,
+      "cap_rejected": 0,
+      "excluded": 1483,
+      "outside_active_radius": 56574,
+      "spacing_rejected": 258
+    },
+    "counts_by_distance_band": {
+      "0-600m": 30,
+      "600-1500m": 347
+    },
+    "counts_by_species": {
+      "narrowleaf_willow": 65,
+      "plains_cottonwood": 152,
+      "rabbitbrush_shrub": 113,
+      "rocky_mountain_juniper": 47
+    },
+    "exclusion_pixel_counts": {
+      "apron": 191,
+      "building": 228163,
+      "open_water": 105434,
+      "parking": 24,
+      "road": 44576,
+      "runway_safety": 1154,
+      "taxiway": 1233
+    },
+    "far_zone_policy": "orthophoto_only beyond 1500 m",
+    "instance_triangle_estimates_by_lod": {
+      "LOD0": 241320,
+      "LOD1": 60320,
+      "LOD2": 9048
+    },
+    "label": "KBDU V2 vegetation source/mask/coverage evidence",
+    "legacy_candidate_count_replaced": 246,
+    "mask_pixels_above_threshold": 58692,
+    "mask_pixels_suitable_after_exclusion": 33166,
+    "minimum_spacing_meters": 24.0,
+    "schema_version": 1,
+    "shared_material_slot_count": 4,
+    "status": "PASS"
+  }
+}

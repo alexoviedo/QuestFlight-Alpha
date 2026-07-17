@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "distribution_source": {"type": "object"},
+    "exclusion_policy": {"type": "object"},
+    "lod_policy": {"items": {"type": "object"}, "maxItems": 4, "minItems": 4, "type": "array"},
+    "schema_version": {"const": 1},
+    "species_library": {"type": "object"},
+    "stereo_policy": {"type": "object"},
+    "validation": {"properties": {"status": {"const": "PASS"}}, "required": ["status"], "type": "object"}
+  },
+  "required": ["schema_version", "distribution_source", "exclusion_policy", "lod_policy", "species_library", "stereo_policy", "validation"],
+  "title": "KBDU vegetation distribution manifest",
+  "type": "object"
+}

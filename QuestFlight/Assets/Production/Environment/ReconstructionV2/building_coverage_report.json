@@ -1,0 +1,54 @@
+{
+  "cell_size_meters": 250.0,
+  "checkpoint_source_limitations": {
+    "building_query_half_extent_meters": 6000.0,
+    "dropped_or_budget_trimmed_parts_all_categories": 0,
+    "maximum_committed_building_centroid_distance_meters": 5999.808,
+    "raw_element_count": 31423,
+    "source_building_cap": null
+  },
+  "label": "KBDU current bounded 6 km OSM building coverage",
+  "schema_version": 1,
+  "source_snapshot": {
+    "endpoint": "https://overpass.kumi.systems/api/interpreter",
+    "osm_base_timestamp": "2026-05-31T22:37:44Z",
+    "query_sha256": "e676237d74ab58113596486d3d1d7d0434a9f757bced5a0981c7bb184daecf4a",
+    "raw_response_sha256": "024560100b28946bb805478c6be091d752172200e7c8fcbe1ebe1d7bea858416"
+  },
+  "v2_acceptance_status": "PASS",
+  "zones": {
+    "0-2km": {
+      "acceptance_threshold_percent": 100.0,
+      "cell_count": 147,
+      "coverage_percent_of_committed_source": 100.0,
+      "represented_footprints": 1831,
+      "represented_significant_footprints": 1663,
+      "significant_coverage_percent": 100.0,
+      "source_footprints": 1831,
+      "source_significant_footprints": 1663,
+      "status": "PASS"
+    },
+    "2-4km": {
+      "acceptance_threshold_percent": 95.0,
+      "cell_count": 435,
+      "coverage_percent_of_committed_source": 100.0,
+      "represented_footprints": 7863,
+      "represented_significant_footprints": 7668,
+      "significant_coverage_percent": 100.0,
+      "source_footprints": 7863,
+      "source_significant_footprints": 7668,
+      "status": "PASS"
+    },
+    "4-6km": {
+      "acceptance_threshold_percent": 90.0,
+      "cell_count": 642,
+      "coverage_percent_of_committed_source": 100.0,
+      "represented_footprints": 17985,
+      "represented_significant_footprints": 17450,
+      "significant_coverage_percent": 100.0,
+      "source_footprints": 17985,
+      "source_significant_footprints": 17450,
+      "status": "PASS"
+    }
+  }
+}

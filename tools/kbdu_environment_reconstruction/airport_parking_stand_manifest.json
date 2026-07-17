@@ -1,0 +1,354 @@
+{
+  "aircraft_model_calibration": {
+    "calibration_basis": "checkpoint model mesh coordinates plus authoritative worn-headset orientation observation",
+    "contact_metadata_status": "PROJECT_AUTHORED_PROXY_CONTACTS; exterior derivative has no retained wheel submesh",
+    "gear_contact_points_unity_meters": {
+      "main_left": [
+        -1.28,
+        0.0,
+        -0.2
+      ],
+      "main_right": [
+        1.28,
+        0.0,
+        -0.2
+      ],
+      "nose": [
+        0.0,
+        0.0,
+        2.35
+      ]
+    },
+    "model_forward_axis_correction_degrees": 90.0,
+    "source_bounds_meters": {
+      "maximum": [
+        6.298952102661133,
+        4.65688943862915,
+        3.614339828491211
+      ],
+      "minimum": [
+        -6.298952102661133,
+        -4.651389122009277,
+        -0.003802664577960968
+      ]
+    },
+    "source_model_axes": {
+      "forward": "-Y",
+      "right": "+X",
+      "up": "+Z"
+    },
+    "unity_imported_forward_axis_before_correction": "-X",
+    "unity_runtime_axes_after_correction": {
+      "forward": "+Z",
+      "right": "+X",
+      "up": "+Y"
+    }
+  },
+  "label": "KBDU authored parking stands and parked-aircraft correction contract",
+  "parked_aircraft_placements": [
+    {
+      "authored_heading_degrees": 0.0,
+      "category": "parked_aircraft",
+      "contact": {
+        "apron_plane_normal": [
+          -0.00357123,
+          0.99994363,
+          0.00999944
+        ],
+        "gear_contact_points_unity_meters": {
+          "main_left": [
+            -1.28,
+            0.0,
+            -0.2
+          ],
+          "main_right": [
+            1.28,
+            0.0,
+            -0.2
+          ],
+          "nose": [
+            0.0,
+            0.0,
+            2.35
+          ]
+        },
+        "root_height_meters": 1.537
+      },
+      "local_enu_meters": {
+        "x": -360.0,
+        "z": -188.0
+      },
+      "lod_hlod": {
+        "cell_id": "cell_250m_xn002_zn001",
+        "class": "airport_authored_lod"
+      },
+      "model_forward_axis_correction_degrees": 90.0,
+      "root_yaw_degrees": 90.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "source_license_class": "CC_BY_4_0_KOG_THORNS_ADAPTATION",
+      "stable_id": "parked-aircraft-kbdu-tiedown-02",
+      "stand_id": "KBDU-TIEDOWN-02",
+      "tint_rgba": [
+        219,
+        225,
+        226,
+        255
+      ]
+    },
+    {
+      "authored_heading_degrees": 0.0,
+      "category": "parked_aircraft",
+      "contact": {
+        "apron_plane_normal": [
+          -0.00357123,
+          0.99994363,
+          0.00999944
+        ],
+        "gear_contact_points_unity_meters": {
+          "main_left": [
+            -1.28,
+            0.0,
+            -0.2
+          ],
+          "main_right": [
+            1.28,
+            0.0,
+            -0.2
+          ],
+          "nose": [
+            0.0,
+            0.0,
+            2.35
+          ]
+        },
+        "root_height_meters": 1.75
+      },
+      "local_enu_meters": {
+        "x": -300.5,
+        "z": -188.0
+      },
+      "lod_hlod": {
+        "cell_id": "cell_250m_xn002_zn001",
+        "class": "airport_authored_lod"
+      },
+      "model_forward_axis_correction_degrees": 90.0,
+      "root_yaw_degrees": 90.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "source_license_class": "CC_BY_4_0_KOG_THORNS_ADAPTATION",
+      "stable_id": "parked-aircraft-kbdu-tiedown-03",
+      "stand_id": "KBDU-TIEDOWN-03",
+      "tint_rgba": [
+        206,
+        218,
+        229,
+        255
+      ]
+    },
+    {
+      "authored_heading_degrees": 0.0,
+      "category": "parked_aircraft",
+      "contact": {
+        "apron_plane_normal": [
+          -0.00357123,
+          0.99994363,
+          0.00999944
+        ],
+        "gear_contact_points_unity_meters": {
+          "main_left": [
+            -1.28,
+            0.0,
+            -0.2
+          ],
+          "main_right": [
+            1.28,
+            0.0,
+            -0.2
+          ],
+          "nose": [
+            0.0,
+            0.0,
+            2.35
+          ]
+        },
+        "root_height_meters": 1.878
+      },
+      "local_enu_meters": {
+        "x": -264.5,
+        "z": -188.0
+      },
+      "lod_hlod": {
+        "cell_id": "cell_250m_xn002_zn001",
+        "class": "airport_authored_lod"
+      },
+      "model_forward_axis_correction_degrees": 90.0,
+      "root_yaw_degrees": 90.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "source_license_class": "CC_BY_4_0_KOG_THORNS_ADAPTATION",
+      "stable_id": "parked-aircraft-kbdu-tiedown-04",
+      "stand_id": "KBDU-TIEDOWN-04",
+      "tint_rgba": [
+        231,
+        220,
+        204,
+        255
+      ]
+    }
+  ],
+  "placement_count": 3,
+  "schema_version": 1,
+  "stand_count": 5,
+  "stands": [
+    {
+      "active_parked_aircraft": false,
+      "apron_contained": true,
+      "apron_plane": {
+        "normal": [
+          -0.00357123,
+          0.99994363,
+          0.00999944
+        ],
+        "point_meters": [
+          -388.0,
+          1.437,
+          -188.0
+        ],
+        "source": "best-fit plane from three checkpoint terrain-seated parked-aircraft samples"
+      },
+      "heading_degrees": 0.0,
+      "id": "KBDU-TIEDOWN-01",
+      "local_enu_meters": {
+        "x": -388.0,
+        "z": -188.0
+      },
+      "permitted_aircraft_class": "single_engine_piston",
+      "source_reference": {
+        "apron_osm_id": 77452627,
+        "taxilane_osm_id": 452355002
+      }
+    },
+    {
+      "active_parked_aircraft": true,
+      "apron_contained": true,
+      "apron_plane": {
+        "normal": [
+          -0.00357123,
+          0.99994363,
+          0.00999944
+        ],
+        "point_meters": [
+          -360.0,
+          1.537,
+          -188.0
+        ],
+        "source": "best-fit plane from three checkpoint terrain-seated parked-aircraft samples"
+      },
+      "heading_degrees": 0.0,
+      "id": "KBDU-TIEDOWN-02",
+      "local_enu_meters": {
+        "x": -360.0,
+        "z": -188.0
+      },
+      "permitted_aircraft_class": "single_engine_piston",
+      "source_reference": {
+        "apron_osm_id": 77452627,
+        "taxilane_osm_id": 452355004
+      }
+    },
+    {
+      "active_parked_aircraft": true,
+      "apron_contained": true,
+      "apron_plane": {
+        "normal": [
+          -0.00357123,
+          0.99994363,
+          0.00999944
+        ],
+        "point_meters": [
+          -300.5,
+          1.75,
+          -188.0
+        ],
+        "source": "best-fit plane from three checkpoint terrain-seated parked-aircraft samples"
+      },
+      "heading_degrees": 0.0,
+      "id": "KBDU-TIEDOWN-03",
+      "local_enu_meters": {
+        "x": -300.5,
+        "z": -188.0
+      },
+      "permitted_aircraft_class": "single_engine_piston",
+      "source_reference": {
+        "apron_osm_id": 77452627,
+        "taxilane_osm_id": 452355007
+      }
+    },
+    {
+      "active_parked_aircraft": true,
+      "apron_contained": true,
+      "apron_plane": {
+        "normal": [
+          -0.00357123,
+          0.99994363,
+          0.00999944
+        ],
+        "point_meters": [
+          -264.5,
+          1.878,
+          -188.0
+        ],
+        "source": "best-fit plane from three checkpoint terrain-seated parked-aircraft samples"
+      },
+      "heading_degrees": 0.0,
+      "id": "KBDU-TIEDOWN-04",
+      "local_enu_meters": {
+        "x": -264.5,
+        "z": -188.0
+      },
+      "permitted_aircraft_class": "single_engine_piston",
+      "source_reference": {
+        "apron_osm_id": 77452627,
+        "taxilane_osm_id": 452355011
+      }
+    },
+    {
+      "active_parked_aircraft": false,
+      "apron_contained": true,
+      "apron_plane": {
+        "normal": [
+          -0.00357123,
+          0.99994363,
+          0.00999944
+        ],
+        "point_meters": [
+          -370.0,
+          1.221,
+          -160.0
+        ],
+        "source": "best-fit plane from three checkpoint terrain-seated parked-aircraft samples"
+      },
+      "heading_degrees": 0.0,
+      "id": "KBDU-TIEDOWN-05",
+      "local_enu_meters": {
+        "x": -370.0,
+        "z": -160.0
+      },
+      "permitted_aircraft_class": "single_engine_piston",
+      "source_reference": {
+        "apron_osm_id": 77452627,
+        "taxilane_osm_id": 452354998
+      }
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ebf48e82ffd42aa9a68945e5b7a34f8, type: 3}
+  m_Name: KBDU_AirportParkingStandManifestV2
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.AirportParkingStandManifest
+  schemaVersion: 1
+  coordinateFrame: KBDU local tangent ENU; Unity +X=east, +Z=north
+  stands:
+  - standId: KBDU-TIEDOWN-01
+    localEnuMeters: {x: -388, y: -188}
+    headingDegrees: 0
+    apronPlanePoint: {x: -388, y: 1.404, z: -188}
+    apronPlaneNormal: {x: -0.0035197528, y: 0.999932, z: 0.011119237}
+    permittedAircraftClass: single_engine_piston
+    minimumSpacingMeters: 28
+    apronBoundaryEnuMeters:
+    - {x: -399, y: -199}
+    - {x: -377, y: -199}
+    - {x: -377, y: -177}
+    - {x: -399, y: -177}
+    sourceReference: OSM apron 77452627; taxilane 452355002
+  - standId: KBDU-TIEDOWN-02
+    localEnuMeters: {x: -360, y: -188}
+    headingDegrees: 0
+    apronPlanePoint: {x: -360, y: 1.49, z: -188}
+    apronPlaneNormal: {x: -0.0037997812, y: 0.99994075, z: 0.010199393}
+    permittedAircraftClass: single_engine_piston
+    minimumSpacingMeters: 28
+    apronBoundaryEnuMeters:
+    - {x: -371, y: -199}
+    - {x: -349, y: -199}
+    - {x: -349, y: -177}
+    - {x: -371, y: -177}
+    sourceReference: OSM apron 77452627; taxilane 452355004
+  - standId: KBDU-TIEDOWN-03
+    localEnuMeters: {x: -300.5, y: -188}
+    headingDegrees: 0
+    apronPlanePoint: {x: -300.5, y: 1.63, z: -188}
+    apronPlaneNormal: {x: -0.0026199536, y: 0.99998146, z: 0.0054998947}
+    permittedAircraftClass: single_engine_piston
+    minimumSpacingMeters: 36
+    apronBoundaryEnuMeters:
+    - {x: -311.5, y: -199}
+    - {x: -289.5, y: -199}
+    - {x: -289.5, y: -177}
+    - {x: -311.5, y: -177}
+    sourceReference: OSM apron 77452627; taxilane 452355007
+  - standId: KBDU-TIEDOWN-04
+    localEnuMeters: {x: -264.5, y: -188}
+    headingDegrees: 0
+    apronPlanePoint: {x: -264.5, y: 1.7154, z: -188}
+    apronPlaneNormal: {x: -0.0025799484, y: 0.9999784, z: 0.0060398746}
+    permittedAircraftClass: single_engine_piston
+    minimumSpacingMeters: 36
+    apronBoundaryEnuMeters:
+    - {x: -275.5, y: -199}
+    - {x: -253.5, y: -199}
+    - {x: -253.5, y: -177}
+    - {x: -275.5, y: -177}
+    sourceReference: OSM apron 77452627; taxilane 452355011
+  - standId: KBDU-TIEDOWN-05
+    localEnuMeters: {x: -370, y: -160}
+    headingDegrees: 0
+    apronPlanePoint: {x: -370, y: 1.1899999, z: -160}
+    apronPlaneNormal: {x: -0.003999764, y: 0.999942, z: 0.009999423}
+    permittedAircraftClass: single_engine_piston
+    minimumSpacingMeters: 29.732138
+    apronBoundaryEnuMeters:
+    - {x: -381, y: -171}
+    - {x: -359, y: -171}
+    - {x: -359, y: -149}
+    - {x: -381, y: -149}
+    sourceReference: OSM apron 77452627; taxilane 452354998

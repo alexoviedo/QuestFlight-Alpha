@@ -32,7 +32,10 @@ namespace QuestFlightLab.EditorTests
                 Assert.That(contract.bakedRunwayThresholdStripeQuadCount, Is.EqualTo(12));
                 Assert.That(contract.bakedRunwayMarkingQuadCount, Is.EqualTo(26));
                 Assert.That(contract.runwayMarkings.GetComponent<MeshFilter>().sharedMesh.triangles.Length / 3, Is.EqualTo(52));
-                Assert.That(contract.retainedWaterBodyCount, Is.EqualTo(1));
+                Assert.That(contract.retainedWaterBodyCount, Is.GreaterThan(1));
+                Assert.That(contract.waterFeatureManifestV2, Is.Not.Null);
+                Assert.That(contract.otherWaterFeaturesSurfaceV2, Is.Not.Null);
+                Assert.That(contract.otherWaterFeaturesShoreBankV2, Is.Not.Null);
                 Assert.That(contract.boulderReservoirSurface, Is.Not.Null);
                 Assert.That(contract.immutableFarTerrain.GetComponentsInChildren<LODGroup>(true), Is.Empty);
                 Assert.That(HasComponentNamed(contract.immutableFarTerrain.gameObject, "RealKbduBatchDistanceCuller"), Is.False);

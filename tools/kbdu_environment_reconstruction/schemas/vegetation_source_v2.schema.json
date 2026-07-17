@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "legacy_candidate_count_replaced": {"const": 246},
+    "mask_contract": {
+      "properties": {
+        "active_3d_radius_meters": {"const": 1500.0},
+        "dimensions": {"const": [1024, 1024]},
+        "likelihood_threshold": {"type": "integer"}
+      },
+      "required": ["dimensions", "active_3d_radius_meters", "likelihood_threshold", "likelihood_sha256", "exclusion_sha256", "suitability_sha256"],
+      "type": "object"
+    },
+    "placements": {
+      "items": {
+        "properties": {
+          "species_id": {"enum": ["plains_cottonwood", "narrowleaf_willow", "rocky_mountain_juniper", "rabbitbrush_shrub"]},
+          "stable_id": {"pattern": "^vegetation-v2-[0-9a-f]{20}$", "type": "string"}
+        },
+        "required": ["stable_id", "species_id", "local_enu_meters", "height_meters", "crown_radius_meters", "likelihood_score"],
+        "type": "object"
+      },
+      "maxItems": 700,
+      "minItems": 200,
+      "type": "array"
+    },
+    "schema_version": {"const": 1},
+    "source": {"type": "object"}
+  },
+  "required": ["schema_version", "source", "mask_contract", "placements", "legacy_candidate_count_replaced"],
+  "title": "KBDU vegetation V2 source",
+  "type": "object"
+}

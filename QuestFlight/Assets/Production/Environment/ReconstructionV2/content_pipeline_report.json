@@ -1,0 +1,47 @@
+{
+  "generated_outputs": [
+    {
+      "bytes": 8291,
+      "path": "airport_parking_stand_manifest.json",
+      "sha256": "26dd80e757275c1418bd38ff7d25a496274c6b0d3145a0d2eb4f560d2ee5b179"
+    },
+    {
+      "bytes": 1913,
+      "path": "building_coverage_report.json",
+      "sha256": "05fdb0e1f5392438fb2712e01cfc0ed79788f8c6fc8338ade92f2d6e945b5d8d"
+    },
+    {
+      "bytes": 2347141,
+      "path": "KBDU_ContextBatchRecipeV2.json",
+      "sha256": "895faa22e2707a6ab944ff6df237b95b57ba3fb349ba0cc15314d20bda35e203"
+    },
+    {
+      "bytes": 10420240,
+      "path": "KBDU_ReferenceContextV2.json",
+      "sha256": "584a47ebde144760bb70c4f4a20bfd58baa591e368a1093164cc464506a8f104"
+    },
+    {
+      "bytes": 19512176,
+      "path": "production_placement_manifest.json",
+      "sha256": "21553ddee4ff5f015a8f4303d8e30f67dcd243d877b29218cfd7945ae79d89e7"
+    },
+    {
+      "bytes": 10170,
+      "path": "vegetation_distribution_manifest.json",
+      "sha256": "58ebba3a4a883488a8ad92619d93a5b7feaf85cde4fe5b9bde231298ffad4e11"
+    }
+  ],
+  "input_hashes": {
+    "context": "5d0d0c3c71532b5106119b8e647e303e12bdeb662960ef78543050166bb8e3e0",
+    "context_recipe": "08eb086d0e7ef355fcbf4b282788c6702c91479db3289290c8e9becd93c8df69",
+    "osm_building_source_6km": "13763d3812525ca48e2294cdca16714bf698fa8cc58ce980babb6300c4f4c3ea",
+    "parked_aircraft_source_manifest": "c24ed699960d5a818585d69c3433f134c87a246d772924976762d2a255525784",
+    "terrain_rings": "712fccb9bcbaf0b79f6f8bf8e7a9f59c05b022fe9e478b022d8ca2595aa767b7",
+    "vegetation_coverage_v2": "382152e08eefca2d21bd1046f8bd43b6a6915fbf7b83bffba4e60a5b617e1923",
+    "vegetation_source_v2": "19400e4afb48f50eaa1a42c4f6850b411c5f34f326aee899951d3eceae88d594",
+    "vegetation_species_v2": "9f959fd1e12b9c647b5d6f6b7c84a3a62210d910025b63ebc3f12e09a82e861f"
+  },
+  "label": "KBDU environment reconstruction tools-only content pipeline",
+  "schema_version": 1,
+  "unity_assets_modified": false
+}

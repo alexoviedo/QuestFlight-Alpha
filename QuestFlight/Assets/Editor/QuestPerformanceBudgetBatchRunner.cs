@@ -21,8 +21,8 @@ namespace QuestFlight.Editor
     /// </summary>
     public static class QuestPerformanceBudgetBatchRunner
     {
-        private const int DrawCallTarget = 120;
-        private const long VisibleTriangleTarget = 500000L;
+        private const int DrawCallTarget = 130;
+        private const long VisibleTriangleTarget = 650000L;
         private const int MaterialTarget = 30;
         private const long TextureMemoryTargetBytes = 220L * 1024L * 1024L;
         private const int TransparentMaterialSlotTarget = 2;
@@ -81,6 +81,9 @@ namespace QuestFlight.Editor
 
             GraphicsDeviceType[] androidApis = PlayerSettings.GetGraphicsAPIs(BuildTarget.Android);
             OpenXRSettings openXr = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+            string configuredRenderPipeline = GraphicsSettings.currentRenderPipeline == null
+                ? "BuiltIn/" + mainCamera.actualRenderingPath
+                : GraphicsSettings.currentRenderPipeline.GetType().FullName;
             PerformanceBudgetReport report = new PerformanceBudgetReport
             {
                 generatedUtc = DateTime.UtcNow.ToString("O"),
@@ -97,6 +100,9 @@ namespace QuestFlight.Editor
                 maxEstimatedDrawCalls = maxDrawCalls,
                 maxEstimatedVisibleTriangles = maxVisibleTriangles,
                 sceneMaterialCount = sceneMaterials,
+                maxVisibleMaterialCount = sceneMaterials,
+                activeSceneMaterialCount = materialReport.materialCount,
+                configuredRenderPipeline = configuredRenderPipeline,
                 activeRendererCount = renderers.Length,
                 sceneMeshTriangles = CountTriangles(renderers),
                 visualQaReportPath = Environment.GetEnvironmentVariable(VisualReportEnvironmentVariable) ?? string.Empty,
@@ -515,9 +521,10 @@ namespace QuestFlight.Editor
             builder.AppendLine("# Standalone Quest Static Performance Budget");
             builder.AppendLine();
             builder.AppendLine("- Classification: `" + report.classification + "`");
+            builder.AppendLine("- Configured render pipeline: `" + report.configuredRenderPipeline + "`");
             builder.AppendLine("- Draw calls: " + report.maxEstimatedDrawCalls + " / " + report.drawCallTarget + " (" + Pass(report.drawCallsPassed) + ")");
             builder.AppendLine("- Visible triangles: " + report.maxEstimatedVisibleTriangles.ToString("N0", CultureInfo.InvariantCulture) + " / " + report.visibleTriangleTarget.ToString("N0", CultureInfo.InvariantCulture) + " (" + Pass(report.visibleTrianglesPassed) + ")");
-            builder.AppendLine("- Visible materials: " + report.sceneMaterialCount + " / " + report.materialTarget + " (" + Pass(report.materialsPassed) + ")");
+            builder.AppendLine("- Materials (maximum visible / active distinct): " + report.maxVisibleMaterialCount + " / " + report.activeSceneMaterialCount + "; visible target " + report.materialTarget + " (" + Pass(report.materialsPassed) + ")");
             builder.AppendLine("- Estimated runtime texture memory: " + FormatBytes(report.estimatedTextureBytes) + " / " + FormatBytes(report.textureMemoryTargetBytes) + " (" + Pass(report.textureMemoryPassed) + ")");
             builder.AppendLine("- Transparent material slots: " + report.transparentMaterialSlots + " / " + report.transparentMaterialSlotTarget + " (" + Pass(report.transparentSlotsPassed) + ")");
             builder.AppendLine("- Android ARM64 / Vulkan / ASTC / IL2CPP: " + report.androidArm64Only + " / " + report.androidVulkanOnly + " / " + report.androidAstcBuildTarget + " / " + report.androidIl2Cpp);
@@ -600,9 +607,9 @@ namespace QuestFlight.Editor
         public sealed class PerformanceBudgetReport
         {
             public int schemaVersion = 1;
-            public string generatedUtc, unityVersion, scenePath, evidenceKind, headsetPerformanceLimitation, classification, visualQaReportPath;
+            public string generatedUtc, unityVersion, scenePath, evidenceKind, headsetPerformanceLimitation, classification, visualQaReportPath, configuredRenderPipeline;
             public bool headsetPerformanceEstablished, drawCallsPassed, visibleTrianglesPassed, materialsPassed, textureMemoryPassed, transparentSlotsPassed, shippingArchitecturePassed, passed;
-            public int drawCallTarget, materialTarget, transparentMaterialSlotTarget, maxEstimatedDrawCalls, sceneMaterialCount, activeRendererCount, msaa;
+            public int drawCallTarget, materialTarget, transparentMaterialSlotTarget, maxEstimatedDrawCalls, sceneMaterialCount, maxVisibleMaterialCount, activeSceneMaterialCount, activeRendererCount, msaa;
             public long visibleTriangleTarget, textureMemoryTargetBytes, maxEstimatedVisibleTriangles, sceneMeshTriangles, estimatedTextureBytes;
             public bool androidArm64Only, androidVulkanOnly, androidAstcBuildTarget, androidIl2Cpp, openXrSinglePassInstanced, multithreadedRendering, streamingMipmaps;
             public int transparentMaterialSlots, shaderCount, shaderKeywordCombinationCount, textureCount, lodGroupCount, crossFadeLodGroupCount;

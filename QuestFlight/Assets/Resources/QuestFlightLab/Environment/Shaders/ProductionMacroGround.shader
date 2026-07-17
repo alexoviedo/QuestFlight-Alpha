@@ -42,6 +42,7 @@ Shader "QuestFlightLab/Production Macro Ground"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_fog
+            #pragma multi_compile_instancing
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
 
@@ -71,6 +72,7 @@ Shader "QuestFlightLab/Production Macro Ground"
             {
                 float4 vertex : POSITION;
                 half3 normal : NORMAL;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct v2f
@@ -79,6 +81,7 @@ Shader "QuestFlightLab/Production Macro Ground"
                 float3 worldPosition : TEXCOORD0;
                 half3 worldNormal : TEXCOORD1;
                 UNITY_FOG_COORDS(2)
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
             float2 Hash22(float2 value)
@@ -106,7 +109,10 @@ Shader "QuestFlightLab/Production Macro Ground"
 
             v2f vert(appdata input)
             {
+                UNITY_SETUP_INSTANCE_ID(input);
                 v2f output;
+                UNITY_INITIALIZE_OUTPUT(v2f, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
                 output.position = UnityObjectToClipPos(input.vertex);
                 output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
                 output.worldNormal = UnityObjectToWorldNormal(input.normal);
@@ -116,6 +122,8 @@ Shader "QuestFlightLab/Production Macro Ground"
 
             fixed4 frag(v2f input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
                 float2 macroUv = saturate((input.worldPosition.xz - _MacroWorldMinInvSize.xy) * _MacroWorldMinInvSize.zw);
                 float2 nearUv = saturate((input.worldPosition.xz - _NearWorldMinInvSize.xy) * _NearWorldMinInvSize.zw);
                 fixed3 midOrthophoto = tex2D(_MacroAlbedo, macroUv).rgb;

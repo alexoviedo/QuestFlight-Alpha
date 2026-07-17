@@ -3,6 +3,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
     Properties
     {
         _NearAlbedo ("Near 4 km NAIP", 2D) = "gray" {}
+        _NearSourceNormal ("Near 1 m DEM source normal (ENU)", 2D) = "gray" {}
         _MidAlbedo ("Mid 12 km NAIP", 2D) = "gray" {}
         _FarAlbedo ("Far 24 km NAIP", 2D) = "gray" {}
         _DetailAlbedo ("CC0 near/mid microdetail", 2D) = "white" {}
@@ -14,6 +15,8 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
         _DetailScale ("Detail world scale", Float) = 0.0666667
         _DetailFadeStartEnd ("Detail camera fade", Vector) = (180,1500,0,0)
         _DetailRadiusFadeStartEnd ("Detail world-radius fade", Vector) = (4500,6800,0,0)
+        _NearSourceNormalFadeStartEnd ("Near source-normal camera fade", Vector) = (250,2500,0,0)
+        _NearSourceNormalStrength ("Near source-normal strength", Range(0,1)) = 0
         _Tint ("Shared terrain tint", Color) = (1,1,1,1)
         _Roughness ("Roughness", Range(0,1)) = 0.92
         [Enum(Off,0,MacroLevel,1,BlendWeight,2,TexelDensityAndBoundaries,3)]
@@ -41,6 +44,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             #include "Lighting.cginc"
 
             sampler2D _NearAlbedo;
+            sampler2D _NearSourceNormal;
             sampler2D _MidAlbedo;
             sampler2D _FarAlbedo;
             sampler2D _DetailAlbedo;
@@ -51,8 +55,10 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             float4 _MidBlendStartEnd;
             float4 _DetailFadeStartEnd;
             float4 _DetailRadiusFadeStartEnd;
+            float4 _NearSourceNormalFadeStartEnd;
             fixed4 _Tint;
             half _DetailScale;
+            half _NearSourceNormalStrength;
             half _Roughness;
             half _DiagnosticMode;
 
@@ -180,6 +186,19 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 }
 
                 half3 normal = normalize(input.worldNormal);
+                half nearSourceNormalWeight = nearWeight * _NearSourceNormalStrength *
+                    (1.0 - smoothstep(
+                        _NearSourceNormalFadeStartEnd.x,
+                        max(_NearSourceNormalFadeStartEnd.x + 1.0, _NearSourceNormalFadeStartEnd.y),
+                        cameraDistance));
+                UNITY_BRANCH if (nearSourceNormalWeight > 0.001)
+                {
+                    half3 nearSourceNormal =
+                        tex2Dgrad(_NearSourceNormal, nearUv, nearUvDx, nearUvDy).xyz * 2.0 - 1.0;
+                    nearSourceNormal.y = max(nearSourceNormal.y, 0.001);
+                    nearSourceNormal *= rsqrt(max(dot(nearSourceNormal, nearSourceNormal), 0.0001));
+                    normal = normalize(lerp(normal, nearSourceNormal, nearSourceNormalWeight));
+                }
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half diffuse = saturate(dot(normal, lightDirection));
                 half3 ambient = ShadeSH9(half4(normal, 1.0));
