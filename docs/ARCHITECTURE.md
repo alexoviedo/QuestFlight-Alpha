@@ -4,8 +4,9 @@
 ProductionWorldRoot
 ├── ProductionEnvironmentRoot (serialized baked environment)
 │   ├── Shared-ENU near/mid/far terrain and orthophoto pyramid
-│   ├── Offline-batched airport, context, and vegetation LODGroups
-│   ├── Opaque dual-normal Boulder Reservoir
+│   ├── Authoritative fixed terrain surface and placement manifests (V2 branch)
+│   ├── Offline-batched building, vegetation, and parked-aircraft HLODGroups
+│   ├── Opaque dual-normal Boulder Reservoir plus batched secondary water (V2 branch)
 │   └── Bounded aircraft/runway blob shadow
 ├── ProductionInputRoot
 ├── AircraftSimulationRoot (one Unity prototype authority, CG pivot)
@@ -29,9 +30,11 @@ The shipping architecture is standalone Quest 3 only: Android ARM64, IL2CPP, Vul
 
 The environment uses one east-north-up coordinate frame for the near, mid, and far terrain meshes and their public-domain orthophoto atlases. Explicit overlap bands blend the aligned pyramid levels without independent tile transforms. Shared materials, offline spatial batching, and authored LODGroups bound scene cost. These batches are not described as GPU instanced unless the actual renderer and shader variants prove it.
 
+On Environment Reconstruction V2, `IProductionTerrainSurface` is the single query contract for height, normal, terrain zone, imagery UV, land-cover, runway/apron, water, and footprint-plane data. `ProductionPlacementManifest` serializes every grounded building, vegetation instance, parked aircraft, and represented water feature. Authoring and validation consume these assets; runtime code does not rebuild the world or repair its hierarchy.
+
 Lighting is one directional sun plus a CC0 photographic HDR sky used for skybox, ambient lighting, and a static custom reflection. Boulder Reservoir is one opaque, dual-normal material with a static sky reflection; it has no planar reflection, realtime reflection probe, screen-space reflection, refraction, or tessellation. A bounded authored blob shadow supplies runway contact without a realtime aircraft shadow map. Volumetric clouds and screen-space atmosphere effects are excluded.
 
-Quest render planning fails closed above 120 draw calls, 500,000 visible triangles, 30 visible materials, 220 MiB of estimated texture memory, or two transparent material slots. Mipmapped ASTC textures, bounded effects, fixed far terrain, and no steady-state runtime hierarchy construction keep the budget predictable. The 24-view Editor QA and static inventory complement—without replacing—the physical-headset gate.
+The V2 feature branch render plan fails closed above 130 draw calls, 650,000 visible triangles, 30 visible materials, 220 MiB of estimated texture memory, or three transparent material slots. Mipmapped ASTC textures, bounded effects, fixed terrain, and no steady-state runtime hierarchy construction keep the budget predictable. The 24-view Editor QA and static inventory complement—without replacing—the physical-headset gate.
 
 Physical performance acceptance is fixed at 72 Hz and requires three distinct unrecorded runs of the same APK. Each run warms for 90 seconds and measures for 60 seconds. Only the physical Quest can establish app-PID CPU+GPU timing, stale/tear counts, thermals, controller/Guardian state, comfort, and worn-display quality; simulator or Editor timing cannot.
 

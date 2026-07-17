@@ -190,3 +190,12 @@ At that milestone, `QuestFlight/Assets/Production/Environment` contained 97 non-
 - No raw FAA, USGS, OSM, DEM, imagery, or download archives.
 - No legacy splat/capture data.
 - No binary runtime asset whose creator, source, terms, or exact content hash is unclear.
+
+## Environment Reconstruction V2 derivatives (feature branch)
+
+- Terrain: USGS 3DEP 1 m bare-earth DEM, United States government work/public domain. External raw payload: 67,117,862 bytes, SHA-256 `93b32e8ef2fef464ff4ee49702d235b30eaff7d347f22b8c4add8848cd7e9d82`. Committed derivatives are the 5 m airport mesh, 25 m near mesh, terrain-surface asset/manifest, and 1024² normal map (`4ba7833e6f27f8ee3abceb79caf502e53f09672525038eedea7d89df6d764cc8`).
+- Buildings and water source features: bounded OpenStreetMap snapshot dated 2026-05-31, ODbL-1.0, `© OpenStreetMap contributors`. Raw building response remains outside Git; SHA-256 `024560100b28946bb805478c6be091d752172200e7c8fcbe1ebe1d7bea858416`. Committed JSON/mesh derivatives retain stable OSM feature IDs and license class.
+- Vegetation mask: public-domain USGS/USDA NAIP natural-color fallback, derived from committed Mid12km imagery SHA-256 `5e8d6edbcc5dc937c78b5fb8e4a5f8f7a06bda726b4509684e237f2b17fbdf9a`. External decoded working raster SHA-256 `9a565142b8d79c3029149f7dd36e15ad95688f61b67637e80ecc3c08618e3158`. Committed mask hashes are recorded in `vegetation_source_v2.json`.
+- Vegetation meshes: four procedural species and their 12 OBJ LODs are project-owned original work. The shared MTL SHA-256 is `9bc39f427446720ec729dd82b994273b77eefab2cd808dc4aed8d36d78751884`.
+- Parked aircraft reuse the already-audited KOG_THORNS CC BY 4.0 derivative and attribution above. V2 changes placement/ground contact and adds a third LOD; they do not change the license boundary.
+- No raw DEM, raw OSM response, decoded NAIP raster, build, capture, cache, or package artifact is committed.

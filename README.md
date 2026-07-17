@@ -7,6 +7,7 @@ T2 QuestFlight is a private, early product vertical slice for standalone Meta Qu
 - seated cockpit start on the KBDU-inspired runway;
 - taxi, takeoff, climb, shallow-turn, and approach presentation loop;
 - one stable baked terrain/runway/water environment with a shared-ENU near/mid/far orthophoto pyramid;
+- on `feature/environment-reconstruction-v2`, an experimental authoritative terrain sampler and placement manifest with complete bounded building coverage, sparse mask-driven vegetation, additional water features, and offline HLOD;
 - one CC0 photographic HDR sky, a single directional sun, and a bounded opaque reservoir treatment;
 - cockpit and external aircraft views with limited control-surface animation;
 - Touch-based seat calibration and standard gamepad/deterministic input;
@@ -40,3 +41,5 @@ Standalone Quest 3 is the sole shipping target. The earlier PCVR recommendation 
 Meta XR Simulator and a Windows/OpenXR development executable or Unity Play Mode may be used only for repeatable development and visual regression. Simulator timing is not Quest performance evidence. Physical acceptance is a 72 Hz gate using three distinct unrecorded Quest runs, each with a 90-second warmup and 60-second measurement window. Worn frame cadence, thermals, comfort, controller/Guardian state, and display acceptance still require the physical headset before release. See `docs/STANDALONE_QUEST_PRODUCT_REQUIREMENTS.md` and `docs/VALIDATION.md`.
 
 This prototype is not FAA approved, not for navigation, does not provide legal training credit, and does not claim certified C172 fidelity, production photorealism, broad device compatibility, or final Quest performance. See `docs/KNOWN_LIMITATIONS.md`.
+
+Environment Reconstruction V2 is a preserved **PARTIAL** feature branch, not a mainline or release acceptance. Its static machine gates and Android build pass, but lead review scores the integrated imagery at about 5.2/10. The runway pattern, non-reservoir water ribbons, procedural building/vegetation quality, and terrain outliers block simulator and headset promotion.

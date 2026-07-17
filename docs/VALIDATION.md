@@ -13,7 +13,9 @@ Run from the repository root:
 .\scripts\run_standalone_quest_gate.ps1
 ```
 
-`validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The standard Visual QA is a 24-view capture set and requires inspection of every full-resolution image. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. Its hard planning ceilings are 120 estimated draw calls, 500,000 visible triangles, 30 visible materials, 220 MiB estimated texture memory, and two transparent material slots.
+`validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The standard Visual QA is a 24-view capture set and requires inspection of every full-resolution image. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. On the V2 feature branch its hard planning ceilings are 130 estimated draw calls, 650,000 visible triangles, 30 visible materials, 220 MiB estimated texture memory, and three transparent material slots.
+
+The 2026-07-17 V2 closure passed `validate_product.ps1`, 61 EditMode tests, 9 PlayMode tests, 24/24 machine image checks, the static budget gate, and an Android release build. The separate reconstruction evidence adapter failed closed because it selected stale intermediate reports; see the V2 evidence document. Machine passes are not visual acceptance: lead inspection remained below 7/10, so simulator replay and physical Quest timing were deliberately not run.
 
 ## Meta XR Simulator replay gate
 
