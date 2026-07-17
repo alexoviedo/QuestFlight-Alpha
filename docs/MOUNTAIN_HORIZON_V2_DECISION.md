@@ -4,7 +4,7 @@
 
 Retain **Option A: the fixed USGS-derived far DEM mesh** as the only far-mountain geometry. Integrate the continuous far orthophoto from Workstream B and the selected HDR sky from Workstream A onto the existing world-anchored architecture. Do not add a horizon panorama to the product scene at this stage.
 
-This is an architecture and asset-readiness decision, not visual acceptance. Workstream A did not edit `ProductionVerticalSlice` or its environment prefab, and no integrated V2 stereo capture exists yet. Seam removal, sun alignment, mountain score, and runtime cost remain lead-owned integration gates.
+This is now the integrated product architecture. The lead serialized Option A, the far orthophoto, the HDR sky, photographed-sun alignment, ambient/reflection settings, and haze into `ProductionVerticalSlice` and inspected all 24 full-resolution Visual QA views plus the final Meta XR Simulator neutral stereo pair. It is not a photoreal visual acceptance: the independent mountain score is `6.3/10`, below the `7.0` target.
 
 ## Existing Option A contract
 
@@ -28,7 +28,7 @@ Option B, a static real-DEM panorama, can produce a smooth silhouette at very lo
 - `workstream_a/mountain_ab_reference/mountain_option_a_100m_dem_hillshade.png`, SHA-256 `d5a3989048f665a41e53fd92b94b8a2f20896b92fc34dbca75b9d7abd3ed9387`;
 - `workstream_a/mountain_ab_reference/mountain_option_b_dem_horizon_panorama.png`, SHA-256 `deda18e867a1ca760be1e664ea9099332d69e5cb0c478db127743321270eb155`.
 
-Those images document source shape only; they are not substitutes for an integrated stereo A/B run. Option B remains a contingency only if V2 Option A captures show persistent faceting or an unfixable mid/far silhouette discontinuity after the continuous material and haze are applied.
+Those images document source shape only; they are not substitutes for an integrated stereo A/B run. The required genuine recorded Meta XR Simulator A/B replay was not completed because the Windows computer-control handoff failed and no `.vrs` recording may be synthesized. Option B therefore remains an unverified contingency. This missing A/B evidence is an explicit milestone blocker and one reason the result is `PARTIAL`, not a basis for claiming Option A visually superior.
 
 ## Selected sky and lighting integration contract
 
@@ -44,11 +44,11 @@ Lead integration should:
 6. keep broad realtime world shadows disabled unless measured Quest headroom later authorizes a bounded exception;
 7. use the photographed clouds as the complete cloud renderer: no volumetric clouds, transparent cloud dome, or billboard field.
 
-The initial sky material uses exposure `1.0` and rotation `0`. These are neutral authoring values, not accepted product tuning. Final exposure, sky rotation, sun transform, ambient intensity, reflection intensity, and fog color must be recorded after full-resolution stereo review.
+The inspected product tuning uses sky exposure `0.74`, rotation `0`, sky ambient intensity `0.86`, reflection intensity `0.76`, one directional sun at intensity `1.0`, and water environment reflection strength `0.78`. The serialized scene and final Visual QA provide the authoritative transforms and fog color.
 
 ## Required integration evidence
 
-Run neutral cockpit, slow four-axis head pan, rearward view, taxi/takeoff, pattern-altitude translation, and approach captures after Workstreams A and B are integrated. Reject Option A only if those captures demonstrate a persistent defect after material/fog tuning. The V2 gate must verify:
+The neutral Meta XR Simulator live stereo capture passed its API/stereo checks, but the required neutral, slow four-axis head pan, rearward, taxi/takeoff, translation, and approach recordings remain missing. A future V2 gate must verify:
 
 - no mid/far material or normal seam;
 - no cubemap seam in either eye;
@@ -58,4 +58,4 @@ Run neutral cockpit, slow four-axis head pan, rearward view, taxi/takeoff, patte
 - no new transparent overdraw region;
 - physical Quest timing remains within the milestone gate.
 
-Until these captures exist, no sky or mountain visual score is claimed.
+The 24-view Editor capture set scored sky/clouds `7.8/10` and mountains `6.3/10`, but Alex's later worn Quest 3 review found visible mountain-ridge aliasing and rejected the overall environment at `4/10`. The fixed DEM remains the serialized architecture, not a visually accepted solution. No recorded-replay stereo stability or physical Quest timing claim is made; the three-run timing gate was intentionally not started after the human visual rejection.
