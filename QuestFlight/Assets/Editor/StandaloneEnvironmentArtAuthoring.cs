@@ -78,6 +78,38 @@ namespace QuestFlight.Editor
             }
         }
 
+        /// <summary>
+        /// Regenerates only the already-referenced airport and sparse-vegetation mesh
+        /// assets. This deliberately does not load or save the product environment,
+        /// world prefab, or scene.
+        /// </summary>
+        public static void RepairVisualAssetsBatch()
+        {
+            try
+            {
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                Dictionary<string, Mesh[]> airportMeshes = AuthorAirportCombinedMeshes();
+                Mesh vegetationLod0 = AuthorVegetationMesh("Production_SparseCottonwood_LOD0", highDetail: true);
+                Mesh vegetationLod1 = AuthorVegetationMesh("Production_SparseCottonwood_LOD1", highDetail: false);
+                Mesh[] quonset = airportMeshes["Hangar_C_Quonset"];
+                if (quonset.Any(mesh => mesh == null || mesh.subMeshCount != 1 || mesh.triangles.Length == 0))
+                    throw new InvalidOperationException("Repaired Quonset LOD assets are missing or split");
+                if (vegetationLod0.triangles.Length / 3 > 240 || vegetationLod1.triangles.Length / 3 > 60)
+                    throw new InvalidOperationException("Repaired sparse vegetation exceeded its bounded topology budget");
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                Debug.Log(
+                    "[QuestFlight][StandaloneEnvironmentVisualRepair] Rebuilt closed Quonset LODs and " +
+                    "deciduous cottonwood/shrub LOD meshes without modifying any prefab or scene.");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorApplication.Exit(1);
+            }
+        }
+
 
         private static void AuthorEnvironment()
         {
@@ -451,25 +483,40 @@ namespace QuestFlight.Editor
             List<Vector3> vertices = new List<Vector3>();
             List<int> triangles = new List<int>();
             List<Color32> colors = new List<Color32>();
-            Vector3[] offsets = { new Vector3(-4f, 0f, -2f), new Vector3(3.2f, 0f, 1f), new Vector3(0f, 0f, 4.2f) };
-            float[] heights = { 8.5f, 10.5f, 7.2f };
+            Vector3[] offsets = { new Vector3(-3.2f, 0f, -1.7f), new Vector3(2.7f, 0f, 0.8f), new Vector3(0f, 0f, 3.6f) };
+            float[] heights = { 6.4f, 7.2f, 5.8f };
             for (int index = 0; index < offsets.Length; index++)
             {
                 float height = heights[index];
                 if (highDetail)
                 {
-                    AddBox(vertices, triangles, colors, offsets[index] + new Vector3(0f, height * 0.28f, 0f),
-                        new Vector3(0.65f, height * 0.56f, 0.65f), new Color32(92, 72, 47, 255));
-                    AddOctahedron(vertices, triangles, colors, offsets[index] + new Vector3(0f, height * 0.73f, 0f),
-                        new Vector3(3.1f, height * 0.30f, 2.8f), new Color32(77, 112, 59, 255));
-                    AddOctahedron(vertices, triangles, colors, offsets[index] + new Vector3(0.7f, height * 0.92f, -0.4f),
-                        new Vector3(2.25f, height * 0.22f, 2.1f), new Color32(96, 132, 69, 255));
+                    AddBox(vertices, triangles, colors, offsets[index] + new Vector3(0f, height * 0.23f, 0f),
+                        new Vector3(0.38f, height * 0.46f, 0.38f), new Color32(94, 78, 55, 255));
+                    Vector3 crownCenter = offsets[index] + new Vector3(0f, height * 0.68f, 0f);
+                    AddDeciduousCrown(vertices, triangles, colors, crownCenter,
+                        new Vector3(2.25f, height * 0.23f, 2.05f), 8, new Color32(74, 111, 58, 255));
+                    AddDeciduousCrown(vertices, triangles, colors, crownCenter + new Vector3(-1.1f, -0.1f, 0.3f),
+                        new Vector3(1.45f, height * 0.17f, 1.35f), 6, new Color32(88, 124, 65, 255));
+                    AddDeciduousCrown(vertices, triangles, colors, crownCenter + new Vector3(1.0f, 0.15f, -0.35f),
+                        new Vector3(1.35f, height * 0.16f, 1.45f), 6, new Color32(97, 132, 70, 255));
                 }
                 else
                 {
-                    AddOctahedron(vertices, triangles, colors, offsets[index] + new Vector3(0f, height * 0.68f, 0f),
-                        new Vector3(2.8f, height * 0.50f, 2.6f), new Color32(82, 117, 61, 255));
+                    AddDeciduousCrown(vertices, triangles, colors, offsets[index] + new Vector3(0f, height * 0.65f, 0f),
+                        new Vector3(2.15f, height * 0.29f, 2.0f), 6, new Color32(80, 111, 60, 255));
                 }
+            }
+            if (highDetail)
+            {
+                Vector3[] shrubCenters =
+                {
+                    new Vector3(-0.8f, 0.58f, -3.8f),
+                    new Vector3(4.6f, 0.62f, 2.7f),
+                    new Vector3(-4.7f, 0.54f, 2.4f)
+                };
+                foreach (Vector3 center in shrubCenters)
+                    AddDeciduousCrown(vertices, triangles, colors, center,
+                        new Vector3(1.05f, 0.58f, 0.86f), 5, new Color32(91, 111, 63, 255));
             }
             Mesh mesh = new Mesh { name = name, indexFormat = IndexFormat.UInt32 };
             mesh.SetVertices(vertices);
@@ -478,6 +525,43 @@ namespace QuestFlight.Editor
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             return WriteMeshAsset(GeneratedArtFolder + "/" + name + ".asset", mesh);
+        }
+
+        private static void AddDeciduousCrown(
+            List<Vector3> vertices,
+            List<int> triangles,
+            List<Color32> colors,
+            Vector3 center,
+            Vector3 radius,
+            int segments,
+            Color32 color)
+        {
+            int start = vertices.Count;
+            vertices.Add(center + Vector3.up * radius.y);
+            vertices.Add(center - Vector3.up * radius.y);
+            colors.Add(new Color32((byte)Mathf.Min(255, color.r + 12), (byte)Mathf.Min(255, color.g + 12),
+                (byte)Mathf.Min(255, color.b + 12), color.a));
+            colors.Add(new Color32((byte)Mathf.Max(0, color.r - 10), (byte)Mathf.Max(0, color.g - 10),
+                (byte)Mathf.Max(0, color.b - 10), color.a));
+            for (int index = 0; index < segments; index++)
+            {
+                float angle = index * Mathf.PI * 2f / segments;
+                vertices.Add(center + new Vector3(
+                    Mathf.Cos(angle) * radius.x,
+                    Mathf.Sin(angle * 2f) * radius.y * 0.08f,
+                    Mathf.Sin(angle) * radius.z));
+                colors.Add(index % 2 == 0
+                    ? color
+                    : new Color32((byte)Mathf.Max(0, color.r - 5), (byte)Mathf.Max(0, color.g - 5),
+                        (byte)Mathf.Max(0, color.b - 5), color.a));
+            }
+            for (int index = 0; index < segments; index++)
+            {
+                int current = start + 2 + index;
+                int next = start + 2 + (index + 1) % segments;
+                triangles.Add(start); triangles.Add(next); triangles.Add(current);
+                triangles.Add(start + 1); triangles.Add(current); triangles.Add(next);
+            }
         }
 
         private static void AddBox(

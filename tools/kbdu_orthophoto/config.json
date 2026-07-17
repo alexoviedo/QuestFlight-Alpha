@@ -32,6 +32,7 @@
       "tile_grid": 2,
       "output_name": "KBDU_NAIP_2019_Near4km_4096.jpg",
       "jpeg_quality": 90,
+      "mip_bias": -0.15,
       "maximum_committed_bytes": 14000000
     },
     {
@@ -41,6 +42,7 @@
       "tile_grid": 2,
       "output_name": "KBDU_NAIP_2019_Mid12km_4096.jpg",
       "jpeg_quality": 89,
+      "mip_bias": -0.15,
       "maximum_committed_bytes": 14000000
     },
     {
@@ -50,6 +52,7 @@
       "tile_grid": 1,
       "output_name": "KBDU_NAIP_2019_Far24km_2048.jpg",
       "jpeg_quality": 87,
+      "mip_bias": -0.10,
       "maximum_committed_bytes": 5000000
     }
   ],
@@ -76,7 +79,7 @@
     "mipmaps": true,
     "streaming_mipmaps": true,
     "filter_mode": "trilinear",
-    "anisotropy": 4,
+    "anisotropy": 8,
     "wrap_mode": "clamp",
     "maximum_runtime_texture_bytes": 25000000
   }

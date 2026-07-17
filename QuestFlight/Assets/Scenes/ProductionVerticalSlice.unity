@@ -15,29 +15,29 @@ RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
   m_Fog: 1
-  m_FogColor: {r: 0.61, g: 0.68, b: 0.76, a: 1}
+  m_FogColor: {r: 0.57, g: 0.65, b: 0.735, a: 1}
   m_FogMode: 1
   m_FogDensity: 0.01
-  m_LinearFogStart: 6500
-  m_LinearFogEnd: 22000
+  m_LinearFogStart: 5200
+  m_LinearFogEnd: 20500
   m_AmbientSkyColor: {r: 0.48, g: 0.58, b: 0.72, a: 1}
   m_AmbientEquatorColor: {r: 0.3, g: 0.34, b: 0.38, a: 1}
   m_AmbientGroundColor: {r: 0.17, g: 0.15, b: 0.12, a: 1}
-  m_AmbientIntensity: 1
-  m_AmbientMode: 1
+  m_AmbientIntensity: 0.86
+  m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 94d43a256ba559344b901c2bda947e3c, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
   m_HaloTexture: {fileID: 0}
   m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
-  m_DefaultReflectionMode: 0
+  m_DefaultReflectionMode: 1
   m_DefaultReflectionResolution: 128
   m_ReflectionBounces: 1
-  m_ReflectionIntensity: 1
-  m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
+  m_ReflectionIntensity: 0.76
+  m_CustomReflection: {fileID: 8900000, guid: 38418911228a4bf4c81b3e7ed32cf656, type: 3}
+  m_Sun: {fileID: 1853183168}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -176,6 +176,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+--- !u!108 &1853183168 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 2375097098290893549, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+  m_PrefabInstance: {fileID: 1853183167}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -7,6 +7,8 @@ using UnityEditor.Build;
 using UnityEngine;
 using UnityEngine.Rendering;
 using QuestFlight.Product;
+using QuestFlightLab.Input;
+using QuestFlightLab.Runtime;
 
 namespace QuestFlight.Editor.Tests
 {
@@ -85,6 +87,7 @@ namespace QuestFlight.Editor.Tests
                 string credits = target.AddComponent<ProductAttribution>().CreditsText;
                 Assert.That(credits, Does.Contain("KOG_THORNS"));
                 Assert.That(credits, Does.Contain("https://creativecommons.org/licenses/by/4.0/"));
+                Assert.That(credits, Does.Contain(ProductAttribution.ParkedSceneryChangeNotice));
                 Assert.That(credits, Does.Contain("© OpenStreetMap contributors"));
                 Assert.That(credits, Does.Contain("https://www.openstreetmap.org/copyright"));
                 Assert.That(credits, Does.Contain("No endorsement"));
@@ -113,6 +116,48 @@ namespace QuestFlight.Editor.Tests
             Assert.That(source, Does.Not.Contain("SetPositionAndRotation"));
             Assert.That(source, Does.Not.Contain("Main Camera"));
             Assert.That(source, Does.Not.Contain("XR Origin"));
+        }
+
+        [Test]
+        public void ProductDemoAndInputMappingReuseSteadyStateSnapshots()
+        {
+            GamepadInputSnapshot input = new GamepadInputSnapshot
+            {
+                connected = true,
+                leftStickX = 0.25f,
+                leftStickY = -0.4f,
+                rightStickX = 0.1f,
+                leftTrigger = 0.2f,
+                rightTrigger = 0.3f
+            };
+            AircraftControlState mapped = AircraftControlState.Neutral();
+            ProductControlInput.MapSnapshotInto(input, true, 0.8f, 0.05f, 0.25f, 1f, 0f, mapped);
+            AircraftControlState mappedIdentity = mapped;
+            ProductControlInput.MapSnapshotInto(input, true, 0.7f, -0.05f, 0f, 0.9f, 0.1f, mapped);
+            Assert.That(mapped, Is.SameAs(mappedIdentity));
+            Assert.That(mapped.throttle, Is.EqualTo(0.7f).Within(0.0001f));
+
+            AircraftControlState scheduled = AircraftControlState.Neutral();
+            ProductDemoPilot.ScheduledControlsInto(42f, out string phase, scheduled);
+            AircraftControlState scheduledIdentity = scheduled;
+            ProductDemoPilot.ScheduledControlsInto(55f, out phase, scheduled);
+            Assert.That(scheduled, Is.SameAs(scheduledIdentity));
+            Assert.That(phase, Is.EqualTo("shallow_left_turn"));
+
+            GameObject target = new GameObject("DeterministicInputReuseTest");
+            try
+            {
+                DeterministicGamepadInputSource source = target.AddComponent<DeterministicGamepadInputSource>();
+                source.SetControls(scheduled);
+                GamepadInputSnapshot first = source.Current;
+                source.SetControls(mapped);
+                Assert.That(source.Current, Is.SameAs(first));
+                Assert.That(source.Current.leftStickX, Is.EqualTo(mapped.aileron).Within(0.0001f));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(target);
+            }
         }
     }
 }

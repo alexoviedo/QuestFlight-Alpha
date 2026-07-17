@@ -105,7 +105,9 @@
     "android_format": "ASTC_HDR_6x6",
     "estimated_android_mipped_cubemap_bytes": 3757728,
     "skybox_shader": "Skybox/Cubemap",
-    "skybox_material": "QuestFlight/Assets/Production/Environment/Sky/Kloppenheim03_PureSky_Skybox.mat"
+    "skybox_material": "QuestFlight/Assets/Production/Environment/Sky/Kloppenheim03_PureSky_Skybox.mat",
+    "skybox_exposure": 0.74,
+    "skybox_rotation_degrees": 0.0
   },
   "external_evidence": {
     "root": "photoreal_environment_v1_20260716_153934/workstream_a",

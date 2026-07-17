@@ -61,26 +61,69 @@ The frozen extraction pipeline queried USGS/USDA NAIP Plus availability, but dow
 
 ### Standalone recovery NAIP derivatives
 
-The standalone recovery added bounded natural-color derivatives from the official USGS NAIP Plus ImageServer. Catalog records identify USDA-FSA APFO imagery acquired 2019-09-19 at 0.6 m source resolution. United States government works are public domain; courtesy credit is `USGS, USDA, The National Map: Orthoimagery`.
+The standalone environment uses three aligned, bounded natural-color derivatives from the official USGS NAIP Plus ImageServer. The source catalog records USDA-FSA APFO imagery acquired on 2019-08-03 and 2019-09-19 at 0.6 m source resolution. United States government works are public domain; courtesy credit is `USGS, USDA, The National Map: Orthoimagery`.
 
 | Runtime derivative | Coverage / import | SHA-256 |
 | --- | --- | --- |
-| `KBDU_NAIP_2019_Near4km_4096.jpg` (6,320,221 bytes) | 4 km × 4 km, 4096², ASTC 6×6, mipmapped/streamed | `446e5c7fa13fc653de1f3e8404829c0e54b7e919fe99ebfba79d747a0b1dadea` |
-| `KBDU_NAIP_2019_Mid12km_2048.jpg` (1,873,985 bytes) | 12 km × 12 km, 2048², ASTC 6×6, mipmapped/streamed | `d75316cb03a8ddcdc6d326186f9fc5e936d19d90ffc4e42ffe627888aa8593cd` |
+| `KBDU_NAIP_2019_Near4km_4096.jpg` (6,320,221 bytes) | 4 km × 4 km, 4096², ASTC 6×6, mipmapped/streamed, anisotropy 8, mip bias `-0.15` | `446e5c7fa13fc653de1f3e8404829c0e54b7e919fe99ebfba79d747a0b1dadea` |
+| `KBDU_NAIP_2019_Mid12km_4096.jpg` (7,273,113 bytes) | 12 km × 12 km, 4096², ASTC 6×6, mipmapped/streamed, anisotropy 8, mip bias `-0.15` | `5e8d6edbcc5dc937c78b5fb8e4a5f8f7a06bda726b4509684e237f2b17fbdf9a` |
+| `KBDU_NAIP_2019_Far24km_2048.jpg` (1,705,067 bytes) | 24 km × 24 km, 2048², ASTC 6×6, mipmapped/streamed, anisotropy 8, mip bias `-0.10` | `799be878d5c6be73b5596cbea70ee4e122859a528231608e40796f1020617b33` |
 
-Exact raster IDs, corrected requested/returned extents, raw external hashes, processing settings, color-match statistics, output hashes, and the no-Google confirmation are pinned in `tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json`.
+Exact raster IDs, corrected requested/returned extents, raw external hashes, processing settings, near-to-mid and mid-to-far color-match statistics, output hashes, and the no-Google confirmation are pinned in `tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json`. The three current Android ASTC mip-chain estimates total 22,420,784 bytes. The earlier `KBDU_NAIP_2019_Mid12km_2048.jpg` derivative remains rights-cleared and tracked, but is superseded and is not bound by the current terrain-pyramid material.
+
+### Photographic sky derivative
+
+The selected sky is [Kloppenheim 03 (Pure Sky)](https://polyhaven.com/a/kloppenheim_03_puresky), authored by Greg Zaal with pure-sky edits by Jarod Guest and distributed by Poly Haven under CC0 1.0. The raw 4096×2048 HDR remains outside Git; the committed runtime file is a project-generated, linear-radiance 2048×1024 derivative with no tone mapping or clipping.
+
+| Product asset | Source / terms | SHA-256 |
+| --- | --- | --- |
+| `Kloppenheim03_PureSky_2K.hdr` (5,430,234 bytes) | Poly Haven `kloppenheim_03_puresky`; CC0-1.0 | `ffd28511add85d9508b51f50d3bbe4d822f4a5240800edb4f014edb75abdb1aa` |
+
+The official raw-source MD5, raw SHA-256 (`f906a7334e5d57007fa5516bd141df2ada8fdc3d2ba0c8bdf445d64f1bbb010a`), authorship, official URLs, derivative tool, import settings, and external evidence hashes are pinned in `QuestFlight/Assets/Production/Environment/Sky/SOURCE_MANIFEST.json` and summarized by the adjacent `SOURCE_AND_LICENSE.md`.
+
+### Batched OpenStreetMap context
+
+The bounded source database is `kbdu_reference_context.json` (SHA-256 `5d0d0c3c71532b5106119b8e647e303e12bdeb662960ef78543050166bb8e3e0`) under ODbL-1.0. The extruded building meshes are OSM Produced Works. Their public display retains `© OpenStreetMap contributors` attribution; the shared atlas, vegetation meshes, shaders, materials, and serialized hierarchy are project-authored presentation assets.
+
+The exact hashes for all 64 generated LOD mesh assets and their prefab/material outputs are pinned in `QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ContextAssetsManifest.json` (25,991 bytes; SHA-256 `3f9802eb0912c0f3f93c014ce0f676366f42d8328a5df7ab0caa13d64d991018`). The shared project-authored `KBDU_ContextAtlas.png` is 13,716 bytes with SHA-256 `51b0ef4df8f15c3b8366a2c8a62a517ea48931b85f173efabcb6767daf79153f`.
+
+That manifest records 246 deterministic tree placements total, 24 shrub companions, and six project-authored airport-perimeter tree placements. The remaining placements follow the bounded mapped road/water context. Vegetation meshes and presentation are project-authored; this does not alter the ODbL boundary of the source context database.
+
+Three static parked-aircraft scale cues use a separately reviewed CC BY 4.0 scenery adaptation of the pinned KOG_THORNS source. The adaptation retains only exterior body geometry; it removes cockpit, interior, glass, textures, source materials, branding presentation, and animation, then joins and decimates the result into two opaque LODs. The three placements are offline-combined per LOD into one non-crossfaded `LODGroup` and use one shared material. They are neither flyable nor interactive. Copyright attribution and the change notice must remain with the product; CC BY does not grant manufacturer trademark rights or imply endorsement.
+
+| Parked-aircraft derivative | Terms / purpose | SHA-256 |
+| --- | --- | --- |
+| `KBDU_ParkedAircraft_LODs.glb` (232,272 bytes) | KOG_THORNS `Cessna172`, CC BY 4.0; exterior-only static scenery adaptation | `0f723238782d47d63496222aa2232a53da58823b2dbfee614a1628dcf2e56c34` |
+| `parked_aircraft_airport_LOD0.asset` (767,880 bytes) | Three offline-combined instances, 9,600 triangles total | `448f9cb2ae138eafbd23e18f616e313f147eb1f21413acedee166c1145638598` |
+| `parked_aircraft_airport_LOD1.asset` (248,949 bytes) | Three offline-combined instances, 2,700 triangles total | `6ff371b190cf2fcc9e31c82c86bbe69143b71d4fc8bbaea96fff742e36bd2c08` |
+| `KBDU_ParkedAircraft.mat` (799 bytes) | Project-authored shared opaque vertex-color material | `ebd0dfc4bb8656efc7c8f1cb8b05247df1a840fb8c3fa2ff4599f2adc28724e4` |
+| `KBDU_ParkedAircraftSourceManifest.json` (2,697 bytes) | Attribution, source hash, change notice, exclusions, Blender version, and LOD contract | `c24ed699960d5a818585d69c3433f134c87a246d772924976762d2a255525784` |
+
+The context materials serialize Unity's instancing-variant flag, but the current custom building and vegetation shaders do not compile GPU-instancing variants. The current implementation therefore relies on offline mesh batching and non-crossfaded LODGroups and makes no GPU-instancing claim.
+
+### Project-authored reservoir presentation assets
+
+The reservoir retains the OSM way 35597714 shoreline (`© OpenStreetMap contributors`, ODbL-1.0). Its two normal maps are deterministic project-authored mathematical textures. The packed mask is a project-authored rendered derivative of the OSM shoreline; its depth channel is artistic distance-to-shore data, not surveyed bathymetry.
+
+| Product asset | Terms | SHA-256 |
+| --- | --- | --- |
+| `BoulderReservoir_BroadWave_NM.png` (158,829 bytes) | Project-authored deterministic texture | `5f68754e86e9631a3a8034a6f5f13e3094bc738ca6f286a5a7b5dc56e87d686a` |
+| `BoulderReservoir_Ripple_NM.png` (221,702 bytes) | Project-authored deterministic texture | `4eb439560cd96ce5fc9f8dd59a54284f93f7b8888165c7e71b7fcf5c78e2ea80` |
+| `BoulderReservoir_DepthShoreRoughness.png` (307,644 bytes) | Project-authored OSM shoreline Produced Work; retain OSM attribution | `258683cba2eca00d585dbe99c24e762da55b67e9c7a5387b3be860ec230356bb` |
+
+The generator, authoritative mesh lineage, channel semantics, Android import estimate, and output hashes are pinned in `tools/kbdu_reservoir_water/asset_manifest.json`.
 
 ### Project-authored standalone airport art
 
 | Product source/runtime asset | Terms | SHA-256 |
 | --- | --- | --- |
-| `tools/kbdu_airport_art/source/KBDU_AirportKit.blend` | Project-owned original work; Blender source | `48b07cf7d54e56c7607a4839c27cc3ea0d089a9472dfa225a12c7bc1693e0c24` |
-| `KBDU_AirportKit.glb` | Project-owned generated geometry; no external mesh input | `d16a398e150aa069a4eedbdb9d0604bc807b4d6175a5e002baeaa44ea1547c5d` |
-| `KBDU_AirportSharedAtlas.png` | Project-owned generated pixels | `fdc5d4d8198a355e48cfdf3df4a17e3d8a92d271a1322970583fee965ecddfaf` |
+| `tools/kbdu_airport_art/source/KBDU_AirportKit.blend` | Project-owned original work; Blender source | `afab623afc03b6d33a1f142e71ff93a42e831053722a5c186f374d9c3ea80d2c` |
+| `KBDU_AirportKit.glb` | Project-owned generated geometry; no external mesh input | `4cd24d44adf8e099ef451dcd4ed879796de42c5a3ef1ba96e90eb30d7f9fac21` |
+| `KBDU_AirportSharedAtlas.png` | Project-owned generated pixels | `e4d11fc26949394750bb949434d50ca5870a2569383037dfa47fdd07b534ab07` |
 | `KBDU_RunwaySurface_Albedo.jpg` | Project-owned deterministic procedural pixels | `6a3cfa432f8556830879b6ee615b080f499c5682f5f2157c40b47f683b64c3b3` |
 | `KBDU_RunwaySurface_MetallicSmoothness.png` | Project-owned deterministic procedural pixels | `599b4281144eb5861467a190d2d52f377f2b95dc5867623a86fc049ab091b031` |
 
-The exact combined Unity mesh hashes and their source-manifest links are recorded in `tools/kbdu_airport_art/kbdu_environment_integration_manifest.json`.
+The single 512×512 atlas carries bounded wall corrugation, roof seams, door panel joints, and lower-edge grime cues without adding a material or texture. The Quonset source uses outward shell winding and double-wound end-cap fans; with back-face culling, only one cap winding is front-facing from either direction. The exact front/rear validation counts, generated-output hashes, and preview paths are pinned in `tools/kbdu_airport_art/kbdu_airport_art_manifest.json`. Exact combined Unity mesh hashes and their source-manifest links are recorded in `tools/kbdu_airport_art/kbdu_environment_integration_manifest.json`.
 
 ### Standalone far-terrain post-pass
 
@@ -99,7 +142,7 @@ These four development-gated binaries are built from JSBSim 1.3.1 revision `3b25
 | `Runtime/Plugins/Android/arm64-v8a/libJSBSim.so` | 2,446,528 | `38c2fe56ba86568763caab81d62a4e3096d4b8fd2222d19ee824934fbc4af8a1` |
 | `Runtime/Plugins/Android/arm64-v8a/libqfl_jsbsim_native.so` | 49,000 | `bf5f10df987a2411e0889b307eca4cd7fe08feef3c1427bfc1da7ce098162bb5` |
 
-The standalone recovery's 11 new true-binary commit candidates total 13,348,076 bytes. Their sorted `path<TAB>bytes<TAB>lowercase-sha256` inventory digest is `65bd12083bc99ed2c1e401dd6d62adf28515229a1c0117809004a47cd7b6394d`; all Unity/package binaries have paired metadata and all 11 match Git LFS rules.
+The photoreal standalone-environment milestone's 11 changed or new true-binary commit candidates total 15,911,609 bytes. Their sorted `path<TAB>bytes<TAB>lowercase-sha256` inventory digest is `caa7cf2b4bc62ea40092aeec1fb703df72e7c5da4a0271bdfeee4d63c8259172`; all Unity binaries have paired metadata and all 11 match Git LFS rules, including the optimized 2K HDR sky.
 
 ## Baked production environment integrity
 
@@ -143,7 +186,7 @@ At that milestone, `QuestFlight/Assets/Production/Environment` contained 97 non-
 ## Exclusions
 
 - No Google Maps, Google Earth, or Street View content.
-- No raw NAIP/orthophoto downloads or lossless processing intermediates; only the two optimized, provenance-recorded public-domain derivatives above.
+- No raw NAIP/orthophoto downloads or lossless processing intermediates; only optimized, provenance-recorded public-domain derivatives are committed. The current material binds the three-level Near4096/Mid4096/Far2048 pyramid above.
 - No raw FAA, USGS, OSM, DEM, imagery, or download archives.
 - No legacy splat/capture data.
 - No binary runtime asset whose creator, source, terms, or exact content hash is unclear.

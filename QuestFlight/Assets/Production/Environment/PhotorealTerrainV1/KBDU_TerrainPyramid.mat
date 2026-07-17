@@ -19,7 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties:
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -45,7 +45,8 @@ Material:
     - _DiagnosticMode: 0
     - _Roughness: 0.92
     m_Colors:
-    - _DetailFadeStartEnd: {r: 180, g: 1500, b: 0, a: 0}
+    - _DetailFadeStartEnd: {r: 250, g: 2600, b: 0, a: 0}
+    - _DetailRadiusFadeStartEnd: {r: 4500, g: 6800, b: 0, a: 0}
     - _FarWorldMinInvSize: {r: -12000, g: -12000, b: 0.000041666666, a: 0.000041666666}
     - _MidBlendStartEnd: {r: 5000, g: 6000, b: 0, a: 0}
     - _MidWorldMinInvSize: {r: -6000, g: -6000, b: 0.00008333333, a: 0.00008333333}

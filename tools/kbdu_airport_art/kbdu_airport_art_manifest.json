@@ -1,9 +1,9 @@
 {
   "creator": "T2 QuestFlight project-authored deterministic Blender generator",
   "generator": {
-    "bytes": 18456,
+    "bytes": 28417,
     "path": "tools/kbdu_airport_art/generate_kbdu_airport_kit.py",
-    "sha256": "a1a65de3fe42113f5ebc0118d071340b70e87b44919d3e8fa8a8b02f9f86f339"
+    "sha256": "e1e36691f98900d07e0156d29d21a4c156841f78fa2e84cd3aa5139c953b4b24"
   },
   "geometry": {
     "asset_roots": [
@@ -35,12 +35,18 @@
       "KBDU_AirportSharedAtlas"
     ],
     "triangles_by_lod": {
-      "LOD0": 936,
-      "LOD1": 428,
-      "LOD2": 212
+      "LOD0": 974,
+      "LOD1": 454,
+      "LOD2": 230
     }
   },
   "integration": {
+    "atlas_surface_cues": [
+      "subtle wall corrugation and panel seams",
+      "standing roof seams and bounded weather streaks",
+      "hangar-door panel joints and lower-edge grime",
+      "single shared 512x512 albedo atlas; no additional material or texture"
+    ],
     "gpu_instancing_compatible": true,
     "lod_thresholds": [
       0.58,
@@ -53,19 +59,19 @@
   "license": "Project-owned original work; no external mesh or texture assets",
   "outputs": [
     {
-      "bytes": 170112,
+      "bytes": 173244,
       "path": "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_AirportKit.glb",
-      "sha256": "d16a398e150aa069a4eedbdb9d0604bc807b4d6175a5e002baeaa44ea1547c5d"
+      "sha256": "4cd24d44adf8e099ef451dcd4ed879796de42c5a3ef1ba96e90eb30d7f9fac21"
     },
     {
-      "bytes": 233753,
+      "bytes": 259180,
       "path": "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_AirportSharedAtlas.png",
-      "sha256": "fdc5d4d8198a355e48cfdf3df4a17e3d8a92d271a1322970583fee965ecddfaf"
+      "sha256": "e4d11fc26949394750bb949434d50ca5870a2569383037dfa47fdd07b534ab07"
     },
     {
-      "bytes": 134962,
+      "bytes": 136608,
       "path": "tools/kbdu_airport_art/source/KBDU_AirportKit.blend",
-      "sha256": "48b07cf7d54e56c7607a4839c27cc3ea0d089a9472dfa225a12c7bc1693e0c24"
+      "sha256": "afab623afc03b6d33a1f142e71ff93a42e831053722a5c186f374d9c3ea80d2c"
     }
   ],
   "preview_external": "external-artifact/kbdu_airport_art/kbdu_airport_kit_lod0_preview.png",
@@ -74,6 +80,43 @@
     "build_hash": "ec6e62d40fa9",
     "license": "GNU GPL; generated project-owned output is not a Blender program derivative",
     "name": "Blender",
+    "python_hash_seed": 0,
     "version": "5.1.2"
-  }
+  },
+  "validation": {
+    "backface_culling_enabled_in_source_preview": true,
+    "quonset_caps_and_shell": {
+      "LOD0": {
+        "front_inward_triangles": 17,
+        "front_outward_triangles": 17,
+        "outward_shell_faces": 17,
+        "passed": true,
+        "rear_inward_triangles": 17,
+        "rear_outward_triangles": 17,
+        "shell_faces": 17
+      },
+      "LOD1": {
+        "front_inward_triangles": 11,
+        "front_outward_triangles": 11,
+        "outward_shell_faces": 11,
+        "passed": true,
+        "rear_inward_triangles": 11,
+        "rear_outward_triangles": 11,
+        "shell_faces": 11
+      },
+      "LOD2": {
+        "front_inward_triangles": 7,
+        "front_outward_triangles": 7,
+        "outward_shell_faces": 7,
+        "passed": true,
+        "rear_inward_triangles": 7,
+        "rear_outward_triangles": 7,
+        "shell_faces": 7
+      }
+    }
+  },
+  "validation_previews_external": [
+    "external-artifact/kbdu_airport_art/kbdu_quonset_lod0_front_cap_preview.png",
+    "external-artifact/kbdu_airport_art/kbdu_quonset_lod0_rear_cap_preview.png"
+  ]
 }

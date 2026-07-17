@@ -9,10 +9,11 @@
   "derived_assets": [
     {
       "android_import": {
-        "anisotropy": 4,
+        "anisotropy": 8,
         "estimated_mip_chain_bytes": 9961536,
         "filter": "trilinear",
         "format": "ASTC_6x6",
+        "mip_bias": -0.15,
         "mipmaps": true,
         "streaming_mipmaps": true,
         "wrap": "clamp"
@@ -53,10 +54,11 @@
     },
     {
       "android_import": {
-        "anisotropy": 4,
+        "anisotropy": 8,
         "estimated_mip_chain_bytes": 9961536,
         "filter": "trilinear",
         "format": "ASTC_6x6",
+        "mip_bias": -0.15,
         "mipmaps": true,
         "streaming_mipmaps": true,
         "wrap": "clamp"
@@ -97,10 +99,11 @@
     },
     {
       "android_import": {
-        "anisotropy": 4,
+        "anisotropy": 8,
         "estimated_mip_chain_bytes": 2497712,
         "filter": "trilinear",
         "format": "ASTC_6x6",
+        "mip_bias": -0.1,
         "mipmaps": true,
         "streaming_mipmaps": true,
         "wrap": "clamp"
@@ -383,9 +386,9 @@
     "python": "3.13.13",
     "tool_files": [
       {
-        "bytes": 2747,
+        "bytes": 2822,
         "path": "tools/kbdu_orthophoto/config.json",
-        "sha256": "410fd42271e346e52ef453c75425e8521592e8d6f2e1c43bdfda4ce0793574d5"
+        "sha256": "4991440261330b521e9ac2f583f25f3d2a59a6f95bdb460470c353f439e585b2"
       },
       {
         "bytes": 15,
@@ -413,19 +416,19 @@
         "sha256": "723163221fb5d4e439eb5044903924a55173221ad348c5dae3168f4ddbd28fd6"
       },
       {
-        "bytes": 8977,
+        "bytes": 9210,
         "path": "tools/kbdu_orthophoto/build_orthophoto_atlas.py",
-        "sha256": "1cd342e81ea6f381b6de21efb9636a10c5da21841b219fe4a0f02cb1ceee5d43"
+        "sha256": "28c5c041753918e72987ed8c67ff1690bb054c5e853f9405e2cb3ff7e91c741a"
       },
       {
-        "bytes": 10958,
+        "bytes": 11269,
         "path": "tools/kbdu_orthophoto/build_terrain_pyramid_contract.py",
-        "sha256": "cba8370d565a817217a4aa90e85911a5ead5113ba49eea05996340719ff0b48b"
+        "sha256": "b3e151271991e29cf771e20ed74987bad363defab3e522948945e3a7e6dfe88f"
       },
       {
-        "bytes": 14171,
+        "bytes": 18662,
         "path": "tools/kbdu_orthophoto/build_context_assets.py",
-        "sha256": "695750b891066bbca6cfadd55c040c14d33de557e7f41bd01d6fb4f7924823fa"
+        "sha256": "e57d6b04d6e804b9cfeb44abd0569b5327a4b12cb7729a5478b62dd1011d8152"
       },
       {
         "bytes": 4685,

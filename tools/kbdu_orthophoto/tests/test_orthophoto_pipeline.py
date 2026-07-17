@@ -14,10 +14,14 @@ from PIL import Image
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
+AIRPORT_ART_SCRIPT_DIR = SCRIPT_DIR.parent / "kbdu_airport_art"
+sys.path.insert(0, str(AIRPORT_ART_SCRIPT_DIR))
 
 from orthophoto_common import REPO_ROOT, astc_mip_chain_bytes, iter_zone_tiles, load_config, sha256_file, zone_bbox
+from build_context_assets import emitted_vegetation_triangle_accounting
 from build_far_dem import DEFAULT_FROZEN_TERRAIN, DEFAULT_OUTPUT, elevations_south_to_north, resample_frozen_far_grid
 from reproject_crop_imagery import suspicious_overlap
+from validate_environment_assets import runtime_binary_asset_paths
 
 
 class OrthophotoGeometryTests(unittest.TestCase):
@@ -97,16 +101,48 @@ class TerrainPyramidAndContextContractTests(unittest.TestCase):
         manifest = json.loads((root / "KBDU_ContextAssetsManifest.json").read_text(encoding="utf-8"))
         building_records = [record for batch in recipe["building_batches"] for record in batch["buildings"]]
         vegetation = [record for batch in recipe["vegetation_batches"] for record in batch["placements"]]
+        authored_airport_perimeter = [
+            record
+            for record in vegetation
+            if record["source_category"] == "project_authored_airport_perimeter"
+        ]
         self.assertEqual(len(recipe["building_batches"]), 23)
         self.assertEqual(len(building_records), 2500)
         self.assertEqual(len({record["feature_index"] for record in building_records}), 2500)
         self.assertEqual(len(recipe["vegetation_batches"]), 8)
-        self.assertEqual(len(vegetation), 240)
+        self.assertEqual(len(vegetation), 246)
+        self.assertEqual(len(authored_airport_perimeter), 6)
+        self.assertEqual(
+            sorted(record["authored_cluster_index"] for record in authored_airport_perimeter),
+            list(range(6)),
+        )
+        self.assertEqual(
+            {record["batch_id"] for record in authored_airport_perimeter},
+            {"vegetation_near_ws"},
+        )
+        self.assertEqual(len(vegetation) - len(authored_airport_perimeter), 240)
         self.assertFalse(recipe["integration"]["one_renderer_per_building"])
-        self.assertEqual(manifest["budgets"]["active_draw_call_delta"], 31)
-        self.assertEqual(manifest["budgets"]["material_delta"], 2)
+        self.assertEqual(manifest["budgets"]["active_draw_call_delta"], 32)
+        self.assertEqual(manifest["budgets"]["material_delta"], 3)
+        vegetation_accounting = emitted_vegetation_triangle_accounting(
+            root / "Generated", [batch["id"] for batch in recipe["vegetation_batches"]]
+        )
+        self.assertTrue(vegetation_accounting["complete"])
+        self.assertEqual(vegetation_accounting["totals_by_lod"], {"LOD0": 18216, "LOD1": 11316})
+        self.assertEqual(
+            manifest["generated_unity_assets"]["vegetation_mesh_triangle_accounting"],
+            vegetation_accounting,
+        )
+        self.assertEqual(
+            manifest["budgets"]["vegetation_lod0_triangle_estimate"],
+            vegetation_accounting["totals_by_lod"]["LOD0"],
+        )
+        self.assertEqual(
+            manifest["budgets"]["vegetation_lod1_triangle_estimate"],
+            vegetation_accounting["totals_by_lod"]["LOD1"],
+        )
         self.assertTrue(manifest["generated_unity_assets"]["complete"])
-        self.assertEqual(manifest["generated_unity_assets"]["observed_mesh_count"], 62)
+        self.assertEqual(manifest["generated_unity_assets"]["observed_mesh_count"], 64)
         for record in manifest["authoring_sources"] + manifest["generated_unity_assets"]["files"]:
             path = REPO_ROOT / record["path"]
             self.assertTrue(path.is_file(), record["path"])
@@ -123,6 +159,38 @@ class TerrainPyramidAndContextContractTests(unittest.TestCase):
         for path in root.rglob("*"):
             if path.is_file() and path.suffix != ".meta":
                 self.assertTrue(Path(str(path) + ".meta").is_file(), f"missing Unity meta for {path}")
+
+
+class EnvironmentIntegrationAssetCategoryTests(unittest.TestCase):
+    def test_runtime_assets_remain_in_their_source_categories(self) -> None:
+        manifests = {
+            "airport": json.loads(
+                (AIRPORT_ART_SCRIPT_DIR / "kbdu_airport_art_manifest.json").read_text(encoding="utf-8")
+            ),
+            "runway": json.loads(
+                (AIRPORT_ART_SCRIPT_DIR / "kbdu_runway_art_manifest.json").read_text(encoding="utf-8")
+            ),
+            "orthophoto": json.loads(
+                (SCRIPT_DIR / "kbdu_orthophoto_manifest.json").read_text(encoding="utf-8")
+            ),
+        }
+        categories = runtime_binary_asset_paths(manifests)
+        names = {category: [path.name for path in paths] for category, paths in categories.items()}
+        self.assertEqual(
+            names["orthophotos"],
+            [
+                "KBDU_NAIP_2019_Near4km_4096.jpg",
+                "KBDU_NAIP_2019_Mid12km_4096.jpg",
+                "KBDU_NAIP_2019_Far24km_2048.jpg",
+            ],
+        )
+        self.assertEqual(names["airport_kit"], ["KBDU_AirportKit.glb", "KBDU_AirportSharedAtlas.png"])
+        self.assertEqual(
+            names["runway_textures"],
+            ["KBDU_RunwaySurface_Albedo.jpg", "KBDU_RunwaySurface_MetallicSmoothness.png"],
+        )
+        all_paths = [path for paths in categories.values() for path in paths]
+        self.assertEqual(len(all_paths), len(set(all_paths)))
 
 
 class FarTerrainResamplingTests(unittest.TestCase):

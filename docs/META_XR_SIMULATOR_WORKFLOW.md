@@ -19,7 +19,7 @@ Meta's current [Getting Started guide](https://developers.meta.com/horizon/docum
 
 ## Safety architecture
 
-`scripts/setup_meta_xr_simulator.ps1` audits the signed installation, current 64-bit and 32-bit OpenXR runtimes, Quest 3 profile, and Unity package compatibility. QA processes select Meta's runtime with the Khronos loader's per-process `XR_RUNTIME_JSON` override. They do not run Meta's registry activation script. The script snapshots the machine runtime before and after each run and fails if it changed. The [OpenXR loader specification](https://registry.khronos.org/OpenXR/specs/1.1/loader.html) defines this override behavior.
+`scripts/setup_meta_xr_simulator.ps1` audits the signed installer provenance, current 64-bit and 32-bit OpenXR runtimes, Quest 3 profile, and Unity package compatibility. QA processes request Meta's runtime with the Khronos loader's per-process `XR_RUNTIME_JSON` override. Meta XR Simulator v201's frontend can nevertheless activate its runtime in the 64-bit machine registry during startup. The runner snapshots both registry views, permits paired cleanup only when Meta's `PreviousActiveRuntime` exactly matches the pre-run value and the 32-bit view is unchanged, invokes Meta's installed `deactivate_simulator.ps1`, and then re-reads the registry. That paired deactivation requires UAC. Any declined UAC, conflicting runtime, incomplete restoration, persistent-configuration change, or shipping-configuration change fails closed as `FAIL_SIMULATOR_STATE_RESTORATION`, ahead of missing-replay classification. The [OpenXR loader specification](https://registry.khronos.org/OpenXR/specs/1.1/loader.html) defines the process override behavior; the additional snapshot/restore guard covers Meta frontend behavior observed in v201.
 
 The Windows development player is built only from a fresh copy under the external artifact root. In that copy, the build entry point enables Standalone OpenXR, stereo rendering, Oculus Touch, and Meta Quest Touch Plus. It refuses to run against the product project. No Windows build profile or Standalone XR loader is added to the product repository, and the Android configuration is never altered.
 
@@ -65,7 +65,7 @@ Outputs are external and must not be committed:
   visual_gate/simulator_stereo_contact_sheet.png
 ```
 
-The visual gate returns a failing exit code if any required recording is missing, either eye is blank, eye poses or scene output are inconsistent, the mountain identity changes, the aircraft violates its CG/reference-frame invariant, the calibration panel enters its protected instrument region, the runway/environment contract fails, missing components/errors appear, or a debug/training overlay is active.
+The visual gate returns a failing exit code if any required recording is missing, either eye is blank, eye poses or scene output are inconsistent, the mountain identity changes, the aircraft violates its CG/reference-frame invariant, the calibration panel enters its protected instrument region, the runway/environment contract fails, missing components/errors appear, a debug/training overlay is active, or the exact OpenXR/persistent state is not restored. State-restoration failure takes precedence over a missing-recording blocker.
 
 ## One-time VRS recording set
 
@@ -77,7 +77,7 @@ Record each session once:
 .\scripts\run_meta_xr_simulator_qa.ps1 -ArtifactRoot $artifacts -RecordSession cockpit_neutral
 ```
 
-Repeat for every identifier below. The script opens Meta XR Simulator and the development player, transactionally selects `exec_state: record`, writes `<artifact root>\meta_xr_simulator\recordings\<id>.vrs`, and restores the user's prior persistent configuration on exit. Stop recording in the simulator Record panel, then close the development player. A one-time simulator UI acknowledgement may be unavoidable after installation.
+Repeat for every identifier below. The script opens Meta XR Simulator and the development player, transactionally selects `exec_state: record`, writes `<artifact root>\meta_xr_simulator\recordings\<id>.vrs`, and restores the user's prior persistent and OpenXR configuration on exit. Stop recording in the simulator Record panel, then close the development player. A simulator UI acknowledgement and Meta's paired UAC deactivation may be unavoidable.
 
 | Session ID | Recorded action |
 |---|---|

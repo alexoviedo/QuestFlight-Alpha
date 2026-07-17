@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -37,6 +38,26 @@ def file_record(path: Path) -> dict:
     }
 
 
+def runtime_binary_asset_paths(manifests: dict) -> dict[str, list[Path]]:
+    """Return runtime assets grouped by their source manifest category."""
+
+    return {
+        "orthophotos": [
+            REPO_ROOT / asset["path"] for asset in manifests["orthophoto"]["derived_assets"]
+        ],
+        "airport_kit": [
+            REPO_ROOT / output["path"]
+            for output in manifests["airport"]["outputs"]
+            if output["path"].startswith("QuestFlight/Assets/")
+        ],
+        "runway_textures": [
+            REPO_ROOT / output["path"]
+            for output in manifests["runway"]["outputs"]
+            if output["path"].startswith("QuestFlight/Assets/")
+        ],
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
@@ -63,6 +84,33 @@ def main() -> int:
     generated_assets = sorted(GENERATED_FOLDER.glob("*.asset"))
     # Twenty production-art meshes plus the authored airport/near terrain seam.
     check("combined_mesh_count", len(generated_assets) == 21, f"count={len(generated_assets)}")
+    for lod in range(3):
+        key = f"LOD{lod}"
+        combined = sorted(GENERATED_FOLDER.glob(f"*_LOD{lod}_Combined.asset"))
+        index_count = sum(
+            sum(int(value) for value in re.findall(r"indexCount: (\d+)", path.read_text(encoding="utf-8")))
+            for path in combined
+        )
+        observed_triangles = index_count // 3
+        expected_triangles = manifests["airport"]["geometry"]["triangles_by_lod"][key]
+        check(
+            "airport_combined_triangles_" + key,
+            index_count % 3 == 0 and observed_triangles == expected_triangles,
+            f"Unity={observed_triangles}, Blender={expected_triangles}, meshes={len(combined)}",
+        )
+        cap = manifests["airport"]["validation"]["quonset_caps_and_shell"][key]
+        check(
+            "quonset_double_wound_caps_" + key,
+            cap["passed"]
+            and cap["front_outward_triangles"] == cap["front_inward_triangles"] > 0
+            and cap["rear_outward_triangles"] == cap["rear_inward_triangles"] > 0
+            and cap["outward_shell_faces"] == cap["shell_faces"] > 0,
+            (
+                f"front={cap['front_outward_triangles']}/{cap['front_inward_triangles']}, "
+                f"rear={cap['rear_outward_triangles']}/{cap['rear_inward_triangles']}, "
+                f"shell={cap['outward_shell_faces']}/{cap['shell_faces']}"
+            ),
+        )
     check("far_mesh_exists", FAR_MESH.is_file(), str(FAR_MESH))
     check("far_mesh_guid_preserved", "guid: f7e9defd4f2f8134ea4ed04d496c0495" in Path(str(FAR_MESH) + ".meta").read_text(encoding="utf-8"), "far mesh GUID")
     far_grid = manifests["far_dem"]["grid"]
@@ -70,13 +118,12 @@ def main() -> int:
     check("far_fidelity_disclosure", "not additional source elevation detail" in manifests["far_dem"]["source_fidelity_disclosure"], manifests["far_dem"]["source_fidelity_disclosure"])
     check("orthophoto_public_domain", "public domain" in manifests["orthophoto"]["source"]["license_name"].lower(), manifests["orthophoto"]["source"]["license_name"])
 
-    texture_paths = [
-        REPO_ROOT / asset["path"] for asset in manifests["orthophoto"]["derived_assets"]
-    ] + [
-        REPO_ROOT / "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_AirportSharedAtlas.png",
-        REPO_ROOT / "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_RunwaySurface_Albedo.jpg",
-        REPO_ROOT / "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_RunwaySurface_MetallicSmoothness.png",
-    ]
+    runtime_asset_paths = runtime_binary_asset_paths(manifests)
+    texture_paths = (
+        runtime_asset_paths["orthophotos"]
+        + [path for path in runtime_asset_paths["airport_kit"] if path.suffix.lower() != ".glb"]
+        + runtime_asset_paths["runway_textures"]
+    )
     for texture in texture_paths:
         meta = Path(str(texture) + ".meta")
         text = meta.read_text(encoding="utf-8") if meta.is_file() else ""
@@ -94,12 +141,10 @@ def main() -> int:
             "far_dem": file_record(FAR_DEM_MANIFEST),
         },
         "runtime_binary_assets": {
-            "orthophotos": [file_record(path) for path in texture_paths[:2]],
-            "airport_kit": [
-                file_record(REPO_ROOT / "QuestFlight/Assets/Production/Environment/AirportKit/KBDU_AirportKit.glb"),
-                file_record(texture_paths[2]),
-            ],
-            "runway_textures": [file_record(path) for path in texture_paths[3:]],
+            **{
+                category: [file_record(path) for path in paths]
+                for category, paths in runtime_asset_paths.items()
+            },
             "unity_authored_meshes": [file_record(FAR_MESH)] + [file_record(path) for path in generated_assets],
         },
         "licenses": {

@@ -15,25 +15,25 @@ Shader "QuestFlightLab/Production Stable Water"
         _BasinCenterExtent ("Basin center XZ / extent XZ", Vector) = (249.5625,4307.6875,1062.5625,857.1875)
         _EnvironmentRotationSinCos ("Sky rotation sin/cos", Vector) = (0,1,0,0)
 
-        _BroadNormalMeters ("Broad normal repeat meters", Range(64,512)) = 240
-        _RippleNormalMeters ("Ripple normal repeat meters", Range(16,192)) = 72
-        _BroadNormalScroll ("Broad normal scroll UV/sec", Vector) = (0.0011,0.00045,0,0)
-        _RippleNormalScroll ("Ripple normal scroll UV/sec", Vector) = (-0.0022,0.0031,0,0)
-        _BroadNormalStrength ("Broad normal strength", Range(0,1)) = 0.48
-        _FineNormalStrength ("Fine normal strength", Range(0,1)) = 0.30
-        _RippleStrength ("Combined ripple strength", Range(0,1)) = 0.68
+        _BroadNormalMeters ("Broad normal repeat meters", Range(64,512)) = 160
+        _RippleNormalMeters ("Ripple normal repeat meters", Range(16,192)) = 44
+        _BroadNormalScroll ("Broad normal scroll UV/sec", Vector) = (0.00055,0.00022,0,0)
+        _RippleNormalScroll ("Ripple normal scroll UV/sec", Vector) = (-0.0012,0.0016,0,0)
+        _BroadNormalStrength ("Broad normal strength", Range(0,1)) = 0.24
+        _FineNormalStrength ("Fine normal strength", Range(0,1)) = 0.14
+        _RippleStrength ("Combined ripple strength", Range(0,1)) = 0.48
 
         _DepthContrast ("Artistic depth contrast", Range(0,1.5)) = 1
-        _SurfaceVariation ("Surface color variation", Range(0,0.25)) = 0.08
-        _ShoreBandStrength ("Shore light-band strength", Range(0,0.5)) = 0.16
-        _Roughness ("Compatibility roughness center", Range(0,1)) = 0.46
-        _RoughnessMin ("Minimum roughness", Range(0.05,1)) = 0.22
-        _RoughnessMax ("Maximum roughness", Range(0.05,1)) = 0.58
-        _EnvironmentMaxMip ("Maximum reflection mip", Range(0,10)) = 6
+        _SurfaceVariation ("Surface color variation", Range(0,0.25)) = 0.035
+        _ShoreBandStrength ("Shore light-band strength", Range(0,0.5)) = 0.26
+        _Roughness ("Compatibility roughness center", Range(0,1)) = 0.56
+        _RoughnessMin ("Minimum roughness", Range(0.05,1)) = 0.30
+        _RoughnessMax ("Maximum roughness", Range(0.05,1)) = 0.70
+        _EnvironmentMaxMip ("Maximum reflection mip", Range(0,10)) = 7
         _EnvironmentIntensity ("Sky reflection intensity", Range(0,2)) = 0.90
-        _ReflectionFloor ("Minimum sky reflection", Range(0,0.35)) = 0.10
+        _ReflectionFloor ("Minimum sky reflection", Range(0,0.35)) = 0.08
         _FresnelF0 ("Water normal-incidence reflectance", Range(0.01,0.08)) = 0.02
-        _GlintStrength ("Directional sun glint", Range(0,1)) = 0.42
+        _GlintStrength ("Directional sun glint", Range(0,1)) = 0.18
         [HideInInspector] _ZWrite ("ZWrite", Float) = 1
     }
 
@@ -142,6 +142,13 @@ Shader "QuestFlightLab/Production Stable Water"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
+                half3 packedMask = tex2D(_DepthShoreRoughness, saturate(input.basinUv)).rgb;
+                half depth = saturate(packedMask.r * _DepthContrast);
+                half shoreBand = saturate(packedMask.g);
+                half shoreTransition = saturate(max(
+                    shoreBand,
+                    1.0h - smoothstep(0.0h, 0.16h, depth)));
+
                 // The surface mesh remains immutable. Only two project-authored normal
                 // textures scroll, producing stable low-cost wave motion with no geometry work.
                 half2 broadUv = input.worldPosition.xz / max(_BroadNormalMeters, 1.0h) +
@@ -151,16 +158,15 @@ Shader "QuestFlightLab/Production Stable Water"
                 half3 broadNormal = UnpackNormal(tex2D(_BroadNormal, broadUv));
                 half3 fineNormal = UnpackNormal(tex2D(_RippleNormal, rippleUv));
                 half2 slope = broadNormal.xy * _BroadNormalStrength + fineNormal.xy * _FineNormalStrength;
-                slope *= _RippleStrength;
+                half shoreNormalScale = lerp(0.45h, 1.0h, smoothstep(0.0h, 0.24h, depth));
+                slope *= _RippleStrength * shoreNormalScale;
                 half vertical = sqrt(saturate(1.0h - min(dot(slope, slope), 0.96h)));
                 half3 waveNormal = normalize(half3(slope.x, vertical, slope.y));
                 half3 normal = normalize(lerp(normalize(input.worldNormal), waveNormal, 0.92h));
 
-                half3 packedMask = tex2D(_DepthShoreRoughness, saturate(input.basinUv)).rgb;
-                half depth = saturate(packedMask.r * _DepthContrast);
-                half shoreBand = packedMask.g;
                 half roughness = saturate(
-                    lerp(_RoughnessMin, _RoughnessMax, packedMask.b) + (_Roughness - 0.5h) * 0.12h);
+                    lerp(_RoughnessMin, _RoughnessMax, packedMask.b) +
+                    (_Roughness - 0.5h) * 0.12h + shoreTransition * 0.14h);
 
                 half3 viewDirection = normalize(_WorldSpaceCameraPos - input.worldPosition);
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
@@ -174,18 +180,25 @@ Shader "QuestFlightLab/Production Stable Water"
                 half3 skyReflection = texCUBElod(_EnvironmentCube,
                     half4(reflectionDirection, roughness * _EnvironmentMaxMip)).rgb;
                 skyReflection *= _HorizonColor.rgb * _EnvironmentIntensity;
+                half reflectionPeak = max(skyReflection.r, max(skyReflection.g, skyReflection.b));
+                skyReflection *= rcp(1.0h + reflectionPeak * 0.42h);
 
                 half colorVariation = lerp(
                     1.0h - _SurfaceVariation,
                     1.0h + _SurfaceVariation,
                     packedMask.b);
-                half3 waterColor = lerp(_ShoreColor.rgb, _Color.rgb, smoothstep(0.04h, 0.92h, depth));
+                half3 waterColor = lerp(_ShoreColor.rgb, _Color.rgb, smoothstep(0.02h, 0.82h, depth));
                 waterColor *= colorVariation;
-                waterColor += _ShoreBandColor.rgb * shoreBand * _ShoreBandStrength;
+                waterColor = lerp(
+                    waterColor,
+                    _ShoreBandColor.rgb,
+                    shoreTransition * _ShoreBandStrength);
 
                 half3 ambient = max(ShadeSH9(half4(normal, 1.0h)), half3(0.025h, 0.025h, 0.025h));
                 half3 litWater = waterColor * (ambient + _LightColor0.rgb * normalDotLight * 0.20h);
-                half reflectionWeight = saturate(_ReflectionFloor + fresnel * (1.0h - roughness * 0.35h));
+                half shoreReflectionScale = lerp(0.55h, 1.0h, smoothstep(0.0h, 0.18h, depth));
+                half reflectionWeight = saturate(
+                    (_ReflectionFloor + fresnel * (1.0h - roughness * 0.35h)) * shoreReflectionScale);
                 half3 color = lerp(litWater, skyReflection, reflectionWeight);
 
                 // One bounded main-sun highlight supplies glitter without a probe, screen
@@ -193,6 +206,7 @@ Shader "QuestFlightLab/Production Stable Water"
                 half specularExponent = exp2(lerp(9.0h, 5.0h, roughness));
                 half sunGlint = pow(normalDotHalf, specularExponent) *
                     (1.0h - roughness) * _GlintStrength * normalDotLight;
+                sunGlint = min(sunGlint, 0.12h);
                 color += _LightColor0.rgb * sunGlint;
 
                 fixed4 output = fixed4(color, 1.0h);

@@ -110,8 +110,11 @@ def main() -> int:
             "Skybox material does not reference the HDR cubemap GUID", failures)
     require("m_Shader: {fileID: 103, guid: 0000000000000000f000000000000000, type: 0}" in material,
             "Skybox material does not use Unity's built-in Skybox/Cubemap shader", failures)
-    require("- _Exposure: 1" in material and "- _Rotation: 0" in material,
-            "Neutral skybox material values changed", failures)
+    expected_exposure = float(manifest["unity_import"]["skybox_exposure"])
+    expected_rotation = float(manifest["unity_import"]["skybox_rotation_degrees"])
+    require(f"- _Exposure: {expected_exposure:g}" in material and
+            f"- _Rotation: {expected_rotation:g}" in material,
+            "Reviewed skybox exposure/rotation contract changed", failures)
 
     estimated = astc_mipped_cubemap_bytes(1024, 6)
     require(estimated == manifest["unity_import"]["estimated_android_mipped_cubemap_bytes"],
@@ -122,8 +125,9 @@ def main() -> int:
     decision = DECISION_PATH.read_text(encoding="utf-8")
     require("Option A" in decision and "fixed USGS-derived far DEM mesh" in decision,
             "Mountain V2 decision does not retain the immutable real-DEM mesh", failures)
-    require("no sky or mountain visual score is claimed" in decision,
-            "Decision must preserve the visual-acceptance boundary", failures)
+    require("iteration scores, not headset acceptance" in decision and
+            "No recorded-replay stereo stability or physical Quest performance claim" in decision,
+            "Decision must preserve the simulator/headset visual-acceptance boundary", failures)
 
     dem = json.loads(DEM_PATH.read_text(encoding="utf-8"))
     grid = dem["grid"]
@@ -168,6 +172,8 @@ def main() -> int:
             "android_max_face_size": 1024,
             "estimated_mipped_bytes": estimated,
             "material_shader": "Skybox/Cubemap",
+            "material_exposure": expected_exposure,
+            "material_rotation_degrees": expected_rotation,
         },
         "candidate_count": len(manifest["approved_candidate_evaluation"]),
         "selected_candidate": selected[0]["asset_id"] if len(selected) == 1 else None,
@@ -177,7 +183,7 @@ def main() -> int:
             "serialized_vertices": 63841,
             "serialized_triangles": 89280,
             "selected": True,
-            "visual_acceptance": "NOT_RUN_LEAD_INTEGRATION_REQUIRED",
+            "visual_acceptance": "PARTIAL_24_VIEW_EDITOR_SCORE_6_3_RECORDED_STEREO_PENDING",
         },
         "failures": failures,
     }

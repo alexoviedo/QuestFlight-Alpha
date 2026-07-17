@@ -67,8 +67,57 @@ def create_shared_atlas(path: Path) -> bpy.types.Image:
         for x in range(width):
             cell = min(7, (x * 4 // width) + (y * 2 // height) * 4)
             base = palette[cell]
-            noise = ((((x * 73856093) ^ (y * 19349663) ^ SEED) & 255) / 255.0 - 0.5) * 0.035
-            pixels.extend((max(0.0, min(1.0, base[0] + noise)), max(0.0, min(1.0, base[1] + noise)), max(0.0, min(1.0, base[2] + noise)), 1.0))
+            local_x = x % (width // 4)
+            local_y = y % (height // 2)
+            fine_noise = ((((x * 73856093) ^ (y * 19349663) ^ SEED) & 255) / 255.0 - 0.5) * 0.018
+            broad_noise = math.sin((x + y * 0.37 + cell * 19.0) * 0.071) * 0.008
+            variation = fine_noise + broad_noise
+            grime = 0.0
+
+            # Each surface keeps a full 128x256 atlas cell. These bounded cues
+            # survive mip reduction without requiring another material or map.
+            if cell == 0:  # metal wall: vertical corrugation and lower-edge grime
+                variation += math.sin(local_x * math.tau / 10.0) * 0.012
+                seam = local_x % 24
+                if seam <= 1:
+                    variation -= 0.042
+                elif seam == 2:
+                    variation += 0.022
+                if local_y % 86 <= 1:
+                    variation -= 0.018
+                grime = (1.0 - local_y / 255.0) ** 3 * 0.048
+            elif cell == 1:  # roof: standing seams and soft weather streaks
+                seam = local_x % 18
+                if seam <= 1:
+                    variation -= 0.046
+                elif seam == 2:
+                    variation += 0.026
+                variation += math.sin(local_y * 0.055 + local_x * 0.13) * 0.006
+                grime = (0.35 + 0.65 * (local_y / 255.0)) * 0.012
+            elif cell == 2:  # hangar doors: panel grid, center joint, bottom dirt
+                vertical = local_x % 32
+                horizontal = local_y % 58
+                if vertical <= 1 or horizontal <= 1:
+                    variation -= 0.040
+                elif vertical == 2 or horizontal == 2:
+                    variation += 0.018
+                if abs(local_x - 64) <= 1:
+                    variation -= 0.035
+                grime = (1.0 - local_y / 255.0) ** 2 * 0.052
+            elif cell in (3, 4, 6):
+                variation += math.sin(local_x * 0.18 + local_y * 0.035) * 0.007
+                grime = (1.0 - local_y / 255.0) ** 2 * 0.018
+            elif cell == 7:  # concrete: broad mottling without high-frequency speckle
+                variation += math.sin(local_x * 0.045) * math.sin(local_y * 0.052) * 0.018
+
+            pixels.extend(
+                (
+                    max(0.0, min(1.0, base[0] + variation - grime * 0.75)),
+                    max(0.0, min(1.0, base[1] + variation - grime * 0.88)),
+                    max(0.0, min(1.0, base[2] + variation - grime)),
+                    1.0,
+                )
+            )
     image = bpy.data.images.new("KBDU_AirportSharedAtlas", width=width, height=height, alpha=False)
     image.pixels.foreach_set(pixels)
     image.filepath_raw = str(path)
@@ -87,6 +136,7 @@ def material(name: str, image: bpy.types.Image) -> bpy.types.Material:
     value.node_tree.links.new(texture.outputs["Color"], node.inputs["Base Color"])
     node.inputs["Metallic"].default_value = 0.12
     node.inputs["Roughness"].default_value = 0.56
+    value.use_backface_culling = True
     return value
 
 
@@ -180,15 +230,62 @@ def quonset_body(name: str, width: float, depth: float, wall: float, segments: i
     for index in range(1, segments + 1):
         angle = math.pi * index / segments
         profile.append((math.cos(angle) * radius, wall + math.sin(angle) * radius))
-    vertices = [(x, -depth / 2, z) for x, z in profile] + [(x, depth / 2, z) for x, z in profile]
+    # Explicit double-wound triangle fans make both end caps robust to importer
+    # winding/culling differences. With back-face culling, only one coincident
+    # winding survives from either direction, so there is no front-facing z-fight.
+    cap_center_z = wall + radius * 0.34
     count = len(profile)
-    faces = [tuple(range(count)), tuple(range(count * 2 - 1, count - 1, -1))]
-    face_materials = [0, 0]
+    front_profile = [(x, -depth / 2, z) for x, z in profile]
+    rear_profile = [(x, depth / 2, z) for x, z in profile]
+    vertices = (
+        front_profile
+        + rear_profile
+        + [(0.0, -depth / 2, cap_center_z), (0.0, depth / 2, cap_center_z)]
+        # Separate vertices retain opposite cap normals through glTF vertex
+        # welding while remaining exactly coplanar for back-face culling.
+        + front_profile
+        + rear_profile
+        + [(0.0, -depth / 2, cap_center_z), (0.0, depth / 2, cap_center_z)]
+    )
+    front_center = count * 2
+    rear_center = front_center + 1
+    inward_front_start = rear_center + 1
+    inward_rear_start = inward_front_start + count
+    inward_front_center = inward_rear_start + count
+    inward_rear_center = inward_front_center + 1
+    faces = []
+    face_materials = []
     for index in range(count):
         next_index = (index + 1) % count
-        faces.append((index, next_index, count + next_index, count + index))
+        faces.append((front_center, index, next_index))
+        faces.append((inward_front_center, inward_front_start + next_index, inward_front_start + index))
+        faces.append((rear_center, count + next_index, count + index))
+        faces.append((inward_rear_center, inward_rear_start + index, inward_rear_start + next_index))
+        face_materials.extend((0, 0, 0, 0))
+    for index in range(count):
+        next_index = (index + 1) % count
+        # The profile is counter-clockwise in X/Z, so this winding points the
+        # extruded shell outward rather than into the hangar volume.
+        faces.append((index, count + index, count + next_index, next_index))
         face_materials.append(1 if index >= 2 and index < count - 1 else 0)
-    return mesh_object(name, vertices, faces, face_materials, parent, [mats["wall"], mats["roof"]])
+    obj = mesh_object(name, vertices, faces, face_materials, parent, [mats["wall"], mats["roof"]])
+    # Project the shared wall cell once across each full cap. Mapping every fan
+    # triangle independently creates radial texture repetition that can resemble
+    # separated geometry at distance.
+    wall_u0, wall_v0 = 0.025, 0.05
+    wall_u1, wall_v1 = 0.25 - 0.025, 0.5 - 0.05
+    uv_layer = obj.data.uv_layers.active
+    for polygon in obj.data.polygons:
+        ys = [obj.data.vertices[index].co.y for index in polygon.vertices]
+        if max(ys) - min(ys) > 1e-5:
+            continue
+        for loop_index in polygon.loop_indices:
+            coordinate = obj.data.vertices[obj.data.loops[loop_index].vertex_index].co
+            uv_layer.data[loop_index].uv = (
+                wall_u0 + ((coordinate.x + radius) / width) * (wall_u1 - wall_u0),
+                wall_v0 + (coordinate.z / (wall + radius)) * (wall_v1 - wall_v0),
+            )
+    return obj
 
 
 def root_object(asset_id: str, lod: int, grid_location: tuple[float, float, float]) -> bpy.types.Object:
@@ -312,6 +409,55 @@ def mesh_report() -> dict:
     }
 
 
+def validate_quonset_caps() -> dict:
+    report: dict[str, dict[str, int | bool]] = {}
+    for lod in range(3):
+        root_name = f"Hangar_C_Quonset_LOD{lod}"
+        root = bpy.data.objects.get(root_name)
+        if root is None:
+            raise RuntimeError(f"Quonset validation root is missing: {root_name}")
+        bodies = [obj for obj in root.children if obj.type == "MESH" and obj.name.endswith("_Body")]
+        if len(bodies) != 1:
+            raise RuntimeError(f"Quonset validation expected one body below {root_name}: {len(bodies)}")
+        mesh = bodies[0].data
+        mesh.update()
+        minimum_y = min(vertex.co.y for vertex in mesh.vertices)
+        maximum_y = max(vertex.co.y for vertex in mesh.vertices)
+        counts = {
+            "front_outward_triangles": 0,
+            "front_inward_triangles": 0,
+            "rear_outward_triangles": 0,
+            "rear_inward_triangles": 0,
+            "outward_shell_faces": 0,
+            "shell_faces": 0,
+        }
+        for polygon in mesh.polygons:
+            ys = [mesh.vertices[index].co.y for index in polygon.vertices]
+            at_front = all(abs(value - minimum_y) < 1e-5 for value in ys)
+            at_rear = all(abs(value - maximum_y) < 1e-5 for value in ys)
+            if at_front:
+                key = "front_outward_triangles" if polygon.normal.y < -0.9 else "front_inward_triangles"
+                counts[key] += max(1, len(polygon.vertices) - 2)
+            elif at_rear:
+                key = "rear_outward_triangles" if polygon.normal.y > 0.9 else "rear_inward_triangles"
+                counts[key] += max(1, len(polygon.vertices) - 2)
+            else:
+                counts["shell_faces"] += 1
+                radial = Vector((polygon.center.x, 0.0, polygon.center.z - 1.4))
+                if radial.length > 1e-5 and polygon.normal.dot(radial.normalized()) > 0.2:
+                    counts["outward_shell_faces"] += 1
+        passed = (
+            counts["front_outward_triangles"] == counts["front_inward_triangles"] > 0
+            and counts["rear_outward_triangles"] == counts["rear_inward_triangles"] > 0
+            and counts["outward_shell_faces"] == counts["shell_faces"] > 0
+        )
+        counts["passed"] = passed
+        if not passed:
+            raise RuntimeError(f"Quonset front/rear cap or shell winding validation failed: {root_name} {counts}")
+        report[f"LOD{lod}"] = counts
+    return report
+
+
 def render_preview(preview_dir: Path) -> Path:
     preview_dir.mkdir(parents=True, exist_ok=True)
     for obj in bpy.data.objects:
@@ -322,9 +468,10 @@ def render_preview(preview_dir: Path) -> Path:
     sun.rotation_euler = (math.radians(32), 0, math.radians(-28))
     sun.data.energy = 2.0
     bpy.ops.object.light_add(type="AREA", location=(-10, -35, 45))
-    bpy.context.object.data.energy = 1800
-    bpy.context.object.data.shape = "DISK"
-    bpy.context.object.data.size = 25
+    area = bpy.context.object
+    area.data.energy = 1800
+    area.data.shape = "DISK"
+    area.data.size = 25
     bpy.ops.object.camera_add(location=(92, -125, 92))
     camera = bpy.context.object
     direction = Vector((2, 0, 3)) - camera.location
@@ -341,9 +488,53 @@ def render_preview(preview_dir: Path) -> Path:
     path = preview_dir / "kbdu_airport_kit_lod0_preview.png"
     scene.render.filepath = str(path)
     bpy.ops.render.render(write_still=True)
-    for obj in (sun, camera):
+    for obj in (sun, area, camera):
         bpy.data.objects.remove(obj, do_unlink=True)
     return path
+
+
+def render_quonset_cap_previews(preview_dir: Path) -> list[Path]:
+    preview_dir.mkdir(parents=True, exist_ok=True)
+    hide_state = {obj: obj.hide_render for obj in bpy.data.objects if obj.type == "MESH"}
+    for obj in hide_state:
+        obj.hide_render = not (obj.parent is not None and obj.parent.name == "Hangar_C_Quonset_LOD0")
+
+    bpy.ops.object.light_add(type="SUN", location=(20, 16, 50))
+    sun = bpy.context.object
+    sun.rotation_euler = (math.radians(28), 0, math.radians(-24))
+    sun.data.energy = 2.1
+    bpy.ops.object.light_add(type="AREA", location=(35, -8, 28))
+    area = bpy.context.object
+    area.data.energy = 1500
+    area.data.shape = "DISK"
+    area.data.size = 18
+    bpy.ops.object.camera_add(location=(20, -28, 8.5))
+    camera = bpy.context.object
+    camera.data.lens = 58
+    scene = bpy.context.scene
+    scene.camera = camera
+    scene.render.engine = "BLENDER_EEVEE"
+    scene.render.resolution_x = 1200
+    scene.render.resolution_y = 800
+    scene.render.resolution_percentage = 100
+    scene.render.image_settings.file_format = "PNG"
+    scene.world.color = (0.10, 0.12, 0.14)
+    target = Vector((20, 16, 6.2))
+    previews: list[Path] = []
+    for label, location in (("front", (20, -28, 8.5)), ("rear", (20, 60, 8.5))):
+        camera.location = location
+        area.location = (35, -8, 28) if label == "front" else (5, 44, 28)
+        camera.rotation_euler = (target - camera.location).to_track_quat("-Z", "Y").to_euler()
+        path = preview_dir / f"kbdu_quonset_lod0_{label}_cap_preview.png"
+        scene.render.filepath = str(path)
+        bpy.ops.render.render(write_still=True)
+        previews.append(path)
+
+    for obj in (sun, area, camera):
+        bpy.data.objects.remove(obj, do_unlink=True)
+    for obj, hidden in hide_state.items():
+        obj.hide_render = hidden
+    return previews
 
 
 def export_assets(asset_dir: Path, source_dir: Path) -> tuple[Path, Path]:
@@ -372,11 +563,17 @@ def export_assets(asset_dir: Path, source_dir: Path) -> tuple[Path, Path]:
 
 
 def main() -> None:
+    if os.environ.get("PYTHONHASHSEED") != "0":
+        raise RuntimeError(
+            "Set PYTHONHASHSEED=0 before launching Blender so glTF buffer ordering is reproducible."
+        )
     paths = parse_args()
     atlas_path = paths["asset_dir"] / "KBDU_AirportSharedAtlas.png"
     configure_scene(atlas_path)
     report = mesh_report()
+    quonset_validation = validate_quonset_caps()
     preview = render_preview(paths["preview_dir"])
+    cap_previews = render_quonset_cap_previews(paths["preview_dir"])
     glb_path, blend_path = export_assets(paths["asset_dir"], paths["source_dir"])
     manifest = {
         "schema_version": 1,
@@ -386,18 +583,32 @@ def main() -> None:
             "name": "Blender",
             "version": bpy.app.version_string,
             "build_hash": bpy.app.build_hash.decode("ascii"),
+            "python_hash_seed": 0,
             "license": "GNU GPL; generated project-owned output is not a Blender program derivative",
         },
         "generator": record(Path(__file__).resolve()),
         "outputs": [record(glb_path), record(atlas_path), record(blend_path)],
         "geometry": report,
+        "validation": {
+            "quonset_caps_and_shell": quonset_validation,
+            "backface_culling_enabled_in_source_preview": True,
+        },
         "integration": {
             "lod_thresholds": [0.58, 0.24, 0.06],
             "shared_material_count": len(report["shared_materials"]),
             "gpu_instancing_compatible": True,
             "notes": "Static meshes have no armatures, animation, runtime generators, or camera-relative behavior.",
+            "atlas_surface_cues": [
+                "subtle wall corrugation and panel seams",
+                "standing roof seams and bounded weather streaks",
+                "hangar-door panel joints and lower-edge grime",
+                "single shared 512x512 albedo atlas; no additional material or texture",
+            ],
         },
         "preview_external": f"external-artifact/kbdu_airport_art/{preview.name}",
+        "validation_previews_external": [
+            f"external-artifact/kbdu_airport_art/{path.name}" for path in cap_previews
+        ],
     }
     paths["manifest"].parent.mkdir(parents=True, exist_ok=True)
     paths["manifest"].write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")

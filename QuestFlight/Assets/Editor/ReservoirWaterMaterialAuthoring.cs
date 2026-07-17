@@ -114,25 +114,25 @@ namespace QuestFlight.Editor
             material.SetVector(
                 "_EnvironmentRotationSinCos",
                 new Vector4(Mathf.Sin(radians), Mathf.Cos(radians), 0f, 0f));
-            material.SetVector("_BroadNormalScroll", new Vector4(0.0011f, 0.00045f, 0f, 0f));
-            material.SetVector("_RippleNormalScroll", new Vector4(-0.0022f, 0.0031f, 0f, 0f));
+            material.SetVector("_BroadNormalScroll", new Vector4(0.00055f, 0.00022f, 0f, 0f));
+            material.SetVector("_RippleNormalScroll", new Vector4(-0.0012f, 0.0016f, 0f, 0f));
 
-            material.SetFloat("_BroadNormalMeters", 240f);
-            material.SetFloat("_RippleNormalMeters", 72f);
-            material.SetFloat("_BroadNormalStrength", 0.48f);
-            material.SetFloat("_FineNormalStrength", 0.30f);
-            material.SetFloat("_RippleStrength", 0.68f);
+            material.SetFloat("_BroadNormalMeters", 160f);
+            material.SetFloat("_RippleNormalMeters", 44f);
+            material.SetFloat("_BroadNormalStrength", 0.24f);
+            material.SetFloat("_FineNormalStrength", 0.14f);
+            material.SetFloat("_RippleStrength", 0.48f);
             material.SetFloat("_DepthContrast", 1f);
-            material.SetFloat("_SurfaceVariation", 0.08f);
-            material.SetFloat("_ShoreBandStrength", 0.16f);
-            material.SetFloat("_Roughness", 0.46f);
-            material.SetFloat("_RoughnessMin", 0.22f);
-            material.SetFloat("_RoughnessMax", 0.58f);
-            material.SetFloat("_EnvironmentMaxMip", 6f);
+            material.SetFloat("_SurfaceVariation", 0.035f);
+            material.SetFloat("_ShoreBandStrength", 0.26f);
+            material.SetFloat("_Roughness", 0.56f);
+            material.SetFloat("_RoughnessMin", 0.30f);
+            material.SetFloat("_RoughnessMax", 0.70f);
+            material.SetFloat("_EnvironmentMaxMip", 7f);
             material.SetFloat("_EnvironmentIntensity", reflectionIntensity);
-            material.SetFloat("_ReflectionFloor", 0.10f);
+            material.SetFloat("_ReflectionFloor", 0.08f);
             material.SetFloat("_FresnelF0", 0.02f);
-            material.SetFloat("_GlintStrength", 0.42f);
+            material.SetFloat("_GlintStrength", 0.18f);
             material.SetFloat("_ZWrite", 1f);
 
             material.SetOverrideTag("RenderType", "Opaque");

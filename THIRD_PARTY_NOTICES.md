@@ -9,7 +9,7 @@ These notices apply to the assets and data included in T2 QuestFlight. They do n
 - Source: <https://sketchfab.com/3d-models/cessna172-d1b15841c29c43d0862667300bad55a4>
 - License: Creative Commons Attribution 4.0 International, <https://creativecommons.org/licenses/by/4.0/>
 - Copyright attribution: KOG_THORNS
-- Changes: the original audited GLB binary is unchanged. T2 QuestFlight adds a separate Unity scene/prefab hierarchy, material/import settings, cockpit/external visibility profiles, and authored control-surface pivots and animation bindings.
+- Changes: the original audited GLB binary remains unchanged for the primary aircraft. T2 QuestFlight adds a separate Unity scene/prefab hierarchy, material/import settings, cockpit/external visibility profiles, and authored control-surface pivots and animation bindings. A separate static parked-scenery adaptation retains only exterior body geometry; removes cockpit, interior, glass, textures, source materials, branding presentation, and animation; joins and decimates that geometry into two opaque LOD meshes; and offline-combines three non-interactive placements per LOD.
 
 The licensed material is supplied without warranties. Use of the model does not imply that KOG_THORNS, Sketchfab, Cessna, Textron Aviation, or any other party endorses T2 QuestFlight.
 
@@ -33,6 +33,14 @@ Poly Haven assets are dedicated under CC0 1.0. Attribution is not required, but 
 - `Dry Ground 01`, Rob Tuytel: <https://polyhaven.com/a/dry_ground_01>
 - License: <https://polyhaven.com/license>
 
+## Poly Haven CC0 HDR sky
+
+`Kloppenheim 03 (Pure Sky)`, original by Greg Zaal with sky edits by Jarod Guest.
+
+- Source: <https://polyhaven.com/a/kloppenheim_03_puresky>
+- License: CC0 1.0, <https://polyhaven.com/license>
+- Changes: the official 4096×2048 Radiance HDR source is reduced to a 2048×1024 runtime derivative by exact 2×2 linear-radiance box filtering, without tone mapping or clipping. The raw download remains outside Git.
+
 ## United States government data
 
 The product includes bounded derivatives of United States government data that the source agencies identify as public domain or unrestricted for public use.
@@ -47,9 +55,9 @@ The product includes only bounded, optimized NAIP derivatives. Raw imagery expor
 
 No agency logo is included and no agency endorsement, navigation suitability, surveying accuracy, FAA approval, or training credit is claimed.
 
-## JSBSim
+## JSBSim (frozen and out of scope)
 
-The optional development-gated native flight-dynamics package includes JSBSim
+The frozen optional development-gated native flight-dynamics package includes JSBSim
 1.3.1 at revision `3b25f25e49b42d0489c04ac805674fc1450ca579`.
 
 - Source: <https://github.com/JSBSim-Team/jsbsim>
@@ -57,7 +65,7 @@ The optional development-gated native flight-dynamics package includes JSBSim
 - Complete license text: `QuestFlight/Packages/com.alexoviedo.questflight.jsbsim/RuntimeData/JSBSim-1.3.1/COPYING.txt`
 - Exact source, binary hashes, architecture, and build flags: `QuestFlight/Packages/com.alexoviedo.questflight.jsbsim/SOURCE_MANIFEST.json`
 
-JSBSim remains a replaceable shared library. Its inclusion does not establish
+No JSBSim work or promotion is part of the photoreal standalone environment milestone. JSBSim remains a replaceable shared library. Its inclusion does not establish
 FAA approval, certified fidelity, training credit, or measured Quest hardware
 performance. Release builds remain on the Unity prototype backend until native
 timing and handling are measured on a physical Quest 3.

@@ -7,7 +7,7 @@ This pipeline creates a three-level, Quest-oriented macro ground pyramid from th
 - Near zone: 4 km x 4 km, 4096 x 4096 (`0.9765625 m/pixel` nominal).
 - Mid zone: 12 km x 12 km, 4096 x 4096 (`2.9296875 m/pixel` nominal).
 - Far zone: 24 km x 24 km, 2048 x 2048 (`11.71875 m/pixel` nominal).
-- Android import: ASTC 6x6, mipmaps, texture streaming, trilinear filtering, anisotropy 4, clamp.
+- Android import: ASTC 6x6, mipmaps, texture streaming, trilinear filtering, anisotropy 8, clamp; near/mid/far mip biases are `-0.15` / `-0.15` / `-0.10`.
 - Estimated combined Android ASTC mip memory: `22,420,784` bytes.
 - Shared square-ENU shader overlaps: 350 m near-to-mid and 1000 m mid-to-far.
 
@@ -53,7 +53,7 @@ The corrected fetch sends `adjustAspectRatio=false`, requires the returned exten
 
 `kbdu_ground_texel_density_audit.json` fails when an adjacent density ratio exceeds 4x, an overlap is absent, an import contract is missing, or the far texture is absent. `kbdu_terrain_pyramid_contract.json` is the exact material/UV contract. The external overlap contact sheet compares each inner level against the same central footprint in its outer level and includes a 5x difference view.
 
-The optional context step derives 23 spatially bounded building batches from all 2,500 pinned OSM footprints and eight opaque vegetation batches from 240 deterministic road/water cues. The Unity authorer emits two non-crossfaded LODs, a two-material serialized prefab, and no scene changes.
+The optional context step derives 23 spatially bounded building batches from all 2,500 pinned OSM footprints and eight opaque vegetation batches from 240 deterministic road/water cues plus six project-authored airport-perimeter cottonwoods. The Unity authorer emits two non-crossfaded LODs, a three-material serialized prefab (buildings, vegetation, and parked-aircraft scenery), and no scene changes.
 
 ## License and use boundary
 

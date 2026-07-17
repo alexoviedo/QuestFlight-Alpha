@@ -350,6 +350,8 @@ namespace QuestFlight.Editor
                         string credits = attributions[0].CreditsText;
                         Require(credits.Contains("KOG_THORNS") && credits.Contains(ProductAttribution.AircraftLicenseUrl),
                             "runtime Credits/About metadata is missing KOG_THORNS CC BY 4.0 attribution", report);
+                        Require(credits.Contains(ProductAttribution.ParkedSceneryChangeNotice),
+                            "runtime Credits/About metadata is missing the CC BY parked-scenery change notice", report);
                         Require(credits.Contains(ProductAttribution.OsmCredit) && credits.Contains(ProductAttribution.OsmLicenseUrl),
                             "runtime Credits/About metadata is missing OpenStreetMap/ODbL attribution", report);
                     }

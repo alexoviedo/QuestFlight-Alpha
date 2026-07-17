@@ -24,6 +24,7 @@ namespace QuestFlight.Product
         public bool AutoStartDemo => autoStartDemo;
 
         private float _startedAt;
+        private readonly AircraftControlState _scheduledControls = AircraftControlState.Neutral(0.10f);
 
         public void ConfigureAuthoredSources(
             ProductControlInput authoredProductInput,
@@ -65,14 +66,30 @@ namespace QuestFlight.Product
         {
             if (!IsRunning || deterministicInput == null) return;
             float time = Mathf.Repeat(Time.unscaledTime - _startedAt, Mathf.Max(30f, loopDurationSeconds));
-            AircraftControlState controls = ScheduledControls(time, out string phase);
+            ScheduledControlsInto(time, out string phase, _scheduledControls);
             Phase = phase;
-            deterministicInput.SetControls(controls);
+            deterministicInput.SetControls(_scheduledControls);
         }
 
         public static AircraftControlState ScheduledControls(float seconds, out string phase)
         {
-            AircraftControlState controls = AircraftControlState.Neutral(0.10f);
+            AircraftControlState controls = new AircraftControlState();
+            ScheduledControlsInto(seconds, out phase, controls);
+            return controls;
+        }
+
+        public static void ScheduledControlsInto(
+            float seconds,
+            out string phase,
+            AircraftControlState controls)
+        {
+            if (controls == null)
+            {
+                phase = "invalid_controls_target";
+                return;
+            }
+
+            controls.SetNeutral(0.10f);
             if (seconds < 3f)
             {
                 phase = "idle_brake_hold";
@@ -128,7 +145,6 @@ namespace QuestFlight.Product
                 controls.elevator = 0.04f;
                 controls.trim = 0.08f;
             }
-            return controls;
         }
     }
 }

@@ -188,7 +188,7 @@ namespace QuestFlightLab.EditorTests
         {
             ProductionEnvironmentRoot contract = LoadPrefab().GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.uniqueMacroAlbedo, Is.Not.Null);
-            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(2048),
+            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(4096),
                 "The bounded mid-zone macro texture is authored at the standalone recovery target resolution");
             Assert.That(contract.macroRepeatedTileSimilarity, Is.LessThan(0.985f));
             TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo));
@@ -205,7 +205,7 @@ namespace QuestFlightLab.EditorTests
         public void ProductionShadersCompileAndAreBoundWithoutFallback()
         {
             Shader ground = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionMacroGround.shader");
+                "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader");
             Shader marking = AssetDatabase.LoadAssetAtPath<Shader>(
                 "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader");
             Shader water = AssetDatabase.LoadAssetAtPath<Shader>(

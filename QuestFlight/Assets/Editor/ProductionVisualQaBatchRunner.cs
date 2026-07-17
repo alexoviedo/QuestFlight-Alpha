@@ -26,10 +26,10 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 16;
-        private const int DrawCallTarget = 180;
-        private const long VisibleTriangleTarget = 700000L;
-        private const int SceneMaterialTarget = 40;
+        private const int RequiredShotCount = 24;
+        private const int DrawCallTarget = 120;
+        private const long VisibleTriangleTarget = 500000L;
+        private const int SceneMaterialTarget = 30;
         private const string ProductionScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
         private static readonly Vector3 RepresentativeCalibrationOffset = new Vector3(0.015f, 0.020f, -0.025f);
 
@@ -251,6 +251,11 @@ namespace QuestFlightLab.Editor
                 ? marker.EnvironmentRoot.GetComponentInChildren<ProductionEnvironmentRoot>(true)
                 : null;
             if (environment == null) throw new InvalidOperationException("Authored ProductionEnvironmentRoot is missing.");
+            AircraftRunwayBlobShadow groundShadow = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<AircraftRunwayBlobShadow>(true))
+                .SingleOrDefault();
+            if (groundShadow == null)
+                throw new InvalidOperationException("Authored bounded aircraft runway shadow is missing.");
             AircraftReferenceFrameRig rig = marker.AircraftRig;
             if (rig == null) throw new InvalidOperationException("Authored aircraft reference-frame rig is missing.");
             if (marker.PilotSeatProfile == null) throw new InvalidOperationException("Authored pilot seat profile is missing.");
@@ -303,6 +308,7 @@ namespace QuestFlightLab.Editor
                 scene = scene,
                 marker = marker,
                 environment = environment,
+                groundShadow = groundShadow,
                 rig = rig,
                 visibility = marker.VisibilityProfiles,
                 animator = marker.ControlAnimator,
@@ -447,6 +453,68 @@ namespace QuestFlightLab.Editor
                 approachCamera, LookAt(approachCamera, approachTarget), 55f, ViewProfile.External,
                 new AircraftControlState { elevator = 0.05f, throttle = 0.35f, mixture = 1f, flaps = 0.65f }));
 
+            // Environment V1 views. These are deterministic presentation poses and
+            // remain separate from flight-physics evidence.
+            SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
+            Vector3 neutralPilotEye = context.rig.PilotSeatAnchor.position;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "17_sky_horizon_forward", "Photographic sky and forward horizon", "sky",
+                neutralPilotEye, context.originalAircraftRotation * Quaternion.Euler(-8f, 0f, 0f),
+                72f, ViewProfile.Cockpit));
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "18_sky_horizon_rearward", "Photographic sky and rearward horizon", "sky",
+                neutralPilotEye + Vector3.up * 2f,
+                context.originalAircraftRotation * Quaternion.Euler(-3f, 180f, 0f),
+                72f, ViewProfile.Environment));
+
+            Vector3 nearMidBoundary = context.runwayMidpoint + Vector3.right * 1825f;
+            Vector3 nearMidCamera = nearMidBoundary + new Vector3(310f, 430f, -420f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "19_near_mid_terrain_seam", "Near/mid terrain overlap", "terrain_seam",
+                nearMidCamera, LookAt(nearMidCamera, nearMidBoundary), 50f, ViewProfile.Environment));
+
+            Vector3 midFarBoundary = context.runwayMidpoint + Vector3.right * 5500f;
+            Vector3 midFarCamera = midFarBoundary + new Vector3(650f, 920f, -980f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "20_mid_far_terrain_seam", "Mid/far terrain overlap", "terrain_seam",
+                midFarCamera, LookAt(midFarCamera, midFarBoundary), 48f, ViewProfile.Environment));
+
+            Vector3 reservoirAircraft = waterTarget + new Vector3(0f, 430f, -920f);
+            Vector3 reservoirHorizontal = Vector3.ProjectOnPlane(waterTarget - reservoirAircraft, Vector3.up).normalized;
+            SetAircraftPose(context, reservoirAircraft, Quaternion.LookRotation(reservoirHorizontal, Vector3.up));
+            Vector3 reservoirPilotEye = context.rig.PilotSeatAnchor.position;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "21_reservoir_cockpit", "Boulder Reservoir from the cockpit", "water",
+                reservoirPilotEye, LookAt(reservoirPilotEye, waterTarget), 64f, ViewProfile.Cockpit));
+
+            Vector3 reservoirAerial = waterTarget + new Vector3(-720f, 880f, -760f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "22_reservoir_aerial", "Boulder Reservoir aerial water read", "water",
+                reservoirAerial, LookAt(reservoirAerial, waterTarget), 48f, ViewProfile.Environment));
+
+            Vector3 rampCamera = hangarTarget
+                                 - context.runwayForward * (airportExtent * 0.45f + 45f)
+                                 + context.runwayRight * (airportExtent * 0.28f + 30f)
+                                 + Vector3.up * (airportExtent * 0.14f + 22f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "23_airport_buildings_ramp", "Airport buildings and ramp scale cues", "airport",
+                rampCamera, LookAt(rampCamera, hangarTarget), 48f, ViewProfile.Environment));
+
+            Bounds parkedAircraftBounds = ClosestNamedRendererBounds(
+                context.environment.transform,
+                hangarTarget,
+                "parked_aircraft_airport");
+            // The three parked aircraft are the foreground scale reference. The
+            // view looks south across the apron toward the explicitly authored
+            // airport-perimeter cottonwoods, so both scenery features are large
+            // enough for a full-resolution visual review instead of incidental
+            // background specks.
+            Vector3 scaleTarget = parkedAircraftBounds.center + new Vector3(-6f, 1.2f, -62f);
+            Vector3 scaleCamera = parkedAircraftBounds.center + new Vector3(42f, 15f, 62f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "24_vegetation_aircraft_scale", "Airport vegetation and parked-aircraft scale reference", "vegetation",
+                scaleCamera, LookAt(scaleCamera, scaleTarget), 42f, ViewProfile.Environment));
+
             SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
             context.animator?.ClearControlStateForTest();
             context.visibility?.SetCockpitView();
@@ -481,11 +549,22 @@ namespace QuestFlightLab.Editor
         {
             if (shot.profile == ViewProfile.Cockpit) context.visibility?.SetCockpitView();
             else context.visibility?.SetExternalView();
+            context.groundShadow?.UpdateShadowPoseNow();
+            bool shadowRequired = shot.id == "11_external_aircraft_static" ||
+                                  shot.id == "12_external_control_sweep" ||
+                                  shot.id == "13_takeoff_roll";
+            bool shadowReady = !shadowRequired ||
+                               (context.groundShadow?.BlobRenderer != null &&
+                                context.groundShadow.BlobRenderer.enabled);
             Renderer[] environmentHiddenRenderers = Array.Empty<Renderer>();
             bool[] environmentHiddenStates = Array.Empty<bool>();
             if (shot.profile == ViewProfile.Environment)
             {
-                environmentHiddenRenderers = context.rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true);
+                IEnumerable<Renderer> renderers =
+                    context.rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true);
+                if (context.groundShadow?.BlobRenderer != null)
+                    renderers = renderers.Concat(new[] { context.groundShadow.BlobRenderer });
+                environmentHiddenRenderers = renderers.Distinct().ToArray();
                 environmentHiddenStates = environmentHiddenRenderers.Select(renderer => renderer.enabled).ToArray();
                 foreach (Renderer renderer in environmentHiddenRenderers) renderer.enabled = false;
             }
@@ -535,10 +614,13 @@ namespace QuestFlightLab.Editor
                     result.warnings.Add($"Estimated draw calls {budget.estimatedInstancedDrawCalls} exceed {DrawCallTarget}.");
                 if (budget.estimatedFrustumTriangles > VisibleTriangleTarget)
                     result.warnings.Add($"Estimated visible triangles {budget.estimatedFrustumTriangles:N0} exceed {VisibleTriangleTarget:N0}.");
+                if (!shadowReady)
+                    result.warnings.Add("The bounded runway contact shadow was required but not active for this ground view.");
                 result.passed = result.imageNotBlank &&
                                 (shot.category != "cockpit" || image.outsideViewRatio >= context.marker.PilotSeatProfile.minimumOutsideViewRatio) &&
                                 budget.estimatedInstancedDrawCalls <= DrawCallTarget &&
-                                budget.estimatedFrustumTriangles <= VisibleTriangleTarget;
+                                budget.estimatedFrustumTriangles <= VisibleTriangleTarget &&
+                                shadowReady;
                 report.shots.Add(result);
             }
             catch (Exception exception)
@@ -878,6 +960,7 @@ namespace QuestFlightLab.Editor
             public Scene scene;
             public ProductionVerticalSliceRoot marker;
             public ProductionEnvironmentRoot environment;
+            public AircraftRunwayBlobShadow groundShadow;
             public AircraftReferenceFrameRig rig;
             public AircraftVisibilityProfileController visibility;
             public ProductionAircraftControlAnimator animator;

@@ -1,0 +1,77 @@
+{
+  "change_notice": "Project-generated static scenery adaptation: retained only exterior body geometry; removed cockpit, interior, glass, textures, materials, branding presentation, and animation; joined and decimated into two exterior-only opaque LOD meshes.",
+  "generator": {
+    "blender_version": "5.1.2",
+    "path": "tools/kbdu_orthophoto/build_parked_aircraft_lods.py",
+    "sha256": "dec5819d1b79c291e4db0118023b363136bcf029bc874c0e43ccadd6b389806a"
+  },
+  "limitations": [
+    "This scenery adaptation is a visual scale cue, not a flyable or interactive aircraft.",
+    "CC BY covers model copyright, not manufacturer trademarks or endorsement.",
+    "The product must retain KOG_THORNS attribution and this change notice."
+  ],
+  "lods": [
+    {
+      "bounds_meters": {
+        "maximum": [
+          6.298952102661133,
+          4.65688943862915,
+          3.614339828491211
+        ],
+        "minimum": [
+          -6.298952102661133,
+          -4.651389122009277,
+          -0.003802664577960968
+        ]
+      },
+      "name": "ParkedAircraft_LOD0",
+      "triangles": 3200,
+      "vertices": 3878
+    },
+    {
+      "bounds_meters": {
+        "maximum": [
+          6.298952102661133,
+          4.675409317016602,
+          3.6059508323669434
+        ],
+        "minimum": [
+          -6.298952102661133,
+          -4.629201412200928,
+          -0.0021482373122125864
+        ]
+      },
+      "name": "ParkedAircraft_LOD1",
+      "triangles": 900,
+      "vertices": 1860
+    }
+  ],
+  "output": {
+    "bytes": 232272,
+    "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraft_LODs.glb",
+    "sha256": "0f723238782d47d63496222aa2232a53da58823b2dbfee614a1628dcf2e56c34"
+  },
+  "runtime_contract": {
+    "active_aircraft_hierarchy_dependency": false,
+    "animation_included": false,
+    "glass_or_transparency_included": false,
+    "interior_included": false,
+    "materials_included": false,
+    "parked_instance_count": 3,
+    "shared_runtime_material_count": 1,
+    "textures_included": false,
+    "unity_instances_are_offline_combined_per_lod": true
+  },
+  "schema_version": 1,
+  "source": {
+    "bytes": 26962216,
+    "canonical_url": "https://sketchfab.com/3d-models/cessna172-d1b15841c29c43d0862667300bad55a4",
+    "creator": "KOG_THORNS",
+    "license": "Creative Commons Attribution 4.0 International",
+    "license_spdx": "CC-BY-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "path": "QuestFlight/Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
+    "sha256": "a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872"
+  },
+  "source_exterior_triangles": 10990
+}

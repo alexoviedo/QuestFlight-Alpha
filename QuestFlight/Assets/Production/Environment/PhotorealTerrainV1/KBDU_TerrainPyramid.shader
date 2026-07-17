@@ -13,6 +13,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
         _MidBlendStartEnd ("Mid to far overlap", Vector) = (5000,6000,0,0)
         _DetailScale ("Detail world scale", Float) = 0.0666667
         _DetailFadeStartEnd ("Detail camera fade", Vector) = (180,1500,0,0)
+        _DetailRadiusFadeStartEnd ("Detail world-radius fade", Vector) = (4500,6800,0,0)
         _Tint ("Shared terrain tint", Color) = (1,1,1,1)
         _Roughness ("Roughness", Range(0,1)) = 0.92
         [Enum(Off,0,MacroLevel,1,BlendWeight,2,TexelDensityAndBoundaries,3)]
@@ -35,6 +36,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_fog
+            #pragma multi_compile_instancing
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
 
@@ -48,6 +50,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             float4 _NearBlendStartEnd;
             float4 _MidBlendStartEnd;
             float4 _DetailFadeStartEnd;
+            float4 _DetailRadiusFadeStartEnd;
             fixed4 _Tint;
             half _DetailScale;
             half _Roughness;
@@ -57,6 +60,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             {
                 float4 vertex : POSITION;
                 half3 normal : NORMAL;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct v2f
@@ -65,11 +69,15 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 float3 worldPosition : TEXCOORD0;
                 half3 worldNormal : TEXCOORD1;
                 UNITY_FOG_COORDS(2)
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
             v2f vert(appdata input)
             {
+                UNITY_SETUP_INSTANCE_ID(input);
                 v2f output;
+                UNITY_INITIALIZE_OUTPUT(v2f, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
                 output.position = UnityObjectToClipPos(input.vertex);
                 output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
                 output.worldNormal = UnityObjectToWorldNormal(input.normal);
@@ -85,27 +93,76 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
 
             fixed4 frag(v2f input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
                 float2 world = input.worldPosition.xz;
                 float2 nearUv = saturate((world - _NearWorldMinInvSize.xy) * _NearWorldMinInvSize.zw);
                 float2 midUv = saturate((world - _MidWorldMinInvSize.xy) * _MidWorldMinInvSize.zw);
                 float2 farUv = saturate((world - _FarWorldMinInvSize.xy) * _FarWorldMinInvSize.zw);
-                fixed3 nearColor = tex2D(_NearAlbedo, nearUv).rgb;
-                fixed3 midColor = tex2D(_MidAlbedo, midUv).rgb;
-                fixed3 farColor = tex2D(_FarAlbedo, farUv).rgb;
+                float2 nearUvDx = ddx(nearUv);
+                float2 nearUvDy = ddy(nearUv);
+                float2 midUvDx = ddx(midUv);
+                float2 midUvDy = ddy(midUv);
+                float2 farUvDx = ddx(farUv);
+                float2 farUvDy = ddy(farUv);
                 half radius = max(abs(world.x), abs(world.y));
                 half nearWeight = 1.0 - smoothstep(_NearBlendStartEnd.x, _NearBlendStartEnd.y, radius);
                 half midWeight = 1.0 - smoothstep(_MidBlendStartEnd.x, _MidBlendStartEnd.y, radius);
-                fixed3 macro = lerp(farColor, midColor, midWeight);
-                macro = lerp(macro, nearColor, nearWeight);
+                fixed3 macro;
+                UNITY_BRANCH if (radius <= _NearBlendStartEnd.x)
+                {
+                    macro = tex2Dgrad(_NearAlbedo, nearUv, nearUvDx, nearUvDy).rgb;
+                }
+                else if (radius < _NearBlendStartEnd.y)
+                {
+                    fixed3 nearColor = tex2Dgrad(_NearAlbedo, nearUv, nearUvDx, nearUvDy).rgb;
+                    fixed3 midColor = tex2Dgrad(_MidAlbedo, midUv, midUvDx, midUvDy).rgb;
+                    macro = lerp(midColor, nearColor, nearWeight);
+                }
+                else if (radius <= _MidBlendStartEnd.x)
+                {
+                    macro = tex2Dgrad(_MidAlbedo, midUv, midUvDx, midUvDy).rgb;
+                }
+                else if (radius < _MidBlendStartEnd.y)
+                {
+                    fixed3 midColor = tex2Dgrad(_MidAlbedo, midUv, midUvDx, midUvDy).rgb;
+                    fixed3 farColor = tex2Dgrad(_FarAlbedo, farUv, farUvDx, farUvDy).rgb;
+                    macro = lerp(farColor, midColor, midWeight);
+                }
+                else
+                {
+                    macro = tex2Dgrad(_FarAlbedo, farUv, farUvDx, farUvDy).rgb;
+                }
 
-                fixed3 detailSample = tex2D(_DetailAlbedo, world * _DetailScale).rgb;
-                half detailLuminance = max(0.12, dot(detailSample, fixed3(0.2126, 0.7152, 0.0722)));
-                fixed3 detailModulation = lerp(fixed3(1,1,1), detailSample / detailLuminance, 0.15);
                 half cameraDistance = distance(_WorldSpaceCameraPos, input.worldPosition);
                 half detailWeight = 1.0 - smoothstep(
                     _DetailFadeStartEnd.x, _DetailFadeStartEnd.y, cameraDistance);
-                detailWeight *= 1.0 - smoothstep(4200.0, 5600.0, radius);
-                fixed3 albedo = macro * _Tint.rgb * lerp(fixed3(1,1,1), detailModulation, detailWeight);
+                detailWeight *= 1.0 - smoothstep(
+                    _DetailRadiusFadeStartEnd.x,
+                    _DetailRadiusFadeStartEnd.y,
+                    radius);
+                fixed3 detailMultiplier = fixed3(1,1,1);
+                float2 detailUv = world * _DetailScale;
+                float2 detailUvDx = ddx(detailUv);
+                float2 detailUvDy = ddy(detailUv);
+                UNITY_BRANCH if (detailWeight > 0.0)
+                {
+                    fixed3 detailSample = tex2Dgrad(
+                        _DetailAlbedo, detailUv, detailUvDx, detailUvDy).rgb;
+                    half detailLuminance = max(
+                        0.12, dot(detailSample, fixed3(0.2126, 0.7152, 0.0722)));
+                    fixed3 detailModulation = lerp(
+                        fixed3(1,1,1), detailSample / detailLuminance, 0.15);
+                    half detailLumaModulation = lerp(
+                        0.92,
+                        1.08,
+                        saturate((detailLuminance - 0.32) * 1.85));
+                    detailMultiplier = lerp(
+                        fixed3(1,1,1),
+                        detailModulation * detailLumaModulation,
+                        detailWeight);
+                }
+                fixed3 albedo = macro * _Tint.rgb * detailMultiplier;
 
                 if (_DiagnosticMode > 0.5)
                 {

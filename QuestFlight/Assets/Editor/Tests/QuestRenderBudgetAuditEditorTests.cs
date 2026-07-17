@@ -42,6 +42,7 @@ namespace QuestFlight.Editor.Tests
             GameObject target = new GameObject("QuestRenderBudgetAudit_SkinnedMesh");
             Mesh mesh = CreateOneTriangleMesh();
             Material material = CreateMaterial();
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             try
             {
                 SkinnedMeshRenderer renderer = target.AddComponent<SkinnedMeshRenderer>();
@@ -53,6 +54,7 @@ namespace QuestFlight.Editor.Tests
                 Assert.That(actual.estimatedInstancedDrawCalls - baseline.estimatedInstancedDrawCalls, Is.EqualTo(1));
                 Assert.That(actual.estimatedFrustumTriangles - baseline.estimatedFrustumTriangles, Is.EqualTo(1));
                 Assert.That(actual.uniqueMaterialCount - baseline.uniqueMaterialCount, Is.EqualTo(1));
+                Assert.That(actual.transparentMaterialSlots - baseline.transparentMaterialSlots, Is.EqualTo(1));
             }
             finally
             {

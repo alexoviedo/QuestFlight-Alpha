@@ -406,6 +406,16 @@
       "reason": "Quest-safe sparse-vegetation shader authored for the standalone recovery pass."
     },
     {
+      "path": "Assets/Resources/QuestFlightLab/Environment/Shaders/AircraftRunwayBlobShadow.shader",
+      "classification": "approved_product_authored",
+      "reason": "Bounded opaque runway-contact cue authored for the standalone Quest environment pass."
+    },
+    {
+      "path": "Assets/Scripts/Environment/AircraftRunwayBlobShadow.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored height-faded runway-contact controller; it does not construct or repair the serialized product hierarchy."
+    },
+    {
       "path": "Assets/Production/Materials/Cockpit/Cockpit_ButtonPlate_MAT_-3879712564025455224.mat",
       "classification": "approved_product_authored",
       "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."

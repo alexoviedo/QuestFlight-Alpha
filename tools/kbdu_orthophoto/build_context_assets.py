@@ -7,6 +7,7 @@ import argparse
 import base64
 import json
 import math
+import re
 import struct
 from pathlib import Path
 
@@ -24,6 +25,61 @@ DEFAULT_TERRAIN = (
     / "QuestFlight/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_terrain_rings.json"
 )
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1"
+PARKED_AIRCRAFT_MANIFEST_NAME = "KBDU_ParkedAircraftSourceManifest.json"
+UNITY_INDEX_COUNT_PATTERN = re.compile(r"^\s*indexCount:\s*(\d+)\s*$", re.MULTILINE)
+
+
+def serialized_unity_mesh_triangle_count(path: Path) -> int:
+    """Read the exact triangle count from a serialized Unity Mesh asset."""
+
+    index_counts = [
+        int(value) for value in UNITY_INDEX_COUNT_PATTERN.findall(path.read_text(encoding="utf-8"))
+    ]
+    if not index_counts:
+        raise ValueError(f"Serialized Unity mesh has no submesh indexCount values: {path}")
+    total_indices = sum(index_counts)
+    if total_indices % 3:
+        raise ValueError(f"Serialized Unity mesh index count is not divisible by three: {path}")
+    return total_indices // 3
+
+
+def emitted_vegetation_triangle_accounting(
+    generated_dir: Path, batch_ids: list[str]
+) -> dict:
+    """Reconcile vegetation budgets against the emitted LOD mesh assets."""
+
+    records = []
+    missing = []
+    totals_by_lod: dict[str, int | None] = {}
+    for lod in ("LOD0", "LOD1"):
+        lod_records = []
+        for batch_id in sorted(batch_ids):
+            path = generated_dir / f"{batch_id}_{lod}.asset"
+            if not path.is_file():
+                missing.append(path)
+                continue
+            lod_records.append(
+                {
+                    "path": path.relative_to(REPO_ROOT).as_posix(),
+                    "lod": lod,
+                    "triangles": serialized_unity_mesh_triangle_count(path),
+                }
+            )
+        records.extend(lod_records)
+        totals_by_lod[lod] = (
+            sum(record["triangles"] for record in lod_records)
+            if len(lod_records) == len(batch_ids)
+            else None
+        )
+    return {
+        "method": "sum serialized Unity Mesh m_SubMeshes indexCount values divided by three",
+        "complete": not missing,
+        "expected_mesh_count": len(batch_ids) * 2,
+        "observed_mesh_count": len(records),
+        "missing_paths": [path.relative_to(REPO_ROOT).as_posix() for path in missing],
+        "totals_by_lod": totals_by_lod,
+        "files": records,
+    }
 
 
 def decode_terrain_layer(layer: dict, quantization: float, origin_elevation: float) -> list[float]:
@@ -191,11 +247,39 @@ def main() -> int:
                 "x_meters": round(x, 3),
                 "base_y_meters": round(sampler.sample(x, z), 3),
                 "z_meters": round(z, 3),
-                "height_meters": round(7.5 + (key % 41) * 0.1, 2),
-                "crown_radius_meters": round(2.6 + ((key >> 8) % 21) * 0.08, 2),
+                "height_meters": round(6.2 + (key % 31) * 0.1, 2),
+                "crown_radius_meters": round(1.9 + ((key >> 8) % 17) * 0.05, 2),
                 "zone": zone,
                 "batch_id": f"vegetation_{zone}_{quadrant(x, z)}",
                 "source_category": source_category,
+            }
+        )
+
+    # A small project-authored cottonwood cluster sits outside the runway safety
+    # strip, along the south airport perimeter road. OSM vegetation coverage is
+    # intentionally sparse here; these bounded cues make aircraft/building scale
+    # readable without filling the airport or the 24 km world with geometry.
+    for index, (x, z, height, crown) in enumerate(
+        (
+            (-438.0, -268.0, 8.8, 2.55),
+            (-417.0, -276.0, 7.4, 2.25),
+            (-395.0, -263.0, 9.1, 2.65),
+            (-365.0, -279.0, 7.8, 2.35),
+            (-338.0, -265.0, 8.5, 2.50),
+            (-311.0, -276.0, 7.1, 2.15),
+        )
+    ):
+        accepted.append(
+            {
+                "x_meters": x,
+                "base_y_meters": round(sampler.sample(x, z), 3),
+                "z_meters": z,
+                "height_meters": height,
+                "crown_radius_meters": crown,
+                "zone": "near",
+                "batch_id": "vegetation_near_ws",
+                "source_category": "project_authored_airport_perimeter",
+                "authored_cluster_index": index,
             }
         )
 
@@ -212,6 +296,33 @@ def main() -> int:
         vegetation_batches.append(
             {"id": batch_id, "placements": [value for value in accepted if value["batch_id"] == batch_id]}
         )
+    shrub_count = sum((len(batch["placements"]) + 11) // 12 for batch in vegetation_batches)
+    parked_source_manifest_path = args.output_dir / PARKED_AIRCRAFT_MANIFEST_NAME
+    if not parked_source_manifest_path.is_file():
+        raise FileNotFoundError(
+            "Parked-aircraft LOD source is missing; run build_parked_aircraft_lods.py with Blender: "
+            + str(parked_source_manifest_path)
+        )
+    parked_source_manifest = json.loads(parked_source_manifest_path.read_text(encoding="utf-8"))
+    parked_lods = {value["name"]: value for value in parked_source_manifest["lods"]}
+    if set(parked_lods) != {"ParkedAircraft_LOD0", "ParkedAircraft_LOD1"}:
+        raise ValueError("Parked-aircraft source manifest has an unexpected LOD contract")
+    parked_placements = []
+    for x, z, yaw, color in (
+        (-348.0, -148.0, -3.0, [219, 225, 226, 255]),
+        (-320.0, -146.0, 2.5, [206, 218, 229, 255]),
+        (-292.0, -149.0, 6.0, [231, 220, 204, 255]),
+    ):
+        parked_placements.append(
+            {
+                "x_meters": x,
+                "base_y_meters": round(sampler.sample(x, z) + 0.04, 3),
+                "z_meters": z,
+                "yaw_degrees": yaw,
+                "color_rgba": color,
+            }
+        )
+    parked_aircraft_batches = [{"id": "parked_aircraft_airport", "placements": parked_placements}]
     recipe = {
         "schema_version": 1,
         "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Y=up, +Z=north",
@@ -220,9 +331,11 @@ def main() -> int:
         "atlas_grid": [4, 4],
         "building_batches": batches,
         "vegetation_batches": vegetation_batches,
+        "parked_aircraft_batches": parked_aircraft_batches,
         "integration": {
             "building_lod_screen_relative_heights": [0.08, 0.025],
             "vegetation_lod_screen_relative_heights": [0.10, 0.035],
+            "parked_aircraft_lod_screen_relative_heights": [0.12, 0.03],
             "lod_crossfade": False,
             "near_cull_distance_meters": 2600.0,
             "mid_cull_distance_meters": 6200.0,
@@ -236,11 +349,15 @@ def main() -> int:
     authoring_source_paths = [
         Path(__file__).resolve(),
         REPO_ROOT / "QuestFlight/Assets/Editor/KbduPhotorealTerrainAssetAuthoring.cs",
+        REPO_ROOT / "tools/kbdu_orthophoto/build_parked_aircraft_lods.py",
         args.output_dir / "KBDU_TerrainPyramid.shader",
         args.output_dir / "KBDU_OsmBuildingContext.shader",
         args.output_dir / "KBDU_OpaqueVegetationContext.shader",
     ]
     generated_mesh_paths = sorted((args.output_dir / "Generated").glob("*.asset"))
+    vegetation_triangle_accounting = emitted_vegetation_triangle_accounting(
+        args.output_dir / "Generated", [batch["id"] for batch in vegetation_batches]
+    )
     generated_unity_paths = generated_mesh_paths + [
         path
         for path in (
@@ -248,22 +365,33 @@ def main() -> int:
             args.output_dir / "KBDU_TerrainPyramid.mat",
             args.output_dir / "KBDU_OsmBuildings.mat",
             args.output_dir / "KBDU_ContextVegetation.mat",
+            args.output_dir / "KBDU_ParkedAircraft.mat",
         )
         if path.is_file()
     ]
-    expected_mesh_count = (len(batches) + len(vegetation_batches)) * 2
+    expected_mesh_count = (len(batches) + len(vegetation_batches) + len(parked_aircraft_batches)) * 2
     manifest = {
         "schema_version": 1,
         "label": "KBDU deterministic batched 3D context / not for navigation",
         "source": {
             "database": "OpenStreetMap bounded derivative",
             "source_path": args.context.relative_to(REPO_ROOT).as_posix(),
+            "project_authored_airport_perimeter_vegetation_count": 6,
             "source_sha256": sha256_file(args.context),
             "license": "Open Data Commons Open Database License 1.0",
             "copyright": "© OpenStreetMap contributors",
             "copyright_url": "https://www.openstreetmap.org/copyright",
             "terrain_path": args.terrain.relative_to(REPO_ROOT).as_posix(),
             "terrain_sha256": sha256_file(args.terrain),
+            "parked_aircraft": {
+                "source_manifest": file_record(parked_source_manifest_path, relative_to=REPO_ROOT),
+                "creator": parked_source_manifest["source"]["creator"],
+                "canonical_url": parked_source_manifest["source"]["canonical_url"],
+                "license": parked_source_manifest["source"]["license"],
+                "license_spdx": parked_source_manifest["source"]["license_spdx"],
+                "source_sha256": parked_source_manifest["source"]["sha256"],
+                "change_notice": parked_source_manifest["change_notice"],
+            },
         },
         "project_authored_assets": {
             "atlas": file_record(atlas_path, relative_to=REPO_ROOT),
@@ -278,9 +406,11 @@ def main() -> int:
             "expected_mesh_count": expected_mesh_count,
             "observed_mesh_count": len(generated_mesh_paths),
             "files": [file_record(path, relative_to=REPO_ROOT) for path in generated_unity_paths],
+            "vegetation_mesh_triangle_accounting": vegetation_triangle_accounting,
             "license_boundary": (
                 "Building meshes are OSM Produced Works; vegetation meshes, shaders, materials, atlas, "
-                "and serialized hierarchy are project-authored. Exact OSM/source terms remain above."
+                "and serialized hierarchy are project-authored. Parked-aircraft meshes are a CC BY 4.0 "
+                "adaptation of the attributed KOG_THORNS source. Exact source terms remain above."
             ),
         },
         "budgets": {
@@ -290,15 +420,24 @@ def main() -> int:
             "building_lod1_triangle_estimate": building_triangle_lod1,
             "vegetation_instance_count": len(accepted),
             "vegetation_batch_count": len(vegetation_batches),
-            "vegetation_lod0_triangle_estimate": len(accepted) * 24,
-            "vegetation_lod1_triangle_estimate": len(accepted) * 8,
-            "active_draw_call_delta": len(batches) + len(vegetation_batches),
-            "material_delta": 2,
+            "vegetation_shrub_count": shrub_count,
+            "vegetation_lod0_triangle_estimate": vegetation_triangle_accounting["totals_by_lod"]["LOD0"],
+            "vegetation_lod1_triangle_estimate": vegetation_triangle_accounting["totals_by_lod"]["LOD1"],
+            "parked_aircraft_count": len(parked_placements),
+            "parked_aircraft_batch_count": len(parked_aircraft_batches),
+            "parked_aircraft_lod0_triangle_estimate": len(parked_placements)
+            * int(parked_lods["ParkedAircraft_LOD0"]["triangles"]),
+            "parked_aircraft_lod1_triangle_estimate": len(parked_placements)
+            * int(parked_lods["ParkedAircraft_LOD1"]["triangles"]),
+            "active_draw_call_delta": len(batches) + len(vegetation_batches) + len(parked_aircraft_batches),
+            "material_delta": 3,
         },
         "limitations": [
             "OSM completeness and tagged heights vary; deterministic source defaults remain visual cues, not surveyed structures.",
             "Vegetation positions are deterministic cues near mapped roads/water, not a botanical inventory.",
-            "Parked aircraft are not emitted: the cleared aircraft source needs a separately reviewed static LOD before duplication.",
+            "Six additional project-authored cottonwood cues sit along the south airport perimeter outside the runway safety strip.",
+            "Three static parked-aircraft scale cues use an opaque, exterior-only CC BY adaptation with source branding presentation removed; they are not flyable or interactive.",
+            "CC BY covers the model copyright, not manufacturer trademarks or endorsement; retain attribution and the recorded change notice.",
             "Lead scene integration, culling setup, stereo inspection, and Quest timing remain required.",
         ],
     }

@@ -14,7 +14,7 @@ namespace QuestFlightLab.Input
         public float LastInputTimestamp { get; private set; }
 
         private Gamepad _activeGamepad;
-        private GamepadInputSnapshot _lastSnapshot;
+        private readonly GamepadInputSnapshot _lastSnapshot = GamepadInputSnapshot.Disconnected(0f, 0f);
         private float _sampleWindowStart;
         private int _sampleWindowCount;
         private float _sampleRateHz;
@@ -37,9 +37,10 @@ namespace QuestFlightLab.Input
         private void Update()
         {
             SelectActiveGamepad();
-            Current = _activeGamepad == null
-                ? GamepadInputSnapshot.Disconnected(Time.unscaledTime, _sampleRateHz)
-                : ReadSnapshot(_activeGamepad);
+            if (_activeGamepad == null)
+                Current.SetDisconnected(Time.unscaledTime, _sampleRateHz);
+            else
+                ReadSnapshot(_activeGamepad, Current);
 
             if (Current.HasDifferentInput(_lastSnapshot))
             {
@@ -47,7 +48,7 @@ namespace QuestFlightLab.Input
             }
 
             Current.secondsSinceLastInput = Time.unscaledTime - LastInputTimestamp;
-            _lastSnapshot = CloneForComparison(Current);
+            _lastSnapshot.CopyInputFrom(Current);
             UpdateSampleRate();
         }
 
@@ -85,44 +86,41 @@ namespace QuestFlightLab.Input
             _activeGamepad = all.Count > 0 ? all[0] : null;
         }
 
-        private GamepadInputSnapshot ReadSnapshot(Gamepad gamepad)
+        private void ReadSnapshot(Gamepad gamepad, GamepadInputSnapshot snapshot)
         {
             Vector2 left = gamepad.leftStick.ReadValue();
             Vector2 right = gamepad.rightStick.ReadValue();
             Vector2 dpad = gamepad.dpad.ReadValue();
 
-            return new GamepadInputSnapshot
-            {
-                connected = true,
-                deviceName = gamepad.name ?? "",
-                displayName = gamepad.displayName ?? "",
-                layout = gamepad.layout ?? "",
-                manufacturer = gamepad.description.manufacturer ?? "",
-                product = gamepad.description.product ?? "",
-                interfaceName = gamepad.description.interfaceName ?? "",
-                deviceId = gamepad.deviceId,
-                timestamp = Time.unscaledTime,
-                sampleRateHz = _sampleRateHz,
-                secondsSinceLastInput = Time.unscaledTime - LastInputTimestamp,
-                leftStickX = left.x,
-                leftStickY = left.y,
-                rightStickX = right.x,
-                rightStickY = right.y,
-                leftTrigger = gamepad.leftTrigger.ReadValue(),
-                rightTrigger = gamepad.rightTrigger.ReadValue(),
-                dpadX = dpad.x,
-                dpadY = dpad.y,
-                buttonSouth = gamepad.buttonSouth.isPressed,
-                buttonEast = gamepad.buttonEast.isPressed,
-                buttonWest = gamepad.buttonWest.isPressed,
-                buttonNorth = gamepad.buttonNorth.isPressed,
-                leftShoulder = gamepad.leftShoulder.isPressed,
-                rightShoulder = gamepad.rightShoulder.isPressed,
-                startButton = gamepad.startButton.isPressed,
-                selectButton = gamepad.selectButton.isPressed,
-                leftStickButton = gamepad.leftStickButton.isPressed,
-                rightStickButton = gamepad.rightStickButton.isPressed
-            };
+            snapshot.connected = true;
+            snapshot.deviceName = gamepad.name ?? string.Empty;
+            snapshot.displayName = gamepad.displayName ?? string.Empty;
+            snapshot.layout = gamepad.layout ?? string.Empty;
+            snapshot.manufacturer = gamepad.description.manufacturer ?? string.Empty;
+            snapshot.product = gamepad.description.product ?? string.Empty;
+            snapshot.interfaceName = gamepad.description.interfaceName ?? string.Empty;
+            snapshot.deviceId = gamepad.deviceId;
+            snapshot.timestamp = Time.unscaledTime;
+            snapshot.sampleRateHz = _sampleRateHz;
+            snapshot.secondsSinceLastInput = Time.unscaledTime - LastInputTimestamp;
+            snapshot.leftStickX = left.x;
+            snapshot.leftStickY = left.y;
+            snapshot.rightStickX = right.x;
+            snapshot.rightStickY = right.y;
+            snapshot.leftTrigger = gamepad.leftTrigger.ReadValue();
+            snapshot.rightTrigger = gamepad.rightTrigger.ReadValue();
+            snapshot.dpadX = dpad.x;
+            snapshot.dpadY = dpad.y;
+            snapshot.buttonSouth = gamepad.buttonSouth.isPressed;
+            snapshot.buttonEast = gamepad.buttonEast.isPressed;
+            snapshot.buttonWest = gamepad.buttonWest.isPressed;
+            snapshot.buttonNorth = gamepad.buttonNorth.isPressed;
+            snapshot.leftShoulder = gamepad.leftShoulder.isPressed;
+            snapshot.rightShoulder = gamepad.rightShoulder.isPressed;
+            snapshot.startButton = gamepad.startButton.isPressed;
+            snapshot.selectButton = gamepad.selectButton.isPressed;
+            snapshot.leftStickButton = gamepad.leftStickButton.isPressed;
+            snapshot.rightStickButton = gamepad.rightStickButton.isPressed;
         }
 
         private void UpdateSampleRate()
@@ -136,32 +134,5 @@ namespace QuestFlightLab.Input
             _sampleWindowStart = Time.unscaledTime;
         }
 
-        private static GamepadInputSnapshot CloneForComparison(GamepadInputSnapshot source)
-        {
-            if (source == null) return null;
-            return new GamepadInputSnapshot
-            {
-                connected = source.connected,
-                deviceId = source.deviceId,
-                leftStickX = source.leftStickX,
-                leftStickY = source.leftStickY,
-                rightStickX = source.rightStickX,
-                rightStickY = source.rightStickY,
-                leftTrigger = source.leftTrigger,
-                rightTrigger = source.rightTrigger,
-                dpadX = source.dpadX,
-                dpadY = source.dpadY,
-                buttonSouth = source.buttonSouth,
-                buttonEast = source.buttonEast,
-                buttonWest = source.buttonWest,
-                buttonNorth = source.buttonNorth,
-                leftShoulder = source.leftShoulder,
-                rightShoulder = source.rightShoulder,
-                startButton = source.startButton,
-                selectButton = source.selectButton,
-                leftStickButton = source.leftStickButton,
-                rightStickButton = source.rightStickButton
-            };
-        }
     }
 }

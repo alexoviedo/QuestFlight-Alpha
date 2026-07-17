@@ -82,7 +82,15 @@ $required = @(
   '13_takeoff_roll',
   '14_climb',
   '15_shallow_turn',
-  '16_approach'
+  '16_approach',
+  '17_sky_horizon_forward',
+  '18_sky_horizon_rearward',
+  '19_near_mid_terrain_seam',
+  '20_mid_far_terrain_seam',
+  '21_reservoir_cockpit',
+  '22_reservoir_aerial',
+  '23_airport_buildings_ramp',
+  '24_vegetation_aircraft_scale'
 )
 $missing = @($required | Where-Object { $_ -notin $shotIds })
 if ($missing.Count -gt 0) { throw "Production Visual QA omitted required view(s): $($missing -join ', ')" }
@@ -90,7 +98,7 @@ if ($missing.Count -gt 0) { throw "Production Visual QA omitted required view(s)
 if (-not $SkipPythonAnalysis) {
   $analyzer = Join-Path (Split-Path $PSScriptRoot -Parent) 'tools\visual_qa_analyze.py'
   if (Test-Path -LiteralPath $analyzer) {
-    $analyzerArguments = @($analyzer, '--input', $ArtifactDir, '--minimum-screenshots', '16', '--fail-on-errors')
+    $analyzerArguments = @($analyzer, '--input', $ArtifactDir, '--minimum-screenshots', '24', '--fail-on-errors')
     if (-not [string]::IsNullOrWhiteSpace($LegacyBaselineDir)) {
       $analyzerArguments += @('--baseline', $LegacyBaselineDir)
     }

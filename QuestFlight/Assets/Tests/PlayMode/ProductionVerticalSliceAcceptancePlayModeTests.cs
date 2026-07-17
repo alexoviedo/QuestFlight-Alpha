@@ -61,9 +61,10 @@ namespace QuestFlightLab.Tests.PlayMode
         [Test]
         public void ProductionRuntimeBudgetMetadataMatchesVerticalSliceTargets()
         {
-            Assert.That(QuestTemporalVisualGateRecorder.ProductionDrawCallGate, Is.EqualTo(180));
-            Assert.That(QuestTemporalVisualGateRecorder.ProductionVisibleTriangleGate, Is.EqualTo(700000L));
-            Assert.That(QuestTemporalVisualGateRecorder.ProductionSceneMaterialGate, Is.EqualTo(40));
+            Assert.That(QuestTemporalVisualGateRecorder.ProductionDrawCallGate, Is.EqualTo(120));
+            Assert.That(QuestTemporalVisualGateRecorder.ProductionVisibleTriangleGate, Is.EqualTo(500000L));
+            Assert.That(QuestTemporalVisualGateRecorder.ProductionSceneMaterialGate, Is.EqualTo(30));
+            Assert.That(QuestTemporalVisualGateRecorder.ProductionTransparentMaterialSlotGate, Is.EqualTo(2));
         }
 
         private Transform LoadProductionWorld()

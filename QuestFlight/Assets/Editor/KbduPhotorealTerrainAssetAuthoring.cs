@@ -28,6 +28,7 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/Textures/KBDU_NAIP_2019_Far24km_2048.jpg";
         private const string DetailPath =
             "Assets/Resources/QuestFlightLab/Environment/GroundMaterials/withered_grass_diff_1k.jpg";
+        private const string ParkedAircraftModelPath = Root + "/KBDU_ParkedAircraft_LODs.glb";
 
         [MenuItem("QuestFlight/Product/Author KBDU Photoreal Terrain Assets")]
         public static void RunInteractive() => AuthorAssets();
@@ -62,13 +63,41 @@ namespace QuestFlight.Editor
             }
         }
 
+        /// <summary>
+        /// Regenerates only the reusable batched context assets after a visual-art
+        /// source repair. It never opens or saves the product environment, world,
+        /// or scene and does not rewrite the terrain-pyramid material.
+        /// </summary>
+        public static void RepairContextVisualAssetsBatch()
+        {
+            try
+            {
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                EnsureFolder(Generated);
+                CreateContextMaterials();
+                CreateContextMeshes();
+                AssetDatabase.SaveAssets();
+                CreateContextPrefab();
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                Debug.Log("[QuestFlight][KBDUPhotorealTerrainVisualRepair] SUCCESS");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorApplication.Exit(1);
+            }
+        }
+
         private static void AuthorAssets()
         {
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             EnsureFolder(Generated);
-            ConfigureTexture(NearPath, 4096, true, 4, true);
-            ConfigureTexture(MidPath, 4096, true, 4, true);
-            ConfigureTexture(FarPath, 2048, true, 4, true);
+            ConfigureTexture(NearPath, 4096, true, 8, true, -0.15f);
+            ConfigureTexture(MidPath, 4096, true, 8, true, -0.15f);
+            ConfigureTexture(FarPath, 2048, true, 8, true, -0.10f);
+            ConfigureTexture(DetailPath, 1024, true, 8, false, -0.15f);
             ConfigureTexture(AtlasPath, 1024, false, 2, true);
             CreateTerrainMaterial();
             CreateContextMaterials();
@@ -81,7 +110,8 @@ namespace QuestFlight.Editor
         private static void ValidateAssets()
         {
             ContextRecipe recipe = ReadJson<ContextRecipe>(RecipePath);
-            int batchCount = recipe.building_batches.Length + recipe.vegetation_batches.Length;
+            int batchCount = recipe.building_batches.Length + recipe.vegetation_batches.Length +
+                             recipe.parked_aircraft_batches.Length;
             string[] meshGuids = AssetDatabase.FindAssets("t:Mesh", new[] { Generated });
             if (meshGuids.Length != batchCount * 2)
                 throw new InvalidOperationException(
@@ -106,7 +136,7 @@ namespace QuestFlight.Editor
                 else if (path.EndsWith("_LOD1.asset", StringComparison.Ordinal)) lod1Triangles += triangles;
                 else throw new InvalidOperationException("Generated mesh has an unexpected LOD name: " + path);
             }
-            if (lod0Triangles > 50000 || lod1Triangles > 30000)
+            if (lod0Triangles > 74000 || lod1Triangles > 35000)
                 throw new InvalidOperationException(
                     "Generated context triangle budget exceeded: LOD0=" + lod0Triangles + ", LOD1=" + lod1Triangles);
 
@@ -123,12 +153,13 @@ namespace QuestFlight.Editor
                     throw new InvalidOperationException("Context LOD must have two non-crossfaded levels: " + group.name);
             }
             HashSet<Material> materials = new HashSet<Material>(renderers.Select(renderer => renderer.sharedMaterial));
-            if (materials.Count != 2 || materials.Any(material => material == null || !material.enableInstancing))
-                throw new InvalidOperationException("Context prefab must use exactly two instanced shared materials");
+            if (materials.Count != 3 || materials.Any(material => material == null))
+                throw new InvalidOperationException("Context prefab must use exactly three non-null shared materials");
 
             ValidateTextureImport(NearPath, 4096);
             ValidateTextureImport(MidPath, 4096);
             ValidateTextureImport(FarPath, 2048);
+            ValidateDetailTextureImport();
             Debug.Log(
                 "[QuestFlight][KBDUPhotorealTerrainValidation] batches=" + batchCount +
                 ", LOD0 triangles=" + lod0Triangles + ", LOD1 triangles=" + lod1Triangles +
@@ -138,14 +169,33 @@ namespace QuestFlight.Editor
         private static void ValidateTextureImport(string path, int maximumSize)
         {
             TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
-            if (importer == null || !importer.mipmapEnabled || !importer.streamingMipmaps ||
-                importer.filterMode != FilterMode.Trilinear || importer.anisoLevel != 4 ||
+            if (importer == null || importer.maxTextureSize != maximumSize ||
+                !importer.mipmapEnabled || !importer.streamingMipmaps ||
+                importer.filterMode != FilterMode.Trilinear || importer.anisoLevel != 8 ||
+                importer.mipMapBias > -0.09f ||
                 importer.wrapMode != TextureWrapMode.Clamp)
                 throw new InvalidOperationException("Terrain texture import contract failed: " + path);
             TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
             if (!android.overridden || android.maxTextureSize != maximumSize ||
                 android.format != TextureImporterFormat.ASTC_6x6)
                 throw new InvalidOperationException("Terrain Android ASTC contract failed: " + path);
+            TextureImporterPlatformSettings standalone = importer.GetPlatformTextureSettings("Standalone");
+            if (!standalone.overridden || standalone.maxTextureSize != maximumSize)
+                throw new InvalidOperationException("Terrain simulator/Standalone resolution contract failed: " + path);
+        }
+
+        private static void ValidateDetailTextureImport()
+        {
+            TextureImporter importer = AssetImporter.GetAtPath(DetailPath) as TextureImporter;
+            if (importer == null || importer.maxTextureSize != 1024 ||
+                !importer.mipmapEnabled || !importer.streamingMipmaps ||
+                importer.filterMode != FilterMode.Trilinear || importer.anisoLevel != 8 ||
+                importer.mipMapBias > -0.14f || importer.wrapMode != TextureWrapMode.Repeat)
+                throw new InvalidOperationException("Terrain microdetail import contract failed: " + DetailPath);
+            TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
+            if (!android.overridden || android.maxTextureSize != 1024 ||
+                android.format != TextureImporterFormat.ASTC_6x6)
+                throw new InvalidOperationException("Terrain microdetail Android ASTC contract failed: " + DetailPath);
         }
 
         private static bool Finite(Vector3 value) =>
@@ -156,7 +206,8 @@ namespace QuestFlight.Editor
             int maximumSize,
             bool streaming,
             int anisotropy,
-            bool clamp)
+            bool clamp,
+            float mipBias = 0f)
         {
             TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer == null) throw new InvalidOperationException("Texture importer is missing: " + path);
@@ -166,8 +217,19 @@ namespace QuestFlight.Editor
             importer.streamingMipmaps = streaming;
             importer.filterMode = FilterMode.Trilinear;
             importer.anisoLevel = anisotropy;
+            importer.mipMapBias = mipBias;
             importer.wrapMode = clamp ? TextureWrapMode.Clamp : TextureWrapMode.Repeat;
+            importer.maxTextureSize = maximumSize;
             importer.textureCompression = TextureImporterCompression.CompressedHQ;
+            importer.SetPlatformTextureSettings(new TextureImporterPlatformSettings
+            {
+                name = "Standalone",
+                overridden = true,
+                maxTextureSize = maximumSize,
+                format = TextureImporterFormat.Automatic,
+                textureCompression = TextureImporterCompression.CompressedHQ,
+                compressionQuality = 75
+            });
             importer.SetPlatformTextureSettings(new TextureImporterPlatformSettings
             {
                 name = "Android",
@@ -194,7 +256,8 @@ namespace QuestFlight.Editor
             material.SetVector("_FarWorldMinInvSize", new Vector4(-12000f, -12000f, 1f / 24000f, 1f / 24000f));
             material.SetVector("_NearBlendStartEnd", new Vector4(1650f, 2000f, 0f, 0f));
             material.SetVector("_MidBlendStartEnd", new Vector4(5000f, 6000f, 0f, 0f));
-            material.SetVector("_DetailFadeStartEnd", new Vector4(180f, 1500f, 0f, 0f));
+            material.SetVector("_DetailFadeStartEnd", new Vector4(250f, 2600f, 0f, 0f));
+            material.SetVector("_DetailRadiusFadeStartEnd", new Vector4(4500f, 6800f, 0f, 0f));
             material.SetFloat("_DetailScale", 1f / 15f);
             material.SetFloat("_Roughness", 0.92f);
             material.SetFloat("_DiagnosticMode", 0f);
@@ -222,6 +285,12 @@ namespace QuestFlight.Editor
             vegetation.SetColor("_Tint", Color.white);
             vegetation.enableInstancing = true;
             EditorUtility.SetDirty(vegetation);
+
+            Material parkedAircraft = LoadOrCreateMaterial(Root + "/KBDU_ParkedAircraft.mat", vegetationShader);
+            parkedAircraft.name = "KBDU_ParkedAircraft";
+            parkedAircraft.SetColor("_Tint", Color.white);
+            parkedAircraft.enableInstancing = true;
+            EditorUtility.SetDirty(parkedAircraft);
         }
 
         private static void CreateContextMeshes()
@@ -230,11 +299,13 @@ namespace QuestFlight.Editor
             ContextRecipe recipe = ReadJson<ContextRecipe>(RecipePath);
             if (context.openstreetmap == null || context.openstreetmap.features == null)
                 throw new InvalidOperationException("OSM context does not contain features");
-            if (recipe.building_batches == null || recipe.vegetation_batches == null)
+            if (recipe.building_batches == null || recipe.vegetation_batches == null ||
+                recipe.parked_aircraft_batches == null)
                 throw new InvalidOperationException("KBDU context recipe does not contain batches");
 
             int buildingCount = 0;
             int vegetationCount = 0;
+            int parkedAircraftCount = 0;
             HashSet<string> desiredMeshPaths = new HashSet<string>(StringComparer.Ordinal);
             foreach (BuildingBatch batch in recipe.building_batches)
             {
@@ -260,6 +331,19 @@ namespace QuestFlight.Editor
                 desiredMeshPaths.Add(lod1Path);
                 vegetationCount += batch.placements.Length;
             }
+            GameObject parkedAircraftSource = LoadRequired<GameObject>(ParkedAircraftModelPath);
+            foreach (ParkedAircraftBatch batch in recipe.parked_aircraft_batches)
+            {
+                Mesh lod0 = BuildParkedAircraftBatch(batch, parkedAircraftSource, false);
+                Mesh lod1 = BuildParkedAircraftBatch(batch, parkedAircraftSource, true);
+                string lod0Path = Generated + "/" + batch.id + "_LOD0.asset";
+                string lod1Path = Generated + "/" + batch.id + "_LOD1.asset";
+                SaveMesh(lod0, lod0Path);
+                SaveMesh(lod1, lod1Path);
+                desiredMeshPaths.Add(lod0Path);
+                desiredMeshPaths.Add(lod1Path);
+                parkedAircraftCount += batch.placements.Length;
+            }
             foreach (string guid in AssetDatabase.FindAssets("t:Mesh", new[] { Generated }))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
@@ -269,7 +353,8 @@ namespace QuestFlight.Editor
                 "[QuestFlight][KBDUPhotorealTerrain] Authored " + recipe.building_batches.Length +
                 " two-LOD OSM building batches (" + buildingCount + " footprints) and " +
                 recipe.vegetation_batches.Length + " two-LOD opaque vegetation batches (" +
-                vegetationCount + " trees); no product scene or environment prefab was modified.");
+                vegetationCount + " trees), plus " + parkedAircraftCount +
+                " exterior-only static parked aircraft in one two-LOD batch; no product scene or environment prefab was modified.");
         }
 
         private static void CreateContextPrefab()
@@ -277,6 +362,7 @@ namespace QuestFlight.Editor
             ContextRecipe recipe = ReadJson<ContextRecipe>(RecipePath);
             Material buildingMaterial = LoadRequired<Material>(Root + "/KBDU_OsmBuildings.mat");
             Material vegetationMaterial = LoadRequired<Material>(Root + "/KBDU_ContextVegetation.mat");
+            Material parkedAircraftMaterial = LoadRequired<Material>(Root + "/KBDU_ParkedAircraft.mat");
             GameObject root = new GameObject("KBDU_BatchedContext");
             try
             {
@@ -284,6 +370,8 @@ namespace QuestFlight.Editor
                     AddBatchLod(root.transform, batch.id, buildingMaterial, 0.08f, 0.025f);
                 foreach (VegetationBatch batch in recipe.vegetation_batches)
                     AddBatchLod(root.transform, batch.id, vegetationMaterial, 0.10f, 0.035f);
+                foreach (ParkedAircraftBatch batch in recipe.parked_aircraft_batches)
+                    AddBatchLod(root.transform, batch.id, parkedAircraftMaterial, 0.12f, 0.03f);
                 PrefabUtility.SaveAsPrefabAsset(root, Root + "/KBDU_BatchedContext.prefab");
             }
             finally
@@ -437,26 +525,208 @@ namespace QuestFlight.Editor
             }
         }
 
+        private static Mesh BuildParkedAircraftBatch(
+            ParkedAircraftBatch batch,
+            GameObject sourceModel,
+            bool lowDetail)
+        {
+            string lodName = lowDetail ? "ParkedAircraft_LOD1" : "ParkedAircraft_LOD0";
+            MeshFilter sourceFilter = sourceModel.GetComponentsInChildren<MeshFilter>(true)
+                .SingleOrDefault(filter => filter.name.StartsWith(lodName, StringComparison.Ordinal));
+            if (sourceFilter == null || sourceFilter.sharedMesh == null)
+                throw new InvalidOperationException("Parked-aircraft source LOD is missing: " + lodName);
+
+            Mesh source = sourceFilter.sharedMesh;
+            Vector3[] sourceVertices = source.vertices;
+            Vector3[] sourceNormals = source.normals;
+            int[] sourceTriangles = source.triangles;
+            if (sourceNormals.Length != sourceVertices.Length)
+                throw new InvalidOperationException("Parked-aircraft source normals are incomplete: " + lodName);
+
+            List<Vector3> vertices = new List<Vector3>(sourceVertices.Length * batch.placements.Length);
+            List<Vector3> normals = new List<Vector3>(sourceVertices.Length * batch.placements.Length);
+            List<Color32> colors = new List<Color32>(sourceVertices.Length * batch.placements.Length);
+            List<int> indices = new List<int>(sourceTriangles.Length * batch.placements.Length);
+            Matrix4x4 sourceToRoot = sourceModel.transform.worldToLocalMatrix * sourceFilter.transform.localToWorldMatrix;
+            foreach (ParkedAircraftPlacement placement in batch.placements)
+            {
+                if (placement.color_rgba == null || placement.color_rgba.Length != 4)
+                    throw new InvalidOperationException("Parked-aircraft color contract is invalid in " + batch.id);
+                Color32 color = new Color32(
+                    (byte)placement.color_rgba[0], (byte)placement.color_rgba[1],
+                    (byte)placement.color_rgba[2], (byte)placement.color_rgba[3]);
+                Matrix4x4 placementMatrix = Matrix4x4.TRS(
+                    new Vector3(placement.x_meters, placement.base_y_meters, placement.z_meters),
+                    Quaternion.Euler(0f, placement.yaw_degrees, 0f),
+                    Vector3.one) * sourceToRoot;
+                Matrix4x4 normalMatrix = placementMatrix.inverse.transpose;
+                int start = vertices.Count;
+                for (int index = 0; index < sourceVertices.Length; index++)
+                {
+                    vertices.Add(placementMatrix.MultiplyPoint3x4(sourceVertices[index]));
+                    normals.Add(normalMatrix.MultiplyVector(sourceNormals[index]).normalized);
+                    colors.Add(color);
+                }
+                foreach (int sourceIndex in sourceTriangles) indices.Add(start + sourceIndex);
+            }
+
+            Mesh mesh = new Mesh { name = batch.id + (lowDetail ? "_LOD1" : "_LOD0") };
+            mesh.indexFormat = vertices.Count > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
+            mesh.SetVertices(vertices);
+            mesh.SetNormals(normals);
+            mesh.SetColors(colors);
+            mesh.SetTriangles(indices, 0, true);
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
         private static Mesh BuildVegetationBatch(VegetationBatch batch, bool lowDetail)
         {
             List<Vector3> vertices = new List<Vector3>();
             List<Color32> colors = new List<Color32>();
             List<int> indices = new List<int>();
-            foreach (VegetationPlacement placement in batch.placements)
+            for (int placementIndex = 0; placementIndex < batch.placements.Length; placementIndex++)
             {
+                VegetationPlacement placement = batch.placements[placementIndex];
                 Vector3 origin = new Vector3(placement.x_meters, placement.base_y_meters, placement.z_meters);
                 if (lowDetail)
-                    AddOctahedralCrown(origin, placement.height_meters, placement.crown_radius_meters, vertices, colors, indices);
-                else
                 {
                     AddColoredBox(
-                        origin + Vector3.up * placement.height_meters * 0.28f,
-                        new Vector3(0.42f, placement.height_meters * 0.56f, 0.42f),
-                        new Color32(91, 70, 45, 255),
+                        origin + Vector3.up * placement.height_meters * 0.23f,
+                        new Vector3(0.28f, placement.height_meters * 0.46f, 0.28f),
+                        new Color32(78, 65, 47, 255),
                         vertices,
                         colors,
                         indices);
-                    AddHexCrown(origin, placement.height_meters, placement.crown_radius_meters, vertices, colors, indices);
+                    Vector3 lowCrownCenter = origin + Vector3.up * placement.height_meters * 0.69f;
+                    AddDeciduousCrown(
+                        lowCrownCenter,
+                        new Vector3(
+                            placement.crown_radius_meters * 0.92f,
+                            placement.height_meters * 0.25f,
+                            placement.crown_radius_meters),
+                        7,
+                        new Color32(56, 88, 48, 255),
+                        vertices,
+                        colors,
+                        indices);
+                    AddDeciduousCrown(
+                        lowCrownCenter + new Vector3(-placement.crown_radius_meters * 0.45f, -0.12f, 0.14f),
+                        new Vector3(
+                            placement.crown_radius_meters * 0.54f,
+                            placement.height_meters * 0.16f,
+                            placement.crown_radius_meters * 0.50f),
+                        5,
+                        new Color32(64, 98, 52, 255),
+                        vertices,
+                        colors,
+                        indices);
+                    AddDeciduousCrown(
+                        lowCrownCenter + new Vector3(placement.crown_radius_meters * 0.42f, 0.10f, -0.18f),
+                        new Vector3(
+                            placement.crown_radius_meters * 0.50f,
+                            placement.height_meters * 0.15f,
+                            placement.crown_radius_meters * 0.55f),
+                        5,
+                        new Color32(70, 105, 56, 255),
+                        vertices,
+                        colors,
+                        indices);
+                }
+                else
+                {
+                    AddColoredBox(
+                        origin + Vector3.up * placement.height_meters * 0.24f,
+                        new Vector3(0.34f, placement.height_meters * 0.48f, 0.34f),
+                        new Color32(92, 76, 54, 255),
+                        vertices,
+                        colors,
+                        indices);
+                    Vector3 crownCenter = origin + Vector3.up * placement.height_meters * 0.69f;
+                    bool nearZone = string.Equals(placement.zone, "near", StringComparison.Ordinal);
+                    if (nearZone)
+                    {
+                        AddRoundedDeciduousCrown(
+                            crownCenter,
+                            new Vector3(
+                                placement.crown_radius_meters * 1.08f,
+                                placement.height_meters * 0.25f,
+                                placement.crown_radius_meters),
+                            8,
+                            new Color32(58, 93, 50, 255),
+                            vertices,
+                            colors,
+                            indices);
+                        AddRoundedDeciduousCrown(
+                            crownCenter + new Vector3(-placement.crown_radius_meters * 0.48f, -0.10f, 0.18f),
+                            new Vector3(
+                                placement.crown_radius_meters * 0.58f,
+                                placement.height_meters * 0.17f,
+                                placement.crown_radius_meters * 0.56f),
+                            6,
+                            new Color32(66, 101, 55, 255),
+                            vertices,
+                            colors,
+                            indices);
+                        AddRoundedDeciduousCrown(
+                            crownCenter + new Vector3(placement.crown_radius_meters * 0.46f, 0.10f, -0.22f),
+                            new Vector3(
+                                placement.crown_radius_meters * 0.56f,
+                                placement.height_meters * 0.16f,
+                                placement.crown_radius_meters * 0.60f),
+                            6,
+                            new Color32(73, 109, 59, 255),
+                            vertices,
+                            colors,
+                            indices);
+                    }
+                    else
+                    {
+                        AddDeciduousCrown(
+                            crownCenter,
+                            new Vector3(
+                                placement.crown_radius_meters * 1.08f,
+                                placement.height_meters * 0.25f,
+                                placement.crown_radius_meters),
+                            6,
+                            new Color32(73, 111, 58, 255),
+                            vertices,
+                            colors,
+                            indices);
+                        AddDeciduousCrown(
+                            crownCenter + new Vector3(-placement.crown_radius_meters * 0.55f, -0.15f, 0.18f),
+                            new Vector3(
+                                placement.crown_radius_meters * 0.64f,
+                                placement.height_meters * 0.18f,
+                                placement.crown_radius_meters * 0.60f),
+                            5,
+                            new Color32(85, 122, 64, 255),
+                            vertices,
+                            colors,
+                            indices);
+                        AddDeciduousCrown(
+                            crownCenter + new Vector3(placement.crown_radius_meters * 0.50f, 0.12f, -0.24f),
+                            new Vector3(
+                                placement.crown_radius_meters * 0.60f,
+                                placement.height_meters * 0.17f,
+                                placement.crown_radius_meters * 0.64f),
+                            5,
+                            new Color32(96, 132, 70, 255),
+                            vertices,
+                            colors,
+                            indices);
+                    }
+                    if (placementIndex % 12 == 0)
+                    {
+                        AddDeciduousCrown(
+                            origin + new Vector3(placement.crown_radius_meters * 1.4f, 0.62f, -0.45f),
+                            new Vector3(0.95f, 0.62f, 0.82f),
+                            4,
+                            new Color32(91, 112, 63, 255),
+                            vertices,
+                            colors,
+                            indices);
+                    }
                 }
             }
             Mesh mesh = new Mesh { name = batch.id + (lowDetail ? "_LOD1" : "_LOD0") };
@@ -468,6 +738,92 @@ namespace QuestFlight.Editor
             mesh.RecalculateBounds();
             return mesh;
         }
+
+        private static void AddDeciduousCrown(
+            Vector3 center,
+            Vector3 radius,
+            int segments,
+            Color32 color,
+            List<Vector3> vertices,
+            List<Color32> colors,
+            List<int> indices)
+        {
+            int start = vertices.Count;
+            vertices.Add(center + Vector3.up * radius.y);
+            vertices.Add(center - Vector3.up * radius.y);
+            colors.Add(Lighten(color, 12));
+            colors.Add(Darken(color, 11));
+            for (int index = 0; index < segments; index++)
+            {
+                float angle = index * Mathf.PI * 2f / segments;
+                vertices.Add(center + new Vector3(
+                    Mathf.Cos(angle) * radius.x,
+                    Mathf.Sin(angle * 2f) * radius.y * 0.08f,
+                    Mathf.Sin(angle) * radius.z));
+                colors.Add(index % 2 == 0 ? color : Darken(color, 5));
+            }
+            for (int index = 0; index < segments; index++)
+            {
+                int current = start + 2 + index;
+                int next = start + 2 + (index + 1) % segments;
+                indices.Add(start); indices.Add(next); indices.Add(current);
+                indices.Add(start + 1); indices.Add(current); indices.Add(next);
+            }
+        }
+
+        private static void AddRoundedDeciduousCrown(
+            Vector3 center,
+            Vector3 radius,
+            int segments,
+            Color32 color,
+            List<Vector3> vertices,
+            List<Color32> colors,
+            List<int> indices)
+        {
+            int start = vertices.Count;
+            vertices.Add(center + Vector3.up * radius.y);
+            vertices.Add(center - Vector3.up * radius.y);
+            colors.Add(Lighten(color, 16));
+            colors.Add(Darken(color, 14));
+            for (int ring = 0; ring < 2; ring++)
+            {
+                float y = ring == 0 ? radius.y * 0.30f : -radius.y * 0.30f;
+                float horizontalScale = ring == 0 ? 0.88f : 0.96f;
+                for (int index = 0; index < segments; index++)
+                {
+                    float angle = index * Mathf.PI * 2f / segments;
+                    vertices.Add(center + new Vector3(
+                        Mathf.Cos(angle) * radius.x * horizontalScale,
+                        y + Mathf.Sin(angle * 2f) * radius.y * 0.035f,
+                        Mathf.Sin(angle) * radius.z * horizontalScale));
+                    Color32 ringColor = ring == 0 ? Lighten(color, 5) : Darken(color, 4);
+                    colors.Add(index % 2 == 0 ? ringColor : Darken(ringColor, 3));
+                }
+            }
+
+            int upperStart = start + 2;
+            int lowerStart = upperStart + segments;
+            for (int index = 0; index < segments; index++)
+            {
+                int next = (index + 1) % segments;
+                indices.Add(start); indices.Add(upperStart + next); indices.Add(upperStart + index);
+                indices.Add(upperStart + index); indices.Add(upperStart + next); indices.Add(lowerStart + next);
+                indices.Add(upperStart + index); indices.Add(lowerStart + next); indices.Add(lowerStart + index);
+                indices.Add(start + 1); indices.Add(lowerStart + index); indices.Add(lowerStart + next);
+            }
+        }
+
+        private static Color32 Lighten(Color32 color, byte amount) => new Color32(
+            (byte)Mathf.Min(255, color.r + amount),
+            (byte)Mathf.Min(255, color.g + amount),
+            (byte)Mathf.Min(255, color.b + amount),
+            color.a);
+
+        private static Color32 Darken(Color32 color, byte amount) => new Color32(
+            (byte)Mathf.Max(0, color.r - amount),
+            (byte)Mathf.Max(0, color.g - amount),
+            (byte)Mathf.Max(0, color.b - amount),
+            color.a);
 
         private static void AddHexCrown(
             Vector3 origin,
@@ -741,6 +1097,7 @@ namespace QuestFlight.Editor
         {
             public BuildingBatch[] building_batches;
             public VegetationBatch[] vegetation_batches;
+            public ParkedAircraftBatch[] parked_aircraft_batches;
         }
 
         [Serializable]
@@ -774,6 +1131,24 @@ namespace QuestFlight.Editor
             public float z_meters;
             public float height_meters;
             public float crown_radius_meters;
+            public string zone;
+        }
+
+        [Serializable]
+        private sealed class ParkedAircraftBatch
+        {
+            public string id;
+            public ParkedAircraftPlacement[] placements;
+        }
+
+        [Serializable]
+        private sealed class ParkedAircraftPlacement
+        {
+            public float x_meters;
+            public float base_y_meters;
+            public float z_meters;
+            public float yaw_degrees;
+            public int[] color_rgba;
         }
     }
 }

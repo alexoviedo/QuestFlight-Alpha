@@ -120,13 +120,15 @@
   "zones": [
     {
       "android_compression": "ASTC_6x6",
-      "anisotropy": 4,
+      "anisotropy": 8,
       "coverage_meters": 4000.0,
       "estimated_mip_at_cockpit_height": 0.0,
       "estimated_mip_at_pattern_altitude": 0.0,
+      "filter_mode": "trilinear",
       "half_extent_meters": 2000.0,
       "id": "near_4km",
       "meters_per_texel": 0.9765625,
+      "mip_bias": -0.15,
       "mipmaps": true,
       "runtime_resolution_pixels": [
         4096,
@@ -140,17 +142,20 @@
         -2000.0,
         0.00025,
         0.00025
-      ]
+      ],
+      "wrap_mode": "clamp"
     },
     {
       "android_compression": "ASTC_6x6",
-      "anisotropy": 4,
+      "anisotropy": 8,
       "coverage_meters": 12000.0,
       "estimated_mip_at_cockpit_height": 0.0,
       "estimated_mip_at_pattern_altitude": 0.0,
+      "filter_mode": "trilinear",
       "half_extent_meters": 6000.0,
       "id": "mid_12km",
       "meters_per_texel": 2.9296875,
+      "mip_bias": -0.15,
       "mipmaps": true,
       "runtime_resolution_pixels": [
         4096,
@@ -164,17 +169,20 @@
         -6000.0,
         8.333333333333333e-05,
         8.333333333333333e-05
-      ]
+      ],
+      "wrap_mode": "clamp"
     },
     {
       "android_compression": "ASTC_6x6",
-      "anisotropy": 4,
+      "anisotropy": 8,
       "coverage_meters": 24000.0,
       "estimated_mip_at_cockpit_height": 0.0,
       "estimated_mip_at_pattern_altitude": 0.0,
+      "filter_mode": "trilinear",
       "half_extent_meters": 12000.0,
       "id": "far_24km",
       "meters_per_texel": 11.71875,
+      "mip_bias": -0.1,
       "mipmaps": true,
       "runtime_resolution_pixels": [
         2048,
@@ -188,7 +196,8 @@
         -12000.0,
         4.1666666666666665e-05,
         4.1666666666666665e-05
-      ]
+      ],
+      "wrap_mode": "clamp"
     }
   ]
 }

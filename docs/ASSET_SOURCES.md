@@ -11,7 +11,7 @@ This file records only assets present in the clean product dependency closure. L
 - Purpose: cockpit and exterior visual baseline
 - Caveat: the license covers the model copyright, not Cessna/Textron trademarks or endorsement. Public commercial release requires a branding review.
 
-The product does not contain a runtime-generated or substitute aircraft. The imported asset is tracked with Git LFS and its exact hash is verified by `scripts/sync_local_aircraft_asset.ps1 -VerifyOnly`.
+The flyable product aircraft is neither runtime-generated nor substituted. The imported asset is tracked with Git LFS and its exact hash is verified by `scripts/sync_local_aircraft_asset.ps1 -VerifyOnly`. Separately authored parked-aircraft scenery is non-interactive environment context and never replaces the flyable product aircraft.
 
 ## KBDU-Inspired Environment Data
 
@@ -31,9 +31,9 @@ The product contains bounded, optimized derivatives rather than raw downloads.
   - attribution: © OpenStreetMap contributors; https://www.openstreetmap.org/copyright
 - USGS/USDA NAIP Plus
   - source: `https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer`
-  - use: bounded 2019 natural-color macro imagery for the near 4 km and mid 12 km zones
+  - use: bounded 2019 natural-color macro imagery for the aligned near 4 km, mid 12 km, and far 24 km zones
   - status: USDA-FSA/USGS United States government work / public domain
-  - product derivatives: one 4096×4096 near atlas and one color-matched 2048×2048 mid atlas
+  - current product derivatives: one 4096×4096 near atlas, one color-matched 4096×4096 mid atlas, and one color-matched 2048×2048 far atlas
   - raw policy: source exports, lossless intermediates, service receipts, and previews remain outside Git
 
 Committed compact derivatives are:
@@ -44,7 +44,19 @@ Committed compact derivatives are:
 
 The exact source requests, timestamps, hashes, licenses, and geometry budgets are pinned in `tools/kbdu_environment/kbdu_source_manifest.json`. The environment is KBDU-inspired and not for navigation.
 
-The later standalone recovery imagery lineage is separately pinned in `tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json` and documented in `docs/KBDU_ORTHOPHOTO_PROVENANCE.md`. The earlier frozen extraction's availability-only decision remains historical evidence; it does not describe the current bounded public-domain runtime atlases.
+The current three-level imagery lineage is pinned in `tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json` and documented in `docs/KBDU_ORTHOPHOTO_PROVENANCE.md`. The earlier frozen extraction's availability-only decision remains historical evidence; it does not describe the current bounded public-domain runtime atlases. The earlier 2048×2048 mid derivative remains rights-cleared and tracked, but the current terrain-pyramid material binds the 4096×4096 replacement.
+
+## Photographic Sky
+
+- Asset: Kloppenheim 03 (Pure Sky), original by Greg Zaal with sky edits by Jarod Guest
+- Official page: https://polyhaven.com/a/kloppenheim_03_puresky
+- License: CC0 1.0
+- Raw source: official 4096×2048 HDR download; retained only in the external milestone artifact tree
+- Product derivative: `QuestFlight/Assets/Production/Environment/Sky/Kloppenheim03_PureSky_2K.hdr`
+- Processing: exact 2×2 linear-radiance box reduction to 2048×1024 Radiance HDR, without tone mapping or clipping
+- Purpose: skybox, ambient environment, static custom reflection, and reservoir reflection source
+
+The selected-source hash, raw-source hash, runtime hash, authorship, official URLs, processing tool, Unity import settings, and external evidence hashes are pinned in `QuestFlight/Assets/Production/Environment/Sky/SOURCE_MANIFEST.json`.
 
 ## CC0 Ground Detail
 
@@ -58,6 +70,10 @@ Three 1K diffuse maps from Poly Haven are used as Quest-bounded microdetail. Pol
 
 The product copies only the optimized 1024×1024 maps. Android imports use mipmaps, trilinear filtering, anisotropy, and ASTC compression. No raw archives are committed.
 
+## CC BY Parked-Scenery Adaptation
+
+Three static parked-aircraft scale cues use the separately reviewed KOG_THORNS source under CC BY 4.0. The original flyable-aircraft GLB remains unchanged. The committed scenery derivative retains only exterior body geometry, removes cockpit/interior/glass/textures/source materials/branding presentation/animation, and provides 3,200- and 900-triangle source LODs. Three serialized placements are offline-combined per LOD, use one shared opaque material, and add one active draw slot. Attribution, the change notice, exact hashes, and the no-endorsement caveat are pinned in `QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraftSourceManifest.json` and the context manifest.
+
 ## Project-Authored Derivatives
 
 - Fixed terrain, runway, marking, bank, water, and context meshes
@@ -65,10 +81,13 @@ The product copies only the optimized 1024×1024 maps. Android imports use mipma
 - Production ground, runway-marking, and stable-water shaders
 - `KBDU_AirportKit.glb` and its shared atlas, generated by the committed Blender script from project-owned geometry
 - project-authored runway albedo/metallic-smoothness textures generated by the committed deterministic Python script
-- deterministic combined airport LOD meshes and sparse cottonwood LOD meshes authored offline into the serialized environment prefab
+- project-authored `KBDU_ContextAtlas.png`, vegetation meshes, context shaders, materials, and batching recipe
+- two project-authored reservoir normal maps and one packed shore/depth/roughness texture; the packed map derives from the OSM shoreline and retains OSM attribution, and its depth channel is explicitly artistic rather than surveyed bathymetry
 - Unity scene, prefabs, materials, scripts, QA views, tests, and build tooling
 
-The legacy macro albedo remains a synthetic land-cover derivative. The current near/mid runtime atlases are bounded public-domain NAIP derivatives and are not current navigation data or a photorealism claim. No Google Maps, Google Earth, Street View, paid, or unclear-license content is included.
+The 2,500 surrounding building extrusions are OSM Produced Works, offline-combined into 23 LODGroups. Their source database, license boundary, per-mesh hashes, shared-atlas hash, and eight project-authored vegetation batch outputs are pinned in `QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ContextAssetsManifest.json`. The current context shaders do not compile GPU-instancing variants, so the product makes no GPU-instancing claim for these batches.
+
+The legacy macro albedo remains a synthetic land-cover derivative. The current near/mid/far runtime atlases are bounded public-domain NAIP derivatives and are not current navigation data or a production-photorealism claim. No Google Maps, Google Earth, Street View, paid, or unclear-license content is included.
 
 ## Future Asset Rule
 
