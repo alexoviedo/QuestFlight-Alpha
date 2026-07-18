@@ -211,23 +211,31 @@ namespace QuestFlightLab.EditorTests
                 "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader");
             Shader marking = AssetDatabase.LoadAssetAtPath<Shader>(
                 "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader");
-            Shader water = AssetDatabase.LoadAssetAtPath<Shader>(
+            Shader reservoir = AssetDatabase.LoadAssetAtPath<Shader>(
+                "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUReservoirWaterV4.shader");
+            Shader secondaryWater = AssetDatabase.LoadAssetAtPath<Shader>(
                 "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionStableWater.shader");
             Assert.That(ground, Is.Not.Null);
             Assert.That(marking, Is.Not.Null);
-            Assert.That(water, Is.Not.Null);
+            Assert.That(reservoir, Is.Not.Null);
+            Assert.That(secondaryWater, Is.Not.Null);
             Assert.That(ground.isSupported, Is.True);
             Assert.That(marking.isSupported, Is.True);
-            Assert.That(water.isSupported, Is.True);
+            Assert.That(reservoir.isSupported, Is.True);
+            Assert.That(secondaryWater.isSupported, Is.True);
             Assert.That(ShaderUtil.GetShaderMessages(ground).Where(IsError).Select(message => message.message), Is.Empty);
             Assert.That(ShaderUtil.GetShaderMessages(marking).Where(IsError).Select(message => message.message), Is.Empty);
-            Assert.That(ShaderUtil.GetShaderMessages(water).Where(IsError).Select(message => message.message), Is.Empty);
+            Assert.That(ShaderUtil.GetShaderMessages(reservoir).Where(IsError).Select(message => message.message), Is.Empty);
+            Assert.That(ShaderUtil.GetShaderMessages(secondaryWater).Where(IsError).Select(message => message.message), Is.Empty);
             ProductionEnvironmentRoot contract = LoadPrefab().GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.nearTerrainMeshes[0].GetComponent<Renderer>().sharedMaterial.shader, Is.SameAs(ground));
             Assert.That(contract.runwayMarkings.sharedMaterial.shader, Is.SameAs(marking));
-            Assert.That(contract.boulderReservoirSurface.GetComponent<Renderer>().sharedMaterial.shader, Is.SameAs(water));
-            Assert.That(contract.boulderReservoirSurface.GetComponent<Renderer>().sharedMaterial.renderQueue,
-                Is.LessThan((int)RenderQueue.Transparent));
+            Material reservoirMaterial = contract.boulderReservoirSurface.GetComponent<Renderer>().sharedMaterial;
+            Assert.That(reservoirMaterial.shader, Is.SameAs(reservoir));
+            Assert.That(reservoirMaterial.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
+            Assert.That(reservoirMaterial.passCount, Is.EqualTo(1));
+            Assert.That(contract.otherWaterFeaturesSurfaceV2.GetComponent<Renderer>().sharedMaterial.shader,
+                Is.SameAs(secondaryWater));
         }
 
         private static bool IsError(ShaderMessage message) =>

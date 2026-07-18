@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using QuestFlightLab.Editor;
+using QuestFlightLab.Runtime;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.SceneManagement;
@@ -21,11 +22,11 @@ namespace QuestFlight.Editor
     /// </summary>
     public static class QuestPerformanceBudgetBatchRunner
     {
-        private const int DrawCallTarget = 130;
-        private const long VisibleTriangleTarget = 650000L;
-        private const int MaterialTarget = 30;
-        private const long TextureMemoryTargetBytes = 220L * 1024L * 1024L;
-        private const int TransparentMaterialSlotTarget = 2;
+        private const int DrawCallTarget = 120;
+        private const long VisibleTriangleTarget = 600000L;
+        private const int MaterialTarget = 25;
+        private const long TextureMemoryTargetBytes = 180L * 1024L * 1024L;
+        private const int TransparentMaterialSlotTarget = 3;
         private const string OutputEnvironmentVariable = "QFL_PERFORMANCE_BUDGET_DIR";
         private const string VisualReportEnvironmentVariable = "QFL_VISUAL_QA_REPORT";
 
@@ -120,6 +121,8 @@ namespace QuestFlight.Editor
                 shaderKeywordCombinationCount = materialReport.shaderKeywordCombinationCount,
                 textureCount = textureReport.textureCount,
                 estimatedTextureBytes = textureReport.estimatedRuntimeBytes,
+                lightmapTextureCount = textureReport.lightmapTextureCount,
+                estimatedLightmapBytes = textureReport.estimatedLightmapBytes,
                 lodGroupCount = lodReport.lodGroupCount,
                 crossFadeLodGroupCount = lodReport.crossFadeLodGroupCount,
                 overdrawCaptures = overdraw
@@ -268,7 +271,17 @@ namespace QuestFlight.Editor
                 }
             }
             AddTextureEstimate(textures, RenderSettings.customReflectionTexture);
+            foreach (LightmapData lightmap in LightmapSettings.lightmaps ?? Array.Empty<LightmapData>())
+            {
+                if (lightmap == null) continue;
+                AddTextureEstimate(textures, lightmap.lightmapColor);
+                AddTextureEstimate(textures, lightmap.lightmapDir);
+                AddTextureEstimate(textures, lightmap.shadowMask);
+            }
             List<TextureEntry> entries = textures.Values.OrderByDescending(entry => entry.estimatedRuntimeBytes).ToList();
+            TextureEntry[] lightmaps = entries.Where(entry =>
+                    entry.assetPath.IndexOf("/Lightmap-", StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToArray();
             return new TextureMemoryReport
             {
                 generatedUtc = DateTime.UtcNow.ToString("O"),
@@ -278,6 +291,8 @@ namespace QuestFlight.Editor
                 mipmappedCount = entries.Count(entry => entry.mipmaps),
                 streamingMipmappedCount = entries.Count(entry => entry.streamingMipmaps),
                 unverifiableImporterCount = entries.Count(entry => entry.androidFormat == "UNVERIFIABLE_SUBASSET"),
+                lightmapTextureCount = lightmaps.Length,
+                estimatedLightmapBytes = lightmaps.Sum(entry => entry.estimatedRuntimeBytes),
                 evidenceBoundary = "Static import estimate only; APK/device residency and streaming behavior require a Quest capture.",
                 textures = entries
             };
@@ -382,28 +397,14 @@ namespace QuestFlight.Editor
 
         private static StaticViewBudget CaptureViewBudget(Camera camera, Renderer[] renderers)
         {
-            Plane[] planes = GeometryUtility.CalculateFrustumPlanes(camera);
-            Renderer[] visible = renderers.Where(renderer => GeometryUtility.TestPlanesAABB(planes, renderer.bounds)).ToArray();
-            HashSet<Material> materials = new HashSet<Material>();
-            int draws = 0;
-            foreach (Renderer renderer in visible)
-            {
-                draws += Math.Max(1, renderer.sharedMaterials.Count(material => material != null));
-                foreach (Material material in renderer.sharedMaterials)
-                    if (material != null) materials.Add(material);
-            }
-            if (camera.clearFlags == CameraClearFlags.Skybox && RenderSettings.skybox != null)
-            {
-                draws++;
-                materials.Add(RenderSettings.skybox);
-            }
+            RenderBudgetSnapshot snapshot = QuestRenderBudgetAudit.Capture(camera);
             return new StaticViewBudget
             {
                 cameraPath = HierarchyPath(camera.transform),
-                visibleRendererCount = visible.Length,
-                estimatedDrawCalls = draws,
-                visibleTriangles = CountTriangles(visible),
-                visibleMaterials = materials.Count
+                visibleRendererCount = snapshot.estimatedVisibleRendererCount,
+                estimatedDrawCalls = snapshot.estimatedInstancedDrawCalls,
+                visibleTriangles = snapshot.estimatedFrustumTriangles,
+                visibleMaterials = snapshot.uniqueMaterialCount
             };
         }
 
@@ -526,6 +527,7 @@ namespace QuestFlight.Editor
             builder.AppendLine("- Visible triangles: " + report.maxEstimatedVisibleTriangles.ToString("N0", CultureInfo.InvariantCulture) + " / " + report.visibleTriangleTarget.ToString("N0", CultureInfo.InvariantCulture) + " (" + Pass(report.visibleTrianglesPassed) + ")");
             builder.AppendLine("- Materials (maximum visible / active distinct): " + report.maxVisibleMaterialCount + " / " + report.activeSceneMaterialCount + "; visible target " + report.materialTarget + " (" + Pass(report.materialsPassed) + ")");
             builder.AppendLine("- Estimated runtime texture memory: " + FormatBytes(report.estimatedTextureBytes) + " / " + FormatBytes(report.textureMemoryTargetBytes) + " (" + Pass(report.textureMemoryPassed) + ")");
+            builder.AppendLine("- Directional lightmap textures / estimated residency: " + report.lightmapTextureCount + " / " + FormatBytes(report.estimatedLightmapBytes));
             builder.AppendLine("- Transparent material slots: " + report.transparentMaterialSlots + " / " + report.transparentMaterialSlotTarget + " (" + Pass(report.transparentSlotsPassed) + ")");
             builder.AppendLine("- Android ARM64 / Vulkan / ASTC / IL2CPP: " + report.androidArm64Only + " / " + report.androidVulkanOnly + " / " + report.androidAstcBuildTarget + " / " + report.androidIl2Cpp);
             builder.AppendLine("- OpenXR single-pass instanced / 4x MSAA / mobile multithreaded / mip streaming: " + report.openXrSinglePassInstanced + " / " + report.msaa + " / " + report.multithreadedRendering + " / " + report.streamingMipmaps);
@@ -564,6 +566,7 @@ namespace QuestFlight.Editor
             builder.AppendLine();
             builder.AppendLine("- Textures: " + report.textureCount + "; ASTC overrides: " + report.astcOverrideCount + "; mipmapped: " + report.mipmappedCount + "; streaming: " + report.streamingMipmappedCount);
             builder.AppendLine("- Conservative estimated imported residency: " + FormatBytes(report.estimatedRuntimeBytes));
+            builder.AppendLine("- Directional lightmap textures / estimated residency: " + report.lightmapTextureCount + " / " + FormatBytes(report.estimatedLightmapBytes));
             builder.AppendLine("- " + report.evidenceBoundary);
             builder.AppendLine();
             builder.AppendLine("| Texture | Dimensions | Faces/layers | Android format | Mips/streaming | Estimated bytes |");
@@ -610,9 +613,9 @@ namespace QuestFlight.Editor
             public string generatedUtc, unityVersion, scenePath, evidenceKind, headsetPerformanceLimitation, classification, visualQaReportPath, configuredRenderPipeline;
             public bool headsetPerformanceEstablished, drawCallsPassed, visibleTrianglesPassed, materialsPassed, textureMemoryPassed, transparentSlotsPassed, shippingArchitecturePassed, passed;
             public int drawCallTarget, materialTarget, transparentMaterialSlotTarget, maxEstimatedDrawCalls, sceneMaterialCount, maxVisibleMaterialCount, activeSceneMaterialCount, activeRendererCount, msaa;
-            public long visibleTriangleTarget, textureMemoryTargetBytes, maxEstimatedVisibleTriangles, sceneMeshTriangles, estimatedTextureBytes;
+            public long visibleTriangleTarget, textureMemoryTargetBytes, maxEstimatedVisibleTriangles, sceneMeshTriangles, estimatedTextureBytes, estimatedLightmapBytes;
             public bool androidArm64Only, androidVulkanOnly, androidAstcBuildTarget, androidIl2Cpp, openXrSinglePassInstanced, multithreadedRendering, streamingMipmaps;
-            public int transparentMaterialSlots, shaderCount, shaderKeywordCombinationCount, textureCount, lodGroupCount, crossFadeLodGroupCount;
+            public int transparentMaterialSlots, shaderCount, shaderKeywordCombinationCount, textureCount, lightmapTextureCount, lodGroupCount, crossFadeLodGroupCount;
             public StaticViewBudget defaultView;
             public List<OverdrawCapture> overdrawCaptures = new List<OverdrawCapture>();
             public List<string> warnings = new List<string>();
@@ -657,8 +660,8 @@ namespace QuestFlight.Editor
         {
             public int schemaVersion = 1;
             public string generatedUtc, evidenceBoundary;
-            public int textureCount, astcOverrideCount, mipmappedCount, streamingMipmappedCount, unverifiableImporterCount;
-            public long estimatedRuntimeBytes;
+            public int textureCount, astcOverrideCount, mipmappedCount, streamingMipmappedCount, unverifiableImporterCount, lightmapTextureCount;
+            public long estimatedRuntimeBytes, estimatedLightmapBytes;
             public List<TextureEntry> textures = new List<TextureEntry>();
         }
 

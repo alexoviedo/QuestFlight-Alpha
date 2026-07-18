@@ -33,6 +33,7 @@ namespace QuestFlightLab.Runtime
     public struct RenderBudgetSnapshot
     {
         public int activeRendererCount;
+        public int estimatedVisibleRendererCount;
         public int estimatedInstancedDrawCalls;
         public long estimatedFrustumTriangles;
         public int uniqueMaterialCount;
@@ -48,12 +49,33 @@ namespace QuestFlightLab.Runtime
             Renderer[] renderers = UnityEngine.Object.FindObjectsByType<Renderer>(
                     FindObjectsInactive.Include,
                     FindObjectsSortMode.None)
-                .Where(renderer => renderer != null && renderer.enabled && renderer.gameObject.activeInHierarchy)
+                .Where(renderer => renderer != null && renderer.enabled && !renderer.forceRenderingOff &&
+                                   renderer.gameObject.activeInHierarchy)
                 .ToArray();
             Plane[] frustum = camera != null ? GeometryUtility.CalculateFrustumPlanes(camera) : null;
-            Renderer[] visible = frustum == null
-                ? renderers
-                : renderers.Where(renderer => GeometryUtility.TestPlanesAABB(frustum, renderer.bounds)).ToArray();
+            Dictionary<Renderer, int> rendererLodIndices = new Dictionary<Renderer, int>();
+            Dictionary<LODGroup, int> selectedLodIndices = new Dictionary<LODGroup, int>();
+            if (camera != null)
+            {
+                foreach (LODGroup group in UnityEngine.Object.FindObjectsByType<LODGroup>(
+                             FindObjectsInactive.Include,
+                             FindObjectsSortMode.None))
+                {
+                    if (group == null || !group.enabled || !group.gameObject.activeInHierarchy) continue;
+                    LOD[] lods = group.GetLODs();
+                    selectedLodIndices[group] = EstimateActiveLodIndex(group, lods, camera);
+                    for (int lodIndex = 0; lodIndex < lods.Length; lodIndex++)
+                    foreach (Renderer renderer in lods[lodIndex].renderers ?? Array.Empty<Renderer>())
+                        if (renderer != null && !rendererLodIndices.ContainsKey(renderer))
+                            rendererLodIndices.Add(renderer, lodIndex);
+                }
+            }
+            Renderer[] visible = renderers.Where(renderer =>
+                    (camera == null ||
+                     ((camera.cullingMask & (1 << renderer.gameObject.layer)) != 0 &&
+                      GeometryUtility.TestPlanesAABB(frustum, renderer.bounds))) &&
+                    IsSelectedLodRenderer(renderer, rendererLodIndices, selectedLodIndices))
+                .ToArray();
             HashSet<Material> materials = new HashSet<Material>();
             long triangles = 0;
             int drawCalls = 0;
@@ -106,13 +128,44 @@ namespace QuestFlightLab.Runtime
             return new RenderBudgetSnapshot
             {
                 activeRendererCount = renderers.Length,
+                estimatedVisibleRendererCount = visible.Length,
                 estimatedInstancedDrawCalls = drawCalls,
                 estimatedFrustumTriangles = triangles,
                 uniqueMaterialCount = materials.Count,
                 transparentMaterialSlots = transparentSlots,
-                drawCountSemantics = "Visible non-null MeshRenderer/SkinnedMeshRenderer material-submesh slots before batching or instancing.",
-                triangleCountSemantics = "Triangle topology indices for the same effective rendered material-submesh slots."
+                drawCountSemantics = "Camera-layer/frustum and selected-LOD non-null MeshRenderer/SkinnedMeshRenderer material-submesh slots before batching or instancing.",
+                triangleCountSemantics = "Triangle topology indices for the same camera-layer/frustum and selected-LOD effective rendered material-submesh slots."
             };
+        }
+
+        private static bool IsSelectedLodRenderer(
+            Renderer renderer,
+            IReadOnlyDictionary<Renderer, int> rendererLodIndices,
+            IReadOnlyDictionary<LODGroup, int> selectedLodIndices)
+        {
+            if (!rendererLodIndices.TryGetValue(renderer, out int rendererLodIndex)) return true;
+            LODGroup group = renderer.GetComponentInParent<LODGroup>();
+            return group == null || !selectedLodIndices.TryGetValue(group, out int selectedLodIndex) ||
+                   selectedLodIndex == rendererLodIndex;
+        }
+
+        private static int EstimateActiveLodIndex(LODGroup group, LOD[] lods, Camera camera)
+        {
+            if (group == null || lods == null || lods.Length == 0 || camera == null) return -1;
+            float scale = Mathf.Max(
+                Mathf.Abs(group.transform.lossyScale.x),
+                Mathf.Abs(group.transform.lossyScale.y),
+                Mathf.Abs(group.transform.lossyScale.z));
+            Vector3 referencePoint = group.transform.TransformPoint(group.localReferencePoint);
+            float distance = Vector3.Distance(camera.transform.position, referencePoint);
+            float relativeHeight = camera.orthographic
+                ? group.size * scale / Mathf.Max(0.001f, camera.orthographicSize * 2f)
+                : group.size * scale /
+                  Mathf.Max(0.001f, distance * 2f * Mathf.Tan(camera.fieldOfView * Mathf.Deg2Rad * 0.5f));
+            relativeHeight *= QualitySettings.lodBias;
+            for (int index = 0; index < lods.Length; index++)
+                if (relativeHeight >= lods[index].screenRelativeTransitionHeight) return index;
+            return -1;
         }
     }
 

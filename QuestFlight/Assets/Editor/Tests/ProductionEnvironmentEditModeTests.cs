@@ -24,7 +24,7 @@ namespace QuestFlightLab.Tests.EditMode
                 ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
                 Assert.That(contract, Is.Not.Null);
                 Assert.That(contract.TryValidateContract(out string report), Is.True, report);
-                Assert.That(contract.bakeToolVersion, Is.EqualTo("environment_reconstruction_v2"));
+                Assert.That(contract.bakeToolVersion, Is.EqualTo("airport_core_photoreal_v4_stage1"));
                 Assert.That(contract.authoritativeTerrainSurface, Is.Not.Null);
                 Assert.That(contract.productionPlacementManifest, Is.Not.Null);
                 Assert.That(contract.productionPlacementManifest.entries.Length, Is.EqualTo(28336));
@@ -134,10 +134,14 @@ namespace QuestFlightLab.Tests.EditMode
                     "The reservoir pair and batched remaining-water pair are expected.");
                 Assert.That(contract.boulderReservoirSurface.name, Does.Contain("BoulderReservoir"));
                 Assert.That(contract.boulderReservoirShoreBank.name, Does.Contain("ShoreBank"));
-                Material water = contract.boulderReservoirSurface.GetComponent<Renderer>().sharedMaterial;
-                Assert.That(water.shader.name, Is.EqualTo(ProductionEnvironmentRoot.ProductionWaterShaderName));
-                Assert.That(water.renderQueue, Is.LessThan((int)RenderQueue.Transparent));
-                Assert.That(water.GetFloat("_ZWrite"), Is.GreaterThan(0.5f));
+                Renderer reservoirRenderer = contract.boulderReservoirSurface.GetComponent<Renderer>();
+                Material water = reservoirRenderer.sharedMaterial;
+                Assert.That(water.shader.name, Is.EqualTo(ProductionEnvironmentRoot.ProductionReservoirShaderName));
+                Assert.That(water.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
+                Assert.That(water.passCount, Is.EqualTo(1));
+                Assert.That(root.GetComponentsInChildren<Renderer>(true)
+                    .Count(renderer => renderer.sharedMaterial == water), Is.EqualTo(1));
+                Assert.That(contract.boulderReservoirSurface.GetComponent<Renderer>(), Is.SameAs(reservoirRenderer));
                 Assert.That(contract.boulderReservoirShorelineClosed, Is.True);
                 Assert.That(contract.boulderReservoirSmoothedShorelineVertexCount,
                     Is.EqualTo(contract.boulderReservoirSourceShorelineVertexCount * 2));

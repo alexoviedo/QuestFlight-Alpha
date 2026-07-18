@@ -1,6 +1,9 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
+using QuestFlightLab.Environment;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -11,6 +14,8 @@ namespace QuestFlight.Editor.Tests
     {
         private const string MeshPath =
             "Assets/Production/Environment/Generated/BoulderReservoir_OSM_AuthoritativeWater_Mesh.asset";
+        private const string V4ShaderPath =
+            "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUReservoirWaterV4.shader";
 
         [Test]
         public void AuthoritativeSurfaceRemainsOneImmutablePlaneAndSubmesh()
@@ -113,6 +118,66 @@ namespace QuestFlight.Editor.Tests
             Assert.That(source, Does.Not.Contain("unity_SpecCube0"));
             Assert.That(source, Does.Not.Contain("_CameraOpaqueTexture"));
             Assert.That(source, Does.Not.Contain("_CameraDepthTexture"));
+        }
+
+        [Test]
+        public void AirportCoreV4ReservoirBindingIsSingleOpaqueAndSourceAudited()
+        {
+            GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(ProductionEnvironmentRoot.PrefabAssetPath);
+            Assert.That(environment, Is.Not.Null);
+            ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
+            AirportCoreBenchmarkRoot root = environment.GetComponentInChildren<AirportCoreBenchmarkRoot>(true);
+            AirportCoreBenchmarkManifest manifest = AssetDatabase.LoadAssetAtPath<AirportCoreBenchmarkManifest>(
+                AirportCoreBenchmarkManifest.AssetPath);
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(root, Is.Not.Null);
+            Assert.That(manifest, Is.Not.Null);
+
+            Renderer renderer = contract.boulderReservoirSurface.GetComponent<Renderer>();
+            Mesh mesh = contract.boulderReservoirSurface.sharedMesh;
+            Material material = renderer.sharedMaterial;
+            Assert.That(renderer, Is.SameAs(root.boulderReservoir));
+            Assert.That(material, Is.SameAs(manifest.reservoirMaterial));
+            Assert.That(renderer.sharedMaterials, Has.Length.EqualTo(1));
+            Assert.That(AssetDatabase.GetAssetPath(mesh), Is.EqualTo(MeshPath));
+            Assert.That(mesh.subMeshCount, Is.EqualTo(1));
+            Assert.That(material.shader.name, Is.EqualTo(ProductionEnvironmentRoot.ProductionReservoirShaderName));
+            Assert.That(material.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
+            Assert.That(material.passCount, Is.EqualTo(1));
+            Assert.That(material.enableInstancing, Is.True);
+            Assert.That(material.GetTexture("_WaveNormalA"), Is.Not.Null);
+            Assert.That(material.GetTexture("_WaveNormalB"), Is.Not.Null);
+            Assert.That(material.GetTexture("_DepthShoreRoughnessSuppression"), Is.Not.Null);
+            Assert.That(material.GetTexture("_EnvironmentCube"), Is.Not.Null);
+            Assert.That(environment.GetComponentsInChildren<Renderer>(true)
+                .Count(item => item.sharedMaterial == material), Is.EqualTo(1));
+            Assert.That(renderer.GetComponentsInChildren<Camera>(true), Is.Empty);
+            Assert.That(renderer.GetComponentsInChildren<ReflectionProbe>(true)
+                .Where(probe => probe.mode == ReflectionProbeMode.Realtime), Is.Empty);
+
+            Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(V4ShaderPath);
+            Assert.That(shader, Is.SameAs(material.shader));
+            Assert.That(shader.isSupported, Is.True);
+            Assert.That(ShaderUtil.GetShaderMessages(shader)
+                .Where(message => string.Equals(message.severity.ToString(), "Error", StringComparison.OrdinalIgnoreCase)),
+                Is.Empty);
+            string absolutePath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", V4ShaderPath));
+            string source = File.ReadAllText(absolutePath);
+            Assert.That(source, Does.Contain("\"RenderType\"=\"Opaque\""));
+            Assert.That(source, Does.Contain("\"Queue\"=\"Geometry+5\""));
+            Assert.That(source, Does.Contain("ZWrite On"));
+            Assert.That(source, Does.Contain("Fallback Off"));
+            Assert.That(source, Does.Contain("texCUBElod(_EnvironmentCube"));
+            Assert.That(source, Does.Contain("UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO"));
+            Assert.That(source, Does.Contain("UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX"));
+            Assert.That(Regex.Matches(source, @"(?m)^\s*Pass\s*$").Count, Is.EqualTo(1));
+            foreach (string forbidden in new[]
+                     {
+                         @"(?m)^\s*Blend\b", @"\bGrabPass\b", @"\bUsePass\b", @"ZWrite\s+Off",
+                         @"_CameraOpaqueTexture", @"_CameraDepthTexture", @"unity_SpecCube0",
+                         @"\bSSR\b", @"refraction", @"tessell"
+                     })
+                Assert.That(Regex.IsMatch(source, forbidden, RegexOptions.IgnoreCase), Is.False, forbidden);
         }
     }
 }
