@@ -36,6 +36,8 @@ namespace QuestFlight.Editor
             public int hangarLod2Triangles;
             public int alphaTestMaterialSlots;
             public int transparentMaterialSlots;
+            public int adaptiveAirportTerrainTriangles;
+            public bool oneAtlasLightmapParametersValid;
             public int validatedTextureCount;
             public int replacementSourceFeatureCount;
             public string[] violations = Array.Empty<string>();
@@ -66,6 +68,9 @@ namespace QuestFlight.Editor
             ValidateCleanPlateTerrainBinding(root, manifest, violations);
             ValidateContextMeshReferences(root, violations);
             ValidateGiAllowlist(environment, root, violations);
+            int adaptiveAirportTerrainTriangles = ValidateAdaptiveAirportTerrainBinding(
+                environment.GetComponent<ProductionEnvironmentRoot>(), violations);
+            bool oneAtlasLightmapParametersValid = ValidateOneAtlasLightmapContract(violations);
 
             ValidateLodGroup(root.executiveTerminal, "executive terminal", 20000, 45000,
                 violations, out int terminal0, out int terminal1, out int terminal2);
@@ -123,8 +128,8 @@ namespace QuestFlight.Editor
             return new Report
             {
                 classification = violations.Count == 0
-                    ? "PASS_AIRPORT_CORE_V4_1_STRUCTURAL_GATE_VISUAL_AND_HEADSET_REQUIRED"
-                    : "FAIL_AIRPORT_CORE_V4_1_STRUCTURAL_GATE",
+                    ? "PASS_AIRPORT_CORE_V4_2_STRUCTURAL_GATE_VISUAL_AND_HEADSET_REQUIRED"
+                    : "FAIL_AIRPORT_CORE_V4_2_STRUCTURAL_GATE",
                 passed = violations.Count == 0,
                 sourceV2Sha = manifest.sourceV2Sha,
                 referenceV3Sha = manifest.referenceV3Sha,
@@ -139,6 +144,8 @@ namespace QuestFlight.Editor
                 hangarLod2Triangles = hangar2,
                 alphaTestMaterialSlots = alphaTestSlots,
                 transparentMaterialSlots = transparentSlots,
+                adaptiveAirportTerrainTriangles = adaptiveAirportTerrainTriangles,
+                oneAtlasLightmapParametersValid = oneAtlasLightmapParametersValid,
                 validatedTextureCount = textures.Length,
                 replacementSourceFeatureCount = manifest.replacementSourceFeatureIds?.Length ?? 0,
                 violations = violations.ToArray()
@@ -199,6 +206,110 @@ namespace QuestFlight.Editor
             return lods.Length == 0 || lods[0].renderers == null || lods[0].renderers.Length != 1
                 ? null
                 : lods[0].renderers[0];
+        }
+
+        private static int ValidateAdaptiveAirportTerrainBinding(
+            ProductionEnvironmentRoot contract,
+            ICollection<string> violations)
+        {
+            Require(contract != null, "production environment contract is missing", violations);
+            if (contract == null) return 0;
+            Require(contract.nearTerrainMeshes != null && contract.nearTerrainMeshes.Length == 2,
+                "production near-terrain array must contain airport and near meshes", violations);
+            MeshFilter airport = contract.nearTerrainMeshes?.FirstOrDefault();
+            Mesh mesh = airport == null ? null : airport.sharedMesh;
+            string path = mesh == null ? string.Empty : AssetDatabase.GetAssetPath(mesh);
+            Require(string.Equals(path, AirportCoreV4Authoring.AdaptiveAirportTerrainMeshPath,
+                    StringComparison.Ordinal),
+                "airport visual terrain is not the pinned V4.2 error-bounded derivative", violations);
+            int triangles = mesh == null ? 0 : MeshTriangles(mesh);
+            Require(triangles > 0 && triangles <= AirportCoreV4Authoring.MaximumAdaptiveAirportTerrainTriangles,
+                $"adaptive airport terrain exceeds its triangle contract: {triangles:N0}/" +
+                $"{AirportCoreV4Authoring.MaximumAdaptiveAirportTerrainTriangles:N0}", violations);
+            Require(airport == null || airport.GetComponent<MeshCollider>() == null,
+                "adaptive airport terrain must remain visual-only", violations);
+            Require(mesh != null && Mathf.Abs(mesh.bounds.min.x + 800f) < 0.001f &&
+                    Mathf.Abs(mesh.bounds.max.x - 800f) < 0.001f &&
+                    Mathf.Abs(mesh.bounds.min.z + 300f) < 0.001f &&
+                    Mathf.Abs(mesh.bounds.max.z - 300f) < 0.001f,
+                "adaptive airport terrain changed the sealed V2 horizontal bounds", violations);
+            Mesh source = AssetDatabase.LoadAssetAtPath<Mesh>(EnvironmentReconstructionV2Authoring.AirportMeshPath);
+            Require(source != null && MeshTriangles(source) == 76800,
+                "pinned 5 m V2 airport source mesh is missing or changed", violations);
+            string surfacePath = contract.authoritativeTerrainSurface == null
+                ? string.Empty
+                : AssetDatabase.GetAssetPath(contract.authoritativeTerrainSurface);
+            Require(string.Equals(surfacePath,
+                    "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_ProductionTerrainSurfaceV2.asset",
+                    StringComparison.Ordinal),
+                "authoritative terrain query data changed during visual-mesh reduction", violations);
+            TextAsset report = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                AirportCoreV4Authoring.AdaptiveAirportTerrainReportPath);
+            Require(report != null &&
+                    report.text.Contains("PASS_ERROR_BOUNDED_ADAPTIVE_AIRPORT_VISUAL_MESH") &&
+                    report.text.Contains("\"outerBoundarySourceSamplesPreserved\": true") &&
+                    report.text.Contains("\"runwayCorridorSourceSamplesPreserved\": true") &&
+                    report.text.Contains("\"authoritativeSurfaceQueryUnchanged\": true"),
+                "adaptive airport terrain provenance/report contract is incomplete", violations);
+            return triangles;
+        }
+
+        private static bool ValidateOneAtlasLightmapContract(ICollection<string> violations)
+        {
+            LightmapParameters parameters = AssetDatabase.LoadAssetAtPath<LightmapParameters>(
+                AirportCoreV4Authoring.OneAtlasLightmapParametersPath);
+            bool parametersValid = parameters != null && parameters.limitLightmapCount &&
+                                   parameters.maxLightmapCount == 1 && parameters.bakedLightmapTag == 0;
+            Require(parametersValid,
+                "one-atlas Lightmap Parameters asset is missing or not bounded to one atlas", violations);
+
+            const string scenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
+            string absoluteScene = Path.GetFullPath(Path.Combine(Application.dataPath, "..", scenePath));
+            string parameterGuid = AssetDatabase.AssetPathToGUID(
+                AirportCoreV4Authoring.OneAtlasLightmapParametersPath);
+            string sceneText = File.Exists(absoluteScene) ? File.ReadAllText(absoluteScene) : string.Empty;
+            Require(!string.IsNullOrWhiteSpace(parameterGuid) && Regex.IsMatch(sceneText,
+                    @"m_LightmapParameters:\s*\{fileID:\s*-?\d+,\s*guid:\s*" +
+                    Regex.Escape(parameterGuid) + @",\s*type:\s*2\}"),
+                "ProductionVerticalSlice does not serialize the bounded Lightmap Parameters assignment", violations);
+
+            const string lightingFolder = "Assets/Scenes/ProductionVerticalSlice";
+            string[] paths = AssetDatabase.FindAssets("t:Texture2D", new[] { lightingFolder })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Where(path => Path.GetFileName(path).StartsWith("Lightmap-", StringComparison.Ordinal) &&
+                               path.IndexOf("_comp_", StringComparison.Ordinal) >= 0)
+                .ToArray();
+            string[] colors = paths.Where(path =>
+                path.IndexOf("_comp_light", StringComparison.Ordinal) >= 0).ToArray();
+            string[] directions = paths.Where(path =>
+                path.IndexOf("_comp_dir", StringComparison.Ordinal) >= 0).ToArray();
+            Require(colors.Length == 1 && directions.Length == 0,
+                $"expected one non-directional lightmap asset, found colors={colors.Length}, " +
+                $"directional={directions.Length}", violations);
+            if (colors.Length == 1)
+            {
+                Texture2D color = AssetDatabase.LoadAssetAtPath<Texture2D>(colors[0]);
+                TextureImporter importer = AssetImporter.GetAtPath(colors[0]) as TextureImporter;
+                TextureImporterPlatformSettings android = importer == null
+                    ? default
+                    : importer.GetPlatformTextureSettings("Android");
+                Require(color != null && color.width <= 1024 && color.height <= 1024,
+                    "accepted lightmap exceeds 1024x1024", violations);
+                Require(importer != null && importer.mipmapEnabled && importer.streamingMipmaps &&
+                        android.overridden && android.format == TextureImporterFormat.ASTC_HDR_6x6,
+                    "accepted lightmap does not use the bounded Android ASTC HDR import contract", violations);
+            }
+            string lightingDataPath = lightingFolder + "/LightingData.asset";
+            LightingDataAsset lightingData = AssetDatabase.LoadAssetAtPath<LightingDataAsset>(lightingDataPath);
+            string lightingDataGuid = AssetDatabase.AssetPathToGUID(lightingDataPath);
+            Require(lightingData != null && !string.IsNullOrWhiteSpace(lightingDataGuid) && Regex.IsMatch(sceneText,
+                        @"m_LightingDataAsset:\s*\{fileID:\s*112000000,\s*guid:\s*" +
+                        Regex.Escape(lightingDataGuid) + @",\s*type:\s*2\}"),
+                "accepted scene LightingData.asset is missing", violations);
+            Require(AssetDatabase.LoadAssetAtPath<TextAsset>(
+                        lightingFolder + "/BAKE_MANIFEST.json") != null,
+                "accepted finite-bake manifest is missing", violations);
+            return parametersValid && colors.Length == 1 && directions.Length == 0;
         }
 
         public static void ValidateBatch()
@@ -407,6 +518,15 @@ namespace QuestFlight.Editor
             return (int)Math.Min(int.MaxValue, indexCount / 3L);
         }
 
+        private static int MeshTriangles(Mesh mesh)
+        {
+            if (mesh == null) return 0;
+            long indexCount = 0;
+            for (int subMesh = 0; subMesh < mesh.subMeshCount; subMesh++)
+                indexCount += (long)mesh.GetIndexCount(subMesh);
+            return (int)Math.Min(int.MaxValue, indexCount / 3L);
+        }
+
         private static bool UsesProjectMesh(Renderer renderer)
         {
             Mesh mesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
@@ -478,7 +598,7 @@ namespace QuestFlight.Editor
         {
             return new Report
             {
-                classification = "FAIL_AIRPORT_CORE_V4_1_STRUCTURAL_GATE",
+                classification = "FAIL_AIRPORT_CORE_V4_2_STRUCTURAL_GATE",
                 passed = false,
                 violations = new[] { violation }
             };
@@ -486,7 +606,7 @@ namespace QuestFlight.Editor
 
         private static string BuildMarkdown(Report report)
         {
-            return "# Airport Core V4.1 structural validation\n\n" +
+            return "# Airport Core V4.2 structural validation\n\n" +
                    $"- Classification: `{report.classification}`\n" +
                    $"- Benchmark renderers/triangles/materials: {report.benchmarkRendererCount:N0}/" +
                    $"{report.benchmarkTriangleCount:N0}/{report.benchmarkMaterialCount:N0}\n" +
@@ -494,6 +614,8 @@ namespace QuestFlight.Editor
                    $"{report.terminalLod1Triangles:N0}/{report.terminalLod2Triangles:N0}\n" +
                    $"- Hangar LOD0/1/2: {report.hangarLod0Triangles:N0}/" +
                    $"{report.hangarLod1Triangles:N0}/{report.hangarLod2Triangles:N0}\n" +
+                   $"- Adaptive airport terrain triangles: {report.adaptiveAirportTerrainTriangles:N0}\n" +
+                   $"- One-atlas parameters valid: {report.oneAtlasLightmapParametersValid}\n" +
                    $"- Violations: {report.violations.Length:N0}\n\n" + report.evidenceBoundary + "\n";
         }
 

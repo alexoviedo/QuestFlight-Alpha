@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using QuestFlight.Editor;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -89,19 +90,24 @@ namespace QuestFlight.EditorTests
         }
 
         [Test]
-        public void ReconstructionV2NearAssetsAreBoundAndFrozenOuterTerrainRemainsUnchanged()
+        public void V42UsesErrorBoundedAirportDerivativeAndFrozenOuterTerrainRemainsUnchanged()
         {
             WithInstance(root =>
             {
                 Assert.That(AssetDatabase.GetAssetPath(Required(root, "Terrain_AirportPatch_USGS").sharedMesh),
-                    Is.EqualTo("Assets/Production/Environment/ReconstructionV2/Generated/KBDU_AirportTerrain_5m_V2.asset"));
+                    Is.EqualTo(AirportCoreV4Authoring.AdaptiveAirportTerrainMeshPath));
+                Mesh sourceAirport = AssetDatabase.LoadAssetAtPath<Mesh>(
+                    EnvironmentReconstructionV2Authoring.AirportMeshPath);
+                Assert.That(sourceAirport, Is.Not.Null);
+                Assert.That(sourceAirport.triangles.Length / 3, Is.EqualTo(76800));
                 Assert.That(AssetDatabase.GetAssetPath(Required(root, "Terrain_Near4km_USGS").sharedMesh),
                     Is.EqualTo("Assets/Production/Environment/ReconstructionV2/Generated/KBDU_NearTerrain_25m_V2.asset"));
                 Assert.That(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(Required(root,
                     "Terrain_Mid12km_USGS").sharedMesh)), Is.EqualTo("4f672962bf8d5274ab31831c906c0bb3"));
                 Assert.That(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(Required(root,
                     "Terrain_Far24km_Immutable_USGS").sharedMesh)), Is.EqualTo("f7e9defd4f2f8134ea4ed04d496c0495"));
-                Assert.That(Required(root, "Terrain_AirportPatch_USGS").sharedMesh.triangles.Length / 3, Is.LessThanOrEqualTo(77000));
+                Assert.That(Required(root, "Terrain_AirportPatch_USGS").sharedMesh.triangles.Length / 3,
+                    Is.InRange(1, AirportCoreV4Authoring.MaximumAdaptiveAirportTerrainTriangles));
                 Assert.That(Required(root, "Terrain_Near4km_USGS").sharedMesh.triangles.Length / 3, Is.LessThanOrEqualTo(50000));
                 Assert.That(Required(root, "Terrain_Mid12km_USGS").sharedMesh.triangles.Length / 3, Is.EqualTo(11752));
                 Assert.That(Required(root, "Terrain_Far24km_Immutable_USGS").sharedMesh.triangles.Length / 3, Is.EqualTo(89280));

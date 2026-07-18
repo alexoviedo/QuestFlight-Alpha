@@ -25,6 +25,14 @@ namespace QuestFlight.Editor
         private const string TargetV2Hlod = "buildings_0-2km_hlod_1500m_xn001_zn001";
         private const string GeneratedFolder =
             "Assets/Production/Environment/AirportCoreV4/Generated";
+        public const string AdaptiveAirportTerrainMeshPath =
+            GeneratedFolder + "/KBDU_AirportTerrain_ErrorBounded_V4_2.asset";
+        public const string AdaptiveAirportTerrainReportPath =
+            GeneratedFolder + "/KBDU_AirportTerrain_ErrorBounded_V4_2.json";
+        public const string OneAtlasLightmapParametersPath =
+            "Assets/Production/Environment/AirportCoreV4/Lighting/AirportCoreV42OneAtlas.giparams";
+        public const int MaximumAdaptiveAirportTerrainTriangles = 15400;
+        public const float MaximumAdaptiveCellSourceDeviationMeters = 1.6f;
         private const string MaterialsFolder =
             "Assets/Production/Environment/AirportCoreV4/Materials";
         private const string ModelsFolder =
@@ -47,6 +55,15 @@ namespace QuestFlight.Editor
         private static readonly Rect HangarExclusion = new Rect(-406f, -385f, 27.5f, 81f);
         private static readonly Bounds BenchmarkBounds =
             new Bounds(new Vector3(-300f, 60f, -225f), new Vector3(700f, 180f, 700f));
+        private static readonly Rect[] AdaptiveTerrainProtectedRects =
+        {
+            // The exact 5 m source grid is retained below the authoritative runway and shoulders.
+            new Rect(-660f, -60f, 1300f, 60f),
+            // Terminal, apron props, and vegetation hero cluster foundations.
+            new Rect(-460f, -280f, 140f, 100f),
+            // Fuel/service benchmark foundation.
+            new Rect(-140f, -240f, 60f, 60f)
+        };
 
         [MenuItem("QuestFlight/Product/Integrate Airport Core Photoreal Benchmark V4")]
         public static void RunInteractive() => Integrate(false);
@@ -283,6 +300,9 @@ namespace QuestFlight.Editor
             string[] directionalPaths = paths.Where(path =>
                     path.IndexOf("_comp_dir", StringComparison.Ordinal) >= 0)
                 .ToArray();
+            // Scan every generated color atlas before deciding cardinality so rejected multi-atlas
+            // output still produces trustworthy finite/non-finite evidence.
+            foreach (string path in colorPaths) ValidateFiniteLightmap(path);
             if (colorPaths.Length != 1 || directionalPaths.Length != 0)
                 throw new InvalidOperationException(
                     $"Expected exactly one non-directional lightmap, found colors={colorPaths.Length}, " +
@@ -630,6 +650,346 @@ namespace QuestFlight.Editor
             return result;
         }
 
+        private static Mesh BuildAdaptiveAirportTerrain(ProductionTerrainSurfaceAsset surface)
+        {
+            const int baseStride = 4; // 4 x 5 m source samples = 20 m nonhero cells.
+            ProductionTerrainSurfaceAsset.GridLayer layer = surface.layers
+                .Single(item => item != null && item.zone == ProductionTerrainZone.Airport);
+            if (!layer.IsValid || Mathf.Abs(layer.spacingMeters - 5f) > 0.0001f ||
+                layer.width != 321 || layer.height != 121 ||
+                (layer.width - 1) % baseStride != 0 || (layer.height - 1) % baseStride != 0)
+                throw new InvalidOperationException(
+                    "V4.2 adaptive terrain requires the pinned 321x121, 5 m V2 airport source grid.");
+
+            List<Vector2Int> cells = new List<Vector2Int>();
+            Dictionary<Vector2Int, float> sourceDeviationByCell = new Dictionary<Vector2Int, float>();
+            HashSet<Vector2Int> protectedCells = new HashSet<Vector2Int>();
+            HashSet<Vector2Int> fineCells = new HashSet<Vector2Int>();
+            int automaticFineCells = 0;
+            for (int z = 0; z < layer.height - 1; z += baseStride)
+            for (int x = 0; x < layer.width - 1; x += baseStride)
+            {
+                Vector2Int cell = new Vector2Int(x, z);
+                cells.Add(cell);
+                float deviation = MaximumCellSourceDeviation(layer, x, z, baseStride);
+                sourceDeviationByCell[cell] = deviation;
+                bool protectedCell = IsProtectedAdaptiveCell(layer, x, z, baseStride);
+                if (protectedCell) protectedCells.Add(cell);
+                if (protectedCell || deviation > MaximumAdaptiveCellSourceDeviationMeters)
+                {
+                    fineCells.Add(cell);
+                    if (!protectedCell) automaticFineCells++;
+                }
+            }
+
+            Dictionary<Vector2Int, int> vertexLookup = new Dictionary<Vector2Int, int>();
+            List<Vector3> vertices = new List<Vector3>();
+            List<Vector2> uvs = new List<Vector2>();
+            List<Vector3> normals = new List<Vector3>();
+            List<int> triangles = new List<int>();
+            bool useSourceNormals = layer.normals != null && layer.normals.Length == layer.heightMeters.Length;
+
+            int VertexAt(int x, int z)
+            {
+                Vector2Int key = new Vector2Int(x, z);
+                if (vertexLookup.TryGetValue(key, out int existing)) return existing;
+                if (x < 0 || x >= layer.width || z < 0 || z >= layer.height)
+                    throw new InvalidOperationException($"Adaptive terrain vertex is outside the source grid: {key}.");
+                float east = layer.minimumEnuMeters.x + x * layer.spacingMeters;
+                float north = layer.minimumEnuMeters.y + z * layer.spacingMeters;
+                int sourceIndex = z * layer.width + x;
+                int index = vertices.Count;
+                vertices.Add(new Vector3(east, layer.heightMeters[sourceIndex], north));
+                uvs.Add(new Vector2((east + 12000f) / 24000f, (north + 12000f) / 24000f));
+                if (useSourceNormals) normals.Add(layer.normals[sourceIndex].normalized);
+                vertexLookup.Add(key, index);
+                return index;
+            }
+
+            void AddTriangle(int a, int b, int c)
+            {
+                triangles.Add(a);
+                triangles.Add(b);
+                triangles.Add(c);
+            }
+
+            void AddQuad(int x, int z, int stride)
+            {
+                int a = VertexAt(x, z);
+                int b = VertexAt(x + stride, z);
+                int c = VertexAt(x, z + stride);
+                int d = VertexAt(x + stride, z + stride);
+                AddTriangle(a, c, b);
+                AddTriangle(b, c, d);
+            }
+
+            void AppendEdge(
+                ICollection<Vector2Int> boundary,
+                int startX,
+                int startZ,
+                int endX,
+                int endZ,
+                int segments,
+                bool includeStart,
+                bool includeEnd)
+            {
+                int first = includeStart ? 0 : 1;
+                int last = includeEnd ? segments : segments - 1;
+                for (int index = first; index <= last; index++)
+                    boundary.Add(new Vector2Int(
+                        startX + (endX - startX) * index / segments,
+                        startZ + (endZ - startZ) * index / segments));
+            }
+
+            int transitionCells = 0;
+            int coarseCells = 0;
+            foreach (Vector2Int cell in cells)
+            {
+                int x = cell.x;
+                int z = cell.y;
+                if (fineCells.Contains(cell))
+                {
+                    for (int fineZ = z; fineZ < z + baseStride; fineZ++)
+                    for (int fineX = x; fineX < x + baseStride; fineX++)
+                        AddQuad(fineX, fineZ, 1);
+                    continue;
+                }
+
+                bool splitLeft = fineCells.Contains(new Vector2Int(x - baseStride, z)) || x == 0;
+                bool splitRight = fineCells.Contains(new Vector2Int(x + baseStride, z)) ||
+                                  x + baseStride == layer.width - 1;
+                bool splitBottom = fineCells.Contains(new Vector2Int(x, z - baseStride)) || z == 0;
+                bool splitTop = fineCells.Contains(new Vector2Int(x, z + baseStride)) ||
+                                z + baseStride == layer.height - 1;
+                if (!splitLeft && !splitRight && !splitBottom && !splitTop)
+                {
+                    AddQuad(x, z, baseStride);
+                    coarseCells++;
+                    continue;
+                }
+
+                transitionCells++;
+                List<Vector2Int> boundary = new List<Vector2Int>(16);
+                AppendEdge(boundary, x, z, x, z + baseStride, splitLeft ? baseStride : 1, true, true);
+                AppendEdge(boundary, x, z + baseStride, x + baseStride, z + baseStride,
+                    splitTop ? baseStride : 1, false, true);
+                AppendEdge(boundary, x + baseStride, z + baseStride, x + baseStride, z,
+                    splitRight ? baseStride : 1, false, true);
+                AppendEdge(boundary, x + baseStride, z, x, z,
+                    splitBottom ? baseStride : 1, false, false);
+                int center = VertexAt(x + baseStride / 2, z + baseStride / 2);
+                for (int index = 0; index < boundary.Count; index++)
+                    AddTriangle(center, VertexAt(boundary[index].x, boundary[index].y),
+                        VertexAt(boundary[(index + 1) % boundary.Count].x,
+                            boundary[(index + 1) % boundary.Count].y));
+            }
+
+            Mesh candidate = new Mesh
+            {
+                name = "KBDU_AirportTerrain_ErrorBounded_V4_2",
+                indexFormat = vertices.Count > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16
+            };
+            candidate.SetVertices(vertices);
+            candidate.SetUVs(0, uvs);
+            if (useSourceNormals) candidate.SetNormals(normals);
+            candidate.SetTriangles(triangles, 0, true);
+            if (!useSourceNormals) candidate.RecalculateNormals();
+            candidate.RecalculateBounds();
+
+            float maximumUnrefinedDeviation = cells
+                .Where(cell => !fineCells.Contains(cell))
+                .Select(cell => sourceDeviationByCell[cell])
+                .DefaultIfEmpty(0f)
+                .Max();
+            ValidateAdaptiveAirportTerrain(
+                candidate, layer, vertexLookup, maximumUnrefinedDeviation, useSourceNormals);
+
+            Mesh sourceMesh = LoadRequired<Mesh>(EnvironmentReconstructionV2Authoring.AirportMeshPath);
+            int sourceTriangles = TriangleCount(sourceMesh);
+            if (sourceTriangles != 76800)
+                throw new InvalidOperationException(
+                    $"Pinned V2 airport mesh changed before V4.2 derivation: {sourceTriangles:N0}/76,800 triangles.");
+            Mesh saved = SaveMesh(candidate, AdaptiveAirportTerrainMeshPath);
+            AdaptiveAirportTerrainReport report = new AdaptiveAirportTerrainReport
+            {
+                schemaVersion = 2,
+                classification = "PASS_ERROR_BOUNDED_ADAPTIVE_AIRPORT_VISUAL_MESH",
+                sourceTerrainSurfaceAsset =
+                    "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_ProductionTerrainSurfaceV2.asset",
+                sourceTerrainManifestSha256 = surface.sourceManifestSha256,
+                sourceVisualMesh = EnvironmentReconstructionV2Authoring.AirportMeshPath,
+                derivedVisualMesh = AdaptiveAirportTerrainMeshPath,
+                sourceSpacingMeters = layer.spacingMeters,
+                nonheroBaseSpacingMeters = layer.spacingMeters * baseStride,
+                protectedSpacingMeters = layer.spacingMeters,
+                maximumAdaptiveCellSourceDeviationMeters = MaximumAdaptiveCellSourceDeviationMeters,
+                measuredMaximumUnrefinedCellSourceDeviationMeters = maximumUnrefinedDeviation,
+                sourceTriangleCount = sourceTriangles,
+                derivedTriangleCount = TriangleCount(saved),
+                triangleReduction = sourceTriangles - TriangleCount(saved),
+                protectedFineCellCount = protectedCells.Count,
+                automaticErrorFineCellCount = automaticFineCells,
+                totalFineCellCount = fineCells.Count,
+                transitionCellCount = transitionCells,
+                coarseCellCount = coarseCells,
+                outerBoundarySourceSamplesPreserved = true,
+                runwayCorridorSourceSamplesPreserved = true,
+                benchmarkFoundationSourceSamplesPreserved = true,
+                authoritativeSurfaceQueryUnchanged = true,
+                colliderBindingsUnchanged = true,
+                sourceNormalsPreserved = useSourceNormals,
+                protectedBounds = AdaptiveTerrainProtectedRects.Select(rect => new AdaptiveBoundsRecord
+                {
+                    minimumEastMeters = rect.xMin,
+                    maximumEastMeters = rect.xMax,
+                    minimumNorthMeters = rect.yMin,
+                    maximumNorthMeters = rect.yMax
+                }).ToArray()
+            };
+            string absoluteReportPath = Path.GetFullPath(
+                Path.Combine(Application.dataPath, "..", AdaptiveAirportTerrainReportPath));
+            File.WriteAllText(absoluteReportPath, JsonUtility.ToJson(report, true) + Environment.NewLine,
+                new UTF8Encoding(false));
+            AssetDatabase.ImportAsset(AdaptiveAirportTerrainReportPath, ImportAssetOptions.ForceSynchronousImport);
+            return saved;
+        }
+
+        private static float MaximumCellSourceDeviation(
+            ProductionTerrainSurfaceAsset.GridLayer layer, int startX, int startZ, int stride)
+        {
+            float h00 = layer.heightMeters[startZ * layer.width + startX];
+            float h10 = layer.heightMeters[startZ * layer.width + startX + stride];
+            float h01 = layer.heightMeters[(startZ + stride) * layer.width + startX];
+            float h11 = layer.heightMeters[(startZ + stride) * layer.width + startX + stride];
+            float maximum = 0f;
+            for (int z = 0; z <= stride; z++)
+            for (int x = 0; x <= stride; x++)
+            {
+                float tx = x / (float)stride;
+                float tz = z / (float)stride;
+                float interpolated = tx + tz <= 1f
+                    ? h00 + (h10 - h00) * tx + (h01 - h00) * tz
+                    : h11 + (h01 - h11) * (1f - tx) + (h10 - h11) * (1f - tz);
+                float source = layer.heightMeters[(startZ + z) * layer.width + startX + x];
+                maximum = Mathf.Max(maximum, Mathf.Abs(source - interpolated));
+            }
+            return maximum;
+        }
+
+        private static bool IsProtectedAdaptiveCell(
+            ProductionTerrainSurfaceAsset.GridLayer layer, int startX, int startZ, int stride)
+        {
+            float minimumEast = layer.minimumEnuMeters.x + startX * layer.spacingMeters;
+            float maximumEast = minimumEast + stride * layer.spacingMeters;
+            float minimumNorth = layer.minimumEnuMeters.y + startZ * layer.spacingMeters;
+            float maximumNorth = minimumNorth + stride * layer.spacingMeters;
+            return AdaptiveTerrainProtectedRects.Any(rect =>
+                minimumEast >= rect.xMin - 0.001f && maximumEast <= rect.xMax + 0.001f &&
+                minimumNorth >= rect.yMin - 0.001f && maximumNorth <= rect.yMax + 0.001f);
+        }
+
+        private static void ValidateAdaptiveAirportTerrain(
+            Mesh mesh,
+            ProductionTerrainSurfaceAsset.GridLayer layer,
+            IReadOnlyDictionary<Vector2Int, int> vertexLookup,
+            float maximumUnrefinedDeviation,
+            bool usesSourceNormals)
+        {
+            int triangleCount = TriangleCount(mesh);
+            if (triangleCount <= 0 || triangleCount > MaximumAdaptiveAirportTerrainTriangles)
+                throw new InvalidOperationException(
+                    $"Adaptive airport terrain exceeds its bounded triangle contract: " +
+                    $"{triangleCount:N0}/{MaximumAdaptiveAirportTerrainTriangles:N0}.");
+            if (maximumUnrefinedDeviation > MaximumAdaptiveCellSourceDeviationMeters + 0.0001f)
+                throw new InvalidOperationException(
+                    $"Adaptive airport terrain source-deviation bound failed: {maximumUnrefinedDeviation:F4} m.");
+            if (mesh.uv == null || mesh.uv.Length != mesh.vertexCount ||
+                mesh.normals == null || mesh.normals.Length != mesh.vertexCount)
+                throw new InvalidOperationException("Adaptive airport terrain UV/normal streams are incomplete.");
+            if (!usesSourceNormals)
+                Debug.LogWarning("[QuestFlight][AirportCoreV4.2] Source normals were unavailable; normals were rebuilt.");
+
+            void RequireSourceVertex(int x, int z, string label)
+            {
+                Vector2Int key = new Vector2Int(x, z);
+                if (!vertexLookup.TryGetValue(key, out int index))
+                    throw new InvalidOperationException($"Adaptive terrain omitted {label} source vertex {key}.");
+                Vector3 vertex = mesh.vertices[index];
+                float expectedHeight = layer.heightMeters[z * layer.width + x];
+                if (Mathf.Abs(vertex.y - expectedHeight) > 0.0001f)
+                    throw new InvalidOperationException($"Adaptive terrain changed {label} source height {key}.");
+            }
+
+            for (int x = 0; x < layer.width; x++)
+            {
+                RequireSourceVertex(x, 0, "outer-boundary");
+                RequireSourceVertex(x, layer.height - 1, "outer-boundary");
+            }
+            for (int z = 0; z < layer.height; z++)
+            {
+                RequireSourceVertex(0, z, "outer-boundary");
+                RequireSourceVertex(layer.width - 1, z, "outer-boundary");
+            }
+            for (int z = 0; z < layer.height; z++)
+            for (int x = 0; x < layer.width; x++)
+            {
+                float east = layer.minimumEnuMeters.x + x * layer.spacingMeters;
+                float north = layer.minimumEnuMeters.y + z * layer.spacingMeters;
+                if (AdaptiveTerrainProtectedRects.Any(rect => rect.Contains(new Vector2(east, north)) ||
+                    Mathf.Abs(east - rect.xMax) < 0.001f && north >= rect.yMin && north <= rect.yMax ||
+                    Mathf.Abs(north - rect.yMax) < 0.001f && east >= rect.xMin && east <= rect.xMax))
+                    RequireSourceVertex(x, z, "protected");
+            }
+
+            Vector3[] vertices = mesh.vertices;
+            int[] triangles = mesh.triangles;
+            Dictionary<MeshEdge, int> edges = new Dictionary<MeshEdge, int>();
+            for (int index = 0; index < triangles.Length; index += 3)
+            {
+                int a = triangles[index];
+                int b = triangles[index + 1];
+                int c = triangles[index + 2];
+                Vector3 cross = Vector3.Cross(vertices[b] - vertices[a], vertices[c] - vertices[a]);
+                if (!IsFinite(cross.y) || cross.y <= 0.000001f)
+                    throw new InvalidOperationException(
+                        $"Adaptive airport terrain contains an inverted/degenerate triangle at {index / 3}.");
+                IncrementEdge(edges, new MeshEdge(a, b));
+                IncrementEdge(edges, new MeshEdge(b, c));
+                IncrementEdge(edges, new MeshEdge(c, a));
+            }
+            if (edges.Values.Any(count => count < 1 || count > 2))
+                throw new InvalidOperationException("Adaptive airport terrain contains a nonmanifold edge.");
+            MeshEdge[] boundaryEdges = edges.Where(item => item.Value == 1).Select(item => item.Key).ToArray();
+            int expectedBoundaryEdges = 2 * ((layer.width - 1) + (layer.height - 1));
+            if (boundaryEdges.Length != expectedBoundaryEdges || boundaryEdges.Any(edge =>
+                    !IsOuterBoundaryEdge(vertices[edge.minimum], vertices[edge.maximum], layer)))
+                throw new InvalidOperationException(
+                    $"Adaptive airport terrain boundary is not sealed to every 5 m source sample: " +
+                    $"{boundaryEdges.Length:N0}/{expectedBoundaryEdges:N0} edges.");
+        }
+
+        private static void IncrementEdge(IDictionary<MeshEdge, int> edges, MeshEdge edge)
+        {
+            edges.TryGetValue(edge, out int count);
+            edges[edge] = count + 1;
+        }
+
+        private static bool IsOuterBoundaryEdge(
+            Vector3 a, Vector3 b, ProductionTerrainSurfaceAsset.GridLayer layer)
+        {
+            float minimumEast = layer.minimumEnuMeters.x;
+            float maximumEast = minimumEast + (layer.width - 1) * layer.spacingMeters;
+            float minimumNorth = layer.minimumEnuMeters.y;
+            float maximumNorth = minimumNorth + (layer.height - 1) * layer.spacingMeters;
+            bool onBoundary =
+                Mathf.Abs(a.x - minimumEast) < 0.001f && Mathf.Abs(b.x - minimumEast) < 0.001f ||
+                Mathf.Abs(a.x - maximumEast) < 0.001f && Mathf.Abs(b.x - maximumEast) < 0.001f ||
+                Mathf.Abs(a.z - minimumNorth) < 0.001f && Mathf.Abs(b.z - minimumNorth) < 0.001f ||
+                Mathf.Abs(a.z - maximumNorth) < 0.001f && Mathf.Abs(b.z - maximumNorth) < 0.001f;
+            float horizontalLength = Vector2.Distance(new Vector2(a.x, a.z), new Vector2(b.x, b.z));
+            return onBoundary && Mathf.Abs(horizontalLength - layer.spacingMeters) < 0.001f;
+        }
+
         private static AirportCoreBenchmarkManifest BuildManifest(
             Material terminal, Material hangar, Material runway, Material reservoir, Material vegetation)
         {
@@ -714,6 +1074,7 @@ namespace QuestFlight.Editor
         {
             ProductionTerrainSurfaceAsset surface = LoadRequired<ProductionTerrainSurfaceAsset>(
                 "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_ProductionTerrainSurfaceV2.asset");
+            Mesh adaptiveAirportTerrain = BuildAdaptiveAirportTerrain(surface);
             GameObject environment = PrefabUtility.LoadPrefabContents(EnvironmentPath);
             try
             {
@@ -774,10 +1135,17 @@ namespace QuestFlight.Editor
                 root.authoritativeRunway = runway;
                 root.boulderReservoir = reservoir;
 
-                MeshRenderer airportTerrain = contract.nearTerrainMeshes.FirstOrDefault()
-                    ?.GetComponent<MeshRenderer>();
-                if (airportTerrain == null)
+                MeshFilter airportTerrainFilter = contract.nearTerrainMeshes.FirstOrDefault();
+                MeshRenderer airportTerrain = airportTerrainFilter == null
+                    ? null
+                    : airportTerrainFilter.GetComponent<MeshRenderer>();
+                if (airportTerrainFilter == null || airportTerrain == null)
                     throw new InvalidOperationException("Airport terrain renderer is missing for minor-water binding.");
+                if (airportTerrainFilter.GetComponent<MeshCollider>() != null)
+                    throw new InvalidOperationException(
+                        "The adaptive airport terrain is visual-only and must not replace a collider mesh.");
+                airportTerrainFilter.sharedMesh = adaptiveAirportTerrain;
+                EditorUtility.SetDirty(airportTerrainFilter);
                 ConfigureTerrainWater(airportTerrain.sharedMaterial, reservoir.bounds);
                 root.minorWaterTerrainEffect = airportTerrain;
                 ConfigureStableShoreAndGi(contract, airportTerrain.sharedMaterial);
@@ -1096,6 +1464,7 @@ namespace QuestFlight.Editor
                 settings.environmentImportanceSampling = false;
                 settings.maxBounces = 2;
                 settings.minBounces = 1;
+                ConfigureOneAtlasLightmapParameters(settings);
                 EditorUtility.SetDirty(settings);
                 Lightmapping.Clear();
                 Application.logMessageReceived += callback;
@@ -1134,7 +1503,6 @@ namespace QuestFlight.Editor
 
                 Texture2D color = lightmaps[0].lightmapColor;
                 string colorPath = AssetDatabase.GetAssetPath(color);
-                ValidateFiniteLightmap(colorPath);
                 long bytes = EstimateAstcBytes(color.width, color.height, 6);
                 manifest.bakedLightmapCount = 1;
                 manifest.bakedLightmapResolution = Mathf.Max(color.width, color.height);
@@ -1156,6 +1524,40 @@ namespace QuestFlight.Editor
                 RejectBake(scene, root, globalSun, manifest);
                 throw;
             }
+        }
+
+        private static LightmapParameters ConfigureOneAtlasLightmapParameters(LightingSettings settings)
+        {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            LightmapParameters parameters = AssetDatabase.LoadAssetAtPath<LightmapParameters>(
+                OneAtlasLightmapParametersPath);
+            if (parameters == null)
+            {
+                LightmapParameters inherited =
+                    LightmapParameters.GetLightmapParametersForLightingSettings(settings);
+                if (inherited == null)
+                    throw new InvalidOperationException(
+                        "Unity did not expose the scene's inherited Lightmap Parameters.");
+                parameters = UnityEngine.Object.Instantiate(inherited);
+                parameters.name = "AirportCoreV42OneAtlas";
+                parameters.hideFlags = HideFlags.None;
+                AssetDatabase.CreateAsset(parameters, OneAtlasLightmapParametersPath);
+            }
+            parameters.limitLightmapCount = true;
+            parameters.maxLightmapCount = 1;
+            parameters.bakedLightmapTag = 0;
+            EditorUtility.SetDirty(parameters);
+            LightmapParameters.SetLightmapParametersForLightingSettings(parameters, settings);
+            LightmapParameters assigned =
+                LightmapParameters.GetLightmapParametersForLightingSettings(settings);
+            if (assigned == null || assigned != parameters ||
+                !string.Equals(AssetDatabase.GetAssetPath(parameters), OneAtlasLightmapParametersPath,
+                    StringComparison.Ordinal) ||
+                !assigned.limitLightmapCount || assigned.maxLightmapCount != 1 ||
+                assigned.bakedLightmapTag != 0)
+                throw new InvalidOperationException(
+                    "The bounded one-atlas Lightmap Parameters asset was not assigned to the scene.");
+            return parameters;
         }
 
         private static void RejectBake(
@@ -1258,6 +1660,14 @@ namespace QuestFlight.Editor
         {
             Mesh mesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
             if (mesh == null && renderer is SkinnedMeshRenderer skinned) mesh = skinned.sharedMesh;
+            if (mesh == null) return 0;
+            long indices = 0;
+            for (int index = 0; index < mesh.subMeshCount; index++) indices += (long)mesh.GetIndexCount(index);
+            return (int)Math.Min(int.MaxValue, indices / 3L);
+        }
+
+        private static int TriangleCount(Mesh mesh)
+        {
             if (mesh == null) return 0;
             long indices = 0;
             for (int index = 0; index < mesh.subMeshCount; index++) indices += (long)mesh.GetIndexCount(index);
@@ -1392,6 +1802,62 @@ namespace QuestFlight.Editor
                 this.position = position;
                 this.rotation = rotation;
             }
+        }
+
+        private readonly struct MeshEdge : IEquatable<MeshEdge>
+        {
+            public readonly int minimum;
+            public readonly int maximum;
+
+            public MeshEdge(int a, int b)
+            {
+                minimum = Math.Min(a, b);
+                maximum = Math.Max(a, b);
+            }
+
+            public bool Equals(MeshEdge other) => minimum == other.minimum && maximum == other.maximum;
+            public override bool Equals(object value) => value is MeshEdge other && Equals(other);
+            public override int GetHashCode() => unchecked(minimum * 397 ^ maximum);
+        }
+
+        [Serializable]
+        private sealed class AdaptiveBoundsRecord
+        {
+            public float minimumEastMeters;
+            public float maximumEastMeters;
+            public float minimumNorthMeters;
+            public float maximumNorthMeters;
+        }
+
+        [Serializable]
+        private sealed class AdaptiveAirportTerrainReport
+        {
+            public int schemaVersion;
+            public string classification;
+            public string sourceTerrainSurfaceAsset;
+            public string sourceTerrainManifestSha256;
+            public string sourceVisualMesh;
+            public string derivedVisualMesh;
+            public float sourceSpacingMeters;
+            public float nonheroBaseSpacingMeters;
+            public float protectedSpacingMeters;
+            public float maximumAdaptiveCellSourceDeviationMeters;
+            public float measuredMaximumUnrefinedCellSourceDeviationMeters;
+            public int sourceTriangleCount;
+            public int derivedTriangleCount;
+            public int triangleReduction;
+            public int protectedFineCellCount;
+            public int automaticErrorFineCellCount;
+            public int totalFineCellCount;
+            public int transitionCellCount;
+            public int coarseCellCount;
+            public bool outerBoundarySourceSamplesPreserved;
+            public bool runwayCorridorSourceSamplesPreserved;
+            public bool benchmarkFoundationSourceSamplesPreserved;
+            public bool authoritativeSurfaceQueryUnchanged;
+            public bool colliderBindingsUnchanged;
+            public bool sourceNormalsPreserved;
+            public AdaptiveBoundsRecord[] protectedBounds = Array.Empty<AdaptiveBoundsRecord>();
         }
 
         [Serializable]

@@ -112,8 +112,12 @@ namespace QuestFlightLab.Environment
                 "minor-water terrain effect binding is missing", failures);
             Require(benchmarkSun != null && benchmarkSun.type == LightType.Directional,
                 "bounded lighting contract has no directional sun", failures);
+#if UNITY_EDITOR
+            // Unity exposes Light.lightmapBakeType only to Editor assemblies. Keep this
+            // fail-closed assertion in editor validation without breaking Android players.
             Require(benchmarkSun == null || benchmarkSun.lightmapBakeType == LightmapBakeType.Baked,
                 "benchmark static sun must be baked", failures);
+#endif
             Require(airportLightProbes != null && airportLightProbes.probePositions.Length == 18,
                 "airport light-probe volume must contain the authored 18 probes", failures);
             Require(airportLightProbes == null ||

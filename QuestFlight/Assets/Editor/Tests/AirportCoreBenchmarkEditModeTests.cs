@@ -38,7 +38,59 @@ namespace QuestFlightLab.Editor.Tests
             AirportCoreBenchmarkValidator.Report report = AirportCoreBenchmarkValidator.Validate();
             Assert.That(report.passed, Is.True, string.Join("\n", report.violations));
             Assert.That(report.classification,
-                Is.EqualTo("PASS_AIRPORT_CORE_V4_1_STRUCTURAL_GATE_VISUAL_AND_HEADSET_REQUIRED"));
+                Is.EqualTo("PASS_AIRPORT_CORE_V4_2_STRUCTURAL_GATE_VISUAL_AND_HEADSET_REQUIRED"));
+            Assert.That(report.adaptiveAirportTerrainTriangles,
+                Is.InRange(1, AirportCoreV4Authoring.MaximumAdaptiveAirportTerrainTriangles));
+            Assert.That(report.oneAtlasLightmapParametersValid, Is.True);
+        }
+
+        [Test]
+        public void V42BindsErrorBoundedVisualTerrainWithoutChangingSurfaceOrPhysics()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ProductionEnvironmentRoot.PrefabAssetPath);
+            Assert.That(prefab, Is.Not.Null);
+            ProductionEnvironmentRoot contract = prefab.GetComponent<ProductionEnvironmentRoot>();
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.nearTerrainMeshes, Has.Length.EqualTo(2));
+            MeshFilter airport = contract.nearTerrainMeshes[0];
+            Assert.That(AssetDatabase.GetAssetPath(airport.sharedMesh),
+                Is.EqualTo(AirportCoreV4Authoring.AdaptiveAirportTerrainMeshPath));
+            Assert.That(airport.sharedMesh.triangles.Length / 3,
+                Is.InRange(1, AirportCoreV4Authoring.MaximumAdaptiveAirportTerrainTriangles));
+            Assert.That(airport.GetComponent<MeshCollider>(), Is.Null);
+            Assert.That(AssetDatabase.GetAssetPath(contract.authoritativeTerrainSurface),
+                Is.EqualTo("Assets/Production/Environment/ReconstructionV2/Generated/" +
+                           "KBDU_ProductionTerrainSurfaceV2.asset"));
+            Mesh source = AssetDatabase.LoadAssetAtPath<Mesh>(EnvironmentReconstructionV2Authoring.AirportMeshPath);
+            Assert.That(source, Is.Not.Null);
+            Assert.That(source.triangles.Length / 3, Is.EqualTo(76800));
+            TextAsset report = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                AirportCoreV4Authoring.AdaptiveAirportTerrainReportPath);
+            Assert.That(report, Is.Not.Null);
+            Assert.That(report.text, Does.Contain("PASS_ERROR_BOUNDED_ADAPTIVE_AIRPORT_VISUAL_MESH"));
+        }
+
+        [Test]
+        public void V42UsesOneBoundedLightmapParametersAsset()
+        {
+            LightmapParameters parameters = AssetDatabase.LoadAssetAtPath<LightmapParameters>(
+                AirportCoreV4Authoring.OneAtlasLightmapParametersPath);
+            Assert.That(parameters, Is.Not.Null);
+            Assert.That(parameters.limitLightmapCount, Is.True);
+            Assert.That(parameters.maxLightmapCount, Is.EqualTo(1));
+            Assert.That(parameters.bakedLightmapTag, Is.Zero);
+        }
+
+        [Test]
+        public void BenchmarkSunRemainsBakedInEditorValidation()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ProductionEnvironmentRoot.PrefabAssetPath);
+            Assert.That(prefab, Is.Not.Null);
+            AirportCoreBenchmarkRoot root = prefab.GetComponentInChildren<AirportCoreBenchmarkRoot>(true);
+            Assert.That(root, Is.Not.Null);
+            Assert.That(root.benchmarkSun, Is.Not.Null);
+            Assert.That(root.benchmarkSun.lightmapBakeType, Is.EqualTo(LightmapBakeType.Baked));
+            Assert.That(root.TryValidateContract(out string report), Is.True, report);
         }
 
         [Test]

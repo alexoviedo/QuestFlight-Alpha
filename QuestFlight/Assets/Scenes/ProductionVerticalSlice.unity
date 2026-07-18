@@ -93,7 +93,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 0}
+  m_LightingDataAsset: {fileID: 112000000, guid: f8db7ca0cbdabab4e8f253a8539cb060, type: 2}
   m_LightingSettings: {fileID: 1724973773}
 --- !u!196 &4
 NavMeshSettings:
@@ -155,7 +155,7 @@ LightingSettings:
   m_MixedBakeMode: 2
   m_LightmapsBakeMode: 0
   m_FilterMode: 1
-  m_LightmapParameters: {fileID: 15204, guid: 0000000000000000f000000000000000, type: 0}
+  m_LightmapParameters: {fileID: 111300000, guid: eb431a5944cf48347b3af976631ce5a8, type: 2}
   m_ExportTrainingData: 0
   m_EnableWorkerProcessBaking: 1
   m_TrainingDataDestination: TrainingData
@@ -200,7 +200,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2375097098290893549, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: m_CullingMask.m_Bits
-      value: 4294967295
+      value: 3758096383
+      objectReference: {fileID: 0}
+    - target: {fileID: 3628160845237562894, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5427240911674089533, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: m_Enabled

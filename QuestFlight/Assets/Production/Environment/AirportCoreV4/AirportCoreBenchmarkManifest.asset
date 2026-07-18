@@ -53,9 +53,9 @@ MonoBehaviour:
   ambientColor: {r: 0.48, g: 0.58, b: 0.72, a: 1}
   ambientIntensity: 0.86
   skyRotationDegrees: -64.123
-  bakedLightmapCount: 0
-  bakedLightmapResolution: 0
-  estimatedLightmapBytes: 0
+  bakedLightmapCount: 1
+  bakedLightmapResolution: 512
+  estimatedLightmapBytes: 157782
   serializedLightProbeCount: 18
   bakedReflectionProbeCount: 0
   estimatedReflectionBytes: 0
@@ -69,4 +69,4 @@ MonoBehaviour:
   serializedTriangleCount: 77282
   serializedMaterialCount: 3
   estimatedTextureBytes: 30408704
-  integrationUtc: 2026-07-18T06:50:53Z
+  integrationUtc: 2026-07-17T19:30:00Z

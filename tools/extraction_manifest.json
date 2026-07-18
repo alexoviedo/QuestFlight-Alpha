@@ -484,6 +484,26 @@
       "path": "Assets/Production/Materials/Cockpit/Cockpit_White_New_Static_5379052021959119566.mat",
       "classification": "approved_product_authored",
       "reason": "Bounded cockpit presentation material extracted from the licensed aircraft instance and tuned for standalone Quest."
+    },
+    {
+      "path": "Assets/Scripts/Environment/AirportCoreBenchmarkManifest.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored serialized contract for the bounded airport-core benchmark; it does not construct or repair the runtime hierarchy."
+    },
+    {
+      "path": "Assets/Scripts/Environment/AirportCoreBenchmarkRoot.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored validation marker for the explicitly serialized airport-core benchmark hierarchy; it performs no runtime construction."
+    },
+    {
+      "path": "Assets/Scenes/ProductionVerticalSlice/LightingData.asset",
+      "classification": "approved_project_generated",
+      "reason": "Unity-generated baked-lighting data for the bounded airport-core benchmark, pinned by the V4.2 bake manifest and structural validator."
+    },
+    {
+      "path": "Assets/Scenes/ProductionVerticalSlice/Lightmap-0_comp_light.exr",
+      "classification": "approved_project_generated",
+      "reason": "Project-generated single-atlas baked lightmap for the bounded airport-core benchmark, hash-pinned by the V4.2 bake manifest."
     }
   ],
   "product_replacements": [
