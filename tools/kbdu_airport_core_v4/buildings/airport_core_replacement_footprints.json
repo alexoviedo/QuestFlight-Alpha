@@ -31,8 +31,10 @@
     {
       "object_id": "AirportCoreV4_FuelServiceCore",
       "asset_id": "FuelServiceCore",
-      "placement_status": "AUTHORED_ASSET_ONLY_PENDING_LEAD_PLACEMENT",
-      "reason": "No survey-grade public footprint was identified for a standalone fuel/service structure; do not inpaint or place it speculatively."
+      "position_xz_meters": [-112.0, -205.0],
+      "placement_status": "EXPERIMENTAL_AUTHORED_CONTEXT_UNVALIDATED",
+      "clean_plate_status": "NOT_REQUIRED_FOR_EXPERIMENTAL_CONTEXT",
+      "reason": "No survey-grade public footprint was identified for a standalone fuel/service structure. This project-authored benchmark placement is not an exact reconstruction and requires integrated Visual QA."
     }
   ],
   "parked_aircraft_and_prop_regions": [

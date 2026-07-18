@@ -466,6 +466,7 @@ namespace QuestFlightLab.Tests.EditMode
                 if (current.name.StartsWith("buildings_", StringComparison.Ordinal) ||
                     current.name.StartsWith("vegetation_", StringComparison.Ordinal) ||
                     string.Equals(current.name, "AirportArtProduction", StringComparison.Ordinal) ||
+                    string.Equals(current.name, AirportCoreBenchmarkRoot.GameObjectName, StringComparison.Ordinal) ||
                     string.Equals(current.name, "SparseVegetationProduction", StringComparison.Ordinal))
                     return true;
             }

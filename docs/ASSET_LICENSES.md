@@ -199,12 +199,13 @@ V4 uses only project-owned output, existing rights-cleared project derivatives, 
 - `AirportCoreV4/Materials/SOURCE_MANIFEST.json`;
 - `AirportCoreV4/CleanPlate/SOURCE_MANIFEST.json`;
 - `AirportCoreV4/Runway/SOURCE_MANIFEST.json`;
-- `AirportCoreV4/Water/Reports/AirportCoreWaterVegetation_SourceManifest.json`;
-- `Assets/Scenes/ProductionVerticalSlice/BAKE_MANIFEST.json`.
+- `AirportCoreV4/Water/Reports/AirportCoreWaterVegetation_SourceManifest.json`.
 
-The executive terminal, Type 2 hangar row, fuel/service kit, airport props, vegetation geometry, analytic water normals, procedural masks, and Blender sources are project-owned. The clean plate is a bounded derivative of the already-recorded public-domain NAIP atlas; replacement bounds retain OSM attribution where applicable. The lightmaps and `LightingData.asset` are project-generated render derivatives of the serialized, rights-cleared scene. Their exact hashes are in `BAKE_MANIFEST.json`; they are preserved as failed-benchmark evidence and are not visually accepted.
+The executive terminal, Type 2 hangar row, fuel/service kit, airport props, vegetation geometry, analytic water normals, procedural masks, and Blender sources are project-owned. The clean plate is a bounded derivative of the already-recorded public-domain NAIP atlas; replacement bounds retain OSM attribution where applicable. V4.1 combines the existing project-owned apron-prop and fuel-service source meshes into six serialized Unity mesh derivatives (`AirportCorePropsCombined_LOD0/1/2` and `FuelServiceCore_LOD0/1/2_V4`); it introduces no new external source or license boundary.
 
-All 55 new LFS-covered V4 binaries have paired Unity metadata. The existing non-LFS historical 5.43 MiB HDR blob remains a bounded policy exception; this branch does not rewrite history. No V4 raw download, build, APK, capture, or cache is committed.
+The rejected V4 `LightingData.asset`, bake manifest, two color lightmaps, and two directional lightmaps were deleted from the product tree by the V4.1 fail-closed quarantine. Two replacement bake attempts were also rejected and deleted because each exceeded the bounded V4.1 one-atlas remediation budget. Their logs remain external under the V4.1 artifact root; no V4.1 lightmap is accepted or committed.
+
+V4 originally produced 55 LFS-covered binaries. V4.1 deletes the four rejected baked-lightmap textures and retains 51, all with paired Unity metadata. The existing non-LFS historical 5.43 MiB HDR blob remains a bounded policy exception; this branch does not rewrite history. No V4 raw download, build, APK, capture, or cache is committed.
 
 ## Environment Reconstruction V2 derivatives (feature branch)
 

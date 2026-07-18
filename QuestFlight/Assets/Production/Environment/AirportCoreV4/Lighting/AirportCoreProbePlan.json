@@ -93,9 +93,9 @@
     ]
   ],
   "probeCount": 18,
-  "finalSerializedProbeCount": 20,
-  "purpose": "Dynamic aircraft and authored airport props only; static core uses baked lightmaps.",
+  "finalSerializedProbeCount": 18,
+  "purpose": "Dynamic aircraft and authored airport props; V4.1 has no accepted static-core lightmap, while a future accepted bake may light the static core.",
   "runtimeUpdates": false,
   "schemaVersion": 1,
-  "status": "PREINTEGRATION_PLAN_SUPERSEDED_BY_SERIALIZED_20_PROBE_VOLUME"
+  "status": "V4_1_SERIALIZED_18_PROBE_TWO_HEIGHT_VOLUME"
 }

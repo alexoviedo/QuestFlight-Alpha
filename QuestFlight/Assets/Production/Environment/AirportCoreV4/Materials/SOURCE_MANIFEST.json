@@ -610,21 +610,21 @@
   },
   "runtimeMaterials": [
     {
-      "bytes": 1379,
+      "bytes": 1378,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreTerminalAtlas.mat",
-      "sha256": "e66ee96e982186f023ab21f4b9aec0c4472d5323c91b2cb60597a3d419f06cb2"
+      "sha256": "ee65c65297859c5ddd15531dc35a9fd8311783b8419997ddd121c0b455eb7cb6"
     },
     {
       "bytes": 1380,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKitAtlas.mat",
-      "sha256": "102265f47aa20d0858624e3513ceec2e4e1caa71f85fc3cc1ec6a87dd6f5ead6"
+      "sha256": "e749ec0e966cfc43a6090e7be5648bced2e27fce32c2d59755d3b45d5619b842"
     }
   ],
   "schemaVersion": 1,
   "shader": {
-    "bytes": 6300,
+    "bytes": 7814,
     "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreBakedLit.shader",
-    "sha256": "bb22d033d818a6c327376663cec3d8387b7dc2aa11210edf7c9e53704509a2c5"
+    "sha256": "7528c50236758aca339c314e89b09cd4268f75c4757d20e842a7f07c329a19bf"
   },
   "status": "OPTIMIZED_DERIVATIVES_READY_NOT_VISUALLY_ACCEPTED"
 }

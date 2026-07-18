@@ -296,12 +296,13 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 }
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half diffuse = saturate(dot(normal, lightDirection));
-                half3 ambient = ShadeSH9(half4(normal, 1.0));
+                half3 irradiance = saturate(max(ShadeSH9(half4(normal, 1.0)), 0.0h) * 0.35h +
+                    _LightColor0.rgb * (0.08h + diffuse * 0.55h));
                 half3 halfDirection = normalize(lightDirection + viewDirection);
                 half specular = pow(saturate(dot(normal, halfDirection)), lerp(28.0, 5.0, surfaceRoughness)) *
                     (1.0 - surfaceRoughness) * 0.045;
                 fixed4 output = fixed4(
-                    albedo * (ambient + _LightColor0.rgb * (0.12 + diffuse * 0.88)) + _LightColor0.rgb * specular,
+                    albedo * irradiance + _LightColor0.rgb * specular,
                     1.0);
                 UNITY_APPLY_FOG(input.fogCoord, output);
                 return output;

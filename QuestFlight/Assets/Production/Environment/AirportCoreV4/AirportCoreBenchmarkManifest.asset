@@ -45,18 +45,18 @@ MonoBehaviour:
   runwayMaterial: {fileID: 2100000, guid: 772deb61031def0e2d972c4803461aff, type: 2}
   reservoirMaterial: {fileID: 2100000, guid: c76f8b87e43a2ca4ec89c353d2b09fdc, type: 2}
   vegetationMaterial: {fileID: 2100000, guid: 0fe0303ee1f1b78b11036da2332e443e, type: 2}
-  sunAzimuthDegrees: 152
-  sunElevationDegrees: 72
-  sunCalibrationConfidence: 0.436
-  sunColor: {r: 1, g: 0.966, b: 0.92, a: 1}
+  sunAzimuthDegrees: 36.123043
+  sunElevationDegrees: 58.62307
+  sunCalibrationConfidence: 0.01
+  sunColor: {r: 1, g: 0.956, b: 0.885, a: 1}
   sunIntensity: 1
-  ambientColor: {r: 0.54, g: 0.61, b: 0.68, a: 1}
-  ambientIntensity: 1
+  ambientColor: {r: 0.48, g: 0.58, b: 0.72, a: 1}
+  ambientIntensity: 0.86
   skyRotationDegrees: -64.123
-  bakedLightmapCount: 1
-  bakedLightmapResolution: 2048
-  estimatedLightmapBytes: 4194304
-  serializedLightProbeCount: 20
+  bakedLightmapCount: 0
+  bakedLightmapResolution: 0
+  estimatedLightmapBytes: 0
+  serializedLightProbeCount: 18
   bakedReflectionProbeCount: 0
   estimatedReflectionBytes: 0
   cleanPlateCoversEveryReplacement: 1
@@ -65,8 +65,8 @@ MonoBehaviour:
   minorWaterUsesTerrainMask: 1
   rawSourcesExcluded: 1
   serializedReplacementCount: 2
-  serializedRendererCount: 27
-  serializedTriangleCount: 74730
+  serializedRendererCount: 15
+  serializedTriangleCount: 77282
   serializedMaterialCount: 3
   estimatedTextureBytes: 30408704
-  integrationUtc: 2026-07-17T19:30:00Z
+  integrationUtc: 2026-07-18T06:50:53Z

@@ -257,10 +257,10 @@
       "sha256": "061169de196095fb6af5ef70b7711607b8946fe6b2f3f3b2bb62d8b1e01176c6"
     },
     {
-      "bytes": 2704,
+      "bytes": 2884,
       "path": "tools/kbdu_airport_core_v4/buildings/airport_core_replacement_footprints.json",
       "role": "authoring_input",
-      "sha256": "d9e4928e9df625173ffffda10fc0bbaec6e040002af78081fda39e77ad57539f"
+      "sha256": "4d424eb3ce1c53c7a922ed20ef1a95349340d060af62c785a92416731bf255f4"
     },
     {
       "bytes": 6927,
@@ -269,10 +269,10 @@
       "sha256": "eaf96b7cabaf61d4a5423981b5f7b4822eb1285b15d6e3e486686773495a9a4f"
     },
     {
-      "bytes": 5121,
+      "bytes": 5217,
       "path": "tools/kbdu_airport_core_v4/buildings/write_source_manifest.py",
       "role": "authoring_input",
-      "sha256": "fecd2b32c85fa30e32ad0fc009b58c6741de2df71649c0649b7bfbe89ff8d456"
+      "sha256": "43b2c8e7b68b7b1e586fad13c4f35f9ac563cd0b74d7b5b8aa0f9db9caaf5b51"
     },
     {
       "bytes": 3127,
@@ -344,7 +344,7 @@
   "limitations": [
     "Models are reference-faithful authoring candidates, not survey-grade replicas.",
     "No model is visually accepted until Unity atlas binding, clean plate, lighting, full-resolution QA, stereo review, and Quest budgets pass.",
-    "FuelServiceCore is intentionally unplaced because no survey-grade public footprint was identified."
+    "FuelServiceCore uses a project-authored experimental benchmark placement; no survey-grade public footprint was identified, so it is not an exact reconstruction and requires integrated Visual QA."
   ],
   "material_dependency": {
     "hangar_kit_material": "AirportCoreHangarKitAtlas",

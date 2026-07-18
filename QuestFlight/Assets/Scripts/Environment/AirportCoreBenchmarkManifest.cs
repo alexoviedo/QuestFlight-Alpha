@@ -21,8 +21,8 @@ namespace QuestFlightLab.Environment
         public const string ReferenceV3Sha = "46ffc235113532ff5c4204c9b3b0a11e5932b2ce";
         public const float MinimumHorizontalExtentMeters = 600f;
         public const float MaximumHorizontalExtentMeters = 900f;
-        public const int MaximumLightmapCount = 2;
-        public const int MaximumLightmapResolution = 2048;
+        public const int MaximumLightmapCount = 1;
+        public const int MaximumLightmapResolution = 1024;
 
         [Header("Identity and bounded scope")]
         public string stableId = StableId;
@@ -128,10 +128,10 @@ namespace QuestFlightLab.Environment
                 "sun calibration confidence is missing", failures);
             Require(sunIntensity > 0f && ambientIntensity > 0f,
                 "sun/ambient intensity contract is incomplete", failures);
-            Require(bakedLightmapCount >= 1 && bakedLightmapCount <= MaximumLightmapCount,
-                "benchmark must use one or two lightmaps", failures);
+            Require(bakedLightmapCount == MaximumLightmapCount,
+                "benchmark must use exactly one bounded lightmap", failures);
             Require(bakedLightmapResolution > 0 && bakedLightmapResolution <= MaximumLightmapResolution,
-                "benchmark lightmap resolution exceeds 2048", failures);
+                "benchmark lightmap resolution exceeds 1024", failures);
             Require(estimatedLightmapBytes > 0, "lightmap memory estimate is missing", failures);
             Require(serializedLightProbeCount > 0, "light probes are not serialized", failures);
             Require(bakedReflectionProbeCount >= 0 && bakedReflectionProbeCount <= 1,

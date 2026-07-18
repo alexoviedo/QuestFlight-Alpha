@@ -55,7 +55,9 @@ Shader "QuestFlightLab/Production Runway Marking"
 
                 half3 normal = normalize(input.worldNormal);
                 half diffuse = saturate(dot(normal, normalize(_WorldSpaceLightPos0.xyz)));
-                fixed4 output = fixed4(_Color.rgb * (ShadeSH9(half4(normal, 1.0)) + _LightColor0.rgb * diffuse), 1.0);
+                half3 irradiance = saturate(max(ShadeSH9(half4(normal, 1.0)), 0.0h) * 0.35h +
+                    _LightColor0.rgb * (0.08h + diffuse * 0.55h));
+                fixed4 output = fixed4(_Color.rgb * irradiance, 1.0);
                 UNITY_APPLY_FOG(input.fogCoord, output);
                 return output;
             }

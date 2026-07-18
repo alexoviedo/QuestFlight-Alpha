@@ -1,23 +1,26 @@
 {
-  "atlasSizePixels": 2048,
+  "atlasSizePixels": 1024,
   "budgetedAtlases": 1,
   "compressed": true,
-  "directionalMode": true,
-  "estimatedMaximumAndroidBytes": 4995424,
-  "estimatedPreferredAndroidBytes": 2497712,
-  "maximumAtlases": 2,
+  "directionalMode": false,
+  "estimatedMaximumAndroidBytes": 629145,
+  "estimatedPreferredAndroidBytes": 629145,
+  "maximumAtlases": 1,
   "runtimeGiUpdates": false,
   "schemaVersion": 1,
-  "scope": "AirportCoreBenchmarkRoot only; no Stage-1 lightmap outside benchmark bounds.",
-  "secondAtlasPolicy": "Conditional only after the full-scene <=180 MiB gate demonstrates headroom.",
-  "finalSceneLightmapAtlases": 2,
-  "finalSceneLightmapTextureCount": 4,
-  "finalConservativeAndroidBytes": 89478488,
-  "finalBakeWarnings": "Six non-finite indirect/environment/directionality values; output is not accepted.",
-  "status": "PREINTEGRATION_PLAN_BAKE_ATTEMPTED_NOT_ACCEPTED",
-  "validation": [
+  "scope": "AirportCoreBenchmarkRoot only; no V4.1 lightmap outside benchmark bounds.",
+  "secondAtlasPolicy": "Rejected. The bounded V4.1 remediation budget requires one atlas.",
+  "finalSceneLightmapAtlases": 0,
+  "finalSceneLightmapTextureCount": 0,
+  "finalConservativeAndroidBytes": 0,
+  "attemptedSceneLightmapAtlases": 2,
+  "attemptedSceneLightmapTextureCount": 2,
+  "finalBakeWarnings": "The lightmapper emitted no prior non-finite diagnostic, but both completed V4.1 attempts packed two non-directional atlases and were rejected before pixel-level finiteness validation.",
+  "status": "V4_1_REJECTED_TWO_ATLASES_FAIL_CLOSED",
+  "pendingValidation": [
     "no doubled shadows",
     "no static realtime shadow map",
     "no out-of-bounds renderer in bake"
-  ]
+  ],
+  "pendingValidationStatus": "NOT_RUN_AFTER_V4_1_BAKE_REJECTION"
 }

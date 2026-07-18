@@ -1,14 +1,14 @@
 {
-  "acceptanceBoundary": "Unity bake and full-resolution A/B ran and failed acceptance; stereo simulator and physical Quest validation were not entered.",
+  "acceptanceBoundary": "V4.1 serialized a neutral Trilight/realtime fallback. Two completed two-atlas attempts did not emit the prior non-finite diagnostic but were rejected before pixel validation; visual QA, stereo simulator, APK, and physical Quest validation were not entered.",
   "ambient": {
-    "intensityStartingValue": 1.0,
+    "intensityStartingValue": 0.86,
     "runtimeGiUpdates": false,
-    "source": "custom sky cubemap"
+    "source": "neutral Trilight; display HDR is reflection/visible-sky only"
   },
   "assetType": "AirportCoreLightingProfile",
-  "confidence": 0.43565118093520183,
+  "confidence": 0.01,
   "fixedTimeOfDay": true,
-  "profileId": "KBDU_AIRPORT_CORE_FIXED_NAIP_MATCH_V4",
+  "profileId": "KBDU_AIRPORT_CORE_NEUTRAL_RECOVERY_V4_1",
   "schemaVersion": 1,
   "sky": {
     "cubemap": "../../Sky/Kloppenheim03_PureSky_2K.hdr",
@@ -17,18 +17,18 @@
     "runtimeUpdates": false,
     "sourceLicense": "CC0-1.0"
   },
-  "status": "SERIALIZED_LOW_CONFIDENCE_PROFILE_NOT_VISUALLY_ACCEPTED",
+  "status": "SERIALIZED_REALTIME_FALLBACK_NOT_VISUALLY_ACCEPTED",
   "sun": {
-    "azimuthDegrees": 152.0,
+    "azimuthDegrees": 36.123043,
     "colorTemperatureKelvin": 5600,
     "directionTowardSunEnu": [
-      0.14507469127660538,
-      0.9510565162951535,
-      -0.27284581133586044
+      0.3069436251,
+      0.8537605113,
+      0.4205693764
     ],
     "dynamicAircraftShadowMode": "lead A/B: existing blob/contact shadow or one bounded aircraft-only realtime shadow",
-    "elevationDegrees": 72.0,
+    "elevationDegrees": 58.62307,
     "intensityStartingValue": 1.0,
-    "staticCoreShadowMode": "baked direct and indirect only"
+    "staticCoreShadowMode": "V4.1 fallback uses bounded realtime irradiance with no accepted lightmap and no broad static realtime shadow map; a future accepted bake may use baked direct and indirect lighting"
   }
 }

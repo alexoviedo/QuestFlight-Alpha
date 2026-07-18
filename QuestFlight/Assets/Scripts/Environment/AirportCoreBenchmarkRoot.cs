@@ -19,8 +19,11 @@ namespace QuestFlightLab.Environment
         [Header("Serialized benchmark contract")]
         public AirportCoreBenchmarkManifest manifest;
         public Transform benchmarkContent;
-        public Transform filteredV2Context;
-        public Transform v2BaselineReference;
+        public LODGroup filteredV2Context;
+        [Tooltip("Editor A/B provenance only. Paths do not pull the original meshes into the Android player.")]
+        public string[] v2ContextOriginalMeshPaths = Array.Empty<string>();
+        [Tooltip("Editor A/B provenance for the active filtered context meshes.")]
+        public string[] v4ContextFilteredMeshPaths = Array.Empty<string>();
         public LODGroup executiveTerminal;
         public LODGroup type2HangarRow;
         public Transform fuelServiceContext;
@@ -60,16 +63,18 @@ namespace QuestFlightLab.Environment
                 "benchmark content is not explicitly authored below the root", failures);
             Require(benchmarkContent == null || benchmarkContent.gameObject.activeSelf,
                 "benchmark content must be active in the authored V4 variant", failures);
-            Require(filteredV2Context != null && filteredV2Context.IsChildOf(transform),
-                "filtered V2 context is not explicitly authored below the benchmark root", failures);
+            Require(HasThreeValidLods(filteredV2Context),
+                "the product context does not expose one valid filtered three-LOD source", failures);
             Require(filteredV2Context == null || filteredV2Context.gameObject.activeSelf,
                 "filtered V2 context must be active in the V4 variant", failures);
-            Require(v2BaselineReference != null &&
-                    v2BaselineReference.IsChildOf(transform) &&
-                    string.Equals(v2BaselineReference.name, V2BaselineName, StringComparison.Ordinal),
-                "V2 A/B baseline reference is missing", failures);
-            Require(v2BaselineReference == null || !v2BaselineReference.gameObject.activeSelf,
-                "V2 baseline and V4 benchmark must not be active together", failures);
+            Require(HasThreeAssetPaths(v2ContextOriginalMeshPaths),
+                "V2 A/B original context mesh paths are missing", failures);
+            Require(HasThreeAssetPaths(v4ContextFilteredMeshPaths),
+                "V4 filtered context mesh paths are missing", failures);
+            Require(GetComponentsInChildren<Transform>(true).All(item =>
+                    !string.Equals(item.name, V2BaselineName, StringComparison.Ordinal) &&
+                    !string.Equals(item.name, "FilteredV2Context", StringComparison.Ordinal)),
+                "serialized duplicate A/B context renderer hierarchy remains", failures);
             Require(executiveTerminal != null && executiveTerminal.transform.IsChildOf(transform),
                 "executive terminal LODGroup is missing", failures);
             Require(type2HangarRow != null && type2HangarRow.transform.IsChildOf(transform),
@@ -109,8 +114,11 @@ namespace QuestFlightLab.Environment
                 "bounded lighting contract has no directional sun", failures);
             Require(benchmarkSun == null || benchmarkSun.lightmapBakeType == LightmapBakeType.Baked,
                 "benchmark static sun must be baked", failures);
-            Require(airportLightProbes != null && airportLightProbes.probePositions.Length > 0,
-                "airport light probes are missing", failures);
+            Require(airportLightProbes != null && airportLightProbes.probePositions.Length == 18,
+                "airport light-probe volume must contain the authored 18 probes", failures);
+            Require(airportLightProbes == null ||
+                    airportLightProbes.probePositions.Select(position => position.y).Distinct().Count() >= 2,
+                "airport light probes must occupy at least two heights", failures);
             Require(airportReflectionProbe == null || airportReflectionProbe.mode == ReflectionProbeMode.Baked,
                 "airport reflection probe must be baked", failures);
             Require(v2RunwayMaterial != null && v2ReservoirMaterial != null,
@@ -149,6 +157,12 @@ namespace QuestFlightLab.Environment
             LOD[] lods = group.GetLODs();
             return lods.Length == 3 && lods.All(lod => lod.renderers != null && lod.renderers.Length > 0 &&
                 lod.renderers.All(renderer => renderer != null));
+        }
+
+        private static bool HasThreeAssetPaths(string[] paths)
+        {
+            return paths != null && paths.Length == 3 &&
+                   paths.All(path => !string.IsNullOrWhiteSpace(path));
         }
 
         private static void Require(bool condition, string message, ICollection<string> failures)

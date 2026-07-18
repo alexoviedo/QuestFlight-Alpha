@@ -898,6 +898,7 @@ namespace QuestFlightLab.Runtime
                 if (objectName.StartsWith("buildings_", StringComparison.Ordinal) ||
                     objectName.StartsWith("vegetation_", StringComparison.Ordinal) ||
                     string.Equals(objectName, "AirportArtProduction", StringComparison.Ordinal) ||
+                    string.Equals(objectName, AirportCoreBenchmarkRoot.GameObjectName, StringComparison.Ordinal) ||
                     string.Equals(objectName, "SparseVegetationProduction", StringComparison.Ordinal))
                     return true;
             }

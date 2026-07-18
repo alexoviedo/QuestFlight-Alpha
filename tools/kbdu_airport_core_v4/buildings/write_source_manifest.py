@@ -75,7 +75,7 @@ def main() -> None:
         "limitations": [
             "Models are reference-faithful authoring candidates, not survey-grade replicas.",
             "No model is visually accepted until Unity atlas binding, clean plate, lighting, full-resolution QA, stereo review, and Quest budgets pass.",
-            "FuelServiceCore is intentionally unplaced because no survey-grade public footprint was identified."
+            "FuelServiceCore uses a project-authored experimental benchmark placement; no survey-grade public footprint was identified, so it is not an exact reconstruction and requires integrated Visual QA."
         ]
     }
     OUTPUT.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")

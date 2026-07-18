@@ -38,11 +38,11 @@ namespace QuestFlightLab.Editor.Tests
             AirportCoreBenchmarkValidator.Report report = AirportCoreBenchmarkValidator.Validate();
             Assert.That(report.passed, Is.True, string.Join("\n", report.violations));
             Assert.That(report.classification,
-                Is.EqualTo("PASS_AIRPORT_CORE_V4_STRUCTURAL_GATE_VISUAL_AND_HEADSET_REQUIRED"));
+                Is.EqualTo("PASS_AIRPORT_CORE_V4_1_STRUCTURAL_GATE_VISUAL_AND_HEADSET_REQUIRED"));
         }
 
         [Test]
-        public void BenchmarkAndV2BaselineAreSerializedAsExclusiveVariants()
+        public void BenchmarkUsesOneFilteredContextAndEditorOnlyPathBasedAbProvenance()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ProductionEnvironmentRoot.PrefabAssetPath);
             Assert.That(prefab, Is.Not.Null);
@@ -59,8 +59,16 @@ namespace QuestFlightLab.Editor.Tests
             Assert.That(root.vegetationHeroCluster.IsChildOf(root.benchmarkContent), Is.True);
             Assert.That(root.filteredV2Context, Is.Not.Null);
             Assert.That(root.filteredV2Context.gameObject.activeSelf, Is.True);
-            Assert.That(root.v2BaselineReference, Is.Not.Null);
-            Assert.That(root.v2BaselineReference.gameObject.activeSelf, Is.False);
+            Assert.That(root.v2ContextOriginalMeshPaths, Has.Length.EqualTo(3));
+            Assert.That(root.v4ContextFilteredMeshPaths, Has.Length.EqualTo(3));
+            Assert.That(root.GetComponentsInChildren<Transform>(true).Any(item =>
+                item.name == AirportCoreBenchmarkRoot.V2BaselineName || item.name == "FilteredV2Context"), Is.False);
+            Assert.That(root.authoredApronProps.GetComponent<LODGroup>(), Is.Not.Null);
+            Assert.That(root.authoredApronProps.GetComponentsInChildren<Renderer>(true), Has.Length.EqualTo(3));
+            Assert.That(root.fuelServiceContext.GetComponent<LODGroup>(), Is.Not.Null);
+            Assert.That(root.fuelServiceContext.GetComponentsInChildren<Renderer>(true), Has.Length.EqualTo(3));
+            Assert.That(root.airportLightProbes.probePositions, Has.Length.EqualTo(18));
+            Assert.That(root.airportLightProbes.probePositions.Select(item => item.y).Distinct().Count(), Is.EqualTo(2));
         }
     }
 }

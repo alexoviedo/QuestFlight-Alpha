@@ -94,10 +94,10 @@ Shader "QuestFlight/Airport Core V4/Vegetation Hero Cutout"
                 #ifdef LIGHTMAP_ON
                     lighting = DecodeLightmap(UNITY_SAMPLE_TEX2D(unity_Lightmap, input.lightmapUv));
                 #else
-                    half3 ambient = max(ShadeSH9(half4(normal,1.0h)), half3(0.06h,0.06h,0.06h));
+                    half3 ambient = max(ShadeSH9(half4(normal,1.0h)), 0.0h) * 0.35h;
                     half ndl = saturate(dot(normal, normalize(_WorldSpaceLightPos0.xyz)));
                     half wrap = lerp(_BackfaceLight, 1.0h, ndl);
-                    lighting = ambient + _LightColor0.rgb * wrap * 0.46h;
+                    lighting = saturate(ambient + _LightColor0.rgb * (0.06h + wrap * 0.40h));
                 #endif
                 half atlasBake = lerp(1.0h, dot(atlas.rgb, half3(0.22h,0.68h,0.10h)) * 0.55h + 0.65h,
                                       _BakedAtlasStrength);

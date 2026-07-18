@@ -872,7 +872,7 @@ def write_profiles(
             "directionTowardSunEnu": direction,
             "colorTemperatureKelvin": 5600,
             "intensityStartingValue": 1.0,
-            "staticCoreShadowMode": "baked direct and indirect only",
+            "staticCoreShadowMode": "future accepted-bake intent: baked direct and indirect only; this generated base profile is not accepted lighting",
             "dynamicAircraftShadowMode": "lead A/B: existing blob/contact shadow or one bounded aircraft-only realtime shadow",
         },
         "sky": {
@@ -912,7 +912,7 @@ def write_profiles(
         "probeCount": len(probe_positions),
         "positionsXyzMeters": probe_positions,
         "runtimeUpdates": False,
-        "purpose": "Dynamic aircraft and authored airport props only; static core uses baked lightmaps.",
+        "purpose": "Dynamic aircraft and authored airport props; a future accepted bake may light the static core.",
     }
     reflections = {
         "schemaVersion": 1,
@@ -944,12 +944,12 @@ def write_profiles(
     paths["contract"].write_text(
         "# Airport-core V4 lighting integration contract\n\n"
         "- Serialize this fixed profile under `AirportCoreBenchmarkRoot`; do not construct it at runtime.\n"
-        "- Bake direct and indirect light only for benchmark static renderers, capped at two 2048 atlases.\n"
+        "- This base Stage-1 authoring plan allows one or two compressed 2048 atlases; V4.1 overrides it with a one-1024-atlas remediation target and currently has no accepted lightmap.\n"
         "- Disable broad realtime shadows on those static renderers and reconcile every removed photograph shadow.\n"
         "- Use the listed light probes for dynamic aircraft/props and at most one baked 128-face reflection probe.\n"
         "- Opaque terminal glazing samples the selected sky/reflection probe; no realtime reflection updates.\n"
         "- Preserve the existing cockpit shadow contract; an aircraft-only realtime sun shadow is an A/B candidate, not a default.\n"
-        "- A successful Unity bake requires exported lighting-data hashes, memory, overlap, and full-resolution A/B evidence.\n"
+        "- A successful Unity bake requires exported lighting-data hashes, memory, overlap, pixel-level finiteness validation, and full-resolution A/B evidence.\n"
         "- Simulator stereo and physical Quest timing remain separate mandatory gates.\n",
         encoding="utf-8",
         newline="\n",

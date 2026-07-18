@@ -91,10 +91,9 @@ Shader "QuestFlight/AirportCoreV4/ContinuousRunway"
                     input.worldPosition.x * 0.5446 + input.worldPosition.z * 0.8387) * _SecondaryTiling;
                 fixed3 primary = tex2D(_MainTex, primaryUv).rgb;
                 fixed3 secondary = tex2D(_MainTex, secondaryUv).rgb;
-                half variation = dot(secondary, half3(0.2126, 0.7152, 0.0722)) - 0.5;
                 half4 feature = tex2D(_FeatureMask, input.meshUv);
-                fixed3 albedo = saturate(primary * (1.0 + variation * 0.12)) * _Tint.rgb;
-                albedo *= 1.0 - feature.r * 0.12 - feature.g * 0.04 - feature.b * 0.15;
+                fixed3 albedo = lerp(primary, secondary, 0.34h) * _Tint.rgb;
+                albedo *= 1.0h - feature.r * 0.07h - feature.g * 0.025h - feature.b * 0.08h;
 
                 half3 mrao = tex2D(_MRAOTex, primaryUv).rgb;
                 half roughness = saturate(mrao.g - feature.r * 0.10 + feature.b * 0.07 + feature.a * 0.05);
@@ -116,7 +115,8 @@ Shader "QuestFlight/AirportCoreV4/ContinuousRunway"
                     irradiance = DecodeLightmap(UNITY_SAMPLE_TEX2D(unity_Lightmap, input.lightmapUv));
                 #else
                     half ndotl = saturate(dot(normal, normalize(_WorldSpaceLightPos0.xyz)));
-                    irradiance = ShadeSH9(half4(normal, 1.0)) + _LightColor0.rgb * (0.08 + ndotl * 0.92);
+                    irradiance = saturate(max(ShadeSH9(half4(normal, 1.0)), 0.0h) * 0.35h +
+                        _LightColor0.rgb * (0.08h + ndotl * 0.55h));
                 #endif
                 half3 color = albedo * irradiance * ao;
                 half3 viewDirection = normalize(_WorldSpaceCameraPos - input.worldPosition);

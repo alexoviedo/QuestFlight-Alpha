@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using QuestFlightLab.Environment;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -29,6 +31,12 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/AirportCoreV4/Buildings/Models";
         private const string SkyCubemapPath =
             "Assets/Production/Environment/Sky/Kloppenheim03_PureSky_2K.hdr";
+        private const string SkyboxMaterialPath =
+            "Assets/Production/Environment/Sky/Kloppenheim03_PureSky_Skybox.mat";
+        private const string V2RunwayMaterialPath =
+            "Assets/Production/Environment/Materials/Production_Runway_Asphalt.mat";
+        private const string V2ReservoirMaterialPath =
+            "Assets/Production/Environment/Materials/Production_BoulderReservoir_Opaque.mat";
         private const string ScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
         private const string WorldPrefabPath =
             "Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab";
@@ -73,9 +81,25 @@ namespace QuestFlight.Editor
             }
         }
 
+        public static void QuarantineRejectedBakeBatch()
+        {
+            try
+            {
+                PrepareNeutralLightingCalibration();
+                Debug.Log("[QuestFlight][AirportCoreV4Authoring] REJECTED_BAKE_QUARANTINED");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorApplication.Exit(1);
+            }
+        }
+
         private static void Integrate(bool bake)
         {
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            PrepareNeutralLightingCalibration();
             EnsureFolder(GeneratedFolder);
             ConfigureTextures();
             Material terminal = ConfigureBuildingMaterial(
@@ -97,6 +121,47 @@ namespace QuestFlight.Editor
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 
             if (bake) BakeBenchmarkAndFinalizeManifest(manifest);
+        }
+
+        private static void PrepareNeutralLightingCalibration()
+        {
+            Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            Lightmapping.Clear();
+            Lightmapping.lightingDataAsset = null;
+            LightmapSettings.lightmaps = Array.Empty<LightmapData>();
+            LightmapSettings.lightmapsMode = LightmapsMode.NonDirectional;
+            RenderSettings.ambientMode = AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = new Color(0.48f, 0.58f, 0.72f, 1f);
+            RenderSettings.ambientEquatorColor = new Color(0.30f, 0.34f, 0.38f, 1f);
+            RenderSettings.ambientGroundColor = new Color(0.17f, 0.15f, 0.12f, 1f);
+            RenderSettings.ambientIntensity = 0.86f;
+            Material skybox = LoadRequired<Material>(SkyboxMaterialPath);
+            if (!skybox.HasProperty("_Rotation"))
+                throw new InvalidOperationException("The selected skybox has no rotation contract.");
+            skybox.SetFloat("_Rotation", -64.123046875f);
+            EditorUtility.SetDirty(skybox);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            DeleteRejectedBakeAssets();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+        }
+
+        private static void DeleteRejectedBakeAssets()
+        {
+            const string folder = "Assets/Scenes/ProductionVerticalSlice";
+            string[] candidates = AssetDatabase.FindAssets(string.Empty, new[] { folder })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Where(path =>
+                {
+                    string name = Path.GetFileName(path);
+                    return string.Equals(name, "LightingData.asset", StringComparison.Ordinal) ||
+                           string.Equals(name, "BAKE_MANIFEST.json", StringComparison.Ordinal) ||
+                           name.StartsWith("Lightmap-", StringComparison.Ordinal);
+                })
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            foreach (string path in candidates) AssetDatabase.DeleteAsset(path);
         }
 
         private static void ConfigureTextures()
@@ -212,10 +277,17 @@ namespace QuestFlight.Editor
                                path.IndexOf("_comp_", StringComparison.Ordinal) >= 0)
                 .OrderBy(path => path, StringComparer.Ordinal)
                 .ToArray();
-            if (paths.Length < 2 || paths.Length > 4)
+            string[] colorPaths = paths.Where(path =>
+                    path.IndexOf("_comp_light", StringComparison.Ordinal) >= 0)
+                .ToArray();
+            string[] directionalPaths = paths.Where(path =>
+                    path.IndexOf("_comp_dir", StringComparison.Ordinal) >= 0)
+                .ToArray();
+            if (colorPaths.Length != 1 || directionalPaths.Length != 0)
                 throw new InvalidOperationException(
-                    $"Expected one or two directional lightmap pairs, found {paths.Length} textures.");
-            foreach (string path in paths)
+                    $"Expected exactly one non-directional lightmap, found colors={colorPaths.Length}, " +
+                    $"directional={directionalPaths.Length}.");
+            foreach (string path in colorPaths)
             {
                 TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
                 if (importer == null) throw new InvalidOperationException("Missing lightmap importer: " + path);
@@ -223,10 +295,8 @@ namespace QuestFlight.Editor
                 importer.streamingMipmaps = true;
                 TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
                 android.overridden = true;
-                android.maxTextureSize = 2048;
-                android.format = path.EndsWith(".exr", StringComparison.OrdinalIgnoreCase)
-                    ? TextureImporterFormat.ASTC_HDR_6x6
-                    : TextureImporterFormat.ASTC_6x6;
+                android.maxTextureSize = 1024;
+                android.format = TextureImporterFormat.ASTC_HDR_6x6;
                 importer.SetPlatformTextureSettings(android);
                 importer.SaveAndReimport();
             }
@@ -276,9 +346,9 @@ namespace QuestFlight.Editor
             material.SetTexture("_MainTex", LoadRequired<Texture2D>(MaterialsFolder + "/" + prefix + "_Albedo.png"));
             material.SetTexture("_NormalTex", LoadRequired<Texture2D>(MaterialsFolder + "/" + prefix + "_Normal.png"));
             material.SetTexture("_MRAOTex", LoadRequired<Texture2D>(MaterialsFolder + "/" + prefix + "_MRAO.png"));
-            material.SetFloat("_NormalStrength", prefix.Contains("Terminal") ? 0.58f : 0.72f);
-            material.SetFloat("_SpecularStrength", 0.34f);
-            material.SetFloat("_ReflectionStrength", prefix.Contains("Terminal") ? 0.38f : 0.24f);
+            material.SetFloat("_NormalStrength", 0.45f);
+            material.SetFloat("_SpecularStrength", 0.15f);
+            material.SetFloat("_ReflectionStrength", prefix.Contains("Terminal") ? 0.10f : 0.08f);
             EditorUtility.SetDirty(material);
             return material;
         }
@@ -293,8 +363,8 @@ namespace QuestFlight.Editor
             material.SetTexture("_NormalTex", LoadRequired<Texture2D>(folder + "/AirportCoreRunway_Normal.png"));
             material.SetTexture("_MRAOTex", LoadRequired<Texture2D>(folder + "/AirportCoreRunway_MRAO.png"));
             material.SetTexture("_FeatureMask", LoadRequired<Texture2D>(folder + "/AirportCoreRunway_FeatureMask.png"));
-            material.SetFloat("_WorldTiling", 0.08f);
-            material.SetFloat("_SecondaryTiling", 0.027f);
+            material.SetFloat("_WorldTiling", 0.025f);
+            material.SetFloat("_SecondaryTiling", 0.008f);
             EditorUtility.SetDirty(material);
             return material;
         }
@@ -304,14 +374,23 @@ namespace QuestFlight.Editor
             const string folder = "Assets/Production/Environment/AirportCoreV4/Water";
             Material material = LoadOrCreateMaterial(folder + "/Materials/AirportCoreReservoir_V4.mat",
                 RequireShader("QuestFlight/Airport Core V4/Reservoir Opaque"));
-            material.SetTexture("_WaveNormalA", LoadRequired<Texture2D>(folder + "/Textures/AirportCoreReservoir_WaveA_NM.png"));
-            material.SetTexture("_WaveNormalB", LoadRequired<Texture2D>(folder + "/Textures/AirportCoreReservoir_WaveB_NM.png"));
+            material.SetTexture("_WaveNormalA", LoadRequired<Texture2D>(
+                "Assets/Production/Environment/Textures/Reservoir/BoulderReservoir_BroadWave_NM.png"));
+            material.SetTexture("_WaveNormalB", LoadRequired<Texture2D>(
+                "Assets/Production/Environment/Textures/Reservoir/BoulderReservoir_Ripple_NM.png"));
             material.SetTexture("_DepthShoreRoughnessSuppression",
                 LoadRequired<Texture2D>(folder + "/Textures/AirportCoreReservoir_DepthShoreRoughnessSuppression.png"));
             material.SetTexture("_EnvironmentCube", LoadRequired<Texture>(SkyCubemapPath));
             float skyRadians = -64.123046875f * Mathf.Deg2Rad;
             material.SetVector("_EnvironmentRotationSinCos",
                 new Vector4(Mathf.Sin(skyRadians), Mathf.Cos(skyRadians), 0f, 0f));
+            material.SetFloat("_WaveMetersA", 320f);
+            material.SetFloat("_WaveMetersB", 48f);
+            material.SetFloat("_WaveStrengthA", 0.06f);
+            material.SetFloat("_WaveStrengthB", 0.025f);
+            material.SetFloat("_SunGlitter", 0.05f);
+            material.SetFloat("_ShoreBandStrength", 0.04f);
+            material.SetColor("_ShoreBandColor", new Color(0.34f, 0.39f, 0.37f, 1f));
             material.enableInstancing = true;
             EditorUtility.SetDirty(material);
             return material;
@@ -323,7 +402,9 @@ namespace QuestFlight.Editor
             Material material = LoadOrCreateMaterial(folder + "/Materials/AirportCoreVegetation_V4.mat",
                 RequireShader("QuestFlight/Airport Core V4/Vegetation Hero Cutout"));
             material.SetTexture("_MainTex", LoadRequired<Texture2D>(folder + "/Textures/AirportCoreVegetation_Atlas.png"));
-            material.SetFloat("_Cutoff", 0.46f);
+            material.SetFloat("_Cutoff", 0.52f);
+            material.SetFloat("_BackfaceLight", 0.45f);
+            material.SetFloat("_BakedAtlasStrength", 0.15f);
             material.enableInstancing = true;
             EditorUtility.SetDirty(material);
             return material;
@@ -368,6 +449,52 @@ namespace QuestFlight.Editor
             return result;
         }
 
+        private static Mesh[] BuildCombinedApronProps(
+            ProductionTerrainSurfaceAsset surface,
+            IReadOnlyDictionary<string, Mesh[]> models)
+        {
+            PlacedProp[] placements =
+            {
+                new PlacedProp("TieDown", Ground(surface, -354f, -239f), Quaternion.Euler(0f, 90f, 0f)),
+                new PlacedProp("Cone", Ground(surface, -366f, -235f), Quaternion.identity),
+                new PlacedProp("ServiceCart", Ground(surface, -345f, -230f), Quaternion.Euler(0f, 20f, 0f)),
+                new PlacedProp("LightPole", Ground(surface, -414f, -213f), Quaternion.identity),
+                new PlacedProp("Fence", Ground(surface, -430f, -270f), Quaternion.Euler(0f, 90f, 0f)),
+                new PlacedProp("Signboard", Ground(surface, -405f, -211f), Quaternion.Euler(0f, 90f, 0f))
+            };
+            Mesh[] result = new Mesh[3];
+            for (int lod = 0; lod < 3; lod++)
+            {
+                List<CombineInstance> instances = new List<CombineInstance>();
+                foreach (PlacedProp placement in placements)
+                {
+                    Mesh mesh = models[placement.asset][lod];
+                    Matrix4x4 matrix = Matrix4x4.TRS(placement.position, placement.rotation, Vector3.one);
+                    for (int submesh = 0; submesh < mesh.subMeshCount; submesh++)
+                        instances.Add(new CombineInstance
+                        {
+                            mesh = mesh,
+                            subMeshIndex = submesh,
+                            transform = matrix
+                        });
+                }
+                Mesh combined = new Mesh
+                {
+                    name = "AirportCorePropsCombined_LOD" + lod,
+                    indexFormat = IndexFormat.UInt32
+                };
+                combined.CombineMeshes(instances.ToArray(), true, true, false);
+                combined.RecalculateBounds();
+                if (combined.normals == null || combined.normals.Length != combined.vertexCount)
+                    combined.RecalculateNormals();
+                if (combined.tangents == null || combined.tangents.Length != combined.vertexCount)
+                    combined.RecalculateTangents();
+                result[lod] = SaveMesh(combined,
+                    GeneratedFolder + "/AirportCorePropsCombined_LOD" + lod + ".asset");
+            }
+            return result;
+        }
+
         private static Mesh CombineModelMeshes(GameObject source, string requiredNameToken, string name)
         {
             MeshFilter[] filters = source.GetComponentsInChildren<MeshFilter>(true)
@@ -403,6 +530,7 @@ namespace QuestFlight.Editor
 
         private static V2ContextCopies FilterV2Context()
         {
+            string[] priorOriginalPaths = LoadPriorOriginalContextMeshPaths();
             GameObject context = PrefabUtility.LoadPrefabContents(ContextPath);
             try
             {
@@ -423,28 +551,47 @@ namespace QuestFlight.Editor
                     MeshFilter filter = renderer == null ? null : renderer.GetComponent<MeshFilter>();
                     if (filter == null || filter.sharedMesh == null)
                         throw new InvalidOperationException("Target V2 HLOD LOD mesh is missing.");
-                    original[index] = filter.sharedMesh;
+                    original[index] = priorOriginalPaths.Length == 3
+                        ? LoadRequired<Mesh>(priorOriginalPaths[index])
+                        : filter.sharedMesh;
                     materials[index] = renderer.sharedMaterial;
                     childMatrices[index] = target.worldToLocalMatrix * renderer.transform.localToWorldMatrix;
                     Mesh candidate = FilterTriangles(
-                        filter.sharedMesh,
+                        original[index],
                         childMatrices[index],
                         new[] { TerminalExclusion, HangarExclusion },
                         TargetV2Hlod + "_Filtered_LOD" + index);
-                    if (candidate.triangles.Length >= filter.sharedMesh.triangles.Length)
+                    if (candidate.triangles.Length >= original[index].triangles.Length)
                         throw new InvalidOperationException("V2 duplicate filter removed no triangles at LOD" + index + ".");
                     filtered[index] = SaveMesh(candidate,
                         GeneratedFolder + "/" + TargetV2Hlod + "_Filtered_LOD" + index + ".asset");
+                    filter.sharedMesh = filtered[index];
+                    EditorUtility.SetDirty(filter);
                 }
-                target.gameObject.SetActive(false);
+                target.gameObject.SetActive(true);
                 PrefabUtility.SaveAsPrefabAsset(context, ContextPath);
                 return new V2ContextCopies(original, filtered, materials, childMatrices,
-                    group.size, group.localReferencePoint);
+                    group.size, group.localReferencePoint,
+                    original.Select(AssetDatabase.GetAssetPath).ToArray(),
+                    filtered.Select(AssetDatabase.GetAssetPath).ToArray());
             }
             finally
             {
                 PrefabUtility.UnloadPrefabContents(context);
             }
+        }
+
+        private static string[] LoadPriorOriginalContextMeshPaths()
+        {
+            GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
+            AirportCoreBenchmarkRoot prior = environment == null
+                ? null
+                : environment.GetComponentsInChildren<AirportCoreBenchmarkRoot>(true).SingleOrDefault();
+            if (prior?.v2ContextOriginalMeshPaths == null ||
+                prior.v2ContextOriginalMeshPaths.Length != 3 ||
+                prior.v2ContextOriginalMeshPaths.Any(string.IsNullOrWhiteSpace))
+                return Array.Empty<string>();
+            return prior.v2ContextOriginalMeshPaths.ToArray();
         }
 
         private static Mesh FilterTriangles(Mesh source, Matrix4x4 meshToGroup, Rect[] exclusions, string name)
@@ -478,7 +625,8 @@ namespace QuestFlight.Editor
                 result.SetTriangles(output, submesh, false);
             }
             result.RecalculateBounds();
-            if (removed == 0) throw new InvalidOperationException("No triangles intersected the V4 replacement masks.");
+            if (removed == 0) throw new InvalidOperationException(
+                "No triangles intersected the V4 replacement masks for " + name + ".");
             return result;
         }
 
@@ -539,7 +687,7 @@ namespace QuestFlight.Editor
             manifest.bakedLightmapCount = 0;
             manifest.bakedLightmapResolution = 0;
             manifest.estimatedLightmapBytes = 0;
-            manifest.serializedLightProbeCount = 20;
+            manifest.serializedLightProbeCount = 18;
             manifest.bakedReflectionProbeCount = 0;
             manifest.estimatedReflectionBytes = 0;
             manifest.cleanPlateCoversEveryReplacement = true;
@@ -572,6 +720,8 @@ namespace QuestFlight.Editor
                 ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
                 if (contract == null || contract.airportContext == null)
                     throw new InvalidOperationException("Authored production environment/airport context is missing.");
+                Transform genericAirportArt = FindDescendant(environment.transform, "AirportArtProduction");
+                if (genericAirportArt != null) UnityEngine.Object.DestroyImmediate(genericAirportArt.gameObject);
                 Transform prior = FindDescendant(environment.transform, AirportCoreBenchmarkRoot.GameObjectName);
                 if (prior != null) UnityEngine.Object.DestroyImmediate(prior.gameObject);
 
@@ -582,13 +732,14 @@ namespace QuestFlight.Editor
                 root.manifest = manifest;
 
                 Transform content = CreateChild(rootObject.transform, "BenchmarkContent", true);
-                Transform filtered = CreateContextLodGroup(rootObject.transform, "FilteredV2Context", context.filtered,
-                    context.materials, context.childMatrices, context.size, context.referencePoint, true);
-                Transform baseline = CreateContextLodGroup(rootObject.transform, AirportCoreBenchmarkRoot.V2BaselineName,
-                    context.original, context.materials, context.childMatrices, context.size, context.referencePoint, false);
+                Transform filteredContext = FindRequired(environment.transform, TargetV2Hlod);
+                LODGroup filtered = filteredContext.GetComponent<LODGroup>();
+                if (filtered == null || filtered.GetLODs().Length != 3)
+                    throw new InvalidOperationException("The active filtered V2 context LODGroup is missing.");
                 root.benchmarkContent = content;
                 root.filteredV2Context = filtered;
-                root.v2BaselineReference = baseline;
+                root.v2ContextOriginalMeshPaths = context.originalPaths;
+                root.v4ContextFilteredMeshPaths = context.filteredPaths;
 
                 AssetDatabase.DeleteAsset(GeneratedFolder + "/AirportCoreCleanPlateSurface.asset");
                 AssetDatabase.DeleteAsset(MaterialsFolder + "/AirportCoreCleanPlate.mat");
@@ -598,21 +749,12 @@ namespace QuestFlight.Editor
                 root.type2HangarRow = CreateLodAsset(content, "Type2THangarRow_3354", models["Type2THangarRow"],
                     hangarMaterial, Ground(surface, -392.25f, -344.875f), Quaternion.identity, true);
 
-                root.fuelServiceContext = CreateChild(content, "FuelServiceContext_UnplacedReferenceBlocked", true);
-                Transform props = CreateChild(content, "AuthoredApronProps", true);
-                root.authoredApronProps = props;
-                CreateProp(props, "TieDown_StandA", models["TieDown"], hangarMaterial,
-                    Ground(surface, -354f, -239f), Quaternion.Euler(0f, 90f, 0f));
-                CreateProp(props, "Cone_StandA", models["Cone"], hangarMaterial,
-                    Ground(surface, -366f, -235f), Quaternion.identity);
-                CreateProp(props, "ServiceCart_StandA", models["ServiceCart"], hangarMaterial,
-                    Ground(surface, -345f, -230f), Quaternion.Euler(0f, 20f, 0f));
-                CreateProp(props, "LightPole_Terminal", models["LightPole"], hangarMaterial,
-                    Ground(surface, -414f, -213f), Quaternion.identity);
-                CreateProp(props, "Fence_ServiceEdge", models["Fence"], hangarMaterial,
-                    Ground(surface, -430f, -270f), Quaternion.Euler(0f, 90f, 0f));
-                CreateProp(props, "TerminalSign", models["Signboard"], hangarMaterial,
-                    Ground(surface, -405f, -211f), Quaternion.Euler(0f, 90f, 0f));
+                root.fuelServiceContext = CreateLodAsset(content, "FuelServiceCore",
+                    models["FuelServiceCore"], hangarMaterial,
+                    Ground(surface, -112f, -205f), Quaternion.identity, false).transform;
+                Mesh[] combinedProps = BuildCombinedApronProps(surface, models);
+                root.authoredApronProps = CreateLodAsset(content, "AuthoredApronProps", combinedProps,
+                    hangarMaterial, Vector3.zero, Quaternion.identity, false).transform;
 
                 root.vegetationHeroCluster = CreateLodAsset(content, "VegetationHeroCluster", models["Vegetation"],
                     vegetationMaterial, Ground(surface, -435f, -215f), Quaternion.Euler(0f, 18f, 0f), false).transform;
@@ -625,8 +767,8 @@ namespace QuestFlight.Editor
                     : contract.boulderReservoirSurface.GetComponent<MeshRenderer>();
                 if (runway == null || reservoir == null)
                     throw new InvalidOperationException("Authoritative runway or Boulder Reservoir renderer is missing.");
-                root.v2RunwayMaterial = runway.sharedMaterial;
-                root.v2ReservoirMaterial = reservoir.sharedMaterial;
+                root.v2RunwayMaterial = LoadRequired<Material>(V2RunwayMaterialPath);
+                root.v2ReservoirMaterial = LoadRequired<Material>(V2ReservoirMaterialPath);
                 runway.sharedMaterial = runwayMaterial;
                 reservoir.sharedMaterial = reservoirMaterial;
                 root.authoritativeRunway = runway;
@@ -638,9 +780,11 @@ namespace QuestFlight.Editor
                     throw new InvalidOperationException("Airport terrain renderer is missing for minor-water binding.");
                 ConfigureTerrainWater(airportTerrain.sharedMaterial, reservoir.bounds);
                 root.minorWaterTerrainEffect = airportTerrain;
+                ConfigureStableShoreAndGi(contract, airportTerrain.sharedMaterial);
 
                 Transform lighting = CreateChild(rootObject.transform, "BenchmarkLighting", true);
-                Light sun = CreateBakedSun(lighting);
+                Light sun = CreateBakedSun(lighting, v2Sun);
+                sun.enabled = false;
                 root.benchmarkSun = sun;
                 root.v2SunRotation = v2Sun.rotation;
                 root.v2SunColor = v2Sun.color;
@@ -705,6 +849,38 @@ namespace QuestFlight.Editor
             EditorUtility.SetDirty(material);
         }
 
+        private static void ConfigureStableShoreAndGi(ProductionEnvironmentRoot contract, Material terrainMaterial)
+        {
+            foreach (MeshFilter bank in new[]
+                     {
+                         contract.boulderReservoirShoreBank,
+                         contract.otherWaterFeaturesShoreBankV2
+                     }.Where(item => item != null))
+            {
+                MeshRenderer renderer = bank.GetComponent<MeshRenderer>();
+                if (renderer != null)
+                {
+                    renderer.sharedMaterial = terrainMaterial;
+                    ClearContributeGi(renderer);
+                    EditorUtility.SetDirty(renderer);
+                }
+                bank.gameObject.SetActive(false);
+            }
+            if (contract.otherWaterFeaturesSurfaceV2 != null)
+                ClearContributeGi(contract.otherWaterFeaturesSurfaceV2.GetComponent<MeshRenderer>());
+        }
+
+        private static void ClearContributeGi(MeshRenderer renderer)
+        {
+            if (renderer == null) return;
+            StaticEditorFlags flags = GameObjectUtility.GetStaticEditorFlags(renderer.gameObject);
+            flags &= ~StaticEditorFlags.ContributeGI;
+            GameObjectUtility.SetStaticEditorFlags(renderer.gameObject, flags);
+            renderer.scaleInLightmap = 0f;
+            renderer.receiveGI = ReceiveGI.LightProbes;
+            EditorUtility.SetDirty(renderer);
+        }
+
         private static V2SunState ConfigureWorldSun(AirportCoreBenchmarkManifest manifest)
         {
             GameObject world = PrefabUtility.LoadPrefabContents(WorldPrefabPath);
@@ -727,11 +903,21 @@ namespace QuestFlight.Editor
                         priorRoot.v2SunIntensity, sun.cullingMask | (1 << BenchmarkLayer))
                     : new V2SunState(
                         sun.transform.rotation, sun.color, Mathf.Max(sun.intensity, 0.01f), sun.cullingMask);
-                Vector3 towardSun = new Vector3(0.14507469f, 0.95105652f, -0.27284581f).normalized;
-                sun.transform.rotation = Quaternion.LookRotation(-towardSun, Vector3.up);
-                sun.color = manifest.sunColor;
-                sun.intensity = manifest.sunIntensity;
-                sun.cullingMask = original.cullingMask & ~(1 << BenchmarkLayer);
+                sun.transform.rotation = original.rotation;
+                sun.color = original.color;
+                sun.intensity = original.intensity;
+                sun.cullingMask = original.cullingMask | (1 << BenchmarkLayer);
+                Vector3 towardSun = -(original.rotation * Vector3.forward);
+                float azimuth = Mathf.Atan2(towardSun.x, towardSun.z) * Mathf.Rad2Deg;
+                if (azimuth < 0f) azimuth += 360f;
+                manifest.sunAzimuthDegrees = azimuth;
+                manifest.sunElevationDegrees = Mathf.Asin(Mathf.Clamp(towardSun.y, -1f, 1f)) * Mathf.Rad2Deg;
+                manifest.sunCalibrationConfidence = 0.01f;
+                manifest.sunColor = original.color;
+                manifest.sunIntensity = original.intensity;
+                manifest.ambientColor = RenderSettings.ambientSkyColor;
+                manifest.ambientIntensity = RenderSettings.ambientIntensity;
+                EditorUtility.SetDirty(manifest);
                 EditorUtility.SetDirty(sun);
                 PrefabUtility.SaveAsPrefabAsset(world, WorldPrefabPath);
                 return original;
@@ -834,7 +1020,7 @@ namespace QuestFlight.Editor
             renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
             renderer.lightProbeUsage = contributeGi ? LightProbeUsage.Off : LightProbeUsage.BlendProbes;
             renderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbes;
-            renderer.scaleInLightmap = contributeGi ? 0.55f : 0f;
+            renderer.scaleInLightmap = contributeGi ? 0.25f : 0f;
             StaticEditorFlags flags = StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic |
                                       StaticEditorFlags.ReflectionProbeStatic;
             if (contributeGi) flags |= StaticEditorFlags.ContributeGI;
@@ -842,18 +1028,17 @@ namespace QuestFlight.Editor
             return renderer;
         }
 
-        private static Light CreateBakedSun(Transform parent)
+        private static Light CreateBakedSun(Transform parent, V2SunState state)
         {
             GameObject sunObject = new GameObject("AirportCoreBakedSun");
             sunObject.transform.SetParent(parent, false);
-            Vector3 towardSun = new Vector3(0.14507469f, 0.95105652f, -0.27284581f).normalized;
-            sunObject.transform.rotation = Quaternion.LookRotation(-towardSun, Vector3.up);
+            sunObject.transform.rotation = state.rotation;
             Light sun = sunObject.AddComponent<Light>();
             sun.type = LightType.Directional;
             sun.lightmapBakeType = LightmapBakeType.Baked;
             sun.shadows = LightShadows.Soft;
-            sun.color = new Color(1f, 0.966f, 0.92f, 1f);
-            sun.intensity = 1f;
+            sun.color = state.color;
+            sun.intensity = state.intensity;
             sun.cullingMask = 1 << BenchmarkLayer;
             sun.renderMode = LightRenderMode.ForcePixel;
             return sun;
@@ -865,9 +1050,10 @@ namespace QuestFlight.Editor
             probeObject.transform.SetParent(parent, false);
             LightProbeGroup group = probeObject.AddComponent<LightProbeGroup>();
             List<Vector3> positions = new List<Vector3>();
-            foreach (float x in new[] { -440f, -385f, -330f, -275f })
-            foreach (float z in new[] { -365f, -285f, -215f, -145f, -75f })
-                positions.Add(new Vector3(x, 5f, z));
+            foreach (float z in new[] { -258f, -224f, -190f })
+            foreach (float x in new[] { -413f, -385f, -357f })
+            foreach (float y in new[] { 1.5f, 5f })
+                positions.Add(new Vector3(x, y, z));
             group.probePositions = positions.ToArray();
             return group;
         }
@@ -878,42 +1064,188 @@ namespace QuestFlight.Editor
             AirportCoreBenchmarkRoot root = scene.GetRootGameObjects()
                 .SelectMany(item => item.GetComponentsInChildren<AirportCoreBenchmarkRoot>(true))
                 .Single();
+            Light globalSun = scene.GetRootGameObjects()
+                .SelectMany(item => item.GetComponentsInChildren<Light>(true))
+                .Single(item => item.type == LightType.Directional && item != root.benchmarkSun);
+            List<string> nonFiniteMessages = new List<string>();
+            Application.LogCallback callback = (condition, _, __) =>
+            {
+                if (!string.IsNullOrWhiteSpace(condition) &&
+                    condition.IndexOf("non finite", StringComparison.OrdinalIgnoreCase) >= 0)
+                    nonFiniteMessages.Add(condition);
+            };
+
+            try
+            {
+                globalSun.cullingMask &= ~(1 << BenchmarkLayer);
+                root.benchmarkSun.enabled = true;
+                RenderSettings.ambientMode = AmbientMode.Trilight;
+                LightmapSettings.lightmapsMode = LightmapsMode.NonDirectional;
+                LightingSettings settings = Lightmapping.lightingSettings;
+                if (settings == null)
+                {
+                    settings = new LightingSettings { name = "AirportCoreV41BoundedLightingSettings" };
+                    Lightmapping.lightingSettings = settings;
+                }
+                settings.bakedGI = true;
+                settings.realtimeGI = false;
+                settings.directionalityMode = LightmapsMode.NonDirectional;
+                settings.lightmapMaxSize = 1024;
+                settings.lightmapResolution = 6f;
+                settings.lightmapCompression = LightmapCompression.NormalQuality;
+                settings.environmentImportanceSampling = false;
+                settings.maxBounces = 2;
+                settings.minBounces = 1;
+                EditorUtility.SetDirty(settings);
+                Lightmapping.Clear();
+                Application.logMessageReceived += callback;
+                bool baked;
+                try
+                {
+                    baked = Lightmapping.Bake();
+                }
+                finally
+                {
+                    Application.logMessageReceived -= callback;
+                }
+                if (!baked)
+                    throw new InvalidOperationException("Unity lightmap bake returned failure.");
+                if (nonFiniteMessages.Count != 0)
+                    throw new InvalidOperationException("Lightmapper emitted non-finite output: " +
+                        string.Join(" | ", nonFiniteMessages.Distinct()));
+
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                ConfigureGeneratedLightmapImports();
+
+                LightmapData[] lightmaps = LightmapSettings.lightmaps ?? Array.Empty<LightmapData>();
+                if (lightmaps.Length != 1 || lightmaps[0]?.lightmapColor == null ||
+                    lightmaps[0].lightmapDir != null)
+                    throw new InvalidOperationException(
+                        $"Expected one non-directional scene lightmap, found {lightmaps.Length}.");
+                int[] lightmapIndices = root.benchmarkContent.GetComponentsInChildren<Renderer>(true)
+                    .Select(item => item.lightmapIndex)
+                    .Where(index => index >= 0 && index < 0xFFFE)
+                    .Distinct().ToArray();
+                if (lightmapIndices.Length != 1 || lightmapIndices[0] != 0)
+                    throw new InvalidOperationException(
+                        "Benchmark GI renderers must use exactly lightmap index zero.");
+
+                Texture2D color = lightmaps[0].lightmapColor;
+                string colorPath = AssetDatabase.GetAssetPath(color);
+                ValidateFiniteLightmap(colorPath);
+                long bytes = EstimateAstcBytes(color.width, color.height, 6);
+                manifest.bakedLightmapCount = 1;
+                manifest.bakedLightmapResolution = Mathf.Max(color.width, color.height);
+                manifest.estimatedLightmapBytes = bytes;
+                manifest.serializedLightProbeCount = root.airportLightProbes.probePositions.Length;
+                EditorUtility.SetDirty(manifest);
+                WriteBakeManifest(colorPath, color, bytes);
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+                AssetDatabase.SaveAssets();
+
+                AirportCoreBenchmarkValidator.Report report = AirportCoreBenchmarkValidator.Validate();
+                if (!report.passed)
+                    throw new InvalidOperationException("Post-bake benchmark validation failed: " +
+                        string.Join("; ", report.violations));
+            }
+            catch
+            {
+                RejectBake(scene, root, globalSun, manifest);
+                throw;
+            }
+        }
+
+        private static void RejectBake(
+            Scene scene,
+            AirportCoreBenchmarkRoot root,
+            Light globalSun,
+            AirportCoreBenchmarkManifest manifest)
+        {
             Lightmapping.Clear();
-            LightmapEditorSettings.maxAtlasSize = 2048;
-            LightmapEditorSettings.textureCompression = true;
-            LightmapEditorSettings.bakeResolution = 12f;
-            if (!Lightmapping.Bake())
-                throw new InvalidOperationException("Unity lightmap bake returned failure.");
+            Lightmapping.lightingDataAsset = null;
+            LightmapSettings.lightmaps = Array.Empty<LightmapData>();
+            LightmapSettings.lightmapsMode = LightmapsMode.NonDirectional;
+            if (globalSun != null) globalSun.cullingMask |= 1 << BenchmarkLayer;
+            if (root?.benchmarkSun != null) root.benchmarkSun.enabled = false;
+            manifest.bakedLightmapCount = 0;
+            manifest.bakedLightmapResolution = 0;
+            manifest.estimatedLightmapBytes = 0;
+            EditorUtility.SetDirty(manifest);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
-
-            int[] lightmapIndices = root.benchmarkContent.GetComponentsInChildren<Renderer>(true)
-                .Select(item => item.lightmapIndex)
-                .Where(index => index >= 0 && index < 0xFFFE)
-                .Distinct().ToArray();
-            if (lightmapIndices.Length == 0 || lightmapIndices.Length > 2)
-                throw new InvalidOperationException(
-                    "Benchmark must use one or two lightmaps; baked indices=" + lightmapIndices.Length);
-            LightmapData[] lightmaps = LightmapSettings.lightmaps ?? Array.Empty<LightmapData>();
-            long bytes = 0;
-            int maximumResolution = 0;
-            foreach (int index in lightmapIndices)
-            {
-                Texture2D color = index < lightmaps.Length ? lightmaps[index].lightmapColor : null;
-                if (color == null) throw new InvalidOperationException("Baked benchmark lightmap texture is missing.");
-                maximumResolution = Mathf.Max(maximumResolution, Mathf.Max(color.width, color.height));
-                bytes += (long)color.width * color.height;
-            }
-            manifest.bakedLightmapCount = lightmapIndices.Length;
-            manifest.bakedLightmapResolution = maximumResolution;
-            manifest.estimatedLightmapBytes = bytes;
-            EditorUtility.SetDirty(manifest);
+            DeleteRejectedBakeAssets();
             AssetDatabase.SaveAssets();
-            AirportCoreBenchmarkValidator.Report report = AirportCoreBenchmarkValidator.Validate();
-            if (!report.passed)
-                throw new InvalidOperationException("Post-bake benchmark validation failed: " +
-                    string.Join("; ", report.violations));
         }
+
+        private static void ValidateFiniteLightmap(string path)
+        {
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null) throw new InvalidOperationException("Missing lightmap importer: " + path);
+            bool previousReadable = importer.isReadable;
+            importer.isReadable = true;
+            importer.SaveAndReimport();
+            try
+            {
+                Texture2D texture = LoadRequired<Texture2D>(path);
+                Color[] pixels = texture.GetPixels();
+                for (int index = 0; index < pixels.Length; index++)
+                {
+                    Color pixel = pixels[index];
+                    if (!IsFinite(pixel.r) || !IsFinite(pixel.g) || !IsFinite(pixel.b) || !IsFinite(pixel.a))
+                        throw new InvalidOperationException(
+                            $"Lightmap contains a non-finite texel at {index}: {pixel}.");
+                }
+            }
+            finally
+            {
+                importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                if (importer != null)
+                {
+                    importer.isReadable = previousReadable;
+                    importer.SaveAndReimport();
+                }
+            }
+        }
+
+        private static long EstimateAstcBytes(int width, int height, int block)
+        {
+            long blocks = (long)((width + block - 1) / block) * ((height + block - 1) / block);
+            return (blocks * 16L * 4L + 2L) / 3L;
+        }
+
+        private static void WriteBakeManifest(string colorPath, Texture2D color, long estimatedBytes)
+        {
+            string absolute = Path.GetFullPath(Path.Combine(Application.dataPath, "..", colorPath));
+            string sha256;
+            using (SHA256 hash = SHA256.Create())
+            using (FileStream stream = File.OpenRead(absolute))
+                sha256 = BitConverter.ToString(hash.ComputeHash(stream)).Replace("-", string.Empty).ToLowerInvariant();
+            BakeManifestRecord record = new BakeManifestRecord
+            {
+                schemaVersion = 2,
+                classification = "PASS_FINITE_BOUNDED_NON_DIRECTIONAL_BAKE",
+                scene = ScenePath,
+                lightmapAssetPath = colorPath,
+                lightmapSha256 = sha256,
+                width = color.width,
+                height = color.height,
+                directional = false,
+                finiteTexels = true,
+                nonFiniteLogMessageCount = 0,
+                ambientMode = AmbientMode.Trilight.ToString(),
+                estimatedAndroidBytes = estimatedBytes
+            };
+            const string manifestPath = "Assets/Scenes/ProductionVerticalSlice/BAKE_MANIFEST.json";
+            string manifestAbsolute = Path.GetFullPath(Path.Combine(Application.dataPath, "..", manifestPath));
+            File.WriteAllText(manifestAbsolute, JsonUtility.ToJson(record, true) + Environment.NewLine,
+                new UTF8Encoding(false));
+            AssetDatabase.ImportAsset(manifestPath, ImportAssetOptions.ForceSynchronousImport);
+        }
+
+        private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
         private static Vector3 Ground(ProductionTerrainSurfaceAsset surface, float x, float z)
         {
@@ -1030,9 +1362,12 @@ namespace QuestFlight.Editor
             public readonly Matrix4x4[] childMatrices;
             public readonly float size;
             public readonly Vector3 referencePoint;
+            public readonly string[] originalPaths;
+            public readonly string[] filteredPaths;
 
             public V2ContextCopies(Mesh[] original, Mesh[] filtered, Material[] materials,
-                Matrix4x4[] childMatrices, float size, Vector3 referencePoint)
+                Matrix4x4[] childMatrices, float size, Vector3 referencePoint,
+                string[] originalPaths, string[] filteredPaths)
             {
                 this.original = original;
                 this.filtered = filtered;
@@ -1040,7 +1375,40 @@ namespace QuestFlight.Editor
                 this.childMatrices = childMatrices;
                 this.size = size;
                 this.referencePoint = referencePoint;
+                this.originalPaths = originalPaths;
+                this.filteredPaths = filteredPaths;
             }
+        }
+
+        private readonly struct PlacedProp
+        {
+            public readonly string asset;
+            public readonly Vector3 position;
+            public readonly Quaternion rotation;
+
+            public PlacedProp(string asset, Vector3 position, Quaternion rotation)
+            {
+                this.asset = asset;
+                this.position = position;
+                this.rotation = rotation;
+            }
+        }
+
+        [Serializable]
+        private sealed class BakeManifestRecord
+        {
+            public int schemaVersion;
+            public string classification;
+            public string scene;
+            public string lightmapAssetPath;
+            public string lightmapSha256;
+            public int width;
+            public int height;
+            public bool directional;
+            public bool finiteTexels;
+            public int nonFiniteLogMessageCount;
+            public string ambientMode;
+            public long estimatedAndroidBytes;
         }
 
         private readonly struct V2SunState

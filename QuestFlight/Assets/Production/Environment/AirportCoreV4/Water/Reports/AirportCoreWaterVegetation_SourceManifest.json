@@ -18,7 +18,7 @@
     {
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AirportCoreV4/Vegetation/Materials/AirportCoreVegetation_V4.mat",
-      "sha256": "963ea6894db6c1e976f257317e0ae9419f73cbe7b27b12d21988ee705dcb6dce",
+      "sha256": "be88cef000f25d4d6ad205fb9154e632f20847fd64b3cbaa082843b4bdc9b272",
       "source": "Project-authored Unity material contract"
     },
     {
@@ -30,7 +30,7 @@
     {
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AirportCoreV4/Vegetation/Shaders/KBDUVegetationHeroV4.shader",
-      "sha256": "da5a122abd4178e69cb0a4a73e47b4b4250759ba5d47ed6a11dcf1f14ce404d8"
+      "sha256": "ccad2e7ae1217a7553f2af4ede06fe1684b56915d1f578bde36568e5c5ed243d"
     },
     {
       "license": "Project-authored",
@@ -41,7 +41,7 @@
     {
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AirportCoreV4/Water/Materials/AirportCoreReservoir_V4.mat",
-      "sha256": "5937718311d7445be9adbe8844990db072417ecd6f1d45f5d62ce66ba2af6347",
+      "sha256": "11e480dfadba19d941984d999bf0a3e8307eea7d0c2b942cba9d948f17818b40",
       "source": "Project-authored Unity material contract"
     },
     {
@@ -57,7 +57,7 @@
     {
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUReservoirWaterV4.shader",
-      "sha256": "2828b9a23a9e04ce79df1f021214062d79b99c2ae3a3fe2bd0f9832eb2c625f3"
+      "sha256": "7ea27409b87bede215f8187e5dbf34ea904ce4f39598e33710437ca8994e0588"
     },
     {
       "license": "Project-authored",

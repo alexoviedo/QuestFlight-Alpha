@@ -29,9 +29,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BackfaceLight: 0.62
-    - _BakedAtlasStrength: 0.55
-    - _Cutoff: 0.46
+    - _BackfaceLight: 0.45
+    - _BakedAtlasStrength: 0.15
+    - _Cutoff: 0.52
     m_Colors:
     - _InstanceTint: {r: 1, g: 1, b: 1, a: 1}
     - _Tint: {r: 1, g: 1, b: 1, a: 1}

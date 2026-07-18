@@ -112,9 +112,9 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
                         bakedOrAmbient = DecodeDirectionalLightmap(bakedOrAmbient, encodedDirection, normal);
                     #endif
                 #else
-                    bakedOrAmbient = ShadeSH9(half4(normal, 1.0));
+                    bakedOrAmbient = max(ShadeSH9(half4(normal, 1.0)), 0.0h) * 0.35h;
                     half ndotl = saturate(dot(normal, normalize(_WorldSpaceLightPos0.xyz)));
-                    realtimeDiffuse = _LightColor0.rgb * (0.08 + ndotl * 0.92);
+                    realtimeDiffuse = _LightColor0.rgb * (0.08h + ndotl * 0.55h);
                 #endif
 
                 half3 viewDirection = normalize(_WorldSpaceCameraPos - input.worldPosition);
@@ -135,6 +135,54 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
                 fixed4 output = fixed4(color, 1.0);
                 UNITY_APPLY_FOG(input.fogCoord, output);
                 return output;
+            }
+            ENDCG
+        }
+
+        Pass
+        {
+            Tags { "LightMode"="Meta" }
+            Cull Off
+            CGPROGRAM
+            #pragma vertex vertMeta
+            #pragma fragment fragMeta
+            #pragma shader_feature EDITOR_VISUALIZATION
+            #include "UnityCG.cginc"
+            #include "UnityMetaPass.cginc"
+
+            sampler2D _MainTex;
+            fixed4 _Tint;
+
+            struct appdata_meta_custom
+            {
+                float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
+                float2 uv1 : TEXCOORD1;
+                float2 uv2 : TEXCOORD2;
+            };
+
+            struct v2f_meta_custom
+            {
+                float4 position : SV_POSITION;
+                float2 uv : TEXCOORD0;
+            };
+
+            v2f_meta_custom vertMeta(appdata_meta_custom input)
+            {
+                v2f_meta_custom output;
+                output.position = UnityMetaVertexPosition(input.vertex, input.uv1, input.uv2,
+                    unity_LightmapST, unity_DynamicLightmapST);
+                output.uv = input.uv;
+                return output;
+            }
+
+            fixed4 fragMeta(v2f_meta_custom input) : SV_Target
+            {
+                UnityMetaInput meta;
+                UNITY_INITIALIZE_OUTPUT(UnityMetaInput, meta);
+                meta.Albedo = tex2D(_MainTex, input.uv).rgb * _Tint.rgb;
+                meta.Emission = 0;
+                return UnityMetaFragment(meta);
             }
             ENDCG
         }

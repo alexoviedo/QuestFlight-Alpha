@@ -64,6 +64,8 @@ namespace QuestFlight.Editor
 
             ValidateReservoir(environment.GetComponent<ProductionEnvironmentRoot>(), root, manifest, violations);
             ValidateCleanPlateTerrainBinding(root, manifest, violations);
+            ValidateContextMeshReferences(root, violations);
+            ValidateGiAllowlist(environment, root, violations);
 
             ValidateLodGroup(root.executiveTerminal, "executive terminal", 20000, 45000,
                 violations, out int terminal0, out int terminal1, out int terminal2);
@@ -104,17 +106,25 @@ namespace QuestFlight.Editor
             Require(manifest.replacementSourceFeatureIds != null &&
                     manifest.replacementSourceFeatureIds.Length == manifest.serializedReplacementCount,
                 "source-feature replacement inventory is incomplete", violations);
-            Require(root.v2BaselineReference != null && !root.v2BaselineReference.gameObject.activeSelf,
-                "V2 reference geometry must be retained but inactive for authored A/B review", violations);
             Require(root.gameObject.activeSelf && root.benchmarkContent != null && root.benchmarkContent.gameObject.activeSelf &&
                     root.filteredV2Context != null && root.filteredV2Context.gameObject.activeSelf,
                 "V4 benchmark content is not the active authored variant", violations);
+            Require(environment.GetComponentsInChildren<Transform>(true).All(item =>
+                    !string.Equals(item.name, AirportCoreBenchmarkRoot.V2BaselineName, StringComparison.Ordinal) &&
+                    !string.Equals(item.name, "FilteredV2Context", StringComparison.Ordinal)),
+                "duplicate serialized A/B context hierarchy remains", violations);
+            Require(environment.GetComponentsInChildren<Transform>(true).All(item =>
+                    !string.Equals(item.name, "AirportArtProduction", StringComparison.Ordinal)),
+                "superseded generic airport-art hierarchy remains active in the product prefab", violations);
+            Require(root.airportLightProbes != null && root.airportLightProbes.probePositions.Length == 18 &&
+                    root.airportLightProbes.probePositions.Select(item => item.y).Distinct().Count() == 2,
+                "light-probe volume must contain the authored 18 probes at two heights", violations);
 
             return new Report
             {
                 classification = violations.Count == 0
-                    ? "PASS_AIRPORT_CORE_V4_STRUCTURAL_GATE_VISUAL_AND_HEADSET_REQUIRED"
-                    : "FAIL_AIRPORT_CORE_V4_STRUCTURAL_GATE",
+                    ? "PASS_AIRPORT_CORE_V4_1_STRUCTURAL_GATE_VISUAL_AND_HEADSET_REQUIRED"
+                    : "FAIL_AIRPORT_CORE_V4_1_STRUCTURAL_GATE",
                 passed = violations.Count == 0,
                 sourceV2Sha = manifest.sourceV2Sha,
                 referenceV3Sha = manifest.referenceV3Sha,
@@ -133,6 +143,62 @@ namespace QuestFlight.Editor
                 replacementSourceFeatureCount = manifest.replacementSourceFeatureIds?.Length ?? 0,
                 violations = violations.ToArray()
             };
+        }
+
+        private static void ValidateContextMeshReferences(
+            AirportCoreBenchmarkRoot root,
+            ICollection<string> violations)
+        {
+            LOD[] lods = root.filteredV2Context == null
+                ? Array.Empty<LOD>()
+                : root.filteredV2Context.GetLODs();
+            Require(lods.Length == 3,
+                "filtered context must expose exactly three LODs", violations);
+            Require(root.v2ContextOriginalMeshPaths != null && root.v2ContextOriginalMeshPaths.Length == 3,
+                "V2 original context mesh provenance is incomplete", violations);
+            Require(root.v4ContextFilteredMeshPaths != null && root.v4ContextFilteredMeshPaths.Length == 3,
+                "V4 filtered context mesh provenance is incomplete", violations);
+            if (lods.Length != 3 || root.v4ContextFilteredMeshPaths == null ||
+                root.v4ContextFilteredMeshPaths.Length != 3) return;
+            for (int index = 0; index < 3; index++)
+            {
+                Renderer renderer = lods[index].renderers?.SingleOrDefault();
+                Mesh active = renderer == null ? null : renderer.GetComponent<MeshFilter>()?.sharedMesh;
+                string path = active == null ? string.Empty : AssetDatabase.GetAssetPath(active);
+                Require(string.Equals(path, root.v4ContextFilteredMeshPaths[index], StringComparison.Ordinal),
+                    $"filtered context LOD{index} does not use its pinned V4 mesh", violations);
+                Require(AssetDatabase.LoadAssetAtPath<Mesh>(root.v2ContextOriginalMeshPaths[index]) != null,
+                    $"V2 A/B mesh path {index} is missing", violations);
+            }
+        }
+
+        private static void ValidateGiAllowlist(
+            GameObject environment,
+            AirportCoreBenchmarkRoot root,
+            ICollection<string> violations)
+        {
+            Renderer[] expected =
+            {
+                FirstLodRenderer(root.executiveTerminal),
+                FirstLodRenderer(root.type2HangarRow)
+            };
+            Renderer[] actual = environment.GetComponentsInChildren<Renderer>(true)
+                .Where(renderer => (GameObjectUtility.GetStaticEditorFlags(renderer.gameObject) &
+                                    StaticEditorFlags.ContributeGI) != 0)
+                .ToArray();
+            Require(expected.All(item => item != null),
+                "terminal/hangar LOD0 GI allowlist is incomplete", violations);
+            Require(actual.Length == 2 && actual.All(item => expected.Contains(item)),
+                "ContributeGI allowlist must contain only terminal and hangar LOD0", violations);
+        }
+
+        private static Renderer FirstLodRenderer(LODGroup group)
+        {
+            if (group == null) return null;
+            LOD[] lods = group.GetLODs();
+            return lods.Length == 0 || lods[0].renderers == null || lods[0].renderers.Length != 1
+                ? null
+                : lods[0].renderers[0];
         }
 
         public static void ValidateBatch()
@@ -412,7 +478,7 @@ namespace QuestFlight.Editor
         {
             return new Report
             {
-                classification = "FAIL_AIRPORT_CORE_V4_STRUCTURAL_GATE",
+                classification = "FAIL_AIRPORT_CORE_V4_1_STRUCTURAL_GATE",
                 passed = false,
                 violations = new[] { violation }
             };
@@ -420,7 +486,7 @@ namespace QuestFlight.Editor
 
         private static string BuildMarkdown(Report report)
         {
-            return "# Airport Core V4 structural validation\n\n" +
+            return "# Airport Core V4.1 structural validation\n\n" +
                    $"- Classification: `{report.classification}`\n" +
                    $"- Benchmark renderers/triangles/materials: {report.benchmarkRendererCount:N0}/" +
                    $"{report.benchmarkTriangleCount:N0}/{report.benchmarkMaterialCount:N0}\n" +

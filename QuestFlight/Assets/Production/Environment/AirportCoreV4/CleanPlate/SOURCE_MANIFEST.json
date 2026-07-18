@@ -89,9 +89,9 @@
   ],
   "replacementCount": 2,
   "replacementManifest": {
-    "bytes": 2704,
+    "bytes": 2884,
     "path": "tools/kbdu_airport_core_v4/buildings/airport_core_replacement_footprints.json",
-    "sha256": "d9e4928e9df625173ffffda10fc0bbaec6e040002af78081fda39e77ad57539f"
+    "sha256": "4d424eb3ce1c53c7a922ed20ef1a95349340d060af62c785a92416731bf255f4"
   },
   "replacementMaskPixelCount": 583,
   "replacementObjectIds": [

@@ -116,7 +116,10 @@ Shader "QuestFlight/Airport Core V4/Reservoir Opaque"
                 half shore = saturate(max(packed.g, 1.0h - smoothstep(0.01h, 0.18h, depth)));
 
                 half2 uvA = input.worldPosition.xz / max(_WaveMetersA, 1.0h) + _Time.y * _WaveScrollA.xy;
-                half2 uvB = input.worldPosition.xz / max(_WaveMetersB, 1.0h) + _Time.y * _WaveScrollB.xy;
+                half2 rotatedB = half2(
+                    input.worldPosition.x * 0.7071h - input.worldPosition.z * 0.7071h,
+                    input.worldPosition.x * 0.7071h + input.worldPosition.z * 0.7071h);
+                half2 uvB = rotatedB / max(_WaveMetersB, 1.0h) + _Time.y * _WaveScrollB.xy;
                 half3 nA = UnpackNormal(tex2D(_WaveNormalA, uvA));
                 half3 nB = UnpackNormal(tex2D(_WaveNormalB, uvB));
                 half shoreDamping = lerp(0.42h, 1.0h, smoothstep(0.02h, 0.28h, depth));
@@ -143,8 +146,9 @@ Shader "QuestFlight/Airport Core V4/Reservoir Opaque"
 
                 half3 baseColor = lerp(_ShallowColor.rgb, _DeepColor.rgb, smoothstep(0.02h, 0.86h, depth));
                 baseColor = lerp(baseColor, _ShoreBandColor.rgb, shore * _ShoreBandStrength);
-                half3 ambient = max(ShadeSH9(half4(normal,1.0h)), half3(0.025h,0.025h,0.025h));
-                half3 color = baseColor * (ambient + _LightColor0.rgb * ndl * 0.18h);
+                half3 irradiance = saturate(max(ShadeSH9(half4(normal,1.0h)), 0.0h) * 0.35h +
+                    _LightColor0.rgb * (0.04h + ndl * 0.22h));
+                half3 color = baseColor * max(irradiance, half3(0.025h,0.025h,0.025h));
                 half reflectionWeight = saturate(_ReflectionFloor + fresnel * (1.0h - roughness * 0.45h));
                 color = lerp(color, reflected, reflectionWeight);
 

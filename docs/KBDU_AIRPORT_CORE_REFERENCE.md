@@ -68,7 +68,7 @@ The five-bay subdivision and detail spacing are visual inferences; the City fact
 
 ## Fuel/service and authored props
 
-`FuelServiceCore.blend` supplies a small service building, canopy, cabinets, bollards, door/sign panels, vent stack, and roof seams. It is deliberately **not assigned a product placement**: no survey-grade public footprint for a standalone fuel structure was established. The lead must author and visually validate any placement rather than inpainting or placing it speculatively.
+`FuelServiceCore.blend` supplies a small service building, canopy, cabinets, bollards, door/sign panels, vent stack, and roof seams. V4.1 places its existing project-owned LODs as experimental service context inside the benchmark root. No survey-grade public footprint for a standalone fuel structure was established, so that authored placement is unvalidated and must not be described as an exact real-world reconstruction; integrated Visual QA remains required before acceptance.
 
 `AirportCoreProps.blend` supplies independently exported LODs for a tie-down anchor, cone, light pole, service cart, fence segment, and signboard. These support deliberate authored stands and service context; they are not a random-scattering library.
 

@@ -119,7 +119,7 @@ namespace QuestFlightLab.Editor
                 new Rect(0.43f, 0.28f, 0.14f, 0.70f)));
 
             Bounds hangarBounds = CombinedNamedRendererBounds(
-                context.environment.airportContext, "AirportArtProduction");
+                context.environment.airportContext, AirportCoreBenchmarkRoot.GameObjectName);
             Vector3 hangarTarget = hangarBounds.center;
             float airportExtent = Mathf.Max(hangarBounds.extents.x, hangarBounds.extents.z);
             Vector3 hangarCamera = hangarTarget
@@ -374,7 +374,7 @@ namespace QuestFlightLab.Editor
             Bounds waterBounds = context.environment.boulderReservoirSurface.GetComponent<Renderer>().bounds;
             Bounds hangarBounds = CombinedNamedRendererBounds(
                 context.environment.airportContext,
-                "AirportArtProduction");
+                AirportCoreBenchmarkRoot.GameObjectName);
 
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "01_default_cockpit", "Default cockpit", "cockpit", pilotEye, pilotForward, 72f, ViewProfile.Cockpit));
@@ -1188,6 +1188,8 @@ namespace QuestFlightLab.Editor
             private readonly Quaternion v4SunRotation;
             private readonly Color v4SunColor;
             private readonly float v4SunIntensity;
+            private readonly Mesh[] v2ContextMeshes;
+            private readonly Mesh[] v4ContextMeshes;
 
             private AirportCoreVariantState(AirportCoreBenchmarkRoot root)
             {
@@ -1212,6 +1214,8 @@ namespace QuestFlightLab.Editor
                 v4SunRotation = globalSun.transform.rotation;
                 v4SunColor = globalSun.color;
                 v4SunIntensity = globalSun.intensity;
+                v2ContextMeshes = LoadContextMeshes(root.v2ContextOriginalMeshPaths, "V2 original");
+                v4ContextMeshes = LoadContextMeshes(root.v4ContextFilteredMeshPaths, "V4 filtered");
             }
 
             public static AirportCoreVariantState Capture(AirportCoreBenchmarkRoot root)
@@ -1222,8 +1226,7 @@ namespace QuestFlightLab.Editor
             public void ApplyV2Baseline()
             {
                 root.benchmarkContent.gameObject.SetActive(false);
-                root.filteredV2Context.gameObject.SetActive(false);
-                root.v2BaselineReference.gameObject.SetActive(true);
+                ApplyContextMeshes(v2ContextMeshes);
                 root.authoritativeRunway.sharedMaterial = root.v2RunwayMaterial;
                 root.boulderReservoir.sharedMaterial = root.v2ReservoirMaterial;
                 terrainMaterial.SetFloat("_AirportCoreMinorWaterStrength", 0f);
@@ -1236,8 +1239,7 @@ namespace QuestFlightLab.Editor
             public void RestoreV4()
             {
                 root.benchmarkContent.gameObject.SetActive(true);
-                root.filteredV2Context.gameObject.SetActive(true);
-                root.v2BaselineReference.gameObject.SetActive(false);
+                ApplyContextMeshes(v4ContextMeshes);
                 root.authoritativeRunway.sharedMaterial = v4RunwayMaterial;
                 root.boulderReservoir.sharedMaterial = v4ReservoirMaterial;
                 terrainMaterial.SetFloat("_AirportCoreMinorWaterStrength", v4MinorWaterStrength);
@@ -1246,6 +1248,31 @@ namespace QuestFlightLab.Editor
                 globalSun.transform.rotation = v4SunRotation;
                 globalSun.color = v4SunColor;
                 globalSun.intensity = v4SunIntensity;
+            }
+
+            private void ApplyContextMeshes(Mesh[] meshes)
+            {
+                LOD[] lods = root.filteredV2Context.GetLODs();
+                if (lods.Length != 3 || meshes == null || meshes.Length != 3)
+                    throw new InvalidOperationException("Airport-core context A/B requires three LOD meshes.");
+                for (int index = 0; index < 3; index++)
+                {
+                    Renderer renderer = lods[index].renderers.SingleOrDefault();
+                    MeshFilter filter = renderer == null ? null : renderer.GetComponent<MeshFilter>();
+                    if (filter == null || meshes[index] == null)
+                        throw new InvalidOperationException("Airport-core context A/B LOD binding is incomplete.");
+                    filter.sharedMesh = meshes[index];
+                }
+            }
+
+            private static Mesh[] LoadContextMeshes(string[] paths, string label)
+            {
+                if (paths == null || paths.Length != 3)
+                    throw new InvalidOperationException(label + " context paths are incomplete.");
+                Mesh[] meshes = paths.Select(AssetDatabase.LoadAssetAtPath<Mesh>).ToArray();
+                if (meshes.Any(item => item == null))
+                    throw new InvalidOperationException(label + " context mesh asset is missing.");
+                return meshes;
             }
         }
 
