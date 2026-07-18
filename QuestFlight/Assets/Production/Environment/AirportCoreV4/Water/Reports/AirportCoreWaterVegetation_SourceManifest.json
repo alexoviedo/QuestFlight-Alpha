@@ -7,6 +7,7 @@
     "The stable V2 packed reservoir depth/shore/roughness mask is the only reservoir-derived pixel source.",
     "V4.3 uses TERRAIN_MASK_NEAR_MID_RGBA generated deterministically from the existing V2 OSM-derived minor-water mesh; no external source was added.",
     "V4.3 removed the terrain suppression include and the serialized minor-water ribbon/bank presentation.",
+    "V4.3.1 proves three nonzero OSM-backed mask components with deterministic ground, oblique, aerial, false-color, final-shaded, and orthophoto-only views; the runtime response was boundedly strengthened without adding geometry, material, or draw calls.",
     "Offline contract validation is not visual, stereo, or Quest performance acceptance."
   ],
   "raw_external_assets": [],
@@ -49,7 +50,7 @@
     {
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUMinorWaterTerrainEffect.hlsl",
-      "sha256": "4396dc2b420ead4ee0a28d3ec58bf60f7746bbdf8fe396c317d8aad6420369ca"
+      "sha256": "7e162374132011545fdb9cabccdd9dc4bd33ee8cecf23f46b61f11bac8b1addb"
     },
     {
       "license": "Project-authored",

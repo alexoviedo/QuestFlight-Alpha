@@ -47,6 +47,24 @@ V4.3 is a fail-closed branch result: implementation/build integrity passes, but 
 
 The machine Visual QA classification means its images are nonblank and structural contracts are intact; it does not override the inspected visual failure.
 
+## Airport-Core V4.3.1 diagnostic closure
+
+V4.3.1 is a branch-only partial result. The bounded art defects pass lead inspection, while deterministic simulator replay remains blocked:
+
+- deterministic R0–R11 runway isolation: PASS; R1 constant-unlit/no-markings retains the defect and proves it is not a texture, marking, lightmap, vertex-color, or duplicate-renderer artifact;
+- mesh/terrain correlation: 52/106 pavement vertices below terrain, signed clearance -0.005092144 to +0.004401267 m;
+- final runway band analyzer: PASS at 0.0949 normalized peak-to-trough against a documented 0.100 threshold (baseline 0.3206);
+- focused V4.3.1 EditMode tests: included in full EditMode PASS 78/78; PlayMode PASS 9/9;
+- minor-water evidence: PASS for Hayden, Valmont, and Baseline Reservoir OSM components using false-color, final-shaded, and orthophoto-only captures at ground, oblique, and aerial ranges;
+- lead visual scores: runway cockpit/close/aerial 7.0; minor water 7.0; terrain/water integration 7.0; unchanged reservoir cockpit/aerial 7.0;
+- static planning budget unchanged from V4.3: 62 draws, 503,339 selected triangles, 689,275 serialized triangles, 24 visible materials, 168.08 MiB textures, two transparent slots, 12 shaders/18 variants, and 4x MSAA;
+- Frame Debugger: BLOCKED because Unity 6000.3.8f1 returns zero local events through its batch API; static renderer/pass state and the isolation matrix remain conclusive, but are not mislabeled as Frame Debugger events;
+- Meta XR Simulator: live Meta OpenXR stereo/HMD/both-Touch session PASS; replay aggregate `BLOCKED_MISSING_RECORDED_REPLAYS` until the ten genuine interactive recordings are created;
+- one-command product validation and Android release-style build: PASS; APK 99,745,119 bytes, SHA-256 `c9a31d53a452cd05a39d293be6fe048bf3e94cc89220152a6591d4e68ef68e59`;
+- physical Quest: NOT RUN because deterministic simulator replay did not pass.
+
+See `docs/evidence/AIRPORT_CORE_ARTIFACT_V4_3_1_2026-07-18.md` for paths and complete evidence.
+
 ## Airport-Core V4 Stage-1 closure
 
 The final V4 closure is a fail-closed feature-branch result, not acceptance:

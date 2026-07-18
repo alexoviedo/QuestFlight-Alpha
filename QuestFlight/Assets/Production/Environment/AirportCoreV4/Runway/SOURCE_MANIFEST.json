@@ -40,9 +40,9 @@
       "sha256": "5307c70d92f24ed46b4d9cd58adb9aa9ac0c5237735cd4ac0b7681275703f920"
     },
     {
-      "bytes": 8417,
+      "bytes": 8479,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.shader",
-      "sha256": "77147a08b41961ad027ef3901bd8d03820aef93b8698bc1cfc9c6448a75dd5ab"
+      "sha256": "8dccfe21818f5cbc63fb0b08584311e830e2c6ee337ab46e7eee6d5a18a11e2d"
     },
     {
       "bytes": 1560,
@@ -90,5 +90,12 @@
   "schemaVersion": 1,
   "source": "Poly Haven asphalt_02 2K CC0 plus project-authored continuous runway-local shading",
   "sourceLumaScale": 1.35,
-  "status": "V4_3_STRUCTURALLY_VALID_VISUAL_GATE_FAILED_BANDING_REMAINS"
+  "v431Correction": {
+    "bandAnalyzerThreshold": 0.1,
+    "diagnosis": "The constant-unlit isolation mode retained the bands. Mesh-to-terrain comparison found 52 of 106 runway vertices below terrain with signed clearance from -0.005092144 m to +0.004401267 m; exactly one pavement renderer, one marking renderer, no lightmap, no vertex colors, and no duplicate renderer were active.",
+    "runtimeChange": "Bounded opaque depth bias (Offset -1, -1) in the existing single pavement pass; no geometry, collider, transform, material, texture, or draw-count change.",
+    "finalPeakToTrough": 0.0949,
+    "baselinePeakToTrough": 0.3206
+  },
+  "status": "V4_3_1_RUNWAY_VISUAL_GATE_PASSED_FRAME_DEBUGGER_REPLAY_GATE_BLOCKED"
 }

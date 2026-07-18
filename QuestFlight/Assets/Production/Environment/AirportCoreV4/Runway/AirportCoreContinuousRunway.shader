@@ -25,6 +25,10 @@ Shader "QuestFlight/AirportCoreV4/ContinuousRunway"
         Pass
         {
             Tags { "LightMode"="ForwardBase" }
+            // The authoritative pavement and terrain intentionally share the surveyed grade.
+            // A bounded depth bias keeps the single pavement draw visually authoritative while
+            // leaving the serialized mesh, collider, reset surface, and marking offsets unchanged.
+            Offset -1, -1
             CGPROGRAM
             #pragma target 3.0
             #pragma vertex vert
@@ -132,11 +136,8 @@ Shader "QuestFlight/AirportCoreV4/ContinuousRunway"
                 half3 tangentNormal = UnpackNormal(tex2D(_NormalTex, primaryUv));
                 tangentNormal.xy *= _NormalStrength;
                 tangentNormal = normalize(tangentNormal);
-                // The authoritative runway is grade-following and segmented. Its legacy
-                // per-segment vertex normals encode tiny slope changes that become giant
-                // alternating illumination slabs under the low sun. Shade the continuous
-                // pavement in one runway-local tangent frame while retaining the exact
-                // geometry, collider, markings, and world-space aggregate detail.
+                // Shade the grade-following pavement in one continuous runway-local tangent
+                // frame while retaining the exact geometry, collider, markings, and detail.
                 half3 runwayTangent = normalize(half3(axis.x, 0.0h, axis.y));
                 half3 runwayBitangent = normalize(half3(lateralAxis.x, 0.0h, lateralAxis.y));
                 half3 runwayUp = half3(0.0h, 1.0h, 0.0h);
