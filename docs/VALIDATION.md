@@ -13,9 +13,25 @@ Run from the repository root:
 .\scripts\run_standalone_quest_gate.ps1
 ```
 
-`validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The standard Visual QA is a 24-view capture set and requires inspection of every full-resolution image. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. On the V2 feature branch its hard planning ceilings are 130 estimated draw calls, 650,000 visible triangles, 30 visible materials, 220 MiB estimated texture memory, and three transparent material slots.
+`validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current standard Visual QA is a 56-view capture set and requires inspection of every full-resolution image. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. On V4.2 the hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. The V2 ceilings below are retained as historical branch evidence, not current V4.2 acceptance values.
 
 The 2026-07-17 V2 closure passed `validate_product.ps1`, 61 EditMode tests, 9 PlayMode tests, 24/24 machine image checks, the static budget gate, and an Android release build. The separate reconstruction evidence adapter failed closed because it selected stale intermediate reports; see the V2 evidence document. Machine passes are not visual acceptance: lead inspection remained below 7/10, so simulator replay and physical Quest timing were deliberately not run.
+
+## Airport-Core V4.2 static packing and geometry closure
+
+V4.2 is a branch-only technical checkpoint, not visual acceptance or a release candidate:
+
+- structural benchmark validator: PASS; 15 renderers / 77,282 triangles / 3 materials, 15,314-triangle adaptive visual terrain, and one accepted lightmap atlas;
+- product dependency closure: PASS; 223 approved project dependencies, five Unity-package dependencies, zero unknown/rejected blockers;
+- ProductIntegrity: PASS at 171 serialized renderers / 698,328 serialized triangles / 32 materials;
+- EditMode: PASS 71/71; PlayMode: PASS 9/9;
+- 56-view machine Visual QA: PASS image/integrity checks at 63 maximum draws / 506,254 maximum selected-LOD triangles / 25 visible materials; all 56 full-resolution frames were inspected;
+- lead visual review: FAIL at approximately 4.0/10 against the 7.5/10 Stage-1 requirement;
+- static Quest planning budget: PASS at 63/120 draws, 506,254/600,000 selected-LOD triangles, 25/25 visible materials, 168.26/180 MiB estimated textures, two/three transparent slots, and 4x MSAA;
+- Android release-style APK: PASS, 100,094,165 bytes, SHA-256 `24ae6262085b2b54091681ece03ad1e72311c971aec0486b1c4b377b2c2f8e98`;
+- Stage 2, Meta XR Simulator, and physical Quest: NOT RUN because the subjective Stage-1 gate failed.
+
+The aggregate and camera-aware triangle values have different scopes and must not be interchanged. Static/Editor passes do not establish Quest frame timing, thermals, comfort, stereo stability, or worn image quality.
 
 ## Airport-Core V4 Stage-1 closure
 

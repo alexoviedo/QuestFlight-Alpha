@@ -207,6 +207,20 @@ The rejected V4 `LightingData.asset`, bake manifest, two color lightmaps, and tw
 
 V4 originally produced 55 LFS-covered binaries. V4.1 deletes the four rejected baked-lightmap textures and retains 51, all with paired Unity metadata. The existing non-LFS historical 5.43 MiB HDR blob remains a bounded policy exception; this branch does not rewrite history. No V4 raw download, build, APK, capture, or cache is committed.
 
+### V4.2 project-generated terrain and bake derivatives
+
+V4.2 introduces no external source. Its visual-only airport mesh is a deterministic derivative of the existing public-domain USGS 3DEP airport mesh; the authoritative terrain query asset and collider bindings are unchanged. The GI parameters, `LightingData.asset`, lightmap, and bake manifest are project-generated from the already rights-cleared benchmark scene. The EXR is covered by Git LFS; raw bake caches, captures, builds, and APKs remain external or ignored.
+
+| V4.2 asset | Bytes | Source / terms | SHA-256 |
+| --- | ---: | --- | --- |
+| `KBDU_AirportTerrain_5m_V2.asset` | 3,410,887 | Existing USGS 3DEP United States government work/public-domain derivative | `84a4303216d5b46932a4f28f46dc9fb6a8594c439735956fcec68700aad1fb24` |
+| `KBDU_AirportTerrain_ErrorBounded_V4_2.asset` | 705,505 | Project-generated error-bounded derivative of the preceding mesh | `d0d85a3ce221c75ef2f08ff0f42018b864288bb828c06ea2f67bcaeddbd701be` |
+| `KBDU_AirportTerrain_ErrorBounded_V4_2.json` | 1,953 | Project-authored provenance/validation report | `a216a058205c5745631bcea247b9bbd087ff60c260f01fb7d05a29044183f8aa` |
+| `AirportCoreV42OneAtlas.giparams` | 660 | Project-authored Unity bake parameters | `876a14671822301f453722ba777515da7e70ed3f23084f8a2f704d5f19facdd8` |
+| `LightingData.asset` | 25,817 | Unity-generated bounded airport-core bake data | `f3ffdd5c2af906c4cd5561eb1b4397daf6c21820edfddbe56b9a7fe3115e8283` |
+| `Lightmap-0_comp_light.exr` | 508,708 | Project-generated 512² non-directional baked lighting | `e1c7d437122306f50d617285b31cd1a36d55737478da15a99a371fdae747edf2` |
+| `BAKE_MANIFEST.json` | 528 | Project-authored finite-bake/hash record | `3876d0009533d64f4dded2fd7dd5bf5a8e7e9f18c4b497b1481a89dfe7f37fea` |
+
 ## Environment Reconstruction V2 derivatives (feature branch)
 
 - Terrain: USGS 3DEP 1 m bare-earth DEM, United States government work/public domain. External raw payload: 67,117,862 bytes, SHA-256 `93b32e8ef2fef464ff4ee49702d235b30eaff7d347f22b8c4add8848cd7e9d82`. Committed derivatives are the 5 m airport mesh, 25 m near mesh, terrain-surface asset/manifest, and 1024² normal map (`4ba7833e6f27f8ee3abceb79caf502e53f09672525038eedea7d89df6d764cc8`).
