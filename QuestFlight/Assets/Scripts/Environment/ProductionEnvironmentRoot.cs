@@ -22,6 +22,7 @@ namespace QuestFlightLab.Environment
         public const int MaximumVisibleTriangles = 700000;
         public const int MaximumMaterials = 40;
         public const string ProductionWaterShaderName = "QuestFlightLab/Production Stable Water";
+        public const string ProductionReservoirShaderName = "QuestFlight/Airport Core V4/Reservoir Opaque";
         public const float MinimumAcceptedWaterTerrainSeparationMeters = 0.12f;
 
         [Header("Authored hierarchy")]
@@ -216,13 +217,13 @@ namespace QuestFlightLab.Environment
             if (boulderReservoirSurface != null)
             {
                 Material water = boulderReservoirSurface.GetComponent<Renderer>()?.sharedMaterial;
-                Require(water != null && water.renderQueue < (int)RenderQueue.Transparent,
-                    "water material must remain in an opaque render queue", failures);
+                Require(water != null && water.renderQueue == (int)RenderQueue.Geometry + 5,
+                    "Boulder Reservoir must use the authored Geometry+5 opaque queue", failures);
                 Require(water != null && water.shader != null &&
-                        string.Equals(water.shader.name, ProductionWaterShaderName, StringComparison.Ordinal),
-                    "Boulder Reservoir must use the production-only static water shader", failures);
-                Require(water != null && (!water.HasProperty("_ZWrite") || water.GetFloat("_ZWrite") > 0.5f),
-                    "water material must use ZWrite", failures);
+                        string.Equals(water.shader.name, ProductionReservoirShaderName, StringComparison.Ordinal),
+                    "Boulder Reservoir must use the bounded V4 opaque reservoir shader", failures);
+                Require(water != null && water.passCount == 1,
+                    "Boulder Reservoir must use exactly one shader pass", failures);
             }
             if (otherWaterFeaturesSurfaceV2 != null)
             {

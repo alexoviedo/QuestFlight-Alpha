@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-07-18T01:39:44Z",
+  "unityVersion": "6000.3.8f1",
+  "scene": "Assets/Scenes/ProductionVerticalSlice.unity",
+  "generator": "Unity GPU Progressive Lightmapper",
+  "license": "Project-generated render derivatives of rights-cleared product assets",
+  "lightProbeCount": 20,
+  "bakedReflectionProbeCount": 0,
+  "status": "BAKE_OUTPUT_PRESERVED_NOT_VISUALLY_ACCEPTED",
+  "warnings": [
+    "Six non-finite indirect, environment, or directionality values were reported across the two lightmap atlases.",
+    "The bake batch ended non-green on a transient reservoir material identity check; later path-based structural validation passed."
+  ],
+  "outputs": [
+    {
+      "path": "Assets/Scenes/ProductionVerticalSlice/LightingData.asset",
+      "bytes": 21961,
+      "sha256": "f72940ca5dbf4aec05ccb43af9638e31e6fd741366021902799abbeab807c549"
+    },
+    {
+      "path": "Assets/Scenes/ProductionVerticalSlice/Lightmap-0_comp_light.exr",
+      "bytes": 15153092,
+      "sha256": "f88f851632a4ca4165eb5887ccf09aa64db1c58f46bccf66df8a269bef4b6e46"
+    },
+    {
+      "path": "Assets/Scenes/ProductionVerticalSlice/Lightmap-0_comp_dir.png",
+      "bytes": 16408,
+      "sha256": "fcc43f7beb10db90c6b7b96bb72652e6bd00e76d5cf7165030d6c9aa41bd1cc6"
+    },
+    {
+      "path": "Assets/Scenes/ProductionVerticalSlice/Lightmap-1_comp_light.exr",
+      "bytes": 6273827,
+      "sha256": "1d194d970989a571bb0854f0af50e3b1ef0672091c9bf1263f7d2c225eec21e6"
+    },
+    {
+      "path": "Assets/Scenes/ProductionVerticalSlice/Lightmap-1_comp_dir.png",
+      "bytes": 808292,
+      "sha256": "c43877e3ccf8859feb9e456cce0e3a6a50fb7bc465b26d5bb73be56d3f2806d7"
+    }
+  ]
+}

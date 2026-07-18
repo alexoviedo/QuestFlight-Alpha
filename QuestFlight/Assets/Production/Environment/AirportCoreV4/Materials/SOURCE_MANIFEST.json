@@ -1,0 +1,630 @@
+{
+  "acceptanceBoundary": "UV assignment, Unity import, baked response, stereo, and Quest budget require lead integration evidence.",
+  "atlasContract": "Two shared 2048 4x4 atlases matching Workstream A tile indices; MRAO channels are metallic/roughness/AO.",
+  "atlases": [
+    {
+      "grid": [
+        4,
+        4
+      ],
+      "name": "Terminal",
+      "outputs": [
+        {
+          "bytes": 4026083,
+          "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreTerminal_Albedo.png",
+          "sha256": "c53b9f49250819664bbe663fccf34a60d8d466d4434e1a1a14df03af34ecbf43"
+        },
+        {
+          "bytes": 2452468,
+          "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreTerminal_Normal.png",
+          "sha256": "dd88502c3f8f727c4648c53c0eb7ef70acc4d06932e6b5e9e5caf5afe623ec2b"
+        },
+        {
+          "bytes": 2470777,
+          "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreTerminal_MRAO.png",
+          "sha256": "9bd6270e248314ea5aa4949acccf8b380b325a9f3910255a99c0f42d668ef14e"
+        }
+      ],
+      "sizePixels": [
+        2048,
+        2048
+      ],
+      "tiles": [
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "brown_brick_02",
+          "tileIndex": 0,
+          "uvRect": [
+            0.0009765625,
+            0.0009765625,
+            0.2490234375,
+            0.2490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "corrugated_iron_02",
+          "tileIndex": 1,
+          "uvRect": [
+            0.2509765625,
+            0.0009765625,
+            0.4990234375,
+            0.2490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_opaque_glazing",
+          "tileIndex": 2,
+          "uvRect": [
+            0.5009765625,
+            0.0009765625,
+            0.7490234375,
+            0.2490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_dark_roof",
+          "tileIndex": 3,
+          "uvRect": [
+            0.7509765625,
+            0.0009765625,
+            0.9990234375,
+            0.2490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_dark_trim",
+          "tileIndex": 4,
+          "uvRect": [
+            0.0009765625,
+            0.2509765625,
+            0.2490234375,
+            0.4990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "concrete_wall_005",
+          "tileIndex": 5,
+          "uvRect": [
+            0.2509765625,
+            0.2509765625,
+            0.4990234375,
+            0.4990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_sign_face",
+          "tileIndex": 6,
+          "uvRect": [
+            0.5009765625,
+            0.2509765625,
+            0.7490234375,
+            0.4990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_roof_equipment",
+          "tileIndex": 7,
+          "uvRect": [
+            0.7509765625,
+            0.2509765625,
+            0.9990234375,
+            0.4990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "corrugated_iron_02",
+          "tileIndex": 8,
+          "uvRect": [
+            0.0009765625,
+            0.5009765625,
+            0.2490234375,
+            0.7490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_bifold_door",
+          "tileIndex": 9,
+          "uvRect": [
+            0.2509765625,
+            0.5009765625,
+            0.4990234375,
+            0.7490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "worn_corrugated_iron",
+          "tileIndex": 10,
+          "uvRect": [
+            0.5009765625,
+            0.5009765625,
+            0.7490234375,
+            0.7490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "asphalt_02",
+          "tileIndex": 11,
+          "uvRect": [
+            0.7509765625,
+            0.5009765625,
+            0.9990234375,
+            0.7490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_safety_yellow",
+          "tileIndex": 12,
+          "uvRect": [
+            0.0009765625,
+            0.7509765625,
+            0.2490234375,
+            0.9990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_landscape_rock",
+          "tileIndex": 13,
+          "uvRect": [
+            0.2509765625,
+            0.7509765625,
+            0.4990234375,
+            0.9990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_shrub",
+          "tileIndex": 14,
+          "uvRect": [
+            0.5009765625,
+            0.7509765625,
+            0.7490234375,
+            0.9990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_service_prop",
+          "tileIndex": 15,
+          "uvRect": [
+            0.7509765625,
+            0.7509765625,
+            0.9990234375,
+            0.9990234375
+          ]
+        }
+      ]
+    },
+    {
+      "grid": [
+        4,
+        4
+      ],
+      "name": "HangarKit",
+      "outputs": [
+        {
+          "bytes": 4027313,
+          "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_Albedo.png",
+          "sha256": "57ae02a0dc3890b55fb92a73c41efdd7e056f664493f24cac09e92be591aad05"
+        },
+        {
+          "bytes": 2452468,
+          "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_Normal.png",
+          "sha256": "dd88502c3f8f727c4648c53c0eb7ef70acc4d06932e6b5e9e5caf5afe623ec2b"
+        },
+        {
+          "bytes": 2470777,
+          "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_MRAO.png",
+          "sha256": "9bd6270e248314ea5aa4949acccf8b380b325a9f3910255a99c0f42d668ef14e"
+        }
+      ],
+      "sizePixels": [
+        2048,
+        2048
+      ],
+      "tiles": [
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "brown_brick_02",
+          "tileIndex": 0,
+          "uvRect": [
+            0.0009765625,
+            0.0009765625,
+            0.2490234375,
+            0.2490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "corrugated_iron_02",
+          "tileIndex": 1,
+          "uvRect": [
+            0.2509765625,
+            0.0009765625,
+            0.4990234375,
+            0.2490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_opaque_glazing",
+          "tileIndex": 2,
+          "uvRect": [
+            0.5009765625,
+            0.0009765625,
+            0.7490234375,
+            0.2490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_dark_roof",
+          "tileIndex": 3,
+          "uvRect": [
+            0.7509765625,
+            0.0009765625,
+            0.9990234375,
+            0.2490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_dark_trim",
+          "tileIndex": 4,
+          "uvRect": [
+            0.0009765625,
+            0.2509765625,
+            0.2490234375,
+            0.4990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "concrete_wall_005",
+          "tileIndex": 5,
+          "uvRect": [
+            0.2509765625,
+            0.2509765625,
+            0.4990234375,
+            0.4990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_sign_face",
+          "tileIndex": 6,
+          "uvRect": [
+            0.5009765625,
+            0.2509765625,
+            0.7490234375,
+            0.4990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_roof_equipment",
+          "tileIndex": 7,
+          "uvRect": [
+            0.7509765625,
+            0.2509765625,
+            0.9990234375,
+            0.4990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "corrugated_iron_02",
+          "tileIndex": 8,
+          "uvRect": [
+            0.0009765625,
+            0.5009765625,
+            0.2490234375,
+            0.7490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_bifold_door",
+          "tileIndex": 9,
+          "uvRect": [
+            0.2509765625,
+            0.5009765625,
+            0.4990234375,
+            0.7490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "worn_corrugated_iron",
+          "tileIndex": 10,
+          "uvRect": [
+            0.5009765625,
+            0.5009765625,
+            0.7490234375,
+            0.7490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "CC0-1.0",
+          "source": "asphalt_02",
+          "tileIndex": 11,
+          "uvRect": [
+            0.7509765625,
+            0.5009765625,
+            0.9990234375,
+            0.7490234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_safety_yellow",
+          "tileIndex": 12,
+          "uvRect": [
+            0.0009765625,
+            0.7509765625,
+            0.2490234375,
+            0.9990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_landscape_rock",
+          "tileIndex": 13,
+          "uvRect": [
+            0.2509765625,
+            0.7509765625,
+            0.4990234375,
+            0.9990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_shrub",
+          "tileIndex": 14,
+          "uvRect": [
+            0.5009765625,
+            0.7509765625,
+            0.7490234375,
+            0.9990234375
+          ]
+        },
+        {
+          "gutterPixelsRecommendedInMeshUvs": 2,
+          "license": "Project-owned",
+          "source": "procedural_service_prop",
+          "tileIndex": 15,
+          "uvRect": [
+            0.7509765625,
+            0.7509765625,
+            0.9990234375,
+            0.9990234375
+          ]
+        }
+      ]
+    }
+  ],
+  "estimatedAndroidResidentBytesIfBothAtlasesLoaded": 11243424,
+  "externalRawPolicy": "Raw Poly Haven maps and API snapshots remain outside Git.",
+  "externalSources": {
+    "files": [
+      {
+        "assetId": "asphalt_02",
+        "bytes": 3075676,
+        "externalFile": "asphalt_02_diffuse_2k.jpg",
+        "officialMd5": "336af399fd98a39ab986d8b3bf73b4ff",
+        "resolution": "2k",
+        "semantic": "diffuse",
+        "sha256": "28f5ba8690553f192c0e5e1a5ff40f34765b4b93f4cc7059b1a3e9c795b6c28c",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_diff_2k.jpg"
+      },
+      {
+        "assetId": "asphalt_02",
+        "bytes": 4943950,
+        "externalFile": "asphalt_02_normalOpenGl_2k.jpg",
+        "officialMd5": "77ebd1cc0b020ccaa1c6b58f103d1f75",
+        "resolution": "2k",
+        "semantic": "normalOpenGl",
+        "sha256": "ffe49db71a0fd34c1e259625df66a302a237597d6ef655307987ec4e45bc6f21",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_nor_gl_2k.jpg"
+      },
+      {
+        "assetId": "asphalt_02",
+        "bytes": 1299186,
+        "externalFile": "asphalt_02_arm_2k.jpg",
+        "officialMd5": "152c0fb79ad6f33040b79779fea98664",
+        "resolution": "2k",
+        "semantic": "arm",
+        "sha256": "ed70e88640e4ed51cf1c3e57cb20db26983599b20b867c2526439e3a2c849fea",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_arm_2k.jpg"
+      },
+      {
+        "assetId": "brown_brick_02",
+        "bytes": 425513,
+        "externalFile": "brown_brick_02_diffuse_1k.jpg",
+        "officialMd5": "c613a284d3ac4a25256bb93cf4d77328",
+        "resolution": "1k",
+        "semantic": "diffuse",
+        "sha256": "d769443de69cc16482d25a8a1777b1fa826ada8b4175c7c29d7abb08a91f8ac2",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brown_brick_02/brown_brick_02_diff_1k.jpg"
+      },
+      {
+        "assetId": "brown_brick_02",
+        "bytes": 226347,
+        "externalFile": "brown_brick_02_normalOpenGl_1k.jpg",
+        "officialMd5": "84cca52ae25ef5d31cf4d50cca551161",
+        "resolution": "1k",
+        "semantic": "normalOpenGl",
+        "sha256": "c4ca57e17a7ebfa27b561b126a6579e90b09a852c94ffa83a0b68d4ed62b46af",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brown_brick_02/brown_brick_02_nor_gl_1k.jpg"
+      },
+      {
+        "assetId": "brown_brick_02",
+        "bytes": 149335,
+        "externalFile": "brown_brick_02_arm_1k.jpg",
+        "officialMd5": "f674473f62a046a897149abf5592eb66",
+        "resolution": "1k",
+        "semantic": "arm",
+        "sha256": "b7acf8615699f4a55743d70eeb2290f192344272b3dac93c6dbe243ed57b6c4d",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brown_brick_02/brown_brick_02_arm_1k.jpg"
+      },
+      {
+        "assetId": "concrete_wall_005",
+        "bytes": 508624,
+        "externalFile": "concrete_wall_005_diffuse_1k.jpg",
+        "officialMd5": "67c38b069f2d69d0affe75cdce587dc1",
+        "resolution": "1k",
+        "semantic": "diffuse",
+        "sha256": "a06a7246e8d220badf4ab7225b6a69d6fe87238816f68efa0cd3523f6ba75cc9",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_005/concrete_wall_005_diff_1k.jpg"
+      },
+      {
+        "assetId": "concrete_wall_005",
+        "bytes": 758971,
+        "externalFile": "concrete_wall_005_normalOpenGl_1k.jpg",
+        "officialMd5": "40b05a1b9c041c9254e02ce4394a16be",
+        "resolution": "1k",
+        "semantic": "normalOpenGl",
+        "sha256": "89dc8af90cf2521932bae79838433ed6741e81409b0ef91e788a4c4c3f52fb6a",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_005/concrete_wall_005_nor_gl_1k.jpg"
+      },
+      {
+        "assetId": "concrete_wall_005",
+        "bytes": 316035,
+        "externalFile": "concrete_wall_005_arm_1k.jpg",
+        "officialMd5": "9f7bbe949038ce0c77d8dccb51f2fd99",
+        "resolution": "1k",
+        "semantic": "arm",
+        "sha256": "e6da28fbef8ccd75ffde2aa75a743bafe1db0b44c05323d75e9768d3070ae620",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_005/concrete_wall_005_arm_1k.jpg"
+      },
+      {
+        "assetId": "corrugated_iron_02",
+        "bytes": 568492,
+        "externalFile": "corrugated_iron_02_diffuse_1k.jpg",
+        "officialMd5": "0437ba7acc3a60e9a00245580ae7e10b",
+        "resolution": "1k",
+        "semantic": "diffuse",
+        "sha256": "7a7b43099d015c1b08ebb175da5965caeae44b86de65a727b3fffa20a7c69a93",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/corrugated_iron_02/corrugated_iron_02_diff_1k.jpg"
+      },
+      {
+        "assetId": "corrugated_iron_02",
+        "bytes": 489773,
+        "externalFile": "corrugated_iron_02_normalOpenGl_1k.jpg",
+        "officialMd5": "e3a9b41f29a5dee9f0835bddb440efbd",
+        "resolution": "1k",
+        "semantic": "normalOpenGl",
+        "sha256": "9743c93668689c36a67e9c4dc8d6a0870fe91202f82dcdaf70ddc330c12f9ecb",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/corrugated_iron_02/corrugated_iron_02_nor_gl_1k.jpg"
+      },
+      {
+        "assetId": "corrugated_iron_02",
+        "bytes": 904443,
+        "externalFile": "corrugated_iron_02_arm_1k.jpg",
+        "officialMd5": "58d9a11932fae9f85d4cbcde4700abb2",
+        "resolution": "1k",
+        "semantic": "arm",
+        "sha256": "da4197f5b3e199ef693082836ca803f9d5cad2b4998a1c1c3dc4ac384f93a890",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/corrugated_iron_02/corrugated_iron_02_arm_1k.jpg"
+      },
+      {
+        "assetId": "worn_corrugated_iron",
+        "bytes": 868207,
+        "externalFile": "worn_corrugated_iron_diffuse_1k.jpg",
+        "officialMd5": "dee4306e2c337afcb3a815eb3345c7bd",
+        "resolution": "1k",
+        "semantic": "diffuse",
+        "sha256": "8980bec97815510c828cb6b3d840c05345eb44212e34c212c39ec54c0abecaa3",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/worn_corrugated_iron/worn_corrugated_iron_diff_1k.jpg"
+      },
+      {
+        "assetId": "worn_corrugated_iron",
+        "bytes": 1032507,
+        "externalFile": "worn_corrugated_iron_normalOpenGl_1k.jpg",
+        "officialMd5": "b1fdf9a7fa3ca2764fe1621a6bdea0db",
+        "resolution": "1k",
+        "semantic": "normalOpenGl",
+        "sha256": "e3972aa29ba1443f44f51a0fd5e5ca178cdbaf0b24b1af93d9e71c7b81c34d95",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/worn_corrugated_iron/worn_corrugated_iron_nor_gl_1k.jpg"
+      },
+      {
+        "assetId": "worn_corrugated_iron",
+        "bytes": 709754,
+        "externalFile": "worn_corrugated_iron_arm_1k.jpg",
+        "officialMd5": "f3b57105dd0a36bac14baa49bb868264",
+        "resolution": "1k",
+        "semantic": "arm",
+        "sha256": "f5225e41ed4d810a11d4660a8d0c81443eb522fab9db1bfb19079b29d4b5b5c7",
+        "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/worn_corrugated_iron/worn_corrugated_iron_arm_1k.jpg"
+      }
+    ],
+    "license": "CC0-1.0",
+    "licenseUrl": "https://polyhaven.com/license",
+    "rawPolicy": "External artifact only; raw maps and API snapshots must not be committed.",
+    "retrievedUtc": "2026-07-17T19:05:55.752905+00:00",
+    "schemaVersion": 1
+  },
+  "runtimeMaterials": [
+    {
+      "bytes": 1379,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreTerminalAtlas.mat",
+      "sha256": "e66ee96e982186f023ab21f4b9aec0c4472d5323c91b2cb60597a3d419f06cb2"
+    },
+    {
+      "bytes": 1380,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKitAtlas.mat",
+      "sha256": "102265f47aa20d0858624e3513ceec2e4e1caa71f85fc3cc1ec6a87dd6f5ead6"
+    }
+  ],
+  "schemaVersion": 1,
+  "shader": {
+    "bytes": 6300,
+    "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreBakedLit.shader",
+    "sha256": "bb22d033d818a6c327376663cec3d8387b7dc2aa11210edf7c9e53704509a2c5"
+  },
+  "status": "OPTIMIZED_DERIVATIVES_READY_NOT_VISUALLY_ACCEPTED"
+}

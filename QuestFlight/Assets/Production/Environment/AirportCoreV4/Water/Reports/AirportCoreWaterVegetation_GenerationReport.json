@@ -1,0 +1,200 @@
+{
+  "output": "Assets/Production/Environment/AirportCoreV4",
+  "schema": "questflight.airport-core-v4.water-vegetation-generation.v1",
+  "vegetation": {
+    "atlas": {
+      "alpha_test_reference": 0.46,
+      "covered_pixel_fraction": 0.4732551574707031,
+      "height": 1024,
+      "regions": {
+        "bark": [
+          0.0,
+          0.0,
+          0.125,
+          1.0
+        ],
+        "cottonwood_a": [
+          0.125,
+          0.0,
+          0.5625,
+          0.5
+        ],
+        "cottonwood_b": [
+          0.5625,
+          0.0,
+          1.0,
+          0.5
+        ],
+        "deciduous": [
+          0.125,
+          0.5,
+          0.5625,
+          1.0
+        ],
+        "shrub": [
+          0.5625,
+          0.5,
+          1.0,
+          1.0
+        ]
+      },
+      "sha256": "8ae9f8a7d30536901dbe0646675c2f334637e551b513535e8d9a969aa2448c17",
+      "sun_bake": {
+        "azimuth_degrees": 135.0,
+        "confidence": "LOW_V3_CALIBRATION",
+        "elevation_degrees": 56.934
+      },
+      "width": 1024
+    },
+    "geometry": {
+      "all_grounded": true,
+      "atlas_sha256": "8ae9f8a7d30536901dbe0646675c2f334637e551b513535e8d9a969aa2448c17",
+      "blender_version": "5.1.2",
+      "cluster_members": [
+        "cottonwood_a",
+        "cottonwood_b",
+        "deciduous",
+        "shrub_group"
+      ],
+      "lod_triangle_ratios": {
+        "lod1_to_lod0": 0.3739495798319328,
+        "lod2_to_lod0": 0.058823529411764705
+      },
+      "no_negative_scale": true,
+      "no_overconnected_nonmanifold_edges": true,
+      "objects": [
+        {
+          "alpha_card_faces": 228,
+          "bounds_max": [
+            9.522123336791992,
+            9.688045501708984,
+            14.747457504272461
+          ],
+          "bounds_min": [
+            -9.103588104248047,
+            -6.543359279632568,
+            -0.0016095871105790138
+          ],
+          "closed_solid_parts": 39,
+          "color_attributes": 1,
+          "expected_open_card_boundary_edges": 912,
+          "faces": 957,
+          "ground_error_m": 0.0016095871105790138,
+          "lod": 0,
+          "material_slots": 1,
+          "mesh_validation_changed": false,
+          "name": "AirportCoreVegetationCluster_LOD0",
+          "negative_scale": false,
+          "overconnected_nonmanifold_edges": 0,
+          "triangles": 1428,
+          "uv_layers": 1,
+          "vertices": 1476
+        },
+        {
+          "alpha_card_faces": 81,
+          "bounds_max": [
+            9.426098823547363,
+            10.437446594238281,
+            15.552233695983887
+          ],
+          "bounds_min": [
+            -8.512628555297852,
+            -6.543359279632568,
+            -0.0015625767409801483
+          ],
+          "closed_solid_parts": 21,
+          "color_attributes": 1,
+          "expected_open_card_boundary_edges": 324,
+          "faces": 360,
+          "ground_error_m": 0.0015625767409801483,
+          "lod": 1,
+          "material_slots": 1,
+          "mesh_validation_changed": false,
+          "name": "AirportCoreVegetationCluster_LOD1",
+          "negative_scale": false,
+          "overconnected_nonmanifold_edges": 0,
+          "triangles": 534,
+          "uv_layers": 1,
+          "vertices": 552
+        },
+        {
+          "alpha_card_faces": 18,
+          "bounds_max": [
+            8.96990966796875,
+            9.859634399414062,
+            14.799999237060547
+          ],
+          "bounds_min": [
+            -8.400735855102539,
+            -6.149999618530273,
+            0.0
+          ],
+          "closed_solid_parts": 3,
+          "color_attributes": 1,
+          "expected_open_card_boundary_edges": 72,
+          "faces": 54,
+          "ground_error_m": 0.0,
+          "lod": 2,
+          "material_slots": 1,
+          "mesh_validation_changed": false,
+          "name": "AirportCoreVegetationCluster_LOD2",
+          "negative_scale": false,
+          "overconnected_nonmanifold_edges": 0,
+          "triangles": 84,
+          "uv_layers": 1,
+          "vertices": 102
+        }
+      ],
+      "one_material_per_lod": true,
+      "open_edges_policy": "Expected only on authored alpha cards; all trunk/branch parts are capped solids.",
+      "runtime_fbx_sha256": "da50ac7a7a95cc326202847c20b642288fe3aa8b9a804397dd55100ecceaf335",
+      "schema": "questflight.airport-core-v4.vegetation-geometry.v1",
+      "source_blend_sha256": "d79bdcf5131f8886a26be964ecb3d055d44a558bf7ecbfaa09d9eff30f31bbb4",
+      "status": "OFFLINE_GEOMETRY_VALIDATED_VISUAL_AND_STEREO_QA_PENDING"
+    }
+  },
+  "water": {
+    "minor_mask": {
+      "channels": {
+        "a": "reserved",
+        "b": "ripple phase",
+        "g": "wet bank",
+        "r": "water"
+      },
+      "georeferenced": false,
+      "height": 512,
+      "integration_status": "NORMALIZED_PROTOTYPE_REQUIRES_BENCHMARK_UV_BINDING",
+      "sha256": "00bc4936506472fa7bc984f9004066e1f4200ff30eeeac96899c573ac8af3a9e",
+      "water_coverage_fraction": 0.0279083251953125,
+      "wet_bank_coverage_fraction": 0.05167388916015625,
+      "width": 512
+    },
+    "reservoir_mask": {
+      "channels": {
+        "a": "orthophoto suppression",
+        "b": "roughness",
+        "g": "shore feather",
+        "r": "depth"
+      },
+      "height": 1024,
+      "sha256": "1320b464e2b409091d35fcf3fddb01ba0e3da805eb80b587b0f660e60d298a49",
+      "source_height": 512,
+      "source_sha256": "258683cba2eca00d585dbe99c24e762da55b67e9c7a5387b3be860ec230356bb",
+      "source_width": 512,
+      "suppression_coverage_fraction": 0.5667238235473633,
+      "width": 1024
+    },
+    "wave_a": {
+      "height": 512,
+      "seamless": true,
+      "sha256": "2eff40dcb74cfd0542d0a17de3a3cbc15deae9df1e36c780ef5945644f8e56ff",
+      "width": 512
+    },
+    "wave_b": {
+      "height": 512,
+      "seamless": true,
+      "sha256": "5ed844a84196771414c3da66eeac490a66c35c9d58f7f74a51e9b034cc27e2ba",
+      "width": 512
+    }
+  }
+}

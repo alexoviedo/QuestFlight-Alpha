@@ -1,0 +1,101 @@
+{
+  "coordinateFrame": "KBDU local ENU meters; Unity +Y up",
+  "positionsXyzMeters": [
+    [
+      -413.0,
+      1.5,
+      -258.0
+    ],
+    [
+      -413.0,
+      5.0,
+      -258.0
+    ],
+    [
+      -385.0,
+      1.5,
+      -258.0
+    ],
+    [
+      -385.0,
+      5.0,
+      -258.0
+    ],
+    [
+      -357.0,
+      1.5,
+      -258.0
+    ],
+    [
+      -357.0,
+      5.0,
+      -258.0
+    ],
+    [
+      -413.0,
+      1.5,
+      -224.0
+    ],
+    [
+      -413.0,
+      5.0,
+      -224.0
+    ],
+    [
+      -385.0,
+      1.5,
+      -224.0
+    ],
+    [
+      -385.0,
+      5.0,
+      -224.0
+    ],
+    [
+      -357.0,
+      1.5,
+      -224.0
+    ],
+    [
+      -357.0,
+      5.0,
+      -224.0
+    ],
+    [
+      -413.0,
+      1.5,
+      -190.0
+    ],
+    [
+      -413.0,
+      5.0,
+      -190.0
+    ],
+    [
+      -385.0,
+      1.5,
+      -190.0
+    ],
+    [
+      -385.0,
+      5.0,
+      -190.0
+    ],
+    [
+      -357.0,
+      1.5,
+      -190.0
+    ],
+    [
+      -357.0,
+      5.0,
+      -190.0
+    ]
+  ],
+  "probeCount": 18,
+  "finalSerializedProbeCount": 20,
+  "purpose": "Dynamic aircraft and authored airport props only; static core uses baked lightmaps.",
+  "runtimeUpdates": false,
+  "schemaVersion": 1,
+  "status": "PREINTEGRATION_PLAN_SUPERSEDED_BY_SERIALIZED_20_PROBE_VOLUME"
+}

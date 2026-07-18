@@ -1,0 +1,99 @@
+{
+  "contract": {
+    "alternatingMacroBlocks": false,
+    "colliderChanges": false,
+    "continuousBase": true,
+    "geometryChanges": false,
+    "instancing": true,
+    "markingAlignmentChanges": false,
+    "opaque": true
+  },
+  "estimatedAndroidResidentBytes": 2505152,
+  "featureChannels": {
+    "a": "edge dirt",
+    "b": "cracks/joints",
+    "g": "repairs",
+    "r": "rubber deposition"
+  },
+  "license": "CC0-1.0 source derivative plus project-authored procedural masks",
+  "orthophotoMedianLuma": 145.0189971923828,
+  "orthophotoReferenceSampleEnuMeters": [
+    -650.0,
+    -80.0,
+    650.0,
+    25.0
+  ],
+  "outputs": [
+    {
+      "bytes": 10705622,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_Albedo.png",
+      "sha256": "211181fcbad546c1211dc350baa35d4a7f056e205a4c108fc218318fa42f22a5"
+    },
+    {
+      "bytes": 9357865,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_Normal.png",
+      "sha256": "a367c62373ff28a63be87ed2b87a17b740490f81ddc6745d8479b8db5b4ef447"
+    },
+    {
+      "bytes": 7685293,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_MRAO.png",
+      "sha256": "5307c70d92f24ed46b4d9cd58adb9aa9ac0c5237735cd4ac0b7681275703f920"
+    },
+    {
+      "bytes": 88202,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_FeatureMask.png",
+      "sha256": "d958cec48190c70f3a9fcf739f3b261df00aef05b4235f9e6db5660055683d8d"
+    },
+    {
+      "bytes": 5862,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.shader",
+      "sha256": "5b24195ba064c1bb5f741bb92dd58c33ab7e0812e761aadeecb9c6d873649537"
+    },
+    {
+      "bytes": 1542,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.mat",
+      "sha256": "c89702786c503454de82ae349e500ec5ea303320ae3113a1497e19e2960287e3"
+    },
+    {
+      "bytes": 1090,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/INTEGRATION_CONTRACT.md",
+      "sha256": "87afe7bdd307f6c862729eb326cc18355656c17947f0dee6382ddee124a2c37a"
+    }
+  ],
+  "rawSource": [
+    {
+      "assetId": "asphalt_02",
+      "bytes": 3075676,
+      "externalFile": "asphalt_02_diffuse_2k.jpg",
+      "officialMd5": "336af399fd98a39ab986d8b3bf73b4ff",
+      "resolution": "2k",
+      "semantic": "diffuse",
+      "sha256": "28f5ba8690553f192c0e5e1a5ff40f34765b4b93f4cc7059b1a3e9c795b6c28c",
+      "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_diff_2k.jpg"
+    },
+    {
+      "assetId": "asphalt_02",
+      "bytes": 4943950,
+      "externalFile": "asphalt_02_normalOpenGl_2k.jpg",
+      "officialMd5": "77ebd1cc0b020ccaa1c6b58f103d1f75",
+      "resolution": "2k",
+      "semantic": "normalOpenGl",
+      "sha256": "ffe49db71a0fd34c1e259625df66a302a237597d6ef655307987ec4e45bc6f21",
+      "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_nor_gl_2k.jpg"
+    },
+    {
+      "assetId": "asphalt_02",
+      "bytes": 1299186,
+      "externalFile": "asphalt_02_arm_2k.jpg",
+      "officialMd5": "152c0fb79ad6f33040b79779fea98664",
+      "resolution": "2k",
+      "semantic": "arm",
+      "sha256": "ed70e88640e4ed51cf1c3e57cb20db26983599b20b867c2526439e3a2c849fea",
+      "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_arm_2k.jpg"
+    }
+  ],
+  "schemaVersion": 1,
+  "source": "Poly Haven asphalt_02 2K CC0 plus project-authored deterministic feature masks",
+  "sourceLumaScale": 1.35,
+  "status": "SERIALIZED_MATERIAL_CANDIDATE_NOT_VISUALLY_ACCEPTED"
+}

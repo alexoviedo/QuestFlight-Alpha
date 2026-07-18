@@ -1,0 +1,23 @@
+{
+  "atlasSizePixels": 2048,
+  "budgetedAtlases": 1,
+  "compressed": true,
+  "directionalMode": true,
+  "estimatedMaximumAndroidBytes": 4995424,
+  "estimatedPreferredAndroidBytes": 2497712,
+  "maximumAtlases": 2,
+  "runtimeGiUpdates": false,
+  "schemaVersion": 1,
+  "scope": "AirportCoreBenchmarkRoot only; no Stage-1 lightmap outside benchmark bounds.",
+  "secondAtlasPolicy": "Conditional only after the full-scene <=180 MiB gate demonstrates headroom.",
+  "finalSceneLightmapAtlases": 2,
+  "finalSceneLightmapTextureCount": 4,
+  "finalConservativeAndroidBytes": 89478488,
+  "finalBakeWarnings": "Six non-finite indirect/environment/directionality values; output is not accepted.",
+  "status": "PREINTEGRATION_PLAN_BAKE_ATTEMPTED_NOT_ACCEPTED",
+  "validation": [
+    "no doubled shadows",
+    "no static realtime shadow map",
+    "no out-of-bounds renderer in bake"
+  ]
+}

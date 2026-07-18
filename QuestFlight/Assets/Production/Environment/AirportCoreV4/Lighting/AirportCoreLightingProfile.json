@@ -1,0 +1,34 @@
+{
+  "acceptanceBoundary": "Unity bake and full-resolution A/B ran and failed acceptance; stereo simulator and physical Quest validation were not entered.",
+  "ambient": {
+    "intensityStartingValue": 1.0,
+    "runtimeGiUpdates": false,
+    "source": "custom sky cubemap"
+  },
+  "assetType": "AirportCoreLightingProfile",
+  "confidence": 0.43565118093520183,
+  "fixedTimeOfDay": true,
+  "profileId": "KBDU_AIRPORT_CORE_FIXED_NAIP_MATCH_V4",
+  "schemaVersion": 1,
+  "sky": {
+    "cubemap": "../../Sky/Kloppenheim03_PureSky_2K.hdr",
+    "exposureStartingValue": 0.74,
+    "rotationDegrees": -64.123046875,
+    "runtimeUpdates": false,
+    "sourceLicense": "CC0-1.0"
+  },
+  "status": "SERIALIZED_LOW_CONFIDENCE_PROFILE_NOT_VISUALLY_ACCEPTED",
+  "sun": {
+    "azimuthDegrees": 152.0,
+    "colorTemperatureKelvin": 5600,
+    "directionTowardSunEnu": [
+      0.14507469127660538,
+      0.9510565162951535,
+      -0.27284581133586044
+    ],
+    "dynamicAircraftShadowMode": "lead A/B: existing blob/contact shadow or one bounded aircraft-only realtime shadow",
+    "elevationDegrees": 72.0,
+    "intensityStartingValue": 1.0,
+    "staticCoreShadowMode": "baked direct and indirect only"
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "benchmarkBoundsXzMeters": [
+    -650.0,
+    -575.0,
+    50.0,
+    125.0
+  ],
+  "cleanPlateSizePixels": [
+    4096,
+    4096
+  ],
+  "conditionalPolicy": "Photographed aircraft/prop regions remain untouched until the lead serializes a matching authored 3D stand.",
+  "conditionalRegionsNotRemoved": [
+    "TerminalApronAuthoredStand_A"
+  ],
+  "license": "LicenseRef-US-Government-Work-Public-Domain derivative; OSM produced-work polygon contract",
+  "limitations": [
+    "OSM and authored replacement polygons are reference-grade rather than survey-grade.",
+    "The clean plate requires full-resolution A/B inspection after model placement.",
+    "JPEG encoding can alter values outside the semantic edit mask; masks remain the authoritative edit boundary."
+  ],
+  "maskSizePixels": [
+    2048,
+    2048
+  ],
+  "maximumEditEnvelopesXzMeters": {
+    "AirportCoreV4_ExecutiveTerminal_3335": [
+      [
+        -402.0,
+        -252.0
+      ],
+      [
+        -402.0,
+        -196.0
+      ],
+      [
+        -368.0,
+        -196.0
+      ],
+      [
+        -368.0,
+        -252.0
+      ],
+      [
+        -402.0,
+        -252.0
+      ]
+    ],
+    "AirportCoreV4_Type2THangarRow_3354": [
+      [
+        -406.0,
+        -385.0
+      ],
+      [
+        -406.0,
+        -304.0
+      ],
+      [
+        -378.5,
+        -304.0
+      ],
+      [
+        -378.5,
+        -385.0
+      ],
+      [
+        -406.0,
+        -385.0
+      ]
+    ]
+  },
+  "method": "Exact authored replacement polygons plus calibrated per-height shadow extrusion; least-structured adjacent real-ground patches with bounded channel matching and feathered edges.",
+  "outputs": [
+    {
+      "bytes": 8158435,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/CleanPlate/AirportCoreCleanPlate_Albedo.jpg",
+      "sha256": "25e81a53a88f929bd80426edb9a76a75e3f6577974fb352f60789664514c2214"
+    },
+    {
+      "bytes": 4252,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/CleanPlate/AirportCoreReplacementMask.png",
+      "sha256": "0e63801a639e583d45160d41c6e1bb38239a63a9e332a4d20c89ff387b23c96d"
+    },
+    {
+      "bytes": 4170,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/CleanPlate/AirportCoreOriginalShadowMask.png",
+      "sha256": "d11d8c6711012c67360514a0de0dfa205be69de25e37c4b65d4898712ea70cac"
+    }
+  ],
+  "replacementCount": 2,
+  "replacementManifest": {
+    "bytes": 2704,
+    "path": "tools/kbdu_airport_core_v4/buildings/airport_core_replacement_footprints.json",
+    "sha256": "d9e4928e9df625173ffffda10fc0bbaec6e040002af78081fda39e77ad57539f"
+  },
+  "replacementMaskPixelCount": 583,
+  "replacementObjectIds": [
+    "AirportCoreV4_ExecutiveTerminal_3335",
+    "AirportCoreV4_Type2THangarRow_3354"
+  ],
+  "schemaVersion": 1,
+  "shadowMaskPixelCount": 21,
+  "source": {
+    "bytes": 6320221,
+    "path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
+    "sha256": "446e5c7fa13fc653de1f3e8404829c0e54b7e919fe99ebfba79d747a0b1dadea"
+  },
+  "status": "BOUNDED_DERIVATIVE_READY_NOT_VISUALLY_ACCEPTED",
+  "synthesisPatches": [
+    {
+      "channelCorrectionRgb": [
+        -14.0,
+        -8.0,
+        -8.0
+      ],
+      "destinationPixelBounds": [
+        1639,
+        2249,
+        1669,
+        2303
+      ],
+      "objectId": "AirportCoreV4_ExecutiveTerminal_3335",
+      "selectedMedianRgb": [
+        164.0,
+        152.0,
+        135.0
+      ],
+      "selectedSourceOffsetPixels": [
+        -40,
+        -64
+      ],
+      "selectionScore": 8.906321982698378,
+      "targetRingMedianRgb": [
+        148.0,
+        144.0,
+        127.0
+      ]
+    },
+    {
+      "channelCorrectionRgb": [
+        -4.0,
+        0.5,
+        13.0
+      ],
+      "destinationPixelBounds": [
+        1635,
+        2359,
+        1659,
+        2441
+      ],
+      "objectId": "AirportCoreV4_Type2THangarRow_3354",
+      "selectedMedianRgb": [
+        178.0,
+        164.0,
+        134.0
+      ],
+      "selectedSourceOffsetPixels": [
+        34,
+        92
+      ],
+      "selectionScore": 7.531245756909261,
+      "targetRingMedianRgb": [
+        174.0,
+        164.5,
+        147.0
+      ]
+    }
+  ]
+}

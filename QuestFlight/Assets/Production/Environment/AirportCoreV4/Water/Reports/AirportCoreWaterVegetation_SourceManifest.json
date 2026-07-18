@@ -1,0 +1,95 @@
+{
+  "external_license_dependencies": [],
+  "generator": "tools/kbdu_airport_core_v4/water_vegetation/generate_benchmark_assets.py",
+  "generator_sha256": "031ea533b314f78b785a2788abe7927270e0e07a1e9aebf0072018a8e1d89bc2",
+  "notes": [
+    "No V3 rejected water or vegetation runtime asset was reused.",
+    "The stable V2 packed reservoir mask is the only derived pixel source.",
+    "Offline contract validation is not visual, stereo, or Quest performance acceptance."
+  ],
+  "raw_external_assets": [],
+  "records": [
+    {
+      "license": "Project-authored",
+      "path": "Assets/ArtSource/Blender/KBDU/VegetationHeroCluster.blend",
+      "sha256": "d79bdcf5131f8886a26be964ecb3d055d44a558bf7ecbfaa09d9eff30f31bbb4",
+      "source": "Reproducible Blender 5.x project source"
+    },
+    {
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AirportCoreV4/Vegetation/Materials/AirportCoreVegetation_V4.mat",
+      "sha256": "963ea6894db6c1e976f257317e0ae9419f73cbe7b27b12d21988ee705dcb6dce",
+      "source": "Project-authored Unity material contract"
+    },
+    {
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AirportCoreV4/Vegetation/Models/AirportCoreVegetationCluster.fbx",
+      "sha256": "da50ac7a7a95cc326202847c20b642288fe3aa8b9a804397dd55100ecceaf335",
+      "source": "Exported from VegetationHeroCluster.blend"
+    },
+    {
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AirportCoreV4/Vegetation/Shaders/KBDUVegetationHeroV4.shader",
+      "sha256": "da5a122abd4178e69cb0a4a73e47b4b4250759ba5d47ed6a11dcf1f14ce404d8"
+    },
+    {
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AirportCoreV4/Vegetation/Textures/AirportCoreVegetation_Atlas.png",
+      "sha256": "8ae9f8a7d30536901dbe0646675c2f334637e551b513535e8d9a969aa2448c17",
+      "source": "Deterministic procedural foliage and bark atlas"
+    },
+    {
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AirportCoreV4/Water/Materials/AirportCoreReservoir_V4.mat",
+      "sha256": "5937718311d7445be9adbe8844990db072417ecd6f1d45f5d62ce66ba2af6347",
+      "source": "Project-authored Unity material contract"
+    },
+    {
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUMinorWaterTerrainEffect.hlsl",
+      "sha256": "777348561bfdb6281d67301b10ba1c2face2230c9bf47613ca62b7b38f4c57aa"
+    },
+    {
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUReservoirGroundSuppression.hlsl",
+      "sha256": "28791775d014dd6c18793026b49e39b31385f52e90bb09d9a05196e2ba9142f2"
+    },
+    {
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUReservoirWaterV4.shader",
+      "sha256": "2828b9a23a9e04ce79df1f021214062d79b99c2ae3a3fe2bd0f9832eb2c625f3"
+    },
+    {
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreMinorWater_TerrainMask.png",
+      "sha256": "00bc4936506472fa7bc984f9004066e1f4200ff30eeeac96899c573ac8af3a9e",
+      "source": "Deterministic normalized terrain-mask prototype"
+    },
+    {
+      "license": "Project-authored derivative",
+      "path": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_DepthShoreRoughnessSuppression.png",
+      "sha256": "1320b464e2b409091d35fcf3fddb01ba0e3da805eb80b587b0f660e60d298a49",
+      "source": "Derived from stable V2 project-authored reservoir mask",
+      "source_sha256": "258683cba2eca00d585dbe99c24e762da55b67e9c7a5387b3be860ec230356bb"
+    },
+    {
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_WaveA_NM.png",
+      "sha256": "2eff40dcb74cfd0542d0a17de3a3cbc15deae9df1e36c780ef5945644f8e56ff",
+      "source": "Deterministic analytic periodic wave generator"
+    },
+    {
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_WaveB_NM.png",
+      "sha256": "5ed844a84196771414c3da66eeac490a66c35c9d58f7f74a51e9b034cc27e2ba",
+      "source": "Deterministic analytic periodic wave generator"
+    },
+    {
+      "license": "Project-authored",
+      "path": "tools/kbdu_airport_core_v4/water_vegetation/author_vegetation_blender.py",
+      "sha256": "26356e864a441b9b7d0707c551af6e9a870dc1359f2f1fcc38291e7016d35360",
+      "source": "Deterministic Blender authoring script"
+    }
+  ],
+  "schema": "questflight.airport-core-v4.water-vegetation-sources.v1"
+}

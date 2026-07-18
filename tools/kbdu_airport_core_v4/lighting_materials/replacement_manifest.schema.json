@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "benchmark_bounds_xz_meters": {
+      "items": { "type": "number" },
+      "maxItems": 4,
+      "minItems": 4,
+      "type": "array"
+    },
+    "coordinate_frame": { "type": "string" },
+    "replacements": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "asset_id": { "type": "string" },
+          "clean_plate_polygon_xz_meters": {
+            "items": {
+              "items": { "type": "number" },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "minItems": 4,
+            "type": "array"
+          },
+          "object_id": { "type": "string" },
+          "source_footprint_xz_meters": {
+            "items": {
+              "items": { "type": "number" },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "minItems": 4,
+            "type": "array"
+          }
+        },
+        "required": [
+          "object_id",
+          "asset_id",
+          "source_footprint_xz_meters",
+          "clean_plate_polygon_xz_meters"
+        ],
+        "type": "object"
+      },
+      "minItems": 2,
+      "type": "array"
+    },
+    "schema_version": { "const": 1 }
+  },
+  "required": [
+    "schema_version",
+    "coordinate_frame",
+    "benchmark_bounds_xz_meters",
+    "replacements"
+  ],
+  "title": "Airport-core V4 exact replacement-footprint contract",
+  "type": "object"
+}

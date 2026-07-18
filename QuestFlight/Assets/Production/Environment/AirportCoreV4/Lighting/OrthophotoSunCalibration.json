@@ -1,0 +1,63 @@
+{
+  "inference": {
+    "aggregateScoreProminenceStandardDeviations": 1.3929562537964624,
+    "confidence": 0.43565118093520183,
+    "confidenceCapReason": "Only 5 reference-grade OSM footprints and mixed-date NAIP imagery without capture time are available.",
+    "confidenceClass": "LOW",
+    "coordinateConvention": "Azimuth clockwise from geographic north in local ENU; shadow points away from sun.",
+    "metadataAcquisitionDates": [
+      "2019-08-03",
+      "2019-09-19"
+    ],
+    "metadataTimeOfDayAvailable": false,
+    "method": "robust joint grid search over explicit replacement footprints using exterior median-luminance contrast",
+    "sampleAzimuthConsistency": 0.528888888888889,
+    "sampleCount": 5,
+    "samples": [
+      {
+        "assetId": "ExecutiveTerminal",
+        "assumedHeightMeters": 8.5,
+        "bestScoreLuma": 142.64639282226562,
+        "bestShadowAzimuthDegrees": 0.0,
+        "bestSunElevationDegrees": 69.0,
+        "objectId": "Terminal_3335"
+      },
+      {
+        "assetId": "Type2THangarRow",
+        "assumedHeightMeters": 7.3,
+        "bestScoreLuma": 143.87301635742188,
+        "bestShadowAzimuthDegrees": 312.0,
+        "bestSunElevationDegrees": 72.0,
+        "objectId": "Type2_3351"
+      },
+      {
+        "assetId": "Type2THangarRow",
+        "assumedHeightMeters": 7.3,
+        "bestScoreLuma": 146.98529052734375,
+        "bestShadowAzimuthDegrees": 320.0,
+        "bestSunElevationDegrees": 72.0,
+        "objectId": "Type2_3353"
+      },
+      {
+        "assetId": "Type2THangarRow",
+        "assumedHeightMeters": 7.3,
+        "bestScoreLuma": 141.51681518554688,
+        "bestShadowAzimuthDegrees": 256.0,
+        "bestSunElevationDegrees": 72.0,
+        "objectId": "Type2_3354"
+      },
+      {
+        "assetId": "Type2THangarRow",
+        "assumedHeightMeters": 7.3,
+        "bestScoreLuma": 144.44461059570312,
+        "bestShadowAzimuthDegrees": 256.0,
+        "bestSunElevationDegrees": 72.0,
+        "objectId": "Type2_3355"
+      }
+    ],
+    "shadowAzimuthDegrees": 332.0,
+    "sunAzimuthDegrees": 152.0,
+    "sunElevationDegrees": 72.0
+  },
+  "schemaVersion": 1
+}

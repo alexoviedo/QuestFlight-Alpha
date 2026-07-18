@@ -17,6 +17,17 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
         _DetailRadiusFadeStartEnd ("Detail world-radius fade", Vector) = (4500,6800,0,0)
         _NearSourceNormalFadeStartEnd ("Near source-normal camera fade", Vector) = (250,2500,0,0)
         _NearSourceNormalStrength ("Near source-normal strength", Range(0,1)) = 0
+        _AirportCoreCleanPlateAlbedo ("Airport core bounded clean plate", 2D) = "gray" {}
+        _AirportCoreCleanPlateMask ("Airport core clean-plate replacement mask", 2D) = "black" {}
+        _AirportCoreCleanPlateWorldMinInvSize ("Clean-plate min XZ / inverse size", Vector) = (0,0,1,1)
+        _AirportCoreCleanPlateStrength ("Clean-plate integration strength", Range(0,1)) = 0
+        _AirportCoreReservoirMask ("Airport core reservoir suppression", 2D) = "black" {}
+        _AirportCoreReservoirCenterExtent ("Reservoir center XZ / half extent XZ", Vector) = (0,0,1,1)
+        _AirportCoreReservoirSuppressionStrength ("Reservoir suppression strength", Range(0,1)) = 0
+        _AirportCoreMinorWaterMask ("Airport core minor-water terrain mask", 2D) = "black" {}
+        _AirportCoreMinorWaterWorldMinInvSize ("Minor-water min XZ / inverse size", Vector) = (0,0,1,1)
+        _AirportCoreMinorWaterStrength ("Minor-water terrain effect strength", Range(0,1)) = 0
+        _AirportCoreMinorWaterReflectionColor ("Minor-water reflection color", Color) = (0.48,0.60,0.67,1)
         _Tint ("Shared terrain tint", Color) = (1,1,1,1)
         _Roughness ("Roughness", Range(0,1)) = 0.92
         [Enum(Off,0,MacroLevel,1,BlendWeight,2,TexelDensityAndBoundaries,3)]
@@ -42,12 +53,18 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             #pragma multi_compile_instancing
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
+            #include "../AirportCoreV4/Water/Shaders/KBDUReservoirGroundSuppression.hlsl"
+            #include "../AirportCoreV4/Water/Shaders/KBDUMinorWaterTerrainEffect.hlsl"
 
             sampler2D _NearAlbedo;
             sampler2D _NearSourceNormal;
             sampler2D _MidAlbedo;
             sampler2D _FarAlbedo;
             sampler2D _DetailAlbedo;
+            sampler2D _AirportCoreCleanPlateAlbedo;
+            sampler2D _AirportCoreCleanPlateMask;
+            sampler2D _AirportCoreReservoirMask;
+            sampler2D _AirportCoreMinorWaterMask;
             float4 _NearWorldMinInvSize;
             float4 _MidWorldMinInvSize;
             float4 _FarWorldMinInvSize;
@@ -56,9 +73,16 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             float4 _DetailFadeStartEnd;
             float4 _DetailRadiusFadeStartEnd;
             float4 _NearSourceNormalFadeStartEnd;
+            float4 _AirportCoreCleanPlateWorldMinInvSize;
+            float4 _AirportCoreReservoirCenterExtent;
+            float4 _AirportCoreMinorWaterWorldMinInvSize;
+            fixed4 _AirportCoreMinorWaterReflectionColor;
             fixed4 _Tint;
             half _DetailScale;
             half _NearSourceNormalStrength;
+            half _AirportCoreCleanPlateStrength;
+            half _AirportCoreReservoirSuppressionStrength;
+            half _AirportCoreMinorWaterStrength;
             half _Roughness;
             half _DiagnosticMode;
 
@@ -140,6 +164,28 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                     macro = tex2Dgrad(_FarAlbedo, farUv, farUvDx, farUvDy).rgb;
                 }
 
+                float2 cleanPlateUv =
+                    (world - _AirportCoreCleanPlateWorldMinInvSize.xy) *
+                    _AirportCoreCleanPlateWorldMinInvSize.zw;
+                half cleanPlateInside = step(0.0, cleanPlateUv.x) * step(cleanPlateUv.x, 1.0) *
+                    step(0.0, cleanPlateUv.y) * step(cleanPlateUv.y, 1.0);
+                UNITY_BRANCH if (_AirportCoreCleanPlateStrength > 0.001h && cleanPlateInside > 0.5h)
+                {
+                    float2 cleanPlateUvDx = ddx(cleanPlateUv);
+                    float2 cleanPlateUvDy = ddy(cleanPlateUv);
+                    half cleanPlateWeight = tex2Dgrad(
+                        _AirportCoreCleanPlateMask,
+                        cleanPlateUv,
+                        cleanPlateUvDx,
+                        cleanPlateUvDy).r * _AirportCoreCleanPlateStrength;
+                    fixed3 cleanPlate = tex2Dgrad(
+                        _AirportCoreCleanPlateAlbedo,
+                        cleanPlateUv,
+                        cleanPlateUvDx,
+                        cleanPlateUvDy).rgb;
+                    macro = lerp(macro, cleanPlate, saturate(cleanPlateWeight));
+                }
+
                 half cameraDistance = distance(_WorldSpaceCameraPos, input.worldPosition);
                 half detailWeight = 1.0 - smoothstep(
                     _DetailFadeStartEnd.x, _DetailFadeStartEnd.y, cameraDistance);
@@ -169,6 +215,26 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                         detailWeight);
                 }
                 fixed3 albedo = macro * _Tint.rgb * detailMultiplier;
+                half surfaceRoughness = _Roughness;
+
+                float2 reservoirUv =
+                    (world - (_AirportCoreReservoirCenterExtent.xy - _AirportCoreReservoirCenterExtent.zw)) /
+                    max(_AirportCoreReservoirCenterExtent.zw * 2.0, float2(1.0, 1.0));
+                half reservoirInside = step(0.0, reservoirUv.x) * step(reservoirUv.x, 1.0) *
+                    step(0.0, reservoirUv.y) * step(reservoirUv.y, 1.0);
+                UNITY_BRANCH if (_AirportCoreReservoirSuppressionStrength > 0.001h && reservoirInside > 0.5h)
+                {
+                    half reservoirSuppression = tex2Dgrad(
+                        _AirportCoreReservoirMask,
+                        reservoirUv,
+                        ddx(reservoirUv),
+                        ddy(reservoirUv)).a * _AirportCoreReservoirSuppressionStrength;
+                    ApplyKBDUReservoirGroundSuppression(
+                        reservoirSuppression,
+                        half3(0.16h, 0.20h, 0.20h),
+                        albedo,
+                        surfaceRoughness);
+                }
 
                 if (_DiagnosticMode > 0.5)
                 {
@@ -199,13 +265,41 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                     nearSourceNormal *= rsqrt(max(dot(nearSourceNormal, nearSourceNormal), 0.0001));
                     normal = normalize(lerp(normal, nearSourceNormal, nearSourceNormalWeight));
                 }
+                float2 minorWaterUv =
+                    (world - _AirportCoreMinorWaterWorldMinInvSize.xy) *
+                    _AirportCoreMinorWaterWorldMinInvSize.zw;
+                half minorWaterInside = step(0.0, minorWaterUv.x) * step(minorWaterUv.x, 1.0) *
+                    step(0.0, minorWaterUv.y) * step(minorWaterUv.y, 1.0);
+                half3 viewDirection = normalize(_WorldSpaceCameraPos - input.worldPosition);
+                UNITY_BRANCH if (_AirportCoreMinorWaterStrength > 0.001h && minorWaterInside > 0.5h)
+                {
+                    half2 minorPacked = tex2Dgrad(
+                        _AirportCoreMinorWaterMask,
+                        minorWaterUv,
+                        ddx(minorWaterUv),
+                        ddy(minorWaterUv)).rg * _AirportCoreMinorWaterStrength;
+                    half2 rippleSlope = half2(
+                        sin(world.x * 0.081h + world.y * 0.047h),
+                        cos(world.y * 0.073h - world.x * 0.039h)) * 0.045h;
+                    half3 rippleNormal = normalize(half3(rippleSlope.x, 1.0h, rippleSlope.y));
+                    half terrainMetallic = 0.0h;
+                    ApplyKBDUMinorWaterTerrainEffect(
+                        minorPacked.r,
+                        minorPacked.g,
+                        _AirportCoreMinorWaterReflectionColor.rgb,
+                        rippleNormal,
+                        viewDirection,
+                        albedo,
+                        normal,
+                        surfaceRoughness,
+                        terrainMetallic);
+                }
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half diffuse = saturate(dot(normal, lightDirection));
                 half3 ambient = ShadeSH9(half4(normal, 1.0));
-                half3 viewDirection = normalize(_WorldSpaceCameraPos - input.worldPosition);
                 half3 halfDirection = normalize(lightDirection + viewDirection);
-                half specular = pow(saturate(dot(normal, halfDirection)), lerp(28.0, 5.0, _Roughness)) *
-                    (1.0 - _Roughness) * 0.045;
+                half specular = pow(saturate(dot(normal, halfDirection)), lerp(28.0, 5.0, surfaceRoughness)) *
+                    (1.0 - surfaceRoughness) * 0.045;
                 fixed4 output = fixed4(
                     albedo * (ambient + _LightColor0.rgb * (0.12 + diffuse * 0.88)) + _LightColor0.rgb * specular,
                     1.0);
