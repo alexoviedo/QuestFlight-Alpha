@@ -191,6 +191,21 @@ At that milestone, `QuestFlight/Assets/Production/Environment` contained 97 non-
 - No legacy splat/capture data.
 - No binary runtime asset whose creator, source, terms, or exact content hash is unclear.
 
+## Airport-Core Photoreal Benchmark V4 assets (failed feature branch)
+
+V4 uses only project-owned output, existing rights-cleared project derivatives, public-domain NAIP imagery, bounded OSM Produced Works, and five Poly Haven CC0 texture sources: `asphalt_02`, `brown_brick_02`, `concrete_wall_005`, `corrugated_iron_02`, and `worn_corrugated_iron`. Raw maps, API snapshots, reference photographs, and contact sheets remain external. Exact source URLs, source MD5/SHA-256 values, derivative hashes, and status are recorded in the adjacent V4 manifests:
+
+- `AirportCoreV4/Buildings/AirportCoreBuildingSourceManifestV4.json`;
+- `AirportCoreV4/Materials/SOURCE_MANIFEST.json`;
+- `AirportCoreV4/CleanPlate/SOURCE_MANIFEST.json`;
+- `AirportCoreV4/Runway/SOURCE_MANIFEST.json`;
+- `AirportCoreV4/Water/Reports/AirportCoreWaterVegetation_SourceManifest.json`;
+- `Assets/Scenes/ProductionVerticalSlice/BAKE_MANIFEST.json`.
+
+The executive terminal, Type 2 hangar row, fuel/service kit, airport props, vegetation geometry, analytic water normals, procedural masks, and Blender sources are project-owned. The clean plate is a bounded derivative of the already-recorded public-domain NAIP atlas; replacement bounds retain OSM attribution where applicable. The lightmaps and `LightingData.asset` are project-generated render derivatives of the serialized, rights-cleared scene. Their exact hashes are in `BAKE_MANIFEST.json`; they are preserved as failed-benchmark evidence and are not visually accepted.
+
+All 55 new LFS-covered V4 binaries have paired Unity metadata. The existing non-LFS historical 5.43 MiB HDR blob remains a bounded policy exception; this branch does not rewrite history. No V4 raw download, build, APK, capture, or cache is committed.
+
 ## Environment Reconstruction V2 derivatives (feature branch)
 
 - Terrain: USGS 3DEP 1 m bare-earth DEM, United States government work/public domain. External raw payload: 67,117,862 bytes, SHA-256 `93b32e8ef2fef464ff4ee49702d235b30eaff7d347f22b8c4add8848cd7e9d82`. Committed derivatives are the 5 m airport mesh, 25 m near mesh, terrain-surface asset/manifest, and 1024² normal map (`4ba7833e6f27f8ee3abceb79caf502e53f09672525038eedea7d89df6d764cc8`).

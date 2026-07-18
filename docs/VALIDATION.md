@@ -17,6 +17,22 @@ Run from the repository root:
 
 The 2026-07-17 V2 closure passed `validate_product.ps1`, 61 EditMode tests, 9 PlayMode tests, 24/24 machine image checks, the static budget gate, and an Android release build. The separate reconstruction evidence adapter failed closed because it selected stale intermediate reports; see the V2 evidence document. Machine passes are not visual acceptance: lead inspection remained below 7/10, so simulator replay and physical Quest timing were deliberately not run.
 
+## Airport-Core V4 Stage-1 closure
+
+The final V4 closure is a fail-closed feature-branch result, not acceptance:
+
+- structural benchmark validator: PASS, 27 renderers / 74,730 triangles / 3 materials;
+- relevant offline atlas regression: PASS, including bottom-left runtime UV origin;
+- EditMode: 67/68; only `FullProductIntegrityGatePasses` fails at 207/180 aggregate renderers and 797,050/700,000 aggregate triangles;
+- PlayMode: 9/9 PASS;
+- 56-view Visual QA: `FAIL_MACHINE_QA`; every image is nonblank, but the global scene reaches 27/25 materials and lead visual review is 4.0/10;
+- camera-aware static audit: 66/120 draws and 572,280/600,000 selected-LOD triangles pass; 27/25 materials and 267,867,042/188,743,680 estimated texture bytes fail;
+- `validate_product.ps1`: FAIL at ProductIntegrity;
+- Android build: BLOCKED by the same prebuild ProductIntegrity gate; no APK was produced;
+- Stage 2, Meta XR Simulator, and physical Quest: NOT RUN because Stage 1 did not pass.
+
+The V2 baseline report predates the selected-LOD estimator correction, so its per-view draw/triangle numbers are not compared numerically with V4. Aggregate scene inventory and texture estimates are reported separately in the V4 evidence document.
+
 ## Meta XR Simulator replay gate
 
 Create each simulator recording once through the real Meta XR Simulator recording UI:

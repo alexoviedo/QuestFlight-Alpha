@@ -31,6 +31,11 @@ Poly Haven assets are dedicated under CC0 1.0. Attribution is not required, but 
 - `Withered Grass`, Charlotte Baglioni: <https://polyhaven.com/a/withered_grass>
 - `Sparse Grass`, Amal Kumar: <https://polyhaven.com/a/sparse_grass>
 - `Dry Ground 01`, Rob Tuytel: <https://polyhaven.com/a/dry_ground_01>
+- `Asphalt 02`: <https://polyhaven.com/a/asphalt_02>
+- `Brown Brick 02`: <https://polyhaven.com/a/brown_brick_02>
+- `Concrete Wall 005`: <https://polyhaven.com/a/concrete_wall_005>
+- `Corrugated Iron 02`: <https://polyhaven.com/a/corrugated_iron_02>
+- `Worn Corrugated Iron`: <https://polyhaven.com/a/worn_corrugated_iron>
 - License: <https://polyhaven.com/license>
 
 ## Poly Haven CC0 HDR sky
