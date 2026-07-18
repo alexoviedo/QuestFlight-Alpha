@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Z=north; Blender +X=east, +Y=north, +Z=up",
+  "material_contract": {
+    "terminal_material": "AirportCoreTerminalAtlas",
+    "hangar_kit_material": "AirportCoreHangarKitAtlas",
+    "atlas_grid": [4, 4],
+    "tiles": {
+      "0": "tan brick / masonry",
+      "1": "light vertical metal panel",
+      "2": "glazing",
+      "3": "dark standing-seam roof / awning",
+      "4": "painted dark metal trim",
+      "5": "concrete / curb",
+      "6": "sign face",
+      "7": "roof equipment",
+      "8": "light corrugated hangar cladding",
+      "9": "bifold aviation door",
+      "10": "weathered corrugated variation",
+      "11": "asphalt-contact / foundation",
+      "12": "safety yellow",
+      "13": "landscape rock",
+      "14": "shrub",
+      "15": "service prop"
+    }
+  },
+  "assets": {
+    "ExecutiveTerminal": {
+      "footprint_meters": [21.5, 43.5],
+      "height_meters": 8.35,
+      "front_direction": "+X / east / apron",
+      "lod0_triangle_target": [20000, 45000],
+      "lod1_ratio_target": [0.35, 0.5],
+      "lod2_ratio_target": [0.08, 0.15]
+    },
+    "Type2THangarRow": {
+      "official_address": "3354 Airport Road",
+      "footprint_meters": [15.5, 68.5],
+      "height_meters": 7.3,
+      "door_faces": "east/west",
+      "bay_count": 5,
+      "lod0_triangle_target": [25000, 60000],
+      "lod1_ratio_target": [0.35, 0.5],
+      "lod2_ratio_target": [0.08, 0.15]
+    },
+    "FuelServiceCore": {
+      "footprint_meters": [16.0, 12.0],
+      "height_meters": 5.4,
+      "lod_policy": "monotonic bounded detail"
+    },
+    "AirportCoreProps": {
+      "members": ["TieDown", "Cone", "LightPole", "ServiceCart", "Fence", "Signboard"],
+      "lod_policy": "three independently exported LODs per member"
+    }
+  }
+}

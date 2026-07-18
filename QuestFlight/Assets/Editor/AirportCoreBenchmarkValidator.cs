@@ -1,0 +1,444 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using QuestFlightLab.Environment;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+namespace QuestFlight.Editor
+{
+    /// <summary>
+    /// Fail-closed structural and static-cost validator for the serialized Stage 1 benchmark.
+    /// Image quality, stereo stability, and physical Quest performance are separate gates.
+    /// </summary>
+    public static class AirportCoreBenchmarkValidator
+    {
+        public const string EnvironmentPrefabPath = ProductionEnvironmentRoot.PrefabAssetPath;
+
+        [Serializable]
+        public sealed class Report
+        {
+            public string classification;
+            public bool passed;
+            public string sourceV2Sha;
+            public string referenceV3Sha;
+            public int benchmarkRendererCount;
+            public int benchmarkTriangleCount;
+            public int benchmarkMaterialCount;
+            public int terminalLod0Triangles;
+            public int terminalLod1Triangles;
+            public int terminalLod2Triangles;
+            public int hangarLod0Triangles;
+            public int hangarLod1Triangles;
+            public int hangarLod2Triangles;
+            public int alphaTestMaterialSlots;
+            public int transparentMaterialSlots;
+            public int validatedTextureCount;
+            public int replacementSourceFeatureCount;
+            public string[] violations = Array.Empty<string>();
+            public string evidenceBoundary =
+                "Structural/static authoring evidence only; this report does not establish image quality, stereo stability, comfort, or Quest hardware performance.";
+        }
+
+        public static Report Validate()
+        {
+            List<string> violations = new List<string>();
+            GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPrefabPath);
+            if (environment == null)
+                return Failed("Production environment prefab is missing.");
+
+            AirportCoreBenchmarkRoot[] roots = environment.GetComponentsInChildren<AirportCoreBenchmarkRoot>(true);
+            if (roots.Length != 1)
+                return Failed($"Expected exactly one AirportCoreBenchmarkRoot, found {roots.Length}.");
+
+            AirportCoreBenchmarkRoot root = roots[0];
+            if (!root.TryValidateContract(out string contractReport))
+                AddViolation(violations, contractReport);
+
+            AirportCoreBenchmarkManifest manifest = root.manifest;
+            if (manifest == null)
+                return Failed("AirportCoreBenchmarkManifest is not bound.");
+
+            ValidateReservoir(environment.GetComponent<ProductionEnvironmentRoot>(), root, manifest, violations);
+            ValidateCleanPlateTerrainBinding(root, manifest, violations);
+
+            ValidateLodGroup(root.executiveTerminal, "executive terminal", 20000, 45000,
+                violations, out int terminal0, out int terminal1, out int terminal2);
+            ValidateLodGroup(root.type2HangarRow, "Type 2 hangar row", 25000, 60000,
+                violations, out int hangar0, out int hangar1, out int hangar2);
+
+            Renderer[] renderers = root.benchmarkContent == null
+                ? Array.Empty<Renderer>()
+                : root.benchmarkContent.GetComponentsInChildren<Renderer>(true);
+            HashSet<Material> materials = new HashSet<Material>(renderers
+                .SelectMany(item => item.sharedMaterials ?? Array.Empty<Material>())
+                .Where(item => item != null));
+            int triangles = renderers.Sum(RendererTriangles);
+            int alphaTestSlots = renderers.Sum(renderer => (renderer.sharedMaterials ?? Array.Empty<Material>())
+                .Count(material => material != null && material.renderQueue >= (int)RenderQueue.AlphaTest &&
+                                   material.renderQueue < (int)RenderQueue.Transparent));
+            int transparentSlots = renderers.Sum(renderer => (renderer.sharedMaterials ?? Array.Empty<Material>())
+                .Count(material => material != null && material.renderQueue >= (int)RenderQueue.Transparent));
+
+            Require(renderers.Length == manifest.serializedRendererCount,
+                $"renderer inventory changed: manifest={manifest.serializedRendererCount}, actual={renderers.Length}", violations);
+            Require(triangles == manifest.serializedTriangleCount,
+                $"triangle inventory changed: manifest={manifest.serializedTriangleCount}, actual={triangles}", violations);
+            Require(materials.Count == manifest.serializedMaterialCount,
+                $"material inventory changed: manifest={manifest.serializedMaterialCount}, actual={materials.Count}", violations);
+            Require(renderers.All(UsesProjectMesh),
+                "benchmark contains a built-in/unsaved mesh instead of a project-authored asset", violations);
+            Require(renderers.All(renderer => renderer.shadowCastingMode != ShadowCastingMode.TwoSided),
+                "benchmark contains two-sided shadow casting", violations);
+            Require(transparentSlots == 0,
+                $"benchmark must use opaque/alpha-test materials; found {transparentSlots} transparent slot(s)", violations);
+            Require(materials.Count <= 8,
+                $"benchmark material set is not consolidated ({materials.Count} distinct materials)", violations);
+
+            Texture[] textures = ManifestTextures(manifest).Where(item => item != null).Distinct().ToArray();
+            foreach (Texture texture in textures) ValidateTexture(texture, violations);
+            Require(textures.Length >= 10, "optimized benchmark texture inventory is incomplete", violations);
+            Require(manifest.replacementSourceFeatureIds != null &&
+                    manifest.replacementSourceFeatureIds.Length == manifest.serializedReplacementCount,
+                "source-feature replacement inventory is incomplete", violations);
+            Require(root.v2BaselineReference != null && !root.v2BaselineReference.gameObject.activeSelf,
+                "V2 reference geometry must be retained but inactive for authored A/B review", violations);
+            Require(root.gameObject.activeSelf && root.benchmarkContent != null && root.benchmarkContent.gameObject.activeSelf &&
+                    root.filteredV2Context != null && root.filteredV2Context.gameObject.activeSelf,
+                "V4 benchmark content is not the active authored variant", violations);
+
+            return new Report
+            {
+                classification = violations.Count == 0
+                    ? "PASS_AIRPORT_CORE_V4_STRUCTURAL_GATE_VISUAL_AND_HEADSET_REQUIRED"
+                    : "FAIL_AIRPORT_CORE_V4_STRUCTURAL_GATE",
+                passed = violations.Count == 0,
+                sourceV2Sha = manifest.sourceV2Sha,
+                referenceV3Sha = manifest.referenceV3Sha,
+                benchmarkRendererCount = renderers.Length,
+                benchmarkTriangleCount = triangles,
+                benchmarkMaterialCount = materials.Count,
+                terminalLod0Triangles = terminal0,
+                terminalLod1Triangles = terminal1,
+                terminalLod2Triangles = terminal2,
+                hangarLod0Triangles = hangar0,
+                hangarLod1Triangles = hangar1,
+                hangarLod2Triangles = hangar2,
+                alphaTestMaterialSlots = alphaTestSlots,
+                transparentMaterialSlots = transparentSlots,
+                validatedTextureCount = textures.Length,
+                replacementSourceFeatureCount = manifest.replacementSourceFeatureIds?.Length ?? 0,
+                violations = violations.ToArray()
+            };
+        }
+
+        public static void ValidateBatch()
+        {
+            string output = Environment.GetEnvironmentVariable("QFL_AIRPORT_CORE_V4_VALIDATION_DIR");
+            if (string.IsNullOrWhiteSpace(output))
+                output = Path.GetFullPath(Path.Combine(Application.dataPath, "../../airport_core_v4_validation"));
+            Directory.CreateDirectory(output);
+            Report report = Validate();
+            File.WriteAllText(Path.Combine(output, "airport_core_benchmark_validation.json"),
+                JsonUtility.ToJson(report, true) + Environment.NewLine);
+            File.WriteAllText(Path.Combine(output, "airport_core_benchmark_validation.md"),
+                BuildMarkdown(report));
+            Debug.Log("[QuestFlight][AirportCoreV4] " + report.classification);
+            EditorApplication.Exit(report.passed ? 0 : 2);
+        }
+
+        private static void ValidateLodGroup(
+            LODGroup group,
+            string label,
+            int minimumLod0,
+            int maximumLod0,
+            ICollection<string> violations,
+            out int lod0,
+            out int lod1,
+            out int lod2)
+        {
+            lod0 = lod1 = lod2 = 0;
+            if (group == null)
+            {
+                AddViolation(violations, label + " LODGroup is missing");
+                return;
+            }
+
+            LOD[] lods = group.GetLODs();
+            if (lods.Length != 3)
+            {
+                AddViolation(violations, $"{label} must have exactly three LODs, found {lods.Length}");
+                return;
+            }
+
+            if (lods.Any(lod => lod.renderers == null || lod.renderers.Length == 0 ||
+                                lod.renderers.Any(renderer => renderer == null)))
+            {
+                AddViolation(violations, label + " contains a null or empty LOD renderer array");
+                return;
+            }
+
+            lod0 = lods[0].renderers.Sum(RendererTriangles);
+            lod1 = lods[1].renderers.Sum(RendererTriangles);
+            lod2 = lods[2].renderers.Sum(RendererTriangles);
+            Require(lod0 >= minimumLod0 && lod0 <= maximumLod0,
+                $"{label} LOD0 is outside {minimumLod0:N0}-{maximumLod0:N0}: {lod0:N0}", violations);
+            Require(lod1 >= Mathf.FloorToInt(lod0 * 0.35f) && lod1 <= Mathf.CeilToInt(lod0 * 0.50f),
+                $"{label} LOD1 must be 35-50% of LOD0: {lod1:N0}/{lod0:N0}", violations);
+            Require(lod2 >= Mathf.FloorToInt(lod0 * 0.08f) && lod2 <= Mathf.CeilToInt(lod0 * 0.15f),
+                $"{label} LOD2 must be 8-15% of LOD0: {lod2:N0}/{lod0:N0}", violations);
+            Require(lods[0].screenRelativeTransitionHeight > lods[1].screenRelativeTransitionHeight &&
+                    lods[1].screenRelativeTransitionHeight > lods[2].screenRelativeTransitionHeight,
+                label + " LOD thresholds are not strictly descending", violations);
+        }
+
+        private static void ValidateReservoir(
+            ProductionEnvironmentRoot environment,
+            AirportCoreBenchmarkRoot root,
+            AirportCoreBenchmarkManifest manifest,
+            ICollection<string> violations)
+        {
+            const string meshPath =
+                "Assets/Production/Environment/Generated/BoulderReservoir_OSM_AuthoritativeWater_Mesh.asset";
+            const string shaderPath =
+                "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUReservoirWaterV4.shader";
+            const string materialPath =
+                "Assets/Production/Environment/AirportCoreV4/Water/Materials/AirportCoreReservoir_V4.mat";
+            Require(environment != null, "production environment contract is missing", violations);
+            if (environment == null) return;
+
+            MeshFilter surface = environment.boulderReservoirSurface;
+            Renderer renderer = surface == null ? null : surface.GetComponent<Renderer>();
+            Mesh mesh = surface == null ? null : surface.sharedMesh;
+            Material material = renderer == null ? null : renderer.sharedMaterial;
+            Require(renderer != null && ReferenceEquals(renderer, root.boulderReservoir),
+                "benchmark reservoir is not the authoritative product renderer", violations);
+            string rendererMaterialPath = material == null ? string.Empty : AssetDatabase.GetAssetPath(material);
+            string manifestMaterialPath = manifest.reservoirMaterial == null
+                ? string.Empty
+                : AssetDatabase.GetAssetPath(manifest.reservoirMaterial);
+            Require(material != null && manifest.reservoirMaterial != null &&
+                    string.Equals(rendererMaterialPath, materialPath, StringComparison.Ordinal) &&
+                    string.Equals(manifestMaterialPath, materialPath, StringComparison.Ordinal),
+                "authoritative reservoir does not use the manifest V4 material", violations);
+            Require(renderer != null && renderer.sharedMaterials.Length == 1,
+                "authoritative reservoir must have exactly one material slot", violations);
+            Require(mesh != null && mesh.subMeshCount == 1,
+                "authoritative reservoir must have exactly one submesh", violations);
+            Require(mesh != null && string.Equals(AssetDatabase.GetAssetPath(mesh), meshPath, StringComparison.Ordinal),
+                "authoritative reservoir mesh identity changed", violations);
+            Require(material != null && material.shader != null &&
+                    string.Equals(material.shader.name, ProductionEnvironmentRoot.ProductionReservoirShaderName,
+                        StringComparison.Ordinal),
+                "authoritative reservoir does not use the exact V4 opaque shader", violations);
+            Require(material != null && material.renderQueue == (int)RenderQueue.Geometry + 5,
+                "authoritative reservoir must use the Geometry+5 queue", violations);
+            Require(material != null && material.passCount == 1,
+                "authoritative reservoir must use exactly one shader pass", violations);
+            Require(material != null && material.enableInstancing,
+                "authoritative reservoir material must support GPU instancing", violations);
+            foreach (string property in new[]
+                     {
+                         "_WaveNormalA", "_WaveNormalB", "_DepthShoreRoughnessSuppression", "_EnvironmentCube"
+                     })
+                Require(material != null && material.HasProperty(property) && material.GetTexture(property) != null,
+                    "authoritative reservoir is missing texture binding " + property, violations);
+            Require(material != null && environment.GetComponentsInChildren<Renderer>(true)
+                    .Count(item => item.sharedMaterial == material) == 1,
+                "V4 reservoir material must be bound to exactly one product renderer", violations);
+            Require(renderer == null || renderer.GetComponentsInChildren<Camera>(true).Length == 0,
+                "reservoir hierarchy must not own a camera", violations);
+            Require(renderer == null || renderer.GetComponentsInChildren<ReflectionProbe>(true)
+                    .All(probe => probe.mode != ReflectionProbeMode.Realtime),
+                "reservoir hierarchy must not own a realtime reflection probe", violations);
+            Require(environment.boulderReservoirShorelineClosed,
+                "authoritative reservoir shoreline is not closed", violations);
+            Require(environment.boulderReservoirSourceShorelineVertexCount >= 3 &&
+                    environment.boulderReservoirSmoothedShorelineVertexCount ==
+                    environment.boulderReservoirSourceShorelineVertexCount * 2,
+                "authoritative reservoir shoreline densification contract changed", violations);
+            Require(environment.boulderReservoirShorelineSelfIntersectionCount == 0,
+                "authoritative reservoir shoreline self-intersects", violations);
+            Require(environment.minimumWaterTerrainSeparationMeters >=
+                    ProductionEnvironmentRoot.MinimumAcceptedWaterTerrainSeparationMeters,
+                "authoritative reservoir terrain separation regressed", violations);
+
+            Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
+            Require(shader != null && material != null && ReferenceEquals(shader, material.shader),
+                "V4 reservoir shader asset is missing or not bound", violations);
+            if (shader == null) return;
+            Require(shader.isSupported, "V4 reservoir shader is unsupported", violations);
+            Require(ShaderUtil.GetShaderMessages(shader).All(message =>
+                    !string.Equals(message.severity.ToString(), "Error", StringComparison.OrdinalIgnoreCase)),
+                "V4 reservoir shader has compiler errors", violations);
+
+            string absolutePath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", shaderPath));
+            Require(File.Exists(absolutePath), "V4 reservoir shader source is missing", violations);
+            if (!File.Exists(absolutePath)) return;
+            string source = File.ReadAllText(absolutePath);
+            foreach (string required in new[]
+                     {
+                         "\"RenderType\"=\"Opaque\"", "\"Queue\"=\"Geometry+5\"", "ZWrite On", "Fallback Off",
+                         "texCUBElod(_EnvironmentCube", "UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO",
+                         "UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX"
+                     })
+                Require(source.Contains(required), "V4 reservoir shader is missing required token: " + required,
+                    violations);
+            Require(Regex.Matches(source, @"(?m)^\s*Pass\s*$").Count == 1,
+                "V4 reservoir shader source must contain exactly one pass", violations);
+            foreach (string forbidden in new[]
+                     {
+                         @"(?m)^\s*Blend\b", @"\bGrabPass\b", @"\bUsePass\b", @"ZWrite\s+Off",
+                         @"_CameraOpaqueTexture", @"_CameraDepthTexture", @"unity_SpecCube0",
+                         @"\bSSR\b", @"refraction", @"tessell"
+                     })
+                Require(!Regex.IsMatch(source, forbidden, RegexOptions.IgnoreCase),
+                    "V4 reservoir shader contains forbidden path: " + forbidden, violations);
+        }
+
+        private static void ValidateCleanPlateTerrainBinding(
+            AirportCoreBenchmarkRoot root,
+            AirportCoreBenchmarkManifest manifest,
+            ICollection<string> violations)
+        {
+            Renderer terrain = root.minorWaterTerrainEffect;
+            Material material = terrain == null ? null : terrain.sharedMaterial;
+            Require(terrain != null && material != null,
+                "airport terrain clean-plate binding is missing", violations);
+            if (material == null) return;
+            Require(material.HasProperty("_AirportCoreCleanPlateAlbedo") &&
+                    ReferenceEquals(material.GetTexture("_AirportCoreCleanPlateAlbedo"), manifest.cleanPlateAlbedo),
+                "clean-plate albedo is not integrated into the authoritative terrain material", violations);
+            Require(material.HasProperty("_AirportCoreCleanPlateMask") &&
+                    ReferenceEquals(material.GetTexture("_AirportCoreCleanPlateMask"), manifest.replacementMask),
+                "clean-plate replacement mask is not integrated into the authoritative terrain material", violations);
+            Require(material.HasProperty("_AirportCoreCleanPlateStrength") &&
+                    material.GetFloat("_AirportCoreCleanPlateStrength") > 0.999f,
+                "terrain-integrated clean plate is not fully enabled", violations);
+            Require(root.benchmarkContent != null &&
+                    root.benchmarkContent.GetComponentsInChildren<Renderer>(true)
+                        .All(renderer => !string.Equals(renderer.name, "AirportCoreCleanPlate", StringComparison.Ordinal)),
+                "obsolete clean-plate overlay renderer remains in the benchmark", violations);
+            Require(root.benchmarkContent != null &&
+                    root.benchmarkContent.GetComponentsInChildren<Renderer>(true)
+                        .SelectMany(renderer => renderer.sharedMaterials ?? Array.Empty<Material>())
+                        .All(item => item == null || !string.Equals(item.name, "AirportCoreCleanPlate", StringComparison.Ordinal)),
+                "obsolete clean-plate overlay material remains in the benchmark", violations);
+        }
+
+        private static int RendererTriangles(Renderer renderer)
+        {
+            if (renderer == null) return 0;
+            Mesh mesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
+            if (mesh == null && renderer is SkinnedMeshRenderer skinned) mesh = skinned.sharedMesh;
+            if (mesh == null) return 0;
+            long indexCount = 0;
+            for (int subMesh = 0; subMesh < mesh.subMeshCount; subMesh++)
+                indexCount += (long)mesh.GetIndexCount(subMesh);
+            return (int)Math.Min(int.MaxValue, indexCount / 3L);
+        }
+
+        private static bool UsesProjectMesh(Renderer renderer)
+        {
+            Mesh mesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
+            if (mesh == null && renderer is SkinnedMeshRenderer skinned) mesh = skinned.sharedMesh;
+            if (mesh == null) return false;
+            string path = AssetDatabase.GetAssetPath(mesh);
+            return !string.IsNullOrWhiteSpace(path) && path.StartsWith("Assets/", StringComparison.Ordinal) &&
+                   path.IndexOf("unity default resources", StringComparison.OrdinalIgnoreCase) < 0;
+        }
+
+        private static IEnumerable<Texture> ManifestTextures(AirportCoreBenchmarkManifest manifest)
+        {
+            yield return manifest.terminalAlbedo;
+            yield return manifest.terminalNormal;
+            yield return manifest.terminalMrao;
+            yield return manifest.hangarKitAlbedo;
+            yield return manifest.hangarKitNormal;
+            yield return manifest.hangarKitMrao;
+            yield return manifest.cleanPlateAlbedo;
+            yield return manifest.replacementMask;
+            yield return manifest.originalShadowMask;
+            yield return manifest.reflectionCubemap;
+            foreach (Material material in new[]
+                     {
+                         manifest.terminalMaterial, manifest.hangarKitMaterial, manifest.runwayMaterial,
+                         manifest.reservoirMaterial, manifest.vegetationMaterial
+                     }.Where(item => item != null))
+            {
+                Shader shader = material.shader;
+                if (shader == null) continue;
+                int propertyCount = shader.GetPropertyCount();
+                for (int index = 0; index < propertyCount; index++)
+                    if (shader.GetPropertyType(index) == ShaderPropertyType.Texture)
+                        yield return material.GetTexture(shader.GetPropertyName(index));
+            }
+        }
+
+        private static void ValidateTexture(Texture texture, ICollection<string> violations)
+        {
+            string path = AssetDatabase.GetAssetPath(texture);
+            Require(!string.IsNullOrWhiteSpace(path), "benchmark texture is not a project asset", violations);
+            if (string.IsNullOrWhiteSpace(path)) return;
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            Require(importer != null, "texture has no TextureImporter: " + path, violations);
+            if (importer == null) return;
+            Require(importer.mipmapEnabled, "texture mipmaps are disabled: " + path, violations);
+            TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
+            Require(android.overridden && IsAstc(android.format),
+                "texture is not explicitly ASTC for Android: " + path, violations);
+        }
+
+        private static bool IsAstc(TextureImporterFormat format)
+        {
+            return format == TextureImporterFormat.ASTC_4x4 ||
+                   format == TextureImporterFormat.ASTC_5x5 ||
+                   format == TextureImporterFormat.ASTC_6x6 ||
+                   format == TextureImporterFormat.ASTC_8x8 ||
+                   format == TextureImporterFormat.ASTC_10x10 ||
+                   format == TextureImporterFormat.ASTC_12x12 ||
+                   format == TextureImporterFormat.ASTC_HDR_4x4 ||
+                   format == TextureImporterFormat.ASTC_HDR_5x5 ||
+                   format == TextureImporterFormat.ASTC_HDR_6x6 ||
+                   format == TextureImporterFormat.ASTC_HDR_8x8 ||
+                   format == TextureImporterFormat.ASTC_HDR_10x10 ||
+                   format == TextureImporterFormat.ASTC_HDR_12x12;
+        }
+
+        private static Report Failed(string violation)
+        {
+            return new Report
+            {
+                classification = "FAIL_AIRPORT_CORE_V4_STRUCTURAL_GATE",
+                passed = false,
+                violations = new[] { violation }
+            };
+        }
+
+        private static string BuildMarkdown(Report report)
+        {
+            return "# Airport Core V4 structural validation\n\n" +
+                   $"- Classification: `{report.classification}`\n" +
+                   $"- Benchmark renderers/triangles/materials: {report.benchmarkRendererCount:N0}/" +
+                   $"{report.benchmarkTriangleCount:N0}/{report.benchmarkMaterialCount:N0}\n" +
+                   $"- Terminal LOD0/1/2: {report.terminalLod0Triangles:N0}/" +
+                   $"{report.terminalLod1Triangles:N0}/{report.terminalLod2Triangles:N0}\n" +
+                   $"- Hangar LOD0/1/2: {report.hangarLod0Triangles:N0}/" +
+                   $"{report.hangarLod1Triangles:N0}/{report.hangarLod2Triangles:N0}\n" +
+                   $"- Violations: {report.violations.Length:N0}\n\n" + report.evidenceBoundary + "\n";
+        }
+
+        private static void Require(bool condition, string message, ICollection<string> violations)
+        {
+            if (!condition) AddViolation(violations, message);
+        }
+
+        private static void AddViolation(ICollection<string> violations, string message)
+        {
+            if (violations.Count < 200) violations.Add(message);
+        }
+    }
+}
