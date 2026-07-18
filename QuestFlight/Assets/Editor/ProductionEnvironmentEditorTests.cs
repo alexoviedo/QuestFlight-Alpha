@@ -34,8 +34,8 @@ namespace QuestFlightLab.EditorTests
                 Assert.That(contract.runwayMarkings.GetComponent<MeshFilter>().sharedMesh.triangles.Length / 3, Is.EqualTo(52));
                 Assert.That(contract.retainedWaterBodyCount, Is.GreaterThan(1));
                 Assert.That(contract.waterFeatureManifestV2, Is.Not.Null);
-                Assert.That(contract.otherWaterFeaturesSurfaceV2, Is.Not.Null);
-                Assert.That(contract.otherWaterFeaturesShoreBankV2, Is.Not.Null);
+                Assert.That(contract.otherWaterFeaturesSurfaceV2, Is.Null);
+                Assert.That(contract.otherWaterFeaturesShoreBankV2, Is.Null);
                 Assert.That(contract.boulderReservoirSurface, Is.Not.Null);
                 Assert.That(contract.immutableFarTerrain.GetComponentsInChildren<LODGroup>(true), Is.Empty);
                 Assert.That(HasComponentNamed(contract.immutableFarTerrain.gameObject, "RealKbduBatchDistanceCuller"), Is.False);
@@ -234,8 +234,11 @@ namespace QuestFlightLab.EditorTests
             Assert.That(reservoirMaterial.shader, Is.SameAs(reservoir));
             Assert.That(reservoirMaterial.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
             Assert.That(reservoirMaterial.passCount, Is.EqualTo(1));
-            Assert.That(contract.otherWaterFeaturesSurfaceV2.GetComponent<Renderer>().sharedMaterial.shader,
-                Is.SameAs(secondaryWater));
+            Assert.That(contract.GetComponentsInChildren<Renderer>(true)
+                .SelectMany(renderer => renderer.sharedMaterials)
+                .Where(material => material != null)
+                .Any(material => material.shader == secondaryWater), Is.False,
+                "The obsolete minor-water mesh shader must not remain bound in the product hierarchy.");
         }
 
         private static bool IsError(ShaderMessage message) =>

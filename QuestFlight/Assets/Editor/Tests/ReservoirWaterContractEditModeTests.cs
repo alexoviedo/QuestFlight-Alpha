@@ -147,7 +147,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(material.enableInstancing, Is.True);
             Assert.That(material.GetTexture("_WaveNormalA"), Is.Not.Null);
             Assert.That(material.GetTexture("_WaveNormalB"), Is.Not.Null);
-            Assert.That(material.GetTexture("_DepthShoreRoughnessSuppression"), Is.Not.Null);
+            Assert.That(material.GetTexture("_DepthShoreRoughness"), Is.Not.Null);
+            Assert.That(material.GetTexture("_TerrainMacroAlbedo"), Is.Not.Null);
             Assert.That(material.GetTexture("_EnvironmentCube"), Is.Not.Null);
             Assert.That(environment.GetComponentsInChildren<Renderer>(true)
                 .Count(item => item.sharedMaterial == material), Is.EqualTo(1));

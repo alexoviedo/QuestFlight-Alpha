@@ -1183,7 +1183,6 @@ namespace QuestFlightLab.Editor
             private readonly Material v4ReservoirMaterial;
             private readonly Material terrainMaterial;
             private readonly float v4MinorWaterStrength;
-            private readonly float v4ReservoirSuppressionStrength;
             private readonly Light globalSun;
             private readonly Quaternion v4SunRotation;
             private readonly Color v4SunColor;
@@ -1197,12 +1196,9 @@ namespace QuestFlightLab.Editor
                 v4RunwayMaterial = root.authoritativeRunway.sharedMaterial;
                 v4ReservoirMaterial = root.boulderReservoir.sharedMaterial;
                 terrainMaterial = root.minorWaterTerrainEffect.sharedMaterial;
-                if (terrainMaterial == null || !terrainMaterial.HasProperty("_AirportCoreMinorWaterStrength") ||
-                    !terrainMaterial.HasProperty("_AirportCoreReservoirSuppressionStrength"))
+                if (terrainMaterial == null || !terrainMaterial.HasProperty("_AirportCoreMinorWaterStrength"))
                     throw new InvalidOperationException("Airport-core terrain A/B properties are missing.");
                 v4MinorWaterStrength = terrainMaterial.GetFloat("_AirportCoreMinorWaterStrength");
-                v4ReservoirSuppressionStrength =
-                    terrainMaterial.GetFloat("_AirportCoreReservoirSuppressionStrength");
                 Light[] sceneSuns = Resources.FindObjectsOfTypeAll<Light>()
                     .Where(item => item != null && item.gameObject.scene.IsValid() &&
                                    item.type == LightType.Directional && item != root.benchmarkSun)
@@ -1230,7 +1226,6 @@ namespace QuestFlightLab.Editor
                 root.authoritativeRunway.sharedMaterial = root.v2RunwayMaterial;
                 root.boulderReservoir.sharedMaterial = root.v2ReservoirMaterial;
                 terrainMaterial.SetFloat("_AirportCoreMinorWaterStrength", 0f);
-                terrainMaterial.SetFloat("_AirportCoreReservoirSuppressionStrength", 0f);
                 globalSun.transform.rotation = root.v2SunRotation;
                 globalSun.color = root.v2SunColor;
                 globalSun.intensity = root.v2SunIntensity;
@@ -1243,8 +1238,6 @@ namespace QuestFlightLab.Editor
                 root.authoritativeRunway.sharedMaterial = v4RunwayMaterial;
                 root.boulderReservoir.sharedMaterial = v4ReservoirMaterial;
                 terrainMaterial.SetFloat("_AirportCoreMinorWaterStrength", v4MinorWaterStrength);
-                terrainMaterial.SetFloat("_AirportCoreReservoirSuppressionStrength",
-                    v4ReservoirSuppressionStrength);
                 globalSun.transform.rotation = v4SunRotation;
                 globalSun.color = v4SunColor;
                 globalSun.intensity = v4SunIntensity;
@@ -1293,15 +1286,17 @@ namespace QuestFlightLab.Editor
             Material material = root.minorWaterTerrainEffect != null
                 ? root.minorWaterTerrainEffect.sharedMaterial
                 : null;
-            if (material == null || !material.HasProperty("_AirportCoreMinorWaterWorldMinInvSize"))
+            if (material == null || !material.HasProperty("_AirportCoreMinorWaterNearWorldMinInvSize"))
                 throw new InvalidOperationException("Minor-water world-space binding is missing.");
-            Vector4 binding = material.GetVector("_AirportCoreMinorWaterWorldMinInvSize");
+            Vector4 binding = material.GetVector("_AirportCoreMinorWaterNearWorldMinInvSize");
             if (binding.z <= 0f || binding.w <= 0f)
                 throw new InvalidOperationException("Minor-water world-space binding has an invalid inverse size.");
-            Vector3 size = new Vector3(1f / binding.z, 2f, 1f / binding.w);
-            Vector3 center = new Vector3(binding.x + size.x * 0.5f,
+            // Focus the dedicated ground-level shot on the existing OSM-derived drainage
+            // feature southwest of the airport, while still validating the global near binding.
+            Vector3 size = new Vector3(110f, 2f, 70f);
+            Vector3 center = new Vector3(-555f,
                 root.minorWaterTerrainEffect.bounds.center.y + 0.2f,
-                binding.y + size.z * 0.5f);
+                -490f);
             return new Bounds(center, size);
         }
 

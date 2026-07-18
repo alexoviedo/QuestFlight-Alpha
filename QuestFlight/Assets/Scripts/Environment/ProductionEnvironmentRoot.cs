@@ -212,8 +212,10 @@ namespace QuestFlightLab.Environment
                 "V2 water-feature source manifest is missing", failures);
             Require(HasMesh(boulderReservoirSurface), "Boulder Reservoir surface is missing", failures);
             Require(HasMesh(boulderReservoirShoreBank), "Boulder Reservoir shore bank is missing", failures);
-            Require(HasMesh(otherWaterFeaturesSurfaceV2), "V2 non-reservoir water surface is missing", failures);
-            Require(HasMesh(otherWaterFeaturesShoreBankV2), "V2 non-reservoir shore-bank mesh is missing", failures);
+            Require(otherWaterFeaturesSurfaceV2 == null,
+                "obsolete V2 non-reservoir water ribbon surface remains serialized", failures);
+            Require(otherWaterFeaturesShoreBankV2 == null,
+                "obsolete V2 non-reservoir water bank geometry remains serialized", failures);
             if (boulderReservoirSurface != null)
             {
                 Material water = boulderReservoirSurface.GetComponent<Renderer>()?.sharedMaterial;
@@ -224,15 +226,6 @@ namespace QuestFlightLab.Environment
                     "Boulder Reservoir must use the bounded V4 opaque reservoir shader", failures);
                 Require(water != null && water.passCount == 1,
                     "Boulder Reservoir must use exactly one shader pass", failures);
-            }
-            if (otherWaterFeaturesSurfaceV2 != null)
-            {
-                Material water = otherWaterFeaturesSurfaceV2.GetComponent<Renderer>()?.sharedMaterial;
-                Require(water != null && water.renderQueue < (int)RenderQueue.Transparent,
-                    "V2 water material must remain in an opaque render queue", failures);
-                Require(water != null && water.shader != null &&
-                        string.Equals(water.shader.name, ProductionWaterShaderName, StringComparison.Ordinal),
-                    "V2 water features must use the production static water shader", failures);
             }
             Require(boulderReservoirShorelineClosed,
                 "Boulder Reservoir smoothed shoreline is not closed", failures);

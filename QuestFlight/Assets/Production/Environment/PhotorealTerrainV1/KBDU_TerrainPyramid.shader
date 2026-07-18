@@ -21,11 +21,9 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
         _AirportCoreCleanPlateMask ("Airport core clean-plate replacement mask", 2D) = "black" {}
         _AirportCoreCleanPlateWorldMinInvSize ("Clean-plate min XZ / inverse size", Vector) = (0,0,1,1)
         _AirportCoreCleanPlateStrength ("Clean-plate integration strength", Range(0,1)) = 0
-        _AirportCoreReservoirMask ("Airport core reservoir suppression", 2D) = "black" {}
-        _AirportCoreReservoirCenterExtent ("Reservoir center XZ / half extent XZ", Vector) = (0,0,1,1)
-        _AirportCoreReservoirSuppressionStrength ("Reservoir suppression strength", Range(0,1)) = 0
         _AirportCoreMinorWaterMask ("Airport core minor-water terrain mask", 2D) = "black" {}
-        _AirportCoreMinorWaterWorldMinInvSize ("Minor-water min XZ / inverse size", Vector) = (0,0,1,1)
+        _AirportCoreMinorWaterNearWorldMinInvSize ("Minor-water near min XZ / inverse size", Vector) = (-2000,-2000,0.00025,0.00025)
+        _AirportCoreMinorWaterMidWorldMinInvSize ("Minor-water mid min XZ / inverse size", Vector) = (-6000,-6000,0.0000833333,0.0000833333)
         _AirportCoreMinorWaterStrength ("Minor-water terrain effect strength", Range(0,1)) = 0
         _AirportCoreMinorWaterReflectionColor ("Minor-water reflection color", Color) = (0.48,0.60,0.67,1)
         _Tint ("Shared terrain tint", Color) = (1,1,1,1)
@@ -53,7 +51,6 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             #pragma multi_compile_instancing
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
-            #include "../AirportCoreV4/Water/Shaders/KBDUReservoirGroundSuppression.hlsl"
             #include "../AirportCoreV4/Water/Shaders/KBDUMinorWaterTerrainEffect.hlsl"
 
             sampler2D _NearAlbedo;
@@ -63,7 +60,6 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             sampler2D _DetailAlbedo;
             sampler2D _AirportCoreCleanPlateAlbedo;
             sampler2D _AirportCoreCleanPlateMask;
-            sampler2D _AirportCoreReservoirMask;
             sampler2D _AirportCoreMinorWaterMask;
             float4 _NearWorldMinInvSize;
             float4 _MidWorldMinInvSize;
@@ -74,14 +70,13 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             float4 _DetailRadiusFadeStartEnd;
             float4 _NearSourceNormalFadeStartEnd;
             float4 _AirportCoreCleanPlateWorldMinInvSize;
-            float4 _AirportCoreReservoirCenterExtent;
-            float4 _AirportCoreMinorWaterWorldMinInvSize;
+            float4 _AirportCoreMinorWaterNearWorldMinInvSize;
+            float4 _AirportCoreMinorWaterMidWorldMinInvSize;
             fixed4 _AirportCoreMinorWaterReflectionColor;
             fixed4 _Tint;
             half _DetailScale;
             half _NearSourceNormalStrength;
             half _AirportCoreCleanPlateStrength;
-            half _AirportCoreReservoirSuppressionStrength;
             half _AirportCoreMinorWaterStrength;
             half _Roughness;
             half _DiagnosticMode;
@@ -217,25 +212,6 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 fixed3 albedo = macro * _Tint.rgb * detailMultiplier;
                 half surfaceRoughness = _Roughness;
 
-                float2 reservoirUv =
-                    (world - (_AirportCoreReservoirCenterExtent.xy - _AirportCoreReservoirCenterExtent.zw)) /
-                    max(_AirportCoreReservoirCenterExtent.zw * 2.0, float2(1.0, 1.0));
-                half reservoirInside = step(0.0, reservoirUv.x) * step(reservoirUv.x, 1.0) *
-                    step(0.0, reservoirUv.y) * step(reservoirUv.y, 1.0);
-                UNITY_BRANCH if (_AirportCoreReservoirSuppressionStrength > 0.001h && reservoirInside > 0.5h)
-                {
-                    half reservoirSuppression = tex2Dgrad(
-                        _AirportCoreReservoirMask,
-                        reservoirUv,
-                        ddx(reservoirUv),
-                        ddy(reservoirUv)).a * _AirportCoreReservoirSuppressionStrength;
-                    ApplyKBDUReservoirGroundSuppression(
-                        reservoirSuppression,
-                        half3(0.16h, 0.20h, 0.20h),
-                        albedo,
-                        surfaceRoughness);
-                }
-
                 if (_DiagnosticMode > 0.5)
                 {
                     fixed3 levelColor = lerp(fixed3(0.12,0.32,0.78), fixed3(0.94,0.58,0.08), midWeight);
@@ -265,19 +241,33 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                     nearSourceNormal *= rsqrt(max(dot(nearSourceNormal, nearSourceNormal), 0.0001));
                     normal = normalize(lerp(normal, nearSourceNormal, nearSourceNormalWeight));
                 }
-                float2 minorWaterUv =
-                    (world - _AirportCoreMinorWaterWorldMinInvSize.xy) *
-                    _AirportCoreMinorWaterWorldMinInvSize.zw;
-                half minorWaterInside = step(0.0, minorWaterUv.x) * step(minorWaterUv.x, 1.0) *
-                    step(0.0, minorWaterUv.y) * step(minorWaterUv.y, 1.0);
+                float2 minorWaterNearUv =
+                    (world - _AirportCoreMinorWaterNearWorldMinInvSize.xy) *
+                    _AirportCoreMinorWaterNearWorldMinInvSize.zw;
+                float2 minorWaterMidUv =
+                    (world - _AirportCoreMinorWaterMidWorldMinInvSize.xy) *
+                    _AirportCoreMinorWaterMidWorldMinInvSize.zw;
+                half minorNearInside = step(0.0, minorWaterNearUv.x) * step(minorWaterNearUv.x, 1.0) *
+                    step(0.0, minorWaterNearUv.y) * step(minorWaterNearUv.y, 1.0);
+                half minorMidInside = step(0.0, minorWaterMidUv.x) * step(minorWaterMidUv.x, 1.0) *
+                    step(0.0, minorWaterMidUv.y) * step(minorWaterMidUv.y, 1.0);
                 half3 viewDirection = normalize(_WorldSpaceCameraPos - input.worldPosition);
-                UNITY_BRANCH if (_AirportCoreMinorWaterStrength > 0.001h && minorWaterInside > 0.5h)
+                UNITY_BRANCH if (_AirportCoreMinorWaterStrength > 0.001h &&
+                    (minorNearInside > 0.5h || minorMidInside > 0.5h))
                 {
-                    half2 minorPacked = tex2Dgrad(
+                    half2 nearPacked = tex2Dgrad(
                         _AirportCoreMinorWaterMask,
-                        minorWaterUv,
-                        ddx(minorWaterUv),
-                        ddy(minorWaterUv)).rg * _AirportCoreMinorWaterStrength;
+                        saturate(minorWaterNearUv),
+                        ddx(minorWaterNearUv),
+                        ddy(minorWaterNearUv)).rg;
+                    half2 midPacked = tex2Dgrad(
+                        _AirportCoreMinorWaterMask,
+                        saturate(minorWaterMidUv),
+                        ddx(minorWaterMidUv),
+                        ddy(minorWaterMidUv)).ba;
+                    half nearToMid = smoothstep(1750.0h, 2100.0h, radius);
+                    half2 minorPacked = lerp(nearPacked * minorNearInside,
+                        midPacked * minorMidInside, nearToMid) * _AirportCoreMinorWaterStrength;
                     half2 rippleSlope = half2(
                         sin(world.x * 0.081h + world.y * 0.047h),
                         cos(world.y * 0.073h - world.x * 0.039h)) * 0.045h;

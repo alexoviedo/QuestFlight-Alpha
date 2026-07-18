@@ -8,21 +8,24 @@
     "zwrite": true
   },
   "ground_suppression": {
-    "changes_outside_authoritative_mask": false,
-    "integration_required": true,
-    "packed_mask": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_DepthShoreRoughnessSuppression.png",
-    "terrain_include": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUReservoirGroundSuppression.hlsl"
+    "status": "REMOVED_V4_3",
+    "terrain_shader_suppression": false,
+    "suppression_renderer": false,
+    "reason": "V4.2 packed alpha neutralized the entire reservoir bounding rectangle, including dry land."
   },
   "minor_water": {
     "additional_renderer_count": 0,
-    "blocker": "Lead must bind normalized prototype to the final benchmark terrain UV/bounds before product use.",
-    "georeferenced": false,
+    "georeferenced": true,
     "include": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUMinorWaterTerrainEffect.hlsl",
     "mask": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreMinorWater_TerrainMask.png",
-    "representation": "TERRAIN_SHADER_MASK_ONLY"
+    "representation": "TERRAIN_MASK_NEAR_MID_RGBA",
+    "source_mesh": "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_OtherWaterFeatures_Surface_V2.asset",
+    "near_bounds_meters": [-2000, -2000, 4000, 4000],
+    "mid_bounds_meters": [-6000, -6000, 12000, 12000],
+    "active_ribbon_renderers": 0
   },
   "schema": "questflight.airport-core-v4.water-contract.v1",
-  "status": "CANDIDATE_REQUIRES_AUTHORED_INTEGRATION_AND_VISUAL_QA",
+  "status": "V4_3_SERIALIZED_MACHINE_VISUAL_QA_REQUIRED",
   "surface": {
     "features": [
       "shallow_deep_color",
@@ -30,6 +33,7 @@
       "baked_sky_reflection",
       "fresnel",
       "bounded_sun_glitter",
+      "orthophoto_aware_base_color",
       "roughness_variation",
       "shore_light_band"
     ],

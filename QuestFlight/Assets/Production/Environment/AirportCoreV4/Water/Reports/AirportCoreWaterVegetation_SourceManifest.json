@@ -4,7 +4,9 @@
   "generator_sha256": "031ea533b314f78b785a2788abe7927270e0e07a1e9aebf0072018a8e1d89bc2",
   "notes": [
     "No V3 rejected water or vegetation runtime asset was reused.",
-    "The stable V2 packed reservoir mask is the only derived pixel source.",
+    "The stable V2 packed reservoir depth/shore/roughness mask is the only reservoir-derived pixel source.",
+    "V4.3 uses TERRAIN_MASK_NEAR_MID_RGBA generated deterministically from the existing V2 OSM-derived minor-water mesh; no external source was added.",
+    "V4.3 removed the terrain suppression include and the serialized minor-water ribbon/bank presentation.",
     "Offline contract validation is not visual, stereo, or Quest performance acceptance."
   ],
   "raw_external_assets": [],
@@ -41,33 +43,28 @@
     {
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AirportCoreV4/Water/Materials/AirportCoreReservoir_V4.mat",
-      "sha256": "11e480dfadba19d941984d999bf0a3e8307eea7d0c2b942cba9d948f17818b40",
+      "sha256": "f2e945f9d4d9010006a4efc6d2cc72b5cacec607ef9abe706fcb13d45877ba99",
       "source": "Project-authored Unity material contract"
     },
     {
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUMinorWaterTerrainEffect.hlsl",
-      "sha256": "777348561bfdb6281d67301b10ba1c2face2230c9bf47613ca62b7b38f4c57aa"
-    },
-    {
-      "license": "Project-authored",
-      "path": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUReservoirGroundSuppression.hlsl",
-      "sha256": "28791775d014dd6c18793026b49e39b31385f52e90bb09d9a05196e2ba9142f2"
+      "sha256": "4396dc2b420ead4ee0a28d3ec58bf60f7746bbdf8fe396c317d8aad6420369ca"
     },
     {
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUReservoirWaterV4.shader",
-      "sha256": "7ea27409b87bede215f8187e5dbf34ea904ce4f39598e33710437ca8994e0588"
+      "sha256": "c23722fca888868eb8f673fa75de36689abed2a9a8cbe5a146dbbe6dcbcc4e5d"
     },
     {
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreMinorWater_TerrainMask.png",
-      "sha256": "00bc4936506472fa7bc984f9004066e1f4200ff30eeeac96899c573ac8af3a9e",
-      "source": "Deterministic normalized terrain-mask prototype"
+      "sha256": "d50d4f15fcf33135e5308bccaba4f55c0462e88cfeb45be44e02c09cc04a28d2",
+      "source": "Deterministic RGBA near/mid terrain mask rasterized from the existing V2 OSM-derived minor-water mesh"
     },
     {
       "license": "Project-authored derivative",
-      "path": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_DepthShoreRoughnessSuppression.png",
+      "path": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_DepthShoreRoughness.png",
       "sha256": "1320b464e2b409091d35fcf3fddb01ba0e3da805eb80b587b0f660e60d298a49",
       "source": "Derived from stable V2 project-authored reservoir mask",
       "source_sha256": "258683cba2eca00d585dbe99c24e762da55b67e9c7a5387b3be860ec230356bb"

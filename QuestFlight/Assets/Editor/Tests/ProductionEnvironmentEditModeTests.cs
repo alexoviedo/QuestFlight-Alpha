@@ -24,7 +24,7 @@ namespace QuestFlightLab.Tests.EditMode
                 ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
                 Assert.That(contract, Is.Not.Null);
                 Assert.That(contract.TryValidateContract(out string report), Is.True, report);
-                Assert.That(contract.bakeToolVersion, Is.EqualTo("airport_core_photoreal_v4_stage1"));
+                Assert.That(contract.bakeToolVersion, Is.EqualTo("airport_core_artifact_v4_3"));
                 Assert.That(contract.authoritativeTerrainSurface, Is.Not.Null);
                 Assert.That(contract.productionPlacementManifest, Is.Not.Null);
                 Assert.That(contract.productionPlacementManifest.entries.Length, Is.EqualTo(28336));
@@ -120,7 +120,7 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void BoundedWaterRetainsReservoirAndBatchedV2CoverageWithOpaqueStableShoreInterface()
+        public void BoundedWaterUsesOneReservoirMeshAndTerrainIntegratedMinorWater()
         {
             WithInstance(root =>
             {
@@ -128,10 +128,10 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(contract.retainedWaterBodyCount, Is.GreaterThan(1));
                 Assert.That(contract.discardedMinorWaterFeatureCount, Is.GreaterThan(0));
                 Assert.That(contract.waterFeatureManifestV2, Is.Not.Null);
-                Assert.That(contract.otherWaterFeaturesSurfaceV2, Is.Not.Null);
-                Assert.That(contract.otherWaterFeaturesShoreBankV2, Is.Not.Null);
-                Assert.That(contract.essentialWater.GetComponentsInChildren<MeshRenderer>(true).Length, Is.EqualTo(4),
-                    "The reservoir pair and batched remaining-water pair are expected.");
+                Assert.That(contract.otherWaterFeaturesSurfaceV2, Is.Null);
+                Assert.That(contract.otherWaterFeaturesShoreBankV2, Is.Null);
+                Assert.That(contract.essentialWater.GetComponentsInChildren<MeshRenderer>(true).Length, Is.EqualTo(2),
+                    "Only the authoritative reservoir and its inactive bank source may remain.");
                 Assert.That(contract.boulderReservoirSurface.name, Does.Contain("BoulderReservoir"));
                 Assert.That(contract.boulderReservoirShoreBank.name, Does.Contain("ShoreBank"));
                 Renderer reservoirRenderer = contract.boulderReservoirSurface.GetComponent<Renderer>();

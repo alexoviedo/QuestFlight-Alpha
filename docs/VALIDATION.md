@@ -33,6 +33,20 @@ V4.2 is a branch-only technical checkpoint, not visual acceptance or a release c
 
 The aggregate and camera-aware triangle values have different scopes and must not be interchanged. Static/Editor passes do not establish Quest frame timing, thermals, comfort, stereo stability, or worn image quality.
 
+## Airport-Core V4.3 artifact correction closure
+
+V4.3 is a fail-closed branch result: implementation/build integrity passes, but the mandatory subjective lead gate does not.
+
+- exact source: V4.2 `949931049c6e67acbca182a31dbbc5806d6e0102`;
+- focused V4.3 tests: PASS 4/4; full EditMode: PASS 75/75; PlayMode: PASS 9/9;
+- one-command `validate_product.ps1`: PASS, including dependency closure, serialization, 56-view machine Visual QA, static audit, and Android build;
+- lead visual review: reservoir 7.0/10 PASS; runway 5.5/10 FAIL because broad bands remain; minor water 5.5/10 FAIL because the terrain-mask result lacks decision-quality visual proof;
+- static budget: PASS at 62 draws, 503,339 selected-LOD triangles, 24 visible materials, 168.08 MiB estimated textures, two transparent slots, and 4x MSAA;
+- Android APK: 99,744,675 bytes, SHA-256 `96e6bf0161b204e9d114e45200ea308e42bd8effaac1bdf5d072b1636ee69594`;
+- Meta XR Simulator and physical Quest: NOT RUN because the lead gate did not pass.
+
+The machine Visual QA classification means its images are nonblank and structural contracts are intact; it does not override the inspected visual failure.
+
 ## Airport-Core V4 Stage-1 closure
 
 The final V4 closure is a fail-closed feature-branch result, not acceptance:

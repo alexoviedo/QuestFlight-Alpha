@@ -40,24 +40,19 @@
       "sha256": "5307c70d92f24ed46b4d9cd58adb9aa9ac0c5237735cd4ac0b7681275703f920"
     },
     {
-      "bytes": 88202,
-      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_FeatureMask.png",
-      "sha256": "d958cec48190c70f3a9fcf739f3b261df00aef05b4235f9e6db5660055683d8d"
-    },
-    {
-      "bytes": 5823,
+      "bytes": 8417,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.shader",
-      "sha256": "963f33a2575f506efe0d636f13d846f80a4e977c7e2b2432fd50ce994aec5d5b"
+      "sha256": "77147a08b41961ad027ef3901bd8d03820aef93b8698bc1cfc9c6448a75dd5ab"
     },
     {
-      "bytes": 1543,
+      "bytes": 1560,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.mat",
-      "sha256": "094dfd1a2947271db52a701f7e94e0e07af6e7685e27aad0ce618566ce867654"
+      "sha256": "1adf1f134dab34af8b91cb513350b7c76e152b820841aa391094789ecff19aff"
     },
     {
-      "bytes": 1090,
+      "bytes": 1001,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/INTEGRATION_CONTRACT.md",
-      "sha256": "87afe7bdd307f6c862729eb326cc18355656c17947f0dee6382ddee124a2c37a"
+      "sha256": "4437515912b98ea6a16dbee3c445735f6b01e74b0145820794d2916b692e145b"
     }
   ],
   "rawSource": [
@@ -93,7 +88,7 @@
     }
   ],
   "schemaVersion": 1,
-  "source": "Poly Haven asphalt_02 2K CC0 plus project-authored deterministic feature masks",
+  "source": "Poly Haven asphalt_02 2K CC0 plus project-authored continuous runway-local shading",
   "sourceLumaScale": 1.35,
-  "status": "SERIALIZED_MATERIAL_CANDIDATE_NOT_VISUALLY_ACCEPTED"
+  "status": "V4_3_STRUCTURALLY_VALID_VISUAL_GATE_FAILED_BANDING_REMAINS"
 }

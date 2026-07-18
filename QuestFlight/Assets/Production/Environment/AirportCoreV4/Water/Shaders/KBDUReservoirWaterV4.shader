@@ -4,13 +4,16 @@ Shader "QuestFlight/Airport Core V4/Reservoir Opaque"
     {
         [Normal] _WaveNormalA ("Broad low-frequency normal", 2D) = "bump" {}
         [Normal] _WaveNormalB ("Secondary low-frequency normal", 2D) = "bump" {}
-        _DepthShoreRoughnessSuppression ("Depth R / shore G / roughness B / suppression A", 2D) = "black" {}
+        _DepthShoreRoughness ("Depth R / shore G / roughness B", 2D) = "black" {}
+        _TerrainMacroAlbedo ("Shared geospatial orthophoto", 2D) = "gray" {}
         _EnvironmentCube ("Selected baked sky reflection", Cube) = "" {}
         _DeepColor ("Deep water", Color) = (0.035,0.125,0.185,1)
         _ShallowColor ("Shallow water", Color) = (0.17,0.34,0.35,1)
         _ShoreBandColor ("Shore light band", Color) = (0.55,0.60,0.43,1)
         _ReflectionTint ("Reflection tint", Color) = (0.86,0.91,0.94,1)
         _BasinCenterExtent ("Basin center XZ / half extent XZ", Vector) = (249.5625,4307.6875,1062.5625,857.1875)
+        _TerrainWorldMinInvSize ("Orthophoto min XZ / inverse size", Vector) = (-6000,-6000,0.0000833333,0.0000833333)
+        _OrthophotoInfluence ("Orthophoto water-color influence", Range(0,1)) = 0.72
         _EnvironmentRotationSinCos ("Sky rotation sin/cos", Vector) = (0,1,0,0)
         _WaveMetersA ("Broad wave repeat meters", Range(80,640)) = 210
         _WaveMetersB ("Secondary wave repeat meters", Range(24,240)) = 72
@@ -50,15 +53,18 @@ Shader "QuestFlight/Airport Core V4/Reservoir Opaque"
 
             sampler2D _WaveNormalA;
             sampler2D _WaveNormalB;
-            sampler2D _DepthShoreRoughnessSuppression;
+            sampler2D _DepthShoreRoughness;
+            sampler2D _TerrainMacroAlbedo;
             samplerCUBE _EnvironmentCube;
             fixed4 _DeepColor, _ShallowColor, _ShoreBandColor, _ReflectionTint;
             float4 _BasinCenterExtent;
+            float4 _TerrainWorldMinInvSize;
             half4 _EnvironmentRotationSinCos, _WaveScrollA, _WaveScrollB;
             half _WaveMetersA, _WaveMetersB, _WaveStrengthA, _WaveStrengthB;
             half _RoughnessMin, _RoughnessMax, _ReflectionIntensity;
             half _ReflectionFloor, _EnvironmentMaxMip, _FresnelF0;
             half _SunGlitter, _ShoreBandStrength;
+            half _OrthophotoInfluence;
 
             struct appdata
             {
@@ -111,9 +117,12 @@ Shader "QuestFlight/Airport Core V4/Reservoir Opaque"
             fixed4 frag(v2f input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-                half4 packed = tex2D(_DepthShoreRoughnessSuppression, saturate(input.basinUv));
+                half4 packed = tex2D(_DepthShoreRoughness, saturate(input.basinUv));
                 half depth = saturate(packed.r);
                 half shore = saturate(max(packed.g, 1.0h - smoothstep(0.01h, 0.18h, depth)));
+                float2 terrainUv = saturate((input.worldPosition.xz - _TerrainWorldMinInvSize.xy) *
+                    _TerrainWorldMinInvSize.zw);
+                half3 orthophoto = tex2D(_TerrainMacroAlbedo, terrainUv).rgb;
 
                 half2 uvA = input.worldPosition.xz / max(_WaveMetersA, 1.0h) + _Time.y * _WaveScrollA.xy;
                 half2 rotatedB = half2(
@@ -144,7 +153,12 @@ Shader "QuestFlight/Airport Core V4/Reservoir Opaque"
                 half reflectedPeak = max(reflected.r, max(reflected.g, reflected.b));
                 reflected *= rcp(1.0h + reflectedPeak * 0.45h);
 
-                half3 baseColor = lerp(_ShallowColor.rgb, _DeepColor.rgb, smoothstep(0.02h, 0.86h, depth));
+                half3 authoredWater = lerp(_ShallowColor.rgb, _DeepColor.rgb, smoothstep(0.02h, 0.86h, depth));
+                // Preserve the photographed reservoir color and exposure. Near the shoreline the
+                // orthophoto contribution approaches unity, hiding the opaque mesh boundary without
+                // a transparent blanket or a terrain-suppression rectangle.
+                half orthophotoWeight = saturate(_OrthophotoInfluence + shore * 0.24h);
+                half3 baseColor = lerp(authoredWater, orthophoto, orthophotoWeight);
                 baseColor = lerp(baseColor, _ShoreBandColor.rgb, shore * _ShoreBandStrength);
                 half3 irradiance = saturate(max(ShadeSH9(half4(normal,1.0h)), 0.0h) * 0.35h +
                     _LightColor0.rgb * (0.04h + ndl * 0.22h));

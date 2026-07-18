@@ -419,7 +419,8 @@ namespace QuestFlight.Editor
                 "authoritative reservoir material must support GPU instancing", violations);
             foreach (string property in new[]
                      {
-                         "_WaveNormalA", "_WaveNormalB", "_DepthShoreRoughnessSuppression", "_EnvironmentCube"
+                         "_WaveNormalA", "_WaveNormalB", "_DepthShoreRoughness",
+                         "_TerrainMacroAlbedo", "_EnvironmentCube"
                      })
                 Require(material != null && material.HasProperty(property) && material.GetTexture(property) != null,
                     "authoritative reservoir is missing texture binding " + property, violations);

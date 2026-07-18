@@ -3,7 +3,7 @@
     "sourceCommit": "cd4131fa7732a6db2d7387921dfef33e2c206970",
     "scenePath": "Assets/Scenes/ProductionVerticalSlice.unity",
     "ready": true,
-    "approvedCount": 223,
+    "approvedCount": 220,
     "packageCount": 5,
     "conditionalLocalCount": 0,
     "rejectedCount": 0,
@@ -170,10 +170,6 @@
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_FeatureMask.png",
-            "classification": "approved_production"
-        },
-        {
             "assetPath": "Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_MRAO.png",
             "classification": "approved_production"
         },
@@ -218,7 +214,7 @@
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_DepthShoreRoughnessSuppression.png",
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_DepthShoreRoughness.png",
             "classification": "approved_production"
         },
         {
@@ -623,14 +619,6 @@
         },
         {
             "assetPath": "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_NearTerrain_25m_V2.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_OtherWaterFeatures_ShoreBank_V2.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_OtherWaterFeatures_Surface_V2.asset",
             "classification": "approved_production"
         },
         {

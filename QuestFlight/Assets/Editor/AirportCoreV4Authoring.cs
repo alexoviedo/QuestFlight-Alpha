@@ -201,13 +201,11 @@ namespace QuestFlight.Editor
                 false, true, 512, 6, TextureWrapMode.Repeat);
             ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_MRAO.png",
                 false, false, 512, 6, TextureWrapMode.Repeat);
-            ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_FeatureMask.png",
-                false, false, 512, 8, TextureWrapMode.Clamp);
             ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_WaveA_NM.png",
                 false, true, 256, 6, TextureWrapMode.Repeat);
             ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_WaveB_NM.png",
                 false, true, 256, 6, TextureWrapMode.Repeat);
-            ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_DepthShoreRoughnessSuppression.png",
+            ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_DepthShoreRoughness.png",
                 false, false, 512, 6, TextureWrapMode.Clamp);
             ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreMinorWater_TerrainMask.png",
                 false, false, 256, 6, TextureWrapMode.Clamp);
@@ -248,7 +246,7 @@ namespace QuestFlight.Editor
                         ?.GetComponent<MeshRenderer>();
                     if (reservoir == null || airportTerrain == null)
                         throw new InvalidOperationException("Authoritative terrain or reservoir renderer is missing.");
-                    ConfigureTerrainWater(airportTerrain.sharedMaterial, reservoir.bounds);
+                    ConfigureTerrainWater(airportTerrain.sharedMaterial);
                     root.minorWaterTerrainEffect = airportTerrain;
 
                     Renderer[] benchmarkRenderers = root.benchmarkContent.GetComponentsInChildren<Renderer>(true);
@@ -382,9 +380,14 @@ namespace QuestFlight.Editor
             material.SetTexture("_MainTex", LoadRequired<Texture2D>(folder + "/AirportCoreRunway_Albedo.png"));
             material.SetTexture("_NormalTex", LoadRequired<Texture2D>(folder + "/AirportCoreRunway_Normal.png"));
             material.SetTexture("_MRAOTex", LoadRequired<Texture2D>(folder + "/AirportCoreRunway_MRAO.png"));
-            material.SetTexture("_FeatureMask", LoadRequired<Texture2D>(folder + "/AirportCoreRunway_FeatureMask.png"));
-            material.SetFloat("_WorldTiling", 0.025f);
-            material.SetFloat("_SecondaryTiling", 0.008f);
+            Vector2 origin = new Vector2(-629.757f, -30.671f);
+            Vector2 end = new Vector2(620.628f, -30.054f);
+            Vector2 axis = (end - origin).normalized;
+            material.SetVector("_RunwayOrigin", new Vector4(origin.x, origin.y, 0f, 0f));
+            material.SetVector("_RunwayAxis", new Vector4(axis.x, axis.y, 0f, 0f));
+            material.SetVector("_RunwayLengthWidth", new Vector4((end - origin).magnitude, 22.86f, 0f, 0f));
+            material.SetFloat("_WorldTiling", 0.09f);
+            material.SetFloat("_SecondaryTiling", 0.031f);
             EditorUtility.SetDirty(material);
             return material;
         }
@@ -398,8 +401,13 @@ namespace QuestFlight.Editor
                 "Assets/Production/Environment/Textures/Reservoir/BoulderReservoir_BroadWave_NM.png"));
             material.SetTexture("_WaveNormalB", LoadRequired<Texture2D>(
                 "Assets/Production/Environment/Textures/Reservoir/BoulderReservoir_Ripple_NM.png"));
-            material.SetTexture("_DepthShoreRoughnessSuppression",
-                LoadRequired<Texture2D>(folder + "/Textures/AirportCoreReservoir_DepthShoreRoughnessSuppression.png"));
+            material.SetTexture("_DepthShoreRoughness",
+                LoadRequired<Texture2D>(folder + "/Textures/AirportCoreReservoir_DepthShoreRoughness.png"));
+            material.SetTexture("_TerrainMacroAlbedo", LoadRequired<Texture2D>(
+                "Assets/Production/Environment/Textures/KBDU_NAIP_2019_Mid12km_4096.jpg"));
+            material.SetVector("_TerrainWorldMinInvSize",
+                new Vector4(-6000f, -6000f, 1f / 12000f, 1f / 12000f));
+            material.SetFloat("_OrthophotoInfluence", 0.72f);
             material.SetTexture("_EnvironmentCube", LoadRequired<Texture>(SkyCubemapPath));
             float skyRadians = -64.123046875f * Mathf.Deg2Rad;
             material.SetVector("_EnvironmentRotationSinCos",
@@ -1146,8 +1154,14 @@ namespace QuestFlight.Editor
                         "The adaptive airport terrain is visual-only and must not replace a collider mesh.");
                 airportTerrainFilter.sharedMesh = adaptiveAirportTerrain;
                 EditorUtility.SetDirty(airportTerrainFilter);
-                ConfigureTerrainWater(airportTerrain.sharedMaterial, reservoir.bounds);
+                ConfigureTerrainWater(airportTerrain.sharedMaterial);
                 root.minorWaterTerrainEffect = airportTerrain;
+                if (contract.otherWaterFeaturesSurfaceV2 != null)
+                    UnityEngine.Object.DestroyImmediate(contract.otherWaterFeaturesSurfaceV2.gameObject);
+                if (contract.otherWaterFeaturesShoreBankV2 != null)
+                    UnityEngine.Object.DestroyImmediate(contract.otherWaterFeaturesShoreBankV2.gameObject);
+                contract.otherWaterFeaturesSurfaceV2 = null;
+                contract.otherWaterFeaturesShoreBankV2 = null;
                 ConfigureStableShoreAndGi(contract, airportTerrain.sharedMaterial);
 
                 Transform lighting = CreateChild(rootObject.transform, "BenchmarkLighting", true);
@@ -1184,7 +1198,7 @@ namespace QuestFlight.Editor
             }
         }
 
-        private static void ConfigureTerrainWater(Material material, Bounds reservoirBounds)
+        private static void ConfigureTerrainWater(Material material)
         {
             if (material == null || !material.HasProperty("_AirportCoreMinorWaterMask"))
                 throw new InvalidOperationException("Terrain shader has not imported the V4 water-mask contract.");
@@ -1198,21 +1212,14 @@ namespace QuestFlight.Editor
             material.SetVector("_AirportCoreCleanPlateWorldMinInvSize",
                 new Vector4(-650f, -575f, 1f / 700f, 1f / 700f));
             material.SetFloat("_AirportCoreCleanPlateStrength", 1f);
-            Texture2D packed = LoadRequired<Texture2D>(
-                "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_DepthShoreRoughnessSuppression.png");
             Texture2D minor = LoadRequired<Texture2D>(
                 "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreMinorWater_TerrainMask.png");
-            material.SetTexture("_AirportCoreReservoirMask", packed);
-            material.SetVector("_AirportCoreReservoirCenterExtent", new Vector4(
-                reservoirBounds.center.x, reservoirBounds.center.z,
-                Mathf.Max(1f, reservoirBounds.extents.x), Mathf.Max(1f, reservoirBounds.extents.z)));
-            material.SetFloat("_AirportCoreReservoirSuppressionStrength", 1f);
             material.SetTexture("_AirportCoreMinorWaterMask", minor);
-            // Bounded drainage/wet-channel prototype; this is an authored benchmark UV binding,
-            // not a claim of survey-grade hydrology.
-            material.SetVector("_AirportCoreMinorWaterWorldMinInvSize",
-                new Vector4(-610f, -525f, 1f / 110f, 1f / 70f));
-            material.SetFloat("_AirportCoreMinorWaterStrength", 0.72f);
+            material.SetVector("_AirportCoreMinorWaterNearWorldMinInvSize",
+                new Vector4(-2000f, -2000f, 1f / 4000f, 1f / 4000f));
+            material.SetVector("_AirportCoreMinorWaterMidWorldMinInvSize",
+                new Vector4(-6000f, -6000f, 1f / 12000f, 1f / 12000f));
+            material.SetFloat("_AirportCoreMinorWaterStrength", 1f);
             material.SetColor("_AirportCoreMinorWaterReflectionColor", new Color(0.44f, 0.56f, 0.63f, 1f));
             EditorUtility.SetDirty(material);
         }
@@ -1221,8 +1228,7 @@ namespace QuestFlight.Editor
         {
             foreach (MeshFilter bank in new[]
                      {
-                         contract.boulderReservoirShoreBank,
-                         contract.otherWaterFeaturesShoreBankV2
+                         contract.boulderReservoirShoreBank
                      }.Where(item => item != null))
             {
                 MeshRenderer renderer = bank.GetComponent<MeshRenderer>();

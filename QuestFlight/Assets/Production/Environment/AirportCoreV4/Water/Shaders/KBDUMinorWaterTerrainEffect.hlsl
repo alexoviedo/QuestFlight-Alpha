@@ -17,13 +17,15 @@ void ApplyKBDUMinorWaterTerrainEffect(
 {
     half channel = smoothstep(0.12h, 0.78h, saturate(waterMask));
     half bank = saturate(wetBankMask) * (1.0h - channel);
-    half3 waterTint = half3(0.10h, 0.20h, 0.20h);
+    half3 photographedBase = albedo;
+    half3 waterTint = photographedBase * half3(0.76h, 0.86h, 0.91h);
     half fresnel = pow(1.0h - saturate(dot(normalize(normalWorld), normalize(viewDirection))), 5.0h);
 
-    normalWorld = normalize(lerp(normalWorld, rippleNormal, channel * 0.30h));
-    albedo = lerp(albedo, albedo * half3(0.70h,0.78h,0.76h), bank * 0.45h);
-    albedo = lerp(albedo, lerp(waterTint, reflectionColor, 0.18h + fresnel * 0.36h), channel * 0.72h);
-    roughness = lerp(roughness, 0.34h, channel);
+    normalWorld = normalize(lerp(normalWorld, rippleNormal, channel * 0.18h));
+    albedo = lerp(albedo, photographedBase * half3(0.82h,0.88h,0.86h), bank * 0.28h);
+    half3 reflectedWater = lerp(waterTint, reflectionColor, 0.08h + fresnel * 0.18h);
+    albedo = lerp(albedo, reflectedWater, channel * 0.46h);
+    roughness = lerp(roughness, 0.42h, channel);
     roughness = lerp(roughness, 0.62h, bank * 0.40h);
     metallic = lerp(metallic, 0.0h, channel);
 }

@@ -35,10 +35,6 @@ Material:
         m_Texture: {fileID: 2800000, guid: 07eb69e6a668d2c620286c92712586fb, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _AirportCoreReservoirMask:
-        m_Texture: {fileID: 2800000, guid: c618a286f30544b00551dccb5b5315c1, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _DetailAlbedo:
         m_Texture: {fileID: 2800000, guid: b0010fed8caac464193afe47db3cea77, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -62,17 +58,16 @@ Material:
     m_Ints: []
     m_Floats:
     - _AirportCoreCleanPlateStrength: 1
-    - _AirportCoreMinorWaterStrength: 0.72
-    - _AirportCoreReservoirSuppressionStrength: 1
+    - _AirportCoreMinorWaterStrength: 1
     - _DetailScale: 0.06666667
     - _DiagnosticMode: 0
     - _NearSourceNormalStrength: 0.72
     - _Roughness: 0.92
     m_Colors:
     - _AirportCoreCleanPlateWorldMinInvSize: {r: -650, g: -575, b: 0.0014285714, a: 0.0014285714}
+    - _AirportCoreMinorWaterMidWorldMinInvSize: {r: -6000, g: -6000, b: 0.00008333333, a: 0.00008333333}
+    - _AirportCoreMinorWaterNearWorldMinInvSize: {r: -2000, g: -2000, b: 0.00025, a: 0.00025}
     - _AirportCoreMinorWaterReflectionColor: {r: 0.44, g: 0.56, b: 0.63, a: 1}
-    - _AirportCoreMinorWaterWorldMinInvSize: {r: -610, g: -525, b: 0.009090909, a: 0.014285714}
-    - _AirportCoreReservoirCenterExtent: {r: 249.5625, g: 4307.6875, b: 1062.5625, a: 857.1875}
     - _DetailFadeStartEnd: {r: 250, g: 2600, b: 0, a: 0}
     - _DetailRadiusFadeStartEnd: {r: 4500, g: 6800, b: 0, a: 0}
     - _FarWorldMinInvSize: {r: -12000, g: -12000, b: 0.000041666666, a: 0.000041666666}
