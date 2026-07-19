@@ -15,6 +15,23 @@ Run from the repository root:
 
 `validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current standard Visual QA is a 56-view capture set and requires inspection of every full-resolution image. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. On V4.2 the hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. The V2 ceilings below are retained as historical branch evidence, not current V4.2 acceptance values.
 
+## Aerial Scenery Representation V1 closure
+
+The branch gate is **FAIL — preserve and stop** because visual targets were not met. Structural validation is deliberately reported separately:
+
+- official USGS 3DEP source/provenance and lidar raster validation: PASS;
+- fixed terrain compilation: PASS at 46,426 vertices / 92,000 triangles, with the declared outside-outlier error gate passing;
+- vegetation pipeline: PASS 5/5 Python tests and static validator; 270 source placements compile to three draws, 17,324 selected triangles, and one material;
+- building spatial pipeline: PASS 7/7 Python tests; 9,695 authored records and 17,984 far orthophoto-only records, with zero unqualified lidar height overrides;
+- Unity EditMode: PASS 91/91 after restoring the Android/ASTC build-target state used by the product configurator; PlayMode: PASS 9/9;
+- product validation/dependency closure: PASS; Android release-style build: PASS;
+- static Quest planning gate: PASS at 57 draws, 527,199 selected triangles, 24 visible materials, 182,930,546 estimated texture bytes, two transparent slots, and 4x MSAA;
+- fixed-camera machine image checks: PASS, but lead visual review: **FAIL at about 5.5/10** against 7.5/10;
+- Meta XR Simulator: one live Quest 3 stereo/HMD/both-Touch smoke PASS; aggregate `BLOCKED_MISSING_RECORDED_REPLAYS` for ten missing sessions;
+- physical Quest: NOT RUN by milestone instruction.
+
+The first integrated Tier-2 experiment produced oversized branch geometry. One bounded correction replaced it with 248 fixed 8–24 m aggregate cells; that removes the catastrophic artifact but still looks like sparse dark blobs and does not pass canopy quality. Machine nonblank checks are not visual acceptance. See `docs/evidence/AERIAL_SCENERY_REPRESENTATION_V1_2026-07-18.md`.
+
 The 2026-07-17 V2 closure passed `validate_product.ps1`, 61 EditMode tests, 9 PlayMode tests, 24/24 machine image checks, the static budget gate, and an Android release build. The separate reconstruction evidence adapter failed closed because it selected stale intermediate reports; see the V2 evidence document. Machine passes are not visual acceptance: lead inspection remained below 7/10, so simulator replay and physical Quest timing were deliberately not run.
 
 ## Airport-Core V4.2 static packing and geometry closure

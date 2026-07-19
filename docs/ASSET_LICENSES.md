@@ -233,3 +233,59 @@ V4.2 introduces no external source. Its visual-only airport mesh is a determinis
 - Vegetation meshes: four procedural species and their 12 OBJ LODs are project-owned original work. The shared MTL SHA-256 is `9bc39f427446720ec729dd82b994273b77eefab2cd808dc4aed8d36d78751884`.
 - Parked aircraft reuse the already-audited KOG_THORNS CC BY 4.0 derivative and attribution above. V2 changes placement/ground contact and adds a third LOD; they do not change the license boundary.
 - No raw DEM, raw OSM response, decoded NAIP raster, build, capture, cache, or package artifact is committed.
+
+## Aerial Scenery Representation V1 derivatives (failed feature branch)
+
+Outcome: **FAIL — preserve the feature branch only**. This milestone introduces
+no broader content right and is not accepted as visually complete. Its source,
+license, derivative, and byte/hash records remain useful even though the final
+inspected environment score is 5.5/10 and all ten required recorded simulator
+replays are missing. The complete gate record is [Aerial Scenery Representation
+V1 evidence](evidence/AERIAL_SCENERY_REPRESENTATION_V1_2026-07-18.md).
+
+All abbreviated paths in the following table are relative to
+`QuestFlight/Assets/Production/Environment`.
+
+| Canonical product asset | Bytes | Source / terms | SHA-256 |
+| --- | ---: | --- | --- |
+| `AerialSceneryV1/KBDU_AerialSceneryManifestV1.asset` | 2,759 | Project-authored serialized integration manifest | `00190a936b1ee77d087474278f7a832ada0ec30784856b6aa437872bc654845b` |
+| `AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json` | 16,973 | Project-authored USGS 3DEP public-domain provenance and output inventory | `1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5` |
+| `AerialSceneryV1/Lidar/KBDU_Lidar_NearTerrain_Fixed.obj` | 3,451,412 | Deterministic derivative of USGS 3DEP `CO_DRCOG_1_2020`; United States government work/public domain | `4689de66d4b47bdfc1a3ea6e8c33e906d4308bbb77317f23e3dc5185b5cefce8` |
+| `AerialSceneryV1/TerrainIntegration/KBDU_Lidar_NearTerrain_UnityLocal_V1.asset` | 3,335,929 | Project-authored Unity serialization of the same USGS 3DEP derivative | `00d92d21960f21b2e270f8f610a278d068e0bc70ee8c02f0441d389d879d33e6` |
+| `AerialSceneryV1/TerrainIntegration/KBDU_AirportPatch_LidarConformed_V1.asset` | 1,344,814 | Project-authored visual-boundary derivative of the existing USGS-derived airport patch and fixed lidar mesh | `6ce5895bb3b605db306bb8bd132259cf81285608928b26838d7e4977a20774cd` |
+| `AerialSceneryV1/Vegetation/SOURCE_MANIFEST.json` | 9,053 | Project-authored inventory; geometry/presentation are project-owned and distribution/handoff outputs derive from public-domain USGS 3DEP lidar | `2f95980df1b3b952ecee2f3564a216e8e7840c9dc1c57bf2a8b5906b037513bc` |
+| `AerialSceneryV1/Buildings/KBDU_BuildingSpatialContractV1.json` | 2,278,923 | Bounded OpenStreetMap ODbL-1.0 derivative; retain `© OpenStreetMap contributors` | `dbb4ad1db8051e34b6948a72b69257bb83fd80fd38daf83a89806cea2be3d87a` |
+| `AerialSceneryV1/Buildings/KBDU_BuildingBatchReplacementV1.json` | 136,195 | Project-authored replacement mapping for the OSM-derived building representation | `6275afa651698fe064d8f05bb15ff42e5943969dcbecfeff95755cf2c7b1b7a7` |
+| `AerialSceneryV1/Buildings/KBDU_BuildingRuntimeAssetInventoryV1.json` | 12,640 | Project-authored per-asset inventory for OSM-derived building runtime content | `d3edbd92e9a39277b1b091cb07fd223ec49acd5b32e258fdf8ecf98085d12061` |
+
+`KBDU_BuildingRuntimeAssetInventoryV1.json` is the canonical 24-asset hash
+inventory. It records relative path, byte count, SHA-256, source, and license for
+23 generated building meshes plus their prefab: 24 assets, 6,455,715 bytes, all
+verified byte-for-byte. The runtime geometry is an OSM ODbL-1.0 derivative and
+retains `© OpenStreetMap contributors`; Unity
+serialization and presentation are project-authored. The building spatial
+contract covers 27,679 features, with 9,695 represented by geometry, 17,984
+ordinary far features represented only by the licensed orthophoto, and zero
+lidar height overrides.
+
+The vegetation manifest records `external_assets` as empty and inventories the
+project-authored geometry, Blender source, atlas, shader, material, prefab,
+configuration, and every generated output with exact hashes and terms. Its 22
+near instances, 248 mid clusters, 323 canopy components, and distribution and
+handoff maps are deterministic derivatives of the public-domain lidar source;
+they do not establish botanical or surveyed accuracy.
+
+The standalone replacement-building prefab has no dependency on the older
+combined prefab. The product package closure still includes that older prefab
+through `ProductionEnvironmentRoot.prefab`, plus 57 legacy building meshes
+(including 12 older 4–6 km LOD assets), even though its 20 building groups are
+serialized inactive. Those dependencies remain governed by the existing
+`PhotorealTerrainV1/KBDU_ContextAssetsManifest.json` OSM/project-authored terms;
+their inactive state does not remove either their package presence or license
+obligations.
+
+Raw EPT/LAZ nodes, WESM downloads, source archives, processing caches, simulator
+recordings, screenshots, builds, and APKs remain external and must not be
+committed. The Aerial Scenery V1 license record makes no FAA, navigation,
+training-credit, certified-fidelity, production-photorealism, compatibility, or
+Quest-performance claim.

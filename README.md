@@ -7,7 +7,7 @@ T2 QuestFlight is a private, early product vertical slice for standalone Meta Qu
 - seated cockpit start on the KBDU-inspired runway;
 - taxi, takeoff, climb, shallow-turn, and approach presentation loop;
 - one stable baked terrain/runway/water environment with a shared-ENU near/mid/far orthophoto pyramid;
-- on `feature/environment-reconstruction-v2`, an experimental authoritative terrain sampler and placement manifest with complete bounded building coverage, sparse mask-driven vegetation, additional water features, and offline HLOD;
+- on `feature/aerial-scenery-representation-v1`, an experimental serialized four-tier aerial representation with a USGS 3DEP-derived fixed near mesh, lidar canopy maps, bounded vegetation batches, and true-footprint OSM building HLOD;
 - one CC0 photographic HDR sky, a single directional sun, and a bounded opaque reservoir treatment;
 - cockpit and external aircraft views with limited control-surface animation;
 - Touch-based seat calibration and standard gamepad/deterministic input;
@@ -43,6 +43,8 @@ Meta XR Simulator and a Windows/OpenXR development executable or Unity Play Mode
 This prototype is not FAA approved, not for navigation, does not provide legal training credit, and does not claim certified C172 fidelity, production photorealism, broad device compatibility, or final Quest performance. See `docs/KNOWN_LIMITATIONS.md`.
 
 Environment Reconstruction V2 is a preserved **PARTIAL** feature branch, not a mainline or release acceptance. Its static machine gates and Android build pass, but lead review scores the integrated imagery at about 5.2/10. The runway pattern, non-reservoir water ribbons, procedural building/vegetation quality, and terrain outliers block simulator and headset promotion.
+
+Aerial Scenery Representation V1 is preserved on `feature/aerial-scenery-representation-v1` as a **failed visual benchmark**, not a mainline or release candidate. It validates a bounded public-domain 3DEP pipeline, replaces active legacy scenery with three vegetation batches and true-footprint building HLOD, passes the static Quest planning budget and Android build, and removes the catastrophic giant-grove artifact found during iteration. Full-resolution lead review still scores the integrated result about **5.5/10**: near trees remain sparse, Tier-2 canopy reads as dark blobs instead of groves, low-oblique terrain remains soft, and building transition continuity is not demonstrated. Meta XR live stereo/HMD/Touch smoke passes, but all ten deterministic recordings are absent. See `docs/evidence/AERIAL_SCENERY_REPRESENTATION_V1_2026-07-18.md`.
 
 Airport-Core Photoreal Benchmark V4 is preserved on `feature/airport-core-photoreal-v4` as a **failed, unscaled benchmark**, not a mainline or release candidate. It adds a bounded, independently toggleable terminal/hangar benchmark and reproducible art sources, but the second and final Stage-1 review scored only 4.0/10. Lighting/ground color, runway, reservoir, clean-plate blending, vegetation, material count, texture memory, aggregate integrity, and Android preflight all remain blocking. Stage 2, Meta XR Simulator, and physical Quest testing were deliberately not entered. See `docs/evidence/AIRPORT_CORE_PHOTOREAL_BENCHMARK_V4_2026-07-17.md`.
 
