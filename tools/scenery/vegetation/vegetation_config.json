@@ -1,0 +1,130 @@
+{
+  "schema": "questflight.aerial-scenery-v1.vegetation-config.v1",
+  "deterministic_seed": "questflight-kbdu-aerial-vegetation-v1",
+  "coordinate_contract": {
+    "frame": "KBDU ARP local ENU metres",
+    "unity_axes": "+X east, +Y up, +Z north",
+    "raster_origin": "northwest",
+    "pixel_sample": "pixel center"
+  },
+  "lidar_input": {
+    "surface_features_semantic": "surface_features_canopy_building",
+    "dtm_semantic": "digital_terrain_model",
+    "terrain_validity_semantic": "terrain_surface_normal_and_validity",
+    "canopy_normal_semantic": "canopy_height_normal_and_occlusion",
+    "surface_channels": {
+      "r": "canopy_hag_u8_0p25m",
+      "g": "vegetation_return_density_unorm8",
+      "b": "building_hag_u8_0p25m",
+      "a": "canopy_occlusion_unorm8"
+    },
+    "require_sha256": true,
+    "require_validated_non_synthetic_source": true
+  },
+  "sampling": {
+    "coarse_cell_pixels": 4,
+    "minimum_canopy_hag_m": 2.0,
+    "minimum_vegetation_density": 0.16,
+    "maximum_building_hag_m": 0.25,
+    "minimum_tree_spacing_m": 12.0,
+    "grove_cluster_cell_m": 96.0,
+    "grove_cluster_max_radius_m": 24.0,
+    "grove_source_footprint_width_m": 34.0,
+    "grove_source_footprint_depth_m": 30.0,
+    "canonical_heights_m": {
+      "cottonwood": 15.0,
+      "willow_riparian": 9.2,
+      "general_deciduous": 11.8,
+      "sparse_conifer": 11.5,
+      "regional_shrub": 3.6
+    }
+  },
+  "tier3_handoff": {
+    "semantic": "tier0_2_geometry_to_tier3_canopy_map_handoff",
+    "grid": "exact frozen lidar 1024x1024 grid at 4 meters per pixel",
+    "local_bounds_edges_m": [
+      -2048.0,
+      -2048.0,
+      2048.0,
+      2048.0
+    ],
+    "tier0_tier1_footprint": "conservative oriented source-mesh horizontal AABB",
+    "tier2_footprint": "authored PCA ellipse",
+    "eligible_canopy_gate": "same DTM/surface-feature HAG, density, and building exclusion used by distribution",
+    "zero_padding_m": 16.0,
+    "smoothstep_feather_m": 64.0,
+    "code_0_owner": "outside validated eligible canopy or Tier0-2 authored geometry",
+    "code_255_owner": "validated eligible canopy fully owned by Tier3 lidar canopy map",
+    "mipmaps": false,
+    "outside_bounds_coverage": 0,
+    "scalar_handoff_allowed": false
+  },
+  "tiers": [
+    {
+      "tier": 0,
+      "label": "airport_hero_instanced_trees",
+      "minimum_radius_m": 0.0,
+      "maximum_radius_m": 500.0,
+      "maximum_instances": 3,
+      "source_objects": [
+        "AerialTree_Cottonwood_T0",
+        "AerialTree_WillowRiparian_T0",
+        "AerialTree_Deciduous_T0",
+        "AerialTree_SparseConifer_T0",
+        "AerialShrub_Regional_T0"
+      ]
+    },
+    {
+      "tier": 1,
+      "label": "near_grove_instanced_trees",
+      "minimum_radius_m": 500.0,
+      "maximum_radius_m": 1500.0,
+      "maximum_instances": 19,
+      "source_objects": [
+        "AerialTree_Cottonwood_T1",
+        "AerialTree_WillowRiparian_T1",
+        "AerialTree_Deciduous_T1",
+        "AerialTree_SparseConifer_T1",
+        "AerialShrub_Regional_T1"
+      ]
+    },
+    {
+      "tier": 2,
+      "label": "mid_fixed_upper_canopy_cell_aggregates",
+      "minimum_radius_m": 1500.0,
+      "maximum_radius_m": 4000.0,
+      "maximum_instances": 248,
+      "source_objects": [
+        "AerialGroveCluster_T2"
+      ]
+    },
+    {
+      "tier": 3,
+      "label": "lidar_domain_geometry_complement_canopy_map",
+      "minimum_radius_m": 0.0,
+      "maximum_radius_m": null,
+      "maximum_instances": 0,
+      "source_objects": [],
+      "ownership_mode": "R8 geometry-complement mask inside validated lidar bounds"
+    }
+  ],
+  "runtime_budget": {
+    "shared_materials": 1,
+    "maximum_simultaneous_draws": 3,
+    "maximum_visible_triangles": 19648,
+    "authored_geometry_worst_case_triangles": 19640,
+    "tier2_procedural_triangles_per_instance": 18,
+    "maximum_instances_per_draw": 1,
+    "vegetation_texture_bytes_excluding_shared_lidar_maps": 12233384,
+    "texture_memory_breakdown_uncompressed_full_mips": {
+      "color_alpha_atlas_rgba8": 5592404,
+      "packed_surface_atlas_rgba8": 5592404,
+      "ownership_handoff_mask_r8": 1048576
+    },
+    "alpha_blended_material_slots": 0,
+    "ordinary_vertical_billboards": 0,
+    "one_gameobject_per_tree": false,
+    "steady_state_environment_allocations": 0,
+    "editor_baked_meshes": 3
+  }
+}

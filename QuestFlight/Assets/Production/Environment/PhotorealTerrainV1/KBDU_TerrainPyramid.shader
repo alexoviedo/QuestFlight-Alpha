@@ -26,6 +26,15 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
         _AirportCoreMinorWaterMidWorldMinInvSize ("Minor-water mid min XZ / inverse size", Vector) = (-6000,-6000,0.0000833333,0.0000833333)
         _AirportCoreMinorWaterStrength ("Minor-water terrain effect strength", Range(0,1)) = 0
         _AirportCoreMinorWaterReflectionColor ("Minor-water reflection color", Color) = (0.48,0.60,0.67,1)
+        _AerialCanopySurfaceFeatures ("Aerial canopy height/density/building", 2D) = "black" {}
+        _AerialTerrainNormalAndValidity ("Aerial terrain normal/validity", 2D) = "black" {}
+        _AerialCanopyNormalOcclusion ("Aerial canopy normal/occlusion", 2D) = "gray" {}
+        _AerialCanopyHandoffMask ("Aerial canopy geometry/map ownership", 2D) = "black" {}
+        _AerialCanopyLocalBounds ("Aerial canopy min XZ / inverse size", Vector) = (-2048,-2048,0.000244140625,0.000244140625)
+        _AerialCanopyHeightQuantumMeters ("Aerial canopy height quantum", Float) = 0.25
+        _AerialCanopyColorStrength ("Aerial canopy color strength", Range(0,1)) = 0
+        _AerialCanopyNormalStrength ("Aerial canopy normal strength", Range(0,1)) = 0
+        _AerialCanopyTint ("Aerial canopy tint", Color) = (0.25,0.34,0.16,1)
         _Tint ("Shared terrain tint", Color) = (1,1,1,1)
         _Roughness ("Roughness", Range(0,1)) = 0.92
         [Enum(Off,0,MacroLevel,1,BlendWeight,2,TexelDensityAndBoundaries,3)]
@@ -52,6 +61,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
             #include "../AirportCoreV4/Water/Shaders/KBDUMinorWaterTerrainEffect.hlsl"
+            #include "../AerialSceneryV1/Vegetation/Shaders/AerialCanopyMap.cginc"
 
             sampler2D _NearAlbedo;
             sampler2D _NearSourceNormal;
@@ -121,6 +131,18 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
                 float2 world = input.worldPosition.xz;
+                float2 aerialCanopyUv = QuestFlightAerialCanopyUv(world);
+                half aerialCanopyInside = step(0.0, aerialCanopyUv.x) * step(aerialCanopyUv.x, 1.0) *
+                    step(0.0, aerialCanopyUv.y) * step(aerialCanopyUv.y, 1.0);
+                QuestFlightAerialCanopySample aerialCanopy;
+                aerialCanopy.heightMeters = 0.0h;
+                aerialCanopy.density = 0.0h;
+                aerialCanopy.buildingHeightMeters = 0.0h;
+                aerialCanopy.occlusion = 0.0h;
+                aerialCanopy.coverage = 0.0h;
+                aerialCanopy.terrainValidity = 0.0h;
+                aerialCanopy.geometryToMapHandoff = 0.0h;
+                aerialCanopy.canopyNormalLocal = half3(0.0h, 1.0h, 0.0h);
                 float2 nearUv = saturate((world - _NearWorldMinInvSize.xy) * _NearWorldMinInvSize.zw);
                 float2 midUv = saturate((world - _MidWorldMinInvSize.xy) * _MidWorldMinInvSize.zw);
                 float2 farUv = saturate((world - _FarWorldMinInvSize.xy) * _FarWorldMinInvSize.zw);
@@ -179,6 +201,13 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                         cleanPlateUvDx,
                         cleanPlateUvDy).rgb;
                     macro = lerp(macro, cleanPlate, saturate(cleanPlateWeight));
+                }
+
+                UNITY_BRANCH if (aerialCanopyInside > 0.5h &&
+                    (_AerialCanopyColorStrength > 0.001h || _AerialCanopyNormalStrength > 0.001h))
+                {
+                    aerialCanopy = QuestFlightSampleAerialCanopy(world);
+                    macro = QuestFlightApplyAerialCanopyColor(macro, aerialCanopy);
                 }
 
                 half cameraDistance = distance(_WorldSpaceCameraPos, input.worldPosition);
@@ -240,6 +269,10 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                     nearSourceNormal.y = max(nearSourceNormal.y, 0.001);
                     nearSourceNormal *= rsqrt(max(dot(nearSourceNormal, nearSourceNormal), 0.0001));
                     normal = normalize(lerp(normal, nearSourceNormal, nearSourceNormalWeight));
+                }
+                UNITY_BRANCH if (aerialCanopy.coverage > 0.001h && _AerialCanopyNormalStrength > 0.001h)
+                {
+                    normal = QuestFlightApplyAerialCanopyNormal(normal, aerialCanopy);
                 }
                 float2 minorWaterNearUv =
                     (world - _AirportCoreMinorWaterNearWorldMinInvSize.xy) *
