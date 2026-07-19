@@ -1,0 +1,107 @@
+{
+  "classification": {
+    "building_class": 6,
+    "ground_class": 2,
+    "noise_classes": [
+      7,
+      18
+    ],
+    "unclassified_surface_class": 1,
+    "vegetation_classes": [
+      3,
+      4,
+      5
+    ],
+    "withheld_class_flag_mask": 4
+  },
+  "derivative_budgets": {
+    "maximum_product_bytes": 11000000,
+    "maximum_raw_snapshot_bytes": 300000000,
+    "maximum_total_near_mesh_triangles": 92000,
+    "preferred_total_near_mesh_triangles": 92000
+  },
+  "ept_selection": {
+    "target_depth": 8,
+    "vertical_query_max_meters": 3000.0,
+    "vertical_query_min_meters": 1300.0
+  },
+  "height_inference": {
+    "building_growth_max_multi_return_fraction": 0.15,
+    "building_min_component_pixels": 2,
+    "building_seed_max_multi_return_fraction": 0.08,
+    "building_seed_max_roughness_meters": 1.5,
+    "building_seed_min_height_meters": 2.0,
+    "canopy_min_multi_return_fraction": 0.08,
+    "elevated_min_height_meters": 1.5,
+    "elevated_min_returns_per_pixel": 2,
+    "maximum_height_above_ground_meters": 63.75
+  },
+  "label": "KBDU-inspired / not for navigation",
+  "near_mesh": {
+    "breakline_source": "QuestFlight/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_reference_context.json",
+    "operational_core_half_extent_east_meters": 800.0,
+    "operational_core_half_extent_north_meters": 400.0,
+    "operational_core_spacing_meters": 16.0,
+    "outer_spacing_meters": 23.0,
+    "primary_runway_id": "08/26",
+    "runway_blend": {
+      "core_lateral_margin_meters": 4.0,
+      "outer_end_margin_meters": 55.0,
+      "outer_lateral_margin_meters": 40.0
+    }
+  },
+  "origin": {
+    "elevation_msl_meters": 1611.7824,
+    "latitude_degrees": 40.03936527,
+    "longitude_degrees": -105.22608958
+  },
+  "product_grid": {
+    "height_pixels": 1024,
+    "half_extent_meters": 2048.0,
+    "pixel_size_meters": 4.0,
+    "product_crs_epsg": 32613,
+    "source_crs_epsg": 3857,
+    "width_pixels": 1024
+  },
+  "quantization": {
+    "absolute_height_offset_meters": 1000.0,
+    "absolute_height_scale_meters": 0.05,
+    "height_above_ground_scale_meters": 0.25
+  },
+  "schema_version": 1,
+  "source": {
+    "dataset_id": "CO_DRCOG_1_2020",
+    "ept_url": "https://s3-us-west-2.amazonaws.com/usgs-lidar-public/CO_DRCOG_1_2020/ept.json",
+    "license_name": "United States Government Work / Public Domain",
+    "license_url": "https://www.usgs.gov/faqs/what-are-terms-uselicensing-map-services-and-data-national-map",
+    "stac_item_url": "https://s3-us-west-2.amazonaws.com/usgs-lidar-stac/ept/CO_DRCOG_1_2020.json",
+    "wesm": {
+      "csv_snapshot": {
+        "bytes": 2233144,
+        "last_modified_http": "Sat, 18 Jul 2026 06:54:47 GMT",
+        "retrieved_utc": "2026-07-19T01:50:01.163Z",
+        "sha256": "25079acea46bad8db53574c4343d0574177eabfa7515c6b5ec0686bbf85d044b",
+        "url": "https://rockyweb.usgs.gov/vdelivery/Datasets/Staged/Elevation/metadata/WESM.csv"
+      },
+      "record": {
+        "acquisition_end": "2020-08-03",
+        "acquisition_start": "2020-05-29",
+        "geoid": "GEOID18",
+        "horizontal_crs_epsg": 6342,
+        "lidar_point_cloud_category": "Meets",
+        "lidar_point_cloud_publication_date": "2021-12-22",
+        "lidar_point_cloud_reason": "Meets 3DEP LPC requirements",
+        "metadata_link": "https://prd-tnm.s3.amazonaws.com/index.html?prefix=StagedProducts/Elevation/metadata/CO_DRCOG_2020_B20/CO_DRCOG_1_2020",
+        "project": "CO_DRCOG_2020_B20",
+        "project_id": 193312,
+        "pulse_method": "linear-mode lidar",
+        "quality_level": "QL 1",
+        "source_dem_gsd_meters": 0.5,
+        "specification": "USGS Lidar Base Specification 2.1",
+        "vertical_crs_epsg": 5703,
+        "workunit": "CO_DRCOG_1_2020",
+        "workunit_id": 193309
+      }
+    }
+  }
+}

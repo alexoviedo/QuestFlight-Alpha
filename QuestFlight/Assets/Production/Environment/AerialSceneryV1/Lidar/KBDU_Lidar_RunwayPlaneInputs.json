@@ -1,0 +1,80 @@
+{
+  "blend": {
+    "core_lateral_margin_meters": 4.0,
+    "method": "separable smoothstep of lateral distance and distance beyond runway endpoints",
+    "outer_end_margin_meters": 55.0,
+    "outer_lateral_margin_meters": 40.0
+  },
+  "coordinate_frame": "KBDU local ENU meters; +X east, +Y up, +Z north",
+  "label": "KBDU-inspired / not for navigation",
+  "plane": {
+    "endpoint_0_source_z_meters": 1611.731,
+    "endpoint_1_source_z_meters": 1608.812,
+    "formula": "z0 + along_meters * (z1 - z0) / endpoint_distance_meters",
+    "local_y_formula": "source_z_meters - origin_source_z_meters",
+    "origin_source_z_meters": 1611.7824
+  },
+  "primary_runway": {
+    "endpoint_distance_meters": 1250.3851522287043,
+    "endpoints": [
+      {
+        "latitude_degrees": 40.03908888,
+        "longitude_degrees": -105.23346666,
+        "usgs_elevation_msl_meters": 1611.731,
+        "x_east_meters": -629.757,
+        "z_north_meters": -30.671
+      },
+      {
+        "latitude_degrees": 40.03909444,
+        "longitude_degrees": -105.21881944,
+        "usgs_elevation_msl_meters": 1608.812,
+        "x_east_meters": 620.628,
+        "z_north_meters": -30.054
+      }
+    ],
+    "polygon_xz_meters": [
+      [
+        -4.56,
+        -41.8
+      ],
+      [
+        -629.75,
+        -42.1
+      ],
+      [
+        -629.76,
+        -19.24
+      ],
+      [
+        -4.57,
+        -18.93
+      ],
+      [
+        620.62,
+        -18.62
+      ],
+      [
+        620.63,
+        -41.49
+      ],
+      [
+        -4.56,
+        -41.8
+      ]
+    ],
+    "runway_id": "08/26",
+    "width_feet": 75,
+    "width_meters": 22.86
+  },
+  "raster_contract_sha256": "2c7c8f6358672fb60796fe376b097a33a4be22fefe405f75c05110ca257bff2c",
+  "reference_input": {
+    "bytes": 1781886,
+    "path": "QuestFlight/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_reference_context.json",
+    "sha256": "5d0d0c3c71532b5106119b8e647e303e12bdeb662960ef78543050166bb8e3e0"
+  },
+  "schema": "questflight.aerial-scenery-v1.runway-plane-inputs.v1",
+  "source_accuracy": {
+    "operational_0_05_meter_accuracy_supported": false,
+    "reason": "EPT/STAC omit vertical CRS and achieved accuracy metrics. The associated WESM row identifies original-workunit EPSG:5703/QL 1, but no surveyed runway truth/error study was applied to this derivative."
+  }
+}
