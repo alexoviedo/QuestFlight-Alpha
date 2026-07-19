@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "source_context_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ReferenceContextV2.json",
+  "source_recipe_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ContextBatchRecipeV2.json",
+  "legacy_runtime_recipe_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_RuntimeHlodRecipeV2.json",
+  "hero_replacements_path": "tools/kbdu_airport_core_v4/buildings/airport_core_replacement_footprints.json",
+  "output_manifest_path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_BuildingSpatialContractV1.json",
+  "output_batch_replacement_manifest_path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_BuildingBatchReplacementV1.json",
+  "optional_lidar_manifest_path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json",
+  "tier_radii_meters": {
+    "hero_core_max_exclusive": 500.0,
+    "near_max_exclusive": 1500.0,
+    "mid_max_exclusive": 4000.0
+  },
+  "mid_simplification": {
+    "maximum_vertices": 6,
+    "maximum_area_error_ratio": 0.1,
+    "preserve_source_bounds": true,
+    "require_simple_polygon": true
+  },
+  "component_index_cell_meters": 20.0,
+  "lidar_height_contract": {
+    "minimum_confidence": 0.8,
+    "maximum_relative_error": 0.1,
+    "require_per_building_identity": true,
+    "preserve_recipe_foundation": true
+  },
+  "far_landmark_allowlist": []
+}

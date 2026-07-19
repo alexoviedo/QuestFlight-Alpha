@@ -1,0 +1,195 @@
+{
+  "asset_count": 24,
+  "generator": {
+    "path": "tools/scenery/buildings/generate_runtime_asset_inventory.py",
+    "sha256": "c78dada1287db25dac2ca7f2f699bbc6299351ddac1df71f3848fcc6fc84436f"
+  },
+  "inputs": {
+    "authoring_script": {
+      "path": "QuestFlight/Assets/Editor/AerialSceneryBuildingAssetAuthoring.cs",
+      "sha256": "bfa36d52affe668a11497031494cb3a7adf74b87fceb0003c708a8699d7e89c6"
+    },
+    "batch_manifest": {
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_BuildingBatchReplacementV1.json",
+      "sha256": "6275afa651698fe064d8f05bb15ff42e5943969dcbecfeff95755cf2c7b1b7a7"
+    },
+    "spatial_contract": {
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_BuildingSpatialContractV1.json",
+      "sha256": "dbb4ad1db8051e34b6948a72b69257bb83fd80fd38daf83a89806cea2be3d87a"
+    }
+  },
+  "license": "OpenStreetMap ODbL-1.0 derivative; \u00a9 OpenStreetMap contributors",
+  "raw_external_data_committed": false,
+  "records": [
+    {
+      "bytes": 1551142,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn001_zn001_LOD0.asset",
+      "sha256": "b3d00a8869ef8f32b72ebabab326772de003113044c73e098e4f03fef5cc5494",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 379619,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn001_zn001_LOD1.asset",
+      "sha256": "e0ef063fffc24a0571bc28890fe4589b6ace1f7913ef665e31d61dec68c290ad",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 16943,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn001_zn002_LOD0.asset",
+      "sha256": "fe3952a7a2f5094e199aa757c9cd5bda0114a80ab5e625ca063a663b8fff60b5",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 119552,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn001_zp000_LOD0.asset",
+      "sha256": "ef17e177952ec3da9ffce556196e2bbc66cbdd10062dcb0b0719842b9ab71697",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 32749,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn001_zp000_LOD1.asset",
+      "sha256": "9b8fabaa87c7ad6c6782079b7e990276e051b4c95962fc241e400389e6d8a20d",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 6581,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn001_zp001_LOD0.asset",
+      "sha256": "9afa9d4d2ea1d11f26fdc43d325de87da2762d4b0b987bbb74aa7d8cd3bfa0aa",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 56226,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn002_zn001_LOD0.asset",
+      "sha256": "26404c9abccfcf0da1950ec875934d2668094067f80f5b5b5b66838088f4d003",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 46278,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn002_zp000_LOD0.asset",
+      "sha256": "ef913f912c4bbb3bcdddf4344bf6ce75372b9e9b7786d0a0c1aaba10ffb17f78",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 578720,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp000_zn001_LOD0.asset",
+      "sha256": "d2a0f5778b78153d3e36d14f3d75d0323111749209794020354ecef97b83f822",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 125678,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp000_zn001_LOD1.asset",
+      "sha256": "75ff995f99e93a40a4c175e69e34946351ee39eef0fb9ef62376566989cdff91",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 17916,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp000_zn002_LOD0.asset",
+      "sha256": "df03005aada1c39aa14a1942fece76813a511ab5b9bb0859aa4a6fda9857fe14",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 217045,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp000_zp000_LOD0.asset",
+      "sha256": "f12f33332198897299f6cd921088732b9d046172f6d7a447178da9dfec79de96",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 48763,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp000_zp000_LOD1.asset",
+      "sha256": "730878e2670cec310096870c690b1b1109a3d65bd70fb1205e6a4fec66f668ae",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 36082,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp000_zp001_LOD0.asset",
+      "sha256": "25c7655bfe3c2edf67f5d945194638cde29dc58be08d87e0df3de3a48c11695e",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 6614,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp001_zn001_LOD0.asset",
+      "sha256": "f835d8d655ca180a4255e1c4816efc02989a2840b372877ee383b6159df1e485",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 7421,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp001_zp000_LOD0.asset",
+      "sha256": "4d0c7f9ccfd383d30b90cd7d5044c6c881c18945200e39d48b9936b99b409f98",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 1536140,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_2-4km_hlod_4000m_xn001_zn001_LOD0.asset",
+      "sha256": "f26cf71959871792a03c1a55e6aeea177079d4a6d7b03aad02de733adbffc6ca",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 855625,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_2-4km_hlod_4000m_xn001_zp000_LOD0.asset",
+      "sha256": "6e2276bec3c0cec68ae6924820b2867993ff1a8ec59692529eed8f46a0109655",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 258832,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_2-4km_hlod_4000m_xp000_zn001_LOD0.asset",
+      "sha256": "6bb33e4c437773d91f52d90376783a6ad8d376d91f5d33e8ae8f9b27fd8f946d",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 463473,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_2-4km_hlod_4000m_xp000_zp000_LOD0.asset",
+      "sha256": "353f25271cc90bfeee1449e34b52b116e334e34c86e534c1af5571760f69b046",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 3889,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__mid_boundary_xn001_zn001_LOD0.asset",
+      "sha256": "f03d18cf10bf438e492a377122245687b15ec4ef22c9d085554832c301acbebf",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 3886,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__mid_boundary_xp000_zn001_LOD0.asset",
+      "sha256": "c00247e231ba45ca351533bb8712c274d354d561f67dda1ece2ab22d556d0016",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 3901,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__mid_boundary_xp000_zp000_LOD0.asset",
+      "sha256": "1f0da9a11b6abe5c0c48a882643c33ddda55843596c1cee11bdf73d9513985ea",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    },
+    {
+      "bytes": 82640,
+      "license": "OpenStreetMap ODbL-1.0 derived data; project-authored Unity serialization",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_AerialBuildingsV1.prefab",
+      "sha256": "49ccd4ab30bb68789e5f8bd73cb22671623bfe29541d43ac937181b0fb76873d",
+      "source": "Deterministic true-footprint geometry compiled from KBDU_BuildingSpatialContractV1.json"
+    }
+  ],
+  "schema": "questflight.aerial-scenery-v1.building-runtime-assets.v1",
+  "total_bytes": 6455715
+}
