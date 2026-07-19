@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "label": "KBDU bounded public-domain ground imagery recovery / not for navigation",
+  "origin": {
+    "latitude_degrees": 40.03936527,
+    "longitude_degrees": -105.22608958,
+    "elevation_msl_meters": 1611.7824
+  },
+  "source": {
+    "agency": "USGS / USDA Farm Service Agency",
+    "service_name": "USGSNAIPPlus",
+    "service_url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer",
+    "catalog_validation_half_extent_meters": 12000.0,
+    "catalog_year": 2019,
+    "acquisition_dates": [
+      "2019-08-03",
+      "2019-09-19"
+    ],
+    "resolution_meters": 0.6,
+    "raster_ids": [
+      30800,
+      30801,
+      30802,
+      30803,
+      30804,
+      30805,
+      30806,
+      30807,
+      30809,
+      30811,
+      32802,
+      32803,
+      32806,
+      32807,
+      32811,
+      32832,
+      32833,
+      32834,
+      32835,
+      32836,
+      32837,
+      32838,
+      32839,
+      32841,
+      32843
+    ],
+    "raster_function": "NaturalColor",
+    "license_name": "United States government work / public domain",
+    "license_spdx": "LicenseRef-US-Government-Work-Public-Domain",
+    "license_url": "https://www.usgs.gov/national-map-supporting-themes",
+    "credit": "USGS, USDA, The National Map: Orthoimagery"
+  },
+  "baseline": {
+    "active_mid_texture": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Mid12km_4096.jpg",
+    "active_mid_texture_sha256": "5e8d6edbcc5dc937c78b5fb8e4a5f8f7a06bda726b4509684e237f2b17fbdf9a",
+    "active_mid_resolution_pixels": 4096,
+    "active_mid_coverage_meters": 12000.0,
+    "active_mid_meters_per_texel": 2.9296875,
+    "active_mid_astc6x6_mip_bytes": 9961536,
+    "existing_near_texture": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
+    "existing_near_texture_sha256": "446e5c7fa13fc653de1f3e8404829c0e54b7e919fe99ebfba79d747a0b1dadea",
+    "existing_near_half_extent_meters": 2000.0,
+    "existing_far_texture": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Far24km_2048.jpg",
+    "existing_far_texture_sha256": "799be878d5c6be73b5596cbea70ee4e122859a528231608e40796f1020617b33",
+    "full_scene_estimated_texture_bytes": 182930546,
+    "full_scene_texture_ceiling_bytes": 188743680
+  },
+  "color_normalization": {
+    "brightness": 0.98,
+    "contrast": 1.04,
+    "saturation": 0.92,
+    "red_gain": 1.02,
+    "green_gain": 0.99,
+    "blue_gain": 0.95,
+    "near_match_gain_min": 0.9,
+    "near_match_gain_max": 1.1,
+    "near_match_offset_limit": 10.0
+  },
+  "recovery_tiles": [
+    {
+      "id": "mid_nw",
+      "local_bounds_meters": [-4032.0, -32.0, 32.0, 4032.0],
+      "nominal_cell_bounds_meters": [-4000.0, 0.0, 0.0, 4000.0],
+      "output_name": "KBDU_NAIP_2019_MidNW_2048.jpg"
+    },
+    {
+      "id": "mid_ne",
+      "local_bounds_meters": [-32.0, -32.0, 4032.0, 4032.0],
+      "nominal_cell_bounds_meters": [0.0, 0.0, 4000.0, 4000.0],
+      "output_name": "KBDU_NAIP_2019_MidNE_2048.jpg"
+    },
+    {
+      "id": "mid_sw",
+      "local_bounds_meters": [-4032.0, -4032.0, 32.0, 32.0],
+      "nominal_cell_bounds_meters": [-4000.0, -4000.0, 0.0, 0.0],
+      "output_name": "KBDU_NAIP_2019_MidSW_2048.jpg"
+    },
+    {
+      "id": "mid_se",
+      "local_bounds_meters": [-32.0, -4032.0, 4032.0, 32.0],
+      "nominal_cell_bounds_meters": [0.0, -4000.0, 4000.0, 0.0],
+      "output_name": "KBDU_NAIP_2019_MidSE_2048.jpg"
+    }
+  ],
+  "fallback": {
+    "id": "mid_base_12km",
+    "local_bounds_meters": [-6000.0, -6000.0, 6000.0, 6000.0],
+    "output_name": "KBDU_NAIP_2019_MidBase12km_4096.jpg"
+  },
+  "runtime": {
+    "hot_resolution_pixels": 2048,
+    "fallback_resolution_pixels": 4096,
+    "hot_export_resolution_pixels": 4000,
+    "jpeg_quality": 92,
+    "jpeg_subsampling": "4:4:4",
+    "hot_android_astc_block": "6x6",
+    "fallback_android_astc_block": "10x10",
+    "mipmaps": true,
+    "streaming_mipmaps": false,
+    "filter_mode": "trilinear",
+    "anisotropy": 8,
+    "hot_tile_streaming_priority": 0,
+    "fallback_streaming_priority": 0,
+    "hot_tile_mip_bias": -0.15,
+    "fallback_mip_bias": 0.0,
+    "wrap_mode": "clamp",
+    "quadrant_overlap_meters": 64.0,
+    "near_to_recovery_blend_meters": [1800.0, 1980.0],
+    "recovery_to_fallback_blend_meters": [3800.0, 4000.0],
+    "fallback_to_far_blend_meters": [5000.0, 6000.0],
+    "maximum_net_full_mip_increase_bytes": 4000000
+  },
+  "water_policy": {
+    "mode": "orthophoto_only",
+    "reservoir": "sample the same selected ground-imagery level as adjacent terrain; no water renderer, no water material, no animated normal, no reflection, no tint, no transparency, and no extra draw",
+    "minor_water": "sample the same selected ground-imagery level as terrain; no ribbon renderer, no bank renderer, no water material, no mask response, no transparency, and no extra draw",
+    "future_polish": "deferred; this contract intentionally provides no water effects"
+  }
+}

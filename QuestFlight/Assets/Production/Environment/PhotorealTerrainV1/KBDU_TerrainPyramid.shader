@@ -4,13 +4,22 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
     {
         _NearAlbedo ("Near 4 km NAIP", 2D) = "gray" {}
         _NearSourceNormal ("Near 1 m DEM source normal (ENU)", 2D) = "gray" {}
-        _MidAlbedo ("Mid 12 km NAIP", 2D) = "gray" {}
+        _RecoveryMidNWAlbedo ("Recovery mid NW 4 km NAIP", 2D) = "gray" {}
+        _RecoveryMidNEAlbedo ("Recovery mid NE 4 km NAIP", 2D) = "gray" {}
+        _RecoveryMidSWAlbedo ("Recovery mid SW 4 km NAIP", 2D) = "gray" {}
+        _RecoveryMidSEAlbedo ("Recovery mid SE 4 km NAIP", 2D) = "gray" {}
+        _MidAlbedo ("Mid 12 km NAIP fallback", 2D) = "gray" {}
         _FarAlbedo ("Far 24 km NAIP", 2D) = "gray" {}
         _DetailAlbedo ("CC0 near/mid microdetail", 2D) = "white" {}
         _NearWorldMinInvSize ("Near min XZ / inverse size", Vector) = (-2000,-2000,0.00025,0.00025)
+        _RecoveryMidNWWorldMinInvSize ("Recovery NW min XZ / inverse size", Vector) = (-4032,-32,0.000246063,0.000246063)
+        _RecoveryMidNEWorldMinInvSize ("Recovery NE min XZ / inverse size", Vector) = (-32,-32,0.000246063,0.000246063)
+        _RecoveryMidSWWorldMinInvSize ("Recovery SW min XZ / inverse size", Vector) = (-4032,-4032,0.000246063,0.000246063)
+        _RecoveryMidSEWorldMinInvSize ("Recovery SE min XZ / inverse size", Vector) = (-32,-4032,0.000246063,0.000246063)
         _MidWorldMinInvSize ("Mid min XZ / inverse size", Vector) = (-6000,-6000,0.0000833333,0.0000833333)
         _FarWorldMinInvSize ("Far min XZ / inverse size", Vector) = (-12000,-12000,0.0000416667,0.0000416667)
-        _NearBlendStartEnd ("Near to mid overlap", Vector) = (1650,2000,0,0)
+        _NearBlendStartEnd ("Near to recovery overlap", Vector) = (1800,1980,0,0)
+        _RecoveryBlendStartEnd ("Recovery to mid fallback overlap", Vector) = (3800,4000,0,0)
         _MidBlendStartEnd ("Mid to far overlap", Vector) = (5000,6000,0,0)
         _DetailScale ("Detail world scale", Float) = 0.0666667
         _DetailFadeStartEnd ("Detail camera fade", Vector) = (180,1500,0,0)
@@ -21,11 +30,6 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
         _AirportCoreCleanPlateMask ("Airport core clean-plate replacement mask", 2D) = "black" {}
         _AirportCoreCleanPlateWorldMinInvSize ("Clean-plate min XZ / inverse size", Vector) = (0,0,1,1)
         _AirportCoreCleanPlateStrength ("Clean-plate integration strength", Range(0,1)) = 0
-        _AirportCoreMinorWaterMask ("Airport core minor-water terrain mask", 2D) = "black" {}
-        _AirportCoreMinorWaterNearWorldMinInvSize ("Minor-water near min XZ / inverse size", Vector) = (-2000,-2000,0.00025,0.00025)
-        _AirportCoreMinorWaterMidWorldMinInvSize ("Minor-water mid min XZ / inverse size", Vector) = (-6000,-6000,0.0000833333,0.0000833333)
-        _AirportCoreMinorWaterStrength ("Minor-water terrain effect strength", Range(0,1)) = 0
-        _AirportCoreMinorWaterReflectionColor ("Minor-water reflection color", Color) = (0.48,0.60,0.67,1)
         _AerialCanopySurfaceFeatures ("Aerial canopy height/density/building", 2D) = "black" {}
         _AerialTerrainNormalAndValidity ("Aerial terrain normal/validity", 2D) = "black" {}
         _AerialCanopyNormalOcclusion ("Aerial canopy normal/occlusion", 2D) = "gray" {}
@@ -60,34 +64,37 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             #pragma multi_compile_instancing
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
-            #include "../AirportCoreV4/Water/Shaders/KBDUMinorWaterTerrainEffect.hlsl"
             #include "../AerialSceneryV1/Vegetation/Shaders/AerialCanopyMap.cginc"
 
             sampler2D _NearAlbedo;
             sampler2D _NearSourceNormal;
+            sampler2D _RecoveryMidNWAlbedo;
+            sampler2D _RecoveryMidNEAlbedo;
+            sampler2D _RecoveryMidSWAlbedo;
+            sampler2D _RecoveryMidSEAlbedo;
             sampler2D _MidAlbedo;
             sampler2D _FarAlbedo;
             sampler2D _DetailAlbedo;
             sampler2D _AirportCoreCleanPlateAlbedo;
             sampler2D _AirportCoreCleanPlateMask;
-            sampler2D _AirportCoreMinorWaterMask;
             float4 _NearWorldMinInvSize;
+            float4 _RecoveryMidNWWorldMinInvSize;
+            float4 _RecoveryMidNEWorldMinInvSize;
+            float4 _RecoveryMidSWWorldMinInvSize;
+            float4 _RecoveryMidSEWorldMinInvSize;
             float4 _MidWorldMinInvSize;
             float4 _FarWorldMinInvSize;
             float4 _NearBlendStartEnd;
+            float4 _RecoveryBlendStartEnd;
             float4 _MidBlendStartEnd;
             float4 _DetailFadeStartEnd;
             float4 _DetailRadiusFadeStartEnd;
             float4 _NearSourceNormalFadeStartEnd;
             float4 _AirportCoreCleanPlateWorldMinInvSize;
-            float4 _AirportCoreMinorWaterNearWorldMinInvSize;
-            float4 _AirportCoreMinorWaterMidWorldMinInvSize;
-            fixed4 _AirportCoreMinorWaterReflectionColor;
             fixed4 _Tint;
             half _DetailScale;
             half _NearSourceNormalStrength;
             half _AirportCoreCleanPlateStrength;
-            half _AirportCoreMinorWaterStrength;
             half _Roughness;
             half _DiagnosticMode;
 
@@ -126,11 +133,69 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 return 1.0 - smoothstep(width, width * 2.0, abs(radius - boundary));
             }
 
+            fixed3 SampleRecoveryTile(
+                sampler2D source,
+                float2 world,
+                float4 worldMinInvSize,
+                float2 worldDx,
+                float2 worldDy)
+            {
+                float2 uv = saturate((world - worldMinInvSize.xy) * worldMinInvSize.zw);
+                return tex2Dgrad(
+                    source,
+                    uv,
+                    worldDx * worldMinInvSize.zw,
+                    worldDy * worldMinInvSize.zw).rgb;
+            }
+
+            fixed3 SampleRecoveryNorth(float2 world, float2 worldDx, float2 worldDy)
+            {
+                UNITY_BRANCH if (world.x <= -32.0)
+                    return SampleRecoveryTile(_RecoveryMidNWAlbedo, world,
+                        _RecoveryMidNWWorldMinInvSize, worldDx, worldDy);
+                UNITY_BRANCH if (world.x >= 32.0)
+                    return SampleRecoveryTile(_RecoveryMidNEAlbedo, world,
+                        _RecoveryMidNEWorldMinInvSize, worldDx, worldDy);
+                fixed3 west = SampleRecoveryTile(_RecoveryMidNWAlbedo, world,
+                    _RecoveryMidNWWorldMinInvSize, worldDx, worldDy);
+                fixed3 east = SampleRecoveryTile(_RecoveryMidNEAlbedo, world,
+                    _RecoveryMidNEWorldMinInvSize, worldDx, worldDy);
+                return lerp(west, east, smoothstep(-32.0, 32.0, world.x));
+            }
+
+            fixed3 SampleRecoverySouth(float2 world, float2 worldDx, float2 worldDy)
+            {
+                UNITY_BRANCH if (world.x <= -32.0)
+                    return SampleRecoveryTile(_RecoveryMidSWAlbedo, world,
+                        _RecoveryMidSWWorldMinInvSize, worldDx, worldDy);
+                UNITY_BRANCH if (world.x >= 32.0)
+                    return SampleRecoveryTile(_RecoveryMidSEAlbedo, world,
+                        _RecoveryMidSEWorldMinInvSize, worldDx, worldDy);
+                fixed3 west = SampleRecoveryTile(_RecoveryMidSWAlbedo, world,
+                    _RecoveryMidSWWorldMinInvSize, worldDx, worldDy);
+                fixed3 east = SampleRecoveryTile(_RecoveryMidSEAlbedo, world,
+                    _RecoveryMidSEWorldMinInvSize, worldDx, worldDy);
+                return lerp(west, east, smoothstep(-32.0, 32.0, world.x));
+            }
+
+            fixed3 SampleRecovery(float2 world, float2 worldDx, float2 worldDy)
+            {
+                UNITY_BRANCH if (world.y <= -32.0)
+                    return SampleRecoverySouth(world, worldDx, worldDy);
+                UNITY_BRANCH if (world.y >= 32.0)
+                    return SampleRecoveryNorth(world, worldDx, worldDy);
+                fixed3 south = SampleRecoverySouth(world, worldDx, worldDy);
+                fixed3 north = SampleRecoveryNorth(world, worldDx, worldDy);
+                return lerp(south, north, smoothstep(-32.0, 32.0, world.y));
+            }
+
             fixed4 frag(v2f input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
                 float2 world = input.worldPosition.xz;
+                float2 worldDx = ddx(world);
+                float2 worldDy = ddy(world);
                 float2 aerialCanopyUv = QuestFlightAerialCanopyUv(world);
                 half aerialCanopyInside = step(0.0, aerialCanopyUv.x) * step(aerialCanopyUv.x, 1.0) *
                     step(0.0, aerialCanopyUv.y) * step(aerialCanopyUv.y, 1.0);
@@ -154,6 +219,8 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 float2 farUvDy = ddy(farUv);
                 half radius = max(abs(world.x), abs(world.y));
                 half nearWeight = 1.0 - smoothstep(_NearBlendStartEnd.x, _NearBlendStartEnd.y, radius);
+                half recoveryWeight = 1.0 - smoothstep(
+                    _RecoveryBlendStartEnd.x, _RecoveryBlendStartEnd.y, radius);
                 half midWeight = 1.0 - smoothstep(_MidBlendStartEnd.x, _MidBlendStartEnd.y, radius);
                 fixed3 macro;
                 UNITY_BRANCH if (radius <= _NearBlendStartEnd.x)
@@ -163,8 +230,18 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 else if (radius < _NearBlendStartEnd.y)
                 {
                     fixed3 nearColor = tex2Dgrad(_NearAlbedo, nearUv, nearUvDx, nearUvDy).rgb;
+                    fixed3 recoveryColor = SampleRecovery(world, worldDx, worldDy);
+                    macro = lerp(recoveryColor, nearColor, nearWeight);
+                }
+                else if (radius <= _RecoveryBlendStartEnd.x)
+                {
+                    macro = SampleRecovery(world, worldDx, worldDy);
+                }
+                else if (radius < _RecoveryBlendStartEnd.y)
+                {
+                    fixed3 recoveryColor = SampleRecovery(world, worldDx, worldDy);
                     fixed3 midColor = tex2Dgrad(_MidAlbedo, midUv, midUvDx, midUvDy).rgb;
-                    macro = lerp(midColor, nearColor, nearWeight);
+                    macro = lerp(midColor, recoveryColor, recoveryWeight);
                 }
                 else if (radius <= _MidBlendStartEnd.x)
                 {
@@ -244,15 +321,23 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 if (_DiagnosticMode > 0.5)
                 {
                     fixed3 levelColor = lerp(fixed3(0.12,0.32,0.78), fixed3(0.94,0.58,0.08), midWeight);
+                    levelColor = lerp(levelColor, fixed3(0.60,0.18,0.82), recoveryWeight);
                     levelColor = lerp(levelColor, fixed3(0.08,0.72,0.30), nearWeight);
                     if (_DiagnosticMode < 1.5)
                         return fixed4(levelColor, 1.0);
-                    half overlap = max(4.0 * nearWeight * (1.0 - nearWeight), 4.0 * midWeight * (1.0 - midWeight));
+                    half overlap = max(
+                        max(4.0 * nearWeight * (1.0 - nearWeight),
+                            4.0 * recoveryWeight * (1.0 - recoveryWeight)),
+                        4.0 * midWeight * (1.0 - midWeight));
                     if (_DiagnosticMode < 2.5)
                         return fixed4(lerp(fixed3(0.03,0.03,0.03), fixed3(1.0,0.12,0.02), overlap), 1.0);
                     half boundary = max(
                         max(BoundaryLine(radius, _NearBlendStartEnd.x), BoundaryLine(radius, _NearBlendStartEnd.y)),
-                        max(BoundaryLine(radius, _MidBlendStartEnd.x), BoundaryLine(radius, _MidBlendStartEnd.y)));
+                        max(
+                            max(BoundaryLine(radius, _RecoveryBlendStartEnd.x),
+                                BoundaryLine(radius, _RecoveryBlendStartEnd.y)),
+                            max(BoundaryLine(radius, _MidBlendStartEnd.x),
+                                BoundaryLine(radius, _MidBlendStartEnd.y))));
                     return fixed4(lerp(levelColor * 0.62, fixed3(1,1,1), boundary), 1.0);
                 }
 
@@ -274,49 +359,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 {
                     normal = QuestFlightApplyAerialCanopyNormal(normal, aerialCanopy);
                 }
-                float2 minorWaterNearUv =
-                    (world - _AirportCoreMinorWaterNearWorldMinInvSize.xy) *
-                    _AirportCoreMinorWaterNearWorldMinInvSize.zw;
-                float2 minorWaterMidUv =
-                    (world - _AirportCoreMinorWaterMidWorldMinInvSize.xy) *
-                    _AirportCoreMinorWaterMidWorldMinInvSize.zw;
-                half minorNearInside = step(0.0, minorWaterNearUv.x) * step(minorWaterNearUv.x, 1.0) *
-                    step(0.0, minorWaterNearUv.y) * step(minorWaterNearUv.y, 1.0);
-                half minorMidInside = step(0.0, minorWaterMidUv.x) * step(minorWaterMidUv.x, 1.0) *
-                    step(0.0, minorWaterMidUv.y) * step(minorWaterMidUv.y, 1.0);
                 half3 viewDirection = normalize(_WorldSpaceCameraPos - input.worldPosition);
-                UNITY_BRANCH if (_AirportCoreMinorWaterStrength > 0.001h &&
-                    (minorNearInside > 0.5h || minorMidInside > 0.5h))
-                {
-                    half2 nearPacked = tex2Dgrad(
-                        _AirportCoreMinorWaterMask,
-                        saturate(minorWaterNearUv),
-                        ddx(minorWaterNearUv),
-                        ddy(minorWaterNearUv)).rg;
-                    half2 midPacked = tex2Dgrad(
-                        _AirportCoreMinorWaterMask,
-                        saturate(minorWaterMidUv),
-                        ddx(minorWaterMidUv),
-                        ddy(minorWaterMidUv)).ba;
-                    half nearToMid = smoothstep(1750.0h, 2100.0h, radius);
-                    half2 minorPacked = lerp(nearPacked * minorNearInside,
-                        midPacked * minorMidInside, nearToMid) * _AirportCoreMinorWaterStrength;
-                    half2 rippleSlope = half2(
-                        sin(world.x * 0.081h + world.y * 0.047h),
-                        cos(world.y * 0.073h - world.x * 0.039h)) * 0.045h;
-                    half3 rippleNormal = normalize(half3(rippleSlope.x, 1.0h, rippleSlope.y));
-                    half terrainMetallic = 0.0h;
-                    ApplyKBDUMinorWaterTerrainEffect(
-                        minorPacked.r,
-                        minorPacked.g,
-                        _AirportCoreMinorWaterReflectionColor.rgb,
-                        rippleNormal,
-                        viewDirection,
-                        albedo,
-                        normal,
-                        surfaceRoughness,
-                        terrainMetallic);
-                }
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half diffuse = saturate(dot(normal, lightDirection));
                 half3 irradiance = saturate(max(ShadeSH9(half4(normal, 1.0)), 0.0h) * 0.35h +
