@@ -4,9 +4,15 @@
 rectangles with an offline, source-pinned building representation contract.
 
 - Hero-core and near records use the original OSM-derived quantized footprint.
-- Mid records use deterministic vertex removal. The simplified polygon must
+- Mid records that retain useful projected size use deterministic vertex removal. The simplified polygon must
   remain simple, keep the exact source X/Z bounds, and remain within +/-10% of
   source area. Failure to simplify safely falls back to more source vertices.
+- Every active context representation is a closed foundation-to-roof shell.
+  Conservative residential footprints use deterministic gable or hip roofs;
+  other footprints use a closed flat roof. No active mesh is roof-only.
+- Every batch has one fixed renderer, a unit transform, and no `LODGroup`.
+  Small structures beyond 2 km use the orthophoto instead of a roof-card HLOD,
+  eliminating the former scale/shape pop while reducing runtime geometry.
 - Components contain only footprint parts that intersect or touch. A runtime
   batch may combine many components into one mesh, but it must never add a hull,
   cell rectangle, or geometry across the space between them.
@@ -16,8 +22,25 @@ rectangles with an offline, source-pinned building representation contract.
   `far_landmark_allowlist` may retain a far footprint.
 - Every represented form uses the same source-derived polygon centroid/bounds,
   terrain-sampled `base_y_meters`, selected height, and one authored unit scale.
-- Mid-only batches use one fixed roof renderer and no `LODGroup`. A two-level
-  LOD is serialized only when near prisms genuinely reduce to roof geometry.
+- Fixed shells use one opaque, instancing-compatible shared material. It reuses
+  the already-resident AirportCore V4 HangarKit albedo, tangent-normal, and MRAO
+  atlas triplet; no context texture is copied or added to the product closure.
+  Facades select deterministic brick, concrete, light metal, or weathered-metal
+  cells. Roofs select only the authored dark-roof or weathered-corrugated cells.
+  Tile indices are bottom-left row-major, and sampling uses the same conservative
+  0.012 absolute-atlas inset as the AirportCore V4 Blender authoring to prevent
+  cross-cell mip bleed at oblique flight views. The old repeated-window
+  `KBDU_ContextAtlas.png` is forbidden from the standalone prefab dependency
+  closure.
+- Facade repetition is based on edge length and storey height instead of
+  stretching a complete atlas cell across every wall. The material has one
+  opaque forward pass, no lightmap dependency, no reflection-probe dependency,
+  and deterministic normal/MRAO lighting. It derives explicit mip gradients
+  from unwrapped local UVs, then progressively flattens albedo, tangent-normal,
+  AO, metallic, and specular microdetail once the atlas footprint becomes
+  sub-pixel. Near views retain the PBR atlas; aerial views converge to bounded
+  per-cell linear-space brick, tan, gray-metal, concrete, and roof averages so
+  corrugation cannot become black moire.
 
 ## Optional lidar height input
 
@@ -61,8 +84,7 @@ The authoring entry point writes only
 `ProductionEnvironmentRoot.prefab`, or the legacy combined context prefab.
 `KBDU_BuildingBatchReplacementV1.json` is the integration handoff: it maps
 each legacy building group and its exact three renderer IDs to disable to the
-new footprint-preserving group and its one fixed renderer or two real LOD
-renderer IDs. Source footprints
+new footprint-preserving group and its one fixed closed-shell renderer. Source footprints
 covered by authored hero replacements remain omitted from the generic prefab.
 Authoring also removes generated mesh assets no longer named by a rendered
 replacement row, so orthophoto-only far batches cannot leave stale assets in

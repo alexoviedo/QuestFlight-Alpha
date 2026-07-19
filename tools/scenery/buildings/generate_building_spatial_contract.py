@@ -414,6 +414,122 @@ def _tier(radius: float, config: dict[str, Any], landmark: bool) -> tuple[str, s
     return "far_orthophoto", "ORTHOPHOTO_ONLY_NO_BUILDING_GEOMETRY"
 
 
+def mid_geometry_is_useful(
+    radius: float, source_area_square_meters: float, config: dict[str, Any]
+) -> bool:
+    """Keep only mid buildings whose projected size justifies a closed shell.
+
+    Small structures beyond the unconditional radius are more faithful in the
+    orthophoto than as roof-only cards.  This decision is deterministic and is
+    made before batching, so it cannot produce a scale-changing runtime LOD.
+    """
+    policy = config["mid_geometry_selection"]
+    return (
+        radius < float(policy["unconditional_radius_meters"])
+        or source_area_square_meters
+        >= float(policy["minimum_footprint_area_square_meters_beyond_radius"])
+    )
+
+
+def roof_profile(
+    feature: dict[str, Any], geometry_points: list[tuple[int, int]], config: dict[str, Any]
+) -> str:
+    """Select a conservative footprint-derived gable, hip, or flat profile."""
+    building_class = str((feature.get("tags") or {}).get("building", "yes")).lower()
+    allowed = {str(value).lower() for value in config["shell_contract"]["gable_building_classes"]}
+    if building_class not in allowed:
+        return "flat"
+    convex = all(
+        orientation(
+            geometry_points[index - 1],
+            geometry_points[index],
+            geometry_points[(index + 1) % len(geometry_points)],
+        )
+        * signed_area2(geometry_points)
+        > 0
+        for index in range(len(geometry_points))
+    )
+    if len(geometry_points) != 4:
+        return "hip" if convex and len(geometry_points) <= 8 else "flat"
+    lengths2 = [
+        (geometry_points[(index + 1) % 4][0] - geometry_points[index][0]) ** 2
+        + (geometry_points[(index + 1) % 4][1] - geometry_points[index][1]) ** 2
+        for index in range(4)
+    ]
+    if min(lengths2) <= 0:
+        return "flat"
+    # Opposite sides should agree reasonably and adjacent sides should meet at
+    # near-right angles.  Irregular footprints retain a flat, closed roof.
+    opposite_ratio = max(
+        max(lengths2[0], lengths2[2]) / min(lengths2[0], lengths2[2]),
+        max(lengths2[1], lengths2[3]) / min(lengths2[1], lengths2[3]),
+    )
+    right_angle_errors = []
+    for index in range(4):
+        previous = geometry_points[index - 1]
+        current = geometry_points[index]
+        following = geometry_points[(index + 1) % 4]
+        first = (previous[0] - current[0], previous[1] - current[1])
+        second = (following[0] - current[0], following[1] - current[1])
+        denominator = math.sqrt((first[0] ** 2 + first[1] ** 2) * (second[0] ** 2 + second[1] ** 2))
+        right_angle_errors.append(abs(first[0] * second[0] + first[1] * second[1]) / denominator)
+    if opposite_ratio <= 1.35 and max(right_angle_errors) <= 0.25:
+        return "gable"
+    return "hip" if convex else "flat"
+
+
+def deterministic_tile_choice(values: list[int], feature_index: int, salt: int) -> int:
+    if not values:
+        raise ValueError("Material tile palette must not be empty")
+    mixed = (
+        ((feature_index + 1) * 2654435761)
+        ^ ((salt + 1) * 2246822519)
+        ^ 3266489917
+    ) & 0xFFFFFFFF
+    mixed ^= mixed >> 16
+    mixed = (mixed * 2246822519) & 0xFFFFFFFF
+    mixed ^= mixed >> 13
+    return int(values[mixed % len(values)])
+
+
+def material_tiles(
+    feature: dict[str, Any],
+    feature_index: int,
+    profile: str,
+    source_facade_tile: int,
+    source_roof_tile: int,
+    config: dict[str, Any],
+) -> tuple[int, int]:
+    """Map the old context recipe to the existing AirportCore V4 PBR cells.
+
+    The source recipe tile remains part of the deterministic salt, but its old
+    repeated-window atlas semantics never enter the runtime contract.
+    """
+    contract = config["material_contract"]
+    building_class = str((feature.get("tags") or {}).get("building", "yes")).lower()
+    masonry = {str(value).lower() for value in contract["masonry_building_classes"]}
+    metal = {str(value).lower() for value in contract["metal_building_classes"]}
+    if building_class in masonry:
+        facade_palette = contract["masonry_facade_tiles"]
+        pitched_palette = contract["pitched_masonry_roof_tiles"]
+    elif building_class in metal:
+        facade_palette = contract["metal_facade_tiles"]
+        pitched_palette = contract["pitched_metal_roof_tiles"]
+    else:
+        facade_palette = contract["generic_facade_tiles"]
+        pitched_palette = contract["pitched_metal_roof_tiles"]
+    facade = deterministic_tile_choice(
+        [int(value) for value in facade_palette], feature_index, source_facade_tile
+    )
+    roof_palette = (
+        contract["flat_roof_tiles"] if profile == "flat" else pitched_palette
+    )
+    roof = deterministic_tile_choice(
+        [int(value) for value in roof_palette], feature_index, source_roof_tile + 31
+    )
+    return facade, roof
+
+
 def build_contract(
     context: dict[str, Any],
     recipe: dict[str, Any],
@@ -465,6 +581,7 @@ def build_contract(
         feature = features[feature_index]
         source_points = decode_points_q(feature)
         source_bounds = bounds_q(source_points)
+        source_area = abs(signed_area2(source_points)) * quantization * quantization * 0.5
         centroid_q = polygon_centroid_q(source_points)
         pivot = [round(centroid_q[0] * quantization, 3), round(centroid_q[1] * quantization, 3)]
         radius = math.hypot(pivot[0], pivot[1])
@@ -475,6 +592,9 @@ def build_contract(
             str(source.get("part", "geometry:0")),
         ) in landmark_ids
         tier, _representation = _tier(radius, config, landmark)
+        if tier == "mid" and not mid_geometry_is_useful(radius, source_area, config):
+            tier = "far_orthophoto"
+            _representation = "ORTHOPHOTO_ONLY_PROJECTED_SIZE_CUTOFF"
         tier_counts[tier] += 1
         if tier in ("hero_core", "near"):
             geometry_points = list(source_points)
@@ -486,7 +606,6 @@ def build_contract(
             )
         else:
             geometry_points = []
-        source_area = abs(signed_area2(source_points)) * quantization * quantization * 0.5
         geometry_area = (
             abs(signed_area2(geometry_points)) * quantization * quantization * 0.5
             if geometry_points
@@ -534,14 +653,38 @@ def build_contract(
         if tier == "far_orthophoto":
             far_orthophoto_feature_indices.append(feature_index)
             continue
+        profile = roof_profile(feature, geometry_points, config)
+        facade_tile, roof_tile = material_tiles(
+            feature,
+            feature_index,
+            profile,
+            int(recipe_record["facade_tile"]),
+            int(recipe_record["roof_tile"]),
+            config,
+        )
+        roof_rise = 0.0
+        if profile != "flat":
+            bounds = bounds_q(geometry_points)
+            short_span = min(bounds[2] - bounds[0], bounds[3] - bounds[1]) * quantization
+            shell = config["shell_contract"]
+            roof_rise = min(
+                float(shell["maximum_gable_rise_meters"]),
+                max(
+                    float(shell["minimum_gable_rise_meters"]),
+                    short_span * float(shell["gable_rise_width_ratio"]),
+                ),
+                selected_height * 0.35,
+            )
         record = {
             "base_y_meters": round(float(recipe_record["base_y_meters"]), 3),
-            "facade_tile": int(recipe_record["facade_tile"]),
+            "facade_tile": facade_tile,
             "feature_index": feature_index,
             "footprint_area_ratio": round(inflation, 6),
             "geometry_points_q": flatten_points(geometry_points),
             "height_meters": selected_height,
-            "roof_tile": int(recipe_record["roof_tile"]),
+            "roof_profile": profile,
+            "roof_rise_meters": round(roof_rise, 3),
+            "roof_tile": roof_tile,
             "tier": tier,
         }
         if lidar_used:
@@ -578,6 +721,38 @@ def build_contract(
         "source_config_sha256": source_hashes["config"],
         "source_generator_path": "tools/scenery/buildings/generate_building_spatial_contract.py",
         "source_generator_sha256": source_hashes["generator"],
+        "material_contract": {
+            "atlas_grid": config["material_contract"]["atlas_grid"],
+            "atlas_source_manifest_path": config["material_contract"]["atlas_source_manifest_path"],
+            "atlas_source_manifest_sha256": source_hashes["material_manifest"],
+            "albedo_path": config["material_contract"]["albedo_path"],
+            "albedo_sha256": source_hashes["material_albedo"],
+            "normal_path": config["material_contract"]["normal_path"],
+            "normal_sha256": source_hashes["material_normal"],
+            "mrao_path": config["material_contract"]["mrao_path"],
+            "mrao_sha256": source_hashes["material_mrao"],
+            "mrao_channels": config["material_contract"]["mrao_channels"],
+            "allowed_facade_tiles": sorted(set(
+                int(value)
+                for key in (
+                    "masonry_facade_tiles", "metal_facade_tiles", "generic_facade_tiles"
+                )
+                for value in config["material_contract"][key]
+            )),
+            "allowed_roof_tiles": sorted(set(
+                int(value)
+                for key in (
+                    "flat_roof_tiles", "pitched_masonry_roof_tiles", "pitched_metal_roof_tiles"
+                )
+                for value in config["material_contract"][key]
+            )),
+            "incremental_texture_bytes": int(
+                config["material_contract"]["incremental_texture_bytes"]
+            ),
+            "incremental_texture_reason": config["material_contract"][
+                "incremental_texture_reason"
+            ],
+        },
         "source_and_license": {
             "derivative_source": "Pinned KBDU Reconstruction V2 OpenStreetMap building footprints and serialized terrain foundations",
             "openstreetmap_attribution": context["openstreetmap"].get("attribution"),
@@ -589,11 +764,13 @@ def build_contract(
         "spatial_contract": {
             "component_rule": "Only represented footprint parts that intersect or touch may share a component; batching never fills the space between parts.",
             "component_storage_rule": "Only multi-part components are serialized; every represented feature not listed is an implicit singleton component.",
-            "far_rule": "Ordinary buildings at or beyond the mid radius have no mesh geometry; the orthophoto is authoritative there.",
+            "far_rule": "Ordinary buildings beyond 4 km and sub-threshold structures beyond the unconditional mid-shell radius have no mesh geometry; the orthophoto is authoritative there.",
             "foundation_rule": "Every rendered tier keeps the terrain-sampled recipe base_y without lidar or LOD mutation.",
-            "mid_rule": "Vertex-removal simplification preserves source X/Z bounds, simple topology, and +/-10 percent area.",
-            "near_rule": "Hero-core and near geometry uses the unclosed quantized source footprint byte-for-byte.",
-            "pivot_rule": "The source polygon centroid and bounds are recomputed exactly from the pinned quantized footprint; unit scale, base_y, selected height, and batch bounds are invariant across authored representations.",
+            "mid_rule": "Useful projected-size mid geometry uses a fixed closed shell; vertex-removal simplification preserves source X/Z bounds, simple topology, and +/-10 percent area.",
+            "near_rule": "Hero-core and near closed shells use the quantized source footprint byte-for-byte.",
+            "pivot_rule": "The source polygon centroid and bounds are recomputed exactly from the pinned quantized footprint; unit scale, base_y, selected height, and batch bounds are immutable because runtime scale-changing LODs are forbidden.",
+            "roof_rule": "Conservative four-corner residential footprints may use a bounded deterministic gable; all other footprints retain a closed flat roof at the same maximum height.",
+            "material_rule": "Every shell uses deterministic plausible brick, concrete, corrugated-metal, worn-metal, dark-roof, or asphalt-roof cells from the already-resident AirportCore V4 HangarKit PBR atlas; the obsolete repeated-window context atlas is forbidden.",
         },
         "height_input": lidar_summary,
         "far_landmark_allowlist": config.get("far_landmark_allowlist", []),
@@ -629,6 +806,7 @@ def build_contract(
         "limitations": [
             "OSM footprints and tag-derived fallback heights are reference-grade, not survey-grade.",
             "The current 4 m lidar height raster has no surveyed vertical-error study and cannot satisfy the 10 percent height gate.",
+            "Small context buildings beyond 2 km intentionally remain orthophoto-only instead of becoming floating roof cards.",
             "This offline contract does not establish Quest performance, visual acceptance, or certified fidelity.",
         ],
     }
@@ -682,20 +860,21 @@ def build_batch_replacement_manifest(
             group_id = f"AerialBuildingsV1__mid_boundary_{cell_suffix}"
         else:
             group_id = f"AerialBuildingsV1__{legacy_id}" if represented else None
-        lod0_triangles = 0
-        lod0_vertices = 0
-        lod1_triangles = 0
-        lod1_vertices = 0
+        shell_triangles = 0
+        shell_vertices = 0
         for record in represented:
             point_count = len(record["geometry_points_q"]) // 2
-            if record["tier"] in ("hero_core", "near", "far_landmark"):
-                lod0_triangles += 3 * point_count - 2
-                lod0_vertices += 5 * point_count
+            if record["roof_profile"] == "gable":
+                if point_count != 4:
+                    raise ValueError("Gable profile requires exactly four footprint points")
+                shell_triangles += 14
+                shell_vertices += 30
+            elif record["roof_profile"] == "hip":
+                shell_triangles += 3 * point_count
+                shell_vertices += 7 * point_count
             else:
-                lod0_triangles += point_count - 2
-                lod0_vertices += point_count
-            lod1_triangles += point_count - 2
-            lod1_vertices += point_count
+                shell_triangles += 3 * point_count - 2
+                shell_vertices += 5 * point_count
         if represented:
             represented_bounds = [
                 bounds_q(
@@ -719,38 +898,16 @@ def build_batch_replacement_manifest(
             ]
         else:
             stable_bounds = []
-        source_heights = [float(policy["screen_relative_height"]) for policy in batch["lod_policy"]]
-        has_near_prism_reduction = any(
-            record["tier"] in ("hero_core", "near", "far_landmark")
-            for record in represented
-        )
         if not represented:
             lods = []
-        elif has_near_prism_reduction:
-            lods = [
-                {
-                    "level": "LOD0",
-                    "mesh_mode": "NEAR_PRISMS_MID_ELEVATED_ROOFS",
-                    "screen_relative_height": source_heights[0],
-                    "triangles": lod0_triangles,
-                    "vertices": lod0_vertices,
-                },
-                {
-                    "level": "LOD1",
-                    "mesh_mode": "FOOTPRINT_ELEVATED_ROOFS_STABLE_SOURCE_BOUNDS",
-                    "screen_relative_height": source_heights[2],
-                    "triangles": lod1_triangles,
-                    "vertices": lod1_vertices,
-                },
-            ]
         else:
             lods = [
                 {
                     "level": "FIXED",
-                    "mesh_mode": "MID_FOOTPRINT_ELEVATED_ROOFS_FIXED_RENDERER",
+                    "mesh_mode": "CLOSED_TRUE_FOOTPRINT_SHELL_FIXED_RENDERER",
                     "screen_relative_height": 0.0,
-                    "triangles": lod1_triangles,
-                    "vertices": lod1_vertices,
+                    "triangles": shell_triangles,
+                    "vertices": shell_vertices,
                 }
             ]
         new_renderers = [f"{group_id}/LOD{lod}" for lod in range(len(lods))] if group_id else []
@@ -825,7 +982,8 @@ def build_batch_replacement_manifest(
             "The replacement prefab is explicitly authored offline; no runtime bootstrap or repair is permitted.",
             "Authored hero replacements remain authoritative, so their two generic OSM source footprints are omitted.",
             "Ordinary far batches have no replacement renderer and rely on the existing orthophoto/terrain.",
-            "Mid-only batches use one fixed roof renderer; only batches with near prisms use a two-level LODGroup with a genuine roof-only reduction.",
+            "Every represented context batch uses one fixed closed-shell renderer and no LODGroup; no runtime representation may collapse to a roof card or change scale.",
+            "Small structures beyond the unconditional mid-shell radius remain orthophoto-only; significant projected-size buildings retain closed true-footprint shells.",
             "Legacy 4-6 km cells containing true-centroid mid-boundary footprints are named as mid-boundary recovery groups; they contain no ordinary-far geometry.",
         ],
     }
@@ -879,6 +1037,10 @@ def main(argv: list[str] | None = None) -> int:
     recipe_path = root / config["source_recipe_path"]
     runtime_recipe_path = root / config["legacy_runtime_recipe_path"]
     replacements_path = root / config["hero_replacements_path"]
+    material_manifest_path = root / config["material_contract"]["atlas_source_manifest_path"]
+    material_albedo_path = root / config["material_contract"]["albedo_path"]
+    material_normal_path = root / config["material_contract"]["normal_path"]
+    material_mrao_path = root / config["material_contract"]["mrao_path"]
     output = args.output or root / config["output_manifest_path"]
     batch_output = args.batch_output or root / config["output_batch_replacement_manifest_path"]
     lidar_path = args.lidar_manifest
@@ -903,6 +1065,10 @@ def main(argv: list[str] | None = None) -> int:
             "hero_replacements": sha256(replacements_path),
             "config": sha256(args.config),
             "generator": sha256(script),
+            "material_manifest": sha256(material_manifest_path),
+            "material_albedo": sha256(material_albedo_path),
+            "material_normal": sha256(material_normal_path),
+            "material_mrao": sha256(material_mrao_path),
         },
         lidar_document,
         lidar_relative,

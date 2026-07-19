@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
@@ -30,6 +31,12 @@ namespace QuestFlight.Editor.Tests
                 int[] sourcePoints = Unclosed(source.openstreetmap.features[record.feature_index].points_q);
                 Assert.That(float.IsNaN(record.base_y_meters) || float.IsInfinity(record.base_y_meters), Is.False);
                 Assert.That(record.height_meters, Is.GreaterThan(0f));
+                Assert.That(record.roof_profile,
+                    Is.EqualTo("flat").Or.EqualTo("gable").Or.EqualTo("hip"));
+                if (record.roof_profile == "flat")
+                    Assert.That(record.roof_rise_meters, Is.EqualTo(0f));
+                else
+                    Assert.That(record.roof_rise_meters, Is.GreaterThan(0f));
                 Assert.That(Bounds(record.geometry_points_q), Is.EqualTo(Bounds(sourcePoints)));
                 if (record.tier == "hero_core" || record.tier == "near")
                 {
@@ -122,7 +129,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(actualLegacyGroups, Is.EquivalentTo(manifest.legacy_group_ids_to_disable));
             Assert.That(actualLegacyRenderers, Is.EquivalentTo(manifest.legacy_renderer_ids_to_disable));
             Assert.That(prefab.GetComponentsInChildren<LODGroup>(true),
-                Has.Length.EqualTo(manifest.statistics.near_reduction_lod_group_count));
+                Is.Empty, "Fixed context shells must never pop between scale/shape variants.");
+            Assert.That(manifest.statistics.near_reduction_lod_group_count, Is.Zero);
             Assert.That(prefab.GetComponentsInChildren<MeshRenderer>(true),
                 Has.Length.EqualTo(manifest.statistics.replacement_renderer_count));
             HashSet<string> expectedMeshes = new HashSet<string>(
@@ -153,26 +161,13 @@ namespace QuestFlight.Editor.Tests
                 Assert.That(group.localPosition, Is.EqualTo(Vector3.zero));
                 Assert.That(group.localRotation, Is.EqualTo(Quaternion.identity));
                 Assert.That(group.localScale, Is.EqualTo(Vector3.one));
-                LODGroup lodGroup = group.GetComponent<LODGroup>();
-                Renderer[] batchRenderers;
-                if (batch.lods.Length == 2)
-                {
-                    Assert.That(lodGroup, Is.Not.Null);
-                    Assert.That(lodGroup.fadeMode, Is.EqualTo(LODFadeMode.None));
-                    Assert.That(lodGroup.animateCrossFading, Is.False);
-                    LOD[] lods = lodGroup.GetLODs();
-                    Assert.That(lods, Has.Length.EqualTo(2));
-                    Assert.That(lods.All(lod => lod.renderers.Length == 1), Is.True);
-                    batchRenderers = lods.Select(lod => lod.renderers[0]).ToArray();
-                }
-                else
-                {
-                    Assert.That(lodGroup, Is.Null);
-                    Assert.That(batch.lods, Has.Length.EqualTo(1));
-                    Assert.That(batch.lods[0].level, Is.EqualTo("FIXED"));
-                    batchRenderers = group.GetComponentsInChildren<MeshRenderer>(true);
-                    Assert.That(batchRenderers, Has.Length.EqualTo(1));
-                }
+                Assert.That(group.GetComponent<LODGroup>(), Is.Null);
+                Assert.That(batch.lods, Has.Length.EqualTo(1));
+                Assert.That(batch.lods[0].level, Is.EqualTo("FIXED"));
+                Assert.That(batch.lods[0].mesh_mode,
+                    Is.EqualTo("CLOSED_TRUE_FOOTPRINT_SHELL_FIXED_RENDERER"));
+                Renderer[] batchRenderers = group.GetComponentsInChildren<MeshRenderer>(true);
+                Assert.That(batchRenderers, Has.Length.EqualTo(1));
                 Bounds expectedBounds = StableBounds(batch.stable_bounds_min_max_xyz_meters);
                 for (int lod = 0; lod < batch.lods.Length; lod++)
                 {
@@ -185,6 +180,12 @@ namespace QuestFlight.Editor.Tests
                     Assert.That((mesh.bounds.size - expectedBounds.size).sqrMagnitude, Is.LessThan(0.000001f));
                     Assert.That(mesh.vertexCount, Is.EqualTo(batch.lods[lod].vertices));
                     Assert.That(mesh.GetIndexCount(0) / 3L, Is.EqualTo(batch.lods[lod].triangles));
+                    Assert.That(mesh.uv, Has.Length.EqualTo(mesh.vertexCount));
+                    Assert.That(mesh.uv2, Has.Length.EqualTo(mesh.vertexCount));
+                    Assert.That(mesh.colors32, Has.Length.EqualTo(mesh.vertexCount));
+                    Assert.That(mesh.bounds.min.y,
+                        Is.EqualTo(batch.stable_bounds_min_max_xyz_meters[1]).Within(0.0001f),
+                        "Closed shells must extend to their stable foundation instead of floating as roof cards.");
                     StringAssert.DoesNotContain("cluster", mesh.name.ToLowerInvariant());
                     StringAssert.DoesNotContain("box", mesh.name.ToLowerInvariant());
                 }
@@ -192,6 +193,105 @@ namespace QuestFlight.Editor.Tests
                     .Single(row => row.tier == "far_orthophoto").count;
                 Assert.That(representedFar, Is.Zero);
             }
+        }
+
+        [Test]
+        public void ContextShellMaterialReusesResidentAirportCorePbrAtlasWithoutNewDependency()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                AerialSceneryBuildingAssetAuthoring.PrefabPath);
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(
+                AerialSceneryBuildingAssetAuthoring.BuildingMaterialPath);
+            Material residentMaterial = AssetDatabase.LoadAssetAtPath<Material>(
+                AerialSceneryBuildingAssetAuthoring.ExistingAirportCoreMaterialPath);
+            Texture2D albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                AerialSceneryBuildingAssetAuthoring.BuildingAlbedoAtlasPath);
+            Texture2D normal = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                AerialSceneryBuildingAssetAuthoring.BuildingNormalAtlasPath);
+            Texture2D mrao = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                AerialSceneryBuildingAssetAuthoring.BuildingMraoAtlasPath);
+            Assert.That(prefab, Is.Not.Null);
+            Assert.That(material, Is.Not.Null);
+            Assert.That(residentMaterial, Is.Not.Null);
+            Assert.That(albedo, Is.Not.Null);
+            Assert.That(normal, Is.Not.Null);
+            Assert.That(mrao, Is.Not.Null);
+            Assert.That(material.shader.name,
+                Is.EqualTo(AerialSceneryBuildingAssetAuthoring.BuildingShaderName));
+            Assert.That(material.GetTexture("_MainTex"), Is.SameAs(albedo));
+            Assert.That(material.GetTexture("_NormalTex"), Is.SameAs(normal));
+            Assert.That(material.GetTexture("_MRAOTex"), Is.SameAs(mrao));
+            Assert.That(residentMaterial.GetTexture("_MainTex"), Is.SameAs(albedo));
+            Assert.That(residentMaterial.GetTexture("_NormalTex"), Is.SameAs(normal));
+            Assert.That(residentMaterial.GetTexture("_MRAOTex"), Is.SameAs(mrao));
+            Assert.That(material.renderQueue, Is.EqualTo((int)UnityEngine.Rendering.RenderQueue.Geometry));
+            Assert.That(material.enableInstancing, Is.True);
+            Assert.That(material.HasProperty("_LightMap"), Is.False);
+            Assert.That(material.GetFloat("_DetailFlattenStart"), Is.EqualTo(3.00f).Within(0.0001f));
+            Assert.That(material.GetFloat("_DetailFlattenEnd"), Is.EqualTo(8.00f).Within(0.0001f));
+            Assert.That(material.GetFloat("_AmbientFloor"), Is.EqualTo(0.12f).Within(0.0001f));
+            Assert.That(material.GetFloat("_NearAlbedoLift"), Is.EqualTo(0.12f).Within(0.0001f));
+
+            string[] dependencies = AssetDatabase.GetDependencies(
+                AerialSceneryBuildingAssetAuthoring.PrefabPath, true);
+            Assert.That(dependencies,
+                Does.Contain(AerialSceneryBuildingAssetAuthoring.BuildingAlbedoAtlasPath));
+            Assert.That(dependencies,
+                Does.Contain(AerialSceneryBuildingAssetAuthoring.BuildingNormalAtlasPath));
+            Assert.That(dependencies,
+                Does.Contain(AerialSceneryBuildingAssetAuthoring.BuildingMraoAtlasPath));
+            Assert.That(dependencies,
+                Does.Not.Contain(AerialSceneryBuildingAssetAuthoring.ObsoleteContextAtlasPath));
+            Assert.That(dependencies.Count(path =>
+                    path.EndsWith(".mat", StringComparison.OrdinalIgnoreCase)),
+                Is.EqualTo(1), "The standalone context prefab must retain one shared material.");
+            Assert.That(AssetDatabase.GetDependencies(
+                    AerialSceneryBuildingAssetAuthoring.ProductEnvironmentRootPath, true),
+                Does.Contain(AerialSceneryBuildingAssetAuthoring.ExistingAirportCoreMaterialPath),
+                "The PBR triplet must already be resident through the active AirportCore V4 material.");
+
+            HashSet<Vector2> allowedAtlasCells = new HashSet<Vector2>
+            {
+                new Vector2(0f, 0f), // brick
+                new Vector2(1f, 0f), // light metal
+                new Vector2(1f, 1f), // concrete
+                new Vector2(0f, 2f), // hangar cladding
+                new Vector2(2f, 2f), // weathered corrugated
+                new Vector2(3f, 0f), // dark roof
+            };
+            MeshRenderer[] renderers = prefab.GetComponentsInChildren<MeshRenderer>(true);
+            Assert.That(renderers, Is.Not.Empty);
+            foreach (MeshRenderer renderer in renderers)
+            {
+                Assert.That(renderer.sharedMaterials, Is.EqualTo(new[] { material }));
+                Assert.That(renderer.lightmapIndex, Is.LessThan(0));
+                Mesh mesh = renderer.GetComponent<MeshFilter>().sharedMesh;
+                Assert.That(mesh.uv2, Is.Not.Empty);
+                Assert.That(mesh.uv2.All(allowedAtlasCells.Contains), Is.True, mesh.name);
+            }
+
+            TextureImporter normalImporter = AssetImporter.GetAtPath(
+                AerialSceneryBuildingAssetAuthoring.BuildingNormalAtlasPath) as TextureImporter;
+            TextureImporter mraoImporter = AssetImporter.GetAtPath(
+                AerialSceneryBuildingAssetAuthoring.BuildingMraoAtlasPath) as TextureImporter;
+            Assert.That(normalImporter, Is.Not.Null);
+            Assert.That(normalImporter.textureType, Is.EqualTo(TextureImporterType.NormalMap));
+            Assert.That(mraoImporter, Is.Not.Null);
+            Assert.That(mraoImporter.sRGBTexture, Is.False);
+            Assert.That(normalImporter.mipmapEnabled, Is.True);
+            Assert.That(mraoImporter.mipmapEnabled, Is.True);
+
+            string shaderPath = AssetDatabase.GetAssetPath(material.shader);
+            string shaderSource = File.ReadAllText(Path.GetFullPath(Path.Combine(
+                Application.dataPath, "..", shaderPath)));
+            StringAssert.DoesNotContain("LIGHTMAP_ON", shaderSource);
+            StringAssert.DoesNotContain("unity_Lightmap", shaderSource);
+            StringAssert.Contains("_NormalTex", shaderSource);
+            StringAssert.Contains("_MRAOTex", shaderSource);
+            StringAssert.Contains("ddx(input.detailUv)", shaderSource);
+            StringAssert.Contains("ddy(input.detailUv)", shaderSource);
+            StringAssert.Contains("tex2Dgrad", shaderSource);
+            StringAssert.Contains("StableAtlasAverage", shaderSource);
         }
 
         private static T ReadJson<T>(string path)

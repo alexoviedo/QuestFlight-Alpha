@@ -21,10 +21,27 @@ namespace QuestFlight.Editor
         public const string SpatialContractPath = Root + "/KBDU_BuildingSpatialContractV1.json";
         public const string BatchReplacementPath = Root + "/KBDU_BuildingBatchReplacementV1.json";
         public const string PrefabPath = Root + "/KBDU_AerialBuildingsV1.prefab";
-        public const string BuildingMaterialPath =
-            "Assets/Production/Environment/PhotorealTerrainV1/KBDU_OsmBuildings.mat";
+        public const string BuildingMaterialPath = Root + "/KBDU_AerialBuildingShellsV2.mat";
+        public const string BuildingAlbedoAtlasPath =
+            "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_Albedo.png";
+        public const string BuildingNormalAtlasPath =
+            "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_Normal.png";
+        public const string BuildingMraoAtlasPath =
+            "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_MRAO.png";
+        public const string ExistingAirportCoreMaterialPath =
+            "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKitAtlas.mat";
+        public const string ObsoleteContextAtlasPath =
+            "Assets/Production/Environment/PhotorealTerrainV1/KBDU_ContextAtlas.png";
+        public const string BuildingShaderName = "QuestFlight/KBDU Aerial Building Shell";
         public const string LegacyCombinedPrefabPath =
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_BatchedContext.prefab";
+        public const string ProductEnvironmentRootPath =
+            "Assets/Production/Environment/ProductionEnvironmentRoot.prefab";
+
+        private static readonly HashSet<int> AllowedFacadeTiles =
+            new HashSet<int> { 0, 1, 5, 8, 10 };
+        private static readonly HashSet<int> AllowedRoofTiles =
+            new HashSet<int> { 3, 10 };
 
         [MenuItem("QuestFlight/Product/Author Aerial Scenery V1 Buildings")]
         public static void RunInteractive() => AuthorAssets();
@@ -65,6 +82,7 @@ namespace QuestFlight.Editor
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             Inputs inputs = LoadInputs();
             EnsureFolder(GeneratedRoot);
+            EnsureBuildingMaterial();
             CreateMeshes(inputs);
             AssetDatabase.SaveAssets();
             CreatePrefab(inputs);
@@ -96,11 +114,24 @@ namespace QuestFlight.Editor
                     throw new InvalidOperationException("Building spatial identity is missing or duplicated.");
                 if (record.geometry_points_q == null || record.geometry_points_q.Length < 6 ||
                     record.geometry_points_q.Length % 2 != 0 ||
-                    !Finite(record.base_y_meters) || !Finite(record.height_meters) || record.height_meters <= 0f)
+                    !Finite(record.base_y_meters) || !Finite(record.height_meters) || record.height_meters <= 0f ||
+                    !Finite(record.roof_rise_meters) || record.roof_rise_meters < 0f ||
+                    !string.Equals(record.roof_profile, "flat", StringComparison.Ordinal) &&
+                    !string.Equals(record.roof_profile, "gable", StringComparison.Ordinal) &&
+                    !string.Equals(record.roof_profile, "hip", StringComparison.Ordinal) ||
+                    !string.Equals(record.roof_profile, "flat", StringComparison.Ordinal) &&
+                    (record.roof_rise_meters <= 0f || record.roof_rise_meters >= record.height_meters) ||
+                    string.Equals(record.roof_profile, "gable", StringComparison.Ordinal) &&
+                    record.geometry_points_q.Length != 8)
                     throw new InvalidOperationException("Compact building authoring record is invalid: " + record.feature_index);
                 if (record.lidar_height_used &&
                     (record.lidar_selected_relative_error < 0f || record.lidar_selected_relative_error > 0.100001f))
                     throw new InvalidOperationException("Qualified lidar height exceeded the 10 percent gate.");
+                if (!AllowedFacadeTiles.Contains(record.facade_tile) ||
+                    !AllowedRoofTiles.Contains(record.roof_tile))
+                    throw new InvalidOperationException(
+                        "Building record references a non-PBR or implausible atlas cell: " +
+                        record.feature_index + ".");
                 if (string.Equals(record.tier, "far_orthophoto", StringComparison.Ordinal))
                     throw new InvalidOperationException("Ordinary far building contains forbidden mesh geometry.");
             }
@@ -120,7 +151,7 @@ namespace QuestFlight.Editor
                 {
                     if (string.IsNullOrWhiteSpace(batch.new_group_id) || !newGroups.Add(batch.new_group_id) ||
                         batch.new_renderer_ids == null || batch.lods == null ||
-                        batch.lods.Length < 1 || batch.lods.Length > 2 ||
+                        batch.lods.Length != 1 ||
                         batch.new_renderer_ids.Length != batch.lods.Length ||
                         batch.stable_bounds_min_max_xyz_meters == null ||
                         batch.stable_bounds_min_max_xyz_meters.Length != 6)
@@ -132,14 +163,12 @@ namespace QuestFlight.Editor
                             string.Equals(record.tier, "far_orthophoto", StringComparison.Ordinal))
                             throw new InvalidOperationException("Replacement batch includes forbidden feature " + featureIndex);
                     }
-                    bool needsNearReduction = batch.represented_feature_indices
-                        .Select(index => byFeature[index])
-                        .Any(record => string.Equals(record.tier, "hero_core", StringComparison.Ordinal) ||
-                                       string.Equals(record.tier, "near", StringComparison.Ordinal) ||
-                                       string.Equals(record.tier, "far_landmark", StringComparison.Ordinal));
-                    if (batch.lods.Length != (needsNearReduction ? 2 : 1) ||
-                        !needsNearReduction && !string.Equals(batch.lods[0].level, "FIXED", StringComparison.Ordinal))
-                        throw new InvalidOperationException("Replacement LOD count does not represent a real reduction.");
+                    if (!string.Equals(batch.lods[0].level, "FIXED", StringComparison.Ordinal) ||
+                        !string.Equals(batch.lods[0].mesh_mode,
+                            "CLOSED_TRUE_FOOTPRINT_SHELL_FIXED_RENDERER", StringComparison.Ordinal) ||
+                        batch.lods[0].screen_relative_height != 0f)
+                        throw new InvalidOperationException(
+                            "Replacement building must be one fixed closed shell: " + batch.new_group_id);
                 }
                 else if (!string.IsNullOrEmpty(batch.new_group_id) ||
                          batch.new_renderer_ids != null && batch.new_renderer_ids.Length != 0)
@@ -194,23 +223,27 @@ namespace QuestFlight.Editor
         {
             List<Vector3> vertices = new List<Vector3>();
             List<Vector3> normals = new List<Vector3>();
-            List<Vector2> uvs = new List<Vector2>();
+            List<Vector2> detailUvs = new List<Vector2>();
+            List<Vector2> atlasCells = new List<Vector2>();
+            List<Color32> colors = new List<Color32>();
             List<int> indices = new List<int>();
             foreach (int featureIndex in batch.represented_feature_indices)
             {
                 SpatialRecord record = byFeature[featureIndex];
                 List<Vector2> footprint = DecodeFootprint(record.geometry_points_q, quantization);
                 EnsureClockwise(footprint);
-                bool prism = lod == 0 &&
-                    (string.Equals(record.tier, "hero_core", StringComparison.Ordinal) ||
-                     string.Equals(record.tier, "near", StringComparison.Ordinal) ||
-                     string.Equals(record.tier, "far_landmark", StringComparison.Ordinal));
                 try
                 {
-                    if (prism)
-                        AddPrism(record, footprint, vertices, normals, uvs, indices);
+                    int vertexStart = vertices.Count;
+                    int indexStart = indices.Count;
+                    if (string.Equals(record.roof_profile, "gable", StringComparison.Ordinal))
+                        AddGabledShell(record, footprint, vertices, normals, detailUvs, atlasCells, colors, indices);
+                    else if (string.Equals(record.roof_profile, "hip", StringComparison.Ordinal))
+                        AddHippedShell(record, footprint, vertices, normals, detailUvs, atlasCells, colors, indices);
                     else
-                        AddRoof(record, footprint, vertices, normals, uvs, indices);
+                        AddFlatShell(record, footprint, vertices, normals, detailUvs, atlasCells, colors, indices);
+                    ValidateClosedShellSlice(
+                        record, footprint, vertexStart, indexStart, vertices, normals, indices);
                 }
                 catch (Exception exception)
                 {
@@ -226,23 +259,89 @@ namespace QuestFlight.Editor
             };
             mesh.SetVertices(vertices);
             mesh.SetNormals(normals);
-            mesh.SetUVs(0, uvs);
+            mesh.SetUVs(0, detailUvs);
+            mesh.SetUVs(1, atlasCells);
+            mesh.SetColors(colors);
             mesh.SetTriangles(indices, 0, false);
             mesh.bounds = StableBounds(batch);
             return mesh;
         }
 
-        private static void AddPrism(
+        private static void ValidateClosedShellSlice(
+            SpatialRecord record,
+            IReadOnlyList<Vector2> footprint,
+            int vertexStart,
+            int indexStart,
+            IReadOnlyList<Vector3> vertices,
+            IReadOnlyList<Vector3> normals,
+            IReadOnlyList<int> indices)
+        {
+            int pointCount = footprint.Count;
+            int expectedVertices = string.Equals(record.roof_profile, "gable", StringComparison.Ordinal)
+                ? 30
+                : string.Equals(record.roof_profile, "hip", StringComparison.Ordinal)
+                    ? 7 * pointCount
+                    : 5 * pointCount;
+            int expectedTriangles = string.Equals(record.roof_profile, "gable", StringComparison.Ordinal)
+                ? 14
+                : string.Equals(record.roof_profile, "hip", StringComparison.Ordinal)
+                    ? 3 * pointCount
+                    : 3 * pointCount - 2;
+            if (vertices.Count - vertexStart != expectedVertices ||
+                (indices.Count - indexStart) / 3 != expectedTriangles)
+                throw new InvalidOperationException(
+                    "Closed-shell topology mismatch for feature " + record.feature_index + ".");
+
+            float minimumX = footprint.Min(point => point.x);
+            float maximumX = footprint.Max(point => point.x);
+            float minimumZ = footprint.Min(point => point.y);
+            float maximumZ = footprint.Max(point => point.y);
+            float top = record.base_y_meters + record.height_meters;
+            IReadOnlyList<Vector3> slice = vertices.Skip(vertexStart).Take(expectedVertices).ToArray();
+            const float epsilon = 0.0001f;
+            if (Mathf.Abs(slice.Min(vertex => vertex.x) - minimumX) > epsilon ||
+                Mathf.Abs(slice.Max(vertex => vertex.x) - maximumX) > epsilon ||
+                Mathf.Abs(slice.Min(vertex => vertex.z) - minimumZ) > epsilon ||
+                Mathf.Abs(slice.Max(vertex => vertex.z) - maximumZ) > epsilon ||
+                Mathf.Abs(slice.Min(vertex => vertex.y) - record.base_y_meters) > epsilon ||
+                Mathf.Abs(slice.Max(vertex => vertex.y) - top) > epsilon ||
+                slice.Count(vertex => Mathf.Abs(vertex.y - record.base_y_meters) <= epsilon) < 2 * pointCount ||
+                normals.Skip(vertexStart).Take(expectedVertices).Count(normal => Mathf.Abs(normal.y) < 0.001f) <
+                4 * pointCount)
+                throw new InvalidOperationException(
+                    "Feature does not contain stable foundation-to-eave walls and a roof: " +
+                    record.feature_index + ".");
+        }
+
+        private static void AddFlatShell(
             SpatialRecord record,
             List<Vector2> footprint,
             List<Vector3> vertices,
             List<Vector3> normals,
-            List<Vector2> uvs,
+            List<Vector2> detailUvs,
+            List<Vector2> atlasCells,
+            List<Color32> colors,
             List<int> indices)
         {
-            AddRoof(record, footprint, vertices, normals, uvs, indices);
-            Rect facade = AtlasRect(record.facade_tile);
             float top = record.base_y_meters + record.height_meters;
+            AddWalls(record, footprint, top, vertices, normals, detailUvs, atlasCells, colors, indices);
+            AddFlatRoof(record, footprint, top, vertices, normals, detailUvs, atlasCells, colors, indices);
+        }
+
+        private static void AddWalls(
+            SpatialRecord record,
+            IReadOnlyList<Vector2> footprint,
+            float wallTop,
+            List<Vector3> vertices,
+            List<Vector3> normals,
+            List<Vector2> detailUvs,
+            List<Vector2> atlasCells,
+            List<Color32> colors,
+            List<int> indices)
+        {
+            Vector2 atlasCell = AtlasCell(record.facade_tile);
+            Color32 tint = BuildingTint(record.feature_index);
+            float perimeter = 0f;
             for (int edge = 0; edge < footprint.Count; edge++)
             {
                 Vector2 a = footprint[edge];
@@ -251,47 +350,190 @@ namespace QuestFlight.Editor
                 Vector3 outward = new Vector3(-direction.y, 0f, direction.x).normalized;
                 int start = vertices.Count;
                 vertices.Add(new Vector3(a.x, record.base_y_meters, a.y));
-                vertices.Add(new Vector3(a.x, top, a.y));
-                vertices.Add(new Vector3(b.x, top, b.y));
+                vertices.Add(new Vector3(a.x, wallTop, a.y));
+                vertices.Add(new Vector3(b.x, wallTop, b.y));
                 vertices.Add(new Vector3(b.x, record.base_y_meters, b.y));
                 for (int index = 0; index < 4; index++) normals.Add(outward);
-                uvs.Add(new Vector2(facade.xMin, facade.yMin));
-                uvs.Add(new Vector2(facade.xMin, facade.yMax));
-                uvs.Add(new Vector2(facade.xMax, facade.yMax));
-                uvs.Add(new Vector2(facade.xMax, facade.yMin));
+                float next = perimeter + direction.magnitude;
+                float bottom = 0f;
+                float top = Mathf.Max(0.1f, wallTop - record.base_y_meters) / 3f;
+                detailUvs.Add(new Vector2(perimeter / 5f, bottom));
+                detailUvs.Add(new Vector2(perimeter / 5f, top));
+                detailUvs.Add(new Vector2(next / 5f, top));
+                detailUvs.Add(new Vector2(next / 5f, bottom));
+                for (int index = 0; index < 4; index++) atlasCells.Add(atlasCell);
+                colors.Add(WithAlpha(tint, 0));
+                colors.Add(WithAlpha(tint, 255));
+                colors.Add(WithAlpha(tint, 255));
+                colors.Add(WithAlpha(tint, 0));
                 indices.Add(start);
                 indices.Add(start + 2);
                 indices.Add(start + 1);
                 indices.Add(start);
                 indices.Add(start + 3);
                 indices.Add(start + 2);
+                perimeter = next;
             }
         }
 
-        private static void AddRoof(
+        private static void AddFlatRoof(
             SpatialRecord record,
-            List<Vector2> footprint,
+            IReadOnlyList<Vector2> footprint,
+            float top,
             List<Vector3> vertices,
             List<Vector3> normals,
-            List<Vector2> uvs,
+            List<Vector2> detailUvs,
+            List<Vector2> atlasCells,
+            List<Color32> colors,
             List<int> indices)
         {
             int start = vertices.Count;
-            float top = record.base_y_meters + record.height_meters;
-            float minX = footprint.Min(point => point.x);
-            float maxX = footprint.Max(point => point.x);
-            float minZ = footprint.Min(point => point.y);
-            float maxZ = footprint.Max(point => point.y);
-            Rect roof = AtlasRect(record.roof_tile);
+            Vector2 atlasCell = AtlasCell(record.roof_tile);
+            Color32 tint = WithAlpha(BuildingTint(record.feature_index), 255);
             foreach (Vector2 point in footprint)
             {
                 vertices.Add(new Vector3(point.x, top, point.y));
                 normals.Add(Vector3.up);
-                float u = Mathf.InverseLerp(minX, maxX, point.x);
-                float v = Mathf.InverseLerp(minZ, maxZ, point.y);
-                uvs.Add(new Vector2(Mathf.Lerp(roof.xMin, roof.xMax, u), Mathf.Lerp(roof.yMin, roof.yMax, v)));
+                detailUvs.Add(new Vector2(point.x / 6f, point.y / 6f));
+                atlasCells.Add(atlasCell);
+                colors.Add(tint);
             }
             foreach (int index in TriangulateClockwise(footprint)) indices.Add(start + index);
+        }
+
+        private static void AddGabledShell(
+            SpatialRecord record,
+            List<Vector2> footprint,
+            List<Vector3> vertices,
+            List<Vector3> normals,
+            List<Vector2> detailUvs,
+            List<Vector2> atlasCells,
+            List<Color32> colors,
+            List<int> indices)
+        {
+            if (footprint.Count != 4)
+                throw new InvalidOperationException("Gabled shell requires a four-corner footprint.");
+            float pair0 = (footprint[1] - footprint[0]).sqrMagnitude +
+                          (footprint[3] - footprint[2]).sqrMagnitude;
+            float pair1 = (footprint[2] - footprint[1]).sqrMagnitude +
+                          (footprint[0] - footprint[3]).sqrMagnitude;
+            if (pair1 > pair0)
+                footprint = new List<Vector2> { footprint[1], footprint[2], footprint[3], footprint[0] };
+
+            float ridgeTop = record.base_y_meters + record.height_meters;
+            float eaveTop = ridgeTop - record.roof_rise_meters;
+            AddWalls(record, footprint, eaveTop, vertices, normals, detailUvs, atlasCells, colors, indices);
+
+            Vector2 ridgeA2 = (footprint[3] + footprint[0]) * 0.5f;
+            Vector2 ridgeB2 = (footprint[1] + footprint[2]) * 0.5f;
+            Vector3 q0 = new Vector3(footprint[0].x, eaveTop, footprint[0].y);
+            Vector3 q1 = new Vector3(footprint[1].x, eaveTop, footprint[1].y);
+            Vector3 q2 = new Vector3(footprint[2].x, eaveTop, footprint[2].y);
+            Vector3 q3 = new Vector3(footprint[3].x, eaveTop, footprint[3].y);
+            Vector3 ridgeA = new Vector3(ridgeA2.x, ridgeTop, ridgeA2.y);
+            Vector3 ridgeB = new Vector3(ridgeB2.x, ridgeTop, ridgeB2.y);
+            Vector2 roofCell = AtlasCell(record.roof_tile);
+            Color32 roofTint = WithAlpha(BuildingTint(record.feature_index), 255);
+            AddQuadFace(q0, q1, ridgeB, ridgeA, roofCell, roofTint,
+                vertices, normals, detailUvs, atlasCells, colors, indices, true);
+            AddQuadFace(q2, q3, ridgeA, ridgeB, roofCell, roofTint,
+                vertices, normals, detailUvs, atlasCells, colors, indices, true);
+
+            Vector2 facadeCell = AtlasCell(record.facade_tile);
+            Color32 facadeTint = WithAlpha(BuildingTint(record.feature_index), 255);
+            AddTriangleFace(q1, q2, ridgeB, facadeCell, facadeTint,
+                vertices, normals, detailUvs, atlasCells, colors, indices, false);
+            AddTriangleFace(q3, q0, ridgeA, facadeCell, facadeTint,
+                vertices, normals, detailUvs, atlasCells, colors, indices, false);
+        }
+
+        private static void AddHippedShell(
+            SpatialRecord record,
+            IReadOnlyList<Vector2> footprint,
+            List<Vector3> vertices,
+            List<Vector3> normals,
+            List<Vector2> detailUvs,
+            List<Vector2> atlasCells,
+            List<Color32> colors,
+            List<int> indices)
+        {
+            float roofTop = record.base_y_meters + record.height_meters;
+            float eaveTop = roofTop - record.roof_rise_meters;
+            AddWalls(record, footprint, eaveTop, vertices, normals, detailUvs, atlasCells, colors, indices);
+            Vector2 center2 = footprint.Aggregate(Vector2.zero, (sum, point) => sum + point) / footprint.Count;
+            Vector3 apex = new Vector3(center2.x, roofTop, center2.y);
+            Vector2 roofCell = AtlasCell(record.roof_tile);
+            Color32 roofTint = WithAlpha(BuildingTint(record.feature_index), 255);
+            for (int index = 0; index < footprint.Count; index++)
+            {
+                Vector2 a2 = footprint[index];
+                Vector2 b2 = footprint[(index + 1) % footprint.Count];
+                AddTriangleFace(
+                    new Vector3(a2.x, eaveTop, a2.y),
+                    new Vector3(b2.x, eaveTop, b2.y),
+                    apex,
+                    roofCell,
+                    roofTint,
+                    vertices,
+                    normals,
+                    detailUvs,
+                    atlasCells,
+                    colors,
+                    indices,
+                    true);
+            }
+        }
+
+        private static void AddQuadFace(
+            Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector2 atlasCell, Color32 tint,
+            List<Vector3> vertices, List<Vector3> normals, List<Vector2> detailUvs,
+            List<Vector2> atlasCells, List<Color32> colors, List<int> indices, bool roof)
+        {
+            Vector3 normal = Vector3.Cross(b - a, c - a).normalized;
+            if (normal.y < 0f)
+            {
+                (b, d) = (d, b);
+                normal = Vector3.Cross(b - a, c - a).normalized;
+            }
+            int start = vertices.Count;
+            foreach (Vector3 point in new[] { a, b, c, d })
+            {
+                vertices.Add(point);
+                normals.Add(normal);
+                detailUvs.Add(roof
+                    ? new Vector2(point.x / 6f, point.z / 6f)
+                    : new Vector2(point.x / 5f, point.y / 3f));
+                atlasCells.Add(atlasCell);
+                colors.Add(tint);
+            }
+            indices.Add(start);
+            indices.Add(start + 1);
+            indices.Add(start + 2);
+            indices.Add(start);
+            indices.Add(start + 2);
+            indices.Add(start + 3);
+        }
+
+        private static void AddTriangleFace(
+            Vector3 a, Vector3 b, Vector3 c, Vector2 atlasCell, Color32 tint,
+            List<Vector3> vertices, List<Vector3> normals, List<Vector2> detailUvs,
+            List<Vector2> atlasCells, List<Color32> colors, List<int> indices, bool roof)
+        {
+            Vector3 normal = Vector3.Cross(b - a, c - a).normalized;
+            int start = vertices.Count;
+            foreach (Vector3 point in new[] { a, b, c })
+            {
+                vertices.Add(point);
+                normals.Add(normal);
+                detailUvs.Add(roof
+                    ? new Vector2(point.x / 6f, point.z / 6f)
+                    : new Vector2(point.x / 5f, point.y / 3f));
+                atlasCells.Add(atlasCell);
+                colors.Add(tint);
+            }
+            indices.Add(start);
+            indices.Add(start + 1);
+            indices.Add(start + 2);
         }
 
         private static void CreatePrefab(Inputs inputs)
@@ -364,6 +606,36 @@ namespace QuestFlight.Editor
             }
         }
 
+        private static void EnsureBuildingMaterial()
+        {
+            Shader shader = Shader.Find(BuildingShaderName);
+            if (shader == null)
+                throw new InvalidOperationException("Aerial building shell shader is missing: " + BuildingShaderName);
+            Texture2D albedo = LoadRequired<Texture2D>(BuildingAlbedoAtlasPath);
+            Texture2D normal = LoadRequired<Texture2D>(BuildingNormalAtlasPath);
+            Texture2D mrao = LoadRequired<Texture2D>(BuildingMraoAtlasPath);
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(BuildingMaterialPath);
+            if (material == null)
+            {
+                material = new Material(shader) { name = "KBDU_AerialBuildingShellsV2" };
+                AssetDatabase.CreateAsset(material, BuildingMaterialPath);
+            }
+            material.shader = shader;
+            material.SetTexture("_MainTex", albedo);
+            material.SetTexture("_NormalTex", normal);
+            material.SetTexture("_MRAOTex", mrao);
+            material.SetColor("_Tint", Color.white);
+            material.SetFloat("_NormalStrength", 0.42f);
+            material.SetFloat("_SpecularStrength", 0.14f);
+            material.SetFloat("_GroundOcclusion", 0.20f);
+            material.SetFloat("_DetailFlattenStart", 3.00f);
+            material.SetFloat("_DetailFlattenEnd", 8.00f);
+            material.SetFloat("_AmbientFloor", 0.12f);
+            material.SetFloat("_NearAlbedoLift", 0.12f);
+            material.enableInstancing = true;
+            EditorUtility.SetDirty(material);
+        }
+
         private static Renderer ConfigureRenderer(
             Transform parent, BatchReplacement batch, int lod, Material material)
         {
@@ -408,6 +680,33 @@ namespace QuestFlight.Editor
                     "Standalone building prefab dependency closure contains a product root, legacy context, or apparent far mesh.");
             LODGroup[] groups = prefab.GetComponentsInChildren<LODGroup>(true);
             MeshRenderer[] renderers = prefab.GetComponentsInChildren<MeshRenderer>(true);
+            Material shellMaterial = LoadRequired<Material>(BuildingMaterialPath);
+            Material existingAirportCoreMaterial = LoadRequired<Material>(ExistingAirportCoreMaterialPath);
+            Texture2D albedo = LoadRequired<Texture2D>(BuildingAlbedoAtlasPath);
+            Texture2D normal = LoadRequired<Texture2D>(BuildingNormalAtlasPath);
+            Texture2D mrao = LoadRequired<Texture2D>(BuildingMraoAtlasPath);
+            if (shellMaterial.shader == null ||
+                !string.Equals(shellMaterial.shader.name, BuildingShaderName, StringComparison.Ordinal) ||
+                shellMaterial.GetTexture("_MainTex") != albedo ||
+                shellMaterial.GetTexture("_NormalTex") != normal ||
+                shellMaterial.GetTexture("_MRAOTex") != mrao ||
+                shellMaterial.renderQueue != (int)RenderQueue.Geometry ||
+                !shellMaterial.enableInstancing)
+                throw new InvalidOperationException("Aerial building shell material contract is invalid.");
+            if (existingAirportCoreMaterial.GetTexture("_MainTex") != albedo ||
+                existingAirportCoreMaterial.GetTexture("_NormalTex") != normal ||
+                existingAirportCoreMaterial.GetTexture("_MRAOTex") != mrao ||
+                !AssetDatabase.GetDependencies(ProductEnvironmentRootPath, true)
+                    .Contains(ExistingAirportCoreMaterialPath))
+                throw new InvalidOperationException(
+                    "Context shells must reuse the already-resident AirportCore V4 PBR atlas triplet.");
+            if (!dependencies.Contains(BuildingAlbedoAtlasPath) ||
+                !dependencies.Contains(BuildingNormalAtlasPath) ||
+                !dependencies.Contains(BuildingMraoAtlasPath) ||
+                dependencies.Contains(ObsoleteContextAtlasPath) ||
+                dependencies.Count(path => path.EndsWith(".mat", StringComparison.OrdinalIgnoreCase)) != 1)
+                throw new InvalidOperationException(
+                    "Standalone building prefab has a stale atlas or material dependency.");
             BatchReplacement[] expected = inputs.RenderedBatches.ToArray();
             HashSet<string> expectedMeshes = new HashSet<string>(
                 expected.SelectMany(batch =>
@@ -464,9 +763,11 @@ namespace QuestFlight.Editor
                     if (renderer.transform.localPosition != Vector3.zero ||
                         renderer.transform.localRotation != Quaternion.identity || renderer.transform.localScale != Vector3.one ||
                         mesh == null || mesh.subMeshCount != 1 || !BoundsEqual(mesh.bounds, stable) ||
+                        mesh.uv.Length != mesh.vertexCount || mesh.uv2.Length != mesh.vertexCount ||
+                        mesh.colors32.Length != mesh.vertexCount ||
                         mesh.vertexCount != batch.lods[lod].vertices ||
                         (long)mesh.GetIndexCount(0) / 3L != batch.lods[lod].triangles ||
-                        renderer.sharedMaterial != LoadRequired<Material>(BuildingMaterialPath) ||
+                        renderer.sharedMaterial != shellMaterial ||
                         renderer.shadowCastingMode != ShadowCastingMode.Off || renderer.receiveShadows)
                         throw new InvalidOperationException("Replacement mesh spatial contract failed: " + batch.new_group_id + " LOD" + lod);
                     long triangles = (long)mesh.GetIndexCount(0) / 3L;
@@ -620,17 +921,23 @@ namespace QuestFlight.Editor
                    first > epsilon && second > epsilon && third > epsilon;
         }
 
-        private static Rect AtlasRect(int tile)
+        private static Vector2 AtlasCell(int tile)
         {
-            const float cell = 0.25f;
             int column = Mathf.Abs(tile) % 4;
-            int rowFromTop = (Mathf.Abs(tile) / 4) % 4;
-            return Rect.MinMaxRect(
-                column * cell + 0.003f,
-                1f - (rowFromTop + 1) * cell + 0.003f,
-                (column + 1) * cell - 0.003f,
-                1f - rowFromTop * cell - 0.003f);
+            int rowFromBottom = (Mathf.Abs(tile) / 4) % 4;
+            return new Vector2(column, rowFromBottom);
         }
+
+        private static Color32 BuildingTint(int featureIndex)
+        {
+            uint hash = unchecked((uint)featureIndex * 747796405u + 2891336453u);
+            byte variation = (byte)(236 + hash % 20u);
+            byte warm = (byte)Mathf.Clamp(variation + (int)((hash >> 8) % 7u) - 3, 224, 255);
+            return new Color32(warm, variation, (byte)Mathf.Clamp(variation - 2, 224, 255), 255);
+        }
+
+        private static Color32 WithAlpha(Color32 color, byte alpha) =>
+            new Color32(color.r, color.g, color.b, alpha);
 
         private static void SaveMesh(Mesh mesh, string path)
         {
@@ -723,6 +1030,8 @@ namespace QuestFlight.Editor
             public float height_meters;
             public bool lidar_height_used;
             public float lidar_selected_relative_error;
+            public string roof_profile;
+            public float roof_rise_meters;
             public int roof_tile;
             public string tier;
         }

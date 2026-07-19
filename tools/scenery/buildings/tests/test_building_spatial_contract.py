@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import math
 import unittest
 from pathlib import Path
 
@@ -23,6 +24,12 @@ class BuildingSpatialContractTests(unittest.TestCase):
         cls.output_path = REPO_ROOT / cls.config["output_manifest_path"]
         cls.batch_output_path = REPO_ROOT / cls.config["output_batch_replacement_manifest_path"]
         cls.lidar_path = REPO_ROOT / cls.config["optional_lidar_manifest_path"]
+        cls.material_manifest_path = REPO_ROOT / cls.config["material_contract"][
+            "atlas_source_manifest_path"
+        ]
+        cls.material_albedo_path = REPO_ROOT / cls.config["material_contract"]["albedo_path"]
+        cls.material_normal_path = REPO_ROOT / cls.config["material_contract"]["normal_path"]
+        cls.material_mrao_path = REPO_ROOT / cls.config["material_contract"]["mrao_path"]
         cls.context = MODULE.load_json(cls.context_path)
         cls.recipe = MODULE.load_json(cls.recipe_path)
         cls.contract = MODULE.load_json(cls.output_path)
@@ -39,6 +46,10 @@ class BuildingSpatialContractTests(unittest.TestCase):
                 "hero_replacements": MODULE.sha256(self.replacements_path),
                 "config": MODULE.sha256(self.config_path),
                 "generator": MODULE.sha256(MODULE_PATH),
+                "material_manifest": MODULE.sha256(self.material_manifest_path),
+                "material_albedo": MODULE.sha256(self.material_albedo_path),
+                "material_normal": MODULE.sha256(self.material_normal_path),
+                "material_mrao": MODULE.sha256(self.material_mrao_path),
             },
             MODULE.load_json(self.lidar_path),
             self.lidar_path.relative_to(REPO_ROOT).as_posix(),
@@ -53,6 +64,7 @@ class BuildingSpatialContractTests(unittest.TestCase):
         self.assertFalse(regenerated["height_input"]["eligible_for_authoritative_override"])
         self.assertFalse(regenerated["height_input"]["meets_10_percent_vertical_error_gate"])
         self.assertEqual(regenerated["statistics"]["lidar_height_override_count"], 0)
+        self.assertEqual(regenerated["material_contract"]["incremental_texture_bytes"], 0)
         batch_regenerated = MODULE.build_batch_replacement_manifest(
             regenerated,
             self.recipe,
@@ -72,8 +84,7 @@ class BuildingSpatialContractTests(unittest.TestCase):
         self.assertEqual(len(batch_manifest["legacy_renderer_ids_to_disable"]), 60)
         self.assertEqual(batch_manifest["statistics"]["hero_replacement_source_count_omitted"], 2)
         self.assertEqual(batch_manifest["statistics"]["ordinary_far_geometry_count"], 0)
-        fixed_mid_groups = 0
-        near_reduction_groups = 0
+        fixed_shell_groups = 0
         for batch in batch_manifest["batches"]:
             if not batch["represented_feature_indices"]:
                 self.assertIsNone(batch["new_group_id"])
@@ -81,19 +92,14 @@ class BuildingSpatialContractTests(unittest.TestCase):
                 self.assertIn("ORTHOPHOTO_ONLY", batch["integration_action"])
             else:
                 self.assertTrue(batch["new_group_id"].startswith("AerialBuildingsV1__"))
-                represented_near = sum(
-                    row["count"]
-                    for row in batch["represented_tier_counts"]
-                    if row["tier"] in ("hero_core", "near", "far_landmark")
+                self.assertEqual(len(batch["new_renderer_ids"]), 1)
+                self.assertEqual(len(batch["lods"]), 1)
+                fixed_shell_groups += 1
+                self.assertEqual(batch["lods"][0]["level"], "FIXED")
+                self.assertEqual(
+                    batch["lods"][0]["mesh_mode"],
+                    "CLOSED_TRUE_FOOTPRINT_SHELL_FIXED_RENDERER",
                 )
-                expected_count = 2 if represented_near else 1
-                self.assertEqual(len(batch["new_renderer_ids"]), expected_count)
-                self.assertEqual(len(batch["lods"]), expected_count)
-                if expected_count == 1:
-                    fixed_mid_groups += 1
-                    self.assertEqual(batch["lods"][0]["level"], "FIXED")
-                else:
-                    near_reduction_groups += 1
             represented_far_ordinary = next(
                 row["count"] for row in batch["represented_tier_counts"]
                 if row["tier"] == "far_orthophoto"
@@ -109,11 +115,8 @@ class BuildingSpatialContractTests(unittest.TestCase):
                     ),
                     0,
                 )
-        self.assertEqual(batch_manifest["statistics"]["fixed_mid_group_count"], fixed_mid_groups)
-        self.assertEqual(
-            batch_manifest["statistics"]["near_reduction_lod_group_count"],
-            near_reduction_groups,
-        )
+        self.assertEqual(batch_manifest["statistics"]["fixed_mid_group_count"], fixed_shell_groups)
+        self.assertEqual(batch_manifest["statistics"]["near_reduction_lod_group_count"], 0)
 
     def test_near_is_exact_mid_is_bounded_and_far_is_orthophoto_only(self):
         features = self.context["openstreetmap"]["features"]
@@ -161,11 +164,106 @@ class BuildingSpatialContractTests(unittest.TestCase):
             else:
                 self.fail(row["tier"])
         quantization = self.contract["coordinate_quantization_meters"]
+        cutoff_radius = self.config["mid_geometry_selection"]["unconditional_radius_meters"]
+        cutoff_area = self.config["mid_geometry_selection"][
+            "minimum_footprint_area_square_meters_beyond_radius"
+        ]
         for feature_index in far_indices:
             source = MODULE.decode_points_q(features[feature_index])
             centroid = MODULE.polygon_centroid_q(source)
-            radius = (centroid[0] * quantization) ** 2 + (centroid[1] * quantization) ** 2
-            self.assertGreaterEqual(radius, self.config["tier_radii_meters"]["mid_max_exclusive"] ** 2)
+            radius = math.hypot(centroid[0] * quantization, centroid[1] * quantization)
+            source_area = abs(MODULE.signed_area2(source)) * quantization * quantization * 0.5
+            self.assertTrue(
+                radius >= self.config["tier_radii_meters"]["mid_max_exclusive"]
+                or (radius >= cutoff_radius and source_area < cutoff_area)
+            )
+
+    def test_every_runtime_representation_is_a_fixed_closed_shell(self):
+        batch_manifest = MODULE.load_json(self.batch_output_path)
+        records = {row["feature_index"]: row for row in self.contract["records"]}
+        total = 0
+        for batch in batch_manifest["batches"]:
+            if not batch["represented_feature_indices"]:
+                continue
+            self.assertEqual(len(batch["lods"]), 1)
+            self.assertEqual(batch["lods"][0]["level"], "FIXED")
+            expected_triangles = 0
+            expected_vertices = 0
+            for feature_index in batch["represented_feature_indices"]:
+                record = records[feature_index]
+                point_count = len(record["geometry_points_q"]) // 2
+                if record["roof_profile"] == "gable":
+                    self.assertEqual(point_count, 4)
+                    self.assertGreater(record["roof_rise_meters"], 0.0)
+                    expected_triangles += 14
+                    expected_vertices += 30
+                elif record["roof_profile"] == "hip":
+                    self.assertGreater(record["roof_rise_meters"], 0.0)
+                    expected_triangles += 3 * point_count
+                    expected_vertices += 7 * point_count
+                else:
+                    self.assertEqual(record["roof_profile"], "flat")
+                    self.assertEqual(record["roof_rise_meters"], 0.0)
+                    expected_triangles += 3 * point_count - 2
+                    expected_vertices += 5 * point_count
+            self.assertEqual(batch["lods"][0]["triangles"], expected_triangles)
+            self.assertEqual(batch["lods"][0]["vertices"], expected_vertices)
+            total += expected_triangles
+        self.assertEqual(
+            batch_manifest["statistics"]["replacement_serialized_triangles"], total
+        )
+        self.assertEqual(
+            batch_manifest["statistics"]["replacement_worst_case_triangles"], total
+        )
+
+    def test_material_tiles_use_only_existing_airport_core_pbr_cells(self):
+        material = self.contract["material_contract"]
+        self.assertEqual(material["atlas_grid"], [4, 4])
+        self.assertEqual(material["mrao_channels"], {
+            "r": "metallic", "g": "roughness", "b": "ambient_occlusion"
+        })
+        self.assertEqual(material["incremental_texture_bytes"], 0)
+        for key, path in (
+            ("atlas_source_manifest_sha256", self.material_manifest_path),
+            ("albedo_sha256", self.material_albedo_path),
+            ("normal_sha256", self.material_normal_path),
+            ("mrao_sha256", self.material_mrao_path),
+        ):
+            self.assertEqual(material[key], MODULE.sha256(path))
+        allowed_facades = set(material["allowed_facade_tiles"])
+        allowed_roofs = set(material["allowed_roof_tiles"])
+        self.assertEqual(allowed_facades, {0, 1, 5, 8, 10})
+        self.assertEqual(allowed_roofs, {3, 10})
+        self.assertTrue(all(record["facade_tile"] in allowed_facades
+                            for record in self.contract["records"]))
+        self.assertTrue(all(record["roof_tile"] in allowed_roofs
+                            for record in self.contract["records"]))
+        first = MODULE.build_contract(
+            self.context,
+            self.recipe,
+            MODULE.load_json(self.replacements_path),
+            self.config,
+            {
+                "context": MODULE.sha256(self.context_path),
+                "recipe": MODULE.sha256(self.recipe_path),
+                "hero_replacements": MODULE.sha256(self.replacements_path),
+                "config": MODULE.sha256(self.config_path),
+                "generator": MODULE.sha256(MODULE_PATH),
+                "material_manifest": MODULE.sha256(self.material_manifest_path),
+                "material_albedo": MODULE.sha256(self.material_albedo_path),
+                "material_normal": MODULE.sha256(self.material_normal_path),
+                "material_mrao": MODULE.sha256(self.material_mrao_path),
+            },
+            MODULE.load_json(self.lidar_path),
+            self.lidar_path.relative_to(REPO_ROOT).as_posix(),
+            MODULE.sha256(self.lidar_path),
+        )
+        self.assertEqual(
+            [(row["feature_index"], row["facade_tile"], row["roof_tile"])
+             for row in first["records"]],
+            [(row["feature_index"], row["facade_tile"], row["roof_tile"])
+             for row in self.contract["records"]],
+        )
 
     def test_components_have_only_touching_or_intersecting_spanning_edges(self):
         records = {row["feature_index"]: row for row in self.contract["records"]}
