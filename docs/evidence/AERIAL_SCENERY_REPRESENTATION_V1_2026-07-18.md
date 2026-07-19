@@ -15,7 +15,7 @@ The milestone keeps the existing explicitly authored product scene and Built-in 
 The intended representation tiers are:
 
 - airport hero, 0–500 m: existing hero buildings and operational surfaces, detailed fixed terrain, and the closest authored vegetation;
-- near, 500–1,500 m: fixed-card tree representations and true-footprint buildings;
+- near, 500–1,500 m: fixed-card tree representations and footprint-preserving buildings;
 - mid, 1,500–4,000 m: fixed grove aggregates and footprint-preserving roof/building groups;
 - far, beyond 4,000 m: orthophoto, fixed DEM terrain, canopy height/normal/occlusion maps, and no ordinary far-building geometry.
 
@@ -142,7 +142,7 @@ Canonical source and runtime inventories are:
 
 ## Decision
 
-Preserve and push the feature branch for its deterministic lidar conversion, conformed visual boundary, four-tier vegetation contracts, true-footprint building representation, source/license inventories, and validation tooling. Do not merge it to main as an accepted environment milestone.
+Preserve and push the feature branch for its deterministic lidar conversion, conformed visual boundary, four-tier vegetation contracts, footprint-preserving building representation, source/license inventories, and validation tooling. Do not merge it to main as an accepted environment milestone.
 
 The next bounded pass must materially improve near vegetation, grove silhouettes, aerial canopy integration, and near/aerial terrain presentation while retaining the accepted building spatial contract and remaining inside the current static limits. Re-run full-resolution inspection and all ten genuine simulator replays before requesting physical Quest timing.
 

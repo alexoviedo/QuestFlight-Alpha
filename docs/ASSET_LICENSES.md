@@ -61,7 +61,7 @@ The frozen extraction pipeline queried USGS/USDA NAIP Plus availability, but dow
 
 ### Standalone recovery NAIP derivatives
 
-The standalone environment uses three aligned, bounded natural-color derivatives from the official USGS NAIP Plus ImageServer. The source catalog records USDA-FSA APFO imagery acquired on 2019-08-03 and 2019-09-19 at 0.6 m source resolution. United States government works are public domain; courtesy credit is `USGS, USDA, The National Map: Orthoimagery`.
+The standalone environment retains three aligned, bounded natural-color base derivatives from the official USGS NAIP Plus ImageServer. The source catalog records USDA-FSA APFO imagery acquired on 2019-08-03 and 2019-09-19 at 0.6 m source resolution. United States government works are public domain; courtesy credit is `USGS, USDA, The National Map: Orthoimagery`.
 
 | Runtime derivative | Coverage / import | SHA-256 |
 | --- | --- | --- |
@@ -69,7 +69,21 @@ The standalone environment uses three aligned, bounded natural-color derivatives
 | `KBDU_NAIP_2019_Mid12km_4096.jpg` (7,273,113 bytes) | 12 km × 12 km, 4096², ASTC 6×6, mipmapped/streamed, anisotropy 8, mip bias `-0.15` | `5e8d6edbcc5dc937c78b5fb8e4a5f8f7a06bda726b4509684e237f2b17fbdf9a` |
 | `KBDU_NAIP_2019_Far24km_2048.jpg` (1,705,067 bytes) | 24 km × 24 km, 2048², ASTC 6×6, mipmapped/streamed, anisotropy 8, mip bias `-0.10` | `799be878d5c6be73b5596cbea70ee4e122859a528231608e40796f1020617b33` |
 
-Exact raster IDs, corrected requested/returned extents, raw external hashes, processing settings, near-to-mid and mid-to-far color-match statistics, output hashes, and the no-Google confirmation are pinned in `tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json`. The three current Android ASTC mip-chain estimates total 22,420,784 bytes. The earlier `KBDU_NAIP_2019_Mid12km_2048.jpg` derivative remains rights-cleared and tracked, but is superseded and is not bound by the current terrain-pyramid material.
+Exact raster IDs, corrected requested/returned extents, raw external hashes, processing settings, near-to-mid and mid-to-far color-match statistics, output hashes, and the no-Google confirmation are pinned in `tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json`. These base assets remain licensed inputs; the recovery branch additionally binds the optimized derivatives below.
+
+### Aerial Scenery Recovery V2 NAIP derivatives
+
+Recovery V2 adds no new license boundary. It derives five optimized runtime images from the same official public-domain 2019 USGS/USDA NAIP Plus source. Raw service responses and decoded working rasters remain external.
+
+| Committed derivative | Runtime contract | SHA-256 |
+|---|---|---|
+| `AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNW_2048.jpg` | 2048² hot quadrant, 1.984375 m/texel, ASTC 6×6, mipmapped | `677142d71bb8b66ba4e181c5a2d966cd73a4b87e21c631eef3c48a339c00b054` |
+| `AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNE_2048.jpg` | 2048² hot quadrant, 1.984375 m/texel, ASTC 6×6, mipmapped | `91ea5f1f4517c081900634073767b22abf821c9d5115de5de8ff0e706c16d907` |
+| `AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSW_2048.jpg` | 2048² hot quadrant, 1.984375 m/texel, ASTC 6×6, mipmapped | `47fe667d0eb344a43dc4469ef332918fc930123187836afe0f5798d5e272e526` |
+| `AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSE_2048.jpg` | 2048² hot quadrant, 1.984375 m/texel, ASTC 6×6, mipmapped | `3d4cc4dd0adaa40c28ffe719a347574a26ff8928e92d04d89910c9aac15a64c2` |
+| `AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidBase12km_4096.jpg` | 4096² 12 km fallback, 2.9296875 m/texel, ASTC 10×10, mipmapped | `6d547c0d1ccc7ff646f59cc2d6ba209d601dda9da0cb61f00beea899b8aeff24` |
+
+The source manifest SHA-256 is `f1ed4c73f02b786098766eb75731b11a0abf0e2b29ba88b41579ae9e97f0f6c2`; the ground contract SHA-256 is `5814882a72c299f207d4f9734bc18d93b14f3b8bc9ffb5cfd9cac85f5df819fa`. Automatic mip streaming is disabled for these five assets because the custom world-space UV path lacks a proven streaming-UV contract; this is documented as resident texture cost, not called streaming.
 
 ### Photographic sky derivative
 
@@ -103,7 +117,7 @@ The context materials serialize Unity's instancing-variant flag, but the current
 
 ### Project-authored reservoir presentation assets
 
-The reservoir retains the OSM way 35597714 shoreline (`© OpenStreetMap contributors`, ODbL-1.0). Its two normal maps are deterministic project-authored mathematical textures. The packed mask is a project-authored rendered derivative of the OSM shoreline; its depth channel is artistic distance-to-shore data, not surveyed bathymetry.
+The reservoir retains the OSM way 35597714 shoreline (`© OpenStreetMap contributors`, ODbL-1.0). Its two normal maps are deterministic project-authored mathematical textures. The packed mask is a project-authored rendered derivative of the OSM shoreline; its depth channel is artistic distance-to-shore data, not surveyed bathymetry. On Aerial Scenery Recovery V2 these assets remain licensed and retained but are unbound; water presentation is orthophoto-only.
 
 | Product asset | Terms | SHA-256 |
 | --- | --- | --- |
@@ -186,7 +200,7 @@ At that milestone, `QuestFlight/Assets/Production/Environment` contained 97 non-
 ## Exclusions
 
 - No Google Maps, Google Earth, or Street View content.
-- No raw NAIP/orthophoto downloads or lossless processing intermediates; only optimized, provenance-recorded public-domain derivatives are committed. The current material binds the three-level Near4096/Mid4096/Far2048 pyramid above.
+- No raw NAIP/orthophoto downloads or lossless processing intermediates; only optimized, provenance-recorded public-domain derivatives are committed. The recovery material binds the retained near/far sources plus the four hot quadrants and 12 km fallback recorded above.
 - No raw FAA, USGS, OSM, DEM, imagery, or download archives.
 - No legacy splat/capture data.
 - No binary runtime asset whose creator, source, terms, or exact content hash is unclear.
@@ -289,3 +303,14 @@ recordings, screenshots, builds, and APKs remain external and must not be
 committed. The Aerial Scenery V1 license record makes no FAA, navigation,
 training-credit, certified-fidelity, production-photorealism, compatibility, or
 Quest-performance claim.
+
+## Aerial Scenery Recovery V2 derivative records
+
+Recovery V2 introduces no new external model or imagery provider. It reuses the OSM ODbL-1.0 building records, public-domain USGS 3DEP canopy products, the existing project-authored vegetation family, and the public-domain NAIP source recorded above. Current deterministic record hashes are:
+
+- building spatial contract: `132cf7f768621becc0dab60b976f3d777b17f03323fc8f9f29bfd9d50dde4521`;
+- building replacement map: `14c46122204b627e546bb567ad4308b783311a3d500d5ef7dca34804405aeb4e`;
+- building runtime inventory: `1c9f555a5dfbef345842fdb7ab63e55c19b92db0e64fcf4cffb4bf6373796d11`;
+- vegetation manifest: `315076dff38bb58c8ae23f05cd65aeb3953fbe730c61ccb785d47de8ffa1db49`.
+
+The current representation contains 2,875 fixed closed building shells and 24,804 orthophoto-only building features. Vegetation contains 22 Tier 0/1 placements in two batches; Tier 2/3 are orthophoto plus canopy-map representations. No raw OSM response, lidar point cloud, decoded NAIP raster, build, capture, or cache is committed.

@@ -15,6 +15,27 @@ Run from the repository root:
 
 `validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current standard Visual QA is a 56-view capture set and requires inspection of every full-resolution image. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. On V4.2 the hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. The V2 ceilings below are retained as historical branch evidence, not current V4.2 acceptance values.
 
+## Aerial Scenery Recovery V2 closure
+
+The recovery branch is **PARTIAL — preserve and push, do not merge**. Exact source is `feature/aerial-scenery-representation-v1` at `6ff04fc9a1dc636030e28ed759b31539ee637396`.
+
+- building recovery: PASS 9/9 Python and 4/4 scoped Unity tests; 2,875 fixed closed shells, 24,804 orthophoto-only records, 16 renderers, 46,005 triangles, one opaque shared material, and zero runtime building LODGroups;
+- vegetation recovery: PASS 7/7 Python and 5/5 scoped Unity tests; 22 Tier 0/1 placements, two draws, 12,860 triangles, one alpha-clipped material, and zero Tier-2 geometry/draws;
+- ground imagery contract: PASS 7/7 Python tests; official public-domain 2019 USGS/USDA NAIP Plus source, four 2048² hot quadrants plus one 4096² 12 km fallback;
+- water defer and full EditMode: PASS 98/98; active water mode is `OrthophotoOnly` and reservoir/minor-water renderer/material bindings are inactive;
+- PlayMode: PASS 9/9;
+- one-command `validate_product.ps1`: PASS, including product integrity, dependency closure, EditMode, PlayMode, 56-view machine Visual QA, static budget, and Android build;
+- machine Visual QA: `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; all 56 production frames and 20 dedicated aerial frames were inspected at full resolution;
+- lead visual review: **PARTIAL at 5.3/10**; structural defects improved, but building art, near vegetation/grove volume, and low-oblique image sharpness remain below acceptance;
+- static planning budget: PASS at 55 draws, 534,976 visible triangles, 24 visible materials, 176.77 MiB estimated texture residency, two transparent slots, 11 shaders / 17 keyword combinations, and 4x MSAA;
+- Android release-style build: PASS, application `com.alexoviedo.t2.questflight`, 106,789,590 bytes, SHA-256 `e97292bc1e060caf7e924998faa0c4c3939a36835cb1beb67e8a2b5a74ff9933`;
+- Meta XR Simulator v201.0: live Quest 3 profile stereo/HMD/both-Touch session PASS and both full-resolution eyes inspected; aggregate `BLOCKED_MISSING_RECORDED_REPLAYS` for all ten absent `.vrs` files;
+- physical Quest: short worn visual smoke **PASS/PARTIAL at 7/10** on the exact APK above; seat correction, absence of floating/size-changing buildings, visible canopy cue, and orthophoto-only water were accepted. Right-side imagery over the reservoir remained blurry while the left view looked decent. The 90+60-second timing/thermal/stale/tear/allocation gate was **NOT RUN**.
+
+The validation summary's `PASS_1_REJECTED_2_UNKNOWN` frozen-source field is an expected fail-closed R&D extraction fixture. The product dependency closure itself is `PASS`; no rejected or unknown R&D dependency was promoted into the product.
+
+See `docs/evidence/AERIAL_SCENERY_RECOVERY_V2_2026-07-19.md` and the external closure artifact root recorded there.
+
 ## Aerial Scenery Representation V1 closure
 
 The branch gate is **FAIL — preserve and stop** because visual targets were not met. Structural validation is deliberately reported separately:

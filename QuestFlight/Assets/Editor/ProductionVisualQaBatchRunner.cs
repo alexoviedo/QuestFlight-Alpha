@@ -551,7 +551,11 @@ namespace QuestFlightLab.Editor
             Bounds core = CombinedRendererBounds(benchmark.benchmarkContent);
             Bounds runway = context.environment.runwayPavement.GetComponent<Renderer>().bounds;
             Bounds reservoir = context.environment.boulderReservoirSurface.GetComponent<Renderer>().bounds;
-            Bounds minorWater = MinorWaterBounds(benchmark);
+            Bounds minorWater = MinorWaterBounds(benchmark, context.environment);
+            string minorWaterTitle = context.environment.waterPresentationMode ==
+                                     ProductionWaterPresentationMode.OrthophotoOnly
+                ? "Minor water orthophoto-only hold"
+                : "Minor-water terrain-mask effect";
             Vector3 north = Vector3.forward;
             Vector3 east = Vector3.right;
 
@@ -591,7 +595,7 @@ namespace QuestFlightLab.Editor
                     reservoir.center + new Vector3(0f, 430f, -920f), reservoir.center, 64f),
                 Benchmark("12_reservoir_aerial", "Reservoir benchmark aerial view", "airport_core_water",
                     reservoir.center + new Vector3(-720f, 880f, -760f), reservoir.center, 48f),
-                Benchmark("13_minor_water_terrain", "Minor-water terrain-mask effect", "airport_core_water",
+                Benchmark("13_minor_water_terrain", minorWaterTitle, "airport_core_water",
                     minorWater.center + new Vector3(36f, 28f, -42f), minorWater.center, 44f),
                 Benchmark("14_vegetation_close", "Vegetation hero cluster close view", "airport_core_vegetation",
                     vegetation.center + east * 24f - north * 28f + Vector3.up * 5f,
@@ -1182,6 +1186,8 @@ namespace QuestFlightLab.Editor
             private readonly Material v4RunwayMaterial;
             private readonly Material v4ReservoirMaterial;
             private readonly Material terrainMaterial;
+            private readonly bool waterEffectsDeferred;
+            private readonly bool hasMinorWaterStrength;
             private readonly float v4MinorWaterStrength;
             private readonly Light globalSun;
             private readonly Quaternion v4SunRotation;
@@ -1195,10 +1201,15 @@ namespace QuestFlightLab.Editor
                 this.root = root;
                 v4RunwayMaterial = root.authoritativeRunway.sharedMaterial;
                 v4ReservoirMaterial = root.boulderReservoir.sharedMaterial;
+                waterEffectsDeferred = root.manifest != null &&
+                                       root.manifest.waterEffectsDeferredToOrthophoto;
                 terrainMaterial = root.minorWaterTerrainEffect.sharedMaterial;
-                if (terrainMaterial == null || !terrainMaterial.HasProperty("_AirportCoreMinorWaterStrength"))
-                    throw new InvalidOperationException("Airport-core terrain A/B properties are missing.");
-                v4MinorWaterStrength = terrainMaterial.GetFloat("_AirportCoreMinorWaterStrength");
+                if (terrainMaterial == null)
+                    throw new InvalidOperationException("Airport-core terrain A/B material is missing.");
+                hasMinorWaterStrength = terrainMaterial.HasProperty("_AirportCoreMinorWaterStrength");
+                v4MinorWaterStrength = hasMinorWaterStrength
+                    ? terrainMaterial.GetFloat("_AirportCoreMinorWaterStrength")
+                    : 0f;
                 Light[] sceneSuns = Resources.FindObjectsOfTypeAll<Light>()
                     .Where(item => item != null && item.gameObject.scene.IsValid() &&
                                    item.type == LightType.Directional && item != root.benchmarkSun)
@@ -1224,8 +1235,10 @@ namespace QuestFlightLab.Editor
                 root.benchmarkContent.gameObject.SetActive(false);
                 ApplyContextMeshes(v2ContextMeshes);
                 root.authoritativeRunway.sharedMaterial = root.v2RunwayMaterial;
-                root.boulderReservoir.sharedMaterial = root.v2ReservoirMaterial;
-                terrainMaterial.SetFloat("_AirportCoreMinorWaterStrength", 0f);
+                if (!waterEffectsDeferred)
+                    root.boulderReservoir.sharedMaterial = root.v2ReservoirMaterial;
+                if (hasMinorWaterStrength)
+                    terrainMaterial.SetFloat("_AirportCoreMinorWaterStrength", 0f);
                 globalSun.transform.rotation = root.v2SunRotation;
                 globalSun.color = root.v2SunColor;
                 globalSun.intensity = root.v2SunIntensity;
@@ -1236,8 +1249,10 @@ namespace QuestFlightLab.Editor
                 root.benchmarkContent.gameObject.SetActive(true);
                 ApplyContextMeshes(v4ContextMeshes);
                 root.authoritativeRunway.sharedMaterial = v4RunwayMaterial;
-                root.boulderReservoir.sharedMaterial = v4ReservoirMaterial;
-                terrainMaterial.SetFloat("_AirportCoreMinorWaterStrength", v4MinorWaterStrength);
+                if (!waterEffectsDeferred)
+                    root.boulderReservoir.sharedMaterial = v4ReservoirMaterial;
+                if (hasMinorWaterStrength)
+                    terrainMaterial.SetFloat("_AirportCoreMinorWaterStrength", v4MinorWaterStrength);
                 globalSun.transform.rotation = v4SunRotation;
                 globalSun.color = v4SunColor;
                 globalSun.intensity = v4SunIntensity;
@@ -1281,18 +1296,32 @@ namespace QuestFlightLab.Editor
             return bounds;
         }
 
-        private static Bounds MinorWaterBounds(AirportCoreBenchmarkRoot root)
+        private static Bounds MinorWaterBounds(
+            AirportCoreBenchmarkRoot root,
+            ProductionEnvironmentRoot environment)
         {
             Material material = root.minorWaterTerrainEffect != null
                 ? root.minorWaterTerrainEffect.sharedMaterial
                 : null;
-            if (material == null || !material.HasProperty("_AirportCoreMinorWaterNearWorldMinInvSize"))
-                throw new InvalidOperationException("Minor-water world-space binding is missing.");
-            Vector4 binding = material.GetVector("_AirportCoreMinorWaterNearWorldMinInvSize");
-            if (binding.z <= 0f || binding.w <= 0f)
-                throw new InvalidOperationException("Minor-water world-space binding has an invalid inverse size.");
+            bool orthophotoOnly = environment != null && environment.waterPresentationMode ==
+                                  ProductionWaterPresentationMode.OrthophotoOnly;
+            if (!orthophotoOnly)
+            {
+                if (material == null || !material.HasProperty("_AirportCoreMinorWaterNearWorldMinInvSize"))
+                    throw new InvalidOperationException("Minor-water world-space binding is missing.");
+                Vector4 binding = material.GetVector("_AirportCoreMinorWaterNearWorldMinInvSize");
+                if (binding.z <= 0f || binding.w <= 0f)
+                    throw new InvalidOperationException(
+                        "Minor-water world-space binding has an invalid inverse size.");
+            }
+            else if (material == null)
+            {
+                throw new InvalidOperationException(
+                    "Orthophoto-only minor-water QA requires the authoritative terrain renderer.");
+            }
             // Focus the dedicated ground-level shot on the existing OSM-derived drainage
-            // feature southwest of the airport, while still validating the global near binding.
+            // feature southwest of the airport. In orthophoto-only mode this deliberately
+            // proves the photographed feature remains coherent without a synthetic overlay.
             Vector3 size = new Vector3(110f, 2f, 70f);
             Vector3 center = new Vector3(-555f,
                 root.minorWaterTerrainEffect.bounds.center.y + 0.2f,
