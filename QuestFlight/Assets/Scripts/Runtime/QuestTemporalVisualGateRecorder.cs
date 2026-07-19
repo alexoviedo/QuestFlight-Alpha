@@ -52,6 +52,13 @@ namespace QuestFlightLab.Runtime
                 .Where(renderer => renderer != null && renderer.enabled && !renderer.forceRenderingOff &&
                                    renderer.gameObject.activeInHierarchy)
                 .ToArray();
+            AerialVegetationBatchRenderer[] vegetationBatches = UnityEngine.Object
+                .FindObjectsByType<AerialVegetationBatchRenderer>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .Where(batch => batch != null && batch.enabled && batch.gameObject.activeInHierarchy &&
+                                batch.SharedMaterial != null && batch.NonEmptyDrawCount > 0)
+                .ToArray();
             Plane[] frustum = camera != null ? GeometryUtility.CalculateFrustumPlanes(camera) : null;
             Dictionary<Renderer, int> rendererLodIndices = new Dictionary<Renderer, int>();
             Dictionary<LODGroup, int> selectedLodIndices = new Dictionary<LODGroup, int>();
@@ -113,6 +120,25 @@ namespace QuestFlightLab.Runtime
                         triangles += (long)mesh.GetIndexCount(subMesh) / 3L;
                 }
             }
+            int visibleVegetationBatchDraws = 0;
+            foreach (AerialVegetationBatchRenderer batch in vegetationBatches)
+            {
+                if (camera != null && (camera.cullingMask & (1 << batch.gameObject.layer)) == 0)
+                    continue;
+
+                int batchDraws = batch.NonEmptyDrawCount;
+                Material material = batch.SharedMaterial;
+                visibleVegetationBatchDraws += batchDraws;
+                drawCalls += batchDraws;
+                triangles += batch.FullyInstancedTriangleCount;
+                materials.Add(material);
+                if (material.renderQueue >= (int)RenderQueue.Transparent ||
+                    string.Equals(
+                        material.GetTag("RenderType", false, string.Empty),
+                        "Transparent",
+                        StringComparison.OrdinalIgnoreCase))
+                    transparentSlots += batchDraws;
+            }
             if (camera != null && camera.clearFlags == CameraClearFlags.Skybox && RenderSettings.skybox != null)
             {
                 Material skybox = RenderSettings.skybox;
@@ -127,14 +153,14 @@ namespace QuestFlightLab.Runtime
             }
             return new RenderBudgetSnapshot
             {
-                activeRendererCount = renderers.Length,
-                estimatedVisibleRendererCount = visible.Length,
+                activeRendererCount = renderers.Length + vegetationBatches.Sum(batch => batch.NonEmptyDrawCount),
+                estimatedVisibleRendererCount = visible.Length + visibleVegetationBatchDraws,
                 estimatedInstancedDrawCalls = drawCalls,
                 estimatedFrustumTriangles = triangles,
                 uniqueMaterialCount = materials.Count,
                 transparentMaterialSlots = transparentSlots,
-                drawCountSemantics = "Camera-layer/frustum and selected-LOD non-null MeshRenderer/SkinnedMeshRenderer material-submesh slots before batching or instancing.",
-                triangleCountSemantics = "Triangle topology indices for the same camera-layer/frustum and selected-LOD effective rendered material-submesh slots."
+                drawCountSemantics = "Camera-layer/frustum and selected-LOD non-null MeshRenderer/SkinnedMeshRenderer material-submesh slots, plus conservative camera-layer-visible authored AerialVegetationBatchRenderer draws, before Unity batching.",
+                triangleCountSemantics = "Triangle topology indices for the same effective renderer slots plus every authored matrix instance submitted by camera-layer-visible aerial vegetation batches."
             };
         }
 

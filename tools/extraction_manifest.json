@@ -496,6 +496,16 @@
       "reason": "Product-authored validation marker for the explicitly serialized airport-core benchmark hierarchy; it performs no runtime construction."
     },
     {
+      "path": "Assets/Scripts/Environment/AerialSceneryManifest.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored serialized contract for the bounded four-tier aerial scenery representation; it performs no runtime construction."
+    },
+    {
+      "path": "Assets/Scripts/Environment/AerialSceneryRoot.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored validation marker for the explicitly serialized aerial scenery hierarchy; it performs no runtime construction or repair."
+    },
+    {
       "path": "Assets/Scenes/ProductionVerticalSlice/LightingData.asset",
       "classification": "approved_project_generated",
       "reason": "Unity-generated baked-lighting data for the bounded airport-core benchmark, pinned by the V4.2 bake manifest and structural validator."

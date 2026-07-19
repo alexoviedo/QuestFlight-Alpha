@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
@@ -40,12 +41,12 @@ namespace QuestFlightLab.Editor.Tests
             Assert.That(report.classification,
                 Is.EqualTo("PASS_AIRPORT_CORE_V4_2_STRUCTURAL_GATE_VISUAL_AND_HEADSET_REQUIRED"));
             Assert.That(report.adaptiveAirportTerrainTriangles,
-                Is.InRange(1, AirportCoreV4Authoring.MaximumAdaptiveAirportTerrainTriangles));
+                Is.InRange(1, AirportPatchLidarConformanceAuthoring.MaximumOutputTriangles));
             Assert.That(report.oneAtlasLightmapParametersValid, Is.True);
         }
 
         [Test]
-        public void V42BindsErrorBoundedVisualTerrainWithoutChangingSurfaceOrPhysics()
+        public void AerialV1BindsConformedVisualTerrainWithoutChangingSurfaceOrPhysics()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ProductionEnvironmentRoot.PrefabAssetPath);
             Assert.That(prefab, Is.Not.Null);
@@ -54,9 +55,9 @@ namespace QuestFlightLab.Editor.Tests
             Assert.That(contract.nearTerrainMeshes, Has.Length.EqualTo(2));
             MeshFilter airport = contract.nearTerrainMeshes[0];
             Assert.That(AssetDatabase.GetAssetPath(airport.sharedMesh),
-                Is.EqualTo(AirportCoreV4Authoring.AdaptiveAirportTerrainMeshPath));
+                Is.EqualTo(AirportPatchLidarConformanceAuthoring.OutputMeshPath));
             Assert.That(airport.sharedMesh.triangles.Length / 3,
-                Is.InRange(1, AirportCoreV4Authoring.MaximumAdaptiveAirportTerrainTriangles));
+                Is.InRange(1, AirportPatchLidarConformanceAuthoring.MaximumOutputTriangles));
             Assert.That(airport.GetComponent<MeshCollider>(), Is.Null);
             Assert.That(AssetDatabase.GetAssetPath(contract.authoritativeTerrainSurface),
                 Is.EqualTo("Assets/Production/Environment/ReconstructionV2/Generated/" +
@@ -68,6 +69,17 @@ namespace QuestFlightLab.Editor.Tests
                 AirportCoreV4Authoring.AdaptiveAirportTerrainReportPath);
             Assert.That(report, Is.Not.Null);
             Assert.That(report.text, Does.Contain("PASS_ERROR_BOUNDED_ADAPTIVE_AIRPORT_VISUAL_MESH"));
+            TextAsset conformance = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                AirportPatchLidarConformanceAuthoring.OutputReportPath);
+            Assert.That(conformance, Is.Not.Null);
+            AirportPatchLidarConformanceAuthoring.ConformanceReport parsed =
+                JsonUtility.FromJson<AirportPatchLidarConformanceAuthoring.ConformanceReport>(conformance.text);
+            Assert.That(parsed, Is.Not.Null);
+            Assert.That(parsed.boundaryProbeCount, Is.GreaterThanOrEqualTo(4000));
+            Assert.That(parsed.maximumBoundaryMismatchMeters,
+                Is.LessThanOrEqualTo(AirportPatchLidarConformanceAuthoring.MaximumBoundaryMismatchMeters));
+            Assert.That(parsed.interiorOriginalVertexChanges, Is.Zero);
+            Assert.That(parsed.runwayProtectedVertexChanges, Is.Zero);
         }
 
         [Test]
@@ -94,7 +106,7 @@ namespace QuestFlightLab.Editor.Tests
         }
 
         [Test]
-        public void BenchmarkUsesOneFilteredContextAndEditorOnlyPathBasedAbProvenance()
+        public void BenchmarkUsesMappedAerialReplacementAndEditorOnlyPathBasedAbProvenance()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ProductionEnvironmentRoot.PrefabAssetPath);
             Assert.That(prefab, Is.Not.Null);
@@ -110,7 +122,23 @@ namespace QuestFlightLab.Editor.Tests
             Assert.That(root.authoredApronProps.IsChildOf(root.benchmarkContent), Is.True);
             Assert.That(root.vegetationHeroCluster.IsChildOf(root.benchmarkContent), Is.True);
             Assert.That(root.filteredV2Context, Is.Not.Null);
-            Assert.That(root.filteredV2Context.gameObject.activeSelf, Is.True);
+            Assert.That(root.filteredV2Context.gameObject.activeSelf, Is.False);
+
+            AerialSceneryRoot[] aerialRoots = prefab.GetComponentsInChildren<AerialSceneryRoot>(true);
+            Assert.That(aerialRoots, Has.Length.EqualTo(1));
+            AerialSceneryRoot aerialRoot = aerialRoots[0];
+            Assert.That(aerialRoot.enabled && IsAuthoredActive(aerialRoot.transform, prefab.transform), Is.True);
+            Assert.That(aerialRoot.buildingRoot, Is.Not.Null);
+            Assert.That(IsAuthoredActive(aerialRoot.buildingRoot, aerialRoot.transform), Is.True);
+            Assert.That(aerialRoot.disabledLegacyBuildingRoots.Count(item =>
+                item == root.filteredV2Context.transform), Is.EqualTo(1));
+            Assert.That(aerialRoot.buildingRoot.GetComponentsInChildren<Renderer>(true).Any(item =>
+                item.enabled && IsAuthoredActive(item.transform, aerialRoot.transform)), Is.True);
+            Assert.That(root.filteredV2Context.GetComponentsInChildren<Renderer>(true).Any(item =>
+                item.enabled && IsAuthoredActive(item.transform, prefab.transform)), Is.False);
+            Assert.That(root.TryValidateFilteredContextRepresentation(out string contextReport), Is.True,
+                contextReport);
+
             Assert.That(root.v2ContextOriginalMeshPaths, Has.Length.EqualTo(3));
             Assert.That(root.v4ContextFilteredMeshPaths, Has.Length.EqualTo(3));
             Assert.That(root.GetComponentsInChildren<Transform>(true).Any(item =>
@@ -121,6 +149,122 @@ namespace QuestFlightLab.Editor.Tests
             Assert.That(root.fuelServiceContext.GetComponentsInChildren<Renderer>(true), Has.Length.EqualTo(3));
             Assert.That(root.airportLightProbes.probePositions, Has.Length.EqualTo(18));
             Assert.That(root.airportLightProbes.probePositions.Select(item => item.y).Distinct().Count(), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void FilteredContextContractPreservesActiveV4FallbackWhenAerialRootIsAbsent()
+        {
+            GameObject scope = new GameObject("AirportBenchmarkV4FallbackFixture");
+            try
+            {
+                AirportCoreBenchmarkRoot root = Child(scope.transform, AirportCoreBenchmarkRoot.GameObjectName)
+                    .gameObject.AddComponent<AirportCoreBenchmarkRoot>();
+                root.filteredV2Context = CreateThreeLodContext(scope.transform);
+
+                Assert.That(root.TryValidateFilteredContextRepresentation(out string validReport), Is.True,
+                    validReport);
+                Assert.That(validReport, Is.EqualTo("PASS_FILTERED_V2_CONTEXT_V4"));
+
+                root.filteredV2Context.gameObject.SetActive(false);
+                Assert.That(root.TryValidateFilteredContextRepresentation(out string invalidReport), Is.False);
+                Assert.That(invalidReport, Does.Contain("must be active in the V4 variant"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(scope);
+            }
+        }
+
+        [Test]
+        public void FilteredContextContractFailsClosedForIncompleteAerialReplacement()
+        {
+            GameObject scope = new GameObject("AirportBenchmarkAerialReplacementFixture");
+            try
+            {
+                AirportCoreBenchmarkRoot root = Child(scope.transform, AirportCoreBenchmarkRoot.GameObjectName)
+                    .gameObject.AddComponent<AirportCoreBenchmarkRoot>();
+                root.filteredV2Context = CreateThreeLodContext(scope.transform);
+                root.filteredV2Context.gameObject.SetActive(false);
+
+                AerialSceneryRoot aerialRoot = Child(scope.transform, AerialSceneryRoot.GameObjectName)
+                    .gameObject.AddComponent<AerialSceneryRoot>();
+                aerialRoot.buildingRoot = Child(aerialRoot.transform, "Buildings");
+                MeshRenderer replacementRenderer = aerialRoot.buildingRoot.gameObject.AddComponent<MeshRenderer>();
+                aerialRoot.disabledLegacyBuildingRoots = new[] { root.filteredV2Context.transform };
+
+                Assert.That(root.TryValidateFilteredContextRepresentation(out string validReport), Is.True,
+                    validReport);
+                Assert.That(validReport, Is.EqualTo("PASS_FILTERED_V2_CONTEXT_AERIAL_V1_REPLACEMENT"));
+
+                aerialRoot.enabled = false;
+                AssertFilteredContextFailure(root, "AerialSceneryRoot replacement must be active");
+                aerialRoot.enabled = true;
+
+                aerialRoot.buildingRoot.gameObject.SetActive(false);
+                AssertFilteredContextFailure(root, "buildingRoot must be an active authored child");
+                aerialRoot.buildingRoot.gameObject.SetActive(true);
+
+                aerialRoot.disabledLegacyBuildingRoots = Array.Empty<Transform>();
+                AssertFilteredContextFailure(root, "must appear exactly once");
+                aerialRoot.disabledLegacyBuildingRoots = new[]
+                    { root.filteredV2Context.transform, root.filteredV2Context.transform };
+                AssertFilteredContextFailure(root, "must appear exactly once");
+                aerialRoot.disabledLegacyBuildingRoots = new[] { root.filteredV2Context.transform };
+
+                replacementRenderer.enabled = false;
+                AssertFilteredContextFailure(root, "replacement building renderers are missing");
+                replacementRenderer.enabled = true;
+
+                root.filteredV2Context.gameObject.SetActive(true);
+                AssertFilteredContextFailure(root, "legacy filtered-context renderer remains active");
+                root.filteredV2Context.gameObject.SetActive(false);
+
+                Child(scope.transform, "DuplicateAerialRepresentation")
+                    .gameObject.AddComponent<AerialSceneryRoot>();
+                AssertFilteredContextFailure(root, "expected exactly one AerialSceneryRoot replacement");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(scope);
+            }
+        }
+
+        private static void AssertFilteredContextFailure(AirportCoreBenchmarkRoot root, string expectedReportText)
+        {
+            Assert.That(root.TryValidateFilteredContextRepresentation(out string report), Is.False);
+            Assert.That(report, Does.Contain(expectedReportText));
+        }
+
+        private static LODGroup CreateThreeLodContext(Transform parent)
+        {
+            Transform context = Child(parent, "FilteredContextFixture");
+            LODGroup group = context.gameObject.AddComponent<LODGroup>();
+            float[] transitionHeights = { 0.6f, 0.3f, 0.05f };
+            LOD[] lods = new LOD[transitionHeights.Length];
+            for (int index = 0; index < lods.Length; index++)
+            {
+                MeshRenderer renderer = Child(context, "LOD" + index).gameObject.AddComponent<MeshRenderer>();
+                lods[index] = new LOD(transitionHeights[index], new Renderer[] { renderer });
+            }
+            group.SetLODs(lods);
+            return group;
+        }
+
+        private static bool IsAuthoredActive(Transform candidate, Transform boundary)
+        {
+            for (Transform current = candidate; current != null; current = current.parent)
+            {
+                if (!current.gameObject.activeSelf) return false;
+                if (current == boundary) return true;
+            }
+            return false;
+        }
+
+        private static Transform Child(Transform parent, string name)
+        {
+            GameObject child = new GameObject(name);
+            child.transform.SetParent(parent, false);
+            return child.transform;
         }
     }
 }

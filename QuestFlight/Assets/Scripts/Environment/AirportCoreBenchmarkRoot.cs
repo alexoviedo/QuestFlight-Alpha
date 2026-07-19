@@ -63,10 +63,8 @@ namespace QuestFlightLab.Environment
                 "benchmark content is not explicitly authored below the root", failures);
             Require(benchmarkContent == null || benchmarkContent.gameObject.activeSelf,
                 "benchmark content must be active in the authored V4 variant", failures);
-            Require(HasThreeValidLods(filteredV2Context),
-                "the product context does not expose one valid filtered three-LOD source", failures);
-            Require(filteredV2Context == null || filteredV2Context.gameObject.activeSelf,
-                "filtered V2 context must be active in the V4 variant", failures);
+            Require(TryValidateFilteredContextRepresentation(out string filteredContextReport),
+                filteredContextReport, failures);
             Require(HasThreeAssetPaths(v2ContextOriginalMeshPaths),
                 "V2 A/B original context mesh paths are missing", failures);
             Require(HasThreeAssetPaths(v4ContextFilteredMeshPaths),
@@ -153,6 +151,89 @@ namespace QuestFlightLab.Environment
                 ? manifest.TryValidate(out string manifestReport) ? manifestReport : "manifest invalid"
                 : string.Join("; ", failures);
             return failures.Count == 0;
+        }
+
+        /// <summary>
+        /// Accepts the original active V4 context when no aerial representation is authored, or the
+        /// explicitly mapped Aerial V1 building replacement. This method only inspects serialized state.
+        /// </summary>
+        public bool TryValidateFilteredContextRepresentation(out string report)
+        {
+            List<string> failures = new List<string>();
+            Require(HasThreeValidLods(filteredV2Context),
+                "the product context does not expose one valid filtered three-LOD source", failures);
+
+            Transform authoredScope = transform.root;
+            AerialSceneryRoot[] aerialRoots = authoredScope.GetComponentsInChildren<AerialSceneryRoot>(true);
+            if (aerialRoots.Length == 0)
+            {
+                Require(filteredV2Context == null || filteredV2Context.gameObject.activeSelf,
+                    "filtered V2 context must be active in the V4 variant when no AerialSceneryRoot replacement is authored",
+                    failures);
+            }
+            else
+            {
+                Require(aerialRoots.Length == 1,
+                    $"expected exactly one AerialSceneryRoot replacement, found {aerialRoots.Length}", failures);
+                if (aerialRoots.Length == 1)
+                    ValidateAerialContextReplacement(aerialRoots[0], authoredScope, failures);
+            }
+
+            report = failures.Count == 0
+                ? aerialRoots.Length == 0
+                    ? "PASS_FILTERED_V2_CONTEXT_V4"
+                    : "PASS_FILTERED_V2_CONTEXT_AERIAL_V1_REPLACEMENT"
+                : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+
+        private void ValidateAerialContextReplacement(
+            AerialSceneryRoot aerialRoot,
+            Transform authoredScope,
+            ICollection<string> failures)
+        {
+            Require(aerialRoot.enabled && IsAuthoredActive(aerialRoot.transform, authoredScope),
+                "AerialSceneryRoot replacement must be active", failures);
+            Require(aerialRoot.buildingRoot != null &&
+                    (aerialRoot.buildingRoot == aerialRoot.transform ||
+                     aerialRoot.buildingRoot.IsChildOf(aerialRoot.transform)) &&
+                    IsAuthoredActive(aerialRoot.buildingRoot, aerialRoot.transform),
+                "AerialSceneryRoot buildingRoot must be an active authored child", failures);
+
+            int mappingCount = filteredV2Context == null || aerialRoot.disabledLegacyBuildingRoots == null
+                ? 0
+                : aerialRoot.disabledLegacyBuildingRoots.Count(item =>
+                    item != null && item == filteredV2Context.transform);
+            Require(mappingCount == 1,
+                "filtered V2 context must appear exactly once in AerialSceneryRoot.disabledLegacyBuildingRoots",
+                failures);
+            Require(filteredV2Context != null && !filteredV2Context.gameObject.activeSelf,
+                "mapped filtered V2 context must be explicitly disabled by the Aerial V1 replacement", failures);
+
+            Renderer[] replacementRenderers = aerialRoot.buildingRoot == null
+                ? Array.Empty<Renderer>()
+                : aerialRoot.buildingRoot.GetComponentsInChildren<Renderer>(true);
+            Require(replacementRenderers.Any(item =>
+                    item != null && item.enabled && IsAuthoredActive(item.transform, aerialRoot.transform)),
+                "active Aerial V1 replacement building renderers are missing", failures);
+
+            Renderer[] legacyRenderers = filteredV2Context == null
+                ? Array.Empty<Renderer>()
+                : filteredV2Context.GetComponentsInChildren<Renderer>(true);
+            Require(legacyRenderers.All(item =>
+                    item == null || !item.enabled || !IsAuthoredActive(item.transform, authoredScope)),
+                "a mapped legacy filtered-context renderer remains active", failures);
+        }
+
+        private static bool IsAuthoredActive(Transform candidate, Transform boundary)
+        {
+            if (candidate == null || boundary == null) return false;
+            for (Transform current = candidate; current != null; current = current.parent)
+            {
+                if (!current.gameObject.activeSelf) return false;
+                if (current == boundary) return true;
+            }
+            return false;
         }
 
         private static bool HasThreeValidLods(LODGroup group)

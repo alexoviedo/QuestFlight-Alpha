@@ -111,8 +111,7 @@ namespace QuestFlight.Editor
             Require(manifest.replacementSourceFeatureIds != null &&
                     manifest.replacementSourceFeatureIds.Length == manifest.serializedReplacementCount,
                 "source-feature replacement inventory is incomplete", violations);
-            Require(root.gameObject.activeSelf && root.benchmarkContent != null && root.benchmarkContent.gameObject.activeSelf &&
-                    root.filteredV2Context != null && root.filteredV2Context.gameObject.activeSelf,
+            Require(root.gameObject.activeSelf && root.benchmarkContent != null && root.benchmarkContent.gameObject.activeSelf,
                 "V4 benchmark content is not the active authored variant", violations);
             Require(environment.GetComponentsInChildren<Transform>(true).All(item =>
                     !string.Equals(item.name, AirportCoreBenchmarkRoot.V2BaselineName, StringComparison.Ordinal) &&
@@ -219,13 +218,21 @@ namespace QuestFlight.Editor
             MeshFilter airport = contract.nearTerrainMeshes?.FirstOrDefault();
             Mesh mesh = airport == null ? null : airport.sharedMesh;
             string path = mesh == null ? string.Empty : AssetDatabase.GetAssetPath(mesh);
-            Require(string.Equals(path, AirportCoreV4Authoring.AdaptiveAirportTerrainMeshPath,
+            AerialSceneryRoot aerial = contract.GetComponentInChildren<AerialSceneryRoot>(true);
+            bool aerialIntegrated = aerial != null;
+            string expectedPath = aerialIntegrated
+                ? AirportPatchLidarConformanceAuthoring.OutputMeshPath
+                : AirportCoreV4Authoring.AdaptiveAirportTerrainMeshPath;
+            int maximumTriangles = aerialIntegrated
+                ? AirportPatchLidarConformanceAuthoring.MaximumOutputTriangles
+                : AirportCoreV4Authoring.MaximumAdaptiveAirportTerrainTriangles;
+            Require(string.Equals(path, expectedPath,
                     StringComparison.Ordinal),
-                "airport visual terrain is not the pinned V4.2 error-bounded derivative", violations);
+                "airport visual terrain is not the pinned authored derivative", violations);
             int triangles = mesh == null ? 0 : MeshTriangles(mesh);
-            Require(triangles > 0 && triangles <= AirportCoreV4Authoring.MaximumAdaptiveAirportTerrainTriangles,
+            Require(triangles > 0 && triangles <= maximumTriangles,
                 $"adaptive airport terrain exceeds its triangle contract: {triangles:N0}/" +
-                $"{AirportCoreV4Authoring.MaximumAdaptiveAirportTerrainTriangles:N0}", violations);
+                $"{maximumTriangles:N0}", violations);
             Require(airport == null || airport.GetComponent<MeshCollider>() == null,
                 "adaptive airport terrain must remain visual-only", violations);
             Require(mesh != null && Mathf.Abs(mesh.bounds.min.x + 800f) < 0.001f &&
@@ -251,6 +258,23 @@ namespace QuestFlight.Editor
                     report.text.Contains("\"runwayCorridorSourceSamplesPreserved\": true") &&
                     report.text.Contains("\"authoritativeSurfaceQueryUnchanged\": true"),
                 "adaptive airport terrain provenance/report contract is incomplete", violations);
+            if (aerialIntegrated)
+            {
+                TextAsset conformance = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                    AirportPatchLidarConformanceAuthoring.OutputReportPath);
+                AirportPatchLidarConformanceAuthoring.ConformanceReport parsed = conformance == null
+                    ? null
+                    : JsonUtility.FromJson<AirportPatchLidarConformanceAuthoring.ConformanceReport>(conformance.text);
+                Require(parsed != null &&
+                        parsed.boundaryProbeCount >= 4000 &&
+                        parsed.maximumBoundaryMismatchMeters <=
+                            AirportPatchLidarConformanceAuthoring.MaximumBoundaryMismatchMeters &&
+                        parsed.interiorOriginalVertexChanges == 0 &&
+                        parsed.runwayProtectedVertexChanges == 0 &&
+                        parsed.sourceLidarMeshUnchanged &&
+                        parsed.authoritativeTerrainQueryUnchanged,
+                    "airport/lidar conformance provenance or dense boundary contract is incomplete", violations);
+            }
             return triangles;
         }
 

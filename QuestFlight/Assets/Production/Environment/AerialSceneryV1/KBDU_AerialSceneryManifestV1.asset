@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ba821c6f6f7444ca57d4dad7df10539, type: 3}
+  m_Name: KBDU_AerialSceneryManifestV1
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.AerialSceneryManifest
+  schemaVersion: 1
+  label: "KBDU aerial scenery representation V1 \u2014 not for navigation"
+  horizontalCrs: EPSG:32613
+  sourceLicense: USGS 3DEP public domain; OSM derivatives ODbL-1.0; project-authored
+    vegetation
+  generatedUtc: 2026-07-19T03:30:00Z
+  lidarSourceManifest: {fileID: 4900000, guid: 3805ff9f812ab01d6800c44d22bd8e55, type: 3}
+  terrainCoordinateConversionReport: {fileID: 4900000, guid: 292a667d9299b6b43b8b6a9f9a49e5c5, type: 3}
+  terrainConformanceReport: {fileID: 4900000, guid: 34110522981e40742b7f5f2e79f8026a, type: 3}
+  vegetationSourceManifest: {fileID: 4900000, guid: c159bb8c36e0782d50c6081453babbbe, type: 3}
+  buildingSourceManifest: {fileID: 4900000, guid: 60a323546a5c4f13bd11d09d53a42e72, type: 3}
+  lidarPipelineSha256: 1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5
+  vegetationPipelineSha256: 2f95980df1b3b952ecee2f3564a216e8e7840c9dc1c57bf2a8b5906b037513bc
+  buildingPipelineSha256: dbb4ad1db8051e34b6948a72b69257bb83fd80fd38daf83a89806cea2be3d87a
+  worldMinimumMeters: {x: -2048, y: -2048}
+  worldSizeMeters: {x: 4096, y: 4096}
+  surfaceFeatures: {fileID: 2800000, guid: 694a8d7153f9db1f8ecd5293972f6d2b, type: 3}
+  surfaceNormals: {fileID: 2800000, guid: f9d0bb15e0b184658fc8707aec537a96, type: 3}
+  canopyNormals: {fileID: 2800000, guid: 8712b0de0c676fe0840fb2bc72cfa359, type: 3}
+  canopyOcclusion: {fileID: 2800000, guid: 8712b0de0c676fe0840fb2bc72cfa359, type: 3}
+  canopyGeometryHandoff: {fileID: 2800000, guid: 449820e3dc7da0bfc6dc3067136b6f38, type: 3}
+  airportPatchMesh: {fileID: 4300000, guid: 8940b62f91a872a4fb89cdb8415406db, type: 2}
+  nearTerrainMesh: {fileID: 4300000, guid: 795292fa54f48ec4d8e15cab1e90dbb7, type: 2}
+  midTerrainMesh: {fileID: 4300000, guid: 4f672962bf8d5274ab31831c906c0bb3, type: 2}
+  boundedSourcePointCount: 18834395
+  canopyComponentCount: 323
+  nearTreeInstanceCount: 22
+  midGroveClusterCount: 248
+  representedBuildingCount: 9695
+  orthophotoOnlyBuildingCount: 17984
+  buildingFootprintInflationMaximum: 1.1
+  terrainMeanAbsoluteErrorMeters: 0.10746558
+  terrainP95ErrorMeters: 0.37577444
+  terrainMaximumErrorMeters: 1.4611648
+  terrainErrorMetricsExcludeDeclaredOutliers: 1
+  terrainDeclaredOutlierFraction: 0.24115086
+  operationalSurfaceRealWorldToleranceEstablished: 0

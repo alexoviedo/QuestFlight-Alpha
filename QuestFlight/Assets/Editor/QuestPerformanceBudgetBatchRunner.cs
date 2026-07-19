@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using QuestFlightLab.Editor;
+using QuestFlightLab.Environment;
 using QuestFlightLab.Runtime;
 using UnityEditor;
 using UnityEditor.Build;
@@ -64,12 +65,17 @@ namespace QuestFlight.Editor
                 .SelectMany(root => root.GetComponentsInChildren<Renderer>(true))
                 .Where(renderer => renderer != null && renderer.enabled && renderer.gameObject.activeInHierarchy)
                 .ToArray();
+            AerialVegetationBatchRenderer[] vegetationBatches = roots
+                .SelectMany(root => root.GetComponentsInChildren<AerialVegetationBatchRenderer>(true))
+                .Where(batch => batch != null && batch.enabled && batch.gameObject.activeInHierarchy &&
+                                batch.SharedMaterial != null && batch.NonEmptyDrawCount > 0)
+                .ToArray();
             Camera mainCamera = roots.SelectMany(root => root.GetComponentsInChildren<Camera>(true))
                 .Single(camera => camera.CompareTag("MainCamera"));
 
-            MaterialShaderReport materialReport = BuildMaterialShaderReport(renderers);
+            MaterialShaderReport materialReport = BuildMaterialShaderReport(renderers, vegetationBatches);
             TextureMemoryReport textureReport = BuildTextureReport(materialReport.materials);
-            LodCullingReport lodReport = BuildLodReport(roots, renderers);
+            LodCullingReport lodReport = BuildLodReport(roots, renderers, vegetationBatches);
             StaticViewBudget defaultView = CaptureViewBudget(mainCamera, renderers);
             ProductionVisualQaBatchRunner.ProductionVisualQaReport visualReport = ReadVisualQaReport();
 
@@ -104,8 +110,9 @@ namespace QuestFlight.Editor
                 maxVisibleMaterialCount = sceneMaterials,
                 activeSceneMaterialCount = materialReport.materialCount,
                 configuredRenderPipeline = configuredRenderPipeline,
-                activeRendererCount = renderers.Length,
-                sceneMeshTriangles = CountTriangles(renderers),
+                activeRendererCount = renderers.Length + vegetationBatches.Sum(batch => batch.NonEmptyDrawCount),
+                sceneMeshTriangles = CountTriangles(renderers) +
+                                     vegetationBatches.Sum(batch => batch.FullyInstancedTriangleCount),
                 visualQaReportPath = Environment.GetEnvironmentVariable(VisualReportEnvironmentVariable) ?? string.Empty,
                 defaultView = defaultView,
                 androidArm64Only = PlayerSettings.Android.targetArchitectures == AndroidArchitecture.ARM64,
@@ -175,7 +182,9 @@ namespace QuestFlight.Editor
             return JsonUtility.FromJson<ProductionVisualQaBatchRunner.ProductionVisualQaReport>(File.ReadAllText(path));
         }
 
-        private static MaterialShaderReport BuildMaterialShaderReport(IEnumerable<Renderer> renderers)
+        private static MaterialShaderReport BuildMaterialShaderReport(
+            IEnumerable<Renderer> renderers,
+            IEnumerable<AerialVegetationBatchRenderer> vegetationBatches)
         {
             Dictionary<Material, MaterialEntry> entries = new Dictionary<Material, MaterialEntry>();
             int slots = 0;
@@ -206,6 +215,35 @@ namespace QuestFlight.Editor
                     }
                     entry.rendererSlotCount++;
                 }
+            }
+            foreach (AerialVegetationBatchRenderer batch in vegetationBatches)
+            {
+                Material material = batch.SharedMaterial;
+                int drawSlots = batch.NonEmptyDrawCount;
+                if (material == null || drawSlots == 0) continue;
+                slots += drawSlots;
+                bool transparent = material.renderQueue >= (int)RenderQueue.Transparent ||
+                                   string.Equals(material.GetTag("RenderType", false, string.Empty),
+                                       "Transparent", StringComparison.OrdinalIgnoreCase);
+                if (transparent) transparentSlots += drawSlots;
+                if (!entries.TryGetValue(material, out MaterialEntry entry))
+                {
+                    entry = new MaterialEntry
+                    {
+                        name = material.name,
+                        assetPath = AssetDatabase.GetAssetPath(material),
+                        shader = material.shader != null ? material.shader.name : "MISSING",
+                        renderQueue = material.renderQueue,
+                        transparent = transparent,
+                        instancingEnabled = material.enableInstancing,
+                        keywords = material.shaderKeywords.OrderBy(keyword => keyword, StringComparer.Ordinal).ToArray(),
+                        rendererSlotCount = 0,
+                        environmentReference = true
+                    };
+                    entries.Add(material, entry);
+                }
+                entry.rendererSlotCount += drawSlots;
+                entry.environmentReference = true;
             }
             Material skybox = RenderSettings.skybox;
             if (skybox != null)
@@ -247,7 +285,7 @@ namespace QuestFlight.Editor
                 instancingEnabledMaterialCount = materials.Count(entry => entry.instancingEnabled),
                 shaderCount = materials.Select(entry => entry.shader).Distinct().Count(),
                 shaderKeywordCombinationCount = variants,
-                variantSemantics = "Distinct shader-plus-material-keyword combinations referenced by active authored renderers and the scene skybox; this is not Unity's compiled variant count.",
+                variantSemantics = "Distinct shader-plus-material-keyword combinations referenced by active authored renderers, authored aerial vegetation batches, and the scene skybox; this is not Unity's compiled variant count.",
                 materials = materials
             };
         }
@@ -363,7 +401,10 @@ namespace QuestFlight.Editor
             (format.StartsWith("ASTC_", StringComparison.Ordinal) ||
              format.StartsWith("ASTC_HDR_", StringComparison.Ordinal));
 
-        private static LodCullingReport BuildLodReport(IEnumerable<GameObject> roots, Renderer[] renderers)
+        private static LodCullingReport BuildLodReport(
+            IEnumerable<GameObject> roots,
+            Renderer[] renderers,
+            AerialVegetationBatchRenderer[] vegetationBatches)
         {
             LODGroup[] groups = roots.SelectMany(root => root.GetComponentsInChildren<LODGroup>(true)).ToArray();
             List<LodGroupEntry> entries = groups.Select(group => new LodGroupEntry
@@ -384,7 +425,7 @@ namespace QuestFlight.Editor
             return new LodCullingReport
             {
                 generatedUtc = DateTime.UtcNow.ToString("O"),
-                activeRendererCount = renderers.Length,
+                activeRendererCount = renderers.Length + vegetationBatches.Sum(batch => batch.NonEmptyDrawCount),
                 rendererBoundsRadiusMaximum = renderers.Length == 0 ? 0f : renderers.Max(renderer => renderer.bounds.extents.magnitude),
                 lodGroupCount = entries.Count,
                 crossFadeLodGroupCount = entries.Count(entry => entry.fadeMode != LODFadeMode.None.ToString()),

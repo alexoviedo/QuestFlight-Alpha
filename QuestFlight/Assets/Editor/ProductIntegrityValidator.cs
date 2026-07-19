@@ -13,6 +13,7 @@ using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Management;
 using QuestFlight.Product;
+using QuestFlightLab.Environment;
 using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Input;
 using QuestFlightLab.Runtime;
@@ -449,10 +450,17 @@ namespace QuestFlight.Editor
                     GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(transform.gameObject));
                 Require(missingScripts == 0, $"scene contains {missingScripts} missing MonoBehaviour script reference(s)", report);
 
-                Renderer[] renderers = roots.SelectMany(root => root.GetComponentsInChildren<Renderer>(true)).ToArray();
-                report.rendererCount = renderers.Length;
+                Renderer[] renderers = roots.SelectMany(root => root.GetComponentsInChildren<Renderer>(true))
+                    .Where(renderer => renderer != null && renderer.enabled &&
+                                       !renderer.forceRenderingOff && renderer.gameObject.activeInHierarchy)
+                    .ToArray();
+                AerialVegetationBatchRenderer[] vegetationBatches = roots
+                    .SelectMany(root => root.GetComponentsInChildren<AerialVegetationBatchRenderer>(true))
+                    .Where(batch => batch != null && batch.enabled && batch.gameObject.activeInHierarchy)
+                    .ToArray();
+                report.rendererCount = renderers.Length + vegetationBatches.Sum(batch => batch.NonEmptyDrawCount);
                 HashSet<Material> materials = new HashSet<Material>();
-                int triangles = 0;
+                long triangles = 0;
                 foreach (Renderer renderer in renderers)
                 {
                     foreach (Material material in renderer.sharedMaterials)
@@ -467,15 +475,25 @@ namespace QuestFlight.Editor
                             report.failures.Add("renderer has a missing/fallback shader: " + HierarchyPath(renderer.transform));
                     }
                 }
-                foreach (MeshFilter filter in roots.SelectMany(root => root.GetComponentsInChildren<MeshFilter>(true)))
+                foreach (AerialVegetationBatchRenderer batch in vegetationBatches)
+                {
+                    if (batch.SharedMaterial != null && batch.NonEmptyDrawCount > 0)
+                        materials.Add(batch.SharedMaterial);
+                    triangles += batch.FullyInstancedTriangleCount;
+                }
+                foreach (MeshFilter filter in roots.SelectMany(root => root.GetComponentsInChildren<MeshFilter>(true))
+                             .Where(filter => filter != null && filter.gameObject.activeInHierarchy &&
+                                              filter.GetComponent<Renderer>() is Renderer renderer &&
+                                              renderer.enabled && !renderer.forceRenderingOff))
                 {
                     if (filter.sharedMesh == null) continue;
                     for (int subMesh = 0; subMesh < filter.sharedMesh.subMeshCount; subMesh++)
-                        triangles += (int)(filter.sharedMesh.GetIndexCount(subMesh) / 3);
+                        triangles += (long)(filter.sharedMesh.GetIndexCount(subMesh) / 3);
                 }
-                report.triangleCount = triangles;
+                report.triangleCount = (int)Math.Min(int.MaxValue, triangles);
                 report.materialCount = materials.Count;
-                Require(renderers.Length <= 180, $"scene renderer budget exceeded: {renderers.Length}/180", report);
+                Require(report.rendererCount <= 180,
+                    $"scene renderer budget exceeded: {report.rendererCount}/180", report);
                 Require(triangles <= 700000, $"scene triangle budget exceeded: {triangles}/700000", report);
                 Require(materials.Count <= 40, $"scene material budget exceeded: {materials.Count}/40", report);
 

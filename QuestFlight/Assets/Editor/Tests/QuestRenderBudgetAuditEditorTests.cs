@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using QuestFlightLab.Environment;
 using QuestFlightLab.Runtime;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -55,6 +56,46 @@ namespace QuestFlight.Editor.Tests
                 Assert.That(actual.estimatedFrustumTriangles - baseline.estimatedFrustumTriangles, Is.EqualTo(1));
                 Assert.That(actual.uniqueMaterialCount - baseline.uniqueMaterialCount, Is.EqualTo(1));
                 Assert.That(actual.transparentMaterialSlots - baseline.transparentMaterialSlots, Is.EqualTo(1));
+            }
+            finally
+            {
+                Object.DestroyImmediate(target);
+                Object.DestroyImmediate(mesh);
+                Object.DestroyImmediate(material);
+            }
+        }
+
+        [Test]
+        public void AuthoredVegetationBatchCountsOneDrawAndEverySubmittedInstance()
+        {
+            RenderBudgetSnapshot baseline = QuestRenderBudgetAudit.Capture(null);
+            GameObject target = new GameObject("QuestRenderBudgetAudit_AerialVegetationBatch");
+            Mesh mesh = CreateOneTriangleMesh();
+            Material material = CreateMaterial();
+            try
+            {
+                AerialVegetationBatchRenderer renderer = target.AddComponent<AerialVegetationBatchRenderer>();
+                renderer.Configure(
+                    material,
+                    null,
+                    new[]
+                    {
+                        new AerialVegetationBatchRenderer.Batch(
+                            "test",
+                            1,
+                            mesh,
+                            new[] { Matrix4x4.identity, Matrix4x4.Translate(Vector3.right) },
+                            new[] { Vector4.one, Vector4.one })
+                    },
+                    2);
+
+                RenderBudgetSnapshot actual = QuestRenderBudgetAudit.Capture(null);
+
+                Assert.That(actual.activeRendererCount - baseline.activeRendererCount, Is.EqualTo(1));
+                Assert.That(actual.estimatedVisibleRendererCount - baseline.estimatedVisibleRendererCount, Is.EqualTo(1));
+                Assert.That(actual.estimatedInstancedDrawCalls - baseline.estimatedInstancedDrawCalls, Is.EqualTo(1));
+                Assert.That(actual.estimatedFrustumTriangles - baseline.estimatedFrustumTriangles, Is.EqualTo(2));
+                Assert.That(actual.uniqueMaterialCount - baseline.uniqueMaterialCount, Is.EqualTo(1));
             }
             finally
             {

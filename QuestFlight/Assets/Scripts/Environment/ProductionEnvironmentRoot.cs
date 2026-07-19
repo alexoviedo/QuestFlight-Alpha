@@ -282,22 +282,54 @@ namespace QuestFlightLab.Environment
 
         public ProductionEnvironmentBudget CalculateBudget()
         {
-            Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+            Renderer[] renderers = GetComponentsInChildren<Renderer>(true)
+                .Where(renderer => renderer != null && renderer.enabled &&
+                                   !renderer.forceRenderingOff && IsAuthoredActive(renderer.transform))
+                .ToArray();
+            AerialVegetationBatchRenderer[] vegetationBatches =
+                GetComponentsInChildren<AerialVegetationBatchRenderer>(true)
+                    .Where(batch => batch != null && batch.enabled &&
+                                    IsAuthoredActive(batch.transform))
+                    .ToArray();
             HashSet<Material> materials = new HashSet<Material>();
-            int triangles = 0;
+            long triangles = 0;
             foreach (Renderer renderer in renderers)
             {
                 foreach (Material material in renderer.sharedMaterials)
                     if (material != null) materials.Add(material);
             }
-            foreach (MeshFilter filter in GetComponentsInChildren<MeshFilter>(true))
+            foreach (AerialVegetationBatchRenderer batch in vegetationBatches)
+            {
+                if (batch.SharedMaterial != null && batch.NonEmptyDrawCount > 0)
+                    materials.Add(batch.SharedMaterial);
+                triangles += batch.FullyInstancedTriangleCount;
+            }
+            foreach (MeshFilter filter in GetComponentsInChildren<MeshFilter>(true)
+                         .Where(filter => filter != null && IsAuthoredActive(filter.transform) &&
+                                          filter.GetComponent<Renderer>() is Renderer renderer &&
+                                          renderer.enabled && !renderer.forceRenderingOff))
             {
                 Mesh mesh = filter.sharedMesh;
                 if (mesh == null) continue;
                 for (int subMesh = 0; subMesh < mesh.subMeshCount; subMesh++)
-                    triangles += (int)(mesh.GetIndexCount(subMesh) / 3);
+                    triangles += (long)mesh.GetIndexCount(subMesh) / 3L;
             }
-            return new ProductionEnvironmentBudget(renderers.Length, triangles, materials.Count);
+            int authoredDrawSources = renderers.Length +
+                                      vegetationBatches.Sum(batch => batch.NonEmptyDrawCount);
+            return new ProductionEnvironmentBudget(
+                authoredDrawSources,
+                (int)Math.Min(int.MaxValue, triangles),
+                materials.Count);
+        }
+
+        private bool IsAuthoredActive(Transform candidate)
+        {
+            for (Transform current = candidate; current != null; current = current.parent)
+            {
+                if (!current.gameObject.activeSelf) return false;
+                if (current == transform) return true;
+            }
+            return false;
         }
 
         private static bool HasMesh(MeshFilter filter) => filter != null && filter.sharedMesh != null;

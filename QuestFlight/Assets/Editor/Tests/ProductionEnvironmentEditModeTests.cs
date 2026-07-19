@@ -24,7 +24,10 @@ namespace QuestFlightLab.Tests.EditMode
                 ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
                 Assert.That(contract, Is.Not.Null);
                 Assert.That(contract.TryValidateContract(out string report), Is.True, report);
-                Assert.That(contract.bakeToolVersion, Is.EqualTo("airport_core_artifact_v4_3"));
+                AerialSceneryRoot aerial = root.GetComponentInChildren<AerialSceneryRoot>(true);
+                Assert.That(aerial, Is.Not.Null);
+                Assert.That(aerial.TryValidateContract(out string aerialReport), Is.True, aerialReport);
+                Assert.That(contract.bakeToolVersion, Is.EqualTo("aerial_scenery_representation_v1"));
                 Assert.That(contract.authoritativeTerrainSurface, Is.Not.Null);
                 Assert.That(contract.productionPlacementManifest, Is.Not.Null);
                 Assert.That(contract.productionPlacementManifest.entries.Length, Is.EqualTo(28336));
