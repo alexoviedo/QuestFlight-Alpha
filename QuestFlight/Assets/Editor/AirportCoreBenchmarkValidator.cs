@@ -413,10 +413,59 @@ namespace QuestFlight.Editor
 
             MeshFilter surface = environment.boulderReservoirSurface;
             Renderer renderer = surface == null ? null : surface.GetComponent<Renderer>();
+            Renderer shoreRenderer = environment.boulderReservoirShoreBank == null
+                ? null
+                : environment.boulderReservoirShoreBank.GetComponent<Renderer>();
             Mesh mesh = surface == null ? null : surface.sharedMesh;
             Material material = renderer == null ? null : renderer.sharedMaterial;
             Require(renderer != null && ReferenceEquals(renderer, root.boulderReservoir),
                 "benchmark reservoir is not the authoritative product renderer", violations);
+            Require(mesh != null && mesh.subMeshCount == 1,
+                "authoritative reservoir must have exactly one submesh", violations);
+            Require(mesh != null && string.Equals(AssetDatabase.GetAssetPath(mesh), meshPath, StringComparison.Ordinal),
+                "authoritative reservoir mesh identity changed", violations);
+            Require(renderer == null || renderer.GetComponentsInChildren<Camera>(true).Length == 0,
+                "reservoir hierarchy must not own a camera", violations);
+            Require(renderer == null || renderer.GetComponentsInChildren<ReflectionProbe>(true)
+                    .All(probe => probe.mode != ReflectionProbeMode.Realtime),
+                "reservoir hierarchy must not own a realtime reflection probe", violations);
+            Require(environment.boulderReservoirShorelineClosed,
+                "authoritative reservoir shoreline is not closed", violations);
+            Require(environment.boulderReservoirSourceShorelineVertexCount >= 3 &&
+                    environment.boulderReservoirSmoothedShorelineVertexCount ==
+                    environment.boulderReservoirSourceShorelineVertexCount * 2,
+                "authoritative reservoir shoreline densification contract changed", violations);
+            Require(environment.boulderReservoirShorelineSelfIntersectionCount == 0,
+                "authoritative reservoir shoreline self-intersects", violations);
+            Require(environment.minimumWaterTerrainSeparationMeters >=
+                    ProductionEnvironmentRoot.MinimumAcceptedWaterTerrainSeparationMeters,
+                "authoritative reservoir terrain separation regressed", violations);
+
+            bool orthophotoOnly = environment.waterPresentationMode ==
+                                  ProductionWaterPresentationMode.OrthophotoOnly;
+            if (orthophotoOnly)
+            {
+                Require(manifest.waterEffectsDeferredToOrthophoto,
+                    "environment and benchmark water-defer contracts disagree", violations);
+                Require(renderer != null && !renderer.enabled && !renderer.gameObject.activeSelf,
+                    "orthophoto-only reservoir renderer is not explicitly disabled", violations);
+                Require(renderer == null || renderer.sharedMaterials.Length == 0,
+                    "orthophoto-only reservoir retains a serialized material slot", violations);
+                Require(shoreRenderer != null && !shoreRenderer.enabled && !shoreRenderer.gameObject.activeSelf,
+                    "orthophoto-only shore-bank renderer is not explicitly disabled", violations);
+                Require(shoreRenderer == null || shoreRenderer.sharedMaterials.Length == 0,
+                    "orthophoto-only shore bank retains a serialized material slot", violations);
+                Require(manifest.reservoirMaterial == null && root.v2ReservoirMaterial == null,
+                    "orthophoto-only water retains a manifest or A/B material dependency", violations);
+                Require(environment.GetComponentsInChildren<Renderer>(true)
+                        .SelectMany(item => item.sharedMaterials)
+                        .Where(item => item != null)
+                        .All(item => !string.Equals(AssetDatabase.GetAssetPath(item), materialPath,
+                            StringComparison.Ordinal)),
+                    "deferred V4 reservoir material remains bound in the product hierarchy", violations);
+                return;
+            }
+
             string rendererMaterialPath = material == null ? string.Empty : AssetDatabase.GetAssetPath(material);
             string manifestMaterialPath = manifest.reservoirMaterial == null
                 ? string.Empty
@@ -427,10 +476,6 @@ namespace QuestFlight.Editor
                 "authoritative reservoir does not use the manifest V4 material", violations);
             Require(renderer != null && renderer.sharedMaterials.Length == 1,
                 "authoritative reservoir must have exactly one material slot", violations);
-            Require(mesh != null && mesh.subMeshCount == 1,
-                "authoritative reservoir must have exactly one submesh", violations);
-            Require(mesh != null && string.Equals(AssetDatabase.GetAssetPath(mesh), meshPath, StringComparison.Ordinal),
-                "authoritative reservoir mesh identity changed", violations);
             Require(material != null && material.shader != null &&
                     string.Equals(material.shader.name, ProductionEnvironmentRoot.ProductionReservoirShaderName,
                         StringComparison.Ordinal),
@@ -451,22 +496,6 @@ namespace QuestFlight.Editor
             Require(material != null && environment.GetComponentsInChildren<Renderer>(true)
                     .Count(item => item.sharedMaterial == material) == 1,
                 "V4 reservoir material must be bound to exactly one product renderer", violations);
-            Require(renderer == null || renderer.GetComponentsInChildren<Camera>(true).Length == 0,
-                "reservoir hierarchy must not own a camera", violations);
-            Require(renderer == null || renderer.GetComponentsInChildren<ReflectionProbe>(true)
-                    .All(probe => probe.mode != ReflectionProbeMode.Realtime),
-                "reservoir hierarchy must not own a realtime reflection probe", violations);
-            Require(environment.boulderReservoirShorelineClosed,
-                "authoritative reservoir shoreline is not closed", violations);
-            Require(environment.boulderReservoirSourceShorelineVertexCount >= 3 &&
-                    environment.boulderReservoirSmoothedShorelineVertexCount ==
-                    environment.boulderReservoirSourceShorelineVertexCount * 2,
-                "authoritative reservoir shoreline densification contract changed", violations);
-            Require(environment.boulderReservoirShorelineSelfIntersectionCount == 0,
-                "authoritative reservoir shoreline self-intersects", violations);
-            Require(environment.minimumWaterTerrainSeparationMeters >=
-                    ProductionEnvironmentRoot.MinimumAcceptedWaterTerrainSeparationMeters,
-                "authoritative reservoir terrain separation regressed", violations);
 
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
             Require(shader != null && material != null && ReferenceEquals(shader, material.shader),
