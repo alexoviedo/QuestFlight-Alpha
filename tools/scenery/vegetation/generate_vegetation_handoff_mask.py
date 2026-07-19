@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Generate the compact Tier0-2 geometry/Tier3 canopy-map ownership mask.
+"""Generate the compact near-geometry/lidar-canopy-map ownership mask.
 
 The output is a deterministic north-up R8 PNG on the frozen lidar grid.  Zero
-means authored Tier0-2 geometry owns the pixel; 255 means the Tier3 canopy map
-owns it.  A spatial feather replaces the invalid scalar handoff previously
+means authored Tier0/Tier1 geometry owns the pixel; 255 means the Tier2/Tier3
+lidar canopy terrain shading owns it. A spatial feather replaces the invalid scalar handoff previously
 proposed for a lidar square that contains no samples at a 4,000 m cardinal
 radius.
 """
@@ -256,44 +256,11 @@ def build_mask(
                     "half_extent_x_m": round(half_x, 4),
                     "half_extent_z_m": round(half_z, 4),
                 })
-            elif tier == 2:
-                radius_major = float(instance["footprint_radius_major_m"])
-                radius_minor = float(instance["footprint_radius_minor_m"])
-                if radius_major <= 0.0 or radius_minor <= 0.0:
-                    raise ValueError(stable_id + " has a non-positive Tier2 footprint radius")
-
-                def ellipse_radial_distance(x: float, z: float, *, major: float = radius_major, minor: float = radius_minor) -> float:
-                    delta_x = x - center_x
-                    delta_z = z - center_z
-                    local_major = delta_x * cosine + delta_z * sine
-                    local_minor = -delta_x * sine + delta_z * cosine
-                    normalized = math.hypot(local_major / major, local_minor / minor)
-                    if normalized <= 1.0:
-                        return -(1.0 - normalized) * min(major, minor)
-                    radial_length = math.hypot(local_major, local_minor)
-                    return radial_length * (1.0 - 1.0 / normalized)
-
-                radius_bound = max(radius_major, radius_minor) + zero_padding_m + feather_m
-                rasterize_shape(
-                    mask, width, height, affine, center_x, center_z, radius_bound,
-                    ellipse_radial_distance, zero_padding_m, feather_m,
-                )
-                records.append({
-                    "stable_id": stable_id,
-                    "tier": tier,
-                    "shape": "authored_pca_ellipse_outward_radial_feather",
-                    "source_object": str(instance["source_object"]),
-                    "center_x_m": center_x,
-                    "center_z_m": center_z,
-                    "yaw_degrees": float(instance["yaw_degrees"]),
-                    "radius_major_m": radius_major,
-                    "radius_minor_m": radius_minor,
-                })
             else:
                 raise ValueError(f"Unexpected geometry batch tier {tier}")
 
-    if batch_counts != {0: 3, 1: 19, 2: 248} or len(records) != 270:
-        raise ValueError(f"Ownership mask requires exact 3/19/248 placement counts, got {batch_counts}")
+    if batch_counts != {0: 3, 1: 19} or len(records) != 22:
+        raise ValueError(f"Ownership mask requires exact Tier0/Tier1 3/19 placement counts, got {batch_counts}")
     return mask, records
 
 
@@ -397,7 +364,7 @@ def main() -> int:
     report = {
         "schema": MASK_SCHEMA,
         "status": "VALIDATED_LIDAR_DERIVATIVE",
-        "semantic": "tier0_2_geometry_to_tier3_canopy_map_handoff",
+        "semantic": "tier0_1_geometry_to_lidar_canopy_map_handoff",
         "source_and_license": {
             "source": "Deterministic project-authored derivative of the validated vegetation distribution and source bounds",
             "license": "Project-authored",
@@ -437,15 +404,15 @@ def main() -> int:
             "outside_bounds_coverage": 0,
         },
         "ownership_semantics": {
-            "code_0": "Pixel is outside validated eligible canopy or Tier0-2 authored geometry owns it",
-            "code_255": "Pixel is validated eligible canopy fully owned by the Tier3 canopy-map representation",
+            "code_0": "Pixel is outside validated eligible canopy or Tier0-1 authored geometry owns it",
+            "code_255": "Pixel is validated eligible canopy fully owned by the lidar canopy terrain-shading representation",
             "zero_padding_m": args.zero_padding_m,
             "smoothstep_feather_m": args.feather_m,
             "combination": "minimum quantized handoff value across all authored footprints",
             "tier0_tier1_footprint": "conservative oriented rectangle from the source mesh horizontal AABB and authored transform",
-            "tier2_footprint": "authored PCA ellipse; feather distance is outward radial distance along the center ray",
+            "tier2_footprint": "none; Tier2 has zero geometry and therefore does not carve the canopy map",
             "scalar_handoff_uniform": None,
-            "tier3_spatial_domain": "geometry complement inside the validated lidar square, not a beyond-4000m radial band",
+            "tier3_spatial_domain": "Tier2/Tier3 lidar canopy terrain shading inside the validated lidar square",
             "eligible_canopy_gate": {
                 "dtm_code": "nonzero",
                 "minimum_canopy_hag_m": config["sampling"]["minimum_canopy_hag_m"],

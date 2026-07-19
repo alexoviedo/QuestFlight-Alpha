@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Generate the project-owned 1K alpha-test vegetation atlas.
 
-The atlas contains one opaque bark cell and five foliage-cutout cells.  All
+The atlas contains one opaque bark cell, five foliage-cutout cells, and two
+top/oblique upper-canopy cells with irregular alpha-clipped silhouettes. All
 shapes are deterministic vector primitives rendered at 2x and downsampled;
 there are no downloaded, scanned, or unclear-rights source images.
 """
@@ -42,6 +43,7 @@ CELLS: dict[str, tuple[int, int]] = {
     "sparse_conifer": (0, 1),
     "regional_shrub": (1, 1),
     "coarse_canopy": (2, 1),
+    "coarse_canopy_b": (3, 1),
 }
 
 FOLIAGE: dict[str, dict[str, Any]] = {
@@ -175,22 +177,96 @@ def draw_bark(color: Image.Image, surface: Image.Image) -> None:
         surface_draw.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), fill=(128, 119, 190, 168))
 
 
-def draw_coarse_canopy(color: Image.Image, surface: Image.Image) -> None:
-    x0, y0, x1, y1 = local_rect(CELLS["coarse_canopy"])
+def irregular_crown(
+    center: tuple[float, float], radius_x: float, radius_y: float, phase: float, jitter: float
+) -> list[tuple[float, float]]:
+    """Return a deterministic crown outline without a billboard-hard ellipse edge."""
+    points: list[tuple[float, float]] = []
+    for index in range(24):
+        angle = math.tau * index / 24.0
+        radial = 1.0 + math.sin(angle * 3.0 + phase) * jitter + math.sin(angle * 7.0 - phase) * jitter * 0.42
+        points.append((
+            center[0] + math.cos(angle) * radius_x * radial,
+            center[1] + math.sin(angle) * radius_y * radial,
+        ))
+    return points
+
+
+def draw_coarse_canopy_variant(
+    name: str,
+    color: Image.Image,
+    surface: Image.Image,
+    *,
+    seed: int,
+    base: tuple[int, int, int],
+) -> None:
+    """Bake an alpha-clipped top/oblique grove cell from layered crown masses.
+
+    Transparent perimeter gaps and internal openings are intentional.  They let
+    the fixed upper-crown geometry keep an irregular tree-line silhouette from
+    above without alpha blending, camera rotation, or extra geometry.
+    """
+    x0, y0, x1, y1 = local_rect(CELLS[name])
     color_draw = ImageDraw.Draw(color, "RGBA")
     surface_draw = ImageDraw.Draw(surface, "RGBA")
-    color_draw.rectangle((x0, y0, x1 - 1, y1 - 1), fill=(72, 116, 42, 255))
-    surface_draw.rectangle((x0, y0, x1 - 1, y1 - 1), fill=(128, 128, 188, 205))
-    rng = random.Random(6029)
-    for _ in range(140):
-        cx = rng.uniform(x0, x1)
-        cy = rng.uniform(y0, y1)
-        radius = rng.uniform(10, 42) * SUPERSAMPLE
-        shade = rng.uniform(0.78, 1.16)
-        color_draw.ellipse(
-            (cx - radius, cy - radius * 0.62, cx + radius, cy + radius * 0.62),
-            fill=(clamp8(72 * shade), clamp8(116 * shade), clamp8(42 * shade), 255),
+    color_draw.rectangle((x0, y0, x1 - 1, y1 - 1), fill=(0, 0, 0, 0))
+    surface_draw.rectangle((x0, y0, x1 - 1, y1 - 1), fill=(128, 128, 224, 235))
+    rng = random.Random(seed)
+    width = x1 - x0
+    height = y1 - y0
+    center_x = x0 + width * 0.50
+    center_y = y0 + height * 0.51
+
+    # Large overlapping crowns establish volume; finer crowns break up scale
+    # and prevent the flat, single-color "green dome" read of Vegetation V1.
+    crown_records: list[tuple[float, float, float, float, float]] = []
+    for index in range(92):
+        angle = rng.random() * math.tau
+        radial = math.sqrt(rng.random())
+        cx = center_x + math.cos(angle) * width * 0.38 * radial
+        cy = center_y + math.sin(angle) * height * 0.39 * radial
+        scale = rng.uniform(0.055, 0.145) * (1.12 - radial * 0.24)
+        crown_records.append((cy, cx, width * scale, height * scale * rng.uniform(0.42, 0.68), rng.random() * math.tau))
+
+    # Back-to-front ordering gives a stable, restrained baked occlusion cue.
+    for cy, cx, radius_x, radius_y, phase in sorted(crown_records):
+        sun = 1.08 - ((cx - x0) / width) * 0.13 - ((cy - y0) / height) * 0.08
+        variation = rng.uniform(0.82, 1.17)
+        shade = sun * variation
+        fill = (
+            clamp8(base[0] * shade),
+            clamp8(base[1] * shade),
+            clamp8(base[2] * (0.96 + (shade - 1.0) * 0.55)),
+            255,
         )
+        outline = irregular_crown((cx, cy), radius_x, radius_y, phase, 0.11)
+        color_draw.polygon(outline, fill=fill)
+        nx = clamp8(128 + (center_x - cx) / width * 76)
+        ny = clamp8(128 + (center_y - cy) / height * 72)
+        roughness = clamp8(rng.uniform(188, 226))
+        ao = clamp8(236 - radial * 20 if (radial := math.hypot((cx - center_x) / width, (cy - center_y) / height)) else 236)
+        surface_draw.polygon(outline, fill=(nx, ny, roughness, ao))
+
+    # Small deterministic sky gaps survive mipmapping through preserve-coverage
+    # import settings and stop each lobe reading as one opaque plastic slab.
+    for _ in range(17):
+        angle = rng.random() * math.tau
+        radial = math.sqrt(rng.random()) * 0.76
+        cx = center_x + math.cos(angle) * width * 0.34 * radial
+        cy = center_y + math.sin(angle) * height * 0.35 * radial
+        radius_x = rng.uniform(0.010, 0.027) * width
+        radius_y = rng.uniform(0.010, 0.026) * height
+        color_draw.ellipse((cx - radius_x, cy - radius_y, cx + radius_x, cy + radius_y), fill=(0, 0, 0, 0))
+        surface_draw.ellipse((cx - radius_x, cy - radius_y, cx + radius_x, cy + radius_y), fill=(128, 128, 224, 235))
+
+
+def draw_coarse_canopy(color: Image.Image, surface: Image.Image) -> None:
+    draw_coarse_canopy_variant(
+        "coarse_canopy", color, surface, seed=6029, base=(94, 137, 58)
+    )
+    draw_coarse_canopy_variant(
+        "coarse_canopy_b", color, surface, seed=7919, base=(79, 126, 64)
+    )
 
 
 def draw_foliage_cell(name: str, color: Image.Image, surface: Image.Image) -> None:

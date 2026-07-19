@@ -1,7 +1,7 @@
 #ifndef QUESTFLIGHT_AERIAL_CANOPY_MAP_INCLUDED
 #define QUESTFLIGHT_AERIAL_CANOPY_MAP_INCLUDED
 
-// Tier 3 consumes the validated lidar products directly.  It does not create
+// Tier 2 and Tier 3 consume the validated lidar products directly. They do not create
 // billboard geometry or a duplicate runtime texture.  Bounds are
 // (minimum local X, minimum local Z, inverse width, inverse depth).
 sampler2D _AerialCanopySurfaceFeatures;
@@ -12,8 +12,9 @@ sampler2D _AerialTerrainNormalAndValidity;
 // model.  Its heuristic source-classification limitation remains documented.
 sampler2D _AerialCanopyNormalOcclusion;
 // Project-authored R8 geometry ownership on the exact lidar grid: 0 under
-// conservative Tier0-2 footprints (plus safety pad), spatially feathered to 1
-// where the Tier3 map owns representation. This replaces a scalar handoff,
+// conservative Tier0/Tier1 footprints (plus safety pad), spatially feathered to 1
+// where the lidar canopy map owns representation. Tier2 never carves this mask.
+// This replaces a scalar handoff,
 // which cannot describe ownership over the finite 4,096 m lidar square.
 sampler2D _AerialCanopyHandoffMask;
 float4 _AerialCanopyLocalBounds;
@@ -55,9 +56,9 @@ inline QuestFlightAerialCanopySample QuestFlightSampleAerialCanopy(float2 localX
     sample.density = features.g;
     sample.buildingHeightMeters = features.b * 255.0h * _AerialCanopyHeightQuantumMeters;
     sample.occlusion = canopyNormalAndOcclusion.a;
-    // The R8 texture is the final Tier3 canopy weight. Its generator already
+    // The R8 texture is the final Tier2/Tier3 canopy weight. Its generator already
     // zeros DTM nodata, sub-threshold HAG/density, building-confounded pixels,
-    // and Tier0-2 ownership. Do not recreate a broader heuristic here.
+    // and Tier0/Tier1 ownership. Do not recreate a broader heuristic here.
     sample.coverage = geometryToMapHandoff;
     sample.terrainValidity = step(0.5h / 255.0h, terrainNormalAndValidity.a) * insideBounds;
     sample.geometryToMapHandoff = geometryToMapHandoff;

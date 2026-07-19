@@ -6,8 +6,8 @@
   "all_tier1_sources_in_quality_band": true,
   "all_vertex_colored": true,
   "all_wood_and_fixed_card_geometry_non_overconnected": true,
-  "atlas_report_sha256": "cce7c7fc20d3cab90e07e82963775016fd497af83c943021022be918a12047c2",
-  "atlas_sha256": "999b3b938a0f39fcca80ef83d54473dcdc1635775c46d9aed1e128902c5960e9",
+  "atlas_report_sha256": "0fcd6c58f89512cc60ecc032c669dc3fe36d3bff1dbb2bda0192b2c24dada52c",
+  "atlas_sha256": "1f22d3c2579cbd0f316032700f79da96a605dce973dc06afbdd9ddc517684d05",
   "blender_version": "5.1.2",
   "camera_facing_geometry": 0,
   "objects": [
@@ -15,22 +15,23 @@
       "alpha_blend": false,
       "alpha_card_faces": 720,
       "alpha_clip": true,
-      "boundary_edges": 1608,
+      "apparent_tree_units": 3,
+      "boundary_edges": 1632,
       "bounds_max": [
-        5.039942264556885,
-        4.076669216156006,
-        16.229829788208008
+        7.5362868309021,
+        7.10599422454834,
+        16.003639221191406
       ],
       "bounds_min": [
-        -4.816867828369141,
-        -4.365800857543945,
-        -0.0037438864819705486
+        -8.039511680603027,
+        -5.4145307540893555,
+        -0.0071990713477134705
       ],
       "camera_facing_faces": 0,
-      "closed_parts": 28,
+      "closed_parts": 32,
       "color_attributes": 1,
       "fixed_orientation_card_clusters": 120,
-      "ground_error_m": 0.0037438864819705486,
+      "ground_error_m": 0.0071990713477134705,
       "material_slots": 1,
       "mesh_validation_changed": false,
       "name": "AerialTree_Cottonwood_T0",
@@ -40,28 +41,29 @@
       "tier": 0,
       "triangles": 1328,
       "uv_layers": 1,
-      "vertices": 1856
+      "vertices": 1872
     },
     {
       "alpha_blend": false,
       "alpha_card_faces": 228,
       "alpha_clip": true,
-      "boundary_edges": 528,
+      "apparent_tree_units": 3,
+      "boundary_edges": 540,
       "bounds_max": [
-        4.390447616577148,
-        4.464007377624512,
-        16.311525344848633
+        6.523866653442383,
+        6.379141807556152,
+        15.203451156616211
       ],
       "bounds_min": [
-        -4.777767181396484,
-        -4.5191497802734375,
-        -0.003275900613516569
+        -7.018623352050781,
+        -4.487116813659668,
+        -0.006079213693737984
       ],
       "camera_facing_faces": 0,
-      "closed_parts": 12,
+      "closed_parts": 14,
       "color_attributes": 1,
       "fixed_orientation_card_clusters": 38,
-      "ground_error_m": 0.003275900613516569,
+      "ground_error_m": 0.006079213693737984,
       "material_slots": 1,
       "mesh_validation_changed": false,
       "name": "AerialTree_Cottonwood_T1",
@@ -71,28 +73,29 @@
       "tier": 1,
       "triangles": 452,
       "uv_layers": 1,
-      "vertices": 616
+      "vertices": 624
     },
     {
       "alpha_blend": false,
       "alpha_card_faces": 744,
       "alpha_clip": true,
-      "boundary_edges": 1704,
+      "apparent_tree_units": 4,
+      "boundary_edges": 1728,
       "bounds_max": [
-        6.5645952224731445,
-        5.8607258796691895,
-        10.603161811828613
+        8.059087753295898,
+        7.592287063598633,
+        10.461286544799805
       ],
       "bounds_min": [
-        -6.397873878479004,
-        -5.517868995666504,
-        -0.008845960721373558
+        -8.653362274169922,
+        -5.9729461669921875,
+        -0.005070151295512915
       ],
       "camera_facing_faces": 0,
-      "closed_parts": 36,
+      "closed_parts": 40,
       "color_attributes": 1,
       "fixed_orientation_card_clusters": 124,
-      "ground_error_m": 0.008845960721373558,
+      "ground_error_m": 0.005070151295512915,
       "material_slots": 1,
       "mesh_validation_changed": false,
       "name": "AerialTree_WillowRiparian_T0",
@@ -102,28 +105,29 @@
       "tier": 0,
       "triangles": 1512,
       "uv_layers": 1,
-      "vertices": 2016
+      "vertices": 2032
     },
     {
       "alpha_blend": false,
       "alpha_card_faces": 240,
       "alpha_clip": true,
-      "boundary_edges": 588,
+      "apparent_tree_units": 4,
+      "boundary_edges": 600,
       "bounds_max": [
-        6.268599987030029,
-        4.9738335609436035,
-        10.161803245544434
+        7.994656562805176,
+        7.309678077697754,
+        10.009543418884277
       ],
       "bounds_min": [
-        -6.401092052459717,
-        -5.059406280517578,
-        -0.006983653642237186
+        -8.6935453414917,
+        -6.292300224304199,
+        -0.004479407332837582
       ],
       "camera_facing_faces": 0,
-      "closed_parts": 18,
+      "closed_parts": 20,
       "color_attributes": 1,
       "fixed_orientation_card_clusters": 40,
-      "ground_error_m": 0.006983653642237186,
+      "ground_error_m": 0.004479407332837582,
       "material_slots": 1,
       "mesh_validation_changed": false,
       "name": "AerialTree_WillowRiparian_T1",
@@ -133,28 +137,29 @@
       "tier": 1,
       "triangles": 560,
       "uv_layers": 1,
-      "vertices": 712
+      "vertices": 720
     },
     {
       "alpha_blend": false,
       "alpha_card_faces": 696,
       "alpha_clip": true,
-      "boundary_edges": 1560,
+      "apparent_tree_units": 3,
+      "boundary_edges": 1584,
       "bounds_max": [
-        5.135239601135254,
-        4.937543869018555,
-        13.139689445495605
+        7.0714945793151855,
+        6.910332679748535,
+        12.826080322265625
       ],
       "bounds_min": [
-        -5.760422706604004,
-        -4.722221374511719,
-        -0.003353897947818041
+        -7.847344875335693,
+        -5.2240142822265625,
+        -0.006399191915988922
       ],
       "camera_facing_faces": 0,
-      "closed_parts": 28,
+      "closed_parts": 32,
       "color_attributes": 1,
       "fixed_orientation_card_clusters": 116,
-      "ground_error_m": 0.003353897947818041,
+      "ground_error_m": 0.006399191915988922,
       "material_slots": 1,
       "mesh_validation_changed": false,
       "name": "AerialTree_Deciduous_T0",
@@ -164,28 +169,29 @@
       "tier": 0,
       "triangles": 1304,
       "uv_layers": 1,
-      "vertices": 1808
+      "vertices": 1824
     },
     {
       "alpha_blend": false,
       "alpha_card_faces": 222,
       "alpha_clip": true,
-      "boundary_edges": 516,
+      "apparent_tree_units": 3,
+      "boundary_edges": 528,
       "bounds_max": [
-        5.178513050079346,
-        5.357188701629639,
-        12.979601860046387
+        6.637245178222656,
+        6.86474609375,
+        12.784086227416992
       ],
       "bounds_min": [
-        -5.261080265045166,
-        -4.467064380645752,
-        -0.002885912312194705
+        -7.720176696777344,
+        -5.234588146209717,
+        -0.006416237913072109
       ],
       "camera_facing_faces": 0,
-      "closed_parts": 12,
+      "closed_parts": 14,
       "color_attributes": 1,
       "fixed_orientation_card_clusters": 37,
-      "ground_error_m": 0.002885912312194705,
+      "ground_error_m": 0.006416237913072109,
       "material_slots": 1,
       "mesh_validation_changed": false,
       "name": "AerialTree_Deciduous_T1",
@@ -195,12 +201,13 @@
       "tier": 1,
       "triangles": 446,
       "uv_layers": 1,
-      "vertices": 604
+      "vertices": 612
     },
     {
       "alpha_blend": false,
       "alpha_card_faces": 780,
       "alpha_clip": true,
+      "apparent_tree_units": 1,
       "boundary_edges": 1740,
       "bounds_max": [
         4.336853981018066,
@@ -232,6 +239,7 @@
       "alpha_blend": false,
       "alpha_card_faces": 252,
       "alpha_clip": true,
+      "apparent_tree_units": 1,
       "boundary_edges": 588,
       "bounds_max": [
         4.188783168792725,
@@ -263,6 +271,7 @@
       "alpha_blend": false,
       "alpha_card_faces": 630,
       "alpha_clip": true,
+      "apparent_tree_units": 1,
       "boundary_edges": 1488,
       "bounds_max": [
         3.992778778076172,
@@ -294,6 +303,7 @@
       "alpha_blend": false,
       "alpha_card_faces": 204,
       "alpha_clip": true,
+      "apparent_tree_units": 1,
       "boundary_edges": 516,
       "bounds_max": [
         3.510796070098877,
@@ -320,42 +330,11 @@
       "triangles": 524,
       "uv_layers": 1,
       "vertices": 640
-    },
-    {
-      "alpha_blend": false,
-      "alpha_card_faces": 180,
-      "alpha_clip": true,
-      "boundary_edges": 540,
-      "bounds_max": [
-        12.735322952270508,
-        12.988990783691406,
-        12.660049438476562
-      ],
-      "bounds_min": [
-        -13.655835151672363,
-        -12.432595252990723,
-        -0.00821234006434679
-      ],
-      "camera_facing_faces": 0,
-      "closed_parts": 30,
-      "color_attributes": 1,
-      "fixed_orientation_card_clusters": 30,
-      "ground_error_m": 0.00821234006434679,
-      "material_slots": 1,
-      "mesh_validation_changed": false,
-      "name": "AerialGroveCluster_T2",
-      "negative_scale": false,
-      "overconnected_edges": 0,
-      "role": "fixed_aerial_grove_cluster",
-      "tier": 2,
-      "triangles": 540,
-      "uv_layers": 1,
-      "vertices": 660
     }
   ],
   "ordinary_vertical_billboards": 0,
   "per_view_budget_contract": {
-    "replacement_ceiling_triangles": 19648,
+    "replacement_ceiling_triangles": 15184,
     "source_triangle_bands": {
       "tier0_maximum": 3000,
       "tier0_minimum": 1000,
@@ -364,10 +343,10 @@
     },
     "tier0_instance_cap": 3,
     "tier1_instance_cap": 19,
-    "tier2_instance_cap": 248,
-    "tier2_runtime_representation": "Unity-authored bounded fixed upper-canopy cell aggregate",
-    "tier2_runtime_triangles_per_instance": 18,
-    "worst_case_triangles": 19640
+    "tier2_instance_cap": 0,
+    "tier2_runtime_representation": "Orthophoto plus existing lidar canopy normal and occlusion terrain shading; no geometry",
+    "tier2_runtime_triangles_per_instance": 0,
+    "worst_case_triangles": 15176
   },
   "regional_archetypes": [
     "cottonwood",
@@ -379,14 +358,15 @@
   "runtime_contract": {
     "alpha_mode": "clip",
     "broad_alpha_blend": false,
-    "draw_api": "three editor-baked per-tier meshes serialized in one prefab",
+    "draw_api": "two editor-baked near-tier meshes serialized in one prefab",
     "material_count": 1,
-    "maximum_simultaneous_source_draws": 3,
+    "maximum_simultaneous_source_draws": 2,
     "one_gameobject_per_tree": false,
-    "preferred_simultaneous_source_draws": 3
+    "preferred_simultaneous_source_draws": 2,
+    "tier2_geometry_draws": 0
   },
-  "runtime_fbx_sha256": "042edecaeb764104c4c1313730628a236bfa3277b0d2ee3461a9db7d539fc095",
+  "runtime_fbx_sha256": "b6ab9dce18453cf4411a61ecdf4e13612d7f22f5bcd0072e5c2de6004af7bbe2",
   "schema": "questflight.aerial-scenery-v1.vegetation-geometry.v1",
-  "source_blend_sha256": "c140e553b8da76e4e79cd1521f973a5d9e078f1ead44dfbdb3c9696f9ffa227e",
+  "source_blend_sha256": "df2d41cbf8eadda03392820c92a5e972b11f9890df0ea2820473d1ad97a669fe",
   "status": "SOURCE_GEOMETRY_VALIDATED_INTEGRATION_AND_STEREO_QA_PENDING"
 }

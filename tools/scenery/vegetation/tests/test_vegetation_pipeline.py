@@ -8,7 +8,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 TOOL_DIR = Path(__file__).resolve().parents[1]
 if str(TOOL_DIR) not in sys.path:
     sys.path.insert(0, str(TOOL_DIR))
@@ -154,6 +153,14 @@ class VegetationPipelineTests(unittest.TestCase):
             self.assertEqual(decoded_r16.gray16(0, 0), 1)
             self.assertEqual(decoded_r16.gray16(1, 0), 65535)
 
+    def test_tier2_is_explicitly_map_only(self) -> None:
+        tier2 = next(record for record in self.config["tiers"] if int(record["tier"]) == 2)
+        self.assertEqual(tier2["minimum_radius_m"], 180.0)
+        self.assertEqual(tier2["maximum_instances"], 0)
+        self.assertEqual(tier2["source_objects"], [])
+        self.assertEqual(tier2["geometry_draws"], 0)
+        self.assertNotIn("upper_canopy_lobes_per_placement", tier2)
+
     def test_handoff_weight_is_spatially_feathered_and_eligible_canopy_gated(self) -> None:
         self.assertEqual(handoff.quantized_handoff(-1.0, 16.0, 64.0), 0)
         self.assertEqual(handoff.quantized_handoff(16.0, 16.0, 64.0), 0)
@@ -180,19 +187,49 @@ class VegetationPipelineTests(unittest.TestCase):
             )
             self.assertEqual(first["status"], "TEST_ONLY_SYNTHETIC")
             self.assertEqual(first["source_kind"], "synthetic_test_fixture")
-            self.assertEqual(first["batch_count"], 3)
+            self.assertEqual(first["batch_count"], 2)
             counts = {batch["batch_id"]: len(batch["instances"]) for batch in first["batches"]}
             self.assertLessEqual(counts["tier0_editor_baked"], 3)
             self.assertLessEqual(counts["tier1_editor_baked"], 19)
-            self.assertLessEqual(counts["tier2_editor_baked_fixed_groves"], 248)
+            self.assertNotIn("tier2_editor_baked_fixed_groves", counts)
             stable_ids = [instance["stable_id"] for batch in first["batches"] for instance in batch["instances"]]
             self.assertEqual(len(stable_ids), len(set(stable_ids)))
             self.assertFalse(first["runtime_policy"]["one_gameobject_per_tree"])
             self.assertEqual(first["runtime_policy"]["ordinary_vertical_billboards"], 0)
-            self.assertEqual(first["runtime_policy"]["source_draws_maximum"], 3)
+            self.assertEqual(first["runtime_policy"]["source_draws_maximum"], 2)
             self.assertFalse(first["runtime_policy"]["camera_facing"])
             self.assertEqual(first["runtime_policy"]["alpha_mode"], "clip")
+            self.assertEqual(first["runtime_policy"]["tier2_geometry_instances"], 0)
+            self.assertEqual(first["runtime_policy"]["tier2_geometry_draws"], 0)
+            self.assertEqual(
+                first["runtime_policy"]["tier2_representation"],
+                "orthophoto_plus_lidar_canopy_normal_occlusion_terrain_shading",
+            )
+            self.assertEqual(first["coverage_agreement"]["tier2"]["canopy_mask_coverage_ratio"], 1.0)
             self.assertEqual(first["coverage_agreement"]["tier3"]["eligible_canopy_coverage_ratio"], 1.0)
+
+    def test_cluster_spatial_index_matches_brute_force_ellipse_queries(self) -> None:
+        clusters = [
+            {
+                "x": -31.0, "z": 47.0,
+                "footprint_radius_major_m": 24.0,
+                "footprint_radius_minor_m": 11.0,
+                "footprint_yaw_degrees": 37.0,
+            },
+            {
+                "x": 152.0, "z": -96.0,
+                "footprint_radius_major_m": 18.0,
+                "footprint_radius_minor_m": 15.0,
+                "footprint_yaw_degrees": 121.0,
+            },
+        ]
+        spatial = pipeline.build_cluster_spatial_index(clusters)
+        for x in range(-256, 257, 7):
+            for z in range(-256, 257, 11):
+                self.assertEqual(
+                    pipeline.point_in_any_cluster(float(x), float(z), clusters),
+                    pipeline.point_in_any_cluster(float(x), float(z), clusters, spatial),
+                )
 
     def test_hash_and_schema_mismatch_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -24,6 +24,18 @@
         0.99707031
       ]
     },
+    "coarse_canopy_b": {
+      "grid": [
+        3,
+        1
+      ],
+      "uv_rect": [
+        0.75292969,
+        0.50292969,
+        0.99707031,
+        0.99707031
+      ]
+    },
     "cottonwood": {
       "grid": [
         1,
@@ -87,7 +99,7 @@
   },
   "color_alpha": {
     "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Atlas.png",
-    "sha256": "999b3b938a0f39fcca80ef83d54473dcdc1635775c46d9aed1e128902c5960e9"
+    "sha256": "1f22d3c2579cbd0f316032700f79da96a605dce973dc06afbdd9ddc517684d05"
   },
   "dimensions": [
     1024,
@@ -112,6 +124,6 @@
       "r": "tangent_normal_x"
     },
     "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Surface.png",
-    "sha256": "050f90e05e4a4c3a7496d37a3b8392f5227c611224f67901b0a21e38f0ced20d"
+    "sha256": "4e5c35568193f62ed273d5e458ac86a9f4a4fc13f1c82accf9219255ef84bdc2"
   }
 }

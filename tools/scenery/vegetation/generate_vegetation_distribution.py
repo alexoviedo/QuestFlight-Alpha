@@ -587,7 +587,13 @@ def cluster_candidates(candidates: list[Candidate], cell_m: float) -> list[tuple
 
 
 def select_clusters(
-    candidates: list[Candidate], maximum: int, cell_m: float, seed: str
+    candidates: list[Candidate],
+    maximum: int,
+    cell_m: float,
+    seed: str,
+    *,
+    near_priority_maximum_radius_m: float | None = None,
+    near_priority_minimum_clusters: int = 0,
 ) -> list[tuple[int, list[Candidate]]]:
     if maximum <= 0 or not candidates:
         return []
@@ -611,23 +617,42 @@ def select_clusters(
         )
 
     ordered = sorted(buckets, key=bucket_rank)
+    near_priority: list[tuple[int, list[Candidate]]] = []
+    if near_priority_maximum_radius_m is not None and near_priority_minimum_clusters > 0:
+        near_ordered = [
+            record for record in ordered
+            if math.hypot(
+                sum(member.x for member in record[1]) / len(record[1]),
+                sum(member.z for member in record[1]) / len(record[1]),
+            ) < near_priority_maximum_radius_m
+        ]
+        near_priority = near_ordered[:min(maximum, near_priority_minimum_clusters)]
+
     # Reserve one quarter of the budget for distinct connected groves so a
     # single long riparian component cannot consume every aggregate cell.
     diversity_budget = min(maximum // 4, len({members[0].component for _, members in ordered}))
     diverse: list[tuple[int, list[Candidate]]] = []
-    seen_components: set[int] = set()
-    for record in ordered:
-        component = record[1][0].component
-        if component in seen_components:
-            continue
-        diverse.append(record)
-        seen_components.add(component)
-        if len(diverse) == diversity_budget:
-            break
-    diverse_ids = {record[0] for record in diverse}
-    selected = diverse + [record for record in ordered if record[0] not in diverse_ids][
-        : maximum - len(diverse)
-    ]
+    seen_components: set[int] = {record[1][0].component for record in near_priority}
+    selected_ids = {record[0] for record in near_priority}
+    diversity_target = min(diversity_budget, maximum - len(near_priority))
+    if diversity_target > 0:
+        for record in ordered:
+            if record[0] in selected_ids:
+                continue
+            component = record[1][0].component
+            if component in seen_components:
+                continue
+            diverse.append(record)
+            seen_components.add(component)
+            if len(diverse) == diversity_target:
+                break
+    selected_ids.update(record[0] for record in diverse)
+    selected = near_priority + diverse
+    selected.extend(
+        record for record in ordered
+        if record[0] not in selected_ids
+    )
+    selected = selected[:maximum]
     return [
         (index, sorted(members, key=lambda item: (item.component, item.row, item.column)))
         for index, members in selected
@@ -708,8 +733,38 @@ def cluster_instance(
     }
 
 
-def point_in_any_cluster(x: float, z: float, clusters: list[dict[str, Any]]) -> bool:
+def build_cluster_spatial_index(
+    clusters: list[dict[str, Any]], cell_m: float = 128.0
+) -> dict[tuple[int, int], list[dict[str, Any]]]:
+    index: dict[tuple[int, int], list[dict[str, Any]]] = defaultdict(list)
     for cluster in clusters:
+        radius = max(
+            float(cluster["footprint_radius_major_m"]),
+            float(cluster["footprint_radius_minor_m"]),
+        )
+        center_x = float(cluster["x"])
+        center_z = float(cluster["z"])
+        minimum_x = math.floor((center_x - radius) / cell_m)
+        maximum_x = math.floor((center_x + radius) / cell_m)
+        minimum_z = math.floor((center_z - radius) / cell_m)
+        maximum_z = math.floor((center_z + radius) / cell_m)
+        for cell_x in range(minimum_x, maximum_x + 1):
+            for cell_z in range(minimum_z, maximum_z + 1):
+                index[(cell_x, cell_z)].append(cluster)
+    return dict(index)
+
+
+def point_in_any_cluster(
+    x: float,
+    z: float,
+    clusters: list[dict[str, Any]],
+    spatial_index: dict[tuple[int, int], list[dict[str, Any]]] | None = None,
+    cell_m: float = 128.0,
+) -> bool:
+    candidates = clusters if spatial_index is None else spatial_index.get(
+        (math.floor(x / cell_m), math.floor(z / cell_m)), []
+    )
+    for cluster in candidates:
         radius_major = float(cluster["footprint_radius_major_m"])
         radius_minor = float(cluster["footprint_radius_minor_m"])
         if radius_major <= 0.0 or radius_minor <= 0.0:
@@ -741,6 +796,7 @@ def coverage_metrics(
     eligible_pixels = 0
     tier3_covered_pixels = 0
     tier3_invalid_pixels = 0
+    cluster_index = build_cluster_spatial_index(clusters)
     for row in range(inputs.surface.height):
         for column in range(inputs.surface.width):
             offset = row * inputs.surface.width + column
@@ -761,7 +817,7 @@ def coverage_metrics(
             in_range = radius >= minimum and (maximum is None or radius < float(maximum))
             if not in_range:
                 continue
-            footprint = point_in_any_cluster(x, z, clusters)
+            footprint = point_in_any_cluster(x, z, clusters, cluster_index)
             if canopy:
                 tier2_canopy_pixels += 1
             if footprint:
@@ -774,29 +830,20 @@ def coverage_metrics(
     def ratio(numerator: int, denominator: int) -> float:
         return round(numerator / denominator, 6) if denominator else 1.0
 
-    represented_components = sorted({
-        int(component)
-        for cluster in clusters
-        for component in cluster.get("grove_components", [])
-    })
     return {
         "method": "pixel-center raster agreement against validated eligible canopy mask",
         "pixel_area_m2": round(pixel_area, 6),
         "eligible_canopy_pixels": eligible_pixels,
         "eligible_canopy_area_m2": round(eligible_pixels * pixel_area, 3),
         "tier2": {
+            "representation": "orthophoto_plus_lidar_canopy_normal_occlusion_terrain_shading",
             "eligible_canopy_pixels": tier2_canopy_pixels,
             "canopy_mask_area_m2": round(tier2_canopy_pixels * pixel_area, 3),
-            "cluster_footprint_union_pixels": tier2_footprint_pixels,
-            "cluster_footprint_union_area_m2": round(tier2_footprint_pixels * pixel_area, 3),
-            "cluster_footprint_analytic_sum_area_m2": round(sum(float(item["footprint_area_m2"]) for item in clusters), 3),
-            "canopy_intersection_pixels": tier2_intersection_pixels,
-            "canopy_intersection_area_m2": round(tier2_intersection_pixels * pixel_area, 3),
-            "canopy_mask_coverage_ratio": ratio(tier2_intersection_pixels, tier2_canopy_pixels),
-            "footprint_precision_ratio": ratio(tier2_intersection_pixels, tier2_footprint_pixels),
-            "intersection_over_union": ratio(tier2_intersection_pixels, tier2_union_pixels),
-            "represented_coarse_components": represented_components,
-            "cluster_count": len(clusters),
+            "terrain_shading_owned_pixels": tier2_canopy_pixels,
+            "terrain_shading_owned_area_m2": round(tier2_canopy_pixels * pixel_area, 3),
+            "canopy_mask_coverage_ratio": 1.0,
+            "geometry_instances": 0,
+            "geometry_draws": 0,
         },
         "tier3": {
             "scope": "source_input_availability_before_final_spatial_handoff",
@@ -804,7 +851,7 @@ def coverage_metrics(
             "eligible_canopy_covered_pixels": tier3_covered_pixels,
             "eligible_canopy_missing_or_invalid_pixels": tier3_invalid_pixels,
             "eligible_canopy_coverage_ratio": ratio(tier3_covered_pixels, eligible_pixels),
-            "final_shader_weight": "AerialVegetation_HandoffMask_R8: eligible-canopy gate intersected with Tier0-2 geometry ownership",
+            "final_shader_weight": "AerialVegetation_HandoffMask_R8: eligible-canopy gate intersected only with Tier0-1 geometry ownership",
             "is_final_shader_coverage": False,
             "duplicate_or_resampled_canopy_texture": False,
             "chm_derived_canopy_normal_available": True,
@@ -846,6 +893,7 @@ def write_coverage_overlay(
     pixels = bytearray(inputs.surface.width * inputs.surface.height * 4)
     minimum = float(tier2_record["minimum_radius_m"])
     maximum = tier2_record["maximum_radius_m"]
+    cluster_index = build_cluster_spatial_index(clusters)
     for row in range(inputs.surface.height):
         for column in range(inputs.surface.width):
             offset = row * inputs.surface.width + column
@@ -854,7 +902,7 @@ def write_coverage_overlay(
             radius = math.hypot(x, z)
             in_tier2 = radius >= minimum and (maximum is None or radius < float(maximum))
             canopy = bool(eligible_mask[offset])
-            footprint = in_tier2 and point_in_any_cluster(x, z, clusters)
+            footprint = in_tier2 and point_in_any_cluster(x, z, clusters, cluster_index)
             if canopy and footprint:
                 color = (34, 220, 188, 255)
             elif canopy:
@@ -958,20 +1006,9 @@ def build_distribution(
     })
 
     tier2 = tier_config(config, 2)
-    selected2 = select_clusters(
-        [candidate for candidate in candidates if in_tier(candidate, tier2)],
-        int(tier2["maximum_instances"]),
-        float(config["sampling"]["grove_cluster_cell_m"]),
-        seed,
-    )
-    tier2_instances = [cluster_instance(index, members, seed, stable_input_hash, config) for index, members in selected2]
-    batches.append({
-        "batch_id": "tier2_editor_baked_fixed_groves",
-        "tier": 2,
-        "source_mode": "fixed_upper_canopy_cell_aggregate_editor_bake",
-        "instances": tier2_instances,
-    })
-
+    if int(tier2["maximum_instances"]) != 0 or tier2.get("source_objects") != []:
+        raise ValueError("Tier2 must remain a zero-geometry orthophoto/lidar canopy-shading representation")
+    tier2_instances: list[dict[str, Any]] = []
     coverage = coverage_metrics(inputs, eligible_mask, tier2, tier2_instances)
 
     output_kind = "TEST_ONLY_SYNTHETIC" if allow_synthetic_test_input else "VALIDATED_LIDAR_DERIVATIVE"
@@ -999,21 +1036,14 @@ def build_distribution(
         "instance_count": sum(len(batch["instances"]) for batch in batches),
         "batches": batches,
         "coverage_agreement": coverage,
-        "cluster_footprints": [
-            {
-                "stable_id": instance["stable_id"],
-                "radius_major_m": instance["footprint_radius_major_m"],
-                "radius_minor_m": instance["footprint_radius_minor_m"],
-                "yaw_degrees": instance["footprint_yaw_degrees"],
-                "analytic_area_m2": instance["footprint_area_m2"],
-            }
-            for instance in tier2_instances
-        ],
+        "cluster_footprints": [],
         "statistics": {
             "coarse_candidates": len(candidates),
             "tier0_selected": len(selected0),
             "tier1_selected": len(selected1),
-            "tier2_selected": len(selected2),
+            "tier2_selected": 0,
+            "tier2_geometry_draws": 0,
+            "tier2_terrain_shading_owned_pixels": coverage["tier2"]["terrain_shading_owned_pixels"],
             "archetype_counts": dict(sorted(
                 (archetype, sum(1 for instance in tier0_instances + tier1_instances if instance["archetype"] == archetype))
                 for archetype in {instance["archetype"] for instance in tier0_instances + tier1_instances}
@@ -1025,15 +1055,18 @@ def build_distribution(
             "batch_renderer_gameobjects": 1,
             "ordinary_vertical_billboards": 0,
             "alpha_blended_material_slots": 0,
-            "source_draws_maximum": 3,
-            "runtime_batches_after_editor_bake": 3,
+            "source_draws_maximum": 2,
+            "runtime_batches_after_editor_bake": 2,
             "fixed_orientation_atlas_cards": True,
             "camera_facing": False,
             "lod_crossfade": False,
             "alpha_mode": "clip",
             "tier3_geometry_instances": 0,
-            "tier3_final_weight": "R8 eligible-canopy and Tier0-2 geometry ownership mask",
+            "tier3_final_weight": "R8 eligible-canopy and Tier0-1 geometry ownership mask",
             "tier3_scalar_handoff": False,
+            "tier2_representation": "orthophoto_plus_lidar_canopy_normal_occlusion_terrain_shading",
+            "tier2_geometry_instances": 0,
+            "tier2_geometry_draws": 0,
         },
     }
     return result
@@ -1048,7 +1081,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--coverage-overlay",
         type=Path,
-        help="Optional external QA PNG: canopy mask, Tier2 footprint intersection, and Tier0/1 placement points.",
+        help="Optional external QA PNG: lidar canopy terrain-shading ownership and Tier0/1 placement points.",
     )
     parser.add_argument(
         "--allow-synthetic-test-input",
@@ -1078,14 +1111,13 @@ def main() -> int:
     if args.coverage_overlay:
         _, _, eligible_mask = eligible_candidates(inputs, config)
         tier2 = tier_config(config, 2)
-        clusters = next(batch["instances"] for batch in distribution["batches"] if int(batch["tier"]) == 2)
         trees = [
             instance
             for batch in distribution["batches"]
             if int(batch["tier"]) in (0, 1)
             for instance in batch["instances"]
         ]
-        write_coverage_overlay(args.coverage_overlay.resolve(), inputs, eligible_mask, tier2, clusters, trees)
+        write_coverage_overlay(args.coverage_overlay.resolve(), inputs, eligible_mask, tier2, [], trees)
     print(json.dumps({
         "status": distribution["status"],
         "output": str(output_path),

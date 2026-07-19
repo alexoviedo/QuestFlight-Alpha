@@ -138,7 +138,7 @@ TextureImporter:
     nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
-  userData: Final Tier3 eligible-canopy and Tier0-2 ownership weight; R8, no mips,
-    exact frozen lidar grid
+  userData: Final lidar-canopy and Tier0/Tier1 ownership weight; Tier2 has zero geometry;
+    R8, no mips, exact frozen lidar grid
   assetBundleName: 
   assetBundleVariant: 

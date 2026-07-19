@@ -3,8 +3,9 @@
 
 Run with Blender 5.x in background mode. The five regional archetypes and a
 reference ten-tree grove use project-authored atlas-cutout foliage on fixed 3D
-card clusters with visible tapered wood. Unity uses the tree sources for Tiers
-0/1 and compiles bounded fixed upper-canopy cells for Tier 2; no representation
+card clusters with visible tapered wood. Tier 0/1 cottonwood, willow, and
+deciduous sources are compact multi-tree micro-groves; Unity compiles three
+overlapping, alpha-clipped upper-crown lobes per Tier 2 cell. No representation
 creates one GameObject or draw call per tree.
 """
 
@@ -183,6 +184,7 @@ ATLAS_GRID: dict[str, tuple[int, int]] = {
     "sparse_conifer": (0, 1),
     "regional_shrub": (1, 1),
     "coarse_canopy": (2, 1),
+    "coarse_canopy_b": (3, 1),
 }
 
 
@@ -226,6 +228,7 @@ class MeshBuilder:
     closed_parts: int = 0
     atlas_card_faces: int = 0
     fixed_card_clusters: int = 0
+    apparent_tree_units: int = 0
 
     @classmethod
     def create(cls) -> "MeshBuilder":
@@ -457,13 +460,96 @@ def add_card_crown(
         builder.fixed_card_clusters += 1
 
 
+def microgrove_centers(
+    definitions: tuple[tuple[int, Vector, Vector, float, bool], ...]
+) -> list[Vector]:
+    """Build several crowns into one batched source without extra draw state."""
+    centers: list[Vector] = []
+    for count, center, spread, salt, umbrella in definitions:
+        centers.extend(ellipsoid_points(count, center, spread, salt, umbrella=umbrella))
+    return centers
+
+
+def add_microgrove_wood(
+    builder: MeshBuilder,
+    trunks: tuple[tuple[Vector, float, float], ...],
+    *,
+    trunk_segments: int,
+    branch_segments: int,
+    branch_cylinders: int,
+    color: Color,
+) -> None:
+    """Author separated grounded trunks with a fixed, budgetable cylinder count."""
+    for trunk_index, (origin, height, radius) in enumerate(trunks):
+        previous = origin
+        for section in range(4):
+            t = (section + 1) / 4.0
+            endpoint = origin + Vector((
+                math.sin(section * 1.13 + trunk_index * 1.71) * height * 0.018 * t,
+                math.cos(section * 0.91 + trunk_index * 1.37) * height * 0.016 * t,
+                height * t,
+            ))
+            builder.cylinder(
+                previous,
+                endpoint,
+                radius * (1.0 - section * 0.17),
+                radius * (1.0 - (section + 1) * 0.17),
+                trunk_segments,
+                color,
+            )
+            previous = endpoint
+
+    # Each branch is a single tapered closed cylinder.  Distributing them over
+    # all trunks keeps the micro-grove grounded while preserving the exact
+    # source triangle contracts used by the Quest budget tests.
+    for branch_index in range(branch_cylinders):
+        origin, height, radius = trunks[branch_index % len(trunks)]
+        phase = branch_index * 2.399963 + len(trunks) * 0.41
+        level = 0.45 + (branch_index % 5) * 0.075
+        start = origin + Vector((0.0, 0.0, height * level))
+        length = height * (0.16 + fraction(branch_index, height) * 0.095)
+        target = start + Vector((
+            math.cos(phase) * length,
+            math.sin(phase) * length,
+            height * (0.10 + fraction(branch_index, height + 4.0) * 0.12),
+        ))
+        builder.cylinder(start, target, radius * 0.34, radius * 0.10, branch_segments, color)
+
+
 def cottonwood_builder(tier: int) -> MeshBuilder:
     builder = MeshBuilder.create()
     count = 120 if tier == 0 else 38
-    centers = ellipsoid_points(count, Vector((0.0, 0.0, 10.6)), Vector((3.6, 3.2, 4.7)), 0.23)
-    branch_targets = [Vector((center.x * 0.74, center.y * 0.74, center.z * 0.82))
-                      for center in centers[::10 if tier == 0 else 10]]
-    add_trunk_and_branches(builder, 10.0, 0.48 if tier == 0 else 0.42, branch_targets, tier, TRUNK)
+    if tier == 0:
+        centers = microgrove_centers((
+            (40, Vector((-3.8, -1.4, 10.7)), Vector((3.05, 2.70, 4.65)), 0.23, False),
+            (40, Vector((3.45, -1.9, 9.7)), Vector((2.75, 2.55, 4.15)), 1.31, False),
+            (40, Vector((0.25, 3.65, 9.1)), Vector((2.65, 2.45, 3.75)), 2.47, False),
+        ))
+        trunks = (
+            (Vector((-3.8, -1.4, 0.0)), 10.0, 0.45),
+            (Vector((3.45, -1.9, 0.0)), 9.1, 0.40),
+            (Vector((0.25, 3.65, 0.0)), 8.6, 0.37),
+        )
+        add_microgrove_wood(
+            builder, trunks, trunk_segments=6, branch_segments=4,
+            branch_cylinders=20, color=TRUNK,
+        )
+    else:
+        centers = microgrove_centers((
+            (13, Vector((-3.25, -1.15, 10.5)), Vector((2.65, 2.35, 4.45)), 0.23, False),
+            (13, Vector((3.05, -1.45, 9.45)), Vector((2.45, 2.20, 3.90)), 1.31, False),
+            (12, Vector((0.10, 3.15, 8.85)), Vector((2.30, 2.10, 3.55)), 2.47, False),
+        ))
+        trunks = (
+            (Vector((-3.25, -1.15, 0.0)), 9.8, 0.38),
+            (Vector((3.05, -1.45, 0.0)), 8.9, 0.34),
+            (Vector((0.10, 3.15, 0.0)), 8.2, 0.31),
+        )
+        add_microgrove_wood(
+            builder, trunks, trunk_segments=4, branch_segments=4,
+            branch_cylinders=2, color=TRUNK,
+        )
+    builder.apparent_tree_units = 3
     add_card_crown(builder, centers, (1.55, 3.10), "cottonwood", FOLIAGE_COTTONWOOD, tier, 0.23)
     return builder
 
@@ -471,18 +557,35 @@ def cottonwood_builder(tier: int) -> MeshBuilder:
 def willow_builder(tier: int) -> MeshBuilder:
     builder = MeshBuilder.create()
     count = 124 if tier == 0 else 40
-    centers = ellipsoid_points(
-        count, Vector((0.0, 0.0, 7.0)), Vector((5.0, 4.4, 2.45)), 1.17, umbrella=True
+    per_tree = (31, 31, 31, 31) if tier == 0 else (10, 10, 10, 10)
+    centers = microgrove_centers(tuple(
+        (tree_count, center, spread, 1.17 + index * 1.09, True)
+        for index, (tree_count, center, spread) in enumerate(zip(
+            per_tree,
+            (
+                Vector((-4.2, -2.1, 7.0)), Vector((3.55, -2.25, 6.45)),
+                Vector((-1.35, 3.25, 6.05)), Vector((4.10, 3.45, 7.15)),
+            ),
+            (
+                Vector((3.35, 3.00, 2.35)), Vector((3.05, 2.75, 2.10)),
+                Vector((2.85, 2.65, 1.95)), Vector((3.20, 2.90, 2.30)),
+            ),
+        ))
+    ))
+    trunks = (
+        (Vector((-4.2, -2.1, 0.0)), 6.3, 0.28),
+        (Vector((3.55, -2.25, 0.0)), 5.8, 0.25),
+        (Vector((-1.35, 3.25, 0.0)), 5.4, 0.23),
+        (Vector((4.10, 3.45, 0.0)), 6.4, 0.27),
     )
-    branch_targets = [Vector((center.x * 0.82, center.y * 0.82, center.z * 0.78))
-                      for center in centers[::10 if tier == 0 else 10]]
-    offsets = (
-        Vector((-0.28, 0.02, 0.0)),
-        Vector((0.24, -0.16, 0.0)),
-        Vector((0.08, 0.24, 0.0)),
+    add_microgrove_wood(
+        builder, trunks,
+        trunk_segments=6 if tier == 0 else 4,
+        branch_segments=4,
+        branch_cylinders=24 if tier == 0 else 4,
+        color=WILLOW_TRUNK,
     )
-    add_trunk_and_branches(builder, 6.2, 0.31 if tier == 0 else 0.27, branch_targets, tier,
-                           WILLOW_TRUNK, trunk_offsets=offsets)
+    builder.apparent_tree_units = 4
     add_card_crown(builder, centers, (1.65, 3.25), "willow_riparian", FOLIAGE_WILLOW, tier, 1.17)
     return builder
 
@@ -490,16 +593,32 @@ def willow_builder(tier: int) -> MeshBuilder:
 def deciduous_builder(tier: int) -> MeshBuilder:
     builder = MeshBuilder.create()
     count = 116 if tier == 0 else 37
-    centers = ellipsoid_points(count, Vector((0.0, 0.0, 8.7)), Vector((4.0, 3.7, 3.25)), 2.41)
-    branch_targets = [Vector((center.x * 0.78, center.y * 0.78, center.z * 0.80))
-                      for center in centers[::10 if tier == 0 else 10]]
-    add_trunk_and_branches(builder, 7.7, 0.43 if tier == 0 else 0.37, branch_targets, tier, TRUNK)
+    counts = (39, 39, 38) if tier == 0 else (13, 12, 12)
+    centers = microgrove_centers((
+        (counts[0], Vector((-3.55, -1.55, 8.85)), Vector((3.05, 2.75, 3.20)), 2.41, False),
+        (counts[1], Vector((3.30, -1.75, 8.10)), Vector((2.80, 2.55, 2.90)), 3.53, False),
+        (counts[2], Vector((0.05, 3.25, 7.55)), Vector((2.65, 2.45, 2.70)), 4.67, False),
+    ))
+    trunks = (
+        (Vector((-3.55, -1.55, 0.0)), 7.8, 0.40),
+        (Vector((3.30, -1.75, 0.0)), 7.2, 0.36),
+        (Vector((0.05, 3.25, 0.0)), 6.7, 0.33),
+    )
+    add_microgrove_wood(
+        builder, trunks,
+        trunk_segments=6 if tier == 0 else 4,
+        branch_segments=4,
+        branch_cylinders=20 if tier == 0 else 2,
+        color=TRUNK,
+    )
+    builder.apparent_tree_units = 3
     add_card_crown(builder, centers, (1.62, 3.15), "general_deciduous", FOLIAGE_DECIDUOUS, tier, 2.41)
     return builder
 
 
 def conifer_builder(tier: int) -> MeshBuilder:
     builder = MeshBuilder.create()
+    builder.apparent_tree_units = 1
     count = 130 if tier == 0 else 42
     centers = cone_points(count, 1.8, 9.7, 3.7, 3.22)
     branch_targets = [Vector((center.x * 0.80, center.y * 0.80, center.z - 0.35))
@@ -512,6 +631,7 @@ def conifer_builder(tier: int) -> MeshBuilder:
 
 def shrub_builder(tier: int) -> MeshBuilder:
     builder = MeshBuilder.create()
+    builder.apparent_tree_units = 1
     count = 105 if tier == 0 else 34
     centers = ellipsoid_points(count, Vector((0.0, 0.0, 2.15)), Vector((3.2, 2.8, 1.35)), 4.31,
                                umbrella=True)
@@ -530,6 +650,7 @@ def shrub_builder(tier: int) -> MeshBuilder:
 
 def grove_builder() -> MeshBuilder:
     builder = MeshBuilder.create()
+    builder.apparent_tree_units = 10
     trees = (
         (-10.8, -3.8, 8.8, 3.7, 0.18, "cottonwood"),
         (-8.0, 5.0, 7.4, 4.1, 0.62, "willow_riparian"),
@@ -671,6 +792,7 @@ def create_object(
         "ground_error_m": abs(min(zs)),
         "alpha_card_faces": builder.atlas_card_faces,
         "fixed_orientation_card_clusters": builder.fixed_card_clusters,
+        "apparent_tree_units": builder.apparent_tree_units,
         "alpha_clip": True,
         "alpha_blend": False,
         "camera_facing_faces": 0,
@@ -767,8 +889,6 @@ def render_previews(objects: list[bpy.types.Object], preview_dir: Path) -> list[
         ("regional_t0_oblique", tier0_names, Vector((31, -45, 27)), Vector((0, 0, 6.2))),
         ("regional_t0_top", tier0_names, Vector((0, -0.5, 66)), Vector((0, 0, 1.0))),
         ("regional_t1_oblique", tier1_names, Vector((29, -44, 25)), Vector((0, 0, 6.0))),
-        ("grove_t2_oblique", ["AerialGroveCluster_T2"], Vector((37, -47, 33)), Vector((0, 1, 3.0))),
-        ("grove_t2_top", ["AerialGroveCluster_T2"], Vector((2, -2, 64)), Vector((0, 1, 1.0))),
     )
     records: list[dict] = []
     panel_paths: list[Path] = []
@@ -849,7 +969,6 @@ def main() -> int:
         ("AerialTree_SparseConifer_T1", conifer_builder(1), 1, "sparse_conifer"),
         ("AerialShrub_Regional_T0", shrub_builder(0), 0, "regional_shrub"),
         ("AerialShrub_Regional_T1", shrub_builder(1), 1, "regional_shrub"),
-        ("AerialGroveCluster_T2", grove_builder(), 2, "fixed_aerial_grove_cluster"),
     )
     objects: list[bpy.types.Object] = []
     reports: list[dict] = []
@@ -890,15 +1009,14 @@ def main() -> int:
     per_view_budget = {
         "tier0_instance_cap": 3,
         "tier1_instance_cap": 19,
-        "tier2_instance_cap": 248,
-        "tier2_runtime_triangles_per_instance": 18,
-        "tier2_runtime_representation": "Unity-authored bounded fixed upper-canopy cell aggregate",
+        "tier2_instance_cap": 0,
+        "tier2_runtime_triangles_per_instance": 0,
+        "tier2_runtime_representation": "Orthophoto plus existing lidar canopy normal and occlusion terrain shading; no geometry",
         "worst_case_triangles": (
             3 * max(tier0_triangles)
             + 19 * max(tier1_triangles)
-            + 248 * 18
         ),
-        "replacement_ceiling_triangles": 19648,
+        "replacement_ceiling_triangles": 15184,
         "source_triangle_bands": {"tier0_minimum": 1000, "tier0_maximum": 3000,
                                   "tier1_minimum": 250, "tier1_maximum": 800},
     }
@@ -929,12 +1047,13 @@ def main() -> int:
         "per_view_budget_contract": per_view_budget,
         "runtime_contract": {
             "one_gameobject_per_tree": False,
-            "draw_api": "three editor-baked per-tier meshes serialized in one prefab",
+            "draw_api": "two editor-baked near-tier meshes serialized in one prefab",
             "material_count": 1,
             "alpha_mode": "clip",
             "broad_alpha_blend": False,
-            "maximum_simultaneous_source_draws": 3,
-            "preferred_simultaneous_source_draws": 3,
+            "maximum_simultaneous_source_draws": 2,
+            "preferred_simultaneous_source_draws": 2,
+            "tier2_geometry_draws": 0,
         },
     }
     report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")

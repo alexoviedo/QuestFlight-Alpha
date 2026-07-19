@@ -2,94 +2,94 @@
   "external_assets": [],
   "records": [
     {
-      "bytes": 303043,
+      "bytes": 297223,
       "license": "Project-authored",
       "path": "Assets/ArtSource/Blender/AerialSceneryV1/AerialVegetationMultiscale.blend",
-      "sha256": "c140e553b8da76e4e79cd1521f973a5d9e078f1ead44dfbdb3c9696f9ffa227e",
+      "sha256": "df2d41cbf8eadda03392820c92a5e972b11f9890df0ea2820473d1ad97a669fe",
       "source": "Deterministic Blender 5.1 project source"
     },
     {
-      "bytes": 2328,
+      "bytes": 2512,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_AtlasReport.json",
-      "sha256": "cce7c7fc20d3cab90e07e82963775016fd497af83c943021022be918a12047c2",
+      "sha256": "0fcd6c58f89512cc60ecc032c669dc3fe36d3bff1dbb2bda0192b2c24dada52c",
       "source": "Deterministic atlas layout, source, license, and hash report"
     },
     {
-      "bytes": 8787,
+      "bytes": 8858,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_Contract.json",
-      "sha256": "c59df931ef0294b8bfe3ca785c515c8d228b85c85855976f8b5b69a22b7d9bb1",
+      "sha256": "0f6cfd3a61dab63785ce328522b31ec1c03e697ab3e9dcf8803cce48d6bf7842",
       "source": "Four-tier vegetation and integration contract"
     },
     {
-      "bytes": 287555,
+      "bytes": 21201,
       "license": "Project-authored derivative of USGS 3DEP United States Government Work / Public Domain input",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_Distribution.json",
-      "sha256": "6d56160356b995f896c7ee5744d713e08108c82e52d0ed80c9b31ff41eea3838",
+      "sha256": "2b0ba1b9a949f4ca7b175211ad7dd2513b90d2fe592f1533f566f9bcd604414b",
       "source": "Validated lidar-derived distribution; frozen source hashes embedded"
     },
     {
-      "bytes": 11007,
+      "bytes": 10542,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_GeometryReport.json",
-      "sha256": "8b8dd651710084d74aff674dfc29f3d9801ead0d8d715727cacd9f411707d6cd",
+      "sha256": "9189044e35f1ee4ba0284d142fc706bd64a689d43479c132cf12db09b5fbf72f",
       "source": "Blender-authored structural and budget report"
     },
     {
-      "bytes": 98078,
+      "bytes": 12321,
       "license": "Project-authored derivative of USGS 3DEP United States Government Work / Public Domain input",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_HandoffMaskReport.json",
-      "sha256": "583cbcb89b7c1c0a705d7a725fff2df386689ed0fc9a4b1ce5bcdd3b5ab7414d",
+      "sha256": "42917082e3b2193c8a381545d27ff1daa048288ac10c80edb207f1252c234ef9",
       "source": "Deterministic handoff inputs, semantics, exclusions, coverage, and hash report"
     },
     {
-      "bytes": 30402,
+      "bytes": 12257,
+      "license": "Project-authored",
+      "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Editor/AerialVegetationEvidenceAuthoring.cs",
+      "sha256": "5965f0cfc20e3137c88af16cf63541d09d158ff378fadbead8d5dc06a7c74b99",
+      "source": "Deterministic product-independent source-representation visual evidence capture"
+    },
+    {
+      "bytes": 24030,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Editor/AerialVegetationPrefabAuthoring.cs",
-      "sha256": "bf74f96e088ec02c7f770c9469f12c3fc855858028e117ff58e3d629cac7d9b0",
+      "sha256": "fa5e50ef88bb0017b696775d362ff65ed980a6e657fe317f5dca1b6cc54ba650",
       "source": "Deterministic Unity prefab authoring entry point"
     },
     {
-      "bytes": 6785,
+      "bytes": 6380,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetationRoot.prefab",
-      "sha256": "7e3729a8f4c7fd59d8d40276066bf8fd9067af847123f321f6100f397e995eec",
-      "source": "Deterministic three-draw vegetation prefab; product-scene integration remains lead-owned"
+      "sha256": "8f91a7a9ff672db904539beecf4387d0288f3a5f1de235620d93431b94360243",
+      "source": "Deterministic two-draw near-vegetation prefab; Tier2/Tier3 remain terrain-shaded; product-scene integration remains lead-owned"
     },
     {
-      "bytes": 894985,
+      "bytes": 895605,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetation_Tier0_Combined.asset",
-      "sha256": "d8dc8e252521ea67f2edf3b7d4c0b98ff739ed9a344109d49b2fa814e7ffe353",
+      "sha256": "ad8e80df3c4712554a01796f246ec28f092dd95047c258c4e46742c94c1f5bcf",
       "source": "Deterministic Unity Editor-baked heterogeneous Tier0 mesh"
     },
     {
-      "bytes": 2001589,
+      "bytes": 1994831,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetation_Tier1_Combined.asset",
-      "sha256": "72cb56f5393c035ee3dba17a247ac5c4271ffeb116774bc2ccfcc775f36a43ca",
+      "sha256": "2aeebd8b6c37ec158a59d6e0a0f4109c1f8c0e92c6915db682b9e7728a3df1b2",
       "source": "Deterministic Unity Editor-baked heterogeneous Tier1 mesh"
-    },
-    {
-      "bytes": 392391,
-      "license": "Project-authored",
-      "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetation_Tier2_Combined.asset",
-      "sha256": "283f91c49c3afb112e4c13a39c7d26d13d54b9953bc5d8fdbd15b81b5f210d89",
-      "source": "Deterministic Unity Editor-baked heterogeneous Tier2 mesh"
     },
     {
       "bytes": 1349,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Materials/AerialVegetation_AtlasCutout.mat",
-      "sha256": "5da4c79ddec323a398fb706a01c8c87f36d6491da56933821b2f80576a03b9e1",
+      "sha256": "3c18c0289463c173ae2091fc44b44d867057a6230d316e011225d20d47a94241",
       "source": "One-material Unity instancing configuration"
     },
     {
-      "bytes": 496588,
+      "bytes": 465852,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Models/AerialVegetationMultiscale.fbx",
-      "sha256": "042edecaeb764104c4c1313730628a236bfa3277b0d2ee3461a9db7d539fc095",
+      "sha256": "b6ab9dce18453cf4411a61ecdf4e13612d7f22f5bcd0072e5c2de6004af7bbe2",
       "source": "FBX export from AerialVegetationMultiscale.blend"
     },
     {
@@ -100,73 +100,73 @@
       "source": "Preallocated runtime instance batch renderer"
     },
     {
-      "bytes": 3882,
+      "bytes": 3945,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Shaders/AerialCanopyMap.cginc",
-      "sha256": "28f9de933e50f24620a84d207711a3398991b406a1ee11a702562d5ade61876a",
+      "sha256": "dfc27c388a30f7ad0c6b21c41a7bfa8df59674b82cff074ace3783e3d981f2a4",
       "source": "Tier 3 canopy-map shader include with bounds and R8 ownership gating"
     },
     {
       "bytes": 5867,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Shaders/AerialVegetationOpaque.shader",
-      "sha256": "d40e64e39d7c4684f3133d613cefe09571b629b26bd955078f67f448c338a964",
+      "sha256": "06f2b0ec50875a3d2f2c322c208e942ea5fb97e155ec266b36a3b2ea4504e0e1",
       "source": "Fixed-card alpha-test Built-in Render Pipeline vegetation shader"
     },
     {
-      "bytes": 679156,
+      "bytes": 717797,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Atlas.png",
-      "sha256": "999b3b938a0f39fcca80ef83d54473dcdc1635775c46d9aed1e128902c5960e9",
-      "source": "Deterministic project-authored 1K bark and five-foliage alpha-test atlas"
+      "sha256": "1f22d3c2579cbd0f316032700f79da96a605dce973dc06afbdd9ddc517684d05",
+      "source": "Deterministic project-authored 1K bark and foliage atlas for Tier0/Tier1 micro-groves"
     },
     {
-      "bytes": 151452,
+      "bytes": 86867,
       "license": "Project-authored derivative of USGS 3DEP United States Government Work / Public Domain input",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_HandoffMask_R8.png",
-      "sha256": "aacb16f6e02cdf35fab2ae0195a181257fdb9fafe820532499c974a956d2999a",
-      "source": "Final R8 eligible-canopy and Tier0-2/Tier3 spatial ownership weight"
+      "sha256": "dccfa359a6ed536787411f9733eff04b80711d1bbaa2af151b3330b0f7273f8b",
+      "source": "Final R8 eligible-canopy and Tier0/Tier1 geometry ownership weight; Tier2 remains map-owned"
     },
     {
-      "bytes": 429689,
+      "bytes": 487233,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Surface.png",
-      "sha256": "050f90e05e4a4c3a7496d37a3b8392f5227c611224f67901b0a21e38f0ced20d",
+      "sha256": "4e5c35568193f62ed273d5e458ac86a9f4a4fc13f1c82accf9219255ef84bdc2",
       "source": "Deterministic packed normal XY, roughness, and AO atlas"
     },
     {
-      "bytes": 38721,
+      "bytes": 43018,
       "license": "Project-authored",
       "path": "tools/scenery/vegetation/author_multiscale_vegetation.py",
-      "sha256": "a20d2b83b4139ef814ca10033df9e0119a52acbe6820e6e5fefcd646c5391a39",
+      "sha256": "f1dc9e63a901cd818fad5eb7f07be5427b3b6b1ad619c90fdcb1621cadcbd8aa",
       "source": "Deterministic Blender authoring generator"
     },
     {
-      "bytes": 12314,
+      "bytes": 15804,
       "license": "Project-authored",
       "path": "tools/scenery/vegetation/generate_vegetation_atlas.py",
-      "sha256": "54f8c906fbb7f7b109f099c843a12350a929e2385611e6f2bd545e82584e39e0",
+      "sha256": "1671aa99fbc85cc51d51bc9cf19a97d8e0f463d5d5a6a26654bca1fce2a6842d",
       "source": "Deterministic 1K atlas generator"
     },
     {
-      "bytes": 48367,
+      "bytes": 49508,
       "license": "Project-authored",
       "path": "tools/scenery/vegetation/generate_vegetation_distribution.py",
-      "sha256": "6d9917351122570956e54afa33e174469cd3b90a65d465f7bb0f6dc5389893d0",
+      "sha256": "1d1205a9ae5ad1a6aec2d64936c1da1008ef5ef20ce3f7ab998a172671242315",
       "source": "Validated lidar distribution generator"
     },
     {
-      "bytes": 22705,
+      "bytes": 20848,
       "license": "Project-authored",
       "path": "tools/scenery/vegetation/generate_vegetation_handoff_mask.py",
-      "sha256": "9eec46c43a465d40648ce3e62f42eed0ea59a356b63927075d4b1d5ed913b4d5",
+      "sha256": "1349d307eba615c13adab8fdc8577325731f089a4ddf735020376c78805d6a0b",
       "source": "Deterministic eligible-canopy and spatial ownership mask generator"
     },
     {
-      "bytes": 4308,
+      "bytes": 4553,
       "license": "Project-authored",
       "path": "tools/scenery/vegetation/vegetation_config.json",
-      "sha256": "883d9ea8d954fa130b8a6f77b982a0fd4d20f76dfc64389bf53f23b47ca5b230",
+      "sha256": "229832de70d70f7c5264ca28d8b2be539f584adb5acb917276120c8e724963d4",
       "source": "Pinned vegetation tiers, sampling, ownership handoff, and budgets"
     }
   ],

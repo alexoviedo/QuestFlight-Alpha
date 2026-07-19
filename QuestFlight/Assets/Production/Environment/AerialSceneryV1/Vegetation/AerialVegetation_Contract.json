@@ -5,7 +5,6 @@
   "geometry_to_map_handoff_mask": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_HandoffMask_R8.png",
   "geometry_to_map_handoff_report": "Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_HandoffMaskReport.json",
   "geometry_triangles": {
-    "AerialGroveCluster_T2": 540,
     "AerialShrub_Regional_T0": 1438,
     "AerialShrub_Regional_T1": 524,
     "AerialTree_Cottonwood_T0": 1328,
@@ -49,9 +48,9 @@
     "alpha_testing": true,
     "alpha_to_coverage": true,
     "camera_facing_geometry": false,
-    "geometry_ownership_handoff": "R8 spatial mask on the exact lidar grid",
+    "geometry_ownership_handoff": "R8 Tier0/Tier1 geometry complement on the exact lidar grid; Tier2 never carves the canopy map",
     "lod_crossfade": false,
-    "maximum_draws": 3,
+    "maximum_draws": 2,
     "one_gameobject_per_tree": false,
     "ordinary_vertical_billboards": false,
     "runtime_hierarchy_construction": false,
@@ -63,10 +62,10 @@
   "representations": [
     {
       "maximum_instances": 3,
-      "mode": "fixed_orientation_alpha_clip_tree_sources_editor_baked_to_one_instanced_tier_mesh",
+      "mode": "fixed_orientation_alpha_clip_microgroves_editor_baked_to_one_tier_mesh",
       "range_m": [
-        0,
-        500
+        0.0,
+        500.0
       ],
       "source_objects": [
         "AerialTree_Cottonwood_T0",
@@ -79,10 +78,10 @@
     },
     {
       "maximum_instances": 19,
-      "mode": "fixed_orientation_alpha_clip_tree_sources_editor_baked_to_one_instanced_tier_mesh",
+      "mode": "fixed_orientation_alpha_clip_microgroves_editor_baked_to_one_tier_mesh",
       "range_m": [
-        500,
-        1500
+        500.0,
+        1500.0
       ],
       "source_objects": [
         "AerialTree_Cottonwood_T1",
@@ -95,17 +94,17 @@
     },
     {
       "camera_facing": false,
-      "maximum_footprint_radius_m": 24.0,
-      "maximum_instances": 248,
-      "mode": "fixed_bounded_upper_canopy_cell_aggregates",
-      "procedural_triangles_per_instance": 18,
+      "canopy_map_handoff_texture": "_AerialCanopyHandoffMask",
+      "geometry_draws": 0,
+      "geometry_instances": 0,
+      "geometry_triangles": 0,
+      "maximum_instances": 0,
+      "mode": "orthophoto_plus_existing_lidar_canopy_normal_occlusion_terrain_shading",
       "range_m": [
-        1500,
-        4000
+        500.0,
+        4000.0
       ],
-      "source_objects": [
-        "AerialGroveCluster_T2"
-      ],
+      "source_objects": [],
       "tier": 2
     },
     {
@@ -114,8 +113,8 @@
       "explicit_inside_bounds_mask": true,
       "geometry_instances": 0,
       "geometry_to_map_handoff_semantics": {
-        "code_0": "Pixel is outside validated eligible canopy or Tier0-2 authored geometry owns it",
-        "code_255": "Pixel is validated eligible canopy fully owned by the Tier3 canopy-map representation",
+        "code_0": "Pixel is outside validated eligible canopy or Tier0-1 authored geometry owns it",
+        "code_255": "Pixel is validated eligible canopy fully owned by the lidar canopy terrain-shading representation",
         "combination": "minimum quantized handoff value across all authored footprints",
         "eligible_canopy_gate": {
           "dtm_code": "nonzero",
@@ -128,15 +127,15 @@
         "scalar_handoff_uniform": null,
         "smoothstep_feather_m": 64.0,
         "tier0_tier1_footprint": "conservative oriented rectangle from the source mesh horizontal AABB and authored transform",
-        "tier2_footprint": "authored PCA ellipse; feather distance is outward radial distance along the center ray",
-        "tier3_spatial_domain": "geometry complement inside the validated lidar square, not a beyond-4000m radial band",
+        "tier2_footprint": "none; Tier2 has zero geometry and therefore does not carve the canopy map",
+        "tier3_spatial_domain": "Tier2/Tier3 lidar canopy terrain shading inside the validated lidar square",
         "zero_padding_m": 16.0
       },
       "geometry_to_map_handoff_texture": "_AerialCanopyHandoffMask",
       "mode": "opaque_terrain_canopy_shader_maps_gated_by_r8_ownership",
       "scalar_handoff_uniform": null,
       "shader_include": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Shaders/AerialCanopyMap.cginc",
-      "spatial_domain": "geometry complement inside local X/Z bounds [-2048,+2048] meters",
+      "spatial_domain": "far orthophoto/lidar canopy terrain shading inside local X/Z bounds [-2048,+2048] meters",
       "surface_features_semantic": "surface_features_canopy_building",
       "terrain_validity_semantic": "terrain_surface_normal_and_validity",
       "tier": 3
@@ -145,11 +144,11 @@
   "runtime_batch_renderer": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Runtime/AerialVegetationBatchRenderer.cs",
   "runtime_budget": {
     "alpha_blended_material_slots": 0,
-    "authored_geometry_worst_case_triangles": 19640,
-    "editor_baked_meshes": 3,
+    "authored_geometry_worst_case_triangles": 15176,
+    "editor_baked_meshes": 2,
     "maximum_instances_per_draw": 1,
-    "maximum_simultaneous_draws": 3,
-    "maximum_visible_triangles": 19648,
+    "maximum_simultaneous_draws": 2,
+    "maximum_visible_triangles": 15184,
     "one_gameobject_per_tree": false,
     "ordinary_vertical_billboards": 0,
     "shared_materials": 1,
@@ -159,7 +158,7 @@
       "ownership_handoff_mask_r8": 1048576,
       "packed_surface_atlas_rgba8": 5592404
     },
-    "tier2_procedural_triangles_per_instance": 18,
+    "tier2_procedural_triangles_per_instance": 0,
     "vegetation_texture_bytes_excluding_shared_lidar_maps": 12233384
   },
   "runtime_model": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Models/AerialVegetationMultiscale.fbx",

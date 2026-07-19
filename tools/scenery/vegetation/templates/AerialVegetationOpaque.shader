@@ -114,7 +114,7 @@ Shader "QuestFlight/Aerial Scenery V1/Vegetation Atlas Cutout"
                 half wrapped = saturate((ndl + _SunWrap) / (1.0h + _SunWrap));
                 half vertexAO = lerp(1.0h, input.color.a, _VertexOcclusionStrength);
                 half packedAO = lerp(1.0h, surface.a, _SurfaceOcclusionStrength);
-                half3 lighting = max(0.18h, ambient * _AmbientStrength + _LightColor0.rgb * wrapped * 0.64h);
+                half3 lighting = max(0.26h, ambient * _AmbientStrength + _LightColor0.rgb * wrapped * 0.70h);
                 half roughness = surface.b;
                 half3 halfVector = normalize(normalize(input.viewDirectionWorld) + normalize(_WorldSpaceLightPos0.xyz));
                 half specular = pow(saturate(dot(normalWorld, halfVector)), lerp(48.0h, 8.0h, roughness));

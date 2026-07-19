@@ -21,18 +21,18 @@ namespace QuestFlightLab.Tests.Editor
             "1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5";
 
         [Test]
-        public void GeneratedPrefab_UsesThreeFixedOrientationDrawsWithinBudget()
+        public void GeneratedPrefab_UsesTwoNearDrawsAndNoTier2Geometry()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
             Assert.That(prefab, Is.Not.Null);
             AerialVegetationBatchRenderer renderer = prefab.GetComponent<AerialVegetationBatchRenderer>();
             Assert.That(renderer, Is.Not.Null);
-            Assert.That(renderer.AuthoredSourcePlacementCount, Is.EqualTo(270));
-            Assert.That(renderer.NonEmptyDrawCount, Is.EqualTo(3));
-            Assert.That(renderer.AuthoredDrawCount, Is.EqualTo(3));
-            Assert.That(renderer.FullyInstancedTriangleCount, Is.EqualTo(17324));
-            Assert.That(renderer.AuthoredFullyInstancedTriangleCount, Is.EqualTo(17324));
-            Assert.That(renderer.FullyInstancedTriangleCount, Is.LessThanOrEqualTo(19648));
+            Assert.That(renderer.AuthoredSourcePlacementCount, Is.EqualTo(22));
+            Assert.That(renderer.NonEmptyDrawCount, Is.EqualTo(2));
+            Assert.That(renderer.AuthoredDrawCount, Is.EqualTo(2));
+            Assert.That(renderer.FullyInstancedTriangleCount, Is.EqualTo(12860));
+            Assert.That(renderer.AuthoredFullyInstancedTriangleCount, Is.EqualTo(12860));
+            Assert.That(renderer.FullyInstancedTriangleCount, Is.LessThanOrEqualTo(15184));
             Assert.That(renderer.AuthoredMaterialCount, Is.EqualTo(1));
             Assert.That(renderer.FixedOrientationOnly, Is.True);
             Assert.That(renderer.CameraFacingBehavior, Is.False);
@@ -40,16 +40,25 @@ namespace QuestFlightLab.Tests.Editor
             Assert.That(renderer.SharedMaterial, Is.Not.Null);
             Assert.That(renderer.SharedMaterial.shader.name,
                 Is.EqualTo("QuestFlight/Aerial Scenery V1/Vegetation Atlas Cutout"));
-            Assert.That(renderer.Batches, Has.Length.EqualTo(3));
+            Assert.That(renderer.Batches, Has.Length.EqualTo(2));
             Assert.That(renderer.Batches.Select(batch => batch.Matrices.Length), Is.All.EqualTo(1));
             Assert.That(renderer.Batches.Select(batch => batch.InstanceTints.Length), Is.All.EqualTo(1));
             Assert.That(renderer.Batches.Select(batch => batch.Mesh), Is.All.Not.Null);
             Assert.That(renderer.DistributionManifest.text, Does.Contain(FrozenLidarManifestSha256));
+            Assert.That(renderer.DistributionManifest.text, Does.Contain("\"minimum_radius_m\": 500.0"));
+            Assert.That(renderer.DistributionManifest.text,
+                Does.Contain("\"tier2_geometry_draws\": 0"));
+            Assert.That(renderer.DistributionManifest.text,
+                Does.Contain("orthophoto_plus_lidar_canopy_normal_occlusion_terrain_shading"));
+            Assert.That(renderer.Batches.Any(batch => batch.Tier == 2), Is.False);
+            Assert.That(AssetDatabase.LoadAssetAtPath<Mesh>(
+                "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetation_Tier2_Combined.asset"),
+                Is.Null);
             Assert.That(prefab.transform.childCount, Is.EqualTo(4));
             Assert.That(prefab.transform.Find("Tier0_EditorBakedTrees_0m_500m"), Is.Not.Null);
             Assert.That(prefab.transform.Find("Tier1_EditorBakedTrees_500m_1500m"), Is.Not.Null);
-            Assert.That(prefab.transform.Find("Tier2_EditorBakedUpperCanopyCells_1500m_4000m"), Is.Not.Null);
-            Assert.That(prefab.transform.Find("Tier3_EligibleCanopyGeometryComplement_LidarBounds"), Is.Not.Null);
+            Assert.That(prefab.transform.Find("Tier2_OrthophotoLidarCanopyTerrainShading_500m_4000m"), Is.Not.Null);
+            Assert.That(prefab.transform.Find("Tier3_OrthophotoLidarCanopyTerrainShading_Far"), Is.Not.Null);
         }
 
         [Test]

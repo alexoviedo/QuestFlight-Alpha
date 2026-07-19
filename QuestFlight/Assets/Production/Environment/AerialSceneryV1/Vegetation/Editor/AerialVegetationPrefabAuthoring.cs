@@ -10,8 +10,9 @@ namespace QuestFlightLab.Environment.Editor
 {
     /// <summary>
     /// Deterministically bakes lidar-derived heterogeneous vegetation placements
-    /// into one serialized mesh per visible tier. The resulting prefab has three
+    /// into one serialized mesh per near visible tier. The resulting prefab has two
     /// non-empty instanced draws, one shared material, and no per-tree GameObjects.
+    /// Tier 2 and Tier 3 are owned by the orthophoto/lidar canopy terrain shading path.
     /// Product-scene placement and legacy-renderer disabling remain lead-owned.
     /// </summary>
     public static class AerialVegetationPrefabAuthoring
@@ -26,29 +27,25 @@ namespace QuestFlightLab.Environment.Editor
             "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated";
         public const string PrefabPath = GeneratedFolder + "/AerialVegetationRoot.prefab";
 
-        private const int ExpectedDrawCount = 3;
-        private const int ExpectedSourcePlacementCount = 270;
-        private const long VisibleTriangleCeiling = 19648;
-        private const int Tier2RingSegments = 6;
-        private const int Tier2TrianglesPerPlacement = Tier2RingSegments * 3;
+        private const int ExpectedDrawCount = 2;
+        private const int ExpectedSourcePlacementCount = 22;
+        private const long VisibleTriangleCeiling = 15184;
         private const string FrozenLidarManifestSha256 =
             "1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5";
 
         private static readonly string[] ExpectedBatchIds =
         {
             "tier0_editor_baked",
-            "tier1_editor_baked",
-            "tier2_editor_baked_fixed_groves"
+            "tier1_editor_baked"
         };
 
         private static readonly string[] ExpectedSourceModes =
         {
             "heterogeneous_fixed_orientation_editor_bake",
-            "heterogeneous_fixed_orientation_editor_bake",
-            "fixed_upper_canopy_cell_aggregate_editor_bake"
+            "heterogeneous_fixed_orientation_editor_bake"
         };
 
-        private static readonly int[] ExpectedTierPlacementCounts = { 3, 19, 248 };
+        private static readonly int[] ExpectedTierPlacementCounts = { 3, 19 };
 
         private static readonly HashSet<string>[] AllowedSourcesByTier =
         {
@@ -67,8 +64,7 @@ namespace QuestFlightLab.Environment.Editor
                 "AerialTree_Deciduous_T1",
                 "AerialTree_SparseConifer_T1",
                 "AerialShrub_Regional_T1"
-            }, StringComparer.Ordinal),
-            new HashSet<string>(new[] { "AerialGroveCluster_T2" }, StringComparer.Ordinal)
+            }, StringComparer.Ordinal)
         };
 
         public static readonly string[] LegacyRendererRootsToDisable =
@@ -132,9 +128,7 @@ namespace QuestFlightLab.Environment.Editor
             for (int tier = 0; tier < orderedRecords.Length; tier++)
             {
                 DistributionBatchRecord record = orderedRecords[tier];
-                Mesh combined = record.tier == 2
-                    ? BuildUpperCanopyTierMesh(record)
-                    : BuildCombinedTierMesh(record, sourceMeshes);
+                Mesh combined = BuildCombinedTierMesh(record, sourceMeshes);
                 string assetPath = GeneratedFolder + "/AerialVegetation_Tier" + tier + "_Combined.asset";
                 Mesh saved = WriteMeshAsset(assetPath, combined);
                 tierTriangles[tier] = TriangleCount(saved);
@@ -182,8 +176,8 @@ namespace QuestFlightLab.Environment.Editor
 
                 CreateTierAnchor(root.transform, "Tier0_EditorBakedTrees_0m_500m");
                 CreateTierAnchor(root.transform, "Tier1_EditorBakedTrees_500m_1500m");
-                CreateTierAnchor(root.transform, "Tier2_EditorBakedUpperCanopyCells_1500m_4000m");
-                CreateTierAnchor(root.transform, "Tier3_EligibleCanopyGeometryComplement_LidarBounds");
+                CreateTierAnchor(root.transform, "Tier2_OrthophotoLidarCanopyTerrainShading_500m_4000m");
+                CreateTierAnchor(root.transform, "Tier3_OrthophotoLidarCanopyTerrainShading_Far");
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -226,7 +220,7 @@ namespace QuestFlightLab.Environment.Editor
                 distribution.batches == null ||
                 distribution.batches.Length != ExpectedDrawCount)
             {
-                throw new InvalidOperationException("Vegetation distribution must contain exactly three editor-baked batches.");
+                throw new InvalidOperationException("Vegetation distribution must contain exactly two near editor-baked batches.");
             }
 
             DistributionBatchRecord[] ordered = new DistributionBatchRecord[ExpectedDrawCount];
@@ -258,7 +252,7 @@ namespace QuestFlightLab.Environment.Editor
             if (ordered.Any(record => record == null) ||
                 distribution.instance_count != ExpectedSourcePlacementCount)
             {
-                throw new InvalidOperationException("Vegetation distribution does not satisfy the 3/19/248 placement contract.");
+                throw new InvalidOperationException("Vegetation distribution does not satisfy the Tier0/Tier1 3/19 placement contract.");
             }
             return ordered;
         }
@@ -287,130 +281,6 @@ namespace QuestFlightLab.Environment.Editor
             {
                 throw new InvalidOperationException(instance.stable_id + " contains an invalid transform or tint.");
             }
-            if (tier == 2 &&
-                (!IsFinitePositive(instance.footprint_radius_major_m) ||
-                 !IsFinitePositive(instance.footprint_radius_minor_m) ||
-                 instance.footprint_radius_major_m > 24.001f ||
-                 instance.footprint_radius_minor_m > 24.001f ||
-                 !IsFinitePositive(instance.mean_canopy_hag_m)))
-            {
-                throw new InvalidOperationException(
-                    instance.stable_id + " contains an invalid bounded upper-canopy footprint.");
-            }
-        }
-
-        private static Mesh BuildUpperCanopyTierMesh(DistributionBatchRecord record)
-        {
-            List<Vector3> vertices = new List<Vector3>(record.instances.Length * (1 + Tier2RingSegments * 2));
-            List<Vector3> normals = new List<Vector3>(vertices.Capacity);
-            List<Vector4> tangents = new List<Vector4>(vertices.Capacity);
-            List<Vector2> uvs = new List<Vector2>(vertices.Capacity);
-            List<Color32> colors = new List<Color32>(vertices.Capacity);
-            List<int> indices = new List<int>(record.instances.Length * Tier2TrianglesPerPlacement * 3);
-
-            foreach (DistributionInstanceRecord instance in record.instances)
-            {
-                float yaw = instance.footprint_yaw_degrees * Mathf.Deg2Rad;
-                float cosineYaw = Mathf.Cos(yaw);
-                float sineYaw = Mathf.Sin(yaw);
-                float height = Mathf.Clamp(instance.mean_canopy_hag_m, 4f, 24f);
-                Color32 tint = (Color32)new Color(
-                    instance.tint_r, instance.tint_g, instance.tint_b, instance.tint_a);
-                int baseVertex = vertices.Count;
-
-                AddUpperCanopyVertex(
-                    new Vector3(instance.x, instance.y + height, instance.z),
-                    Vector3.up,
-                    new Vector2(0.64f, 0.75f),
-                    tint,
-                    vertices, normals, tangents, uvs, colors);
-
-                for (int ring = 0; ring < 2; ring++)
-                {
-                    float radialScale = ring == 0 ? 0.72f : 1f;
-                    float elevation = instance.y + height * (ring == 0 ? 0.58f : 0.14f);
-                    float uvRadiusU = ring == 0 ? 0.105f : 0.135f;
-                    float uvRadiusV = ring == 0 ? 0.175f : 0.225f;
-                    for (int segment = 0; segment < Tier2RingSegments; segment++)
-                    {
-                        float angle = segment * Mathf.PI * 2f / Tier2RingSegments;
-                        float localX = Mathf.Cos(angle) * instance.footprint_radius_major_m * radialScale;
-                        float localZ = Mathf.Sin(angle) * instance.footprint_radius_minor_m * radialScale;
-                        float worldX = localX * cosineYaw - localZ * sineYaw;
-                        float worldZ = localX * sineYaw + localZ * cosineYaw;
-                        Vector3 normal = new Vector3(
-                            Mathf.Cos(angle) * 0.58f,
-                            ring == 0 ? 0.82f : 0.48f,
-                            Mathf.Sin(angle) * 0.58f).normalized;
-                        normal = new Vector3(
-                            normal.x * cosineYaw - normal.z * sineYaw,
-                            normal.y,
-                            normal.x * sineYaw + normal.z * cosineYaw).normalized;
-                        AddUpperCanopyVertex(
-                            new Vector3(instance.x + worldX, elevation, instance.z + worldZ),
-                            normal,
-                            new Vector2(
-                                0.64f + Mathf.Cos(angle) * uvRadiusU,
-                                0.75f + Mathf.Sin(angle) * uvRadiusV),
-                            tint,
-                            vertices, normals, tangents, uvs, colors);
-                    }
-                }
-
-                int shoulder = baseVertex + 1;
-                int edge = shoulder + Tier2RingSegments;
-                for (int segment = 0; segment < Tier2RingSegments; segment++)
-                {
-                    int next = (segment + 1) % Tier2RingSegments;
-                    indices.Add(baseVertex);
-                    indices.Add(shoulder + segment);
-                    indices.Add(shoulder + next);
-
-                    indices.Add(shoulder + segment);
-                    indices.Add(edge + segment);
-                    indices.Add(edge + next);
-                    indices.Add(shoulder + segment);
-                    indices.Add(edge + next);
-                    indices.Add(shoulder + next);
-                }
-            }
-
-            Mesh combined = new Mesh
-            {
-                name = "AerialVegetation_Tier2_Combined",
-                indexFormat = vertices.Count > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16
-            };
-            combined.SetVertices(vertices);
-            combined.SetNormals(normals);
-            combined.SetTangents(tangents);
-            combined.SetUVs(0, uvs);
-            combined.SetColors(colors);
-            combined.SetTriangles(indices, 0, false);
-            combined.RecalculateBounds();
-            if (TriangleCount(combined) != (long)record.instances.Length * Tier2TrianglesPerPlacement)
-            {
-                UnityEngine.Object.DestroyImmediate(combined);
-                throw new InvalidOperationException("Tier2 upper-canopy aggregate triangle contract mismatch.");
-            }
-            return combined;
-        }
-
-        private static void AddUpperCanopyVertex(
-            Vector3 position,
-            Vector3 normal,
-            Vector2 uv,
-            Color32 color,
-            ICollection<Vector3> vertices,
-            ICollection<Vector3> normals,
-            ICollection<Vector4> tangents,
-            ICollection<Vector2> uvs,
-            ICollection<Color32> colors)
-        {
-            vertices.Add(position);
-            normals.Add(normal);
-            tangents.Add(new Vector4(1f, 0f, 0f, 1f));
-            uvs.Add(uv);
-            colors.Add(color);
         }
 
         private static Mesh BuildCombinedTierMesh(

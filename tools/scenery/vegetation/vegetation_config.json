@@ -40,7 +40,7 @@
     }
   },
   "tier3_handoff": {
-    "semantic": "tier0_2_geometry_to_tier3_canopy_map_handoff",
+    "semantic": "tier0_1_geometry_to_lidar_canopy_map_handoff",
     "grid": "exact frozen lidar 1024x1024 grid at 4 meters per pixel",
     "local_bounds_edges_m": [
       -2048.0,
@@ -49,12 +49,12 @@
       2048.0
     ],
     "tier0_tier1_footprint": "conservative oriented source-mesh horizontal AABB",
-    "tier2_footprint": "authored PCA ellipse",
+    "tier2_footprint": "none; Tier 2 is terrain canopy shading and owns no geometry",
     "eligible_canopy_gate": "same DTM/surface-feature HAG, density, and building exclusion used by distribution",
     "zero_padding_m": 16.0,
     "smoothstep_feather_m": 64.0,
-    "code_0_owner": "outside validated eligible canopy or Tier0-2 authored geometry",
-    "code_255_owner": "validated eligible canopy fully owned by Tier3 lidar canopy map",
+    "code_0_owner": "outside validated eligible canopy or Tier0-1 authored geometry",
+    "code_255_owner": "validated eligible canopy fully owned by the lidar canopy terrain shading path",
     "mipmaps": false,
     "outside_bounds_coverage": 0,
     "scalar_handoff_allowed": false
@@ -66,6 +66,7 @@
       "minimum_radius_m": 0.0,
       "maximum_radius_m": 500.0,
       "maximum_instances": 3,
+      "apparent_tree_units_per_placement": 3,
       "source_objects": [
         "AerialTree_Cottonwood_T0",
         "AerialTree_WillowRiparian_T0",
@@ -80,6 +81,7 @@
       "minimum_radius_m": 500.0,
       "maximum_radius_m": 1500.0,
       "maximum_instances": 19,
+      "minimum_apparent_tree_units_per_placement": 3,
       "source_objects": [
         "AerialTree_Cottonwood_T1",
         "AerialTree_WillowRiparian_T1",
@@ -90,13 +92,13 @@
     },
     {
       "tier": 2,
-      "label": "mid_fixed_upper_canopy_cell_aggregates",
-      "minimum_radius_m": 1500.0,
+      "label": "mid_orthophoto_lidar_canopy_terrain_shading",
+      "minimum_radius_m": 500.0,
       "maximum_radius_m": 4000.0,
-      "maximum_instances": 248,
-      "source_objects": [
-        "AerialGroveCluster_T2"
-      ]
+      "maximum_instances": 0,
+      "source_objects": [],
+      "ownership_mode": "orthophoto plus existing lidar canopy normal and occlusion terrain shading",
+      "geometry_draws": 0
     },
     {
       "tier": 3,
@@ -110,10 +112,10 @@
   ],
   "runtime_budget": {
     "shared_materials": 1,
-    "maximum_simultaneous_draws": 3,
-    "maximum_visible_triangles": 19648,
-    "authored_geometry_worst_case_triangles": 19640,
-    "tier2_procedural_triangles_per_instance": 18,
+    "maximum_simultaneous_draws": 2,
+    "maximum_visible_triangles": 15184,
+    "authored_geometry_worst_case_triangles": 15176,
+    "tier2_procedural_triangles_per_instance": 0,
     "maximum_instances_per_draw": 1,
     "vegetation_texture_bytes_excluding_shared_lidar_maps": 12233384,
     "texture_memory_breakdown_uncompressed_full_mips": {
@@ -125,6 +127,6 @@
     "ordinary_vertical_billboards": 0,
     "one_gameobject_per_tree": false,
     "steady_state_environment_allocations": 0,
-    "editor_baked_meshes": 3
+    "editor_baked_meshes": 2
   }
 }

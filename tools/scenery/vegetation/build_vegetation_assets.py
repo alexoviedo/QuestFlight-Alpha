@@ -282,12 +282,12 @@ Material:
         m_Offset: {{x: 0, y: 0}}
     m_Ints: []
     m_Floats:
-    - _AmbientStrength: 0.56
+    - _AmbientStrength: 0.72
     - _Cutoff: 0.42
-    - _NormalStrength: 0.44
-    - _SunWrap: 0.28
-    - _SurfaceOcclusionStrength: 0.72
-    - _VertexOcclusionStrength: 0.58
+    - _NormalStrength: 0.32
+    - _SunWrap: 0.34
+    - _SurfaceOcclusionStrength: 0.44
+    - _VertexOcclusionStrength: 0.36
     m_Colors:
     - _InstanceTint: {{r: 1, g: 1, b: 1, a: 1}}
     - _Tint: {{r: 1, g: 1, b: 1, a: 1}}
@@ -318,6 +318,7 @@ def write_contract(
     handoff_report: dict[str, Any],
 ) -> None:
     objects = {record["name"]: record for record in geometry_report["objects"]}
+    tiers = {int(record["tier"]): record for record in config["tiers"]}
     contract = {
         "schema": "questflight.aerial-scenery-v1.vegetation-contract.v1",
         "status": "UNITY_READY_PREFAB_REQUIRES_AUTHORED_PRODUCT_INTEGRATION_AND_STEREO_QA",
@@ -336,31 +337,33 @@ def write_contract(
         "representations": [
             {
                 "tier": 0,
-                "range_m": [0, 500],
-                "mode": "fixed_orientation_alpha_clip_tree_sources_editor_baked_to_one_instanced_tier_mesh",
+                "range_m": [tiers[0]["minimum_radius_m"], tiers[0]["maximum_radius_m"]],
+                "mode": "fixed_orientation_alpha_clip_microgroves_editor_baked_to_one_tier_mesh",
                 "source_objects": config["tiers"][0]["source_objects"],
                 "maximum_instances": config["tiers"][0]["maximum_instances"],
             },
             {
                 "tier": 1,
-                "range_m": [500, 1500],
-                "mode": "fixed_orientation_alpha_clip_tree_sources_editor_baked_to_one_instanced_tier_mesh",
+                "range_m": [tiers[1]["minimum_radius_m"], tiers[1]["maximum_radius_m"]],
+                "mode": "fixed_orientation_alpha_clip_microgroves_editor_baked_to_one_tier_mesh",
                 "source_objects": config["tiers"][1]["source_objects"],
                 "maximum_instances": config["tiers"][1]["maximum_instances"],
             },
             {
                 "tier": 2,
-                "range_m": [1500, 4000],
-                "mode": "fixed_bounded_upper_canopy_cell_aggregates",
-                "source_objects": config["tiers"][2]["source_objects"],
-                "maximum_instances": config["tiers"][2]["maximum_instances"],
-                "procedural_triangles_per_instance": config["runtime_budget"]["tier2_procedural_triangles_per_instance"],
-                "maximum_footprint_radius_m": config["sampling"]["grove_cluster_max_radius_m"],
+                "range_m": [tiers[2]["minimum_radius_m"], tiers[2]["maximum_radius_m"]],
+                "mode": "orthophoto_plus_existing_lidar_canopy_normal_occlusion_terrain_shading",
+                "source_objects": [],
+                "maximum_instances": 0,
+                "geometry_instances": 0,
+                "geometry_draws": 0,
+                "geometry_triangles": 0,
                 "camera_facing": False,
+                "canopy_map_handoff_texture": "_AerialCanopyHandoffMask",
             },
             {
                 "tier": 3,
-                "spatial_domain": "geometry complement inside local X/Z bounds [-2048,+2048] meters",
+                "spatial_domain": "far orthophoto/lidar canopy terrain shading inside local X/Z bounds [-2048,+2048] meters",
                 "mode": "opaque_terrain_canopy_shader_maps_gated_by_r8_ownership",
                 "geometry_instances": 0,
                 "surface_features_semantic": config["lidar_input"]["surface_features_semantic"],
@@ -378,7 +381,7 @@ def write_contract(
         "runtime_budget": config["runtime_budget"],
         "rendering_policy": {
             "shared_materials": 1,
-            "maximum_draws": 3,
+            "maximum_draws": 2,
             "transparent_material_slots": 0,
             "alpha_blending": False,
             "alpha_testing": True,
@@ -391,7 +394,7 @@ def write_contract(
             "one_gameobject_per_tree": False,
             "runtime_hierarchy_construction": False,
             "steady_state_allocations": 0,
-            "geometry_ownership_handoff": "R8 spatial mask on the exact lidar grid",
+            "geometry_ownership_handoff": "R8 Tier0/Tier1 geometry complement on the exact lidar grid; Tier2 never carves the canopy map",
         },
         "legacy_renderer_roots_to_disable_during_authored_integration": legacy_roots(),
         "legacy_disable_policy": (
@@ -527,7 +530,7 @@ def main() -> int:
         atlas_path,
         srgb=True,
         alpha_cutout=True,
-        note="Project-authored 1K bark and five-foliage alpha-test atlas; no external image sources",
+        note="Project-authored 1K bark and foliage atlas for Tier0/Tier1 micro-groves; no external image sources",
     )
     texture_meta(
         surface_path,
@@ -575,7 +578,7 @@ def main() -> int:
         alpha_cutout=False,
         single_channel_r8=True,
         mipmaps=False,
-        note="Final Tier3 eligible-canopy and Tier0-2 ownership weight; R8, no mips, exact frozen lidar grid",
+        note="Final lidar-canopy and Tier0/Tier1 ownership weight; Tier2 has zero geometry; R8, no mips, exact frozen lidar grid",
     )
     default_meta(handoff_report_path, "Tier3 eligible-canopy and geometry-ownership handoff report")
 
@@ -592,8 +595,10 @@ def main() -> int:
 
     runtime_path = VEGETATION_ROOT / "Runtime/AerialVegetationBatchRenderer.cs"
     editor_path = VEGETATION_ROOT / "Editor/AerialVegetationPrefabAuthoring.cs"
+    evidence_path = VEGETATION_ROOT / "Editor/AerialVegetationEvidenceAuthoring.cs"
     script_meta(runtime_path, "Aerial Scenery V1 preallocated GPU-instanced batch renderer")
     script_meta(editor_path, "Aerial Scenery V1 deterministic prefab authoring entry point")
+    script_meta(evidence_path, "Aerial Scenery V1 deterministic source-representation visual evidence capture")
 
     geometry = json.loads(geometry_path.read_text(encoding="utf-8"))
     handoff_report = json.loads(handoff_report_path.read_text(encoding="utf-8"))
@@ -608,10 +613,10 @@ def main() -> int:
         (blend_path, "Deterministic Blender 5.1 project source"),
         (model_path, "FBX export from AerialVegetationMultiscale.blend"),
         (geometry_path, "Blender-authored structural and budget report"),
-        (atlas_path, "Deterministic project-authored 1K bark and five-foliage alpha-test atlas"),
+        (atlas_path, "Deterministic project-authored 1K bark and foliage atlas for Tier0/Tier1 micro-groves"),
         (surface_path, "Deterministic packed normal XY, roughness, and AO atlas"),
         (atlas_report_path, "Deterministic atlas layout, source, license, and hash report"),
-        (handoff_mask_path, "Final R8 eligible-canopy and Tier0-2/Tier3 spatial ownership weight"),
+        (handoff_mask_path, "Final R8 eligible-canopy and Tier0/Tier1 geometry ownership weight; Tier2 remains map-owned"),
         (handoff_report_path, "Deterministic handoff inputs, semantics, exclusions, coverage, and hash report"),
         (shader_path, "Fixed-card alpha-test Built-in Render Pipeline vegetation shader"),
         (include_path, "Tier 3 canopy-map shader include with bounds and R8 ownership gating"),
@@ -619,6 +624,7 @@ def main() -> int:
         (contract_path, "Four-tier vegetation and integration contract"),
         (runtime_path, "Preallocated runtime instance batch renderer"),
         (editor_path, "Deterministic Unity prefab authoring entry point"),
+        (evidence_path, "Deterministic product-independent source-representation visual evidence capture"),
         (TOOL_DIR / "author_multiscale_vegetation.py", "Deterministic Blender authoring generator"),
         (TOOL_DIR / "generate_vegetation_atlas.py", "Deterministic 1K atlas generator"),
         (TOOL_DIR / "generate_vegetation_distribution.py", "Validated lidar distribution generator"),
@@ -630,11 +636,11 @@ def main() -> int:
             VEGETATION_ROOT / f"Generated/AerialVegetation_Tier{tier}_Combined.asset",
             f"Deterministic Unity Editor-baked heterogeneous Tier{tier} mesh",
         )
-        for tier in range(3)
+        for tier in range(2)
     )
     source_files.append((
         VEGETATION_ROOT / "Generated/AerialVegetationRoot.prefab",
-        "Deterministic three-draw vegetation prefab; product-scene integration remains lead-owned",
+        "Deterministic two-draw near-vegetation prefab; Tier2/Tier3 remain terrain-shaded; product-scene integration remains lead-owned",
     ))
     source_files.append((distribution_path, "Validated lidar-derived distribution; frozen source hashes embedded"))
     write_source_manifest(source_manifest_path, source_files)

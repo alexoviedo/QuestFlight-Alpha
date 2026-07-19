@@ -33,12 +33,12 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AmbientStrength: 0.56
+    - _AmbientStrength: 0.72
     - _Cutoff: 0.42
-    - _NormalStrength: 0.44
-    - _SunWrap: 0.28
-    - _SurfaceOcclusionStrength: 0.72
-    - _VertexOcclusionStrength: 0.58
+    - _NormalStrength: 0.32
+    - _SunWrap: 0.34
+    - _SurfaceOcclusionStrength: 0.44
+    - _VertexOcclusionStrength: 0.36
     m_Colors:
     - _InstanceTint: {r: 1, g: 1, b: 1, a: 1}
     - _Tint: {r: 1, g: 1, b: 1, a: 1}
