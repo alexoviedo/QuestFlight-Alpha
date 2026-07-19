@@ -73,7 +73,7 @@ This removes the rejected gray suppression/synthetic water presentation and cost
 - OpenXR still exclusively owns the tracked Main Camera; calibration still changes only the seat-relative offset;
 - the airport-core benchmark validator now fails closed without throwing when optional probe-position data is absent in a release player.
 
-Both changes are covered by EditMode/PlayMode validation. The seat adjustment requires post-change worn confirmation.
+Both changes are covered by EditMode/PlayMode validation. The post-change worn smoke confirmed that the seat adjustment eliminated Alex's need to move backward.
 
 ## Visual QA
 
