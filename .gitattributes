@@ -15,6 +15,11 @@
 *.yaml text eol=lf
 *.py text eol=lf
 *.ps1 text eol=lf
+
+# Preserve checksum-pinned authoring inputs byte-for-byte, including their
+# generated trailing blank line.
+tools/scenery/conda-lock-win-64.txt whitespace=-blank-at-eof
+tools/scenery/lidar/ept_snapshot.py whitespace=-blank-at-eof
 # Unity's serializer emits blank scalar values with a trailing space. Preserve
 # stable LF serialization while excluding that generated convention from
 # whitespace-error checks.
