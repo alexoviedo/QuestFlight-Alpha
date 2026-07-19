@@ -6,6 +6,12 @@ using UnityEngine.Rendering;
 
 namespace QuestFlightLab.Environment
 {
+    public enum ProductionWaterPresentationMode
+    {
+        AuthoredSurface = 0,
+        OrthophotoOnly = 1
+    }
+
     /// <summary>
     /// Contract and validation-only marker for the authored production environment prefab.
     /// This component never creates, replaces, moves, or re-parents production geometry.
@@ -32,6 +38,9 @@ namespace QuestFlightLab.Environment
         public Transform airportContext;
         public Transform authoritativeRunwaySystem;
         public Transform essentialWater;
+        [Tooltip("OrthophotoOnly deliberately defers all water effects while preserving source provenance for final polish.")]
+        public ProductionWaterPresentationMode waterPresentationMode =
+            ProductionWaterPresentationMode.AuthoredSurface;
 
         [Header("Immutable terrain")]
         public MeshFilter[] nearTerrainMeshes = Array.Empty<MeshFilter>();
@@ -216,9 +225,27 @@ namespace QuestFlightLab.Environment
                 "obsolete V2 non-reservoir water ribbon surface remains serialized", failures);
             Require(otherWaterFeaturesShoreBankV2 == null,
                 "obsolete V2 non-reservoir water bank geometry remains serialized", failures);
-            if (boulderReservoirSurface != null)
+            Renderer reservoirRenderer = boulderReservoirSurface == null
+                ? null
+                : boulderReservoirSurface.GetComponent<Renderer>();
+            Renderer shoreRenderer = boulderReservoirShoreBank == null
+                ? null
+                : boulderReservoirShoreBank.GetComponent<Renderer>();
+            if (waterPresentationMode == ProductionWaterPresentationMode.OrthophotoOnly)
             {
-                Material water = boulderReservoirSurface.GetComponent<Renderer>()?.sharedMaterial;
+                Require(reservoirRenderer != null &&
+                        !reservoirRenderer.enabled && !IsAuthoredActive(reservoirRenderer.transform),
+                    "orthophoto-only water requires the reservoir renderer to be explicitly disabled", failures);
+                Require(reservoirRenderer == null || reservoirRenderer.sharedMaterials.Length == 0,
+                    "orthophoto-only water must not serialize a reservoir material dependency", failures);
+                Require(shoreRenderer != null && !shoreRenderer.enabled && !IsAuthoredActive(shoreRenderer.transform),
+                    "orthophoto-only water requires the shore-bank renderer to be disabled", failures);
+                Require(shoreRenderer == null || shoreRenderer.sharedMaterials.Length == 0,
+                    "orthophoto-only water must not serialize a shore-bank material dependency", failures);
+            }
+            else if (boulderReservoirSurface != null)
+            {
+                Material water = reservoirRenderer?.sharedMaterial;
                 Require(water != null && water.renderQueue == (int)RenderQueue.Geometry + 5,
                     "Boulder Reservoir must use the authored Geometry+5 opaque queue", failures);
                 Require(water != null && water.shader != null &&

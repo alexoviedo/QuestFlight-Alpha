@@ -196,12 +196,15 @@ namespace QuestFlightLab.EditorTests
             Assert.That(contract.macroRepeatedTileSimilarity, Is.LessThan(0.985f));
             TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo));
             Assert.That(importer.mipmapEnabled, Is.True);
+            Assert.That(importer.streamingMipmaps, Is.False,
+                "Custom world-space macro UVs require bounded full residency.");
             Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Trilinear));
             Assert.That(importer.anisoLevel, Is.GreaterThanOrEqualTo(4));
             Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));
             TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
             Assert.That(android.overridden, Is.True);
-            Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_6x6));
+            Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_10x10),
+                "The 12 km fallback uses ASTC 10x10 to fund four sharper ASTC 6x6 hot quadrants.");
         }
 
         [Test]
@@ -230,10 +233,17 @@ namespace QuestFlightLab.EditorTests
             ProductionEnvironmentRoot contract = LoadPrefab().GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.nearTerrainMeshes[0].GetComponent<Renderer>().sharedMaterial.shader, Is.SameAs(ground));
             Assert.That(contract.runwayMarkings.sharedMaterial.shader, Is.SameAs(marking));
-            Material reservoirMaterial = contract.boulderReservoirSurface.GetComponent<Renderer>().sharedMaterial;
-            Assert.That(reservoirMaterial.shader, Is.SameAs(reservoir));
-            Assert.That(reservoirMaterial.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
-            Assert.That(reservoirMaterial.passCount, Is.EqualTo(1));
+            Renderer reservoirRenderer = contract.boulderReservoirSurface.GetComponent<Renderer>();
+            Assert.That(reservoirRenderer.enabled, Is.False);
+            Assert.That(reservoirRenderer.sharedMaterials, Is.Empty,
+                "Orthophoto-only product water must not retain a serialized material dependency.");
+            Material reservoirSource = AssetDatabase.LoadAssetAtPath<Material>(
+                "Assets/Production/Environment/AirportCoreV4/Water/Materials/AirportCoreReservoir_V4.mat");
+            Assert.That(reservoirSource, Is.Not.Null,
+                "The unbound historical water source remains available for provenance and later polish.");
+            Assert.That(reservoirSource.shader, Is.SameAs(reservoir));
+            Assert.That(reservoirSource.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
+            Assert.That(reservoirSource.passCount, Is.EqualTo(1));
             Assert.That(contract.GetComponentsInChildren<Renderer>(true)
                 .SelectMany(renderer => renderer.sharedMaterials)
                 .Where(material => material != null)

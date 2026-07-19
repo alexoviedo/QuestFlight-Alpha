@@ -106,6 +106,27 @@ namespace QuestFlightLab.Editor.Tests
         }
 
         [Test]
+        public void BenchmarkProbeValidationFailsClosedWhenProbePositionsAreUnavailable()
+        {
+            GameObject fixture = new GameObject(AirportCoreBenchmarkRoot.GameObjectName);
+            try
+            {
+                AirportCoreBenchmarkRoot root = fixture.AddComponent<AirportCoreBenchmarkRoot>();
+                root.validateOnAwake = false;
+                root.airportLightProbes = fixture.AddComponent<LightProbeGroup>();
+                root.airportLightProbes.probePositions = null;
+
+                string report = null;
+                Assert.DoesNotThrow(() => root.TryValidateContract(out report));
+                Assert.That(report, Does.Contain("airport light-probe volume"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(fixture);
+            }
+        }
+
+        [Test]
         public void BenchmarkUsesMappedAerialReplacementAndEditorOnlyPathBasedAbProvenance()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ProductionEnvironmentRoot.PrefabAssetPath);

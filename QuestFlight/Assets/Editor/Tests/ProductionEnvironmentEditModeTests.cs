@@ -123,11 +123,13 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void BoundedWaterUsesOneReservoirMeshAndTerrainIntegratedMinorWater()
+        public void WaterIsExplicitlyDeferredToOrthophotoOnlyWithoutActiveWaterRenderers()
         {
             WithInstance(root =>
             {
                 ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
+                Assert.That(contract.waterPresentationMode,
+                    Is.EqualTo(ProductionWaterPresentationMode.OrthophotoOnly));
                 Assert.That(contract.retainedWaterBodyCount, Is.GreaterThan(1));
                 Assert.That(contract.discardedMinorWaterFeatureCount, Is.GreaterThan(0));
                 Assert.That(contract.waterFeatureManifestV2, Is.Not.Null);
@@ -138,12 +140,15 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(contract.boulderReservoirSurface.name, Does.Contain("BoulderReservoir"));
                 Assert.That(contract.boulderReservoirShoreBank.name, Does.Contain("ShoreBank"));
                 Renderer reservoirRenderer = contract.boulderReservoirSurface.GetComponent<Renderer>();
-                Material water = reservoirRenderer.sharedMaterial;
-                Assert.That(water.shader.name, Is.EqualTo(ProductionEnvironmentRoot.ProductionReservoirShaderName));
-                Assert.That(water.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
-                Assert.That(water.passCount, Is.EqualTo(1));
-                Assert.That(root.GetComponentsInChildren<Renderer>(true)
-                    .Count(renderer => renderer.sharedMaterial == water), Is.EqualTo(1));
+                Renderer shoreRenderer = contract.boulderReservoirShoreBank.GetComponent<Renderer>();
+                Assert.That(reservoirRenderer.enabled, Is.False);
+                Assert.That(reservoirRenderer.gameObject.activeInHierarchy, Is.False);
+                Assert.That(reservoirRenderer.sharedMaterials, Is.Empty,
+                    "A disabled reservoir must not retain a serialized runtime material dependency.");
+                Assert.That(shoreRenderer.enabled, Is.False);
+                Assert.That(shoreRenderer.gameObject.activeInHierarchy, Is.False);
+                Assert.That(shoreRenderer.sharedMaterials, Is.Empty,
+                    "A disabled shore bank must not retain a serialized runtime material dependency.");
                 Assert.That(contract.boulderReservoirSurface.GetComponent<Renderer>(), Is.SameAs(reservoirRenderer));
                 Assert.That(contract.boulderReservoirShorelineClosed, Is.True);
                 Assert.That(contract.boulderReservoirSmoothedShorelineVertexCount,
@@ -153,6 +158,14 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(contract.minimumWaterTerrainSeparationMeters,
                     Is.GreaterThanOrEqualTo(ProductionEnvironmentRoot.MinimumAcceptedWaterTerrainSeparationMeters));
                 Assert.That(contract.essentialWater.GetComponentsInChildren<LODGroup>(true), Is.Empty);
+                AirportCoreBenchmarkRoot benchmark = root.GetComponentInChildren<AirportCoreBenchmarkRoot>(true);
+                Assert.That(benchmark.v2ReservoirMaterial, Is.Null);
+                Assert.That(benchmark.manifest.waterEffectsDeferredToOrthophoto, Is.True);
+                Assert.That(benchmark.manifest.reservoirMaterial, Is.Null);
+                Assert.That(benchmark.manifest.minorWaterUsesTerrainMask, Is.False);
+                Assert.That(benchmark.minorWaterTerrainEffect.sharedMaterial
+                    .HasProperty("_AirportCoreMinorWaterMask"), Is.False,
+                    "Orthophoto-only water must remove the active minor-water sampling path.");
             });
         }
 
@@ -168,12 +181,14 @@ namespace QuestFlightLab.Tests.EditMode
             string path = AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo);
             TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);
             Assert.That(importer.mipmapEnabled, Is.True);
+            Assert.That(importer.streamingMipmaps, Is.False,
+                "Custom world-space macro UVs require bounded full residency.");
             Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Trilinear));
             Assert.That(importer.anisoLevel, Is.GreaterThanOrEqualTo(4));
             Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));
             TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
             Assert.That(android.overridden, Is.True);
-            Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_6x6));
+            Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_10x10));
             string absolute = Path.Combine(Directory.GetParent(Application.dataPath).FullName, path);
             Assert.That(File.Exists(absolute), Is.True);
         }

@@ -24,8 +24,8 @@ MonoBehaviour:
   vegetationSourceManifest: {fileID: 4900000, guid: c159bb8c36e0782d50c6081453babbbe, type: 3}
   buildingSourceManifest: {fileID: 4900000, guid: 60a323546a5c4f13bd11d09d53a42e72, type: 3}
   lidarPipelineSha256: 1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5
-  vegetationPipelineSha256: 2f95980df1b3b952ecee2f3564a216e8e7840c9dc1c57bf2a8b5906b037513bc
-  buildingPipelineSha256: dbb4ad1db8051e34b6948a72b69257bb83fd80fd38daf83a89806cea2be3d87a
+  vegetationPipelineSha256: 315076dff38bb58c8ae23f05cd65aeb3953fbe730c61ccb785d47de8ffa1db49
+  buildingPipelineSha256: 132cf7f768621becc0dab60b976f3d777b17f03323fc8f9f29bfd9d50dde4521
   worldMinimumMeters: {x: -2048, y: -2048}
   worldSizeMeters: {x: 4096, y: 4096}
   surfaceFeatures: {fileID: 2800000, guid: 694a8d7153f9db1f8ecd5293972f6d2b, type: 3}
@@ -39,10 +39,10 @@ MonoBehaviour:
   boundedSourcePointCount: 18834395
   canopyComponentCount: 323
   nearTreeInstanceCount: 22
-  midGroveClusterCount: 248
-  representedBuildingCount: 9695
-  orthophotoOnlyBuildingCount: 17984
-  buildingFootprintInflationMaximum: 1.1
+  midGroveClusterCount: 0
+  representedBuildingCount: 2875
+  orthophotoOnlyBuildingCount: 24804
+  buildingFootprintInflationMaximum: 1.099701
   terrainMeanAbsoluteErrorMeters: 0.10746558
   terrainP95ErrorMeters: 0.37577444
   terrainMaximumErrorMeters: 1.4611648

@@ -43,7 +43,7 @@ MonoBehaviour:
   terminalMaterial: {fileID: 2100000, guid: 6580fb1f9d337618f7d65c870a8b1caf, type: 2}
   hangarKitMaterial: {fileID: 2100000, guid: 480e5d209d593a03cdced17d71b4d007, type: 2}
   runwayMaterial: {fileID: 2100000, guid: 772deb61031def0e2d972c4803461aff, type: 2}
-  reservoirMaterial: {fileID: 2100000, guid: c76f8b87e43a2ca4ec89c353d2b09fdc, type: 2}
+  reservoirMaterial: {fileID: 0}
   vegetationMaterial: {fileID: 2100000, guid: 0fe0303ee1f1b78b11036da2332e443e, type: 2}
   sunAzimuthDegrees: 36.123043
   sunElevationDegrees: 58.62307
@@ -62,7 +62,8 @@ MonoBehaviour:
   cleanPlateCoversEveryReplacement: 1
   photographedShadowsReconciled: 1
   runwayMacroPatternRemoved: 1
-  minorWaterUsesTerrainMask: 1
+  waterEffectsDeferredToOrthophoto: 1
+  minorWaterUsesTerrainMask: 0
   rawSourcesExcluded: 1
   serializedReplacementCount: 2
   serializedRendererCount: 15

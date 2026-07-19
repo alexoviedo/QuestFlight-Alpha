@@ -121,7 +121,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void AirportCoreV4ReservoirBindingIsSingleOpaqueAndSourceAudited()
+        public void OrthophotoOnlyProductHasNoReservoirMaterialDependencyAndSourceRemainsAudited()
         {
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(ProductionEnvironmentRoot.PrefabAssetPath);
             Assert.That(environment, Is.Not.Null);
@@ -135,10 +135,19 @@ namespace QuestFlight.Editor.Tests
 
             Renderer renderer = contract.boulderReservoirSurface.GetComponent<Renderer>();
             Mesh mesh = contract.boulderReservoirSurface.sharedMesh;
-            Material material = renderer.sharedMaterial;
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(
+                AirportCoreV43ArtifactAuthoring.ReservoirMaterialPath);
             Assert.That(renderer, Is.SameAs(root.boulderReservoir));
-            Assert.That(material, Is.SameAs(manifest.reservoirMaterial));
-            Assert.That(renderer.sharedMaterials, Has.Length.EqualTo(1));
+            Assert.That(contract.waterPresentationMode,
+                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoOnly));
+            Assert.That(renderer.enabled, Is.False);
+            Assert.That(renderer.gameObject.activeSelf, Is.False);
+            Assert.That(renderer.sharedMaterials, Is.Empty);
+            Assert.That(root.v2ReservoirMaterial, Is.Null);
+            Assert.That(manifest.waterEffectsDeferredToOrthophoto, Is.True);
+            Assert.That(manifest.reservoirMaterial, Is.Null);
+            Assert.That(material, Is.Not.Null,
+                "The unbound V4 water source remains project-owned, licensed, and available for final polish.");
             Assert.That(AssetDatabase.GetAssetPath(mesh), Is.EqualTo(MeshPath));
             Assert.That(mesh.subMeshCount, Is.EqualTo(1));
             Assert.That(material.shader.name, Is.EqualTo(ProductionEnvironmentRoot.ProductionReservoirShaderName));
@@ -151,7 +160,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(material.GetTexture("_TerrainMacroAlbedo"), Is.Not.Null);
             Assert.That(material.GetTexture("_EnvironmentCube"), Is.Not.Null);
             Assert.That(environment.GetComponentsInChildren<Renderer>(true)
-                .Count(item => item.sharedMaterial == material), Is.EqualTo(1));
+                .SelectMany(item => item.sharedMaterials)
+                .Count(item => item == material), Is.Zero);
             Assert.That(renderer.GetComponentsInChildren<Camera>(true), Is.Empty);
             Assert.That(renderer.GetComponentsInChildren<ReflectionProbe>(true)
                 .Where(probe => probe.mode == ReflectionProbeMode.Realtime), Is.Empty);

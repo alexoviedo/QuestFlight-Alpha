@@ -53,12 +53,23 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void ReservoirUsesOrthophotoAwareOpaqueShaderWithoutSuppressionBlanket()
+        public void ReservoirEffectsAreDeferredWithoutLosingTheAuditedSourceAsset()
         {
             GameObject environment = LoadEnvironment();
             ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
             Renderer renderer = contract.boulderReservoirSurface.GetComponent<Renderer>();
-            Material material = renderer.sharedMaterial;
+            AirportCoreBenchmarkRoot root = environment.GetComponentInChildren<AirportCoreBenchmarkRoot>(true);
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(
+                AirportCoreV43ArtifactAuthoring.ReservoirMaterialPath);
+            Assert.That(contract.waterPresentationMode,
+                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoOnly));
+            Assert.That(renderer.enabled, Is.False);
+            Assert.That(renderer.gameObject.activeSelf, Is.False);
+            Assert.That(renderer.sharedMaterials, Is.Empty);
+            Assert.That(root.v2ReservoirMaterial, Is.Null);
+            Assert.That(root.manifest.waterEffectsDeferredToOrthophoto, Is.True);
+            Assert.That(root.manifest.reservoirMaterial, Is.Null);
+            Assert.That(material, Is.Not.Null);
             Assert.That(material.shader.name, Is.EqualTo(ProductionEnvironmentRoot.ProductionReservoirShaderName));
             Assert.That(material.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
             Assert.That(material.passCount, Is.EqualTo(1));
@@ -66,7 +77,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(material.GetTexture("_TerrainMacroAlbedo"), Is.Not.Null);
             Assert.That(material.GetFloat("_OrthophotoInfluence"), Is.InRange(0.65f, 0.85f));
             Assert.That(environment.GetComponentsInChildren<Renderer>(true)
-                .Count(item => item.sharedMaterial == material), Is.EqualTo(1));
+                .SelectMany(item => item.sharedMaterials)
+                .Count(item => item == material), Is.Zero);
             Assert.That(renderer.GetComponentsInChildren<Camera>(true), Is.Empty);
             Assert.That(renderer.GetComponentsInChildren<ReflectionProbe>(true)
                 .Where(item => item.mode == ReflectionProbeMode.Realtime), Is.Empty);
@@ -80,7 +92,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void MinorWaterUsesOneDeterministicTerrainMaskAndNoRibbonRenderers()
+        public void MinorWaterIsDeferredToOrthophotoOnlyAndHasNoRuntimeSamplingPath()
         {
             GameObject environment = LoadEnvironment();
             ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
@@ -92,13 +104,10 @@ namespace QuestFlight.Editor.Tests
                 Is.Empty);
             Assert.That(root.minorWaterTerrainEffect, Is.Not.Null);
             Material terrain = root.minorWaterTerrainEffect.sharedMaterial;
-            Texture mask = terrain.GetTexture("_AirportCoreMinorWaterMask");
-            Assert.That(mask, Is.Not.Null);
-            Assert.That(AssetDatabase.GetAssetPath(mask), Is.EqualTo(AirportCoreV43ArtifactAuthoring.MinorWaterMaskPath));
-            Assert.That(terrain.GetVector("_AirportCoreMinorWaterNearWorldMinInvSize"),
-                Is.EqualTo(new Vector4(-2000f, -2000f, 1f / 4000f, 1f / 4000f)));
-            Assert.That(terrain.GetVector("_AirportCoreMinorWaterMidWorldMinInvSize"),
-                Is.EqualTo(new Vector4(-6000f, -6000f, 1f / 12000f, 1f / 12000f)));
+            Assert.That(contract.waterPresentationMode,
+                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoOnly));
+            Assert.That(terrain.HasProperty("_AirportCoreMinorWaterMask"), Is.False);
+            Assert.That(ReadAsset(TerrainShaderPath), Does.Not.Contain("KBDUMinorWaterTerrainEffect"));
 
             Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(
                 AirportCoreV43ArtifactAuthoring.MinorWaterMaskPath);
@@ -109,7 +118,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(importer, Is.Not.Null);
             Assert.That(importer.sRGBTexture, Is.False);
             Assert.That(importer.mipmapEnabled, Is.True);
-            Assert.That(importer.streamingMipmaps, Is.True);
+            Assert.That(importer.streamingMipmaps, Is.True,
+                "The preserved authoring mask is not an active runtime terrain dependency.");
             Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));
             TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
             Assert.That(android.overridden, Is.True);

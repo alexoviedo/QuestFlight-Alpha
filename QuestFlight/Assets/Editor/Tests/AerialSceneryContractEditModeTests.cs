@@ -20,6 +20,12 @@ namespace QuestFlight.Editor.Tests
             "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Atlas.png";
         private const string VegetationSurfacePath =
             "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Surface.png";
+        private const string SurfaceFeaturesPath =
+            "Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_SurfaceFeatures_RGBA8.png";
+        private const string SurfaceNormalPath =
+            "Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_SurfaceNormal_RGBA8.png";
+        private const string CanopyNormalPath =
+            "Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_CanopyNormalOcclusion_RGBA8.png";
 
         [Test]
         public void RootHasNoPerFrameRuntimeMutationHook()
@@ -147,8 +153,8 @@ namespace QuestFlight.Editor.Tests
 
             AerialVegetationBatchRenderer batch = root.vegetationRoot
                 .GetComponentsInChildren<AerialVegetationBatchRenderer>(true).Single();
-            Assert.That(batch.NonEmptyDrawCount, Is.EqualTo(3));
-            Assert.That(batch.FullyInstancedTriangleCount, Is.EqualTo(17324));
+            Assert.That(batch.NonEmptyDrawCount, Is.EqualTo(2));
+            Assert.That(batch.FullyInstancedTriangleCount, Is.EqualTo(12860));
             Assert.That(batch.SharedMaterial, Is.Not.Null);
             Assert.That(batch.FixedOrientationOnly, Is.True);
             Assert.That(batch.CameraFacingBehavior, Is.False);
@@ -156,16 +162,15 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root.vegetationRoot.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
             Transform[] vegetationTransforms = root.vegetationRoot.GetComponentsInChildren<Transform>(true);
             Assert.That(vegetationTransforms.Length, Is.LessThanOrEqualTo(5),
-                "The three instanced batches may use only a bounded authored hierarchy.");
+                "The two near instanced batches and two map-only semantic anchors may use only a bounded authored hierarchy.");
             Assert.That(vegetationTransforms.Any(item =>
                 item.name.IndexOf("instance", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 item.name.IndexOf("tree_", StringComparison.OrdinalIgnoreCase) >= 0), Is.False,
                 "Vegetation must not create one GameObject per tree instance.");
 
-            Assert.That(root.buildingRoot.GetComponentsInChildren<MeshRenderer>(true), Has.Length.EqualTo(23));
-            Assert.That(root.buildingRoot.GetComponentsInChildren<LODGroup>(true), Has.Length.EqualTo(4));
-            Assert.That(root.buildingRoot.GetComponentsInChildren<LODGroup>(true)
-                .All(item => item.fadeMode == LODFadeMode.None && !item.animateCrossFading), Is.True);
+            Assert.That(root.buildingRoot.GetComponentsInChildren<MeshRenderer>(true), Has.Length.EqualTo(16));
+            Assert.That(root.buildingRoot.GetComponentsInChildren<LODGroup>(true), Is.Empty,
+                "Context buildings use fixed, closed footprint shells so their scale and silhouette cannot pop.");
 
             Material terrain = AssetDatabase.LoadAssetAtPath<Material>(TerrainMaterialPath);
             Assert.That(terrain, Is.Not.Null);
@@ -186,6 +191,16 @@ namespace QuestFlight.Editor.Tests
                 Assert.That(importer, Is.Not.Null, path);
                 Assert.That(importer.mipmapEnabled, Is.True, path);
                 Assert.That(importer.streamingMipmaps, Is.True, path);
+                Assert.That(importer.GetPlatformTextureSettings("Android").format,
+                    Is.EqualTo(TextureImporterFormat.ASTC_6x6), path);
+            }
+            foreach (string path in new[] { SurfaceFeaturesPath, SurfaceNormalPath, CanopyNormalPath })
+            {
+                TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                Assert.That(importer, Is.Not.Null, path);
+                Assert.That(importer.mipmapEnabled, Is.True, path);
+                Assert.That(importer.streamingMipmaps, Is.False,
+                    path + " uses a custom world-space UV contract and must remain fully resident.");
                 Assert.That(importer.GetPlatformTextureSettings("Android").format,
                     Is.EqualTo(TextureImporterFormat.ASTC_6x6), path);
             }

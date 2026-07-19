@@ -55,6 +55,9 @@ namespace QuestFlightLab.Environment
         public bool TryValidateContract(out string report)
         {
             List<string> failures = new List<string>();
+            Vector3[] probePositions = airportLightProbes != null
+                ? airportLightProbes.probePositions
+                : null;
             Require(string.Equals(name, GameObjectName, StringComparison.Ordinal),
                 "benchmark root name changed", failures);
             Require(manifest != null && manifest.TryValidate(out _),
@@ -116,15 +119,27 @@ namespace QuestFlightLab.Environment
             Require(benchmarkSun == null || benchmarkSun.lightmapBakeType == LightmapBakeType.Baked,
                 "benchmark static sun must be baked", failures);
 #endif
-            Require(airportLightProbes != null && airportLightProbes.probePositions.Length == 18,
+            Require(probePositions != null && probePositions.Length == 18,
                 "airport light-probe volume must contain the authored 18 probes", failures);
-            Require(airportLightProbes == null ||
-                    airportLightProbes.probePositions.Select(position => position.y).Distinct().Count() >= 2,
+            Require(probePositions == null ||
+                    probePositions.Select(position => position.y).Distinct().Count() >= 2,
                 "airport light probes must occupy at least two heights", failures);
             Require(airportReflectionProbe == null || airportReflectionProbe.mode == ReflectionProbeMode.Baked,
                 "airport reflection probe must be baked", failures);
-            Require(v2RunwayMaterial != null && v2ReservoirMaterial != null,
-                "V2 runway/reservoir A/B restoration materials are missing", failures);
+            Require(v2RunwayMaterial != null,
+                "V2 runway A/B restoration material is missing", failures);
+            if (manifest != null && manifest.waterEffectsDeferredToOrthophoto)
+            {
+                Require(v2ReservoirMaterial == null,
+                    "orthophoto-only water must not serialize the V2 reservoir A/B material", failures);
+                Require(boulderReservoir == null || boulderReservoir.sharedMaterials.Length == 0,
+                    "orthophoto-only water must not serialize a reservoir renderer material", failures);
+            }
+            else
+            {
+                Require(v2ReservoirMaterial != null,
+                    "V2 reservoir A/B restoration material is missing", failures);
+            }
             Require(v2SunIntensity > 0f,
                 "V2 sun A/B restoration state is missing", failures);
             Require(IsFinite(v2SunRotation.x) && IsFinite(v2SunRotation.y) &&

@@ -74,6 +74,8 @@ namespace QuestFlightLab.Environment
         public bool cleanPlateCoversEveryReplacement;
         public bool photographedShadowsReconciled;
         public bool runwayMacroPatternRemoved;
+        [Tooltip("True when current product water is intentionally represented by orthophoto only; source assets remain provenance, not runtime dependencies.")]
+        public bool waterEffectsDeferredToOrthophoto;
         public bool minorWaterUsesTerrainMask;
         public bool rawSourcesExcluded;
         public int serializedReplacementCount;
@@ -117,8 +119,22 @@ namespace QuestFlightLab.Environment
             Require(cleanPlateAlbedo != null && replacementMask != null && originalShadowMask != null,
                 "bounded clean-plate asset set is incomplete", failures);
             Require(terminalMaterial != null && hangarKitMaterial != null && runwayMaterial != null &&
-                    reservoirMaterial != null && vegetationMaterial != null,
+                    vegetationMaterial != null,
                 "benchmark shared materials are incomplete", failures);
+            if (waterEffectsDeferredToOrthophoto)
+            {
+                Require(reservoirMaterial == null,
+                    "orthophoto-only water must not serialize a reservoir material dependency", failures);
+                Require(!minorWaterUsesTerrainMask,
+                    "orthophoto-only water must not claim an active minor-water terrain mask", failures);
+            }
+            else
+            {
+                Require(reservoirMaterial != null,
+                    "authored reservoir presentation is missing its shared material", failures);
+                Require(minorWaterUsesTerrainMask,
+                    "minor-water benchmark is not terrain-mask based", failures);
+            }
             Require(reflectionCubemap != null, "benchmark reflection cubemap is missing", failures);
             Require(sunAzimuthDegrees >= 0f && sunAzimuthDegrees < 360f,
                 "sun azimuth is outside [0,360)", failures);
@@ -144,8 +160,6 @@ namespace QuestFlightLab.Environment
                 "photographed and 3D shadows are not reconciled", failures);
             Require(runwayMacroPatternRemoved,
                 "obsolete runway macro pattern remains active", failures);
-            Require(minorWaterUsesTerrainMask,
-                "minor-water benchmark is not terrain-mask based", failures);
             Require(rawSourcesExcluded, "raw source assets are not excluded", failures);
             Require(serializedReplacementCount == replacementSourceFeatureIds?.Length,
                 "replacement count differs from source feature inventory", failures);

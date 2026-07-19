@@ -48,6 +48,8 @@ namespace QuestFlight.Editor
         public const string BuildingReplacementPath = BuildingRoot + "/KBDU_BuildingBatchReplacementV1.json";
         public const string BuildingPrefabPath = BuildingRoot + "/KBDU_AerialBuildingsV1.prefab";
         public const string DeterministicBakeUtc = "2026-07-19T03:30:00Z";
+        public const string MacroSourceDescription =
+            "USGS/USDA NAIP 2019 public-domain bounded KBDU imagery pyramid";
 
         private static readonly string[] LegacyVegetationNames =
         {
@@ -79,13 +81,13 @@ namespace QuestFlight.Editor
         private static void Apply()
         {
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-            ConfigureRuntimeTexture(SurfaceFeaturesPath, true, TextureImporterFormat.ASTC_6x6);
-            ConfigureRuntimeTexture(SurfaceNormalPath, true, TextureImporterFormat.ASTC_6x6);
-            ConfigureRuntimeTexture(CanopyNormalPath, true, TextureImporterFormat.ASTC_6x6);
-            ConfigureRuntimeTexture(VegetationHandoffPath, false, TextureImporterFormat.R8);
-            ConfigureRuntimeTexture(VegetationAtlasPath, true, TextureImporterFormat.ASTC_6x6,
+            ConfigureRuntimeTexture(SurfaceFeaturesPath, true, false, TextureImporterFormat.ASTC_6x6);
+            ConfigureRuntimeTexture(SurfaceNormalPath, true, false, TextureImporterFormat.ASTC_6x6);
+            ConfigureRuntimeTexture(CanopyNormalPath, true, false, TextureImporterFormat.ASTC_6x6);
+            ConfigureRuntimeTexture(VegetationHandoffPath, false, false, TextureImporterFormat.R8);
+            ConfigureRuntimeTexture(VegetationAtlasPath, true, true, TextureImporterFormat.ASTC_6x6,
                 sRgb: true, preserveAlphaCoverage: true, anisotropy: 2);
-            ConfigureRuntimeTexture(VegetationSurfacePath, true, TextureImporterFormat.ASTC_6x6,
+            ConfigureRuntimeTexture(VegetationSurfacePath, true, true, TextureImporterFormat.ASTC_6x6,
                 anisotropy: 2);
 
             TextAsset lidarSource = LoadRequired<TextAsset>(LidarManifestPath);
@@ -123,6 +125,7 @@ namespace QuestFlight.Editor
             {
                 ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
                 if (contract == null) throw new InvalidOperationException("Production environment contract is missing.");
+                ConfigureOrthophotoOnlyWater(environment, contract);
 
                 AerialSceneryRoot[] existingAerialRoots =
                     environment.GetComponentsInChildren<AerialSceneryRoot>(true);
@@ -348,6 +351,7 @@ namespace QuestFlight.Editor
         private static void ConfigureRuntimeTexture(
             string path,
             bool mipmaps,
+            bool streamingMipmaps,
             TextureImporterFormat androidFormat,
             bool sRgb = false,
             bool preserveAlphaCoverage = false,
@@ -360,7 +364,7 @@ namespace QuestFlight.Editor
             importer.mipmapEnabled = mipmaps;
             importer.mipMapsPreserveCoverage = preserveAlphaCoverage;
             if (preserveAlphaCoverage) importer.alphaTestReferenceValue = 0.42f;
-            importer.streamingMipmaps = mipmaps;
+            importer.streamingMipmaps = streamingMipmaps;
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.filterMode = mipmaps ? FilterMode.Trilinear : FilterMode.Bilinear;
             importer.anisoLevel = anisotropy;
@@ -373,6 +377,47 @@ namespace QuestFlight.Editor
             android.compressionQuality = 100;
             importer.SetPlatformTextureSettings(android);
             importer.SaveAndReimport();
+        }
+
+        private static void ConfigureOrthophotoOnlyWater(
+            GameObject environment,
+            ProductionEnvironmentRoot contract)
+        {
+            AirportCoreBenchmarkRoot benchmark = environment
+                .GetComponentsInChildren<AirportCoreBenchmarkRoot>(true).Single();
+            Renderer reservoir = contract.boulderReservoirSurface == null
+                ? null
+                : contract.boulderReservoirSurface.GetComponent<Renderer>();
+            Renderer shore = contract.boulderReservoirShoreBank == null
+                ? null
+                : contract.boulderReservoirShoreBank.GetComponent<Renderer>();
+            if (reservoir == null)
+                throw new InvalidOperationException("The authoritative Boulder Reservoir renderer is missing.");
+
+            contract.waterPresentationMode = ProductionWaterPresentationMode.OrthophotoOnly;
+            contract.macroSource = MacroSourceDescription;
+            DisableAndClearMaterials(reservoir);
+            if (shore != null) DisableAndClearMaterials(shore);
+
+            benchmark.boulderReservoir = reservoir;
+            benchmark.v2ReservoirMaterial = null;
+            if (benchmark.manifest == null)
+                throw new InvalidOperationException("The airport-core benchmark manifest is missing.");
+            benchmark.manifest.reservoirMaterial = null;
+            benchmark.manifest.waterEffectsDeferredToOrthophoto = true;
+            benchmark.manifest.minorWaterUsesTerrainMask = false;
+
+            EditorUtility.SetDirty(benchmark.manifest);
+            EditorUtility.SetDirty(benchmark);
+            EditorUtility.SetDirty(contract);
+        }
+
+        private static void DisableAndClearMaterials(Renderer renderer)
+        {
+            renderer.enabled = false;
+            renderer.gameObject.SetActive(false);
+            renderer.sharedMaterials = Array.Empty<Material>();
+            EditorUtility.SetDirty(renderer);
         }
 
         private static void DisableAuthoredLegacy(IEnumerable<Transform> roots)
@@ -467,9 +512,16 @@ namespace QuestFlight.Editor
             if (terrain?.geometric_integration_eligibility == null ||
                 !string.Equals(terrain.geometric_integration_eligibility.status, "ELIGIBLE", StringComparison.Ordinal))
                 throw new InvalidOperationException("Near terrain is not geometrically eligible.");
-            if (vegetation?.statistics?.rejection_counters == null || vegetation.batch_count != 3)
+            if (vegetation?.statistics?.rejection_counters == null ||
+                vegetation.batch_count != 2 ||
+                vegetation.instance_count != 22 ||
+                vegetation.statistics.tier0_selected != 3 ||
+                vegetation.statistics.tier1_selected != 19 ||
+                vegetation.statistics.tier2_selected != 0 ||
+                vegetation.statistics.tier2_geometry_draws != 0 ||
+                vegetation.statistics.tier2_terrain_shading_owned_pixels <= 0)
                 throw new InvalidOperationException("Vegetation distribution contract is incomplete.");
-            if (buildings?.statistics == null || buildings.statistics.geometry_building_count != 9695 ||
+            if (buildings?.statistics == null || buildings.statistics.geometry_building_count != 2875 ||
                 buildings.statistics.maximum_footprint_area_ratio > 1.100001f)
                 throw new InvalidOperationException("Building spatial contract changed.");
             if (replacement?.legacy_group_ids_to_disable == null ||
@@ -500,6 +552,7 @@ namespace QuestFlight.Editor
         [Serializable] private sealed class VegetationDistributionJson
         {
             public int batch_count;
+            public int instance_count;
             public VegetationStatistics statistics;
         }
         [Serializable] private sealed class VegetationStatistics
@@ -507,6 +560,8 @@ namespace QuestFlight.Editor
             public int tier0_selected;
             public int tier1_selected;
             public int tier2_selected;
+            public int tier2_geometry_draws;
+            public int tier2_terrain_shading_owned_pixels;
             public VegetationRejections rejection_counters;
         }
         [Serializable] private sealed class VegetationRejections { public int grove_components; }
