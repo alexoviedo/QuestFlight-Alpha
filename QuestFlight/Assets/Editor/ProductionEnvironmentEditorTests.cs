@@ -32,7 +32,10 @@ namespace QuestFlightLab.EditorTests
                 Assert.That(contract.bakedRunwayThresholdStripeQuadCount, Is.EqualTo(12));
                 Assert.That(contract.bakedRunwayMarkingQuadCount, Is.EqualTo(26));
                 Assert.That(contract.runwayMarkings.GetComponent<MeshFilter>().sharedMesh.triangles.Length / 3, Is.EqualTo(52));
-                Assert.That(contract.retainedWaterBodyCount, Is.EqualTo(1));
+                Assert.That(contract.retainedWaterBodyCount, Is.GreaterThan(1));
+                Assert.That(contract.waterFeatureManifestV2, Is.Not.Null);
+                Assert.That(contract.otherWaterFeaturesSurfaceV2, Is.Null);
+                Assert.That(contract.otherWaterFeaturesShoreBankV2, Is.Null);
                 Assert.That(contract.boulderReservoirSurface, Is.Not.Null);
                 Assert.That(contract.immutableFarTerrain.GetComponentsInChildren<LODGroup>(true), Is.Empty);
                 Assert.That(HasComponentNamed(contract.immutableFarTerrain.gameObject, "RealKbduBatchDistanceCuller"), Is.False);
@@ -188,43 +191,64 @@ namespace QuestFlightLab.EditorTests
         {
             ProductionEnvironmentRoot contract = LoadPrefab().GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.uniqueMacroAlbedo, Is.Not.Null);
-            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(2048),
+            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(4096),
                 "The bounded mid-zone macro texture is authored at the standalone recovery target resolution");
             Assert.That(contract.macroRepeatedTileSimilarity, Is.LessThan(0.985f));
             TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo));
             Assert.That(importer.mipmapEnabled, Is.True);
+            Assert.That(importer.streamingMipmaps, Is.False,
+                "Custom world-space macro UVs require bounded full residency.");
             Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Trilinear));
             Assert.That(importer.anisoLevel, Is.GreaterThanOrEqualTo(4));
             Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));
             TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
             Assert.That(android.overridden, Is.True);
-            Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_6x6));
+            Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_10x10),
+                "The 12 km fallback uses ASTC 10x10 to fund four sharper ASTC 6x6 hot quadrants.");
         }
 
         [Test]
         public void ProductionShadersCompileAndAreBoundWithoutFallback()
         {
             Shader ground = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionMacroGround.shader");
+                "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader");
             Shader marking = AssetDatabase.LoadAssetAtPath<Shader>(
                 "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader");
-            Shader water = AssetDatabase.LoadAssetAtPath<Shader>(
+            Shader reservoir = AssetDatabase.LoadAssetAtPath<Shader>(
+                "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUReservoirWaterV4.shader");
+            Shader secondaryWater = AssetDatabase.LoadAssetAtPath<Shader>(
                 "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionStableWater.shader");
             Assert.That(ground, Is.Not.Null);
             Assert.That(marking, Is.Not.Null);
-            Assert.That(water, Is.Not.Null);
+            Assert.That(reservoir, Is.Not.Null);
+            Assert.That(secondaryWater, Is.Not.Null);
             Assert.That(ground.isSupported, Is.True);
             Assert.That(marking.isSupported, Is.True);
-            Assert.That(water.isSupported, Is.True);
+            Assert.That(reservoir.isSupported, Is.True);
+            Assert.That(secondaryWater.isSupported, Is.True);
             Assert.That(ShaderUtil.GetShaderMessages(ground).Where(IsError).Select(message => message.message), Is.Empty);
             Assert.That(ShaderUtil.GetShaderMessages(marking).Where(IsError).Select(message => message.message), Is.Empty);
-            Assert.That(ShaderUtil.GetShaderMessages(water).Where(IsError).Select(message => message.message), Is.Empty);
+            Assert.That(ShaderUtil.GetShaderMessages(reservoir).Where(IsError).Select(message => message.message), Is.Empty);
+            Assert.That(ShaderUtil.GetShaderMessages(secondaryWater).Where(IsError).Select(message => message.message), Is.Empty);
             ProductionEnvironmentRoot contract = LoadPrefab().GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.nearTerrainMeshes[0].GetComponent<Renderer>().sharedMaterial.shader, Is.SameAs(ground));
             Assert.That(contract.runwayMarkings.sharedMaterial.shader, Is.SameAs(marking));
-            Assert.That(contract.boulderReservoirSurface.GetComponent<Renderer>().sharedMaterial.shader, Is.SameAs(water));
-            Assert.That(contract.boulderReservoirSurface.GetComponent<Renderer>().sharedMaterial.renderQueue,
-                Is.LessThan((int)RenderQueue.Transparent));
+            Renderer reservoirRenderer = contract.boulderReservoirSurface.GetComponent<Renderer>();
+            Assert.That(reservoirRenderer.enabled, Is.False);
+            Assert.That(reservoirRenderer.sharedMaterials, Is.Empty,
+                "Orthophoto-only product water must not retain a serialized material dependency.");
+            Material reservoirSource = AssetDatabase.LoadAssetAtPath<Material>(
+                "Assets/Production/Environment/AirportCoreV4/Water/Materials/AirportCoreReservoir_V4.mat");
+            Assert.That(reservoirSource, Is.Not.Null,
+                "The unbound historical water source remains available for provenance and later polish.");
+            Assert.That(reservoirSource.shader, Is.SameAs(reservoir));
+            Assert.That(reservoirSource.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
+            Assert.That(reservoirSource.passCount, Is.EqualTo(1));
+            Assert.That(contract.GetComponentsInChildren<Renderer>(true)
+                .SelectMany(renderer => renderer.sharedMaterials)
+                .Where(material => material != null)
+                .Any(material => material.shader == secondaryWater), Is.False,
+                "The obsolete minor-water mesh shader must not remain bound in the product hierarchy.");
         }
 
         private static bool IsError(ShaderMessage message) =>

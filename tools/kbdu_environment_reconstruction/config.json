@@ -1,0 +1,132 @@
+{
+  "aircraft_calibration": {
+    "gear_contacts_unity_meters": {
+      "main_left": [-1.28, 0.0, -0.2],
+      "main_right": [1.28, 0.0, -0.2],
+      "nose": [0.0, 0.0, 2.35]
+    },
+    "model_forward_axis_correction_degrees": 90.0,
+    "source_model_axes": {
+      "forward": "-Y",
+      "right": "+X",
+      "up": "+Z"
+    },
+    "unity_imported_forward_axis_before_correction": "-X",
+    "unity_runtime_axes_after_correction": {
+      "forward": "+Z",
+      "right": "+X",
+      "up": "+Y"
+    }
+  },
+  "building_cell_size_meters": 250.0,
+  "building_zones_meters": [
+    [0.0, 2000.0],
+    [2000.0, 4000.0],
+    [4000.0, 6000.0]
+  ],
+  "inputs": {
+    "context": "QuestFlight/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_reference_context.json",
+    "context_recipe": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ContextBatchRecipe.json",
+    "osm_building_source_6km": "tools/kbdu_environment_reconstruction/osm_buildings_6km_source.json",
+    "terrain_rings": "QuestFlight/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_terrain_rings.json",
+    "vegetation_coverage_v2": "tools/kbdu_environment_reconstruction/vegetation_coverage_report.json",
+    "vegetation_source_v2": "tools/kbdu_environment_reconstruction/vegetation_source_v2.json",
+    "vegetation_species_v2": "tools/kbdu_environment_reconstruction/vegetation_species_library_v2.json",
+    "parked_aircraft_source_manifest": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraftSourceManifest.json"
+  },
+  "parking_stands": [
+    {
+      "active": false,
+      "heading_degrees": 0.0,
+      "id": "KBDU-TIEDOWN-01",
+      "source_apron_osm_id": 77452627,
+      "source_taxilane_osm_id": 452355002,
+      "x_meters": -388.0,
+      "z_meters": -188.0
+    },
+    {
+      "active": true,
+      "heading_degrees": 0.0,
+      "id": "KBDU-TIEDOWN-02",
+      "source_apron_osm_id": 77452627,
+      "source_taxilane_osm_id": 452355004,
+      "x_meters": -360.0,
+      "z_meters": -188.0
+    },
+    {
+      "active": true,
+      "heading_degrees": 0.0,
+      "id": "KBDU-TIEDOWN-03",
+      "source_apron_osm_id": 77452627,
+      "source_taxilane_osm_id": 452355007,
+      "x_meters": -300.5,
+      "z_meters": -188.0
+    },
+    {
+      "active": true,
+      "heading_degrees": 0.0,
+      "id": "KBDU-TIEDOWN-04",
+      "source_apron_osm_id": 77452627,
+      "source_taxilane_osm_id": 452355011,
+      "x_meters": -264.5,
+      "z_meters": -188.0
+    },
+    {
+      "active": false,
+      "heading_degrees": 0.0,
+      "id": "KBDU-TIEDOWN-05",
+      "source_apron_osm_id": 77452627,
+      "source_taxilane_osm_id": 452354998,
+      "x_meters": -370.0,
+      "z_meters": -160.0
+    }
+  ],
+  "vegetation": {
+    "exclusions": {
+      "aircraft_parking_clearance_meters": 8.0,
+      "apron_clearance_meters": 5.0,
+      "building_clearance_meters": 4.0,
+      "open_water_clearance_meters": 5.0,
+      "road_clearance_meters": 8.0,
+      "runway_safety_clearance_meters": 30.0,
+      "taxiway_clearance_meters": 12.0
+    },
+    "lod_policy": [
+      {
+        "id": "LOD0",
+        "maximum_distance_meters": 250.0,
+        "minimum_distance_meters": 0.0,
+        "representation": "species_3d_high",
+        "target_triangles_per_instance": [1000, 3000]
+      },
+      {
+        "id": "LOD1",
+        "maximum_distance_meters": 600.0,
+        "minimum_distance_meters": 250.0,
+        "representation": "species_3d_simplified",
+        "target_triangles_per_instance": [250, 800]
+      },
+      {
+        "id": "LOD2",
+        "maximum_distance_meters": 1500.0,
+        "minimum_distance_meters": 600.0,
+        "representation": "fixed_canopy_cluster_or_multi_angle_impostor",
+        "target_triangles_per_instance": [24, 160]
+      },
+      {
+        "id": "FAR",
+        "maximum_distance_meters": null,
+        "minimum_distance_meters": 1500.0,
+        "representation": "orthophoto_only",
+        "target_triangles_per_instance": [0, 0]
+      }
+    ],
+    "species_slots": [
+      "cottonwood_like_deciduous",
+      "general_deciduous",
+      "willow_riparian",
+      "sparse_conifer",
+      "shrub_cluster"
+    ]
+  }
+}

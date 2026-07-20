@@ -1,0 +1,129 @@
+{
+  "cells": {
+    "bark": {
+      "grid": [
+        0,
+        0
+      ],
+      "uv_rect": [
+        0.00292969,
+        0.00292969,
+        0.24707031,
+        0.49707031
+      ]
+    },
+    "coarse_canopy": {
+      "grid": [
+        2,
+        1
+      ],
+      "uv_rect": [
+        0.50292969,
+        0.50292969,
+        0.74707031,
+        0.99707031
+      ]
+    },
+    "coarse_canopy_b": {
+      "grid": [
+        3,
+        1
+      ],
+      "uv_rect": [
+        0.75292969,
+        0.50292969,
+        0.99707031,
+        0.99707031
+      ]
+    },
+    "cottonwood": {
+      "grid": [
+        1,
+        0
+      ],
+      "uv_rect": [
+        0.25292969,
+        0.00292969,
+        0.49707031,
+        0.49707031
+      ]
+    },
+    "general_deciduous": {
+      "grid": [
+        3,
+        0
+      ],
+      "uv_rect": [
+        0.75292969,
+        0.00292969,
+        0.99707031,
+        0.49707031
+      ]
+    },
+    "regional_shrub": {
+      "grid": [
+        1,
+        1
+      ],
+      "uv_rect": [
+        0.25292969,
+        0.50292969,
+        0.49707031,
+        0.99707031
+      ]
+    },
+    "sparse_conifer": {
+      "grid": [
+        0,
+        1
+      ],
+      "uv_rect": [
+        0.00292969,
+        0.50292969,
+        0.24707031,
+        0.99707031
+      ]
+    },
+    "willow_riparian": {
+      "grid": [
+        2,
+        0
+      ],
+      "uv_rect": [
+        0.50292969,
+        0.00292969,
+        0.74707031,
+        0.49707031
+      ]
+    }
+  },
+  "color_alpha": {
+    "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Atlas.png",
+    "sha256": "1f22d3c2579cbd0f316032700f79da96a605dce973dc06afbdd9ddc517684d05"
+  },
+  "dimensions": [
+    1024,
+    1024
+  ],
+  "external_assets": [],
+  "license": "Project-authored",
+  "rendering": {
+    "alpha_mode": "clip",
+    "broad_alpha_blend": false,
+    "camera_facing": false
+  },
+  "schema": "questflight.aerial-scenery-v1.vegetation-atlas.v1",
+  "source": "Deterministic Pillow vector primitives in generate_vegetation_atlas.py",
+  "status": "PROJECT_AUTHORED_DETERMINISTIC_ALPHA_TEST_ATLAS",
+  "supersample": 2,
+  "surface_packed": {
+    "channels": {
+      "a": "ambient_occlusion",
+      "b": "roughness",
+      "g": "tangent_normal_y",
+      "r": "tangent_normal_x"
+    },
+    "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Surface.png",
+    "sha256": "4e5c35568193f62ed273d5e458ac86a9f4a4fc13f1c82accf9219255ef84bdc2"
+  }
+}

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using QuestFlightLab.Environment;
+using QuestFlightLab.Runtime;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -23,7 +24,15 @@ namespace QuestFlightLab.Tests.EditMode
                 ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
                 Assert.That(contract, Is.Not.Null);
                 Assert.That(contract.TryValidateContract(out string report), Is.True, report);
-                Assert.That(contract.bakeToolVersion, Is.EqualTo("standalone_environment_art_v2"));
+                AerialSceneryRoot aerial = root.GetComponentInChildren<AerialSceneryRoot>(true);
+                Assert.That(aerial, Is.Not.Null);
+                Assert.That(aerial.TryValidateContract(out string aerialReport), Is.True, aerialReport);
+                Assert.That(contract.bakeToolVersion, Is.EqualTo("aerial_scenery_representation_v1"));
+                Assert.That(contract.authoritativeTerrainSurface, Is.Not.Null);
+                Assert.That(contract.productionPlacementManifest, Is.Not.Null);
+                Assert.That(contract.productionPlacementManifest.entries.Length, Is.EqualTo(28336));
+                Assert.That(contract.airportParkingStandManifest, Is.Not.Null);
+                Assert.That(contract.airportParkingStandManifest.stands.Length, Is.EqualTo(5));
                 Assert.That(contract.bakeUtc, Is.Not.Empty);
             });
         }
@@ -114,21 +123,33 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void EssentialWaterRetainsOnlyBoulderReservoirAndOpaqueStableShoreInterface()
+        public void WaterIsExplicitlyDeferredToOrthophotoOnlyWithoutActiveWaterRenderers()
         {
             WithInstance(root =>
             {
                 ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
-                Assert.That(contract.retainedWaterBodyCount, Is.EqualTo(1));
-                Assert.That(contract.discardedMinorWaterFeatureCount, Is.GreaterThan(100));
+                Assert.That(contract.waterPresentationMode,
+                    Is.EqualTo(ProductionWaterPresentationMode.OrthophotoOnly));
+                Assert.That(contract.retainedWaterBodyCount, Is.GreaterThan(1));
+                Assert.That(contract.discardedMinorWaterFeatureCount, Is.GreaterThan(0));
+                Assert.That(contract.waterFeatureManifestV2, Is.Not.Null);
+                Assert.That(contract.otherWaterFeaturesSurfaceV2, Is.Null);
+                Assert.That(contract.otherWaterFeaturesShoreBankV2, Is.Null);
                 Assert.That(contract.essentialWater.GetComponentsInChildren<MeshRenderer>(true).Length, Is.EqualTo(2),
-                    "One surface and one natural shoreline bank are expected.");
+                    "Only the authoritative reservoir and its inactive bank source may remain.");
                 Assert.That(contract.boulderReservoirSurface.name, Does.Contain("BoulderReservoir"));
                 Assert.That(contract.boulderReservoirShoreBank.name, Does.Contain("ShoreBank"));
-                Material water = contract.boulderReservoirSurface.GetComponent<Renderer>().sharedMaterial;
-                Assert.That(water.shader.name, Is.EqualTo(ProductionEnvironmentRoot.ProductionWaterShaderName));
-                Assert.That(water.renderQueue, Is.LessThan((int)RenderQueue.Transparent));
-                Assert.That(water.GetFloat("_ZWrite"), Is.GreaterThan(0.5f));
+                Renderer reservoirRenderer = contract.boulderReservoirSurface.GetComponent<Renderer>();
+                Renderer shoreRenderer = contract.boulderReservoirShoreBank.GetComponent<Renderer>();
+                Assert.That(reservoirRenderer.enabled, Is.False);
+                Assert.That(reservoirRenderer.gameObject.activeInHierarchy, Is.False);
+                Assert.That(reservoirRenderer.sharedMaterials, Is.Empty,
+                    "A disabled reservoir must not retain a serialized runtime material dependency.");
+                Assert.That(shoreRenderer.enabled, Is.False);
+                Assert.That(shoreRenderer.gameObject.activeInHierarchy, Is.False);
+                Assert.That(shoreRenderer.sharedMaterials, Is.Empty,
+                    "A disabled shore bank must not retain a serialized runtime material dependency.");
+                Assert.That(contract.boulderReservoirSurface.GetComponent<Renderer>(), Is.SameAs(reservoirRenderer));
                 Assert.That(contract.boulderReservoirShorelineClosed, Is.True);
                 Assert.That(contract.boulderReservoirSmoothedShorelineVertexCount,
                     Is.EqualTo(contract.boulderReservoirSourceShorelineVertexCount * 2));
@@ -137,6 +158,14 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(contract.minimumWaterTerrainSeparationMeters,
                     Is.GreaterThanOrEqualTo(ProductionEnvironmentRoot.MinimumAcceptedWaterTerrainSeparationMeters));
                 Assert.That(contract.essentialWater.GetComponentsInChildren<LODGroup>(true), Is.Empty);
+                AirportCoreBenchmarkRoot benchmark = root.GetComponentInChildren<AirportCoreBenchmarkRoot>(true);
+                Assert.That(benchmark.v2ReservoirMaterial, Is.Null);
+                Assert.That(benchmark.manifest.waterEffectsDeferredToOrthophoto, Is.True);
+                Assert.That(benchmark.manifest.reservoirMaterial, Is.Null);
+                Assert.That(benchmark.manifest.minorWaterUsesTerrainMask, Is.False);
+                Assert.That(benchmark.minorWaterTerrainEffect.sharedMaterial
+                    .HasProperty("_AirportCoreMinorWaterMask"), Is.False,
+                    "Orthophoto-only water must remove the active minor-water sampling path.");
             });
         }
 
@@ -146,18 +175,20 @@ namespace QuestFlightLab.Tests.EditMode
             GameObject prefab = LoadPrefab();
             ProductionEnvironmentRoot contract = prefab.GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.uniqueMacroAlbedo, Is.Not.Null);
-            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(2048));
-            Assert.That(contract.uniqueMacroAlbedo.height, Is.EqualTo(2048));
+            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(4096));
+            Assert.That(contract.uniqueMacroAlbedo.height, Is.EqualTo(4096));
             Assert.That(contract.macroRepeatedTileSimilarity, Is.LessThan(0.985f));
             string path = AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo);
             TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);
             Assert.That(importer.mipmapEnabled, Is.True);
+            Assert.That(importer.streamingMipmaps, Is.False,
+                "Custom world-space macro UVs require bounded full residency.");
             Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Trilinear));
             Assert.That(importer.anisoLevel, Is.GreaterThanOrEqualTo(4));
             Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));
             TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
             Assert.That(android.overridden, Is.True);
-            Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_6x6));
+            Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_10x10));
             string absolute = Path.Combine(Directory.GetParent(Application.dataPath).FullName, path);
             Assert.That(File.Exists(absolute), Is.True);
         }
@@ -200,24 +231,160 @@ namespace QuestFlightLab.Tests.EditMode
         [Test]
         public void ProductionShadersHaveNoCompilerErrorsOrFallbackAssignment()
         {
-            Shader ground = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionMacroGround.shader");
-            Shader marking = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader");
-            Assert.That(ground, Is.Not.Null);
-            Assert.That(marking, Is.Not.Null);
-            Assert.That(ground.isSupported, Is.True);
-            Assert.That(marking.isSupported, Is.True);
-            Assert.That(ShaderUtil.GetShaderMessages(ground)
-                .Where(item => string.Equals(item.severity.ToString(), "Error", StringComparison.OrdinalIgnoreCase))
-                .Select(item => item.message), Is.Empty);
-            Assert.That(ShaderUtil.GetShaderMessages(marking)
-                .Where(item => string.Equals(item.severity.ToString(), "Error", StringComparison.OrdinalIgnoreCase))
-                .Select(item => item.message), Is.Empty);
+            string[] shaderPaths =
+            {
+                "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionMacroGround.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionSparseVegetation.shader"
+            };
+            Shader[] shaders = shaderPaths
+                .Select(path => AssetDatabase.LoadAssetAtPath<Shader>(path))
+                .ToArray();
+            for (int index = 0; index < shaders.Length; index++)
+            {
+                Shader shader = shaders[index];
+                Assert.That(shader, Is.Not.Null, shaderPaths[index]);
+                Assert.That(shader.isSupported, Is.True, shaderPaths[index]);
+                Assert.That(ShaderUtil.GetShaderMessages(shader)
+                    .Where(item => string.Equals(item.severity.ToString(), "Error", StringComparison.OrdinalIgnoreCase))
+                    .Select(item => item.message), Is.Empty, shaderPaths[index]);
+            }
+            Shader ground = shaders[0];
+            Shader marking = shaders[2];
+            Material groundPropertyProbe = new Material(ground);
+            try
+            {
+                Assert.That(groundPropertyProbe.HasProperty("_NearSourceNormal"), Is.True);
+                Assert.That(groundPropertyProbe.HasProperty("_NearSourceNormalStrength"), Is.True);
+                Assert.That(groundPropertyProbe.HasProperty("_NearSourceNormalFadeStartEnd"), Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(groundPropertyProbe);
+            }
             GameObject prefab = LoadPrefab();
             ProductionEnvironmentRoot contract = prefab.GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.nearTerrainMeshes[0].GetComponent<Renderer>().sharedMaterial.shader, Is.SameAs(ground));
             Assert.That(contract.runwayMarkings.sharedMaterial.shader, Is.SameAs(marking));
+        }
+
+        [Test]
+        public void CoreEnvironmentShadersCarrySinglePassStereoAndInstancingState()
+        {
+            string[] shaderPaths =
+            {
+                "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader",
+                "Assets/Production/Environment/PhotorealTerrainV1/KBDU_OsmBuildingContext.shader",
+                "Assets/Production/Environment/PhotorealTerrainV1/KBDU_OpaqueVegetationContext.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionMacroGround.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionSparseVegetation.shader",
+                "Assets/Resources/QuestFlightLab/Environment/Shaders/AircraftRunwayBlobShadow.shader"
+            };
+            string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+            string[] requiredTokens =
+            {
+                "#pragma multi_compile_instancing",
+                "UNITY_VERTEX_INPUT_INSTANCE_ID",
+                "UNITY_VERTEX_OUTPUT_STEREO",
+                "UNITY_SETUP_INSTANCE_ID",
+                "UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO",
+                "UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX"
+            };
+
+            foreach (string assetPath in shaderPaths)
+            {
+                string source = File.ReadAllText(Path.Combine(projectRoot, assetPath));
+                foreach (string token in requiredTokens)
+                    Assert.That(source, Does.Contain(token), $"{assetPath} must preserve {token} for Quest single-pass instanced rendering.");
+            }
+
+            string terrainSource = File.ReadAllText(Path.Combine(projectRoot, shaderPaths[0]));
+            Assert.That(terrainSource, Does.Contain("tex2Dgrad(_NearSourceNormal, nearUv"));
+            Assert.That(terrainSource, Does.Contain("nearWeight * _NearSourceNormalStrength"));
+            Assert.That(terrainSource, Does.Contain("_NearSourceNormalFadeStartEnd"));
+        }
+
+        [TestCase(QuestTemporalVisualGateRecorder.SkyOnlyIsolationProfile)]
+        [TestCase(QuestTemporalVisualGateRecorder.WaterOffIsolationProfile)]
+        [TestCase(QuestTemporalVisualGateRecorder.BuildingsVegetationOffIsolationProfile)]
+        [TestCase(QuestTemporalVisualGateRecorder.ReducedTextureIsolationProfile)]
+        public void QuestDiagnosticIsolationProfilesAreBoundedAndRestorable(string profile)
+        {
+            WithInstance(root =>
+            {
+                ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
+                Renderer[] renderers = contract.GetComponentsInChildren<Renderer>(true);
+                bool[] before = renderers.Select(renderer => renderer.enabled).ToArray();
+                int mipLimitBefore = QualitySettings.globalTextureMipmapLimit;
+                MethodInfo apply = typeof(QuestTemporalVisualGateRecorder).GetMethod(
+                    "ApplyDiagnosticIsolation",
+                    BindingFlags.Static | BindingFlags.NonPublic);
+                MethodInfo restore = typeof(QuestTemporalVisualGateRecorder).GetMethod(
+                    "RestoreDiagnosticIsolation",
+                    BindingFlags.Static | BindingFlags.NonPublic);
+                Assert.That(apply, Is.Not.Null);
+                Assert.That(restore, Is.Not.Null);
+                object state = null;
+                try
+                {
+                    state = apply.Invoke(null, new object[] { profile, contract });
+                    for (int index = 0; index < renderers.Length; index++)
+                    {
+                        Renderer renderer = renderers[index];
+                        bool wasEnabled = before[index];
+                        if (profile == QuestTemporalVisualGateRecorder.SkyOnlyIsolationProfile)
+                        {
+                            if (wasEnabled) Assert.That(renderer.enabled, Is.False, renderer.name);
+                        }
+                        else if (profile == QuestTemporalVisualGateRecorder.WaterOffIsolationProfile)
+                        {
+                            bool isWater = renderer.transform == contract.essentialWater ||
+                                           renderer.transform.IsChildOf(contract.essentialWater);
+                            Assert.That(renderer.enabled, Is.EqualTo(wasEnabled && !isWater), renderer.name);
+                        }
+                        else if (profile == QuestTemporalVisualGateRecorder.BuildingsVegetationOffIsolationProfile)
+                        {
+                            bool isBuildingOrVegetation = IsBuildingOrVegetationForDiagnostic(renderer.transform);
+                            Assert.That(renderer.enabled, Is.EqualTo(wasEnabled && !isBuildingOrVegetation), renderer.name);
+                            if (HasAncestorPrefix(renderer.transform, "parked_aircraft_"))
+                                Assert.That(renderer.enabled, Is.EqualTo(wasEnabled), "Parked aircraft are not part of the buildings/vegetation isolation.");
+                        }
+                        else
+                        {
+                            Assert.That(renderer.enabled, Is.EqualTo(wasEnabled), renderer.name);
+                        }
+                    }
+
+                    if (profile == QuestTemporalVisualGateRecorder.ReducedTextureIsolationProfile)
+                        Assert.That(QualitySettings.globalTextureMipmapLimit, Is.GreaterThanOrEqualTo(1));
+                    else
+                        Assert.That(QualitySettings.globalTextureMipmapLimit, Is.EqualTo(mipLimitBefore));
+                }
+                finally
+                {
+                    if (state != null) restore.Invoke(null, new[] { state });
+                }
+
+                Assert.That(QualitySettings.globalTextureMipmapLimit, Is.EqualTo(mipLimitBefore));
+                for (int index = 0; index < renderers.Length; index++)
+                    Assert.That(renderers[index].enabled, Is.EqualTo(before[index]), renderers[index].name);
+            });
+        }
+
+        [Test]
+        public void Il2CppAllocationCounterDeltaRejectsDecreaseAndOverflow()
+        {
+            MethodInfo method = typeof(QuestTemporalVisualGateRecorder).GetMethod(
+                "TryComputeAllocationCounterDelta",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(method, Is.Not.Null);
+
+            AssertDelta(method, 10UL, 10UL, true, 0L);
+            AssertDelta(method, 10UL, 13UL, true, 3L);
+            AssertDelta(method, 13UL, 10UL, false, 0L);
+            AssertDelta(method, 0UL, ulong.MaxValue, false, 0L);
         }
 
         private static void AssertBoundaryIsOneClosedNonSelfIntersectingLoop(Mesh mesh)
@@ -301,6 +468,35 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         private static float Cross2D(Vector2 first, Vector2 second) => first.x * second.y - first.y * second.x;
+
+        private static void AssertDelta(MethodInfo method, ulong previous, ulong current, bool expectedValid, long expectedDelta)
+        {
+            object[] arguments = { previous, current, 0L };
+            bool valid = (bool)method.Invoke(null, arguments);
+            Assert.That(valid, Is.EqualTo(expectedValid));
+            Assert.That((long)arguments[2], Is.EqualTo(expectedDelta));
+        }
+
+        private static bool IsBuildingOrVegetationForDiagnostic(Transform transform)
+        {
+            for (Transform current = transform; current != null; current = current.parent)
+            {
+                if (current.name.StartsWith("buildings_", StringComparison.Ordinal) ||
+                    current.name.StartsWith("vegetation_", StringComparison.Ordinal) ||
+                    string.Equals(current.name, "AirportArtProduction", StringComparison.Ordinal) ||
+                    string.Equals(current.name, AirportCoreBenchmarkRoot.GameObjectName, StringComparison.Ordinal) ||
+                    string.Equals(current.name, "SparseVegetationProduction", StringComparison.Ordinal))
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool HasAncestorPrefix(Transform transform, string prefix)
+        {
+            for (Transform current = transform; current != null; current = current.parent)
+                if (current.name.StartsWith(prefix, StringComparison.Ordinal)) return true;
+            return false;
+        }
 
         private static bool HasComponentNamed(GameObject root, string typeName) =>
             root.GetComponentsInChildren<MonoBehaviour>(true).Any(component =>

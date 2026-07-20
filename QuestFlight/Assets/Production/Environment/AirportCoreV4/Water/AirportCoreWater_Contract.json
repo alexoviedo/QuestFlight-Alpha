@@ -1,0 +1,55 @@
+{
+  "authoritative_reservoir": {
+    "mesh_path": "Assets/Production/Environment/Generated/BoulderReservoir_OSM_AuthoritativeWater_Mesh.asset",
+    "mesh_sha256": "bd15ce33217c09d96baab922b5ebb3e4f4dbcdf192ee3b30a6e243b12690ab9b",
+    "renderer_count": 1,
+    "shoreline_policy": "IMMUTABLE_AUTHORITATIVE_V2",
+    "surface_queue": "OPAQUE_GEOMETRY_PLUS_5",
+    "zwrite": true
+  },
+  "ground_suppression": {
+    "status": "REMOVED_V4_3",
+    "terrain_shader_suppression": false,
+    "suppression_renderer": false,
+    "reason": "V4.2 packed alpha neutralized the entire reservoir bounding rectangle, including dry land."
+  },
+  "minor_water": {
+    "additional_renderer_count": 0,
+    "georeferenced": true,
+    "include": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUMinorWaterTerrainEffect.hlsl",
+    "mask": "Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreMinorWater_TerrainMask.png",
+    "representation": "TERRAIN_MASK_NEAR_MID_RGBA",
+    "source_mesh": "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_OtherWaterFeatures_Surface_V2.asset",
+    "near_bounds_meters": [-2000, -2000, 4000, 4000],
+    "mid_bounds_meters": [-6000, -6000, 12000, 12000],
+    "active_ribbon_renderers": 0
+  },
+  "schema": "questflight.airport-core-v4.water-contract.v1",
+  "status": "V4_3_SERIALIZED_MACHINE_VISUAL_QA_REQUIRED",
+  "surface": {
+    "features": [
+      "shallow_deep_color",
+      "dual_low_frequency_normals",
+      "baked_sky_reflection",
+      "fresnel",
+      "bounded_sun_glitter",
+      "orthophoto_aware_base_color",
+      "roughness_variation",
+      "shore_light_band"
+    ],
+    "forbidden_features": [
+      "transparency",
+      "SSR",
+      "planar_reflection",
+      "refraction_camera",
+      "tessellation"
+    ],
+    "selected_reflection": "Assets/Production/Environment/Sky/Kloppenheim03_PureSky_2K.hdr",
+    "selected_reflection_sha256": "ffd28511add85d9508b51f50d3bbe4d822f4a5240800edb4f014edb75abdb1aa",
+    "shader": "Assets/Production/Environment/AirportCoreV4/Water/Shaders/KBDUReservoirWaterV4.shader",
+    "wave_normals": [
+      "AirportCoreReservoir_WaveA_NM.png",
+      "AirportCoreReservoir_WaveB_NM.png"
+    ]
+  }
+}

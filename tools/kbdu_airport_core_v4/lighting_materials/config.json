@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "assetRoot": "QuestFlight/Assets/Production/Environment/AirportCoreV4",
+  "benchmarkBoundsEnuMeters": {
+    "east": 50.0,
+    "north": 150.0,
+    "south": -650.0,
+    "west": -750.0
+  },
+  "cleanPlate": {
+    "featherMeters": 0.75,
+    "nearHalfExtentMeters": 2000.0,
+    "orthophoto": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
+    "orthophotoManifest": "tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json",
+    "maskSizePixels": 2048,
+    "outputSizePixels": 4096,
+    "requiredReplacementRoles": [
+      "executive_terminal",
+      "type_2_t_hangar_row"
+    ],
+    "sourceContext": "tools/kbdu_environment_reconstruction/KBDU_ReferenceContextV2.json"
+  },
+  "lighting": {
+    "acquisitionDates": [
+      "2019-08-03",
+      "2019-09-19"
+    ],
+    "azimuthStepDegrees": 2,
+    "elevationRangeDegrees": [
+      20.0,
+      75.0
+    ],
+    "elevationStepDegrees": 1.0,
+    "knownBuildingHeightsMeters": {
+      "executive_terminal": 8.5,
+      "type_2_t_hangar_row": 7.3
+    },
+    "referenceFootprints": [
+      { "assetId": "ExecutiveTerminal", "objectId": "Terminal_3335", "osmId": 77434544 },
+      { "assetId": "Type2THangarRow", "objectId": "Type2_3351", "osmId": 78054458 },
+      { "assetId": "Type2THangarRow", "objectId": "Type2_3353", "osmId": 78054461 },
+      { "assetId": "Type2THangarRow", "objectId": "Type2_3354", "osmId": 78054463 },
+      { "assetId": "Type2THangarRow", "objectId": "Type2_3355", "osmId": 78054465 }
+    ],
+    "maximumLightmapAtlases": 2,
+    "lightmapSizePixels": 2048,
+    "maximumReflectionProbes": 1,
+    "reflectionProbeResolutionPerFace": 128
+  },
+  "materials": {
+    "atlasSizePixels": 2048,
+    "sources": {
+      "brown_brick_02": {
+        "resolution": "1k",
+        "role": "terminal_lower_brick"
+      },
+      "concrete_wall_005": {
+        "resolution": "1k",
+        "role": "terminal_stucco_and_service"
+      },
+      "corrugated_iron_02": {
+        "resolution": "1k",
+        "role": "light_metal_panel"
+      },
+      "worn_corrugated_iron": {
+        "resolution": "1k",
+        "role": "weathered_hangar_panel"
+      },
+      "asphalt_02": {
+        "resolution": "2k",
+        "role": "continuous_runway_surface"
+      }
+    },
+    "atlasGrid": [4, 4],
+    "terminalAtlas": [
+      "brown_brick_02",
+      "corrugated_iron_02",
+      "procedural_opaque_glazing",
+      "procedural_dark_roof",
+      "procedural_dark_trim",
+      "concrete_wall_005",
+      "procedural_sign_face",
+      "procedural_roof_equipment",
+      "corrugated_iron_02",
+      "procedural_bifold_door",
+      "worn_corrugated_iron",
+      "asphalt_02",
+      "procedural_safety_yellow",
+      "procedural_landscape_rock",
+      "procedural_shrub",
+      "procedural_service_prop"
+    ],
+    "hangarKitAtlas": [
+      "brown_brick_02",
+      "corrugated_iron_02",
+      "procedural_opaque_glazing",
+      "procedural_dark_roof",
+      "procedural_dark_trim",
+      "concrete_wall_005",
+      "procedural_sign_face",
+      "procedural_roof_equipment",
+      "corrugated_iron_02",
+      "procedural_bifold_door",
+      "worn_corrugated_iron",
+      "asphalt_02",
+      "procedural_safety_yellow",
+      "procedural_landscape_rock",
+      "procedural_shrub",
+      "procedural_service_prop"
+    ],
+    "runwayReferenceSampleEnuMeters": [
+      -650.0,
+      -80.0,
+      650.0,
+      25.0
+    ]
+  },
+  "sourcePolicy": {
+    "polyHavenApi": "https://api.polyhaven.com/files/{assetId}",
+    "polyHavenLicense": "CC0-1.0",
+    "polyHavenLicenseUrl": "https://polyhaven.com/license",
+    "rawSourcesMustRemainExternal": true
+  }
+}

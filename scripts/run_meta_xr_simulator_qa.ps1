@@ -8,6 +8,7 @@ param(
     [switch]$AllowMissingRecordings,
     [switch]$LiveSmokeWhenRecordingsMissing,
     [string]$RecordSession,
+    [string]$DevelopmentScratchRoot,
     [int]$SessionTimeoutSeconds = 240,
     [int]$CaptureWidth = 1440,
     [int]$CaptureHeight = 1440
@@ -23,6 +24,12 @@ if ([string]::IsNullOrWhiteSpace($ArtifactRoot)) {
     $ArtifactRoot = Join-Path (Split-Path -Parent $repoRoot) "T2-QuestFlight-product-artifacts\standalone_recovery_$stamp"
 }
 $ArtifactRoot = [IO.Path]::GetFullPath($ArtifactRoot)
+$DevelopmentScratchRoot = if ([string]::IsNullOrWhiteSpace($DevelopmentScratchRoot)) {
+    Join-Path ([IO.Path]::GetTempPath()) "QuestFlight\MetaXrSimulator"
+} else {
+    $DevelopmentScratchRoot
+}
+$DevelopmentScratchRoot = [IO.Path]::GetFullPath($DevelopmentScratchRoot)
 $simulatorRoot = Join-Path $ArtifactRoot "meta_xr_simulator"
 $outputDirectory = Join-Path $simulatorRoot "qa_run"
 $sessionOutputRoot = Join-Path $outputDirectory "sessions"
@@ -36,6 +43,10 @@ if ([string]::IsNullOrWhiteSpace($ReplayRoot)) {
 }
 $ReplayRoot = [IO.Path]::GetFullPath($ReplayRoot)
 New-Item -ItemType Directory -Path $outputDirectory,$sessionOutputRoot,$logRoot,$replayEvidenceRoot,$ReplayRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $DevelopmentScratchRoot -Force | Out-Null
+$developmentCopyPath = $null
+$developmentCopyRemoved = $false
+$developmentCleanupError = $null
 
 $sessionCatalog = @(
     [ordered]@{ id = "cockpit_neutral"; description = "Cockpit neutral forward view"; delaySeconds = 4; startDemo = $false },
@@ -84,6 +95,150 @@ function Get-OpenXrRegistrySnapshot {
     }
 }
 
+function Set-RegistryOpenXrRuntime {
+    param(
+        [Microsoft.Win32.RegistryView]$View,
+        [AllowNull()][string]$Value
+    )
+    $baseKey = [Microsoft.Win32.RegistryKey]::OpenBaseKey(
+        [Microsoft.Win32.RegistryHive]::LocalMachine,
+        $View)
+    try {
+        $key = $baseKey.OpenSubKey("SOFTWARE\Khronos\OpenXR\1", $true)
+        if ($null -eq $key) { throw "The machine OpenXR registry key is unavailable or not writable." }
+        try {
+            if ($null -eq $Value) { $key.DeleteValue("ActiveRuntime", $false) }
+            else { $key.SetValue("ActiveRuntime", $Value, [Microsoft.Win32.RegistryValueKind]::String) }
+        }
+        finally { $key.Dispose() }
+    }
+    finally { $baseKey.Dispose() }
+}
+
+function Restore-OpenXrRegistrySnapshot {
+    param([System.Collections.IDictionary]$Snapshot)
+    $beforeRestore = Get-OpenXrRegistrySnapshot
+    $errors = @()
+    $attempted = $false
+    foreach ($entry in @(
+        [ordered]@{ name = "runtime64"; view = [Microsoft.Win32.RegistryView]::Registry64 },
+        [ordered]@{ name = "runtime32"; view = [Microsoft.Win32.RegistryView]::Registry32 }
+    )) {
+        $name = [string]$entry.name
+        if ($beforeRestore[$name] -eq $Snapshot[$name]) { continue }
+        $attempted = $true
+        try { Set-RegistryOpenXrRuntime -View $entry.view -Value $Snapshot[$name] }
+        catch { $errors += ("{0}: {1}" -f $name, $_.Exception.Message) }
+    }
+    $afterRestore = Get-OpenXrRegistrySnapshot
+    [pscustomobject][ordered]@{
+        attempted = $attempted
+        succeeded = $afterRestore.runtime64 -eq $Snapshot.runtime64 -and
+            $afterRestore.runtime32 -eq $Snapshot.runtime32
+        errors = @($errors)
+        beforeRestore = $beforeRestore
+        afterRestore = $afterRestore
+    }
+}
+
+function Get-PreviousOpenXrRuntime64 {
+    $baseKey = [Microsoft.Win32.RegistryKey]::OpenBaseKey(
+        [Microsoft.Win32.RegistryHive]::LocalMachine,
+        [Microsoft.Win32.RegistryView]::Registry64)
+    try {
+        $key = $baseKey.OpenSubKey("SOFTWARE\Khronos\OpenXR\1", $false)
+        if ($null -eq $key) { return $null }
+        try { return [string]$key.GetValue("PreviousActiveRuntime", $null) }
+        finally { $key.Dispose() }
+    }
+    finally { $baseKey.Dispose() }
+}
+
+function Restore-MetaOpenXrRuntimeSnapshot {
+    param(
+        [System.Collections.IDictionary]$Snapshot,
+        [AllowNull()][object]$Installation
+    )
+    $beforeRestore = Get-OpenXrRegistrySnapshot
+    if ($beforeRestore.runtime64 -eq $Snapshot.runtime64 -and
+        $beforeRestore.runtime32 -eq $Snapshot.runtime32) {
+        return [pscustomobject][ordered]@{
+            attempted = $false
+            succeeded = $true
+            strategy = "AlreadyPreserved"
+            uacRequired = $false
+            errors = @()
+            beforeRestore = $beforeRestore
+            afterRestore = $beforeRestore
+        }
+    }
+
+    $previousRuntime64 = Get-PreviousOpenXrRuntime64
+    $deactivationScript = if ($Installation) {
+        Join-Path ([string]$Installation.Directory) "deactivate_simulator.ps1"
+    } else { $null }
+    $pairedMetaDeactivationSafe = $Installation -and
+        $beforeRestore.runtime64 -eq [string]$Installation.Manifest -and
+        $beforeRestore.runtime32 -eq $Snapshot.runtime32 -and
+        $previousRuntime64 -eq $Snapshot.runtime64 -and
+        (Test-Path -LiteralPath $deactivationScript -PathType Leaf)
+
+    if (-not $pairedMetaDeactivationSafe) {
+        $direct = Restore-OpenXrRegistrySnapshot -Snapshot $Snapshot
+        return [pscustomobject][ordered]@{
+            attempted = [bool]$direct.attempted
+            succeeded = [bool]$direct.succeeded
+            strategy = "DirectExactSnapshot"
+            uacRequired = $false
+            errors = @($direct.errors)
+            beforeRestore = $direct.beforeRestore
+            afterRestore = $direct.afterRestore
+        }
+    }
+
+    $errors = @()
+    try {
+        $arguments = '-NoProfile -ExecutionPolicy Bypass -File "{0}" -MessageTime 0' -f $deactivationScript
+        $process = Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList $arguments -PassThru -Wait -WindowStyle Hidden
+        if ($process.ExitCode -ne 0) { $errors += "Meta deactivation exited with code $($process.ExitCode)." }
+    }
+    catch { $errors += $_.Exception.Message }
+    $afterRestore = Get-OpenXrRegistrySnapshot
+    $previousAfter = Get-PreviousOpenXrRuntime64
+    $succeeded = $afterRestore.runtime64 -eq $Snapshot.runtime64 -and
+        $afterRestore.runtime32 -eq $Snapshot.runtime32 -and
+        [string]::IsNullOrWhiteSpace($previousAfter)
+    if (-not $succeeded -and $errors.Count -eq 0) {
+        $errors += "Meta's deactivation script did not restore the exact pre-run runtime snapshot."
+    }
+    [pscustomobject][ordered]@{
+        attempted = $true
+        succeeded = $succeeded
+        strategy = "MetaPairedDeactivationScript"
+        uacRequired = $true
+        errors = @($errors)
+        beforeRestore = $beforeRestore
+        afterRestore = $afterRestore
+    }
+}
+
+function Close-SimulatorProcess {
+    param([Diagnostics.Process]$Process)
+    if ($null -eq $Process) { return }
+    try { $Process.Refresh() } catch { return }
+    if ($Process.HasExited) { return }
+    $closeRequested = $false
+    try { $closeRequested = $Process.CloseMainWindow() } catch { $closeRequested = $false }
+    if ($closeRequested) {
+        try {
+            if ($Process.WaitForExit(15000)) { return }
+        }
+        catch { }
+    }
+    Stop-Process -Id $Process.Id -Force -ErrorAction SilentlyContinue
+    try { [void]$Process.WaitForExit(5000) } catch { }
+}
+
 function Get-MetaXrSimulatorInstallation {
     $root = Join-Path $env:ProgramFiles "MetaXRSimulator"
     if (-not (Test-Path -LiteralPath $root -PathType Container)) { return $null }
@@ -120,13 +275,33 @@ function Assert-UnitySlotAvailable {
 
 function New-DevelopmentProjectCopy {
     $copyStamp = [DateTime]::UtcNow.ToString("yyyyMMdd_HHmmss")
-    $copyRoot = Join-Path $simulatorRoot "dev_project_$copyStamp"
+    $copyRoot = Join-Path $DevelopmentScratchRoot ("dev_project_{0}_{1}" -f $copyStamp, $PID)
+    $scratchPrefix = $DevelopmentScratchRoot.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (-not $copyRoot.StartsWith($scratchPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Simulator development copy escaped its scratch root: $copyRoot"
+    }
+    $script:developmentCopyPath = $copyRoot
     New-Item -ItemType Directory -Path $copyRoot -Force | Out-Null
     foreach ($name in @("Assets", "Packages", "ProjectSettings")) {
         $source = Join-Path $unityProject $name
         Copy-Item -LiteralPath $source -Destination $copyRoot -Recurse -Force
     }
     return $copyRoot
+}
+
+function Remove-DevelopmentProjectCopy {
+    param([string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path) -or -not (Test-Path -LiteralPath $Path -PathType Container)) { return }
+    $scratch = [IO.Path]::GetFullPath($DevelopmentScratchRoot).TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+    $candidate = [IO.Path]::GetFullPath($Path)
+    $prefix = $scratch + [IO.Path]::DirectorySeparatorChar
+    $leaf = [IO.Path]::GetFileName($candidate)
+    if (-not $candidate.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -or
+        $leaf -notmatch '^dev_project_\d{8}_\d{6}_\d+$') {
+        throw "Refusing to remove unverified simulator development copy: $candidate"
+    }
+    Remove-Item -LiteralPath $candidate -Recurse -Force
+    $script:developmentCopyRemoved = -not (Test-Path -LiteralPath $candidate)
 }
 
 function Build-SimulatorDevelopmentPlayer {
@@ -167,6 +342,8 @@ function Build-SimulatorDevelopmentPlayer {
         $env:QFL_META_XR_SIMULATOR_EXPECTED_PROJECT_ROOT = $previous.expected
         $env:QFL_META_XR_SIMULATOR_PLAYER_PATH = $previous.player
         $env:QFL_META_XR_SIMULATOR_BUILD_REPORT = $previous.report
+        try { Remove-DevelopmentProjectCopy -Path $devProject }
+        catch { $script:developmentCleanupError = $_.Exception.Message }
     }
 }
 
@@ -276,8 +453,10 @@ function Invoke-SimulatorSession {
         }
     }
     finally {
-        if ($player -and -not $player.HasExited) { Stop-Process -Id $player.Id -Force -ErrorAction SilentlyContinue }
-        if ($frontend -and -not $frontend.HasExited) { Stop-Process -Id $frontend.Id -Force -ErrorAction SilentlyContinue }
+        Close-SimulatorProcess -Process $player
+        # Meta's frontend can perform machine-runtime bookkeeping during startup.
+        # Give its normal shutdown path a chance to complete before any force stop.
+        Close-SimulatorProcess -Process $frontend
         foreach ($name in $envNames) {
             [Environment]::SetEnvironmentVariable($name, $environmentBefore[$name], "Process")
         }
@@ -297,6 +476,7 @@ $copiedReplays = @()
 $classification = "NOT_RUN"
 $playerBuilt = Test-Path -LiteralPath $playerPath -PathType Leaf
 $caughtError = $null
+$runtimeRestoration = $null
 
 try {
     if ($null -eq $installation) { throw "Meta XR Simulator is not installed." }
@@ -351,14 +531,19 @@ catch {
     $classification = "FAIL_SIMULATOR_ORCHESTRATION"
 }
 finally {
-    $runtimeAfter = Get-OpenXrRegistrySnapshot
+    # Per-process XR_RUNTIME_JSON remains the intended activation mechanism, but
+    # current Meta frontends may still mutate HKLM. Restore the exact snapshot or
+    # fail closed with the required UAC/admin error preserved in evidence.
+    $runtimeRestoration = Restore-MetaOpenXrRuntimeSnapshot -Snapshot $runtimeBefore -Installation $installation
+    $runtimeAfter = $runtimeRestoration.afterRestore
     $persistentAfterExists = Test-Path -LiteralPath $persistentPath -PathType Leaf
     $persistentAfterHash = if ($persistentAfterExists) { (Get-FileHash -LiteralPath $persistentPath -Algorithm SHA256).Hash } else { $null }
-    $runtimePreserved = $runtimeBefore.runtime64 -eq $runtimeAfter.runtime64 -and $runtimeBefore.runtime32 -eq $runtimeAfter.runtime32
+    $runtimePreserved = [bool]$runtimeRestoration.succeeded
     $persistentRestored = $persistentInitiallyExisted -eq $persistentAfterExists -and $persistentInitialHash -eq $persistentAfterHash
+    if (-not $runtimePreserved) { $classification = "FAIL_SIMULATOR_STATE_RESTORATION" }
 
     $report = [ordered]@{
-        schemaVersion = 1
+        schemaVersion = 2
         generatedUtc = [DateTime]::UtcNow.ToString("O")
         classification = $classification
         repository = $repoRoot
@@ -368,11 +553,19 @@ finally {
         simulatorRuntimeManifest = if ($installation) { $installation.Manifest } else { $null }
         playerPath = $playerPath
         playerBuilt = $playerBuilt
+        developmentScratchRoot = $DevelopmentScratchRoot
+        developmentProjectRemoved = $developmentCopyRemoved
+        developmentCleanupError = $developmentCleanupError
         shippingAndroidConfigurationChanged = $false
         activationMethod = "Per-process XR_RUNTIME_JSON"
         activeRuntimeBefore = $runtimeBefore
         activeRuntimeAfter = $runtimeAfter
         activeRuntimePreserved = $runtimePreserved
+        activeRuntimeMutationDetected = [bool]$runtimeRestoration.attempted
+        activeRuntimeRestorationStrategy = [string]$runtimeRestoration.strategy
+        activeRuntimeRestorationRequiredUac = [bool]$runtimeRestoration.uacRequired
+        activeRuntimeRestorationErrors = @($runtimeRestoration.errors)
+        activeRuntimeBeforeRestoreAttempt = $runtimeRestoration.beforeRestore
         persistentConfigurationPath = $persistentPath
         persistentConfigurationRestored = $persistentRestored
         replayRoot = $ReplayRoot

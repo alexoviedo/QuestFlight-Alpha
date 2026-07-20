@@ -40,13 +40,81 @@ namespace QuestFlightLab.Runtime
 
         public static GamepadInputSnapshot Disconnected(float now, float sampleRate)
         {
-            return new GamepadInputSnapshot
+            GamepadInputSnapshot snapshot = new GamepadInputSnapshot();
+            snapshot.SetDisconnected(now, sampleRate);
+            return snapshot;
+        }
+
+        public void SetDisconnected(float now, float sampleRate)
+        {
+            connected = false;
+            deviceName = "none";
+            displayName = "none";
+            layout = "none";
+            manufacturer = string.Empty;
+            product = string.Empty;
+            interfaceName = string.Empty;
+            deviceId = -1;
+            timestamp = now;
+            sampleRateHz = sampleRate;
+            secondsSinceLastInput = 0f;
+            leftStickX = 0f;
+            leftStickY = 0f;
+            rightStickX = 0f;
+            rightStickY = 0f;
+            leftTrigger = 0f;
+            rightTrigger = 0f;
+            dpadX = 0f;
+            dpadY = 0f;
+            buttonSouth = false;
+            buttonEast = false;
+            buttonWest = false;
+            buttonNorth = false;
+            leftShoulder = false;
+            rightShoulder = false;
+            startButton = false;
+            selectButton = false;
+            leftStickButton = false;
+            rightStickButton = false;
+        }
+
+        public void CopyInputFrom(GamepadInputSnapshot source)
+        {
+            if (source == null)
             {
-                connected = false,
-                timestamp = now,
-                sampleRateHz = sampleRate,
-                secondsSinceLastInput = 0f
-            };
+                SetDisconnected(0f, 0f);
+                return;
+            }
+
+            connected = source.connected;
+            deviceName = source.deviceName;
+            displayName = source.displayName;
+            layout = source.layout;
+            manufacturer = source.manufacturer;
+            product = source.product;
+            interfaceName = source.interfaceName;
+            deviceId = source.deviceId;
+            timestamp = source.timestamp;
+            sampleRateHz = source.sampleRateHz;
+            secondsSinceLastInput = source.secondsSinceLastInput;
+            leftStickX = source.leftStickX;
+            leftStickY = source.leftStickY;
+            rightStickX = source.rightStickX;
+            rightStickY = source.rightStickY;
+            leftTrigger = source.leftTrigger;
+            rightTrigger = source.rightTrigger;
+            dpadX = source.dpadX;
+            dpadY = source.dpadY;
+            buttonSouth = source.buttonSouth;
+            buttonEast = source.buttonEast;
+            buttonWest = source.buttonWest;
+            buttonNorth = source.buttonNorth;
+            leftShoulder = source.leftShoulder;
+            rightShoulder = source.rightShoulder;
+            startButton = source.startButton;
+            selectButton = source.selectButton;
+            leftStickButton = source.leftStickButton;
+            rightStickButton = source.rightStickButton;
         }
 
         public bool HasDifferentInput(GamepadInputSnapshot other, float axisEpsilon = 0.01f)

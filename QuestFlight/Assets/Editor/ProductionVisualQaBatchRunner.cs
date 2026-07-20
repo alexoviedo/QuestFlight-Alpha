@@ -26,10 +26,10 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 16;
-        private const int DrawCallTarget = 180;
-        private const long VisibleTriangleTarget = 700000L;
-        private const int SceneMaterialTarget = 40;
+        private const int RequiredShotCount = 56;
+        private const int DrawCallTarget = 120;
+        private const long VisibleTriangleTarget = 600000L;
+        private const int SceneMaterialTarget = 25;
         private const string ProductionScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
         private static readonly Vector3 RepresentativeCalibrationOffset = new Vector3(0.015f, 0.020f, -0.025f);
 
@@ -68,6 +68,14 @@ namespace QuestFlightLab.Editor
                 RenderRequiredShots(context, report, outputDir, width, height);
                 report.mountainSweep = RunMountainSweep(context);
                 report.contactSheetPath = BuildContactSheet(report, outputDir);
+                report.airportCoreBeforeContactSheetPath = BuildContactSheet(
+                    report.shots.Where(shot => shot.id.StartsWith("v4_before_", StringComparison.Ordinal)).ToList(),
+                    outputDir,
+                    "airport_core_before_contact_sheet.png");
+                report.airportCoreAfterContactSheetPath = BuildContactSheet(
+                    report.shots.Where(shot => shot.id.StartsWith("v4_after_", StringComparison.Ordinal)).ToList(),
+                    outputDir,
+                    "airport_core_after_contact_sheet.png");
                 FinalizeReport(context, report);
             }
             catch (Exception exception)
@@ -111,7 +119,7 @@ namespace QuestFlightLab.Editor
                 new Rect(0.43f, 0.28f, 0.14f, 0.70f)));
 
             Bounds hangarBounds = CombinedNamedRendererBounds(
-                context.environment.airportContext, "AirportArtProduction");
+                context.environment.airportContext, AirportCoreBenchmarkRoot.GameObjectName);
             Vector3 hangarTarget = hangarBounds.center;
             float airportExtent = Mathf.Max(hangarBounds.extents.x, hangarBounds.extents.z);
             Vector3 hangarCamera = hangarTarget
@@ -251,6 +259,18 @@ namespace QuestFlightLab.Editor
                 ? marker.EnvironmentRoot.GetComponentInChildren<ProductionEnvironmentRoot>(true)
                 : null;
             if (environment == null) throw new InvalidOperationException("Authored ProductionEnvironmentRoot is missing.");
+            AirportCoreBenchmarkRoot[] benchmarkRoots = environment.GetComponentsInChildren<AirportCoreBenchmarkRoot>(true);
+            if (benchmarkRoots.Length != 1)
+                throw new InvalidOperationException(
+                    $"Expected one authored AirportCoreBenchmarkRoot, found {benchmarkRoots.Length}.");
+            AirportCoreBenchmarkRoot benchmark = benchmarkRoots[0];
+            if (!benchmark.TryValidateContract(out string benchmarkReport))
+                throw new InvalidOperationException("Airport-core V4 contract failed: " + benchmarkReport);
+            AircraftRunwayBlobShadow groundShadow = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<AircraftRunwayBlobShadow>(true))
+                .SingleOrDefault();
+            if (groundShadow == null)
+                throw new InvalidOperationException("Authored bounded aircraft runway shadow is missing.");
             AircraftReferenceFrameRig rig = marker.AircraftRig;
             if (rig == null) throw new InvalidOperationException("Authored aircraft reference-frame rig is missing.");
             if (marker.PilotSeatProfile == null) throw new InvalidOperationException("Authored pilot seat profile is missing.");
@@ -303,6 +323,8 @@ namespace QuestFlightLab.Editor
                 scene = scene,
                 marker = marker,
                 environment = environment,
+                benchmark = benchmark,
+                groundShadow = groundShadow,
                 rig = rig,
                 visibility = marker.VisibilityProfiles,
                 animator = marker.ControlAnimator,
@@ -352,7 +374,7 @@ namespace QuestFlightLab.Editor
             Bounds waterBounds = context.environment.boulderReservoirSurface.GetComponent<Renderer>().bounds;
             Bounds hangarBounds = CombinedNamedRendererBounds(
                 context.environment.airportContext,
-                "AirportArtProduction");
+                AirportCoreBenchmarkRoot.GameObjectName);
 
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "01_default_cockpit", "Default cockpit", "cockpit", pilotEye, pilotForward, 72f, ViewProfile.Cockpit));
@@ -447,9 +469,218 @@ namespace QuestFlightLab.Editor
                 approachCamera, LookAt(approachCamera, approachTarget), 55f, ViewProfile.External,
                 new AircraftControlState { elevator = 0.05f, throttle = 0.35f, mixture = 1f, flaps = 0.65f }));
 
+            // Environment V1 views. These are deterministic presentation poses and
+            // remain separate from flight-physics evidence.
+            SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
+            Vector3 neutralPilotEye = context.rig.PilotSeatAnchor.position;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "17_sky_horizon_forward", "Photographic sky and forward horizon", "sky",
+                neutralPilotEye, context.originalAircraftRotation * Quaternion.Euler(-8f, 0f, 0f),
+                72f, ViewProfile.Cockpit));
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "18_sky_horizon_rearward", "Photographic sky and rearward horizon", "sky",
+                neutralPilotEye + Vector3.up * 2f,
+                context.originalAircraftRotation * Quaternion.Euler(-3f, 180f, 0f),
+                72f, ViewProfile.Environment));
+
+            Vector3 nearMidBoundary = context.runwayMidpoint + Vector3.right * 1825f;
+            Vector3 nearMidCamera = nearMidBoundary + new Vector3(310f, 430f, -420f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "19_near_mid_terrain_seam", "Near/mid terrain overlap", "terrain_seam",
+                nearMidCamera, LookAt(nearMidCamera, nearMidBoundary), 50f, ViewProfile.Environment));
+
+            Vector3 midFarBoundary = context.runwayMidpoint + Vector3.right * 5500f;
+            Vector3 midFarCamera = midFarBoundary + new Vector3(650f, 920f, -980f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "20_mid_far_terrain_seam", "Mid/far terrain overlap", "terrain_seam",
+                midFarCamera, LookAt(midFarCamera, midFarBoundary), 48f, ViewProfile.Environment));
+
+            Vector3 reservoirAircraft = waterTarget + new Vector3(0f, 430f, -920f);
+            Vector3 reservoirHorizontal = Vector3.ProjectOnPlane(waterTarget - reservoirAircraft, Vector3.up).normalized;
+            SetAircraftPose(context, reservoirAircraft, Quaternion.LookRotation(reservoirHorizontal, Vector3.up));
+            Vector3 reservoirPilotEye = context.rig.PilotSeatAnchor.position;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "21_reservoir_cockpit", "Boulder Reservoir from the cockpit", "water",
+                reservoirPilotEye, LookAt(reservoirPilotEye, waterTarget), 64f, ViewProfile.Cockpit));
+
+            Vector3 reservoirAerial = waterTarget + new Vector3(-720f, 880f, -760f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "22_reservoir_aerial", "Boulder Reservoir aerial water read", "water",
+                reservoirAerial, LookAt(reservoirAerial, waterTarget), 48f, ViewProfile.Environment));
+
+            Vector3 rampCamera = hangarTarget
+                                 - context.runwayForward * (airportExtent * 0.45f + 45f)
+                                 + context.runwayRight * (airportExtent * 0.28f + 30f)
+                                 + Vector3.up * (airportExtent * 0.14f + 22f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "23_airport_buildings_ramp", "Airport buildings and ramp scale cues", "airport",
+                rampCamera, LookAt(rampCamera, hangarTarget), 48f, ViewProfile.Environment));
+
+            Bounds parkedAircraftBounds = ClosestNamedRendererBounds(
+                context.environment.transform,
+                hangarTarget,
+                "parked_aircraft_airport");
+            // The three parked aircraft are the foreground scale reference. The
+            // view looks south across the apron toward the explicitly authored
+            // airport-perimeter cottonwoods, so both scenery features are large
+            // enough for a full-resolution visual review instead of incidental
+            // background specks.
+            Vector3 scaleTarget = parkedAircraftBounds.center + new Vector3(-6f, 1.2f, -62f);
+            Vector3 scaleCamera = parkedAircraftBounds.center + new Vector3(42f, 15f, 62f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "24_vegetation_aircraft_scale", "Airport vegetation and parked-aircraft scale reference", "vegetation",
+                scaleCamera, LookAt(scaleCamera, scaleTarget), 42f, ViewProfile.Environment));
+
             SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
             context.animator?.ClearControlStateForTest();
             context.visibility?.SetCockpitView();
+            RenderAirportCoreBenchmarkAbShots(context, report, outputDir, width, height);
+        }
+
+        private static void RenderAirportCoreBenchmarkAbShots(
+            VisualContext context,
+            ProductionVisualQaReport report,
+            string outputDir,
+            int width,
+            int height)
+        {
+            AirportCoreBenchmarkRoot benchmark = context.benchmark;
+            Bounds terminal = CombinedRendererBounds(benchmark.executiveTerminal.transform);
+            Bounds hangar = CombinedRendererBounds(benchmark.type2HangarRow.transform);
+            Bounds vegetation = CombinedRendererBounds(benchmark.vegetationHeroCluster);
+            Bounds core = CombinedRendererBounds(benchmark.benchmarkContent);
+            Bounds runway = context.environment.runwayPavement.GetComponent<Renderer>().bounds;
+            Bounds reservoir = context.environment.boulderReservoirSurface.GetComponent<Renderer>().bounds;
+            Bounds minorWater = MinorWaterBounds(benchmark, context.environment);
+            string minorWaterTitle = context.environment.waterPresentationMode ==
+                                     ProductionWaterPresentationMode.OrthophotoOnly
+                ? "Minor water orthophoto-only hold"
+                : "Minor-water terrain-mask effect";
+            Vector3 north = Vector3.forward;
+            Vector3 east = Vector3.right;
+
+            List<BenchmarkShot> shots = new List<BenchmarkShot>
+            {
+                Benchmark("01_terminal_front", "Executive terminal front", "airport_core_terminal",
+                    terminal.center + east * 58f + north * 8f + Vector3.up * 7f,
+                    terminal.center + Vector3.up * 4.5f, 45f),
+                Benchmark("02_terminal_apron_oblique", "Executive terminal apron oblique", "airport_core_terminal",
+                    terminal.center + north * 52f + east * 46f + Vector3.up * 18f,
+                    terminal.center + Vector3.up * 4f, 48f),
+                Benchmark("03_terminal_aerial", "Executive terminal aerial", "airport_core_terminal",
+                    terminal.center + north * 32f - east * 28f + Vector3.up * 78f,
+                    terminal.center, 44f),
+                Benchmark("04_type2_hangar_front", "Type 2 T-hangar row front", "airport_core_hangar",
+                    hangar.center + east * 48f + north * 4f + Vector3.up * 7f,
+                    hangar.center + Vector3.up * 3.5f, 47f),
+                Benchmark("05_type2_hangar_aerial", "Type 2 T-hangar row aerial", "airport_core_hangar",
+                    hangar.center + east * 54f - north * 38f + Vector3.up * 92f,
+                    hangar.center, 43f),
+                Benchmark("06_hangar_material_close", "Type 2 hangar material close-up", "airport_core_material",
+                    hangar.center + east * 17f - north * 10f + Vector3.up * 3.2f,
+                    hangar.center + Vector3.up * 3.2f, 39f),
+                Benchmark("07_cleanplate_integration", "Terminal and clean-plate integration", "airport_core_cleanplate",
+                    Vector3.Lerp(terminal.center, hangar.center, 0.42f) + east * 38f + north * 28f + Vector3.up * 72f,
+                    Vector3.Lerp(terminal.center, hangar.center, 0.42f), 46f),
+                Benchmark("08_baked_shadow_alignment", "Airport-core baked-shadow alignment", "airport_core_lighting",
+                    terminal.center - east * 36f + north * 28f + Vector3.up * 9f,
+                    terminal.center + Vector3.up * 2.5f, 44f),
+                Benchmark("09_runway_surface_close", "Continuous runway hero material", "airport_core_runway",
+                    runway.center - context.runwayForward * 115f + context.runwayRight * 9f + Vector3.up * 2.2f,
+                    runway.center + context.runwayForward * 150f, 42f),
+                Benchmark("10_runway_apron_overview", "Runway and airport-core apron overview", "airport_core_runway",
+                    terminal.center + east * 145f + north * 135f + Vector3.up * 115f,
+                    Vector3.Lerp(terminal.center, runway.center, 0.42f), 50f),
+                BenchmarkCockpit("11_reservoir_cockpit", "Reservoir benchmark cockpit view", "airport_core_water",
+                    reservoir.center + new Vector3(0f, 430f, -920f), reservoir.center, 64f),
+                Benchmark("12_reservoir_aerial", "Reservoir benchmark aerial view", "airport_core_water",
+                    reservoir.center + new Vector3(-720f, 880f, -760f), reservoir.center, 48f),
+                Benchmark("13_minor_water_terrain", minorWaterTitle, "airport_core_water",
+                    minorWater.center + new Vector3(36f, 28f, -42f), minorWater.center, 44f),
+                Benchmark("14_vegetation_close", "Vegetation hero cluster close view", "airport_core_vegetation",
+                    vegetation.center + east * 24f - north * 28f + Vector3.up * 5f,
+                    vegetation.center + Vector3.up * 3f, 42f),
+                Benchmark("15_vegetation_aerial", "Vegetation hero cluster aerial view", "airport_core_vegetation",
+                    vegetation.center - east * 36f + north * 30f + Vector3.up * 70f,
+                    vegetation.center, 44f),
+                Benchmark("16_complete_overview", "Complete airport-core benchmark", "airport_core_overview",
+                    core.center + east * 155f - north * 145f + Vector3.up * 155f,
+                    core.center, 50f)
+            };
+
+            AirportCoreVariantState state = AirportCoreVariantState.Capture(benchmark);
+            try
+            {
+                state.ApplyV2Baseline();
+                foreach (BenchmarkShot shot in shots)
+                    CaptureBenchmarkShot(context, report, outputDir, width, height, shot, "v4_before_", "V2 before — ");
+
+                state.RestoreV4();
+                foreach (BenchmarkShot shot in shots)
+                    CaptureBenchmarkShot(context, report, outputDir, width, height, shot, "v4_after_", "V4 after — ");
+            }
+            finally
+            {
+                state.RestoreV4();
+            }
+        }
+
+        private static BenchmarkShot Benchmark(
+            string id,
+            string title,
+            string category,
+            Vector3 camera,
+            Vector3 target,
+            float fov)
+        {
+            return new BenchmarkShot(id, title, category, camera, target, fov, false);
+        }
+
+        private static BenchmarkShot BenchmarkCockpit(
+            string id,
+            string title,
+            string category,
+            Vector3 aircraftPosition,
+            Vector3 target,
+            float fov)
+        {
+            return new BenchmarkShot(id, title, category, aircraftPosition, target, fov, true);
+        }
+
+        private static void CaptureBenchmarkShot(
+            VisualContext context,
+            ProductionVisualQaReport report,
+            string outputDir,
+            int width,
+            int height,
+            BenchmarkShot shot,
+            string prefix,
+            string titlePrefix)
+        {
+            if (!shot.cockpit)
+            {
+                Capture(context, report, outputDir, width, height, shot.Definition(prefix, titlePrefix));
+                return;
+            }
+
+            Vector3 horizontal = Vector3.ProjectOnPlane(shot.target - shot.cameraOrAircraftPosition, Vector3.up).normalized;
+            try
+            {
+                SetAircraftPose(context, shot.cameraOrAircraftPosition, Quaternion.LookRotation(horizontal, Vector3.up));
+                Vector3 pilotEye = context.rig.PilotSeatAnchor.position;
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    prefix + shot.id,
+                    titlePrefix + shot.title,
+                    shot.category,
+                    pilotEye,
+                    LookAt(pilotEye, shot.target),
+                    shot.fov,
+                    ViewProfile.Cockpit));
+            }
+            finally
+            {
+                SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
+            }
         }
 
         private static void CaptureChase(
@@ -479,32 +710,44 @@ namespace QuestFlightLab.Editor
             int height,
             ShotDefinition shot)
         {
-            if (shot.profile == ViewProfile.Cockpit) context.visibility?.SetCockpitView();
-            else context.visibility?.SetExternalView();
             Renderer[] environmentHiddenRenderers = Array.Empty<Renderer>();
             bool[] environmentHiddenStates = Array.Empty<bool>();
-            if (shot.profile == ViewProfile.Environment)
-            {
-                environmentHiddenRenderers = context.rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true);
-                environmentHiddenStates = environmentHiddenRenderers.Select(renderer => renderer.enabled).ToArray();
-                foreach (Renderer renderer in environmentHiddenRenderers) renderer.enabled = false;
-            }
-            if (shot.controls != null)
-            {
-                context.animator?.CaptureAuthoredRestPosesForValidation();
-                context.animator?.SetControlStateForTest(shot.controls);
-            }
-            else
-            {
-                context.animator?.ClearControlStateForTest();
-            }
-
-            context.camera.transform.SetPositionAndRotation(shot.cameraPosition, shot.cameraRotation);
-            context.camera.fieldOfView = shot.fov;
             string path = Path.Combine(outputDir, "screenshots", shot.id + ".png");
-            Texture2D texture = Render(context.camera, width, height, out EditorFrameRenderStats editorStats);
+            Texture2D texture = null;
             try
             {
+                if (shot.profile == ViewProfile.Cockpit) context.visibility?.SetCockpitView();
+                else context.visibility?.SetExternalView();
+                context.groundShadow?.UpdateShadowPoseNow();
+                bool shadowRequired = shot.id == "11_external_aircraft_static" ||
+                                      shot.id == "12_external_control_sweep" ||
+                                      shot.id == "13_takeoff_roll";
+                bool shadowReady = !shadowRequired ||
+                                   (context.groundShadow?.BlobRenderer != null &&
+                                    context.groundShadow.BlobRenderer.enabled);
+                if (shot.profile == ViewProfile.Environment)
+                {
+                    IEnumerable<Renderer> renderers =
+                        context.rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true);
+                    if (context.groundShadow?.BlobRenderer != null)
+                        renderers = renderers.Concat(new[] { context.groundShadow.BlobRenderer });
+                    environmentHiddenRenderers = renderers.Distinct().ToArray();
+                    environmentHiddenStates = environmentHiddenRenderers.Select(renderer => renderer.enabled).ToArray();
+                    foreach (Renderer renderer in environmentHiddenRenderers) renderer.enabled = false;
+                }
+                if (shot.controls != null)
+                {
+                    context.animator?.CaptureAuthoredRestPosesForValidation();
+                    context.animator?.SetControlStateForTest(shot.controls);
+                }
+                else
+                {
+                    context.animator?.ClearControlStateForTest();
+                }
+
+                context.camera.transform.SetPositionAndRotation(shot.cameraPosition, shot.cameraRotation);
+                context.camera.fieldOfView = shot.fov;
+                texture = Render(context.camera, width, height, out EditorFrameRenderStats editorStats);
                 File.WriteAllBytes(path, texture.EncodeToPNG());
                 ImageStats image = Analyze(texture);
                 RenderBudgetSnapshot budget = QuestRenderBudgetAudit.Capture(context.camera);
@@ -535,10 +778,13 @@ namespace QuestFlightLab.Editor
                     result.warnings.Add($"Estimated draw calls {budget.estimatedInstancedDrawCalls} exceed {DrawCallTarget}.");
                 if (budget.estimatedFrustumTriangles > VisibleTriangleTarget)
                     result.warnings.Add($"Estimated visible triangles {budget.estimatedFrustumTriangles:N0} exceed {VisibleTriangleTarget:N0}.");
+                if (!shadowReady)
+                    result.warnings.Add("The bounded runway contact shadow was required but not active for this ground view.");
                 result.passed = result.imageNotBlank &&
                                 (shot.category != "cockpit" || image.outsideViewRatio >= context.marker.PilotSeatProfile.minimumOutsideViewRatio) &&
                                 budget.estimatedInstancedDrawCalls <= DrawCallTarget &&
-                                budget.estimatedFrustumTriangles <= VisibleTriangleTarget;
+                                budget.estimatedFrustumTriangles <= VisibleTriangleTarget &&
+                                shadowReady;
                 report.shots.Add(result);
             }
             catch (Exception exception)
@@ -557,7 +803,7 @@ namespace QuestFlightLab.Editor
             {
                 for (int index = 0; index < environmentHiddenRenderers.Length; index++)
                     environmentHiddenRenderers[index].enabled = environmentHiddenStates[index];
-                Object.DestroyImmediate(texture);
+                if (texture != null) Object.DestroyImmediate(texture);
             }
         }
 
@@ -722,18 +968,26 @@ namespace QuestFlightLab.Editor
 
         private static string BuildContactSheet(ProductionVisualQaReport report, string outputDir)
         {
+            return BuildContactSheet(report.shots, outputDir, "visual_qa_contact_sheet.png");
+        }
+
+        private static string BuildContactSheet(
+            IReadOnlyList<ProductionVisualQaShot> shots,
+            string outputDir,
+            string fileName)
+        {
             const int columns = 4;
             const int cellWidth = 320;
             const int cellHeight = 180;
-            int rows = Mathf.CeilToInt(report.shots.Count / (float)columns);
+            int rows = Mathf.Max(1, Mathf.CeilToInt(shots.Count / (float)columns));
             Texture2D sheet = new Texture2D(columns * cellWidth, rows * cellHeight, TextureFormat.RGBA32, false);
             Color32[] background = Enumerable.Repeat(new Color32(16, 18, 22, 255), sheet.width * sheet.height).ToArray();
             sheet.SetPixels32(background);
             try
             {
-                for (int index = 0; index < report.shots.Count; index++)
+                for (int index = 0; index < shots.Count; index++)
                 {
-                    string screenshotPath = report.shots[index].screenshotPath;
+                    string screenshotPath = shots[index].screenshotPath;
                     if (!File.Exists(screenshotPath)) continue;
                     Texture2D source = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                     try
@@ -749,7 +1003,7 @@ namespace QuestFlightLab.Editor
                     }
                 }
                 sheet.Apply();
-                string path = Path.Combine(outputDir, "visual_qa_contact_sheet.png");
+                string path = Path.Combine(outputDir, fileName);
                 File.WriteAllBytes(path, sheet.EncodeToPNG());
                 return path;
             }
@@ -785,6 +1039,7 @@ namespace QuestFlightLab.Editor
             builder.AppendLine($"- Classification: `{report.classification}`");
             builder.AppendLine($"- Scene: `{report.scenePath}`; architecture `{report.architectureVersion}`");
             builder.AppendLine($"- Captures: {report.shots.Count}/{report.requiredShotCount}; contact sheet `{report.contactSheetPath}`");
+            builder.AppendLine($"- Airport-core A/B sheets: `{report.airportCoreBeforeContactSheetPath}` / `{report.airportCoreAfterContactSheetPath}`");
             builder.AppendLine($"- Authored hierarchy/environment contract: {report.authoredHierarchyPassed}/{report.productionEnvironmentContractPassed}");
             builder.AppendLine($"- One enabled XR Origin: {report.singleEnabledXrOrigin}");
             builder.AppendLine($"- Legacy bootstrap/UI suppressed: {report.legacyBootstrapAndUiSuppressed}");
@@ -878,6 +1133,8 @@ namespace QuestFlightLab.Editor
             public Scene scene;
             public ProductionVerticalSliceRoot marker;
             public ProductionEnvironmentRoot environment;
+            public AirportCoreBenchmarkRoot benchmark;
+            public AircraftRunwayBlobShadow groundShadow;
             public AircraftReferenceFrameRig rig;
             public AircraftVisibilityProfileController visibility;
             public ProductionAircraftControlAnimator animator;
@@ -889,6 +1146,187 @@ namespace QuestFlightLab.Editor
             public Vector3 runwayForward;
             public Vector3 runwayRight;
             public Vector3 runwayMidpoint;
+        }
+
+        private readonly struct BenchmarkShot
+        {
+            public readonly string id, title, category;
+            public readonly Vector3 cameraOrAircraftPosition, target;
+            public readonly float fov;
+            public readonly bool cockpit;
+
+            public BenchmarkShot(
+                string id,
+                string title,
+                string category,
+                Vector3 cameraOrAircraftPosition,
+                Vector3 target,
+                float fov,
+                bool cockpit)
+            {
+                this.id = id;
+                this.title = title;
+                this.category = category;
+                this.cameraOrAircraftPosition = cameraOrAircraftPosition;
+                this.target = target;
+                this.fov = fov;
+                this.cockpit = cockpit;
+            }
+
+            public ShotDefinition Definition(string prefix, string titlePrefix)
+            {
+                return new ShotDefinition(prefix + id, titlePrefix + title, category,
+                    cameraOrAircraftPosition, LookAt(cameraOrAircraftPosition, target), fov, ViewProfile.Environment);
+            }
+        }
+
+        private sealed class AirportCoreVariantState
+        {
+            private readonly AirportCoreBenchmarkRoot root;
+            private readonly Material v4RunwayMaterial;
+            private readonly Material v4ReservoirMaterial;
+            private readonly Material terrainMaterial;
+            private readonly bool waterEffectsDeferred;
+            private readonly bool hasMinorWaterStrength;
+            private readonly float v4MinorWaterStrength;
+            private readonly Light globalSun;
+            private readonly Quaternion v4SunRotation;
+            private readonly Color v4SunColor;
+            private readonly float v4SunIntensity;
+            private readonly Mesh[] v2ContextMeshes;
+            private readonly Mesh[] v4ContextMeshes;
+
+            private AirportCoreVariantState(AirportCoreBenchmarkRoot root)
+            {
+                this.root = root;
+                v4RunwayMaterial = root.authoritativeRunway.sharedMaterial;
+                v4ReservoirMaterial = root.boulderReservoir.sharedMaterial;
+                waterEffectsDeferred = root.manifest != null &&
+                                       root.manifest.waterEffectsDeferredToOrthophoto;
+                terrainMaterial = root.minorWaterTerrainEffect.sharedMaterial;
+                if (terrainMaterial == null)
+                    throw new InvalidOperationException("Airport-core terrain A/B material is missing.");
+                hasMinorWaterStrength = terrainMaterial.HasProperty("_AirportCoreMinorWaterStrength");
+                v4MinorWaterStrength = hasMinorWaterStrength
+                    ? terrainMaterial.GetFloat("_AirportCoreMinorWaterStrength")
+                    : 0f;
+                Light[] sceneSuns = Resources.FindObjectsOfTypeAll<Light>()
+                    .Where(item => item != null && item.gameObject.scene.IsValid() &&
+                                   item.type == LightType.Directional && item != root.benchmarkSun)
+                    .ToArray();
+                if (sceneSuns.Length != 1)
+                    throw new InvalidOperationException(
+                        $"Expected one global directional sun for V4 A/B, found {sceneSuns.Length}.");
+                globalSun = sceneSuns[0];
+                v4SunRotation = globalSun.transform.rotation;
+                v4SunColor = globalSun.color;
+                v4SunIntensity = globalSun.intensity;
+                v2ContextMeshes = LoadContextMeshes(root.v2ContextOriginalMeshPaths, "V2 original");
+                v4ContextMeshes = LoadContextMeshes(root.v4ContextFilteredMeshPaths, "V4 filtered");
+            }
+
+            public static AirportCoreVariantState Capture(AirportCoreBenchmarkRoot root)
+            {
+                return new AirportCoreVariantState(root);
+            }
+
+            public void ApplyV2Baseline()
+            {
+                root.benchmarkContent.gameObject.SetActive(false);
+                ApplyContextMeshes(v2ContextMeshes);
+                root.authoritativeRunway.sharedMaterial = root.v2RunwayMaterial;
+                if (!waterEffectsDeferred)
+                    root.boulderReservoir.sharedMaterial = root.v2ReservoirMaterial;
+                if (hasMinorWaterStrength)
+                    terrainMaterial.SetFloat("_AirportCoreMinorWaterStrength", 0f);
+                globalSun.transform.rotation = root.v2SunRotation;
+                globalSun.color = root.v2SunColor;
+                globalSun.intensity = root.v2SunIntensity;
+            }
+
+            public void RestoreV4()
+            {
+                root.benchmarkContent.gameObject.SetActive(true);
+                ApplyContextMeshes(v4ContextMeshes);
+                root.authoritativeRunway.sharedMaterial = v4RunwayMaterial;
+                if (!waterEffectsDeferred)
+                    root.boulderReservoir.sharedMaterial = v4ReservoirMaterial;
+                if (hasMinorWaterStrength)
+                    terrainMaterial.SetFloat("_AirportCoreMinorWaterStrength", v4MinorWaterStrength);
+                globalSun.transform.rotation = v4SunRotation;
+                globalSun.color = v4SunColor;
+                globalSun.intensity = v4SunIntensity;
+            }
+
+            private void ApplyContextMeshes(Mesh[] meshes)
+            {
+                LOD[] lods = root.filteredV2Context.GetLODs();
+                if (lods.Length != 3 || meshes == null || meshes.Length != 3)
+                    throw new InvalidOperationException("Airport-core context A/B requires three LOD meshes.");
+                for (int index = 0; index < 3; index++)
+                {
+                    Renderer renderer = lods[index].renderers.SingleOrDefault();
+                    MeshFilter filter = renderer == null ? null : renderer.GetComponent<MeshFilter>();
+                    if (filter == null || meshes[index] == null)
+                        throw new InvalidOperationException("Airport-core context A/B LOD binding is incomplete.");
+                    filter.sharedMesh = meshes[index];
+                }
+            }
+
+            private static Mesh[] LoadContextMeshes(string[] paths, string label)
+            {
+                if (paths == null || paths.Length != 3)
+                    throw new InvalidOperationException(label + " context paths are incomplete.");
+                Mesh[] meshes = paths.Select(AssetDatabase.LoadAssetAtPath<Mesh>).ToArray();
+                if (meshes.Any(item => item == null))
+                    throw new InvalidOperationException(label + " context mesh asset is missing.");
+                return meshes;
+            }
+        }
+
+        private static Bounds CombinedRendererBounds(Transform root)
+        {
+            Renderer[] renderers = root != null
+                ? root.GetComponentsInChildren<Renderer>(true)
+                : Array.Empty<Renderer>();
+            if (renderers.Length == 0)
+                throw new InvalidOperationException("Required benchmark renderer hierarchy is empty: " + root?.name);
+            Bounds bounds = renderers[0].bounds;
+            for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
+            return bounds;
+        }
+
+        private static Bounds MinorWaterBounds(
+            AirportCoreBenchmarkRoot root,
+            ProductionEnvironmentRoot environment)
+        {
+            Material material = root.minorWaterTerrainEffect != null
+                ? root.minorWaterTerrainEffect.sharedMaterial
+                : null;
+            bool orthophotoOnly = environment != null && environment.waterPresentationMode ==
+                                  ProductionWaterPresentationMode.OrthophotoOnly;
+            if (!orthophotoOnly)
+            {
+                if (material == null || !material.HasProperty("_AirportCoreMinorWaterNearWorldMinInvSize"))
+                    throw new InvalidOperationException("Minor-water world-space binding is missing.");
+                Vector4 binding = material.GetVector("_AirportCoreMinorWaterNearWorldMinInvSize");
+                if (binding.z <= 0f || binding.w <= 0f)
+                    throw new InvalidOperationException(
+                        "Minor-water world-space binding has an invalid inverse size.");
+            }
+            else if (material == null)
+            {
+                throw new InvalidOperationException(
+                    "Orthophoto-only minor-water QA requires the authoritative terrain renderer.");
+            }
+            // Focus the dedicated ground-level shot on the existing OSM-derived drainage
+            // feature southwest of the airport. In orthophoto-only mode this deliberately
+            // proves the photographed feature remains coherent without a synthetic overlay.
+            Vector3 size = new Vector3(110f, 2f, 70f);
+            Vector3 center = new Vector3(-555f,
+                root.minorWaterTerrainEffect.bounds.center.y + 0.2f,
+                -490f);
+            return new Bounds(center, size);
         }
 
         private readonly struct ShotDefinition
@@ -925,6 +1363,7 @@ namespace QuestFlightLab.Editor
         {
             public int schemaVersion = 1;
             public string generatedUtc, unityVersion, scenePath, architectureVersion, outputDirectory, contactSheetPath;
+            public string airportCoreBeforeContactSheetPath, airportCoreAfterContactSheetPath;
             public int renderWidth, renderHeight, requiredShotCount;
             public bool productionEnvironmentContractPassed, authoredHierarchyPassed, singleEnabledXrOrigin, legacyBootstrapAndUiSuppressed;
             public string productionEnvironmentContract;

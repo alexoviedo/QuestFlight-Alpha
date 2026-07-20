@@ -1,0 +1,44 @@
+{
+  "accepted_placement_count": 377,
+  "active_3d_radius_meters": 1500.0,
+  "candidate_rejection_counts": {
+    "below_threshold": 989884,
+    "cap_rejected": 0,
+    "excluded": 1483,
+    "outside_active_radius": 56574,
+    "spacing_rejected": 258
+  },
+  "counts_by_distance_band": {
+    "0-600m": 30,
+    "600-1500m": 347
+  },
+  "counts_by_species": {
+    "narrowleaf_willow": 65,
+    "plains_cottonwood": 152,
+    "rabbitbrush_shrub": 113,
+    "rocky_mountain_juniper": 47
+  },
+  "exclusion_pixel_counts": {
+    "apron": 191,
+    "building": 228163,
+    "open_water": 105434,
+    "parking": 24,
+    "road": 44576,
+    "runway_safety": 1154,
+    "taxiway": 1233
+  },
+  "far_zone_policy": "orthophoto_only beyond 1500 m",
+  "instance_triangle_estimates_by_lod": {
+    "LOD0": 241320,
+    "LOD1": 60320,
+    "LOD2": 9048
+  },
+  "label": "KBDU V2 vegetation source/mask/coverage evidence",
+  "legacy_candidate_count_replaced": 246,
+  "mask_pixels_above_threshold": 58692,
+  "mask_pixels_suitable_after_exclusion": 33166,
+  "minimum_spacing_meters": 24.0,
+  "schema_version": 1,
+  "shared_material_slot_count": 4,
+  "status": "PASS"
+}

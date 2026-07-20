@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "building_batches": {"type": "array"},
+    "parked_aircraft_batches": {
+      "items": {
+        "properties": {
+          "id": {"type": "string"},
+          "placements": {
+            "items": {
+              "properties": {
+                "base_y_meters": {"type": "number"},
+                "color_rgba": {
+                  "items": {"maximum": 255, "minimum": 0, "type": "integer"},
+                  "maxItems": 4,
+                  "minItems": 4,
+                  "type": "array"
+                },
+                "placement_v2": {
+                  "properties": {
+                    "gear_contact_points_unity_meters": {"type": "object"},
+                    "model_forward_axis_correction_degrees": {"const": 90.0},
+                    "root_height_meters": {"type": "number"},
+                    "source_model_axes": {"type": "object"},
+                    "stable_id": {"pattern": "^parked-aircraft-kbdu-tiedown-[0-9]{2}$", "type": "string"},
+                    "stand_id": {"pattern": "^KBDU-TIEDOWN-[0-9]{2}$", "type": "string"},
+                    "terrain_height_meters": {"type": "number"}
+                  },
+                  "required": [
+                    "stable_id",
+                    "stand_id",
+                    "terrain_height_meters",
+                    "root_height_meters",
+                    "model_forward_axis_correction_degrees",
+                    "source_model_axes",
+                    "gear_contact_points_unity_meters"
+                  ],
+                  "type": "object"
+                },
+                "x_meters": {"type": "number"},
+                "yaw_degrees": {"type": "number"},
+                "z_meters": {"type": "number"}
+              },
+              "required": ["x_meters", "base_y_meters", "z_meters", "yaw_degrees", "color_rgba", "placement_v2"],
+              "type": "object"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          }
+        },
+        "required": ["id", "placements"],
+        "type": "object"
+      },
+      "maxItems": 1,
+      "minItems": 1,
+      "type": "array"
+    },
+    "vegetation_batches": {"type": "array"}
+  },
+  "required": ["building_batches", "vegetation_batches", "parked_aircraft_batches"],
+  "title": "KBDU Unity-compatible context batch recipe V2",
+  "type": "object"
+}

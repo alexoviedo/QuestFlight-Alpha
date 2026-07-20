@@ -1,0 +1,126 @@
+{
+  "boundary_metric": "max(abs(world_x_meters), abs(world_z_meters))",
+  "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Z=north",
+  "label": "KBDU continuous terrain imagery pyramid / not for navigation",
+  "origin": {
+    "elevation_msl_meters": 1611.7824,
+    "latitude_degrees": 40.03936527,
+    "longitude_degrees": -105.22608958
+  },
+  "schema_version": 1,
+  "shader_contract": {
+    "diagnostic_modes": [
+      "macro_level",
+      "blend_weight",
+      "texel_density_and_boundaries"
+    ],
+    "globally_continuous_world_space_uv": true,
+    "microdetail_maximum_distance_meters": 1500.0,
+    "runtime_material_instances_per_chunk": false,
+    "same_shader_and_lighting_across_all_rings": true,
+    "shader_name": "QuestFlight/KBDU Terrain Pyramid"
+  },
+  "transitions": [
+    {
+      "blend_start_end_meters": [
+        1650.0,
+        2000.0
+      ],
+      "blend_width_meters": 350.0,
+      "inner_zone_id": "near_4km",
+      "outer_zone_id": "mid_12km"
+    },
+    {
+      "blend_start_end_meters": [
+        5000.0,
+        6000.0
+      ],
+      "blend_width_meters": 1000.0,
+      "inner_zone_id": "mid_12km",
+      "outer_zone_id": "far_24km"
+    }
+  ],
+  "zones": [
+    {
+      "android_compression": "ASTC_6x6",
+      "anisotropy": 8,
+      "coverage_meters": 4000.0,
+      "estimated_mip_at_cockpit_height": 0.0,
+      "estimated_mip_at_pattern_altitude": 0.0,
+      "filter_mode": "trilinear",
+      "half_extent_meters": 2000.0,
+      "id": "near_4km",
+      "meters_per_texel": 0.9765625,
+      "mip_bias": -0.15,
+      "mipmaps": true,
+      "runtime_resolution_pixels": [
+        4096,
+        4096
+      ],
+      "streaming_mipmaps": true,
+      "texture_path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
+      "texture_sha256": "446e5c7fa13fc653de1f3e8404829c0e54b7e919fe99ebfba79d747a0b1dadea",
+      "world_min_inverse_size": [
+        -2000.0,
+        -2000.0,
+        0.00025,
+        0.00025
+      ],
+      "wrap_mode": "clamp"
+    },
+    {
+      "android_compression": "ASTC_6x6",
+      "anisotropy": 8,
+      "coverage_meters": 12000.0,
+      "estimated_mip_at_cockpit_height": 0.0,
+      "estimated_mip_at_pattern_altitude": 0.0,
+      "filter_mode": "trilinear",
+      "half_extent_meters": 6000.0,
+      "id": "mid_12km",
+      "meters_per_texel": 2.9296875,
+      "mip_bias": -0.15,
+      "mipmaps": true,
+      "runtime_resolution_pixels": [
+        4096,
+        4096
+      ],
+      "streaming_mipmaps": true,
+      "texture_path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Mid12km_4096.jpg",
+      "texture_sha256": "5e8d6edbcc5dc937c78b5fb8e4a5f8f7a06bda726b4509684e237f2b17fbdf9a",
+      "world_min_inverse_size": [
+        -6000.0,
+        -6000.0,
+        8.333333333333333e-05,
+        8.333333333333333e-05
+      ],
+      "wrap_mode": "clamp"
+    },
+    {
+      "android_compression": "ASTC_6x6",
+      "anisotropy": 8,
+      "coverage_meters": 24000.0,
+      "estimated_mip_at_cockpit_height": 0.0,
+      "estimated_mip_at_pattern_altitude": 0.0,
+      "filter_mode": "trilinear",
+      "half_extent_meters": 12000.0,
+      "id": "far_24km",
+      "meters_per_texel": 11.71875,
+      "mip_bias": -0.1,
+      "mipmaps": true,
+      "runtime_resolution_pixels": [
+        2048,
+        2048
+      ],
+      "streaming_mipmaps": true,
+      "texture_path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Far24km_2048.jpg",
+      "texture_sha256": "799be878d5c6be73b5596cbea70ee4e122859a528231608e40796f1020617b33",
+      "world_min_inverse_size": [
+        -12000.0,
+        -12000.0,
+        4.1666666666666665e-05,
+        4.1666666666666665e-05
+      ],
+      "wrap_mode": "clamp"
+    }
+  ]
+}

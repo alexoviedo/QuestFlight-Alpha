@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "cell_size_meters": {"maximum": 300, "minimum": 200, "type": "number"},
+    "coordinate_frame": {"type": "string"},
+    "label": {"type": "string"},
+    "placements": {
+      "items": {
+        "properties": {
+          "category": {"enum": ["building", "parked_aircraft", "vegetation"]},
+          "local_enu_meters": {
+            "properties": {"x": {"type": "number"}, "z": {"type": "number"}},
+            "required": ["x", "z"],
+            "type": "object"
+          },
+          "lod_hlod": {
+            "properties": {"cell_id": {"pattern": "^cell_250m_x[np][0-9]{3}_z[np][0-9]{3}$", "type": "string"}},
+            "required": ["cell_id"],
+            "type": "object"
+          },
+          "source_license_class": {"type": "string"},
+          "stable_id": {"minLength": 1, "type": "string"}
+        },
+        "required": ["stable_id", "category", "local_enu_meters", "lod_hlod", "source_license_class"],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema_version": {"const": 1},
+    "source_license_classes": {"items": {"type": "string"}, "type": "array"}
+  },
+  "required": ["schema_version", "coordinate_frame", "cell_size_meters", "placements", "source_license_classes"],
+  "title": "KBDU V2 production placement manifest",
+  "type": "object"
+}

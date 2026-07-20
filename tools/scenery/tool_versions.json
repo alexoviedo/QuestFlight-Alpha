@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-07-19T18:08:07Z",
+  "scope": "Offline Aerial Scenery V1 authoring and validation only; none of these tools are product runtime dependencies.",
+  "host_tools": {
+    "git": "2.54.0.windows.1",
+    "git_lfs": "3.7.1",
+    "adb": "35.0.2-12147458",
+    "blender": "5.1.2",
+    "unity": "6000.3.8f1 (1c7db571dde0)",
+    "meta_xr_simulator": "201.0"
+  },
+  "pinned_scenery_environment": {
+    "micromamba": "2.3.2",
+    "python": "3.12.13",
+    "numpy": "2.3.5",
+    "scipy": "1.16.3",
+    "pillow": "11.3.0",
+    "pyproj": "3.7.2",
+    "laspy": "2.6.1",
+    "lazrs_python": "0.8.1",
+    "pdal_core": "2.10.0",
+    "python_pdal": "3.5.3",
+    "gdal": "3.12.3",
+    "rasterio": "1.5.0",
+    "shapely": "2.1.2",
+    "trimesh": "4.12.2",
+    "pytest": "8.4.2"
+  },
+  "optional_unavailable_tools": {
+    "gltfpack": null,
+    "meshoptimizer": null
+  },
+  "canonical_resolution_record": "tools/scenery/toolchain.json",
+  "explicit_package_lock": "tools/scenery/conda-lock-win-64.txt"
+}

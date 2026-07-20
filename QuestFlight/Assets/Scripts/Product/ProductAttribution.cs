@@ -11,6 +11,8 @@ namespace QuestFlight.Product
         public const string AircraftLicenseUrl = "https://creativecommons.org/licenses/by/4.0/";
         public const string AircraftSourceUrl =
             "https://sketchfab.com/3d-models/cessna172-d1b15841c29c43d0862667300bad55a4";
+        public const string ParkedSceneryChangeNotice =
+            "Changes for parked scenery: exterior body only; cockpit, interior, glass, textures, source materials, branding presentation, and animation removed; geometry joined and decimated into two opaque LOD meshes.";
         public const string OsmCredit = "© OpenStreetMap contributors";
         public const string OsmLicenseUrl = "https://www.openstreetmap.org/copyright";
         public const string BrandingCaveat =
@@ -18,6 +20,7 @@ namespace QuestFlight.Product
 
         public string CreditsText =>
             AircraftCredit + " " + AircraftLicenseUrl + " Source: " + AircraftSourceUrl + "\n" +
+            ParkedSceneryChangeNotice + "\n" +
             OsmCredit + " — ODbL attribution: " + OsmLicenseUrl + "\n" + BrandingCaveat;
     }
 }

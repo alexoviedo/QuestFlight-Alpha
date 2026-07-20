@@ -6,6 +6,12 @@ using UnityEngine.Rendering;
 
 namespace QuestFlightLab.Environment
 {
+    public enum ProductionWaterPresentationMode
+    {
+        AuthoredSurface = 0,
+        OrthophotoOnly = 1
+    }
+
     /// <summary>
     /// Contract and validation-only marker for the authored production environment prefab.
     /// This component never creates, replaces, moves, or re-parents production geometry.
@@ -22,6 +28,7 @@ namespace QuestFlightLab.Environment
         public const int MaximumVisibleTriangles = 700000;
         public const int MaximumMaterials = 40;
         public const string ProductionWaterShaderName = "QuestFlightLab/Production Stable Water";
+        public const string ProductionReservoirShaderName = "QuestFlight/Airport Core V4/Reservoir Opaque";
         public const float MinimumAcceptedWaterTerrainSeparationMeters = 0.12f;
 
         [Header("Authored hierarchy")]
@@ -31,12 +38,18 @@ namespace QuestFlightLab.Environment
         public Transform airportContext;
         public Transform authoritativeRunwaySystem;
         public Transform essentialWater;
+        [Tooltip("OrthophotoOnly deliberately defers all water effects while preserving source provenance for final polish.")]
+        public ProductionWaterPresentationMode waterPresentationMode =
+            ProductionWaterPresentationMode.AuthoredSurface;
 
         [Header("Immutable terrain")]
         public MeshFilter[] nearTerrainMeshes = Array.Empty<MeshFilter>();
         public MeshFilter midTerrainMesh;
         public MeshFilter farTerrainMesh;
         public Texture2D uniqueMacroAlbedo;
+        public ProductionTerrainSurfaceAsset authoritativeTerrainSurface;
+        public ProductionPlacementManifest productionPlacementManifest;
+        public AirportParkingStandManifest airportParkingStandManifest;
         public Vector2 macroWorldMinimumMeters = new Vector2(-6000f, -6000f);
         public Vector2 macroWorldSizeMeters = new Vector2(MidCoverageMeters, MidCoverageMeters);
         [Range(0f, 1f)] public float macroRepeatedTileSimilarity;
@@ -65,9 +78,12 @@ namespace QuestFlightLab.Environment
         public int bakedRunwayThresholdStripeQuadCount;
         public int bakedRunwayMarkingQuadCount;
 
-        [Header("Essential water only")]
+        [Header("Authoritative bounded water")]
         public MeshFilter boulderReservoirSurface;
         public MeshFilter boulderReservoirShoreBank;
+        public TextAsset waterFeatureManifestV2;
+        public MeshFilter otherWaterFeaturesSurfaceV2;
+        public MeshFilter otherWaterFeaturesShoreBankV2;
         public int retainedWaterBodyCount;
         public int discardedMinorWaterFeatureCount;
         public float minimumWaterTerrainSeparationMeters;
@@ -151,6 +167,14 @@ namespace QuestFlightLab.Environment
             Require(farTerrainSmoothingPassCount == 2,
                 $"far terrain must use two conservative offline smoothing passes, found {farTerrainSmoothingPassCount}", failures);
             Require(uniqueMacroAlbedo != null, "unique nonrepeating macro albedo is missing", failures);
+            Require(authoritativeTerrainSurface != null,
+                "authoritative production terrain-surface asset is missing", failures);
+            Require(productionPlacementManifest != null && productionPlacementManifest.entries != null &&
+                    productionPlacementManifest.entries.Length > 0,
+                "production placement manifest is missing or empty", failures);
+            Require(airportParkingStandManifest != null && airportParkingStandManifest.stands != null &&
+                    airportParkingStandManifest.stands.Length >= 3,
+                "airport parking-stand manifest is missing or incomplete", failures);
             Require(macroWorldSizeMeters.x >= MidCoverageMeters && macroWorldSizeMeters.y >= MidCoverageMeters,
                 "macro albedo does not cover the 12 km production context", failures);
             Require(macroRepeatedTileSimilarity < 0.985f,
@@ -191,19 +215,44 @@ namespace QuestFlightLab.Environment
                     renderer.name.IndexOf("RealContext_0_road_asphalt_021", StringComparison.Ordinal) < 0),
                 "production context still contains a duplicate land-cover or known malformed road renderer", failures);
 
-            Require(retainedWaterBodyCount == 1, $"expected only Boulder Reservoir, found {retainedWaterBodyCount} water bodies", failures);
+            Require(retainedWaterBodyCount > 1,
+                $"bounded V2 water coverage is incomplete ({retainedWaterBodyCount} represented features)", failures);
+            Require(waterFeatureManifestV2 != null,
+                "V2 water-feature source manifest is missing", failures);
             Require(HasMesh(boulderReservoirSurface), "Boulder Reservoir surface is missing", failures);
             Require(HasMesh(boulderReservoirShoreBank), "Boulder Reservoir shore bank is missing", failures);
-            if (boulderReservoirSurface != null)
+            Require(otherWaterFeaturesSurfaceV2 == null,
+                "obsolete V2 non-reservoir water ribbon surface remains serialized", failures);
+            Require(otherWaterFeaturesShoreBankV2 == null,
+                "obsolete V2 non-reservoir water bank geometry remains serialized", failures);
+            Renderer reservoirRenderer = boulderReservoirSurface == null
+                ? null
+                : boulderReservoirSurface.GetComponent<Renderer>();
+            Renderer shoreRenderer = boulderReservoirShoreBank == null
+                ? null
+                : boulderReservoirShoreBank.GetComponent<Renderer>();
+            if (waterPresentationMode == ProductionWaterPresentationMode.OrthophotoOnly)
             {
-                Material water = boulderReservoirSurface.GetComponent<Renderer>()?.sharedMaterial;
-                Require(water != null && water.renderQueue < (int)RenderQueue.Transparent,
-                    "water material must remain in an opaque render queue", failures);
+                Require(reservoirRenderer != null &&
+                        !reservoirRenderer.enabled && !IsAuthoredActive(reservoirRenderer.transform),
+                    "orthophoto-only water requires the reservoir renderer to be explicitly disabled", failures);
+                Require(reservoirRenderer == null || reservoirRenderer.sharedMaterials.Length == 0,
+                    "orthophoto-only water must not serialize a reservoir material dependency", failures);
+                Require(shoreRenderer != null && !shoreRenderer.enabled && !IsAuthoredActive(shoreRenderer.transform),
+                    "orthophoto-only water requires the shore-bank renderer to be disabled", failures);
+                Require(shoreRenderer == null || shoreRenderer.sharedMaterials.Length == 0,
+                    "orthophoto-only water must not serialize a shore-bank material dependency", failures);
+            }
+            else if (boulderReservoirSurface != null)
+            {
+                Material water = reservoirRenderer?.sharedMaterial;
+                Require(water != null && water.renderQueue == (int)RenderQueue.Geometry + 5,
+                    "Boulder Reservoir must use the authored Geometry+5 opaque queue", failures);
                 Require(water != null && water.shader != null &&
-                        string.Equals(water.shader.name, ProductionWaterShaderName, StringComparison.Ordinal),
-                    "Boulder Reservoir must use the production-only static water shader", failures);
-                Require(water != null && (!water.HasProperty("_ZWrite") || water.GetFloat("_ZWrite") > 0.5f),
-                    "water material must use ZWrite", failures);
+                        string.Equals(water.shader.name, ProductionReservoirShaderName, StringComparison.Ordinal),
+                    "Boulder Reservoir must use the bounded V4 opaque reservoir shader", failures);
+                Require(water != null && water.passCount == 1,
+                    "Boulder Reservoir must use exactly one shader pass", failures);
             }
             Require(boulderReservoirShorelineClosed,
                 "Boulder Reservoir smoothed shoreline is not closed", failures);
@@ -260,22 +309,54 @@ namespace QuestFlightLab.Environment
 
         public ProductionEnvironmentBudget CalculateBudget()
         {
-            Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+            Renderer[] renderers = GetComponentsInChildren<Renderer>(true)
+                .Where(renderer => renderer != null && renderer.enabled &&
+                                   !renderer.forceRenderingOff && IsAuthoredActive(renderer.transform))
+                .ToArray();
+            AerialVegetationBatchRenderer[] vegetationBatches =
+                GetComponentsInChildren<AerialVegetationBatchRenderer>(true)
+                    .Where(batch => batch != null && batch.enabled &&
+                                    IsAuthoredActive(batch.transform))
+                    .ToArray();
             HashSet<Material> materials = new HashSet<Material>();
-            int triangles = 0;
+            long triangles = 0;
             foreach (Renderer renderer in renderers)
             {
                 foreach (Material material in renderer.sharedMaterials)
                     if (material != null) materials.Add(material);
             }
-            foreach (MeshFilter filter in GetComponentsInChildren<MeshFilter>(true))
+            foreach (AerialVegetationBatchRenderer batch in vegetationBatches)
+            {
+                if (batch.SharedMaterial != null && batch.NonEmptyDrawCount > 0)
+                    materials.Add(batch.SharedMaterial);
+                triangles += batch.FullyInstancedTriangleCount;
+            }
+            foreach (MeshFilter filter in GetComponentsInChildren<MeshFilter>(true)
+                         .Where(filter => filter != null && IsAuthoredActive(filter.transform) &&
+                                          filter.GetComponent<Renderer>() is Renderer renderer &&
+                                          renderer.enabled && !renderer.forceRenderingOff))
             {
                 Mesh mesh = filter.sharedMesh;
                 if (mesh == null) continue;
                 for (int subMesh = 0; subMesh < mesh.subMeshCount; subMesh++)
-                    triangles += (int)(mesh.GetIndexCount(subMesh) / 3);
+                    triangles += (long)mesh.GetIndexCount(subMesh) / 3L;
             }
-            return new ProductionEnvironmentBudget(renderers.Length, triangles, materials.Count);
+            int authoredDrawSources = renderers.Length +
+                                      vegetationBatches.Sum(batch => batch.NonEmptyDrawCount);
+            return new ProductionEnvironmentBudget(
+                authoredDrawSources,
+                (int)Math.Min(int.MaxValue, triangles),
+                materials.Count);
+        }
+
+        private bool IsAuthoredActive(Transform candidate)
+        {
+            for (Transform current = candidate; current != null; current = current.parent)
+            {
+                if (!current.gameObject.activeSelf) return false;
+                if (current == transform) return true;
+            }
+            return false;
         }
 
         private static bool HasMesh(MeshFilter filter) => filter != null && filter.sharedMesh != null;

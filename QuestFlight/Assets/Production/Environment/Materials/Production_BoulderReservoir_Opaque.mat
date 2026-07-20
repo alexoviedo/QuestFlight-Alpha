@@ -20,26 +20,57 @@ Material:
   stringTagMap:
     RenderType: Opaque
   disabledShaderPasses: []
-  m_LockedProperties:
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _BroadNormal:
+        m_Texture: {fileID: 2800000, guid: 46134191a60a45649a4398dec9d5d0f9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DepthShoreRoughness:
+        m_Texture: {fileID: 2800000, guid: 982dda159f5e4b2c8de2f2c28b5a3c24, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EnvironmentCube:
+        m_Texture: {fileID: 8900000, guid: 38418911228a4bf4c81b3e7ed32cf656, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _RippleNormal:
+        m_Texture: {fileID: 2800000, guid: 5b27ade097124140af79c796369ebe00, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _DepthContrast: 0.92
-    - _GlintStrength: 0.34
+    - _BroadNormalMeters: 160
+    - _BroadNormalStrength: 0.24
+    - _DepthContrast: 1
+    - _EnvironmentIntensity: 0.78
+    - _EnvironmentMaxMip: 7
+    - _FineNormalStrength: 0.14
+    - _FresnelF0: 0.02
+    - _GlintStrength: 0.18
+    - _ReflectionFloor: 0.08
+    - _RippleNormalMeters: 44
     - _RippleStrength: 0.48
-    - _Roughness: 0.54
-    - _SurfaceVariation: 0.16
+    - _Roughness: 0.56
+    - _RoughnessMax: 0.7
+    - _RoughnessMin: 0.3
+    - _ShoreBandStrength: 0.26
+    - _SurfaceVariation: 0.035
     - _ZWrite: 1
     m_Colors:
     - _BasinCenterExtent: {r: 249.5625, g: 4307.6875, b: 1062.5625, a: 857.1875}
-    - _Color: {r: 0.095, g: 0.275, b: 0.345, a: 1}
-    - _HorizonColor: {r: 0.55, g: 0.68, b: 0.71, a: 1}
-    - _ShoreColor: {r: 0.33, g: 0.49, b: 0.42, a: 1}
+    - _BroadNormalScroll: {r: 0.00055, g: 0.00022, b: 0, a: 0}
+    - _Color: {r: 0.045, g: 0.17, b: 0.24, a: 1}
+    - _EnvironmentRotationSinCos: {r: 0, g: 1, b: 0, a: 0}
+    - _HorizonColor: {r: 0.82, g: 0.9, b: 0.94, a: 1}
+    - _RippleNormalScroll: {r: -0.0012, g: 0.0016, b: 0, a: 0}
+    - _ShoreBandColor: {r: 0.62, g: 0.67, b: 0.52, a: 1}
+    - _ShoreColor: {r: 0.19, g: 0.38, b: 0.38, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

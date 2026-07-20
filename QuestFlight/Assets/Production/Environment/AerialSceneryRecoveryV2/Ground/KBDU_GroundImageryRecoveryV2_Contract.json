@@ -1,0 +1,411 @@
+{
+  "budget": {
+    "baseline_scene_estimated_texture_bytes": 182930546,
+    "net_full_mip_increase_bytes": 3619008,
+    "new_full_astc_mip_bytes": 13580544,
+    "new_texture_count": 5,
+    "projected_scene_estimated_texture_bytes": 186549554,
+    "replaced_mid_full_astc_mip_bytes": 9961536,
+    "residency_note": "All macro-map mip chains are explicitly resident because the current world-space custom shader does not expose a proven automatic mip-streaming UV contract.",
+    "scene_texture_ceiling_bytes": 188743680
+  },
+  "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Z=north",
+  "integration_gate": [
+    "Remove the replaced 4096 mid atlas from the product dependency closure before counting the net delta.",
+    "Keep automatic mip streaming disabled for every world-space macro map unless a later manual requested-mip controller is separately proven.",
+    "Capture physical Quest memory/timing before acceptance.",
+    "Use the full mip-chain estimate as resident texture memory; do not claim unmeasured streaming savings."
+  ],
+  "label": "KBDU culling-compatible ground imagery selection and orthophoto-only water contract",
+  "renderer_contract": {
+    "automatic_mip_streaming_is_not_relied_upon": true,
+    "future_culling_compatibility": "The four quadrant assets preserve bounded ENU footprints and may later be moved to renderer-bound cells; that path is not required or credited in this milestone.",
+    "manual_requested_mipmap_level_is_optional_future_work_only_after_hardware_proof": true,
+    "no_draw_triangle_or_material_delta_from_imagery_itself": true,
+    "no_network_or_pc_runtime_dependency": true,
+    "no_runtime_material_clones": true,
+    "shared_material_binds_all_five_replacement_textures": true,
+    "texture_array_not_required": true,
+    "zero_renderer_delta": true
+  },
+  "schema_version": 1,
+  "selection": {
+    "fallback": {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 3589696,
+        "filter": "trilinear",
+        "format": "ASTC_10x10",
+        "mip_bias": 0.0,
+        "mipmaps": true,
+        "streaming_mipmaps": false,
+        "streaming_priority": 0,
+        "wrap": "clamp"
+      },
+      "bytes": 10215880,
+      "channel_statistics": [
+        {
+          "mean": 99.710838,
+          "standard_deviation": 47.785493
+        },
+        {
+          "mean": 105.10833,
+          "standard_deviation": 33.062786
+        },
+        {
+          "mean": 81.969105,
+          "standard_deviation": 29.592881
+        }
+      ],
+      "dimensions_pixels": [
+        4096,
+        4096
+      ],
+      "id": "mid_base_12km",
+      "local_bounds_meters": [
+        -6000.0,
+        -6000.0,
+        6000.0,
+        6000.0
+      ],
+      "meters_per_texel": [
+        2.9296875,
+        2.9296875
+      ],
+      "nominal_cell_bounds_meters": null,
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidBase12km_4096.jpg",
+      "sha256": "6d547c0d1ccc7ff646f59cc2d6ba209d601dda9da0cb61f00beea899b8aeff24",
+      "world_min_inverse_size": [
+        -6000.0,
+        -6000.0,
+        8.333333333333333e-05,
+        8.333333333333333e-05
+      ]
+    },
+    "fallback_to_far_blend_meters": [
+      5000.0,
+      6000.0
+    ],
+    "far": {
+      "path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Far24km_2048.jpg"
+    },
+    "near": {
+      "blend_to_recovery_meters": [
+        1800.0,
+        1980.0
+      ],
+      "half_extent_meters": 2000.0,
+      "path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg"
+    },
+    "quadrant_selection": "Select by signs of world X/Z; cross-blend only within 32 m of X=0 or Z=0 using the 64 m authored overlap.",
+    "recovery_quadrants": [
+      {
+        "android_import": {
+          "anisotropy": 8,
+          "estimated_full_mip_chain_bytes": 2497712,
+          "filter": "trilinear",
+          "format": "ASTC_6x6",
+          "mip_bias": -0.15,
+          "mipmaps": true,
+          "streaming_mipmaps": false,
+          "streaming_priority": 0,
+          "wrap": "clamp"
+        },
+        "bytes": 2402925,
+        "channel_statistics": [
+          {
+            "mean": 105.305885,
+            "standard_deviation": 50.647522
+          },
+          {
+            "mean": 107.641438,
+            "standard_deviation": 34.685595
+          },
+          {
+            "mean": 83.290245,
+            "standard_deviation": 30.445899
+          }
+        ],
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "id": "mid_nw",
+        "local_bounds_meters": [
+          -4032.0,
+          -32.0,
+          32.0,
+          4032.0
+        ],
+        "meters_per_texel": [
+          1.984375,
+          1.984375
+        ],
+        "nominal_cell_bounds_meters": [
+          -4000.0,
+          0.0,
+          0.0,
+          4000.0
+        ],
+        "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNW_2048.jpg",
+        "sha256": "677142d71bb8b66ba4e181c5a2d966cd73a4b87e21c631eef3c48a339c00b054",
+        "world_min_inverse_size": [
+          -4032.0,
+          -32.0,
+          0.00024606299212598425,
+          0.00024606299212598425
+        ]
+      },
+      {
+        "android_import": {
+          "anisotropy": 8,
+          "estimated_full_mip_chain_bytes": 2497712,
+          "filter": "trilinear",
+          "format": "ASTC_6x6",
+          "mip_bias": -0.15,
+          "mipmaps": true,
+          "streaming_mipmaps": false,
+          "streaming_priority": 0,
+          "wrap": "clamp"
+        },
+        "bytes": 2522835,
+        "channel_statistics": [
+          {
+            "mean": 85.63377,
+            "standard_deviation": 51.534286
+          },
+          {
+            "mean": 97.162186,
+            "standard_deviation": 37.676178
+          },
+          {
+            "mean": 75.097729,
+            "standard_deviation": 34.435877
+          }
+        ],
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "id": "mid_ne",
+        "local_bounds_meters": [
+          -32.0,
+          -32.0,
+          4032.0,
+          4032.0
+        ],
+        "meters_per_texel": [
+          1.984375,
+          1.984375
+        ],
+        "nominal_cell_bounds_meters": [
+          0.0,
+          0.0,
+          4000.0,
+          4000.0
+        ],
+        "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNE_2048.jpg",
+        "sha256": "91ea5f1f4517c081900634073767b22abf821c9d5115de5de8ff0e706c16d907",
+        "world_min_inverse_size": [
+          -32.0,
+          -32.0,
+          0.00024606299212598425,
+          0.00024606299212598425
+        ]
+      },
+      {
+        "android_import": {
+          "anisotropy": 8,
+          "estimated_full_mip_chain_bytes": 2497712,
+          "filter": "trilinear",
+          "format": "ASTC_6x6",
+          "mip_bias": -0.15,
+          "mipmaps": true,
+          "streaming_mipmaps": false,
+          "streaming_priority": 0,
+          "wrap": "clamp"
+        },
+        "bytes": 3108931,
+        "channel_statistics": [
+          {
+            "mean": 97.924751,
+            "standard_deviation": 54.874286
+          },
+          {
+            "mean": 105.836071,
+            "standard_deviation": 42.921246
+          },
+          {
+            "mean": 90.485531,
+            "standard_deviation": 40.751191
+          }
+        ],
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "id": "mid_sw",
+        "local_bounds_meters": [
+          -4032.0,
+          -4032.0,
+          32.0,
+          32.0
+        ],
+        "meters_per_texel": [
+          1.984375,
+          1.984375
+        ],
+        "nominal_cell_bounds_meters": [
+          -4000.0,
+          -4000.0,
+          0.0,
+          0.0
+        ],
+        "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSW_2048.jpg",
+        "sha256": "47fe667d0eb344a43dc4469ef332918fc930123187836afe0f5798d5e272e526",
+        "world_min_inverse_size": [
+          -4032.0,
+          -4032.0,
+          0.00024606299212598425,
+          0.00024606299212598425
+        ]
+      },
+      {
+        "android_import": {
+          "anisotropy": 8,
+          "estimated_full_mip_chain_bytes": 2497712,
+          "filter": "trilinear",
+          "format": "ASTC_6x6",
+          "mip_bias": -0.15,
+          "mipmaps": true,
+          "streaming_mipmaps": false,
+          "streaming_priority": 0,
+          "wrap": "clamp"
+        },
+        "bytes": 2327389,
+        "channel_statistics": [
+          {
+            "mean": 90.43029,
+            "standard_deviation": 56.881953
+          },
+          {
+            "mean": 97.889496,
+            "standard_deviation": 40.959958
+          },
+          {
+            "mean": 76.959736,
+            "standard_deviation": 36.783879
+          }
+        ],
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "id": "mid_se",
+        "local_bounds_meters": [
+          -32.0,
+          -4032.0,
+          4032.0,
+          32.0
+        ],
+        "meters_per_texel": [
+          1.984375,
+          1.984375
+        ],
+        "nominal_cell_bounds_meters": [
+          0.0,
+          -4000.0,
+          4000.0,
+          0.0
+        ],
+        "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSE_2048.jpg",
+        "sha256": "3d4cc4dd0adaa40c28ffe719a347574a26ff8928e92d04d89910c9aac15a64c2",
+        "world_min_inverse_size": [
+          -32.0,
+          -4032.0,
+          0.00024606299212598425,
+          0.00024606299212598425
+        ]
+      }
+    ],
+    "recovery_to_fallback_blend_meters": [
+      3800.0,
+      4000.0
+    ]
+  },
+  "shader_integration_spec": {
+    "deterministic_batch_method": "Read KBDU_GroundImageryRecoveryV2_Contract.json, bind the exact GUID-backed paths above, set vectors verbatim, set every macro TextureImporter.streamingMipmaps=false, save the shared material and explicitly serialized product prefab, then run the imagery validator and product Visual QA.",
+    "fragment_branch_order": [
+      "radius <= 1800: sample _NearAlbedo",
+      "1800 < radius < 1980: blend selected recovery quadrant to _NearAlbedo",
+      "1980 <= radius <= 3800: sample selected recovery quadrant",
+      "3800 < radius < 4000: blend _MidAlbedo fallback to selected recovery quadrant",
+      "4000 <= radius <= 5000: sample _MidAlbedo fallback",
+      "5000 < radius < 6000: preserve existing _MidAlbedo-to-_FarAlbedo blend",
+      "radius >= 6000: sample _FarAlbedo"
+    ],
+    "new_texture_properties": {
+      "_RecoveryMidNEAlbedo": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNE_2048.jpg",
+      "_RecoveryMidNWAlbedo": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNW_2048.jpg",
+      "_RecoveryMidSEAlbedo": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSE_2048.jpg",
+      "_RecoveryMidSWAlbedo": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSW_2048.jpg"
+    },
+    "new_vector_properties": {
+      "_RecoveryHotBlendStartEnd": [
+        3800.0,
+        4000.0
+      ],
+      "_RecoveryMidNEWorldMinInvSize": [
+        -32.0,
+        -32.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ],
+      "_RecoveryMidNWWorldMinInvSize": [
+        -4032.0,
+        -32.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ],
+      "_RecoveryMidSEWorldMinInvSize": [
+        -32.0,
+        -4032.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ],
+      "_RecoveryMidSWWorldMinInvSize": [
+        -4032.0,
+        -4032.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ],
+      "_RecoveryNearBlendStartEnd": [
+        1800.0,
+        1980.0
+      ],
+      "_RecoveryQuadrantSeamHalfWidthMeters": [
+        32.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "preserved_properties": {
+      "_FarAlbedo": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Far24km_2048.jpg",
+      "_NearAlbedo": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg"
+    },
+    "quadrant_selection_formula": "north = worldZ >= 0; east = worldX >= 0; choose NW/NE/SW/SE. Within abs(worldX)<32 or abs(worldZ)<32, cross-blend the two adjacent tiles using smoothstep(-32,32,axis); at radius>1980 both axes cannot simultaneously be in the seam.",
+    "quadrant_uv_formula": "uv = (worldXZ - property.xy) * property.zw; use tex2Dgrad with ddx/ddy of that uv",
+    "rebound_property": {
+      "_MidAlbedo": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidBase12km_4096.jpg",
+      "replaces": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Mid12km_4096.jpg"
+    },
+    "shader": "QuestFlight/KBDU Terrain Pyramid"
+  },
+  "water": {
+    "future_polish": "deferred; this contract intentionally provides no water effects",
+    "minor_water": "sample the same selected ground-imagery level as terrain; no ribbon renderer, no bank renderer, no water material, no mask response, no transparency, and no extra draw",
+    "mode": "orthophoto_only",
+    "reservoir": "sample the same selected ground-imagery level as adjacent terrain; no water renderer, no water material, no animated normal, no reflection, no tint, no transparency, and no extra draw"
+  }
+}

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using QuestFlightLab.Environment;
 using QuestFlightLab.Flight.Backends;
 using Unity.Profiling;
@@ -23,6 +24,7 @@ namespace QuestFlightLab.Runtime
         public float cpuFrameMs;
         public float gpuFrameMs;
         public long gcAllocatedBytes;
+        public long managedAllocationCount;
         public long runtimeDrawCalls;
         public long runtimeTriangles;
     }
@@ -31,9 +33,11 @@ namespace QuestFlightLab.Runtime
     public struct RenderBudgetSnapshot
     {
         public int activeRendererCount;
+        public int estimatedVisibleRendererCount;
         public int estimatedInstancedDrawCalls;
         public long estimatedFrustumTriangles;
         public int uniqueMaterialCount;
+        public int transparentMaterialSlots;
         public string drawCountSemantics;
         public string triangleCountSemantics;
     }
@@ -45,15 +49,44 @@ namespace QuestFlightLab.Runtime
             Renderer[] renderers = UnityEngine.Object.FindObjectsByType<Renderer>(
                     FindObjectsInactive.Include,
                     FindObjectsSortMode.None)
-                .Where(renderer => renderer != null && renderer.enabled && renderer.gameObject.activeInHierarchy)
+                .Where(renderer => renderer != null && renderer.enabled && !renderer.forceRenderingOff &&
+                                   renderer.gameObject.activeInHierarchy)
+                .ToArray();
+            AerialVegetationBatchRenderer[] vegetationBatches = UnityEngine.Object
+                .FindObjectsByType<AerialVegetationBatchRenderer>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .Where(batch => batch != null && batch.enabled && batch.gameObject.activeInHierarchy &&
+                                batch.SharedMaterial != null && batch.NonEmptyDrawCount > 0)
                 .ToArray();
             Plane[] frustum = camera != null ? GeometryUtility.CalculateFrustumPlanes(camera) : null;
-            Renderer[] visible = frustum == null
-                ? renderers
-                : renderers.Where(renderer => GeometryUtility.TestPlanesAABB(frustum, renderer.bounds)).ToArray();
+            Dictionary<Renderer, int> rendererLodIndices = new Dictionary<Renderer, int>();
+            Dictionary<LODGroup, int> selectedLodIndices = new Dictionary<LODGroup, int>();
+            if (camera != null)
+            {
+                foreach (LODGroup group in UnityEngine.Object.FindObjectsByType<LODGroup>(
+                             FindObjectsInactive.Include,
+                             FindObjectsSortMode.None))
+                {
+                    if (group == null || !group.enabled || !group.gameObject.activeInHierarchy) continue;
+                    LOD[] lods = group.GetLODs();
+                    selectedLodIndices[group] = EstimateActiveLodIndex(group, lods, camera);
+                    for (int lodIndex = 0; lodIndex < lods.Length; lodIndex++)
+                    foreach (Renderer renderer in lods[lodIndex].renderers ?? Array.Empty<Renderer>())
+                        if (renderer != null && !rendererLodIndices.ContainsKey(renderer))
+                            rendererLodIndices.Add(renderer, lodIndex);
+                }
+            }
+            Renderer[] visible = renderers.Where(renderer =>
+                    (camera == null ||
+                     ((camera.cullingMask & (1 << renderer.gameObject.layer)) != 0 &&
+                      GeometryUtility.TestPlanesAABB(frustum, renderer.bounds))) &&
+                    IsSelectedLodRenderer(renderer, rendererLodIndices, selectedLodIndices))
+                .ToArray();
             HashSet<Material> materials = new HashSet<Material>();
             long triangles = 0;
             int drawCalls = 0;
+            int transparentSlots = 0;
             foreach (Renderer renderer in visible)
             {
                 Material[] sharedMaterials = renderer.sharedMaterials;
@@ -73,29 +106,99 @@ namespace QuestFlightLab.Runtime
                 // to one draw nor counted once in full for every material.
                 for (int materialSlot = 0; materialSlot < sharedMaterials.Length; materialSlot++)
                 {
-                    if (sharedMaterials[materialSlot] == null) continue;
+                    Material material = sharedMaterials[materialSlot];
+                    if (material == null) continue;
+                    if (material.renderQueue >= (int)RenderQueue.Transparent ||
+                        string.Equals(
+                            material.GetTag("RenderType", false, string.Empty),
+                            "Transparent",
+                            StringComparison.OrdinalIgnoreCase))
+                        transparentSlots++;
                     int subMesh = Mathf.Min(materialSlot, mesh.subMeshCount - 1);
                     drawCalls++;
                     if (mesh.GetTopology(subMesh) == MeshTopology.Triangles)
                         triangles += (long)mesh.GetIndexCount(subMesh) / 3L;
                 }
             }
+            int visibleVegetationBatchDraws = 0;
+            foreach (AerialVegetationBatchRenderer batch in vegetationBatches)
+            {
+                if (camera != null && (camera.cullingMask & (1 << batch.gameObject.layer)) == 0)
+                    continue;
+
+                int batchDraws = batch.NonEmptyDrawCount;
+                Material material = batch.SharedMaterial;
+                visibleVegetationBatchDraws += batchDraws;
+                drawCalls += batchDraws;
+                triangles += batch.FullyInstancedTriangleCount;
+                materials.Add(material);
+                if (material.renderQueue >= (int)RenderQueue.Transparent ||
+                    string.Equals(
+                        material.GetTag("RenderType", false, string.Empty),
+                        "Transparent",
+                        StringComparison.OrdinalIgnoreCase))
+                    transparentSlots += batchDraws;
+            }
+            if (camera != null && camera.clearFlags == CameraClearFlags.Skybox && RenderSettings.skybox != null)
+            {
+                Material skybox = RenderSettings.skybox;
+                materials.Add(skybox);
+                drawCalls++;
+                if (skybox.renderQueue >= (int)RenderQueue.Transparent ||
+                    string.Equals(
+                        skybox.GetTag("RenderType", false, string.Empty),
+                        "Transparent",
+                        StringComparison.OrdinalIgnoreCase))
+                    transparentSlots++;
+            }
             return new RenderBudgetSnapshot
             {
-                activeRendererCount = renderers.Length,
+                activeRendererCount = renderers.Length + vegetationBatches.Sum(batch => batch.NonEmptyDrawCount),
+                estimatedVisibleRendererCount = visible.Length + visibleVegetationBatchDraws,
                 estimatedInstancedDrawCalls = drawCalls,
                 estimatedFrustumTriangles = triangles,
                 uniqueMaterialCount = materials.Count,
-                drawCountSemantics = "Visible non-null MeshRenderer/SkinnedMeshRenderer material-submesh slots before batching or instancing.",
-                triangleCountSemantics = "Triangle topology indices for the same effective rendered material-submesh slots."
+                transparentMaterialSlots = transparentSlots,
+                drawCountSemantics = "Camera-layer/frustum and selected-LOD non-null MeshRenderer/SkinnedMeshRenderer material-submesh slots, plus conservative camera-layer-visible authored AerialVegetationBatchRenderer draws, before Unity batching.",
+                triangleCountSemantics = "Triangle topology indices for the same effective renderer slots plus every authored matrix instance submitted by camera-layer-visible aerial vegetation batches."
             };
+        }
+
+        private static bool IsSelectedLodRenderer(
+            Renderer renderer,
+            IReadOnlyDictionary<Renderer, int> rendererLodIndices,
+            IReadOnlyDictionary<LODGroup, int> selectedLodIndices)
+        {
+            if (!rendererLodIndices.TryGetValue(renderer, out int rendererLodIndex)) return true;
+            LODGroup group = renderer.GetComponentInParent<LODGroup>();
+            return group == null || !selectedLodIndices.TryGetValue(group, out int selectedLodIndex) ||
+                   selectedLodIndex == rendererLodIndex;
+        }
+
+        private static int EstimateActiveLodIndex(LODGroup group, LOD[] lods, Camera camera)
+        {
+            if (group == null || lods == null || lods.Length == 0 || camera == null) return -1;
+            float scale = Mathf.Max(
+                Mathf.Abs(group.transform.lossyScale.x),
+                Mathf.Abs(group.transform.lossyScale.y),
+                Mathf.Abs(group.transform.lossyScale.z));
+            Vector3 referencePoint = group.transform.TransformPoint(group.localReferencePoint);
+            float distance = Vector3.Distance(camera.transform.position, referencePoint);
+            float relativeHeight = camera.orthographic
+                ? group.size * scale / Mathf.Max(0.001f, camera.orthographicSize * 2f)
+                : group.size * scale /
+                  Mathf.Max(0.001f, distance * 2f * Mathf.Tan(camera.fieldOfView * Mathf.Deg2Rad * 0.5f));
+            relativeHeight *= QualitySettings.lodBias;
+            for (int index = 0; index < lods.Length; index++)
+                if (relativeHeight >= lods[index].screenRelativeTransitionHeight) return index;
+            return -1;
         }
     }
 
     [Serializable]
     public sealed class QuestTemporalVisualGateReport
     {
-        public int schemaVersion = 3;
+        public int schemaVersion = 5;
         public string generatedUtc;
         public string unityVersion;
         public string platform;
@@ -103,6 +206,10 @@ namespace QuestFlightLab.Runtime
         public string graphicsDeviceType;
         public string graphicsDeviceName;
         public string sceneryMode = ProductionVerticalSliceRoot.ArchitectureVersion;
+        public string diagnosticIsolationProfile = QuestTemporalVisualGateRecorder.ProductionIsolationProfile;
+        public bool diagnosticIsolationActive;
+        public int diagnosticDisabledRendererCount;
+        public int diagnosticTextureMipmapLimit;
         public bool productionVerticalSliceActive;
         public string productionArchitectureVersion;
         public bool authoredProductionHierarchyValid;
@@ -141,13 +248,29 @@ namespace QuestFlightLab.Runtime
         public float averageGpuFrameMs;
         public float p95GpuFrameMs;
         public bool allocationRecorderAvailable;
+        public bool allocationMeasurementAvailable;
+        public bool allocationMeasurementValidated;
+        public string allocationMeasurementSource;
+        public string allocationMeasurementScope;
+        public int allocationMeasurementSamples;
+        public bool allocationByteMeasurementAvailable;
+        public bool managedAllocationCountMeasurementAvailable;
+        public bool allocationCounterCalibrationPassed;
+        public long allocationCounterCalibrationDelta;
+        public long totalManagedAllocationCount;
+        public long maxManagedAllocationCountPerFrame;
+        public string allocationMeasurementInvalidReason;
         public long averageGcAllocatedBytesPerFrame;
         public long maxGcAllocatedBytesPerFrame;
         public RenderBudgetSnapshot renderBudget;
         public int activeRendererCount;
         public int sceneMaterialCount;
+        public int transparentMaterialSlots;
         public int performanceDrawCallGate = QuestTemporalVisualGateRecorder.ProductionDrawCallGate;
         public long performanceVisibleTriangleGate = QuestTemporalVisualGateRecorder.ProductionVisibleTriangleGate;
+        public int performanceSceneMaterialGate = QuestTemporalVisualGateRecorder.ProductionSceneMaterialGate;
+        public int performanceTransparentMaterialSlotGate =
+            QuestTemporalVisualGateRecorder.ProductionTransparentMaterialSlotGate;
         public bool hardPerformanceGatePassed;
         public string hardPerformanceGateSemantics;
         public bool deliveredCadencePerformanceGatePassed;
@@ -172,17 +295,31 @@ namespace QuestFlightLab.Runtime
         public const float DefaultWarmupSeconds = 90f;
         public const float DefaultMeasurementSeconds = 60f;
         public const float Quest72HzFrameBudgetMs = 1000f / 72f;
-        public const float QuestAverageFrameGateMs = 13.2f;
         public const float QuestOverBudgetGateRatio = 0.05f;
-        public const int ProductionDrawCallGate = 180;
-        public const long ProductionVisibleTriangleGate = 700000L;
-        public const int ProductionSceneMaterialGate = 40;
+        public const int ProductionDrawCallGate = 120;
+        public const long ProductionVisibleTriangleGate = 500000L;
+        public const int ProductionSceneMaterialGate = 30;
+        public const int ProductionTransparentMaterialSlotGate = 2;
+        public const string ProductionIsolationProfile = "production";
+        public const string SkyOnlyIsolationProfile = "sky_only";
+        public const string WaterOffIsolationProfile = "water_off";
+        public const string BuildingsVegetationOffIsolationProfile = "buildings_vegetation_off";
+        public const string ReducedTextureIsolationProfile = "reduced_texture_tier";
         public const string DeliveredIntervalSemantics =
             "Time.unscaledDeltaTime is delivered-frame cadence and is not app execution headroom.";
         public const string WorkloadTimingSemantics =
             "Per-frame max of available Unity FrameTimingManager CPU/GPU duration; host VrApi remains authoritative on Quest.";
 
         private const string LogPrefix = "[QuestFlight][TemporalVisualGate]";
+        private const int Il2CppStatNewObjectCount = 0;
+        private static byte[] allocationCounterCalibrationRoot;
+
+        private sealed class DiagnosticIsolationState
+        {
+            public string profile = ProductionIsolationProfile;
+            public int previousTextureMipmapLimit;
+            public readonly List<Renderer> disabledRenderers = new List<Renderer>();
+        }
 
         [SerializeField] private float readinessTimeoutSeconds = DefaultReadinessTimeoutSeconds;
         [SerializeField] private float warmupSeconds = DefaultWarmupSeconds;
@@ -266,10 +403,63 @@ namespace QuestFlightLab.Runtime
             Debug.Log($"{LogPrefix} Readiness {(ready ? "PASS" : "FAIL")}: {readiness}");
             if (!ready) yield break;
 
+            ProductionEnvironmentRoot diagnosticEnvironment = productionRoot != null && productionRoot.EnvironmentRoot != null
+                ? productionRoot.EnvironmentRoot.GetComponentInChildren<ProductionEnvironmentRoot>(true)
+                : null;
+            DiagnosticIsolationState isolation = ApplyDiagnosticIsolation(ReadIsolationProfile(), diagnosticEnvironment);
+            Debug.Log($"{LogPrefix} Isolation profile={isolation.profile}; disabledRenderers={isolation.disabledRenderers.Count}; " +
+                      $"textureMipmapLimit={QualitySettings.globalTextureMipmapLimit}");
+
+            // The temporal recorder owns mountain capture during this gate. Disable the probe's
+            // independent 90 s auto-start before this gate's 90 s warmup so diagnostic profiles
+            // cannot accidentally start a second observer at the measurement boundary. Capture
+            // the full mountain invariant window during warmup, then leave a cooldown before the
+            // allocation-sensitive product window. Both gates remain strict, but the observer's
+            // own evidence serialization is not misclassified as product allocation.
+            bool mountainDiagnosticApplicable = mountainProbe != null && !string.Equals(
+                isolation.profile,
+                SkyOnlyIsolationProfile,
+                StringComparison.Ordinal);
+            MountainTemporalStabilityReport completedMountainReport = null;
+            if (mountainProbe != null)
+            {
+                mountainProbe.autoCaptureInPlayer = false;
+                if (mountainProbe.IsCapturing)
+                    mountainProbe.EndCapture(false);
+                if (mountainDiagnosticApplicable)
+                {
+                    mountainProbe.automaticCaptureSeconds = measurementSeconds;
+                    mountainProbe.BeginCapture(Camera.main);
+                }
+            }
+
             float warmupStarted = Time.realtimeSinceStartup;
-            while (Time.realtimeSinceStartup - warmupStarted < warmupSeconds) yield return null;
+            while (Time.realtimeSinceStartup - warmupStarted < warmupSeconds)
+            {
+                if (mountainDiagnosticApplicable && completedMountainReport == null &&
+                    Time.realtimeSinceStartup - warmupStarted >= measurementSeconds)
+                {
+                    completedMountainReport = mountainProbe.IsCapturing
+                        ? mountainProbe.EndCapture(true)
+                        : mountainProbe.LastReport;
+                }
+                yield return null;
+            }
+            if (mountainDiagnosticApplicable && completedMountainReport == null)
+            {
+                completedMountainReport = mountainProbe.IsCapturing
+                    ? mountainProbe.EndCapture(true)
+                    : mountainProbe.LastReport;
+            }
 
             QuestTemporalVisualGateReport report = CreateReport(readiness, Time.realtimeSinceStartup - readinessStarted);
+            report.diagnosticIsolationProfile = isolation.profile;
+            report.diagnosticIsolationActive = !string.Equals(
+                isolation.profile,
+                ProductionIsolationProfile,
+                StringComparison.Ordinal);
+            report.diagnosticDisabledRendererCount = isolation.disabledRenderers.Count;
+            report.diagnosticTextureMipmapLimit = QualitySettings.globalTextureMipmapLimit;
             // Allocate all observer-owned steady-state storage before the allocation recorder starts.
             // The gate must measure the product workload, not allocations introduced by its own probe.
             int expectedFrameSamples = Mathf.CeilToInt(Mathf.Max(1f, measurementSeconds) * 144f) + 16;
@@ -279,29 +469,87 @@ namespace QuestFlightLab.Runtime
             LastReport = report;
             if (mountainProbe != null)
             {
-                mountainProbe.autoCaptureInPlayer = false;
-                mountainProbe.automaticCaptureSeconds = measurementSeconds;
-                mountainProbe.BeginCapture(Camera.main);
+                if (string.Equals(isolation.profile, SkyOnlyIsolationProfile, StringComparison.Ordinal))
+                {
+                    report.limitations.Add(
+                        "Mountain temporal probing is not applicable to the sky-only diagnostic because all environment renderers are intentionally disabled.");
+                }
+                else if (completedMountainReport == null)
+                {
+                    report.limitations.Add(
+                        "The warmup-owned MountainTemporalStabilityProbe did not produce a report before the allocation window.");
+                }
             }
             else
             {
                 report.limitations.Add("Authored MountainTemporalStabilityProbe is missing.");
             }
-            Debug.Log($"{LogPrefix} Measurement started");
             ProfilerRecorder allocations = default;
-            bool allocationAvailable = false;
+            bool profilerAllocationAvailable = false;
             try
             {
                 allocations = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame", 1);
-                allocationAvailable = allocations.Valid;
+                profilerAllocationAvailable = allocations.Valid;
+                if (!profilerAllocationAvailable)
+                {
+                    report.limitations.Add(
+                        "Unity's byte-valued GC Allocated In Frame counter is unavailable in this non-development Release Player.");
+                    report.limitations.Add(
+                        "System.GC.GetAllocatedBytesForCurrentThread is intentionally not used because Unity 6000.3.8f1 IL2CPP implements it as an unimplemented zero-return stub.");
+                }
             }
             catch (Exception exception)
             {
-                report.limitations.Add("Allocation recorder unavailable: " + exception.Message);
+                report.limitations.Add("Unity allocation recorder unavailable: " + exception.Message);
             }
 
+            bool allocationCounterCalibrationPassed = false;
+            long allocationCounterCalibrationDelta = 0L;
+            string allocationMeasurementInvalidReason = string.Empty;
+            bool il2CppAllocationCounterAvailable = false;
+            ulong previousManagedObjectCount = 0UL;
+            if (!profilerAllocationAvailable)
+            {
+                il2CppAllocationCounterAvailable = TryCalibrateIl2CppAllocationCounter(
+                    out previousManagedObjectCount,
+                    out allocationCounterCalibrationDelta,
+                    out allocationMeasurementInvalidReason);
+                allocationCounterCalibrationPassed = il2CppAllocationCounterAvailable;
+                if (!il2CppAllocationCounterAvailable)
+                    report.limitations.Add("IL2CPP managed-object allocation counter unavailable: " +
+                                           allocationMeasurementInvalidReason);
+            }
+
+            bool allocationMeasurementAvailable = profilerAllocationAvailable || il2CppAllocationCounterAvailable;
+            string allocationMeasurementSource = profilerAllocationAvailable
+                ? "Unity ProfilerRecorder: GC Allocated In Frame"
+                : il2CppAllocationCounterAvailable
+                    ? "Unity IL2CPP public runtime stat: IL2CPP_STAT_NEW_OBJECT_COUNT"
+                    : "unavailable";
+            string allocationMeasurementScope = profilerAllocationAvailable
+                ? "All managed allocations reported by Unity for each frame."
+                : il2CppAllocationCounterAvailable
+                    ? "Monotonic process-global managed-object creations across all IL2CPP threads; zero objects implies zero managed allocation bytes."
+                    : "No exact managed-allocation measurement was available; the gate remains failed closed.";
+
+            Debug.Log($"{LogPrefix} Measurement started");
+            if (il2CppAllocationCounterAvailable)
+            {
+                try
+                {
+                    // Reset after all observer setup and the measurement log so only the exact
+                    // steady-state window contributes to the first per-frame delta.
+                    previousManagedObjectCount = ReadIl2CppManagedObjectCount();
+                }
+                catch (Exception exception)
+                {
+                    il2CppAllocationCounterAvailable = false;
+                    allocationMeasurementInvalidReason = "Could not establish the measurement baseline: " + exception.Message;
+                }
+            }
             float measurementStarted = Time.realtimeSinceStartup;
             int sequence = 0;
+            int allocationMeasurementSamples = 0;
             while (Time.realtimeSinceStartup - measurementStarted < measurementSeconds)
             {
                 yield return waitForEndOfFrame;
@@ -309,6 +557,48 @@ namespace QuestFlightLab.Runtime
                 uint count = FrameTimingManager.GetLatestTimings(1, timingBuffer);
                 float cpu = count > 0 ? (float)timingBuffer[0].cpuFrameTime : 0f;
                 float gpu = count > 0 ? (float)timingBuffer[0].gpuFrameTime : 0f;
+                long allocatedBytes = -1L;
+                long managedAllocationCount = -1L;
+                if (profilerAllocationAvailable)
+                {
+                    long profilerValue = allocations.LastValue;
+                    if (allocations.Count > 0 && profilerValue >= 0L)
+                    {
+                        allocatedBytes = profilerValue;
+                        allocationMeasurementSamples++;
+                    }
+                    else if (string.IsNullOrEmpty(allocationMeasurementInvalidReason))
+                    {
+                        allocationMeasurementInvalidReason =
+                            "Unity ProfilerRecorder did not provide a nonnegative per-frame allocation sample.";
+                    }
+                }
+                else if (il2CppAllocationCounterAvailable)
+                {
+                    try
+                    {
+                        ulong currentManagedObjectCount = ReadIl2CppManagedObjectCount();
+                        if (TryComputeAllocationCounterDelta(
+                                previousManagedObjectCount,
+                                currentManagedObjectCount,
+                                out managedAllocationCount))
+                        {
+                            previousManagedObjectCount = currentManagedObjectCount;
+                            allocationMeasurementSamples++;
+                        }
+                        else
+                        {
+                            allocationMeasurementInvalidReason =
+                                "IL2CPP managed-object allocation counter decreased or overflowed Int64.";
+                            il2CppAllocationCounterAvailable = false;
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        allocationMeasurementInvalidReason = "IL2CPP allocation sample failed: " + exception.Message;
+                        il2CppAllocationCounterAvailable = false;
+                    }
+                }
                 report.frameSamples.Add(new QuestTemporalFrameSample
                 {
                     sequence = sequence++,
@@ -318,21 +608,69 @@ namespace QuestFlightLab.Runtime
                     frameTimingAvailable = count > 0,
                     cpuFrameMs = cpu,
                     gpuFrameMs = gpu,
-                    gcAllocatedBytes = allocationAvailable ? allocations.LastValue : 0
+                    gcAllocatedBytes = allocatedBytes,
+                    managedAllocationCount = managedAllocationCount
                 });
             }
-            if (allocationAvailable) allocations.Dispose();
+            if (!profilerAllocationAvailable && il2CppAllocationCounterAvailable && report.frameSamples.Count > 0)
+            {
+                try
+                {
+                    ulong finalManagedObjectCount = ReadIl2CppManagedObjectCount();
+                    if (TryComputeAllocationCounterDelta(
+                            previousManagedObjectCount,
+                            finalManagedObjectCount,
+                            out long tailManagedAllocationCount))
+                    {
+                        int lastIndex = report.frameSamples.Count - 1;
+                        QuestTemporalFrameSample finalSample = report.frameSamples[lastIndex];
+                        finalSample.managedAllocationCount += tailManagedAllocationCount;
+                        report.frameSamples[lastIndex] = finalSample;
+                    }
+                    else
+                    {
+                        allocationMeasurementInvalidReason =
+                            "IL2CPP managed-object allocation counter decreased or overflowed at the measurement boundary.";
+                        il2CppAllocationCounterAvailable = false;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    allocationMeasurementInvalidReason = "IL2CPP final allocation sample failed: " + exception.Message;
+                    il2CppAllocationCounterAvailable = false;
+                }
+            }
+            if (profilerAllocationAvailable) allocations.Dispose();
             if (mountainProbe != null)
             {
-                MountainTemporalStabilityReport mountainReport = mountainProbe.IsCapturing
-                    ? mountainProbe.EndCapture(true)
-                    : mountainProbe.LastReport;
-                report.mountainTemporalGatePassed = mountainReport != null && mountainReport.passed;
-                report.mountainTemporalClassification = mountainReport?.classification ?? "MISSING_REPORT";
-                report.mountainTemporalEvidencePath = mountainReport?.evidencePath ?? string.Empty;
+                if (string.Equals(isolation.profile, SkyOnlyIsolationProfile, StringComparison.Ordinal))
+                {
+                    report.mountainTemporalGatePassed = false;
+                    report.mountainTemporalClassification = "NOT_APPLICABLE_DIAGNOSTIC_SKY_ONLY";
+                    report.mountainTemporalEvidencePath = string.Empty;
+                }
+                else
+                {
+                    MountainTemporalStabilityReport mountainReport = completedMountainReport;
+                    report.mountainTemporalGatePassed = mountainReport != null && mountainReport.passed;
+                    report.mountainTemporalClassification = mountainReport?.classification ?? "MISSING_REPORT";
+                    report.mountainTemporalEvidencePath = mountainReport?.evidencePath ?? string.Empty;
+                }
             }
-            FinalizeReport(report, Time.realtimeSinceStartup - measurementStarted, allocationAvailable);
+            FinalizeReport(
+                report,
+                Time.realtimeSinceStartup - measurementStarted,
+                profilerAllocationAvailable,
+                allocationMeasurementAvailable,
+                allocationMeasurementSource,
+                allocationMeasurementScope,
+                allocationMeasurementSamples,
+                il2CppAllocationCounterAvailable,
+                allocationCounterCalibrationPassed,
+                allocationCounterCalibrationDelta,
+                allocationMeasurementInvalidReason);
             WriteEvidence(report);
+            RestoreDiagnosticIsolation(isolation);
         }
 
         private QuestTemporalVisualGateReport CreateReport(string readiness, float readinessSeconds)
@@ -363,7 +701,18 @@ namespace QuestFlightLab.Runtime
             };
         }
 
-        private static void FinalizeReport(QuestTemporalVisualGateReport report, float measuredSeconds, bool allocationAvailable)
+        private static void FinalizeReport(
+            QuestTemporalVisualGateReport report,
+            float measuredSeconds,
+            bool profilerAllocationAvailable,
+            bool allocationMeasurementAvailable,
+            string allocationMeasurementSource,
+            string allocationMeasurementScope,
+            int allocationMeasurementSamples,
+            bool il2CppAllocationCounterAvailable,
+            bool allocationCounterCalibrationPassed,
+            long allocationCounterCalibrationDelta,
+            string allocationMeasurementInvalidReason)
         {
             report.measuredSeconds = measuredSeconds;
             report.sampleCount = report.frameSamples.Count;
@@ -396,15 +745,37 @@ namespace QuestFlightLab.Runtime
             report.p95CpuFrameMs = Percentile(cpu, 0.95f);
             report.averageGpuFrameMs = Average(gpu);
             report.p95GpuFrameMs = Percentile(gpu, 0.95f);
-            report.allocationRecorderAvailable = allocationAvailable;
-            report.averageGcAllocatedBytesPerFrame = report.frameSamples.Count > 0
-                ? (long)report.frameSamples.Average(sample => (double)sample.gcAllocatedBytes) : 0L;
-            report.maxGcAllocatedBytesPerFrame = report.frameSamples.Count > 0
-                ? report.frameSamples.Max(sample => sample.gcAllocatedBytes) : 0L;
+            report.allocationRecorderAvailable = profilerAllocationAvailable;
+            report.allocationMeasurementAvailable = allocationMeasurementAvailable;
+            report.allocationMeasurementSource = allocationMeasurementSource;
+            report.allocationMeasurementScope = allocationMeasurementScope;
+            report.allocationMeasurementSamples = allocationMeasurementSamples;
+            report.allocationByteMeasurementAvailable = profilerAllocationAvailable;
+            report.allocationCounterCalibrationPassed = allocationCounterCalibrationPassed;
+            report.allocationCounterCalibrationDelta = allocationCounterCalibrationDelta;
+            report.allocationMeasurementInvalidReason = allocationMeasurementInvalidReason ?? string.Empty;
+            report.allocationMeasurementValidated = allocationMeasurementAvailable &&
+                                                    allocationMeasurementSamples == report.frameSamples.Count &&
+                                                    string.IsNullOrEmpty(report.allocationMeasurementInvalidReason) &&
+                                                    (profilerAllocationAvailable ||
+                                                     il2CppAllocationCounterAvailable && allocationCounterCalibrationPassed);
+            report.managedAllocationCountMeasurementAvailable = !profilerAllocationAvailable &&
+                                                                il2CppAllocationCounterAvailable &&
+                                                                report.allocationMeasurementValidated;
+            report.averageGcAllocatedBytesPerFrame = profilerAllocationAvailable && report.frameSamples.Count > 0
+                ? (long)report.frameSamples.Average(sample => (double)sample.gcAllocatedBytes) : -1L;
+            report.maxGcAllocatedBytesPerFrame = profilerAllocationAvailable && report.frameSamples.Count > 0
+                ? report.frameSamples.Max(sample => sample.gcAllocatedBytes) : -1L;
+            report.totalManagedAllocationCount = report.managedAllocationCountMeasurementAvailable
+                ? report.frameSamples.Sum(sample => sample.managedAllocationCount) : -1L;
+            report.maxManagedAllocationCountPerFrame = report.managedAllocationCountMeasurementAvailable &&
+                                                       report.frameSamples.Count > 0
+                ? report.frameSamples.Max(sample => sample.managedAllocationCount) : -1L;
             Camera camera = Camera.main;
             report.renderBudget = QuestRenderBudgetAudit.Capture(camera);
             report.activeRendererCount = report.renderBudget.activeRendererCount;
             report.sceneMaterialCount = report.renderBudget.uniqueMaterialCount;
+            report.transparentMaterialSlots = report.renderBudget.transparentMaterialSlots;
             report.deliveredCadencePerformanceGatePassed = report.p95DeliveredIntervalMs <= Quest72HzFrameBudgetMs &&
                                                           report.framesOver72HzBudgetRatio <= QuestOverBudgetGateRatio;
             report.workloadPerformanceGatePassed = workload.Length > 0 &&
@@ -413,8 +784,151 @@ namespace QuestFlightLab.Runtime
             report.hardPerformanceGatePassed = report.workloadPerformanceGatePassed &&
                                                report.renderBudget.estimatedInstancedDrawCalls <= ProductionDrawCallGate &&
                                                report.renderBudget.estimatedFrustumTriangles <= ProductionVisibleTriangleGate &&
-                                               report.renderBudget.uniqueMaterialCount <= ProductionSceneMaterialGate;
+                                               report.renderBudget.uniqueMaterialCount <= ProductionSceneMaterialGate &&
+                                               report.renderBudget.transparentMaterialSlots <= ProductionTransparentMaterialSlotGate;
             report.limitations.Add("No worn-headset human observation was available during machine capture.");
+        }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+        [DllImport("__Internal", EntryPoint = "il2cpp_stats_get_value", CallingConvention = CallingConvention.Cdecl)]
+        private static extern ulong Il2CppStatsGetValue(int stat);
+#endif
+
+        private static ulong ReadIl2CppManagedObjectCount()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            return Il2CppStatsGetValue(Il2CppStatNewObjectCount);
+#else
+            throw new PlatformNotSupportedException("IL2CPP runtime allocation stats are available only in the Android player.");
+#endif
+        }
+
+        private static bool TryCalibrateIl2CppAllocationCounter(
+            out ulong currentCount,
+            out long calibrationDelta,
+            out string error)
+        {
+            currentCount = 0UL;
+            calibrationDelta = 0L;
+            error = string.Empty;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            try
+            {
+                ulong before = ReadIl2CppManagedObjectCount();
+                allocationCounterCalibrationRoot = new byte[1];
+                allocationCounterCalibrationRoot[0] = 0x51;
+                ulong after = ReadIl2CppManagedObjectCount();
+                currentCount = after;
+                if (!TryComputeAllocationCounterDelta(before, after, out calibrationDelta) || calibrationDelta < 1L)
+                {
+                    error = "Calibration allocation did not increment IL2CPP_STAT_NEW_OBJECT_COUNT.";
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception exception)
+            {
+                error = exception.GetType().Name + ": " + exception.Message;
+                return false;
+            }
+#else
+            error = "Not an Android IL2CPP player.";
+            return false;
+#endif
+        }
+
+        private static bool TryComputeAllocationCounterDelta(ulong previous, ulong current, out long delta)
+        {
+            delta = 0L;
+            if (current < previous) return false;
+            ulong unsignedDelta = current - previous;
+            if (unsignedDelta > (ulong)long.MaxValue) return false;
+            delta = (long)unsignedDelta;
+            return true;
+        }
+
+        private static string ReadIsolationProfile()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            try
+            {
+                using AndroidJavaClass player = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                using AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
+                using AndroidJavaObject intent = activity?.Call<AndroidJavaObject>("getIntent");
+                string profile = intent?.Call<string>("getStringExtra", "qfl_environment_isolation");
+                return IsSupportedIsolationProfile(profile) ? profile : ProductionIsolationProfile;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning(LogPrefix + " Could not read diagnostic isolation intent: " + exception.Message);
+            }
+#endif
+            return ProductionIsolationProfile;
+        }
+
+        private static bool IsSupportedIsolationProfile(string profile) =>
+            string.Equals(profile, ProductionIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, SkyOnlyIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, WaterOffIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, BuildingsVegetationOffIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, ReducedTextureIsolationProfile, StringComparison.Ordinal);
+
+        private static DiagnosticIsolationState ApplyDiagnosticIsolation(
+            string profile,
+            ProductionEnvironmentRoot environment)
+        {
+            DiagnosticIsolationState state = new DiagnosticIsolationState
+            {
+                profile = IsSupportedIsolationProfile(profile) ? profile : ProductionIsolationProfile,
+                previousTextureMipmapLimit = QualitySettings.globalTextureMipmapLimit
+            };
+            if (string.Equals(state.profile, ReducedTextureIsolationProfile, StringComparison.Ordinal))
+            {
+                QualitySettings.globalTextureMipmapLimit = Math.Max(1, state.previousTextureMipmapLimit);
+                return state;
+            }
+            if (string.Equals(state.profile, ProductionIsolationProfile, StringComparison.Ordinal)) return state;
+
+            if (environment == null) return state;
+            Renderer[] renderers = environment.GetComponentsInChildren<Renderer>(true);
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null || !renderer.enabled) continue;
+                bool disable = string.Equals(state.profile, SkyOnlyIsolationProfile, StringComparison.Ordinal) ||
+                               string.Equals(state.profile, WaterOffIsolationProfile, StringComparison.Ordinal) &&
+                               environment.essentialWater != null &&
+                               (renderer.transform == environment.essentialWater ||
+                                renderer.transform.IsChildOf(environment.essentialWater)) ||
+                               string.Equals(state.profile, BuildingsVegetationOffIsolationProfile, StringComparison.Ordinal) &&
+                               IsBuildingOrVegetationRenderer(renderer.transform);
+                if (!disable) continue;
+                renderer.enabled = false;
+                state.disabledRenderers.Add(renderer);
+            }
+            return state;
+        }
+
+        private static void RestoreDiagnosticIsolation(DiagnosticIsolationState state)
+        {
+            if (state == null) return;
+            foreach (Renderer renderer in state.disabledRenderers)
+                if (renderer != null) renderer.enabled = true;
+            QualitySettings.globalTextureMipmapLimit = state.previousTextureMipmapLimit;
+        }
+
+        private static bool IsBuildingOrVegetationRenderer(Transform transform)
+        {
+            for (Transform current = transform; current != null; current = current.parent)
+            {
+                string objectName = current.name;
+                if (objectName.StartsWith("buildings_", StringComparison.Ordinal) ||
+                    objectName.StartsWith("vegetation_", StringComparison.Ordinal) ||
+                    string.Equals(objectName, "AirportArtProduction", StringComparison.Ordinal) ||
+                    string.Equals(objectName, AirportCoreBenchmarkRoot.GameObjectName, StringComparison.Ordinal) ||
+                    string.Equals(objectName, "SparseVegetationProduction", StringComparison.Ordinal))
+                    return true;
+            }
+            return false;
         }
 
         private static void WriteEvidence(QuestTemporalVisualGateReport report)

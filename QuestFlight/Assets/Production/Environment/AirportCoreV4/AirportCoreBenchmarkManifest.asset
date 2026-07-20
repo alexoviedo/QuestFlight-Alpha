@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6415d1c0c7a4aa69e939b3305b424c1, type: 3}
+  m_Name: AirportCoreBenchmarkManifest
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.AirportCoreBenchmarkManifest
+  stableId: KBDU_AIRPORT_CORE_BENCHMARK_V4
+  sourceV2Sha: eaccabc5e2cb9ccdcef30f825c69a013b83cea75
+  referenceV3Sha: 46ffc235113532ff5c4204c9b3b0a11e5932b2ce
+  benchmarkBounds:
+    m_Center: {x: -300, y: 60, z: -225}
+    m_Extent: {x: 350, y: 90, z: 350}
+  replacementSourceFeatureIds:
+  - osm:77434544
+  - osm:78054463
+  sourceAndLicenseManifests:
+  - {fileID: 4900000, guid: c5bd2064385ef77c4debea507ccccb0d, type: 3}
+  - {fileID: 4900000, guid: 5d1350e721200af0395b8dcbf6332260, type: 3}
+  - {fileID: 4900000, guid: 915ff169553146987e8d1d34ca82c329, type: 3}
+  - {fileID: 4900000, guid: 4ec9ea8a278caf8bb70ec8a97bde97d8, type: 3}
+  - {fileID: 4900000, guid: 76eed686fbc1612f4164640df2f7bcbc, type: 3}
+  buildingValidationReport: {fileID: 4900000, guid: 9a7720e7ea931ad3b90f6cd24aa81d16, type: 3}
+  materialsValidationReport: {fileID: 4900000, guid: 5d1350e721200af0395b8dcbf6332260, type: 3}
+  waterVegetationValidationReport: {fileID: 4900000, guid: aab21b39647a14ddc2513b6e95217cef, type: 3}
+  terminalAlbedo: {fileID: 2800000, guid: dd1bd02664e46745a5600a46a734157e, type: 3}
+  terminalNormal: {fileID: 2800000, guid: ec9df12bdaf7111742b12f62d0b5bf7b, type: 3}
+  terminalMrao: {fileID: 2800000, guid: b87b585ed56bb7f5d7120f57a971fc77, type: 3}
+  hangarKitAlbedo: {fileID: 2800000, guid: 466ed3d39b9fd5847a79c6fbbc4d1818, type: 3}
+  hangarKitNormal: {fileID: 2800000, guid: a982fb48de6f3a492598ea7fe8a16d71, type: 3}
+  hangarKitMrao: {fileID: 2800000, guid: 3a1a715c4a5259ffe652193b8f8be4b4, type: 3}
+  cleanPlateAlbedo: {fileID: 2800000, guid: 88f4e3f036c5188a01ad866c28ff253d, type: 3}
+  replacementMask: {fileID: 2800000, guid: 29300e2ed120f4b81cadc8494df4cbb2, type: 3}
+  originalShadowMask: {fileID: 2800000, guid: 418eecc3ed73b4145ef0da2e34a17f40, type: 3}
+  reflectionCubemap: {fileID: 8900000, guid: 38418911228a4bf4c81b3e7ed32cf656, type: 3}
+  terminalMaterial: {fileID: 2100000, guid: 6580fb1f9d337618f7d65c870a8b1caf, type: 2}
+  hangarKitMaterial: {fileID: 2100000, guid: 480e5d209d593a03cdced17d71b4d007, type: 2}
+  runwayMaterial: {fileID: 2100000, guid: 772deb61031def0e2d972c4803461aff, type: 2}
+  reservoirMaterial: {fileID: 0}
+  vegetationMaterial: {fileID: 2100000, guid: 0fe0303ee1f1b78b11036da2332e443e, type: 2}
+  sunAzimuthDegrees: 36.123043
+  sunElevationDegrees: 58.62307
+  sunCalibrationConfidence: 0.01
+  sunColor: {r: 1, g: 0.956, b: 0.885, a: 1}
+  sunIntensity: 1
+  ambientColor: {r: 0.48, g: 0.58, b: 0.72, a: 1}
+  ambientIntensity: 0.86
+  skyRotationDegrees: -64.123
+  bakedLightmapCount: 1
+  bakedLightmapResolution: 512
+  estimatedLightmapBytes: 157782
+  serializedLightProbeCount: 18
+  bakedReflectionProbeCount: 0
+  estimatedReflectionBytes: 0
+  cleanPlateCoversEveryReplacement: 1
+  photographedShadowsReconciled: 1
+  runwayMacroPatternRemoved: 1
+  waterEffectsDeferredToOrthophoto: 1
+  minorWaterUsesTerrainMask: 0
+  rawSourcesExcluded: 1
+  serializedReplacementCount: 2
+  serializedRendererCount: 15
+  serializedTriangleCount: 77282
+  serializedMaterialCount: 3
+  estimatedTextureBytes: 30408704
+  integrationUtc: 2026-07-17T19:30:00Z

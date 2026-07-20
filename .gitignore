@@ -55,6 +55,10 @@ htmlcov/
 /**/RawDownloads/
 /**/SourceArchives/
 /**/PackageCache/
+/tools/kbdu_environment_reconstruction/osm_buildings_6km_source.json
+# Unity may externalize an unused material beside the committed Blender source.
+/QuestFlight/Assets/ArtSource/Blender/AerialSceneryV1/Materials/
+/QuestFlight/Assets/ArtSource/Blender/AerialSceneryV1/Materials.meta
 *.zip
 *.7z
 *.rar

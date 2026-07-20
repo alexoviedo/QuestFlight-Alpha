@@ -1,0 +1,819 @@
+{
+  "budget": {
+    "baseline_scene_estimated_texture_bytes": 182930546,
+    "net_full_mip_increase_bytes": 3619008,
+    "new_full_astc_mip_bytes": 13580544,
+    "new_texture_count": 5,
+    "projected_scene_estimated_texture_bytes": 186549554,
+    "replaced_mid_full_astc_mip_bytes": 9961536,
+    "residency_note": "All macro-map mip chains are explicitly resident because the current world-space custom shader does not expose a proven automatic mip-streaming UV contract.",
+    "scene_texture_ceiling_bytes": 188743680
+  },
+  "derived_assets": [
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 2497712,
+        "filter": "trilinear",
+        "format": "ASTC_6x6",
+        "mip_bias": -0.15,
+        "mipmaps": true,
+        "streaming_mipmaps": false,
+        "streaming_priority": 0,
+        "wrap": "clamp"
+      },
+      "bytes": 2402925,
+      "channel_statistics": [
+        {
+          "mean": 105.305885,
+          "standard_deviation": 50.647522
+        },
+        {
+          "mean": 107.641438,
+          "standard_deviation": 34.685595
+        },
+        {
+          "mean": 83.290245,
+          "standard_deviation": 30.445899
+        }
+      ],
+      "dimensions_pixels": [
+        2048,
+        2048
+      ],
+      "id": "mid_nw",
+      "local_bounds_meters": [
+        -4032.0,
+        -32.0,
+        32.0,
+        4032.0
+      ],
+      "meters_per_texel": [
+        1.984375,
+        1.984375
+      ],
+      "nominal_cell_bounds_meters": [
+        -4000.0,
+        0.0,
+        0.0,
+        4000.0
+      ],
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNW_2048.jpg",
+      "sha256": "677142d71bb8b66ba4e181c5a2d966cd73a4b87e21c631eef3c48a339c00b054",
+      "world_min_inverse_size": [
+        -4032.0,
+        -32.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ]
+    },
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 2497712,
+        "filter": "trilinear",
+        "format": "ASTC_6x6",
+        "mip_bias": -0.15,
+        "mipmaps": true,
+        "streaming_mipmaps": false,
+        "streaming_priority": 0,
+        "wrap": "clamp"
+      },
+      "bytes": 2522835,
+      "channel_statistics": [
+        {
+          "mean": 85.63377,
+          "standard_deviation": 51.534286
+        },
+        {
+          "mean": 97.162186,
+          "standard_deviation": 37.676178
+        },
+        {
+          "mean": 75.097729,
+          "standard_deviation": 34.435877
+        }
+      ],
+      "dimensions_pixels": [
+        2048,
+        2048
+      ],
+      "id": "mid_ne",
+      "local_bounds_meters": [
+        -32.0,
+        -32.0,
+        4032.0,
+        4032.0
+      ],
+      "meters_per_texel": [
+        1.984375,
+        1.984375
+      ],
+      "nominal_cell_bounds_meters": [
+        0.0,
+        0.0,
+        4000.0,
+        4000.0
+      ],
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNE_2048.jpg",
+      "sha256": "91ea5f1f4517c081900634073767b22abf821c9d5115de5de8ff0e706c16d907",
+      "world_min_inverse_size": [
+        -32.0,
+        -32.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ]
+    },
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 2497712,
+        "filter": "trilinear",
+        "format": "ASTC_6x6",
+        "mip_bias": -0.15,
+        "mipmaps": true,
+        "streaming_mipmaps": false,
+        "streaming_priority": 0,
+        "wrap": "clamp"
+      },
+      "bytes": 3108931,
+      "channel_statistics": [
+        {
+          "mean": 97.924751,
+          "standard_deviation": 54.874286
+        },
+        {
+          "mean": 105.836071,
+          "standard_deviation": 42.921246
+        },
+        {
+          "mean": 90.485531,
+          "standard_deviation": 40.751191
+        }
+      ],
+      "dimensions_pixels": [
+        2048,
+        2048
+      ],
+      "id": "mid_sw",
+      "local_bounds_meters": [
+        -4032.0,
+        -4032.0,
+        32.0,
+        32.0
+      ],
+      "meters_per_texel": [
+        1.984375,
+        1.984375
+      ],
+      "nominal_cell_bounds_meters": [
+        -4000.0,
+        -4000.0,
+        0.0,
+        0.0
+      ],
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSW_2048.jpg",
+      "sha256": "47fe667d0eb344a43dc4469ef332918fc930123187836afe0f5798d5e272e526",
+      "world_min_inverse_size": [
+        -4032.0,
+        -4032.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ]
+    },
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 2497712,
+        "filter": "trilinear",
+        "format": "ASTC_6x6",
+        "mip_bias": -0.15,
+        "mipmaps": true,
+        "streaming_mipmaps": false,
+        "streaming_priority": 0,
+        "wrap": "clamp"
+      },
+      "bytes": 2327389,
+      "channel_statistics": [
+        {
+          "mean": 90.43029,
+          "standard_deviation": 56.881953
+        },
+        {
+          "mean": 97.889496,
+          "standard_deviation": 40.959958
+        },
+        {
+          "mean": 76.959736,
+          "standard_deviation": 36.783879
+        }
+      ],
+      "dimensions_pixels": [
+        2048,
+        2048
+      ],
+      "id": "mid_se",
+      "local_bounds_meters": [
+        -32.0,
+        -4032.0,
+        4032.0,
+        32.0
+      ],
+      "meters_per_texel": [
+        1.984375,
+        1.984375
+      ],
+      "nominal_cell_bounds_meters": [
+        0.0,
+        -4000.0,
+        4000.0,
+        0.0
+      ],
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSE_2048.jpg",
+      "sha256": "3d4cc4dd0adaa40c28ffe719a347574a26ff8928e92d04d89910c9aac15a64c2",
+      "world_min_inverse_size": [
+        -32.0,
+        -4032.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ]
+    },
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 3589696,
+        "filter": "trilinear",
+        "format": "ASTC_10x10",
+        "mip_bias": 0.0,
+        "mipmaps": true,
+        "streaming_mipmaps": false,
+        "streaming_priority": 0,
+        "wrap": "clamp"
+      },
+      "bytes": 10215880,
+      "channel_statistics": [
+        {
+          "mean": 99.710838,
+          "standard_deviation": 47.785493
+        },
+        {
+          "mean": 105.10833,
+          "standard_deviation": 33.062786
+        },
+        {
+          "mean": 81.969105,
+          "standard_deviation": 29.592881
+        }
+      ],
+      "dimensions_pixels": [
+        4096,
+        4096
+      ],
+      "id": "mid_base_12km",
+      "local_bounds_meters": [
+        -6000.0,
+        -6000.0,
+        6000.0,
+        6000.0
+      ],
+      "meters_per_texel": [
+        2.9296875,
+        2.9296875
+      ],
+      "nominal_cell_bounds_meters": null,
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidBase12km_4096.jpg",
+      "sha256": "6d547c0d1ccc7ff646f59cc2d6ba209d601dda9da0cb61f00beea899b8aeff24",
+      "world_min_inverse_size": [
+        -6000.0,
+        -6000.0,
+        8.333333333333333e-05,
+        8.333333333333333e-05
+      ]
+    }
+  ],
+  "label": "KBDU bounded public-domain ground imagery recovery / not for navigation",
+  "limitations": [
+    "The current official KBDU catalog contains 2019 0.6 m NAIP; the service query found no newer source at this location.",
+    "The recovery tiles improve sampling allocation but remain downsampled derivatives of real source imagery.",
+    "This imagery is visual context only and is not current airport or navigation data.",
+    "Final mip residency, bandwidth, and visual quality require an integrated physical Quest measurement."
+  ],
+  "processing": {
+    "base_grade": {
+      "blue_gain": 0.95,
+      "brightness": 0.98,
+      "contrast": 1.04,
+      "green_gain": 0.99,
+      "near_match_gain_max": 1.1,
+      "near_match_gain_min": 0.9,
+      "near_match_offset_limit": 10.0,
+      "red_gain": 1.02,
+      "saturation": 0.92
+    },
+    "config_sha256": "a5cb9e715d35559be61cb10fbfacb8ae945617b3b27553cc631d2bcbec84c526",
+    "near_match_gains": [
+      1.0043134,
+      1.00557518,
+      1.00410618
+    ],
+    "near_match_offsets": [
+      -1.34435751,
+      -1.46087026,
+      -1.18792656
+    ],
+    "pillow": "11.3.0",
+    "python": "3.12.13",
+    "resampling": "USGS ImageServer NaturalColor / bilinear / adjustAspectRatio=false; no synthetic or AI-generated pixels",
+    "tool_files": [
+      {
+        "bytes": 4948,
+        "path": "tools/scenery/imagery/config.json",
+        "sha256": "a5cb9e715d35559be61cb10fbfacb8ae945617b3b27553cc631d2bcbec84c526"
+      },
+      {
+        "bytes": 5358,
+        "path": "tools/scenery/imagery/ground_imagery_common.py",
+        "sha256": "58ed9e5bea50c5a8edec79a02cecd93439693f1df96ac6435a61e188849a3c12"
+      },
+      {
+        "bytes": 30289,
+        "path": "tools/scenery/imagery/fetch_and_build_ground_imagery.py",
+        "sha256": "7acb1ff64e6616897a759638e741565299a9f0e7d434e104b5dc2b9ee933e615"
+      },
+      {
+        "bytes": 9993,
+        "path": "tools/scenery/imagery/validate_ground_imagery.py",
+        "sha256": "2a5b2bc5400f98d0c87476bfd3ed572012765e175abdaf81e68c7f12b32d8b65"
+      }
+    ]
+  },
+  "prohibited_sources_confirmation": "No Google, commercial, unclear-license, AI-generated, or AI-upscaled imagery is used.",
+  "raw_policy": "Raw PNG exports, service responses, and work products remain external and are not committed.",
+  "schema_version": 1,
+  "source": {
+    "acquisition_dates": [
+      "2019-08-03",
+      "2019-09-19"
+    ],
+    "agency": "USGS / USDA Farm Service Agency",
+    "catalog_features": [
+      {
+        "Name": "m_3910506_ne_13_060_20190919",
+        "OBJECTID": 30800,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030003",
+        "raster_name": "m_3910506_ne_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910506_nw_13_060_20190919",
+        "OBJECTID": 30801,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030004",
+        "raster_name": "m_3910506_nw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910506_se_13_060_20190919",
+        "OBJECTID": 30802,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030006",
+        "raster_name": "m_3910506_se_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910506_sw_13_060_20190919",
+        "OBJECTID": 30803,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030005",
+        "raster_name": "m_3910506_sw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910507_ne_13_060_20190919",
+        "OBJECTID": 30804,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030154",
+        "raster_name": "m_3910507_ne_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910507_nw_13_060_20190919",
+        "OBJECTID": 30805,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030153",
+        "raster_name": "m_3910507_nw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910507_se_13_060_20190919",
+        "OBJECTID": 30806,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030155",
+        "raster_name": "m_3910507_se_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910507_sw_13_060_20190919",
+        "OBJECTID": 30807,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3030156",
+        "raster_name": "m_3910507_sw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910508_nw_13_060_20190803",
+        "OBJECTID": 30809,
+        "Year": 2019,
+        "acquisition_date": 1564790400000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029917",
+        "raster_name": "m_3910508_nw_13_060_20190803",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_3910508_sw_13_060_20190803",
+        "OBJECTID": 30811,
+        "Year": 2019,
+        "acquisition_date": 1564790400000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029918",
+        "raster_name": "m_3910508_sw_13_060_20190803",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010554_se_13_060_20190919",
+        "OBJECTID": 32802,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029805",
+        "raster_name": "m_4010554_se_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010554_sw_13_060_20190919",
+        "OBJECTID": 32803,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029809",
+        "raster_name": "m_4010554_sw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010555_se_13_060_20190919",
+        "OBJECTID": 32806,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029829",
+        "raster_name": "m_4010555_se_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010555_sw_13_060_20190919",
+        "OBJECTID": 32807,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029730",
+        "raster_name": "m_4010555_sw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010556_sw_13_060_20190803",
+        "OBJECTID": 32811,
+        "Year": 2019,
+        "acquisition_date": 1564790400000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029763",
+        "raster_name": "m_4010556_sw_13_060_20190803",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010562_ne_13_060_20190919",
+        "OBJECTID": 32832,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029651",
+        "raster_name": "m_4010562_ne_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010562_nw_13_060_20190919",
+        "OBJECTID": 32833,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029652",
+        "raster_name": "m_4010562_nw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010562_se_13_060_20190919",
+        "OBJECTID": 32834,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029705",
+        "raster_name": "m_4010562_se_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010562_sw_13_060_20190919",
+        "OBJECTID": 32835,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029706",
+        "raster_name": "m_4010562_sw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010563_ne_13_060_20190919",
+        "OBJECTID": 32836,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029793",
+        "raster_name": "m_4010563_ne_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010563_nw_13_060_20190919",
+        "OBJECTID": 32837,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029792",
+        "raster_name": "m_4010563_nw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010563_se_13_060_20190919",
+        "OBJECTID": 32838,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029785",
+        "raster_name": "m_4010563_se_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010563_sw_13_060_20190919",
+        "OBJECTID": 32839,
+        "Year": 2019,
+        "acquisition_date": 1568851200000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029783",
+        "raster_name": "m_4010563_sw_13_060_20190919",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010564_nw_13_060_20190803",
+        "OBJECTID": 32841,
+        "Year": 2019,
+        "acquisition_date": 1564790400000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029753",
+        "raster_name": "m_4010564_nw_13_060_20190803",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      },
+      {
+        "Name": "m_4010564_sw_13_060_20190803",
+        "OBJECTID": 32843,
+        "Year": 2019,
+        "acquisition_date": 1564790400000,
+        "agency": "USDA",
+        "band_count": 4,
+        "download_url": "https://earthexplorer.usgs.gov/download/options/naip/3029756",
+        "raster_name": "m_4010564_sw_13_060_20190803",
+        "resolution_units": "METER",
+        "resolution_value": 0.6,
+        "vendor": "USDA-FSA-APFO"
+      }
+    ],
+    "catalog_sha256": "c7611112a2a54c277969e48072cc525f0fa79449de744d7515a0afff0d332073",
+    "catalog_validation_half_extent_meters": 12000.0,
+    "catalog_year": 2019,
+    "credit": "USGS, USDA, The National Map: Orthoimagery",
+    "license_name": "United States government work / public domain",
+    "license_spdx": "LicenseRef-US-Government-Work-Public-Domain",
+    "license_url": "https://www.usgs.gov/national-map-supporting-themes",
+    "raster_function": "NaturalColor",
+    "raster_ids": [
+      30800,
+      30801,
+      30802,
+      30803,
+      30804,
+      30805,
+      30806,
+      30807,
+      30809,
+      30811,
+      32802,
+      32803,
+      32806,
+      32807,
+      32811,
+      32832,
+      32833,
+      32834,
+      32835,
+      32836,
+      32837,
+      32838,
+      32839,
+      32841,
+      32843
+    ],
+    "requests": [
+      {
+        "bbox_wgs84": [
+          -105.27334636249692,
+          40.00305199744567,
+          -105.17883279750308,
+          40.075659062130065
+        ],
+        "export_extent": [
+          -105.273346362497,
+          40.003051997446,
+          -105.178832797503,
+          40.07565906213
+        ],
+        "id": "hot_mosaic_8km",
+        "raw_bytes": 34982923,
+        "raw_sha256": "e5af246a60d0c66d654f9668970676eff9ca48f2cdd416e7bed505736385fa5d",
+        "request_sha256": "7d137577d00d2f7e17b3defc48f4aa3595dd752da18a2329fab45337fa5bb649"
+      },
+      {
+        "bbox_wgs84": [
+          -105.29643037059333,
+          40.03934395357932,
+          -105.22608958,
+          40.09338814056143
+        ],
+        "export_extent": [
+          -105.296430370593,
+          40.039343953579,
+          -105.22608958,
+          40.093388140561
+        ],
+        "id": "mid_base_r0c0",
+        "raw_bytes": 8674761,
+        "raw_sha256": "92dba3e4e20d7c931fe9e6b9cab3c4d2cd9dfe514c6038376178c6726e3ccf47",
+        "request_sha256": "c03a7ee2c1d519f68195380614e71d56b71e719288278e2d91f689d54abd22a3"
+      },
+      {
+        "bbox_wgs84": [
+          -105.22608958,
+          40.03934395357932,
+          -105.15574878940667,
+          40.09338814056143
+        ],
+        "export_extent": [
+          -105.22608958,
+          40.039343953579,
+          -105.155748789407,
+          40.093388140561
+        ],
+        "id": "mid_base_r0c1",
+        "raw_bytes": 8698852,
+        "raw_sha256": "f255e46afc15e993c70b48433108fd8572f6a73d9c2c8be480fd15c1e3b2fb3b",
+        "request_sha256": "14a2988d2d5f20289edfab3e669fba00968b3b58a695fe5e4807641c99f958fc"
+      },
+      {
+        "bbox_wgs84": [
+          -105.29637486054237,
+          39.98532061843375,
+          -105.22608958,
+          40.039365270000005
+        ],
+        "export_extent": [
+          -105.296374860542,
+          39.985320618434,
+          -105.22608958,
+          40.03936527
+        ],
+        "id": "mid_base_r1c0",
+        "raw_bytes": 9903992,
+        "raw_sha256": "f487b651f56f422952239928331db40a5c3d6dec3554242b63566f4bd85de78a",
+        "request_sha256": "7dab42ac101827198564246df250442ee9d09615b63b5b2de005a48bc712a473"
+      },
+      {
+        "bbox_wgs84": [
+          -105.22608958,
+          39.98532061843375,
+          -105.15580429945761,
+          40.039365270000005
+        ],
+        "export_extent": [
+          -105.22608958,
+          39.985320618434,
+          -105.155804299458,
+          40.03936527
+        ],
+        "id": "mid_base_r1c1",
+        "raw_bytes": 8709313,
+        "raw_sha256": "653b864ab45399f2afd27eb02bb2bd1d390c5515e0a434d901e2ed87b29fc5b2",
+        "request_sha256": "7ac0ad16d344b6424e25cec4e97a7035db2989fd83a572744bcdf9c952eaa270"
+      }
+    ],
+    "resolution_meters": 0.6,
+    "retrieved_utc": "2026-07-19T19:38:14.534708Z",
+    "service_metadata_sha256": "45f59a5ccfa7aa1d0153fb00230a54de72ca8eb02d17f839894f80771335f024",
+    "service_name": "USGSNAIPPlus",
+    "service_url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer"
+  }
+}

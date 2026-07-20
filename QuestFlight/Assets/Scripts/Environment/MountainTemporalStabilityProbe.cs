@@ -126,6 +126,10 @@ namespace QuestFlightLab.Environment
         {
             public Renderer Renderer;
             public MeshFilter MeshFilter;
+            public Transform RendererTransform;
+            public GameObject RendererGameObject;
+            public Mesh BaselineMesh;
+            public Material BaselineMaterial;
             public Transform InitialParent;
             public LODGroup LodGroup;
             public LOD[] Lods;
@@ -137,8 +141,10 @@ namespace QuestFlightLab.Environment
         private Transform _authoritativeRoot;
         private Transform _environmentRoot;
         private Camera _camera;
+        private Transform _cameraTransform;
         private bool _initialized;
         private bool _capturing;
+        private bool _captureEndsAutomatically;
         private bool _automaticCaptureFinished;
         private float _activeWarmupSeconds;
         private float _captureActiveSeconds;
@@ -162,7 +168,7 @@ namespace QuestFlightLab.Environment
                     _activeWarmupSeconds += Time.unscaledDeltaTime;
                     if (_activeWarmupSeconds >= Mathf.Max(0f, automaticWarmupSeconds))
                     {
-                        BeginCapture(_camera);
+                        BeginCaptureInternal(_camera, true);
                     }
                 }
             }
@@ -170,7 +176,8 @@ namespace QuestFlightLab.Environment
             if (!_capturing) return;
             _captureActiveSeconds += Time.unscaledDeltaTime;
             CaptureFrameNow();
-            if (_captureActiveSeconds >= Mathf.Max(0.1f, automaticCaptureSeconds))
+            if (_captureEndsAutomatically &&
+                _captureActiveSeconds >= Mathf.Max(0.1f, automaticCaptureSeconds))
             {
                 EndCapture(true);
                 _automaticCaptureFinished = true;
@@ -209,6 +216,10 @@ namespace QuestFlightLab.Environment
                 {
                     Renderer = renderer,
                     MeshFilter = filter,
+                    RendererTransform = renderer.transform,
+                    RendererGameObject = renderer.gameObject,
+                    BaselineMesh = filter != null ? filter.sharedMesh : null,
+                    BaselineMaterial = renderer.sharedMaterial,
                     InitialParent = renderer.transform.parent,
                     LodGroup = lodGroup,
                     Lods = lods,
@@ -227,15 +238,23 @@ namespace QuestFlightLab.Environment
 
         public void BeginCapture(Camera camera = null)
         {
+            BeginCaptureInternal(camera, false);
+        }
+
+        private void BeginCaptureInternal(Camera camera, bool captureEndsAutomatically)
+        {
             if (!_initialized) Initialize(transform, transform.parent);
             _camera = ResolveCamera(camera);
+            _cameraTransform = _camera != null ? _camera.transform : null;
             _captureStartedUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
             _captureActiveSeconds = 0f;
             _sampledFrames = 0;
             _capturing = true;
+            _captureEndsAutomatically = captureEndsAutomatically;
 
             LastReport = CreateReport();
-            int expectedSamples = Mathf.CeilToInt(Mathf.Max(1f, automaticCaptureSeconds) * 90f * Mathf.Max(1, _bindings.Count));
+            int expectedSamples = Mathf.CeilToInt(
+                Mathf.Max(1f, automaticCaptureSeconds) * 144f * Mathf.Max(1, _bindings.Count));
             LastReport.frameSamples = new List<MountainRendererFrameSample>(expectedSamples);
             // Revalidate the renderer set before the allocation-sensitive capture begins. Per-frame
             // samples still detect identity/transform/material changes, and EndCapture scans again.
@@ -260,6 +279,7 @@ namespace QuestFlightLab.Environment
             if (LastReport == null) LastReport = CreateReport();
             ScanRendererSetAndLegacySources();
             _capturing = false;
+            _captureEndsAutomatically = false;
 
             LastReport.generatedUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
             LastReport.captureStartedUtc = _captureStartedUtc;
@@ -334,21 +354,23 @@ namespace QuestFlightLab.Environment
                 return;
             }
 
+            Transform rendererTransform = binding.RendererTransform;
+            GameObject rendererGameObject = binding.RendererGameObject;
             Mesh mesh = binding.MeshFilter != null ? binding.MeshFilter.sharedMesh : null;
             Material material = renderer.sharedMaterial;
             long matrixHash = HashMatrix(renderer.localToWorldMatrix);
             Bounds bounds = renderer.bounds;
-            string hierarchy = renderer.transform.parent == binding.InitialParent
+            string hierarchy = rendererTransform.parent == binding.InitialParent
                 ? binding.Baseline.parentHierarchy
-                : HierarchyPath(renderer.transform);
+                : HierarchyPath(rendererTransform);
             int meshId = mesh != null ? mesh.GetInstanceID() : 0;
             int vertexCount = mesh != null ? mesh.vertexCount : 0;
             int materialId = material != null ? material.GetInstanceID() : 0;
-            LODGroup currentLod = FindLodGroup(renderer.transform, _authoritativeRoot);
+            LODGroup currentLod = FindLodGroup(rendererTransform, _authoritativeRoot);
 
             if (matrixHash != binding.Baseline.localToWorldMatrixHash)
                 AddViolation($"Transform/matrix changed for {hierarchy}.");
-            if (renderer.transform.parent != binding.InitialParent)
+            if (rendererTransform.parent != binding.InitialParent)
                 AddViolation($"Parent hierarchy changed for {binding.Baseline.parentHierarchy} -> {hierarchy}.");
             if (meshId != binding.Baseline.meshInstanceId || vertexCount != binding.Baseline.vertexCount)
                 AddViolation($"Mesh identity/vertex count changed for {hierarchy}: {binding.Baseline.meshInstanceId}/{binding.Baseline.vertexCount} -> {meshId}/{vertexCount}.");
@@ -357,12 +379,12 @@ namespace QuestFlightLab.Environment
             if (materialId != binding.Baseline.materialInstanceId)
                 AddViolation($"Material identity changed for {hierarchy}: {binding.Baseline.materialInstanceId} -> {materialId}.");
             if (renderer.enabled != binding.Baseline.rendererEnabled ||
-                renderer.gameObject.activeSelf != binding.Baseline.activeSelf ||
-                renderer.gameObject.activeInHierarchy != binding.Baseline.activeInHierarchy ||
+                rendererGameObject.activeSelf != binding.Baseline.activeSelf ||
+                rendererGameObject.activeInHierarchy != binding.Baseline.activeInHierarchy ||
                 renderer.forceRenderingOff != binding.Baseline.forceRenderingOff)
                 AddViolation($"Enabled/active renderer state changed for {hierarchy}.");
-            if (!Approximately(renderer.transform.localScale, binding.Baseline.localScale) ||
-                !Approximately(renderer.transform.lossyScale, binding.Baseline.lossyScale))
+            if (!Approximately(rendererTransform.localScale, binding.Baseline.localScale) ||
+                !Approximately(rendererTransform.lossyScale, binding.Baseline.lossyScale))
                 AddViolation($"Scale changed for {hierarchy}.");
             if (currentLod != binding.LodGroup)
                 AddViolation($"LODGroup binding changed for {hierarchy}.");
@@ -370,10 +392,11 @@ namespace QuestFlightLab.Environment
             float cameraDistance = 0f;
             bool insideFarClip = true;
             bool reportedVisible = renderer.isVisible;
-            if (_camera != null)
+            if (_cameraTransform != null)
             {
-                Vector3 closest = bounds.ClosestPoint(_camera.transform.position);
-                cameraDistance = Vector3.Distance(_camera.transform.position, closest);
+                Vector3 cameraPosition = _cameraTransform.position;
+                Vector3 closest = bounds.ClosestPoint(cameraPosition);
+                cameraDistance = Vector3.Distance(cameraPosition, closest);
                 insideFarClip = cameraDistance <= _camera.farClipPlane;
             }
 
@@ -382,10 +405,10 @@ namespace QuestFlightLab.Environment
                 frameSequence = _sampledFrames,
                 unityFrameCount = Time.frameCount,
                 elapsedSeconds = _captureActiveSeconds,
-                objectName = renderer.name,
+                objectName = binding.Baseline.objectName,
                 parentHierarchy = hierarchy,
-                activeSelf = renderer.gameObject.activeSelf,
-                activeInHierarchy = renderer.gameObject.activeInHierarchy,
+                activeSelf = rendererGameObject.activeSelf,
+                activeInHierarchy = rendererGameObject.activeInHierarchy,
                 rendererEnabled = renderer.enabled,
                 forceRenderingOff = renderer.forceRenderingOff,
                 localToWorldMatrixHash = matrixHash,
@@ -394,8 +417,8 @@ namespace QuestFlightLab.Environment
                 boundsCenter = bounds.center,
                 boundsSize = bounds.size,
                 materialInstanceId = materialId,
-                localScale = renderer.transform.localScale,
-                lossyScale = renderer.transform.lossyScale,
+                localScale = rendererTransform.localScale,
+                lossyScale = rendererTransform.lossyScale,
                 lodGroupPresent = currentLod != null,
                 lodGroupEnabled = currentLod != null && currentLod.enabled,
                 lodFadeMode = currentLod != null ? (int)currentLod.fadeMode : -1,

@@ -1,0 +1,29 @@
+{
+  "estimatedAndroidBytes": 63072,
+  "plan": [
+    {
+      "boxSizeXyzMeters": [
+        260.0,
+        35.0,
+        240.0
+      ],
+      "consumers": [
+        "terminal opaque glazing",
+        "parked aircraft",
+        "service props"
+      ],
+      "name": "AirportCoreV4_BakedReflection",
+      "positionXyzMeters": [
+        -385.0,
+        5.0,
+        -260.0
+      ],
+      "resolutionPerFace": 128,
+      "runtimeUpdates": false
+    }
+  ],
+  "finalBakedReflectionProbeCount": 0,
+  "schemaVersion": 1,
+  "screenSpaceReflections": false,
+  "status": "NOT_BAKED_NOT_VISUALLY_ACCEPTED"
+}

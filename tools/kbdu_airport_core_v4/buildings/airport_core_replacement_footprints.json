@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Z=north",
+  "source": "Pinned V2 OSM derivative at feature/environment-reconstruction-v2 eaccabc5e2cb9ccdcef30f825c69a013b83cea75 plus official City address/type mapping",
+  "benchmark_bounds_xz_meters": [-650.0, -575.0, 50.0, 125.0],
+  "replacements": [
+    {
+      "object_id": "AirportCoreV4_ExecutiveTerminal_3335",
+      "asset_id": "ExecutiveTerminal",
+      "official_address": "3335 Airport Road",
+      "source_osm_id": 77434544,
+      "position_xz_meters": [-385.25, -224.125],
+      "rotation_degrees_clockwise_from_east": 0.0,
+      "source_footprint_xz_meters": [[-396.0, -245.5], [-396.0, -202.5], [-374.5, -202.5], [-374.5, -246.0], [-396.0, -245.5]],
+      "clean_plate_polygon_xz_meters": [[-402.0, -252.0], [-402.0, -196.0], [-368.0, -196.0], [-368.0, -252.0], [-402.0, -252.0]],
+      "clean_plate_reason": "Remove the photographed terminal roof, parked-aircraft overlap, and obsolete terminal shadow beneath the authored replacement. Preserve apron markings outside the padded polygon where possible."
+    },
+    {
+      "object_id": "AirportCoreV4_Type2THangarRow_3354",
+      "asset_id": "Type2THangarRow",
+      "official_address": "3354 Airport Road",
+      "source_osm_id": 78054463,
+      "position_xz_meters": [-392.25, -344.875],
+      "rotation_degrees_clockwise_from_east": 0.0,
+      "source_footprint_xz_meters": [[-400.0, -311.0], [-385.0, -310.5], [-384.5, -379.0], [-399.5, -379.0], [-400.0, -311.0]],
+      "clean_plate_polygon_xz_meters": [[-406.0, -385.0], [-406.0, -304.0], [-378.5, -304.0], [-378.5, -385.0], [-406.0, -385.0]],
+      "clean_plate_reason": "Remove the complete 3354 photographed roof and shadow while retaining adjacent 3353/3355 rows for Stage-1 A/B context."
+    }
+  ],
+  "context_models": [
+    {
+      "object_id": "AirportCoreV4_FuelServiceCore",
+      "asset_id": "FuelServiceCore",
+      "position_xz_meters": [-112.0, -205.0],
+      "placement_status": "EXPERIMENTAL_AUTHORED_CONTEXT_UNVALIDATED",
+      "clean_plate_status": "NOT_REQUIRED_FOR_EXPERIMENTAL_CONTEXT",
+      "reason": "No survey-grade public footprint was identified for a standalone fuel/service structure. This project-authored benchmark placement is not an exact reconstruction and requires integrated Visual QA."
+    }
+  ],
+  "parked_aircraft_and_prop_regions": [
+    {
+      "region_id": "TerminalApronAuthoredStand_A",
+      "bounds_xz_meters": [-372.0, -247.0, -342.0, -211.0],
+      "status": "CANDIDATE_CLEAN_PLATE_ONLY_IF_LEAD_AUTHORS_A_3D_AIRCRAFT_STAND"
+    }
+  ],
+  "limitations": [
+    "OSM footprints are reference-grade rather than survey-grade.",
+    "The padded clean-plate polygons are conservative authoring masks, not placement geometry.",
+    "Only one representative Type 2 row (3354) is in Stage 1; adjacent rows must remain untouched."
+  ]
+}

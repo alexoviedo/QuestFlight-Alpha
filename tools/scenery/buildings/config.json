@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "source_context_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ReferenceContextV2.json",
+  "source_recipe_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ContextBatchRecipeV2.json",
+  "legacy_runtime_recipe_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_RuntimeHlodRecipeV2.json",
+  "hero_replacements_path": "tools/kbdu_airport_core_v4/buildings/airport_core_replacement_footprints.json",
+  "output_manifest_path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_BuildingSpatialContractV1.json",
+  "output_batch_replacement_manifest_path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_BuildingBatchReplacementV1.json",
+  "optional_lidar_manifest_path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json",
+  "tier_radii_meters": {
+    "hero_core_max_exclusive": 500.0,
+    "near_max_exclusive": 1500.0,
+    "mid_max_exclusive": 4000.0
+  },
+  "mid_simplification": {
+    "maximum_vertices": 6,
+    "maximum_area_error_ratio": 0.1,
+    "preserve_source_bounds": true,
+    "require_simple_polygon": true
+  },
+  "mid_geometry_selection": {
+    "unconditional_radius_meters": 2000.0,
+    "minimum_footprint_area_square_meters_beyond_radius": 500.0,
+    "rationale": "Inside 2 km every source footprint remains a closed shell. From 2-4 km only large footprints that retain useful projected size remain geometry; smaller structures use the orthophoto instead of floating roof cards."
+  },
+  "shell_contract": {
+    "facade_repeat_meters": 5.0,
+    "facade_storey_meters": 3.0,
+    "roof_repeat_meters": 6.0,
+    "gable_building_classes": [
+      "detached",
+      "garage",
+      "garages",
+      "house",
+      "residential",
+      "semidetached_house",
+      "shed",
+      "terrace"
+    ],
+    "maximum_gable_rise_meters": 2.2,
+    "minimum_gable_rise_meters": 0.65,
+    "gable_rise_width_ratio": 0.22
+  },
+  "material_contract": {
+    "atlas_source_manifest_path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/SOURCE_MANIFEST.json",
+    "albedo_path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_Albedo.png",
+    "normal_path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_Normal.png",
+    "mrao_path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_MRAO.png",
+    "atlas_grid": [
+      4,
+      4
+    ],
+    "mrao_channels": {
+      "r": "metallic",
+      "g": "roughness",
+      "b": "ambient_occlusion"
+    },
+    "masonry_facade_tiles": [
+      0,
+      5
+    ],
+    "metal_facade_tiles": [
+      1,
+      8,
+      10
+    ],
+    "generic_facade_tiles": [
+      0,
+      1,
+      5,
+      8,
+      10
+    ],
+    "flat_roof_tiles": [
+      3,
+      10
+    ],
+    "pitched_masonry_roof_tiles": [
+      3
+    ],
+    "pitched_metal_roof_tiles": [
+      10
+    ],
+    "masonry_building_classes": [
+      "apartments",
+      "church",
+      "commercial",
+      "detached",
+      "hospital",
+      "hotel",
+      "house",
+      "museum",
+      "office",
+      "public",
+      "residential",
+      "retail",
+      "school",
+      "semidetached_house",
+      "terrace",
+      "theatre",
+      "university"
+    ],
+    "metal_building_classes": [
+      "carport",
+      "construction",
+      "garage",
+      "garages",
+      "industrial",
+      "parking",
+      "roof",
+      "shed",
+      "static_caravan",
+      "warehouse"
+    ],
+    "incremental_texture_bytes": 0,
+    "incremental_texture_reason": "The selected HangarKit PBR atlas triplet is already present in the product dependency closure through AirportCoreHangarKitAtlas.mat."
+  },
+  "component_index_cell_meters": 20.0,
+  "lidar_height_contract": {
+    "minimum_confidence": 0.8,
+    "maximum_relative_error": 0.1,
+    "require_per_building_identity": true,
+    "preserve_recipe_foundation": true
+  },
+  "far_landmark_allowlist": []
+}

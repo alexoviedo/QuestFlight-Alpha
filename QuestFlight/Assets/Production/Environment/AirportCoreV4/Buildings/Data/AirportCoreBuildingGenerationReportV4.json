@@ -1,0 +1,967 @@
+{
+  "assets": {
+    "AirportCoreProps": {
+      "members": {
+        "Cone": {
+          "lods": [
+            {
+              "bounds_max_xyz_meters": [
+                0.29,
+                0.29,
+                0.695
+              ],
+              "bounds_min_xyz_meters": [
+                -0.29,
+                -0.29,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Cone_LOD0.glb",
+              "glb_bytes": 29648,
+              "glb_sha256": "77d5a0266ef51261a6475f9d11a8c9e58cb8efbc24150ddae4d887498eb26c67",
+              "inverted_faces_detected": 0,
+              "lod": 0,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 120,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 232,
+              "uv_layers": 1,
+              "vertices": 120
+            },
+            {
+              "bounds_max_xyz_meters": [
+                0.29,
+                0.29,
+                0.695
+              ],
+              "bounds_min_xyz_meters": [
+                -0.29,
+                -0.29,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Cone_LOD1.glb",
+              "glb_bytes": 9672,
+              "glb_sha256": "3625bc289a141dbc269dec197338c3d1dd6ca3e372db6dc95d389b630d595a2d",
+              "inverted_faces_detected": 0,
+              "lod": 1,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 40,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 72,
+              "uv_layers": 1,
+              "vertices": 40
+            },
+            {
+              "bounds_max_xyz_meters": [
+                0.26,
+                0.26,
+                0.65
+              ],
+              "bounds_min_xyz_meters": [
+                -0.26,
+                -0.26,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Cone_LOD2.glb",
+              "glb_bytes": 3832,
+              "glb_sha256": "0d7d51549d5b8367859903605a3b7eff330aea1f267c56757156e53d00b45d0e",
+              "inverted_faces_detected": 0,
+              "lod": 2,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 16,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 28,
+              "uv_layers": 1,
+              "vertices": 16
+            }
+          ],
+          "material_contract": "AirportCoreHangarKitAtlas"
+        },
+        "Fence": {
+          "lods": [
+            {
+              "bounds_max_xyz_meters": [
+                2.55,
+                0.045,
+                1.8
+              ],
+              "bounds_min_xyz_meters": [
+                -2.55,
+                -0.045,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Fence_LOD0.glb",
+              "glb_bytes": 36704,
+              "glb_sha256": "6b721c8ffc60fde644445be37c1b108cc605643e351216948197852dc573cef3",
+              "inverted_faces_detected": 0,
+              "lod": 0,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 168,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 304,
+              "uv_layers": 1,
+              "vertices": 168
+            },
+            {
+              "bounds_max_xyz_meters": [
+                2.55,
+                0.045,
+                1.8
+              ],
+              "bounds_min_xyz_meters": [
+                -2.55,
+                -0.045,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Fence_LOD1.glb",
+              "glb_bytes": 18004,
+              "glb_sha256": "44e2fa18fab5e7a807fc99fb0f1a76d42f02bdd98117b9e7884dbd395e17e6bc",
+              "inverted_faces_detected": 0,
+              "lod": 1,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 84,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 148,
+              "uv_layers": 1,
+              "vertices": 84
+            },
+            {
+              "bounds_max_xyz_meters": [
+                2.55,
+                0.045,
+                1.8
+              ],
+              "bounds_min_xyz_meters": [
+                -2.55,
+                -0.045,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Fence_LOD2.glb",
+              "glb_bytes": 8568,
+              "glb_sha256": "bc27bd3f087cab0ae172581d7f9c1243af82ccfd64b770801b3d786e10f67e1a",
+              "inverted_faces_detected": 0,
+              "lod": 2,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 36,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 64,
+              "uv_layers": 1,
+              "vertices": 36
+            }
+          ],
+          "material_contract": "AirportCoreHangarKitAtlas"
+        },
+        "LightPole": {
+          "lods": [
+            {
+              "bounds_max_xyz_meters": [
+                0.605,
+                0.24,
+                8.5
+              ],
+              "bounds_min_xyz_meters": [
+                -0.24,
+                -0.24,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/LightPole_LOD0.glb",
+              "glb_bytes": 33264,
+              "glb_sha256": "52f6c60f690fa350f1a59719097b471b112202c9d1110aef71752a3f27f7facc",
+              "inverted_faces_detected": 0,
+              "lod": 0,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 136,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 260,
+              "uv_layers": 1,
+              "vertices": 136
+            },
+            {
+              "bounds_max_xyz_meters": [
+                0.605,
+                0.24,
+                8.5
+              ],
+              "bounds_min_xyz_meters": [
+                -0.24,
+                -0.24,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/LightPole_LOD1.glb",
+              "glb_bytes": 14732,
+              "glb_sha256": "f34204a69c8c8dd548981a5c00bb72c892a929f869e9d760ac0ae5e80ef4f9ee",
+              "inverted_faces_detected": 0,
+              "lod": 1,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 64,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 116,
+              "uv_layers": 1,
+              "vertices": 64
+            },
+            {
+              "bounds_max_xyz_meters": [
+                0.11,
+                0.11,
+                8.5
+              ],
+              "bounds_min_xyz_meters": [
+                -0.11,
+                -0.11,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/LightPole_LOD2.glb",
+              "glb_bytes": 3828,
+              "glb_sha256": "1e081c09eda10efc1645de597d81fd20ded3115ef9c96648d3b8570a8d3caf36",
+              "inverted_faces_detected": 0,
+              "lod": 2,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 16,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 28,
+              "uv_layers": 1,
+              "vertices": 16
+            }
+          ],
+          "material_contract": "AirportCoreHangarKitAtlas"
+        },
+        "ServiceCart": {
+          "lods": [
+            {
+              "bounds_max_xyz_meters": [
+                1.475,
+                0.74,
+                1.55
+              ],
+              "bounds_min_xyz_meters": [
+                -1.475,
+                -0.74,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ServiceCart_LOD0.glb",
+              "glb_bytes": 43672,
+              "glb_sha256": "6fc7c9da33d007c8cf1fee069e9f23fae754513158b2c3ba67fbad01d7a5d40f",
+              "inverted_faces_detected": 0,
+              "lod": 0,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 208,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 392,
+              "uv_layers": 1,
+              "vertices": 208
+            },
+            {
+              "bounds_max_xyz_meters": [
+                1.475,
+                0.74,
+                1.55
+              ],
+              "bounds_min_xyz_meters": [
+                -1.475,
+                -0.74,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ServiceCart_LOD1.glb",
+              "glb_bytes": 22068,
+              "glb_sha256": "6ebdd6684b98838f9072c2fca07b11d5017d48060d0a522a5a82f89e36301020",
+              "inverted_faces_detected": 0,
+              "lod": 1,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 112,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 200,
+              "uv_layers": 1,
+              "vertices": 112
+            },
+            {
+              "bounds_max_xyz_meters": [
+                1.4,
+                0.625,
+                1.15
+              ],
+              "bounds_min_xyz_meters": [
+                -1.4,
+                -0.625,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ServiceCart_LOD2.glb",
+              "glb_bytes": 6892,
+              "glb_sha256": "efe132ddd44a40fe187487a38f60cd7759fe861d239d8d687b523e2849bbb836",
+              "inverted_faces_detected": 0,
+              "lod": 2,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 24,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 44,
+              "uv_layers": 1,
+              "vertices": 24
+            }
+          ],
+          "material_contract": "AirportCoreHangarKitAtlas"
+        },
+        "Signboard": {
+          "lods": [
+            {
+              "bounds_max_xyz_meters": [
+                0.08,
+                1.3,
+                3.025
+              ],
+              "bounds_min_xyz_meters": [
+                -0.08,
+                -1.3,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Signboard_LOD0.glb",
+              "glb_bytes": 20412,
+              "glb_sha256": "05427baa0a11b87b112c99917cdfd9bf88b2e560f1415304c168fe66dd8f704b",
+              "inverted_faces_detected": 0,
+              "lod": 0,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 88,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 164,
+              "uv_layers": 1,
+              "vertices": 88
+            },
+            {
+              "bounds_max_xyz_meters": [
+                0.08,
+                1.3,
+                3.025
+              ],
+              "bounds_min_xyz_meters": [
+                -0.08,
+                -1.3,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Signboard_LOD1.glb",
+              "glb_bytes": 10904,
+              "glb_sha256": "1bea239a8de4ca8a257dd15ba2901067eca74856ad12635c8791930debf80c84",
+              "inverted_faces_detected": 0,
+              "lod": 1,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 48,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 84,
+              "uv_layers": 1,
+              "vertices": 48
+            },
+            {
+              "bounds_max_xyz_meters": [
+                0.08,
+                1.3,
+                1.45
+              ],
+              "bounds_min_xyz_meters": [
+                -0.08,
+                -1.3,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Signboard_LOD2.glb",
+              "glb_bytes": 2588,
+              "glb_sha256": "b2ac308f08626d367a1e98d4b5dac555cbbae10d9de4079480d9a223164d4839",
+              "inverted_faces_detected": 0,
+              "lod": 2,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 8,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 12,
+              "uv_layers": 1,
+              "vertices": 8
+            }
+          ],
+          "material_contract": "AirportCoreHangarKitAtlas"
+        },
+        "TieDown": {
+          "lods": [
+            {
+              "bounds_max_xyz_meters": [
+                0.21,
+                0.21,
+                0.36
+              ],
+              "bounds_min_xyz_meters": [
+                -0.21,
+                -0.21,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/TieDown_LOD0.glb",
+              "glb_bytes": 19188,
+              "glb_sha256": "c9b9ffecd10e04660f7787a4dc4bd208a055842d8f81ecc4516205996c976344",
+              "inverted_faces_detected": 0,
+              "lod": 0,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 80,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 152,
+              "uv_layers": 1,
+              "vertices": 80
+            },
+            {
+              "bounds_max_xyz_meters": [
+                0.21,
+                0.21,
+                0.36
+              ],
+              "bounds_min_xyz_meters": [
+                -0.21,
+                -0.21,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/TieDown_LOD1.glb",
+              "glb_bytes": 9056,
+              "glb_sha256": "334b50eebfa73a5d459d62d46e830d25fa0187488ec9360f693a22c786bce518",
+              "inverted_faces_detected": 0,
+              "lod": 1,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 36,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 64,
+              "uv_layers": 1,
+              "vertices": 36
+            },
+            {
+              "bounds_max_xyz_meters": [
+                0.21,
+                0.21,
+                0.08
+              ],
+              "bounds_min_xyz_meters": [
+                -0.21,
+                -0.21,
+                0.0
+              ],
+              "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/TieDown_LOD2.glb",
+              "glb_bytes": 2588,
+              "glb_sha256": "db73126b5c50ff95a37d1aa84563e27e8cbef155cf37ace00078d9e3fe212fec",
+              "inverted_faces_detected": 0,
+              "lod": 2,
+              "materials": [
+                "AirportCoreHangarKitAtlas"
+              ],
+              "mesh_objects": 1,
+              "nonmanifold_edges": 0,
+              "normal_vectors": 8,
+              "pivot_xyz_meters": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "tangent_validation": "PASS",
+              "triangles": 12,
+              "uv_layers": 1,
+              "vertices": 8
+            }
+          ],
+          "material_contract": "AirportCoreHangarKitAtlas"
+        }
+      },
+      "source_blend": "QuestFlight/Assets/ArtSource/Blender/KBDU/AirportCoreProps.blend",
+      "source_blend_bytes": 145111,
+      "source_blend_sha256": "43c2e84d36039bba2b2c2be2dae4ae21f229a3929a0d4dc49fdc9e22186cc431"
+    },
+    "ExecutiveTerminal": {
+      "lods": [
+        {
+          "bounds_max_xyz_meters": [
+            14.51627,
+            22.05,
+            11.065
+          ],
+          "bounds_min_xyz_meters": [
+            -11.05,
+            -23.25,
+            0.0
+          ],
+          "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ExecutiveTerminal_LOD0.glb",
+          "glb_bytes": 2593340,
+          "glb_sha256": "a08ea0a001b3ec1737ccb3ca783ab77453bf9c95316932e4f945ae48b0db2270",
+          "inverted_faces_detected": 0,
+          "lod": 0,
+          "materials": [
+            "AirportCoreTerminalAtlas"
+          ],
+          "mesh_objects": 1,
+          "nonmanifold_edges": 0,
+          "normal_vectors": 10868,
+          "pivot_xyz_meters": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "tangent_validation": "PASS",
+          "triangles": 20172,
+          "uv_layers": 1,
+          "vertices": 10868
+        },
+        {
+          "bounds_max_xyz_meters": [
+            14.51627,
+            22.05,
+            11.0
+          ],
+          "bounds_min_xyz_meters": [
+            -11.05,
+            -23.25,
+            0.0
+          ],
+          "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ExecutiveTerminal_LOD1.glb",
+          "glb_bytes": 1089456,
+          "glb_sha256": "178394ae9c3300026a813d664e7300e46aa83ea9a3ca7018026733dd8d722a62",
+          "inverted_faces_detected": 0,
+          "lod": 1,
+          "materials": [
+            "AirportCoreTerminalAtlas"
+          ],
+          "mesh_objects": 1,
+          "nonmanifold_edges": 0,
+          "normal_vectors": 4708,
+          "pivot_xyz_meters": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "tangent_validation": "PASS",
+          "triangles": 8592,
+          "uv_layers": 1,
+          "vertices": 4708
+        },
+        {
+          "bounds_max_xyz_meters": [
+            14.51627,
+            22.05,
+            11.0
+          ],
+          "bounds_min_xyz_meters": [
+            -11.05,
+            -23.25,
+            0.0
+          ],
+          "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ExecutiveTerminal_LOD2.glb",
+          "glb_bytes": 301644,
+          "glb_sha256": "0cd7334581f476e78363f7d2f320f4c600360a73c54aa9f062adc49907a3a7dd",
+          "inverted_faces_detected": 0,
+          "lod": 2,
+          "materials": [
+            "AirportCoreTerminalAtlas"
+          ],
+          "mesh_objects": 1,
+          "nonmanifold_edges": 0,
+          "normal_vectors": 1304,
+          "pivot_xyz_meters": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "tangent_validation": "PASS",
+          "triangles": 2364,
+          "uv_layers": 1,
+          "vertices": 1304
+        }
+      ],
+      "material_contract": "AirportCoreTerminalAtlas",
+      "source_blend": "QuestFlight/Assets/ArtSource/Blender/KBDU/ExecutiveTerminal.blend",
+      "source_blend_bytes": 664011,
+      "source_blend_sha256": "38be9258bc3c49c0d2874e68c87cecd67f05ba1d970f1b8c23726113eabd8131"
+    },
+    "FuelServiceCore": {
+      "lods": [
+        {
+          "bounds_max_xyz_meters": [
+            8.2,
+            6.0,
+            6.55
+          ],
+          "bounds_min_xyz_meters": [
+            -8.0,
+            -6.0,
+            0.0
+          ],
+          "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/FuelServiceCore_LOD0.glb",
+          "glb_bytes": 203000,
+          "glb_sha256": "4156f48dea927ce91eca68ada8eb9eb725b351731b2a18425c1bc1f6de31ef7a",
+          "inverted_faces_detected": 0,
+          "lod": 0,
+          "materials": [
+            "AirportCoreHangarKitAtlas"
+          ],
+          "mesh_objects": 1,
+          "nonmanifold_edges": 0,
+          "normal_vectors": 892,
+          "pivot_xyz_meters": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "tangent_validation": "PASS",
+          "triangles": 1672,
+          "uv_layers": 1,
+          "vertices": 892
+        },
+        {
+          "bounds_max_xyz_meters": [
+            8.2,
+            6.0,
+            5.2
+          ],
+          "bounds_min_xyz_meters": [
+            -8.0,
+            -6.0,
+            0.0
+          ],
+          "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/FuelServiceCore_LOD1.glb",
+          "glb_bytes": 74644,
+          "glb_sha256": "80a033ec382bffa1c18d826f8191634237d7b41e52fec7d4a66e9342e4ebaded",
+          "inverted_faces_detected": 0,
+          "lod": 1,
+          "materials": [
+            "AirportCoreHangarKitAtlas"
+          ],
+          "mesh_objects": 1,
+          "nonmanifold_edges": 0,
+          "normal_vectors": 360,
+          "pivot_xyz_meters": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "tangent_validation": "PASS",
+          "triangles": 648,
+          "uv_layers": 1,
+          "vertices": 360
+        },
+        {
+          "bounds_max_xyz_meters": [
+            8.2,
+            4.5,
+            5.08
+          ],
+          "bounds_min_xyz_meters": [
+            -7.4,
+            -4.5,
+            0.0
+          ],
+          "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/FuelServiceCore_LOD2.glb",
+          "glb_bytes": 28960,
+          "glb_sha256": "f2f6c01cba546340b524896039d50d87b19a328102910a4c4ec81cca6ce7089f",
+          "inverted_faces_detected": 0,
+          "lod": 2,
+          "materials": [
+            "AirportCoreHangarKitAtlas"
+          ],
+          "mesh_objects": 1,
+          "nonmanifold_edges": 0,
+          "normal_vectors": 128,
+          "pivot_xyz_meters": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "tangent_validation": "PASS",
+          "triangles": 232,
+          "uv_layers": 1,
+          "vertices": 128
+        }
+      ],
+      "material_contract": "AirportCoreHangarKitAtlas",
+      "source_blend": "QuestFlight/Assets/ArtSource/Blender/KBDU/FuelServiceCore.blend",
+      "source_blend_bytes": 146372,
+      "source_blend_sha256": "b05172bce6803a230c199883375f09a0b7f6a3ef4184cb837af5394b3fbcee6f"
+    },
+    "Type2THangarRow": {
+      "lods": [
+        {
+          "bounds_max_xyz_meters": [
+            7.985,
+            34.4,
+            8.485
+          ],
+          "bounds_min_xyz_meters": [
+            -7.985,
+            -34.4,
+            0.0
+          ],
+          "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Type2THangarRow_LOD0.glb",
+          "glb_bytes": 3628828,
+          "glb_sha256": "78599324a6dba807797a7ae8e91ca6c1d4c4abc59017295df0f9185fdbf4735b",
+          "inverted_faces_detected": 0,
+          "lod": 0,
+          "materials": [
+            "AirportCoreHangarKitAtlas"
+          ],
+          "mesh_objects": 1,
+          "nonmanifold_edges": 0,
+          "normal_vectors": 13776,
+          "pivot_xyz_meters": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "tangent_validation": "PASS",
+          "triangles": 25492,
+          "uv_layers": 1,
+          "vertices": 13776
+        },
+        {
+          "bounds_max_xyz_meters": [
+            7.985,
+            34.4,
+            7.62016
+          ],
+          "bounds_min_xyz_meters": [
+            -7.985,
+            -34.4,
+            0.0
+          ],
+          "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Type2THangarRow_LOD1.glb",
+          "glb_bytes": 1396512,
+          "glb_sha256": "1f44b47ae5dea860db8af69f727caef3bc93cdebb3e60adf99cbcffa7cfa6403",
+          "inverted_faces_detected": 0,
+          "lod": 1,
+          "materials": [
+            "AirportCoreHangarKitAtlas"
+          ],
+          "mesh_objects": 1,
+          "nonmanifold_edges": 0,
+          "normal_vectors": 5604,
+          "pivot_xyz_meters": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "tangent_validation": "PASS",
+          "triangles": 10244,
+          "uv_layers": 1,
+          "vertices": 5604
+        },
+        {
+          "bounds_max_xyz_meters": [
+            7.985,
+            34.4,
+            7.62016
+          ],
+          "bounds_min_xyz_meters": [
+            -7.985,
+            -34.4,
+            0.0
+          ],
+          "glb": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Type2THangarRow_LOD2.glb",
+          "glb_bytes": 461080,
+          "glb_sha256": "77d596af12d9635b281f5f77d0fe085b7093fedd7856790fe1e1d5e602fd4e7d",
+          "inverted_faces_detected": 0,
+          "lod": 2,
+          "materials": [
+            "AirportCoreHangarKitAtlas"
+          ],
+          "mesh_objects": 1,
+          "nonmanifold_edges": 0,
+          "normal_vectors": 1884,
+          "pivot_xyz_meters": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "tangent_validation": "PASS",
+          "triangles": 3444,
+          "uv_layers": 1,
+          "vertices": 1884
+        }
+      ],
+      "material_contract": "AirportCoreHangarKitAtlas",
+      "source_blend": "QuestFlight/Assets/ArtSource/Blender/KBDU/Type2THangarRow.blend",
+      "source_blend_bytes": 764931,
+      "source_blend_sha256": "0f5b862fe7b99a87bf13ab88fe707307ae5298b2f7370b8dd5aac8242e8074cb"
+    }
+  },
+  "blender_version": "5.1.2",
+  "generator": "tools/kbdu_airport_core_v4/buildings/generate_airport_core_buildings.py",
+  "limitations": [
+    "These meshes are authoring candidates until Unity import, materials, clean-plate integration, full-resolution Visual QA, stereo, and Quest timing pass.",
+    "OSM footprints and photo-derived visual proportions are reference-grade rather than survey-grade.",
+    "Each LOD is exported as an isolated GLB to prevent the V3 overlapping-LOD failure mode."
+  ],
+  "material_tile_contract": {
+    "atlas_grid": [
+      4,
+      4
+    ],
+    "hangar_kit_material": "AirportCoreHangarKitAtlas",
+    "terminal_material": "AirportCoreTerminalAtlas",
+    "tiles": {
+      "0": "tan brick / masonry",
+      "1": "light vertical metal panel",
+      "10": "weathered corrugated variation",
+      "11": "asphalt-contact / foundation",
+      "12": "safety yellow",
+      "13": "landscape rock",
+      "14": "shrub",
+      "15": "service prop",
+      "2": "glazing",
+      "3": "dark standing-seam roof / awning",
+      "4": "painted dark metal trim",
+      "5": "concrete / curb",
+      "6": "sign face",
+      "7": "roof equipment",
+      "8": "light corrugated hangar cladding",
+      "9": "bifold aviation door"
+    }
+  },
+  "reference_photographs_embedded": false,
+  "schema_version": 1,
+  "source_license": "Project-authored deterministic geometry; factual dimensions and externally inspected references; no reference pixels embedded",
+  "spec_sha256": "061169de196095fb6af5ef70b7711607b8946fe6b2f3f3b2bb62d8b1e01176c6",
+  "status": "GENERATED_UNVALIDATED"
+}

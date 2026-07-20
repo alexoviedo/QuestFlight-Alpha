@@ -1,0 +1,30 @@
+{
+  "blender_version": "5.1.2",
+  "hangar_lod_ratios": [
+    1.0,
+    0.4019,
+    0.1351
+  ],
+  "hangar_triangles": [
+    25492,
+    10244,
+    3444
+  ],
+  "isolated_glb_lods": "PASS",
+  "manifold_and_grounded_pivots": "PASS",
+  "paired_meta_files": "PASS",
+  "reference_pixels_in_runtime_tree": 0,
+  "status": "PASS",
+  "terminal_lod_ratios": [
+    1.0,
+    0.4259,
+    0.1172
+  ],
+  "terminal_triangles": [
+    20172,
+    8592,
+    2364
+  ],
+  "uv_normal_tangent_contract": "PASS",
+  "visual_acceptance": "NOT_CLAIMED"
+}

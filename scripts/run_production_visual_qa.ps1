@@ -82,7 +82,47 @@ $required = @(
   '13_takeoff_roll',
   '14_climb',
   '15_shallow_turn',
-  '16_approach'
+  '16_approach',
+  '17_sky_horizon_forward',
+  '18_sky_horizon_rearward',
+  '19_near_mid_terrain_seam',
+  '20_mid_far_terrain_seam',
+  '21_reservoir_cockpit',
+  '22_reservoir_aerial',
+  '23_airport_buildings_ramp',
+  '24_vegetation_aircraft_scale',
+  'v4_before_01_terminal_front',
+  'v4_before_02_terminal_apron_oblique',
+  'v4_before_03_terminal_aerial',
+  'v4_before_04_type2_hangar_front',
+  'v4_before_05_type2_hangar_aerial',
+  'v4_before_06_hangar_material_close',
+  'v4_before_07_cleanplate_integration',
+  'v4_before_08_baked_shadow_alignment',
+  'v4_before_09_runway_surface_close',
+  'v4_before_10_runway_apron_overview',
+  'v4_before_11_reservoir_cockpit',
+  'v4_before_12_reservoir_aerial',
+  'v4_before_13_minor_water_terrain',
+  'v4_before_14_vegetation_close',
+  'v4_before_15_vegetation_aerial',
+  'v4_before_16_complete_overview',
+  'v4_after_01_terminal_front',
+  'v4_after_02_terminal_apron_oblique',
+  'v4_after_03_terminal_aerial',
+  'v4_after_04_type2_hangar_front',
+  'v4_after_05_type2_hangar_aerial',
+  'v4_after_06_hangar_material_close',
+  'v4_after_07_cleanplate_integration',
+  'v4_after_08_baked_shadow_alignment',
+  'v4_after_09_runway_surface_close',
+  'v4_after_10_runway_apron_overview',
+  'v4_after_11_reservoir_cockpit',
+  'v4_after_12_reservoir_aerial',
+  'v4_after_13_minor_water_terrain',
+  'v4_after_14_vegetation_close',
+  'v4_after_15_vegetation_aerial',
+  'v4_after_16_complete_overview'
 )
 $missing = @($required | Where-Object { $_ -notin $shotIds })
 if ($missing.Count -gt 0) { throw "Production Visual QA omitted required view(s): $($missing -join ', ')" }
@@ -90,7 +130,7 @@ if ($missing.Count -gt 0) { throw "Production Visual QA omitted required view(s)
 if (-not $SkipPythonAnalysis) {
   $analyzer = Join-Path (Split-Path $PSScriptRoot -Parent) 'tools\visual_qa_analyze.py'
   if (Test-Path -LiteralPath $analyzer) {
-    $analyzerArguments = @($analyzer, '--input', $ArtifactDir, '--minimum-screenshots', '16', '--fail-on-errors')
+    $analyzerArguments = @($analyzer, '--input', $ArtifactDir, '--minimum-screenshots', '56', '--fail-on-errors')
     if (-not [string]::IsNullOrWhiteSpace($LegacyBaselineDir)) {
       $analyzerArguments += @('--baseline', $LegacyBaselineDir)
     }

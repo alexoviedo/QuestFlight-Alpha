@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "aircraft_model_calibration": {
+      "required": ["source_model_axes", "model_forward_axis_correction_degrees", "gear_contact_points_unity_meters"],
+      "type": "object"
+    },
+    "parked_aircraft_placements": {"items": {"type": "object"}, "maxItems": 8, "minItems": 3, "type": "array"},
+    "placement_count": {"maximum": 8, "minimum": 3, "type": "integer"},
+    "schema_version": {"const": 1},
+    "stand_count": {"maximum": 8, "minimum": 3, "type": "integer"},
+    "stands": {
+      "items": {
+        "properties": {
+          "apron_contained": {"const": true},
+          "heading_degrees": {"type": "number"},
+          "id": {"pattern": "^KBDU-TIEDOWN-[0-9]{2}$", "type": "string"}
+        },
+        "required": ["id", "heading_degrees", "apron_contained", "apron_plane", "source_reference"],
+        "type": "object"
+      },
+      "maxItems": 8,
+      "minItems": 3,
+      "type": "array"
+    }
+  },
+  "required": ["schema_version", "stands", "stand_count", "aircraft_model_calibration", "parked_aircraft_placements", "placement_count"],
+  "title": "KBDU airport parking stand manifest",
+  "type": "object"
+}

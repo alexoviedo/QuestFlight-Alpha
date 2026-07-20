@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using QuestFlightLab.Editor;
+using QuestFlightLab.Environment;
+using QuestFlightLab.Runtime;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.SceneManagement;
@@ -21,9 +23,11 @@ namespace QuestFlight.Editor
     /// </summary>
     public static class QuestPerformanceBudgetBatchRunner
     {
-        private const int DrawCallTarget = 180;
-        private const long VisibleTriangleTarget = 700000L;
-        private const int MaterialTarget = 40;
+        private const int DrawCallTarget = 120;
+        private const long VisibleTriangleTarget = 600000L;
+        private const int MaterialTarget = 25;
+        private const long TextureMemoryTargetBytes = 180L * 1024L * 1024L;
+        private const int TransparentMaterialSlotTarget = 3;
         private const string OutputEnvironmentVariable = "QFL_PERFORMANCE_BUDGET_DIR";
         private const string VisualReportEnvironmentVariable = "QFL_VISUAL_QA_REPORT";
 
@@ -61,12 +65,17 @@ namespace QuestFlight.Editor
                 .SelectMany(root => root.GetComponentsInChildren<Renderer>(true))
                 .Where(renderer => renderer != null && renderer.enabled && renderer.gameObject.activeInHierarchy)
                 .ToArray();
+            AerialVegetationBatchRenderer[] vegetationBatches = roots
+                .SelectMany(root => root.GetComponentsInChildren<AerialVegetationBatchRenderer>(true))
+                .Where(batch => batch != null && batch.enabled && batch.gameObject.activeInHierarchy &&
+                                batch.SharedMaterial != null && batch.NonEmptyDrawCount > 0)
+                .ToArray();
             Camera mainCamera = roots.SelectMany(root => root.GetComponentsInChildren<Camera>(true))
                 .Single(camera => camera.CompareTag("MainCamera"));
 
-            MaterialShaderReport materialReport = BuildMaterialShaderReport(renderers);
+            MaterialShaderReport materialReport = BuildMaterialShaderReport(renderers, vegetationBatches);
             TextureMemoryReport textureReport = BuildTextureReport(materialReport.materials);
-            LodCullingReport lodReport = BuildLodReport(roots, renderers);
+            LodCullingReport lodReport = BuildLodReport(roots, renderers, vegetationBatches);
             StaticViewBudget defaultView = CaptureViewBudget(mainCamera, renderers);
             ProductionVisualQaBatchRunner.ProductionVisualQaReport visualReport = ReadVisualQaReport();
 
@@ -79,6 +88,9 @@ namespace QuestFlight.Editor
 
             GraphicsDeviceType[] androidApis = PlayerSettings.GetGraphicsAPIs(BuildTarget.Android);
             OpenXRSettings openXr = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+            string configuredRenderPipeline = GraphicsSettings.currentRenderPipeline == null
+                ? "BuiltIn/" + mainCamera.actualRenderingPath
+                : GraphicsSettings.currentRenderPipeline.GetType().FullName;
             PerformanceBudgetReport report = new PerformanceBudgetReport
             {
                 generatedUtc = DateTime.UtcNow.ToString("O"),
@@ -90,11 +102,17 @@ namespace QuestFlight.Editor
                 drawCallTarget = DrawCallTarget,
                 visibleTriangleTarget = VisibleTriangleTarget,
                 materialTarget = MaterialTarget,
+                textureMemoryTargetBytes = TextureMemoryTargetBytes,
+                transparentMaterialSlotTarget = TransparentMaterialSlotTarget,
                 maxEstimatedDrawCalls = maxDrawCalls,
                 maxEstimatedVisibleTriangles = maxVisibleTriangles,
                 sceneMaterialCount = sceneMaterials,
-                activeRendererCount = renderers.Length,
-                sceneMeshTriangles = CountTriangles(renderers),
+                maxVisibleMaterialCount = sceneMaterials,
+                activeSceneMaterialCount = materialReport.materialCount,
+                configuredRenderPipeline = configuredRenderPipeline,
+                activeRendererCount = renderers.Length + vegetationBatches.Sum(batch => batch.NonEmptyDrawCount),
+                sceneMeshTriangles = CountTriangles(renderers) +
+                                     vegetationBatches.Sum(batch => batch.FullyInstancedTriangleCount),
                 visualQaReportPath = Environment.GetEnvironmentVariable(VisualReportEnvironmentVariable) ?? string.Empty,
                 defaultView = defaultView,
                 androidArm64Only = PlayerSettings.Android.targetArchitectures == AndroidArchitecture.ARM64,
@@ -110,6 +128,8 @@ namespace QuestFlight.Editor
                 shaderKeywordCombinationCount = materialReport.shaderKeywordCombinationCount,
                 textureCount = textureReport.textureCount,
                 estimatedTextureBytes = textureReport.estimatedRuntimeBytes,
+                lightmapTextureCount = textureReport.lightmapTextureCount,
+                estimatedLightmapBytes = textureReport.estimatedLightmapBytes,
                 lodGroupCount = lodReport.lodGroupCount,
                 crossFadeLodGroupCount = lodReport.crossFadeLodGroupCount,
                 overdrawCaptures = overdraw
@@ -117,17 +137,22 @@ namespace QuestFlight.Editor
             report.drawCallsPassed = report.maxEstimatedDrawCalls <= DrawCallTarget;
             report.visibleTrianglesPassed = report.maxEstimatedVisibleTriangles <= VisibleTriangleTarget;
             report.materialsPassed = report.sceneMaterialCount <= MaterialTarget;
+            report.textureMemoryPassed = report.estimatedTextureBytes <= TextureMemoryTargetBytes;
+            report.transparentSlotsPassed =
+                report.transparentMaterialSlots <= TransparentMaterialSlotTarget;
             report.shippingArchitecturePassed = report.androidArm64Only && report.androidVulkanOnly &&
                                                 report.androidAstcBuildTarget && report.androidIl2Cpp &&
                                                 report.openXrSinglePassInstanced && report.msaa == 4 &&
                                                 report.multithreadedRendering && report.streamingMipmaps;
             report.passed = report.drawCallsPassed && report.visibleTrianglesPassed && report.materialsPassed &&
+                            report.textureMemoryPassed && report.transparentSlotsPassed &&
                             report.shippingArchitecturePassed;
             report.classification = report.passed
                 ? "PASS_STATIC_QUEST_BUDGET_HEADSET_MEASUREMENT_REQUIRED"
                 : "FAIL_STATIC_QUEST_BUDGET";
-            if (materialReport.transparentMaterialSlots > 8)
-                report.warnings.Add("Transparent material-slot count exceeds the review threshold of 8; inspect overdraw captures.");
+            if (!report.transparentSlotsPassed)
+                report.warnings.Add("Transparent material-slot count exceeds the hard target of " +
+                                    TransparentMaterialSlotTarget + "; inspect overdraw captures.");
             if (textureReport.unverifiableImporterCount > 0)
                 report.warnings.Add(textureReport.unverifiableImporterCount + " texture sub-assets do not expose a TextureImporter; their platform format is estimated conservatively.");
             if (lodReport.crossFadeLodGroupCount > 0)
@@ -157,7 +182,9 @@ namespace QuestFlight.Editor
             return JsonUtility.FromJson<ProductionVisualQaBatchRunner.ProductionVisualQaReport>(File.ReadAllText(path));
         }
 
-        private static MaterialShaderReport BuildMaterialShaderReport(IEnumerable<Renderer> renderers)
+        private static MaterialShaderReport BuildMaterialShaderReport(
+            IEnumerable<Renderer> renderers,
+            IEnumerable<AerialVegetationBatchRenderer> vegetationBatches)
         {
             Dictionary<Material, MaterialEntry> entries = new Dictionary<Material, MaterialEntry>();
             int slots = 0;
@@ -189,6 +216,64 @@ namespace QuestFlight.Editor
                     entry.rendererSlotCount++;
                 }
             }
+            foreach (AerialVegetationBatchRenderer batch in vegetationBatches)
+            {
+                Material material = batch.SharedMaterial;
+                int drawSlots = batch.NonEmptyDrawCount;
+                if (material == null || drawSlots == 0) continue;
+                slots += drawSlots;
+                bool transparent = material.renderQueue >= (int)RenderQueue.Transparent ||
+                                   string.Equals(material.GetTag("RenderType", false, string.Empty),
+                                       "Transparent", StringComparison.OrdinalIgnoreCase);
+                if (transparent) transparentSlots += drawSlots;
+                if (!entries.TryGetValue(material, out MaterialEntry entry))
+                {
+                    entry = new MaterialEntry
+                    {
+                        name = material.name,
+                        assetPath = AssetDatabase.GetAssetPath(material),
+                        shader = material.shader != null ? material.shader.name : "MISSING",
+                        renderQueue = material.renderQueue,
+                        transparent = transparent,
+                        instancingEnabled = material.enableInstancing,
+                        keywords = material.shaderKeywords.OrderBy(keyword => keyword, StringComparer.Ordinal).ToArray(),
+                        rendererSlotCount = 0,
+                        environmentReference = true
+                    };
+                    entries.Add(material, entry);
+                }
+                entry.rendererSlotCount += drawSlots;
+                entry.environmentReference = true;
+            }
+            Material skybox = RenderSettings.skybox;
+            if (skybox != null)
+            {
+                slots++;
+                bool transparent = skybox.renderQueue >= (int)RenderQueue.Transparent ||
+                                   string.Equals(
+                                       skybox.GetTag("RenderType", false, string.Empty),
+                                       "Transparent",
+                                       StringComparison.OrdinalIgnoreCase);
+                if (transparent) transparentSlots++;
+                if (!entries.TryGetValue(skybox, out MaterialEntry skyEntry))
+                {
+                    skyEntry = new MaterialEntry
+                    {
+                        name = skybox.name,
+                        assetPath = AssetDatabase.GetAssetPath(skybox),
+                        shader = skybox.shader != null ? skybox.shader.name : "MISSING",
+                        renderQueue = skybox.renderQueue,
+                        transparent = transparent,
+                        instancingEnabled = skybox.enableInstancing,
+                        keywords = skybox.shaderKeywords.OrderBy(keyword => keyword, StringComparer.Ordinal).ToArray(),
+                        rendererSlotCount = 0,
+                        environmentReference = true
+                    };
+                    entries.Add(skybox, skyEntry);
+                }
+                skyEntry.rendererSlotCount++;
+                skyEntry.environmentReference = true;
+            }
             List<MaterialEntry> materials = entries.Values.OrderBy(entry => entry.shader).ThenBy(entry => entry.name).ToList();
             int variants = materials.Select(entry => entry.shader + "|" + string.Join(";", entry.keywords)).Distinct().Count();
             return new MaterialShaderReport
@@ -200,7 +285,7 @@ namespace QuestFlight.Editor
                 instancingEnabledMaterialCount = materials.Count(entry => entry.instancingEnabled),
                 shaderCount = materials.Select(entry => entry.shader).Distinct().Count(),
                 shaderKeywordCombinationCount = variants,
-                variantSemantics = "Distinct shader-plus-material-keyword combinations referenced by active authored renderers; this is not Unity's compiled variant count.",
+                variantSemantics = "Distinct shader-plus-material-keyword combinations referenced by active authored renderers, authored aerial vegetation batches, and the scene skybox; this is not Unity's compiled variant count.",
                 materials = materials
             };
         }
@@ -220,58 +305,106 @@ namespace QuestFlight.Editor
                 foreach (string property in material.GetTexturePropertyNames())
                 {
                     Texture texture = material.GetTexture(property);
-                    if (!(texture is Texture2D texture2D)) continue;
-                    string assetPath = AssetDatabase.GetAssetPath(texture2D);
-                    string key = string.IsNullOrWhiteSpace(assetPath) ? "instance:" + texture2D.GetInstanceID() : assetPath + "#" + texture2D.name;
-                    if (textures.ContainsKey(key)) continue;
-
-                    TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-                    TextureImporterPlatformSettings android = importer != null
-                        ? importer.GetPlatformTextureSettings("Android")
-                        : null;
-                    string format = android != null && android.overridden
-                        ? android.format.ToString()
-                        : importer != null ? importer.textureCompression.ToString() : "UNVERIFIABLE_SUBASSET";
-                    int width = texture2D.width;
-                    int height = texture2D.height;
-                    bool mipmaps = importer == null || importer.mipmapEnabled;
-                    long estimatedBytes = EstimateTextureBytes(width, height, format, mipmaps);
-                    textures.Add(key, new TextureEntry
-                    {
-                        name = texture2D.name,
-                        assetPath = assetPath,
-                        width = width,
-                        height = height,
-                        androidOverride = android != null && android.overridden,
-                        androidFormat = format,
-                        maxTextureSize = android != null ? android.maxTextureSize : Math.Max(width, height),
-                        mipmaps = mipmaps,
-                        streamingMipmaps = importer != null && importer.streamingMipmaps,
-                        anisotropy = importer != null ? importer.anisoLevel : 0,
-                        filterMode = texture2D.filterMode.ToString(),
-                        estimatedRuntimeBytes = estimatedBytes,
-                        estimateSemantics = format.StartsWith("ASTC_", StringComparison.Ordinal)
-                            ? "ASTC block estimate including mip chain when enabled"
-                            : "Conservative RGBA32 estimate including mip chain when enabled"
-                    });
+                    AddTextureEstimate(textures, texture);
                 }
             }
+            AddTextureEstimate(textures, RenderSettings.customReflectionTexture);
+            foreach (LightmapData lightmap in LightmapSettings.lightmaps ?? Array.Empty<LightmapData>())
+            {
+                if (lightmap == null) continue;
+                AddTextureEstimate(textures, lightmap.lightmapColor);
+                AddTextureEstimate(textures, lightmap.lightmapDir);
+                AddTextureEstimate(textures, lightmap.shadowMask);
+            }
             List<TextureEntry> entries = textures.Values.OrderByDescending(entry => entry.estimatedRuntimeBytes).ToList();
+            TextureEntry[] lightmaps = entries.Where(entry =>
+                    entry.assetPath.IndexOf("/Lightmap-", StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToArray();
             return new TextureMemoryReport
             {
                 generatedUtc = DateTime.UtcNow.ToString("O"),
                 textureCount = entries.Count,
                 estimatedRuntimeBytes = entries.Sum(entry => entry.estimatedRuntimeBytes),
-                astcOverrideCount = entries.Count(entry => entry.androidFormat.StartsWith("ASTC_", StringComparison.Ordinal)),
+                astcOverrideCount = entries.Count(entry => IsAstcFormat(entry.androidFormat)),
                 mipmappedCount = entries.Count(entry => entry.mipmaps),
                 streamingMipmappedCount = entries.Count(entry => entry.streamingMipmaps),
                 unverifiableImporterCount = entries.Count(entry => entry.androidFormat == "UNVERIFIABLE_SUBASSET"),
+                lightmapTextureCount = lightmaps.Length,
+                estimatedLightmapBytes = lightmaps.Sum(entry => entry.estimatedRuntimeBytes),
                 evidenceBoundary = "Static import estimate only; APK/device residency and streaming behavior require a Quest capture.",
                 textures = entries
             };
         }
 
-        private static LodCullingReport BuildLodReport(IEnumerable<GameObject> roots, Renderer[] renderers)
+        private static void AddTextureEstimate(Dictionary<string, TextureEntry> textures, Texture texture)
+        {
+            if (texture == null) return;
+            string assetPath = AssetDatabase.GetAssetPath(texture);
+            string key = string.IsNullOrWhiteSpace(assetPath)
+                ? "instance:" + texture.GetInstanceID()
+                : assetPath + "#" + texture.name;
+            if (textures.ContainsKey(key)) return;
+
+            TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            TextureImporterPlatformSettings android = importer != null
+                ? importer.GetPlatformTextureSettings("Android")
+                : null;
+            string format = android != null && android.overridden
+                ? android.format.ToString()
+                : importer != null ? importer.textureCompression.ToString() : "UNVERIFIABLE_SUBASSET";
+            int width = Math.Max(1, texture.width);
+            int height = Math.Max(1, texture.height);
+            int maximumSize = android != null && android.maxTextureSize > 0
+                ? android.maxTextureSize
+                : Math.Max(width, height);
+            int largestDimension = Math.Max(width, height);
+            if (maximumSize > 0 && largestDimension > maximumSize)
+            {
+                double scale = maximumSize / (double)largestDimension;
+                width = Math.Max(1, (int)Math.Ceiling(width * scale));
+                height = Math.Max(1, (int)Math.Ceiling(height * scale));
+            }
+
+            int layersOrFaces = 1;
+            string dimension = texture.dimension.ToString();
+            if (texture is Cubemap) layersOrFaces = 6;
+            else if (texture is CubemapArray cubemapArray) layersOrFaces = cubemapArray.cubemapCount * 6;
+            else if (texture is Texture2DArray textureArray) layersOrFaces = textureArray.depth;
+            else if (texture is Texture3D texture3D) layersOrFaces = texture3D.depth;
+
+            bool mipmaps = importer == null || importer.mipmapEnabled;
+            long estimatedBytes = EstimateTextureBytes(width, height, format, mipmaps) * layersOrFaces;
+            textures.Add(key, new TextureEntry
+            {
+                name = texture.name,
+                assetPath = assetPath,
+                dimension = dimension,
+                layersOrFaces = layersOrFaces,
+                width = width,
+                height = height,
+                androidOverride = android != null && android.overridden,
+                androidFormat = format,
+                maxTextureSize = maximumSize,
+                mipmaps = mipmaps,
+                streamingMipmaps = importer != null && importer.streamingMipmaps,
+                anisotropy = importer != null ? importer.anisoLevel : 0,
+                filterMode = texture.filterMode.ToString(),
+                estimatedRuntimeBytes = estimatedBytes,
+                estimateSemantics = IsAstcFormat(format)
+                    ? "ASTC block estimate multiplied by faces/layers and including mip chains when enabled"
+                    : "Conservative RGBA32 estimate multiplied by faces/layers and including mip chains when enabled"
+            });
+        }
+
+        private static bool IsAstcFormat(string format) =>
+            !string.IsNullOrWhiteSpace(format) &&
+            (format.StartsWith("ASTC_", StringComparison.Ordinal) ||
+             format.StartsWith("ASTC_HDR_", StringComparison.Ordinal));
+
+        private static LodCullingReport BuildLodReport(
+            IEnumerable<GameObject> roots,
+            Renderer[] renderers,
+            AerialVegetationBatchRenderer[] vegetationBatches)
         {
             LODGroup[] groups = roots.SelectMany(root => root.GetComponentsInChildren<LODGroup>(true)).ToArray();
             List<LodGroupEntry> entries = groups.Select(group => new LodGroupEntry
@@ -292,7 +425,7 @@ namespace QuestFlight.Editor
             return new LodCullingReport
             {
                 generatedUtc = DateTime.UtcNow.ToString("O"),
-                activeRendererCount = renderers.Length,
+                activeRendererCount = renderers.Length + vegetationBatches.Sum(batch => batch.NonEmptyDrawCount),
                 rendererBoundsRadiusMaximum = renderers.Length == 0 ? 0f : renderers.Max(renderer => renderer.bounds.extents.magnitude),
                 lodGroupCount = entries.Count,
                 crossFadeLodGroupCount = entries.Count(entry => entry.fadeMode != LODFadeMode.None.ToString()),
@@ -305,23 +438,14 @@ namespace QuestFlight.Editor
 
         private static StaticViewBudget CaptureViewBudget(Camera camera, Renderer[] renderers)
         {
-            Plane[] planes = GeometryUtility.CalculateFrustumPlanes(camera);
-            Renderer[] visible = renderers.Where(renderer => GeometryUtility.TestPlanesAABB(planes, renderer.bounds)).ToArray();
-            HashSet<Material> materials = new HashSet<Material>();
-            int draws = 0;
-            foreach (Renderer renderer in visible)
-            {
-                draws += Math.Max(1, renderer.sharedMaterials.Count(material => material != null));
-                foreach (Material material in renderer.sharedMaterials)
-                    if (material != null) materials.Add(material);
-            }
+            RenderBudgetSnapshot snapshot = QuestRenderBudgetAudit.Capture(camera);
             return new StaticViewBudget
             {
                 cameraPath = HierarchyPath(camera.transform),
-                visibleRendererCount = visible.Length,
-                estimatedDrawCalls = draws,
-                visibleTriangles = CountTriangles(visible),
-                visibleMaterials = materials.Count
+                visibleRendererCount = snapshot.estimatedVisibleRendererCount,
+                estimatedDrawCalls = snapshot.estimatedInstancedDrawCalls,
+                visibleTriangles = snapshot.estimatedFrustumTriangles,
+                visibleMaterials = snapshot.uniqueMaterialCount
             };
         }
 
@@ -419,8 +543,12 @@ namespace QuestFlight.Editor
                 { "ASTC_4x4", 4 }, { "ASTC_5x5", 5 }, { "ASTC_6x6", 6 }, { "ASTC_8x8", 8 },
                 { "ASTC_10x10", 10 }, { "ASTC_12x12", 12 }
             };
+            string normalizedFormat = !string.IsNullOrEmpty(format) &&
+                                      format.StartsWith("ASTC_HDR_", StringComparison.Ordinal)
+                ? "ASTC_" + format.Substring("ASTC_HDR_".Length)
+                : format ?? string.Empty;
             long baseBytes;
-            if (astcBlocks.TryGetValue(format, out int block))
+            if (astcBlocks.TryGetValue(normalizedFormat, out int block))
                 baseBytes = (long)Math.Ceiling(width / (double)block) * (long)Math.Ceiling(height / (double)block) * 16L;
             else
                 baseBytes = (long)width * height * 4L;
@@ -435,14 +563,18 @@ namespace QuestFlight.Editor
             builder.AppendLine("# Standalone Quest Static Performance Budget");
             builder.AppendLine();
             builder.AppendLine("- Classification: `" + report.classification + "`");
+            builder.AppendLine("- Configured render pipeline: `" + report.configuredRenderPipeline + "`");
             builder.AppendLine("- Draw calls: " + report.maxEstimatedDrawCalls + " / " + report.drawCallTarget + " (" + Pass(report.drawCallsPassed) + ")");
             builder.AppendLine("- Visible triangles: " + report.maxEstimatedVisibleTriangles.ToString("N0", CultureInfo.InvariantCulture) + " / " + report.visibleTriangleTarget.ToString("N0", CultureInfo.InvariantCulture) + " (" + Pass(report.visibleTrianglesPassed) + ")");
-            builder.AppendLine("- Visible materials: " + report.sceneMaterialCount + " / " + report.materialTarget + " (" + Pass(report.materialsPassed) + ")");
+            builder.AppendLine("- Materials (maximum visible / active distinct): " + report.maxVisibleMaterialCount + " / " + report.activeSceneMaterialCount + "; visible target " + report.materialTarget + " (" + Pass(report.materialsPassed) + ")");
+            builder.AppendLine("- Estimated runtime texture memory: " + FormatBytes(report.estimatedTextureBytes) + " / " + FormatBytes(report.textureMemoryTargetBytes) + " (" + Pass(report.textureMemoryPassed) + ")");
+            builder.AppendLine("- Directional lightmap textures / estimated residency: " + report.lightmapTextureCount + " / " + FormatBytes(report.estimatedLightmapBytes));
+            builder.AppendLine("- Transparent material slots: " + report.transparentMaterialSlots + " / " + report.transparentMaterialSlotTarget + " (" + Pass(report.transparentSlotsPassed) + ")");
             builder.AppendLine("- Android ARM64 / Vulkan / ASTC / IL2CPP: " + report.androidArm64Only + " / " + report.androidVulkanOnly + " / " + report.androidAstcBuildTarget + " / " + report.androidIl2Cpp);
             builder.AppendLine("- OpenXR single-pass instanced / 4x MSAA / mobile multithreaded / mip streaming: " + report.openXrSinglePassInstanced + " / " + report.msaa + " / " + report.multithreadedRendering + " / " + report.streamingMipmaps);
             builder.AppendLine("- Active renderers / shaders / material keyword combinations: " + report.activeRendererCount + " / " + report.shaderCount + " / " + report.shaderKeywordCombinationCount);
             builder.AppendLine("- Textures / estimated imported residency: " + report.textureCount + " / " + FormatBytes(report.estimatedTextureBytes));
-            builder.AppendLine("- LOD groups / crossfade groups / transparent slots: " + report.lodGroupCount + " / " + report.crossFadeLodGroupCount + " / " + report.transparentMaterialSlots);
+            builder.AppendLine("- LOD groups / crossfade groups: " + report.lodGroupCount + " / " + report.crossFadeLodGroupCount);
             builder.AppendLine();
             builder.AppendLine("## Evidence boundary");
             builder.AppendLine();
@@ -475,12 +607,13 @@ namespace QuestFlight.Editor
             builder.AppendLine();
             builder.AppendLine("- Textures: " + report.textureCount + "; ASTC overrides: " + report.astcOverrideCount + "; mipmapped: " + report.mipmappedCount + "; streaming: " + report.streamingMipmappedCount);
             builder.AppendLine("- Conservative estimated imported residency: " + FormatBytes(report.estimatedRuntimeBytes));
+            builder.AppendLine("- Directional lightmap textures / estimated residency: " + report.lightmapTextureCount + " / " + FormatBytes(report.estimatedLightmapBytes));
             builder.AppendLine("- " + report.evidenceBoundary);
             builder.AppendLine();
-            builder.AppendLine("| Texture | Dimensions | Android format | Mips/streaming | Estimated bytes |");
-            builder.AppendLine("| --- | ---: | --- | --- | ---: |");
+            builder.AppendLine("| Texture | Dimensions | Faces/layers | Android format | Mips/streaming | Estimated bytes |");
+            builder.AppendLine("| --- | ---: | ---: | --- | --- | ---: |");
             foreach (TextureEntry entry in report.textures)
-                builder.AppendLine("| `" + entry.name + "` | " + entry.width + "x" + entry.height + " | `" + entry.androidFormat + "` | " + entry.mipmaps + "/" + entry.streamingMipmaps + " | " + FormatBytes(entry.estimatedRuntimeBytes) + " |");
+                builder.AppendLine("| `" + entry.name + "` | " + entry.width + "x" + entry.height + " " + entry.dimension + " | " + entry.layersOrFaces + " | `" + entry.androidFormat + "` | " + entry.mipmaps + "/" + entry.streamingMipmaps + " | " + FormatBytes(entry.estimatedRuntimeBytes) + " |");
             return builder.ToString();
         }
 
@@ -518,12 +651,12 @@ namespace QuestFlight.Editor
         public sealed class PerformanceBudgetReport
         {
             public int schemaVersion = 1;
-            public string generatedUtc, unityVersion, scenePath, evidenceKind, headsetPerformanceLimitation, classification, visualQaReportPath;
-            public bool headsetPerformanceEstablished, drawCallsPassed, visibleTrianglesPassed, materialsPassed, shippingArchitecturePassed, passed;
-            public int drawCallTarget, materialTarget, maxEstimatedDrawCalls, sceneMaterialCount, activeRendererCount, msaa;
-            public long visibleTriangleTarget, maxEstimatedVisibleTriangles, sceneMeshTriangles, estimatedTextureBytes;
+            public string generatedUtc, unityVersion, scenePath, evidenceKind, headsetPerformanceLimitation, classification, visualQaReportPath, configuredRenderPipeline;
+            public bool headsetPerformanceEstablished, drawCallsPassed, visibleTrianglesPassed, materialsPassed, textureMemoryPassed, transparentSlotsPassed, shippingArchitecturePassed, passed;
+            public int drawCallTarget, materialTarget, transparentMaterialSlotTarget, maxEstimatedDrawCalls, sceneMaterialCount, maxVisibleMaterialCount, activeSceneMaterialCount, activeRendererCount, msaa;
+            public long visibleTriangleTarget, textureMemoryTargetBytes, maxEstimatedVisibleTriangles, sceneMeshTriangles, estimatedTextureBytes, estimatedLightmapBytes;
             public bool androidArm64Only, androidVulkanOnly, androidAstcBuildTarget, androidIl2Cpp, openXrSinglePassInstanced, multithreadedRendering, streamingMipmaps;
-            public int transparentMaterialSlots, shaderCount, shaderKeywordCombinationCount, textureCount, lodGroupCount, crossFadeLodGroupCount;
+            public int transparentMaterialSlots, shaderCount, shaderKeywordCombinationCount, textureCount, lightmapTextureCount, lodGroupCount, crossFadeLodGroupCount;
             public StaticViewBudget defaultView;
             public List<OverdrawCapture> overdrawCaptures = new List<OverdrawCapture>();
             public List<string> warnings = new List<string>();
@@ -559,7 +692,7 @@ namespace QuestFlight.Editor
         {
             public string name, assetPath, shader;
             public int renderQueue, rendererSlotCount;
-            public bool transparent, instancingEnabled;
+            public bool transparent, instancingEnabled, environmentReference;
             public string[] keywords;
         }
 
@@ -568,16 +701,16 @@ namespace QuestFlight.Editor
         {
             public int schemaVersion = 1;
             public string generatedUtc, evidenceBoundary;
-            public int textureCount, astcOverrideCount, mipmappedCount, streamingMipmappedCount, unverifiableImporterCount;
-            public long estimatedRuntimeBytes;
+            public int textureCount, astcOverrideCount, mipmappedCount, streamingMipmappedCount, unverifiableImporterCount, lightmapTextureCount;
+            public long estimatedRuntimeBytes, estimatedLightmapBytes;
             public List<TextureEntry> textures = new List<TextureEntry>();
         }
 
         [Serializable]
         public sealed class TextureEntry
         {
-            public string name, assetPath, androidFormat, filterMode, estimateSemantics;
-            public int width, height, maxTextureSize, anisotropy;
+            public string name, assetPath, androidFormat, filterMode, dimension, estimateSemantics;
+            public int width, height, layersOrFaces, maxTextureSize, anisotropy;
             public bool androidOverride, mipmaps, streamingMipmaps;
             public long estimatedRuntimeBytes;
         }

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import math
 import random
 import struct
 import sys
@@ -13,10 +14,14 @@ from PIL import Image
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
+AIRPORT_ART_SCRIPT_DIR = SCRIPT_DIR.parent / "kbdu_airport_art"
+sys.path.insert(0, str(AIRPORT_ART_SCRIPT_DIR))
 
-from orthophoto_common import astc_mip_chain_bytes, iter_zone_tiles, load_config, zone_bbox
+from orthophoto_common import REPO_ROOT, astc_mip_chain_bytes, iter_zone_tiles, load_config, sha256_file, zone_bbox
+from build_context_assets import emitted_vegetation_triangle_accounting
 from build_far_dem import DEFAULT_FROZEN_TERRAIN, DEFAULT_OUTPUT, elevations_south_to_north, resample_frozen_far_grid
 from reproject_crop_imagery import suspicious_overlap
+from validate_environment_assets import runtime_binary_asset_paths
 
 
 class OrthophotoGeometryTests(unittest.TestCase):
@@ -31,10 +36,15 @@ class OrthophotoGeometryTests(unittest.TestCase):
             self.assertGreater(east, self.config["origin"]["longitude_degrees"])
             self.assertLess(south, self.config["origin"]["latitude_degrees"])
             self.assertGreater(north, self.config["origin"]["latitude_degrees"])
-            self.assertAlmostEqual(
-                zone["half_extent_meters"] * 2.0 / zone["atlas_size_pixels"],
-                0.9765625 if zone["id"] == "near_4km" else 5.859375,
-            )
+        meters_per_texel = {
+            zone["id"]: zone["half_extent_meters"] * 2.0 / zone["atlas_size_pixels"]
+            for zone in self.config["zones"]
+        }
+        self.assertAlmostEqual(meters_per_texel["near_4km"], 0.9765625)
+        self.assertAlmostEqual(meters_per_texel["mid_12km"], 2.9296875)
+        self.assertAlmostEqual(meters_per_texel["far_24km"], 11.71875)
+        self.assertLessEqual(meters_per_texel["mid_12km"] / meters_per_texel["near_4km"], 4.0)
+        self.assertLessEqual(meters_per_texel["far_24km"] / meters_per_texel["mid_12km"], 4.0)
 
     def test_near_tiles_share_edges_without_requested_overlap(self) -> None:
         zone = next(item for item in self.config["zones"] if item["id"] == "near_4km")
@@ -48,7 +58,7 @@ class OrthophotoGeometryTests(unittest.TestCase):
             astc_mip_chain_bytes(zone["atlas_size_pixels"], zone["atlas_size_pixels"])
             for zone in self.config["zones"]
         )
-        self.assertEqual(total, 12_459_248)
+        self.assertEqual(total, 22_420_784)
         self.assertLessEqual(total, self.config["unity"]["maximum_runtime_texture_bytes"])
 
 
@@ -75,6 +85,112 @@ class DuplicateStripRegressionTests(unittest.TestCase):
         south = source.crop((0, 256, 256, 512))
         result = suspicious_overlap(north, south, vertical=True)
         self.assertGreater(result["mean_absolute_error"], 6.0)
+
+
+class TerrainPyramidAndContextContractTests(unittest.TestCase):
+    def test_ground_texel_density_audit_passes(self) -> None:
+        audit = json.loads((SCRIPT_DIR / "kbdu_ground_texel_density_audit.json").read_text(encoding="utf-8"))
+        self.assertTrue(audit["passed"])
+        self.assertEqual([item["texel_density_ratio"] for item in audit["adjacency_checks"]], [3.0, 4.0])
+        self.assertTrue(all(item["passed_color_mean_continuity"] for item in audit["overlap_pixel_diagnostics"]))
+        self.assertLess(max(item["maximum_absolute_mean_channel_delta"] for item in audit["overlap_pixel_diagnostics"]), 1.0)
+
+    def test_context_recipe_is_batched_and_source_seated(self) -> None:
+        root = REPO_ROOT / "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1"
+        recipe = json.loads((root / "KBDU_ContextBatchRecipe.json").read_text(encoding="utf-8"))
+        manifest = json.loads((root / "KBDU_ContextAssetsManifest.json").read_text(encoding="utf-8"))
+        building_records = [record for batch in recipe["building_batches"] for record in batch["buildings"]]
+        vegetation = [record for batch in recipe["vegetation_batches"] for record in batch["placements"]]
+        authored_airport_perimeter = [
+            record
+            for record in vegetation
+            if record["source_category"] == "project_authored_airport_perimeter"
+        ]
+        self.assertEqual(len(recipe["building_batches"]), 23)
+        self.assertEqual(len(building_records), 2500)
+        self.assertEqual(len({record["feature_index"] for record in building_records}), 2500)
+        self.assertEqual(len(recipe["vegetation_batches"]), 8)
+        self.assertEqual(len(vegetation), 246)
+        self.assertEqual(len(authored_airport_perimeter), 6)
+        self.assertEqual(
+            sorted(record["authored_cluster_index"] for record in authored_airport_perimeter),
+            list(range(6)),
+        )
+        self.assertEqual(
+            {record["batch_id"] for record in authored_airport_perimeter},
+            {"vegetation_near_ws"},
+        )
+        self.assertEqual(len(vegetation) - len(authored_airport_perimeter), 240)
+        self.assertFalse(recipe["integration"]["one_renderer_per_building"])
+        self.assertEqual(manifest["budgets"]["active_draw_call_delta"], 32)
+        self.assertEqual(manifest["budgets"]["material_delta"], 3)
+        vegetation_accounting = emitted_vegetation_triangle_accounting(
+            root / "Generated", [batch["id"] for batch in recipe["vegetation_batches"]]
+        )
+        self.assertTrue(vegetation_accounting["complete"])
+        self.assertEqual(vegetation_accounting["totals_by_lod"], {"LOD0": 18216, "LOD1": 11316})
+        self.assertEqual(
+            manifest["generated_unity_assets"]["vegetation_mesh_triangle_accounting"],
+            vegetation_accounting,
+        )
+        self.assertEqual(
+            manifest["budgets"]["vegetation_lod0_triangle_estimate"],
+            vegetation_accounting["totals_by_lod"]["LOD0"],
+        )
+        self.assertEqual(
+            manifest["budgets"]["vegetation_lod1_triangle_estimate"],
+            vegetation_accounting["totals_by_lod"]["LOD1"],
+        )
+        self.assertTrue(manifest["generated_unity_assets"]["complete"])
+        self.assertEqual(manifest["generated_unity_assets"]["observed_mesh_count"], 64)
+        for record in manifest["authoring_sources"] + manifest["generated_unity_assets"]["files"]:
+            path = REPO_ROOT / record["path"]
+            self.assertTrue(path.is_file(), record["path"])
+            self.assertEqual(sha256_file(path), record["sha256"], record["path"])
+        self.assertTrue(all(math.isfinite(record["base_y_meters"]) for record in building_records + vegetation))
+        source = REPO_ROOT / manifest["source"]["source_path"]
+        self.assertEqual(sha256_file(source), manifest["source"]["source_sha256"])
+
+    def test_context_atlas_and_unity_meta_pairing(self) -> None:
+        root = REPO_ROOT / "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1"
+        with Image.open(root / "KBDU_ContextAtlas.png") as image:
+            self.assertEqual(image.size, (1024, 1024))
+            self.assertEqual(image.mode, "RGB")
+        for path in root.rglob("*"):
+            if path.is_file() and path.suffix != ".meta":
+                self.assertTrue(Path(str(path) + ".meta").is_file(), f"missing Unity meta for {path}")
+
+
+class EnvironmentIntegrationAssetCategoryTests(unittest.TestCase):
+    def test_runtime_assets_remain_in_their_source_categories(self) -> None:
+        manifests = {
+            "airport": json.loads(
+                (AIRPORT_ART_SCRIPT_DIR / "kbdu_airport_art_manifest.json").read_text(encoding="utf-8")
+            ),
+            "runway": json.loads(
+                (AIRPORT_ART_SCRIPT_DIR / "kbdu_runway_art_manifest.json").read_text(encoding="utf-8")
+            ),
+            "orthophoto": json.loads(
+                (SCRIPT_DIR / "kbdu_orthophoto_manifest.json").read_text(encoding="utf-8")
+            ),
+        }
+        categories = runtime_binary_asset_paths(manifests)
+        names = {category: [path.name for path in paths] for category, paths in categories.items()}
+        self.assertEqual(
+            names["orthophotos"],
+            [
+                "KBDU_NAIP_2019_Near4km_4096.jpg",
+                "KBDU_NAIP_2019_Mid12km_4096.jpg",
+                "KBDU_NAIP_2019_Far24km_2048.jpg",
+            ],
+        )
+        self.assertEqual(names["airport_kit"], ["KBDU_AirportKit.glb", "KBDU_AirportSharedAtlas.png"])
+        self.assertEqual(
+            names["runway_textures"],
+            ["KBDU_RunwaySurface_Albedo.jpg", "KBDU_RunwaySurface_MetallicSmoothness.png"],
+        )
+        all_paths = [path for paths in categories.values() for path in paths]
+        self.assertEqual(len(all_paths), len(set(all_paths)))
 
 
 class FarTerrainResamplingTests(unittest.TestCase):

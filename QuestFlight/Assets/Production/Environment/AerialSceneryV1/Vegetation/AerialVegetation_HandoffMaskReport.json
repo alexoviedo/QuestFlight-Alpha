@@ -1,0 +1,351 @@
+{
+  "coordinate_contract": {
+    "extra_v_flip": false,
+    "local_bounds_edges_m": [
+      -2048.0,
+      -2048.0,
+      2048.0,
+      2048.0
+    ],
+    "outside_bounds_coverage": 0,
+    "pixel_center_affine_local_meters": {
+      "x_at_column0_row0": -2046.0,
+      "x_per_column": 4.0,
+      "x_per_row": 0.0,
+      "z_at_column0_row0": 2046.0,
+      "z_per_column": 0.0,
+      "z_per_row": -4.0
+    },
+    "unity_bottom_left_uv": "((x + 2048) / 4096, (z + 2048) / 4096)"
+  },
+  "footprints": [
+    {
+      "center_x_m": -386.0,
+      "center_z_m": 286.0,
+      "half_extent_x_m": 10.8903,
+      "half_extent_z_m": 10.05,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T0",
+      "stable_id": "vegetation-v1-0e2b4fb68d43b8b70cd0",
+      "tier": 0,
+      "yaw_degrees": 198.652
+    },
+    {
+      "center_x_m": -406.0,
+      "center_z_m": 102.0,
+      "half_extent_x_m": 11.1106,
+      "half_extent_z_m": 9.5547,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T0",
+      "stable_id": "vegetation-v1-db05ad34f080b5747bc8",
+      "tier": 0,
+      "yaw_degrees": 338.208
+    },
+    {
+      "center_x_m": 50.0,
+      "center_z_m": 490.0,
+      "half_extent_x_m": 10.4763,
+      "half_extent_z_m": 9.9306,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T0",
+      "stable_id": "vegetation-v1-49c5b9bc5f654c61d5d9",
+      "tier": 0,
+      "yaw_degrees": 134.151
+    },
+    {
+      "center_x_m": -606.0,
+      "center_z_m": 402.0,
+      "half_extent_x_m": 10.6108,
+      "half_extent_z_m": 9.2695,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T1",
+      "stable_id": "vegetation-v1-9cd25d9c241acc1c67d6",
+      "tier": 1,
+      "yaw_degrees": 50.769
+    },
+    {
+      "center_x_m": 1106.0,
+      "center_z_m": 38.0,
+      "half_extent_x_m": 10.3111,
+      "half_extent_z_m": 9.3282,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T1",
+      "stable_id": "vegetation-v1-3c6a35696623ebef1741",
+      "tier": 1,
+      "yaw_degrees": 143.632
+    },
+    {
+      "center_x_m": -434.0,
+      "center_z_m": 914.0,
+      "half_extent_x_m": 10.6978,
+      "half_extent_z_m": 9.7684,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T1",
+      "stable_id": "vegetation-v1-d0ded89aed3c146bc439",
+      "tier": 1,
+      "yaw_degrees": 333.616
+    },
+    {
+      "center_x_m": -378.0,
+      "center_z_m": 406.0,
+      "half_extent_x_m": 11.1561,
+      "half_extent_z_m": 9.3588,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T1",
+      "stable_id": "vegetation-v1-822f06ba546263a81725",
+      "tier": 1,
+      "yaw_degrees": 118.665
+    },
+    {
+      "center_x_m": 558.0,
+      "center_z_m": -382.0,
+      "half_extent_x_m": 12.7144,
+      "half_extent_z_m": 9.6965,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Deciduous_T1",
+      "stable_id": "vegetation-v1-fb730621757c9d5793f9",
+      "tier": 1,
+      "yaw_degrees": 165.215
+    },
+    {
+      "center_x_m": 650.0,
+      "center_z_m": -186.0,
+      "half_extent_x_m": 8.9375,
+      "half_extent_z_m": 9.3123,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T1",
+      "stable_id": "vegetation-v1-0cbbe61865e09b043016",
+      "tier": 1,
+      "yaw_degrees": 143.264
+    },
+    {
+      "center_x_m": 986.0,
+      "center_z_m": 398.0,
+      "half_extent_x_m": 8.0791,
+      "half_extent_z_m": 7.4132,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T1",
+      "stable_id": "vegetation-v1-8ab99a213d16ab5eba3e",
+      "tier": 1,
+      "yaw_degrees": 85.903
+    },
+    {
+      "center_x_m": 758.0,
+      "center_z_m": -1086.0,
+      "half_extent_x_m": 6.1848,
+      "half_extent_z_m": 5.5307,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T1",
+      "stable_id": "vegetation-v1-ac7f920e86e42c38d768",
+      "tier": 1,
+      "yaw_degrees": 189.693
+    },
+    {
+      "center_x_m": -534.0,
+      "center_z_m": 1126.0,
+      "half_extent_x_m": 7.4573,
+      "half_extent_z_m": 6.2216,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T1",
+      "stable_id": "vegetation-v1-ecc6607c5d5e6ac9d3b6",
+      "tier": 1,
+      "yaw_degrees": 131.3
+    },
+    {
+      "center_x_m": 178.0,
+      "center_z_m": 1082.0,
+      "half_extent_x_m": 7.9963,
+      "half_extent_z_m": 6.8301,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T1",
+      "stable_id": "vegetation-v1-fc4e94736d76e5ac227a",
+      "tier": 1,
+      "yaw_degrees": 153.932
+    },
+    {
+      "center_x_m": 722.0,
+      "center_z_m": -206.0,
+      "half_extent_x_m": 11.2329,
+      "half_extent_z_m": 9.0391,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_WillowRiparian_T1",
+      "stable_id": "vegetation-v1-bf4977d3aee9493ff6b1",
+      "tier": 1,
+      "yaw_degrees": 245.971
+    },
+    {
+      "center_x_m": 850.0,
+      "center_z_m": -94.0,
+      "half_extent_x_m": 6.573,
+      "half_extent_z_m": 5.798,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Deciduous_T1",
+      "stable_id": "vegetation-v1-a7f49b0143eb93bf1a80",
+      "tier": 1,
+      "yaw_degrees": 95.511
+    },
+    {
+      "center_x_m": -310.0,
+      "center_z_m": 974.0,
+      "half_extent_x_m": 9.4503,
+      "half_extent_z_m": 8.5356,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Deciduous_T1",
+      "stable_id": "vegetation-v1-dc3bf6cef22c9e69ea7a",
+      "tier": 1,
+      "yaw_degrees": 340.559
+    },
+    {
+      "center_x_m": -622.0,
+      "center_z_m": -230.0,
+      "half_extent_x_m": 4.9987,
+      "half_extent_z_m": 5.2437,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Cottonwood_T1",
+      "stable_id": "vegetation-v1-00fbe40c1d5d4b30c6da",
+      "tier": 1,
+      "yaw_degrees": 41.293
+    },
+    {
+      "center_x_m": -762.0,
+      "center_z_m": -338.0,
+      "half_extent_x_m": 8.0151,
+      "half_extent_z_m": 7.0261,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Deciduous_T1",
+      "stable_id": "vegetation-v1-3e3b289641f01d1ac955",
+      "tier": 1,
+      "yaw_degrees": 92.726
+    },
+    {
+      "center_x_m": -502.0,
+      "center_z_m": -1286.0,
+      "half_extent_x_m": 7.7572,
+      "half_extent_z_m": 6.4748,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Deciduous_T1",
+      "stable_id": "vegetation-v1-86c0243575d86858ad56",
+      "tier": 1,
+      "yaw_degrees": 165.72
+    },
+    {
+      "center_x_m": 1390.0,
+      "center_z_m": 46.0,
+      "half_extent_x_m": 6.6386,
+      "half_extent_z_m": 5.765,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_Deciduous_T1",
+      "stable_id": "vegetation-v1-47b723a7aaa7f1b3c677",
+      "tier": 1,
+      "yaw_degrees": 239.984
+    },
+    {
+      "center_x_m": -106.0,
+      "center_z_m": 786.0,
+      "half_extent_x_m": 8.6414,
+      "half_extent_z_m": 7.8382,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_WillowRiparian_T1",
+      "stable_id": "vegetation-v1-3e99b77e8f5e62d247ae",
+      "tier": 1,
+      "yaw_degrees": 201.613
+    },
+    {
+      "center_x_m": -1242.0,
+      "center_z_m": 350.0,
+      "half_extent_x_m": 9.7229,
+      "half_extent_z_m": 7.4705,
+      "shape": "conservative_oriented_source_aabb",
+      "source_object": "AerialTree_WillowRiparian_T1",
+      "stable_id": "vegetation-v1-e18d4f5abe1e58795846",
+      "tier": 1,
+      "yaw_degrees": 267.356
+    }
+  ],
+  "inputs": {
+    "config_path": "tools/scenery/vegetation/vegetation_config.json",
+    "config_sha256": "229832de70d70f7c5264ca28d8b2be539f584adb5acb917276120c8e724963d4",
+    "distribution_path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_Distribution.json",
+    "distribution_sha256": "2b0ba1b9a949f4ca7b175211ad7dd2513b90d2fe592f1533f566f9bcd604414b",
+    "dtm_semantic": "digital_terrain_model",
+    "dtm_sha256": "d5e703ea15af0c3bdd7a6280d68b56addcda1c481639cb09adef5dd9b18cb745",
+    "geometry_report_path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_GeometryReport.json",
+    "geometry_report_sha256": "9189044e35f1ee4ba0284d142fc706bd64a689d43479c132cf12db09b5fbf72f",
+    "lidar_manifest_path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json",
+    "lidar_manifest_sha256": "1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5",
+    "surface_features_semantic": "surface_features_canopy_building",
+    "surface_features_sha256": "caeb502a111898aa800a679cced6549f94c49df11d7a9a1c30afdc2cadeb3af0"
+  },
+  "output": {
+    "dimensions": [
+      1024,
+      1024
+    ],
+    "encoding": "PNG R8 linear UNorm; north-up file rows",
+    "mipmaps": false,
+    "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_HandoffMask_R8.png",
+    "png_bytes": 86867,
+    "runtime_property": "_AerialCanopyHandoffMask",
+    "runtime_uncompressed_base_bytes": 1048576,
+    "runtime_uncompressed_bytes": 1048576,
+    "sha256": "dccfa359a6ed536787411f9733eff04b80711d1bbaa2af151b3330b0f7273f8b",
+    "theoretical_unrequested_full_mip_chain_bytes": 1398101
+  },
+  "ownership_semantics": {
+    "code_0": "Pixel is outside validated eligible canopy or Tier0-1 authored geometry owns it",
+    "code_255": "Pixel is validated eligible canopy fully owned by the lidar canopy terrain-shading representation",
+    "combination": "minimum quantized handoff value across all authored footprints",
+    "eligible_canopy_gate": {
+      "dtm_code": "nonzero",
+      "linear_sampling_note": "base-level R8 is sampled bilinearly; no mip chain can reintroduce excluded distant texels",
+      "maximum_building_hag_m": 0.25,
+      "minimum_canopy_hag_m": 2.0,
+      "minimum_vegetation_density": 0.16,
+      "source": "same decoded surface-features and DTM eligibility function used by the frozen distribution"
+    },
+    "scalar_handoff_uniform": null,
+    "smoothstep_feather_m": 64.0,
+    "tier0_tier1_footprint": "conservative oriented rectangle from the source mesh horizontal AABB and authored transform",
+    "tier2_footprint": "none; Tier2 has zero geometry and therefore does not carve the canopy map",
+    "tier3_spatial_domain": "Tier2/Tier3 lidar canopy terrain shading inside the validated lidar square",
+    "zero_padding_m": 16.0
+  },
+  "schema": "questflight.aerial-scenery-v1.vegetation-handoff-mask.v1",
+  "semantic": "tier0_1_geometry_to_lidar_canopy_map_handoff",
+  "source_and_license": {
+    "external_assets": [],
+    "license": "Project-authored",
+    "source": "Deterministic project-authored derivative of the validated vegetation distribution and source bounds"
+  },
+  "statistics": {
+    "eligible_canopy_area_m2": 4444864.0,
+    "eligible_canopy_exclusion_counters": {
+      "below_density": 12789,
+      "below_hag": 757983,
+      "eligible_canopy_area_m2": 4444864.0,
+      "eligible_pixels": 277804,
+      "eligible_pixels_reduced_to_cells": 34446,
+      "grove_components": 323
+    },
+    "eligible_canopy_pixels": 277804,
+    "eligible_geometry_owned_zero_area_m2": 14368.0,
+    "eligible_geometry_owned_zero_pixels": 898,
+    "footprint_count": 22,
+    "geometry_handoff_nonzero_pixels_before_eligible_canopy_gate": 1045178,
+    "ineligible_excluded_area_m2": 12332352.0,
+    "ineligible_excluded_pixels": 770772,
+    "tier3_nonzero_eligible_coverage_fraction": 0.99676751,
+    "tier3_owned_full_area_m2": 4369216.0,
+    "tier3_owned_full_pixels": 273076,
+    "tier_counts": {
+      "0": 3,
+      "1": 19,
+      "2": 0
+    },
+    "total_final_weight_zero_area_m2": 12346720.0,
+    "total_final_weight_zero_pixels": 771670,
+    "transition_area_m2": 61280.0,
+    "transition_pixels": 3830
+  },
+  "status": "VALIDATED_LIDAR_DERIVATIVE"
+}

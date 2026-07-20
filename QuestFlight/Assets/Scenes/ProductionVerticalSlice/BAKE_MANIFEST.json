@@ -1,0 +1,14 @@
+{
+    "schemaVersion": 2,
+    "classification": "PASS_FINITE_BOUNDED_NON_DIRECTIONAL_BAKE",
+    "scene": "Assets/Scenes/ProductionVerticalSlice.unity",
+    "lightmapAssetPath": "Assets/Scenes/ProductionVerticalSlice/Lightmap-0_comp_light.exr",
+    "lightmapSha256": "e1c7d437122306f50d617285b31cd1a36d55737478da15a99a371fdae747edf2",
+    "width": 512,
+    "height": 512,
+    "directional": false,
+    "finiteTexels": true,
+    "nonFiniteLogMessageCount": 0,
+    "ambientMode": "Trilight",
+    "estimatedAndroidBytes": 157782
+}

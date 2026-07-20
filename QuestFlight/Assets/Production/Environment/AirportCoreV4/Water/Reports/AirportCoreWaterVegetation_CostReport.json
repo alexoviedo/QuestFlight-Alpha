@@ -1,0 +1,32 @@
+{
+  "estimated_texture_bytes_total": 2499712,
+  "schema": "questflight.airport-core-v4.water-vegetation-cost.v1",
+  "status": "TEXTURE_AND_RENDERER_PLANNING_ONLY",
+  "vegetation": {
+    "active_material_slots": 1,
+    "active_renderer_count": 1,
+    "atlas_astc_4x4_mip_bytes": 1398128,
+    "geometry_report_pending": false,
+    "transparent_material_slots": 0,
+    "triangles_by_lod": {
+      "lod0": 1428,
+      "lod1": 534,
+      "lod2": 84
+    },
+    "vertices_by_lod": {
+      "lod0": 1476,
+      "lod1": 552,
+      "lod2": 102
+    }
+  },
+  "water": {
+    "minor_mask_astc_6x6_mip_bytes": 158432,
+    "minor_water_renderer_delta": 0,
+    "reservoir_expected_active_renderers": 1,
+    "reservoir_mask_astc_6x6_mip_bytes": 626288,
+    "reservoir_renderer_delta": 0,
+    "transparent_material_slots": 0,
+    "wave_a_astc_6x6_mip_bytes": 158432,
+    "wave_b_astc_6x6_mip_bytes": 158432
+  }
+}

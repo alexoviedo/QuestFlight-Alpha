@@ -1,0 +1,40 @@
+{
+  "alpha_tested": true,
+  "atlas": "Assets/Production/Environment/AirportCoreV4/Vegetation/Textures/AirportCoreVegetation_Atlas.png",
+  "camera_facing_billboard": false,
+  "cluster_members": [
+    "cottonwood_a",
+    "cottonwood_b",
+    "deciduous",
+    "shrub_group"
+  ],
+  "gpu_instancing": true,
+  "lod_objects": [
+    "AirportCoreVegetationCluster_LOD0",
+    "AirportCoreVegetationCluster_LOD1",
+    "AirportCoreVegetationCluster_LOD2"
+  ],
+  "lod_policy": {
+    "culled_after": 240.0,
+    "lod0": [
+      0.0,
+      45.0
+    ],
+    "lod1": [
+      45.0,
+      105.0
+    ],
+    "lod2": [
+      105.0,
+      240.0
+    ]
+  },
+  "material_slots_per_lod": 1,
+  "runtime_model": "Assets/Production/Environment/AirportCoreV4/Vegetation/Models/AirportCoreVegetationCluster.fbx",
+  "schema": "questflight.airport-core-v4.vegetation-contract.v1",
+  "shader": "Assets/Production/Environment/AirportCoreV4/Vegetation/Shaders/KBDUVegetationHeroV4.shader",
+  "source_blend": "Assets/ArtSource/Blender/KBDU/VegetationHeroCluster.blend",
+  "status": "CANDIDATE_REQUIRES_AUTHORED_INTEGRATION_AND_VISUAL_QA",
+  "top_oblique_stability": "AUTHORED_HORIZONTAL_AND_OBLIQUE_CARDS; REQUIRES_STEREO_QA",
+  "transparent": false
+}

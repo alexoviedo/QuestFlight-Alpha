@@ -1,0 +1,47 @@
+{
+    "schemaVersion": 2,
+    "classification": "PASS_ERROR_BOUNDED_ADAPTIVE_AIRPORT_VISUAL_MESH",
+    "sourceTerrainSurfaceAsset": "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_ProductionTerrainSurfaceV2.asset",
+    "sourceTerrainManifestSha256": "392156a4b11c0b7c5cc48ec1d9d0e9fce97187f95ee9c325f515dc44228b1f5b",
+    "sourceVisualMesh": "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_AirportTerrain_5m_V2.asset",
+    "derivedVisualMesh": "Assets/Production/Environment/AirportCoreV4/Generated/KBDU_AirportTerrain_ErrorBounded_V4_2.asset",
+    "sourceSpacingMeters": 5.0,
+    "nonheroBaseSpacingMeters": 20.0,
+    "protectedSpacingMeters": 5.0,
+    "maximumAdaptiveCellSourceDeviationMeters": 1.600000023841858,
+    "measuredMaximumUnrefinedCellSourceDeviationMeters": 1.5900001525878907,
+    "sourceTriangleCount": 76800,
+    "derivedTriangleCount": 15314,
+    "triangleReduction": 61486,
+    "protectedFineCellCount": 239,
+    "automaticErrorFineCellCount": 37,
+    "totalFineCellCount": 276,
+    "transitionCellCount": 427,
+    "coarseCellCount": 1697,
+    "outerBoundarySourceSamplesPreserved": true,
+    "runwayCorridorSourceSamplesPreserved": true,
+    "benchmarkFoundationSourceSamplesPreserved": true,
+    "authoritativeSurfaceQueryUnchanged": true,
+    "colliderBindingsUnchanged": true,
+    "sourceNormalsPreserved": true,
+    "protectedBounds": [
+        {
+            "minimumEastMeters": -660.0,
+            "maximumEastMeters": 640.0,
+            "minimumNorthMeters": -60.0,
+            "maximumNorthMeters": 0.0
+        },
+        {
+            "minimumEastMeters": -460.0,
+            "maximumEastMeters": -320.0,
+            "minimumNorthMeters": -280.0,
+            "maximumNorthMeters": -180.0
+        },
+        {
+            "minimumEastMeters": -140.0,
+            "maximumEastMeters": -80.0,
+            "minimumNorthMeters": -240.0,
+            "maximumNorthMeters": -180.0
+        }
+    ]
+}

@@ -1,0 +1,358 @@
+{
+  "assets": [
+    {
+      "asset_id": "AirportCoreProps",
+      "bytes": 145111,
+      "path": "QuestFlight/Assets/ArtSource/Blender/KBDU/AirportCoreProps.blend",
+      "role": "source_blend",
+      "sha256": "43c2e84d36039bba2b2c2be2dae4ae21f229a3929a0d4dc49fdc9e22186cc431"
+    },
+    {
+      "asset_id": "Cone",
+      "bytes": 29648,
+      "lod": 0,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Cone_LOD0.glb",
+      "role": "runtime_lod",
+      "sha256": "77d5a0266ef51261a6475f9d11a8c9e58cb8efbc24150ddae4d887498eb26c67"
+    },
+    {
+      "asset_id": "Cone",
+      "bytes": 9672,
+      "lod": 1,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Cone_LOD1.glb",
+      "role": "runtime_lod",
+      "sha256": "3625bc289a141dbc269dec197338c3d1dd6ca3e372db6dc95d389b630d595a2d"
+    },
+    {
+      "asset_id": "Cone",
+      "bytes": 3832,
+      "lod": 2,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Cone_LOD2.glb",
+      "role": "runtime_lod",
+      "sha256": "0d7d51549d5b8367859903605a3b7eff330aea1f267c56757156e53d00b45d0e"
+    },
+    {
+      "asset_id": "Fence",
+      "bytes": 36704,
+      "lod": 0,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Fence_LOD0.glb",
+      "role": "runtime_lod",
+      "sha256": "6b721c8ffc60fde644445be37c1b108cc605643e351216948197852dc573cef3"
+    },
+    {
+      "asset_id": "Fence",
+      "bytes": 18004,
+      "lod": 1,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Fence_LOD1.glb",
+      "role": "runtime_lod",
+      "sha256": "44e2fa18fab5e7a807fc99fb0f1a76d42f02bdd98117b9e7884dbd395e17e6bc"
+    },
+    {
+      "asset_id": "Fence",
+      "bytes": 8568,
+      "lod": 2,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Fence_LOD2.glb",
+      "role": "runtime_lod",
+      "sha256": "bc27bd3f087cab0ae172581d7f9c1243af82ccfd64b770801b3d786e10f67e1a"
+    },
+    {
+      "asset_id": "LightPole",
+      "bytes": 33264,
+      "lod": 0,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/LightPole_LOD0.glb",
+      "role": "runtime_lod",
+      "sha256": "52f6c60f690fa350f1a59719097b471b112202c9d1110aef71752a3f27f7facc"
+    },
+    {
+      "asset_id": "LightPole",
+      "bytes": 14732,
+      "lod": 1,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/LightPole_LOD1.glb",
+      "role": "runtime_lod",
+      "sha256": "f34204a69c8c8dd548981a5c00bb72c892a929f869e9d760ac0ae5e80ef4f9ee"
+    },
+    {
+      "asset_id": "LightPole",
+      "bytes": 3828,
+      "lod": 2,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/LightPole_LOD2.glb",
+      "role": "runtime_lod",
+      "sha256": "1e081c09eda10efc1645de597d81fd20ded3115ef9c96648d3b8570a8d3caf36"
+    },
+    {
+      "asset_id": "ServiceCart",
+      "bytes": 43672,
+      "lod": 0,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ServiceCart_LOD0.glb",
+      "role": "runtime_lod",
+      "sha256": "6fc7c9da33d007c8cf1fee069e9f23fae754513158b2c3ba67fbad01d7a5d40f"
+    },
+    {
+      "asset_id": "ServiceCart",
+      "bytes": 22068,
+      "lod": 1,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ServiceCart_LOD1.glb",
+      "role": "runtime_lod",
+      "sha256": "6ebdd6684b98838f9072c2fca07b11d5017d48060d0a522a5a82f89e36301020"
+    },
+    {
+      "asset_id": "ServiceCart",
+      "bytes": 6892,
+      "lod": 2,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ServiceCart_LOD2.glb",
+      "role": "runtime_lod",
+      "sha256": "efe132ddd44a40fe187487a38f60cd7759fe861d239d8d687b523e2849bbb836"
+    },
+    {
+      "asset_id": "Signboard",
+      "bytes": 20412,
+      "lod": 0,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Signboard_LOD0.glb",
+      "role": "runtime_lod",
+      "sha256": "05427baa0a11b87b112c99917cdfd9bf88b2e560f1415304c168fe66dd8f704b"
+    },
+    {
+      "asset_id": "Signboard",
+      "bytes": 10904,
+      "lod": 1,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Signboard_LOD1.glb",
+      "role": "runtime_lod",
+      "sha256": "1bea239a8de4ca8a257dd15ba2901067eca74856ad12635c8791930debf80c84"
+    },
+    {
+      "asset_id": "Signboard",
+      "bytes": 2588,
+      "lod": 2,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Signboard_LOD2.glb",
+      "role": "runtime_lod",
+      "sha256": "b2ac308f08626d367a1e98d4b5dac555cbbae10d9de4079480d9a223164d4839"
+    },
+    {
+      "asset_id": "TieDown",
+      "bytes": 19188,
+      "lod": 0,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/TieDown_LOD0.glb",
+      "role": "runtime_lod",
+      "sha256": "c9b9ffecd10e04660f7787a4dc4bd208a055842d8f81ecc4516205996c976344"
+    },
+    {
+      "asset_id": "TieDown",
+      "bytes": 9056,
+      "lod": 1,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/TieDown_LOD1.glb",
+      "role": "runtime_lod",
+      "sha256": "334b50eebfa73a5d459d62d46e830d25fa0187488ec9360f693a22c786bce518"
+    },
+    {
+      "asset_id": "TieDown",
+      "bytes": 2588,
+      "lod": 2,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/TieDown_LOD2.glb",
+      "role": "runtime_lod",
+      "sha256": "db73126b5c50ff95a37d1aa84563e27e8cbef155cf37ace00078d9e3fe212fec"
+    },
+    {
+      "asset_id": "ExecutiveTerminal",
+      "bytes": 664011,
+      "path": "QuestFlight/Assets/ArtSource/Blender/KBDU/ExecutiveTerminal.blend",
+      "role": "source_blend",
+      "sha256": "38be9258bc3c49c0d2874e68c87cecd67f05ba1d970f1b8c23726113eabd8131"
+    },
+    {
+      "asset_id": "ExecutiveTerminal",
+      "bytes": 2593340,
+      "lod": 0,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ExecutiveTerminal_LOD0.glb",
+      "role": "runtime_lod",
+      "sha256": "a08ea0a001b3ec1737ccb3ca783ab77453bf9c95316932e4f945ae48b0db2270"
+    },
+    {
+      "asset_id": "ExecutiveTerminal",
+      "bytes": 1089456,
+      "lod": 1,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ExecutiveTerminal_LOD1.glb",
+      "role": "runtime_lod",
+      "sha256": "178394ae9c3300026a813d664e7300e46aa83ea9a3ca7018026733dd8d722a62"
+    },
+    {
+      "asset_id": "ExecutiveTerminal",
+      "bytes": 301644,
+      "lod": 2,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/ExecutiveTerminal_LOD2.glb",
+      "role": "runtime_lod",
+      "sha256": "0cd7334581f476e78363f7d2f320f4c600360a73c54aa9f062adc49907a3a7dd"
+    },
+    {
+      "asset_id": "FuelServiceCore",
+      "bytes": 146372,
+      "path": "QuestFlight/Assets/ArtSource/Blender/KBDU/FuelServiceCore.blend",
+      "role": "source_blend",
+      "sha256": "b05172bce6803a230c199883375f09a0b7f6a3ef4184cb837af5394b3fbcee6f"
+    },
+    {
+      "asset_id": "FuelServiceCore",
+      "bytes": 203000,
+      "lod": 0,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/FuelServiceCore_LOD0.glb",
+      "role": "runtime_lod",
+      "sha256": "4156f48dea927ce91eca68ada8eb9eb725b351731b2a18425c1bc1f6de31ef7a"
+    },
+    {
+      "asset_id": "FuelServiceCore",
+      "bytes": 74644,
+      "lod": 1,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/FuelServiceCore_LOD1.glb",
+      "role": "runtime_lod",
+      "sha256": "80a033ec382bffa1c18d826f8191634237d7b41e52fec7d4a66e9342e4ebaded"
+    },
+    {
+      "asset_id": "FuelServiceCore",
+      "bytes": 28960,
+      "lod": 2,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/FuelServiceCore_LOD2.glb",
+      "role": "runtime_lod",
+      "sha256": "f2f6c01cba546340b524896039d50d87b19a328102910a4c4ec81cca6ce7089f"
+    },
+    {
+      "asset_id": "Type2THangarRow",
+      "bytes": 764931,
+      "path": "QuestFlight/Assets/ArtSource/Blender/KBDU/Type2THangarRow.blend",
+      "role": "source_blend",
+      "sha256": "0f5b862fe7b99a87bf13ab88fe707307ae5298b2f7370b8dd5aac8242e8074cb"
+    },
+    {
+      "asset_id": "Type2THangarRow",
+      "bytes": 3628828,
+      "lod": 0,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Type2THangarRow_LOD0.glb",
+      "role": "runtime_lod",
+      "sha256": "78599324a6dba807797a7ae8e91ca6c1d4c4abc59017295df0f9185fdbf4735b"
+    },
+    {
+      "asset_id": "Type2THangarRow",
+      "bytes": 1396512,
+      "lod": 1,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Type2THangarRow_LOD1.glb",
+      "role": "runtime_lod",
+      "sha256": "1f44b47ae5dea860db8af69f727caef3bc93cdebb3e60adf99cbcffa7cfa6403"
+    },
+    {
+      "asset_id": "Type2THangarRow",
+      "bytes": 461080,
+      "lod": 2,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Buildings/Models/Type2THangarRow_LOD2.glb",
+      "role": "runtime_lod",
+      "sha256": "77d596af12d9635b281f5f77d0fe085b7093fedd7856790fe1e1d5e602fd4e7d"
+    },
+    {
+      "bytes": 32902,
+      "path": "tools/kbdu_airport_core_v4/buildings/generate_airport_core_buildings.py",
+      "role": "authoring_input",
+      "sha256": "3c7d0f3fa25b386e13e855da637e10a2ee31993c23b19b292c5d91c4443208a1"
+    },
+    {
+      "bytes": 1819,
+      "path": "tools/kbdu_airport_core_v4/buildings/airport_core_building_spec.json",
+      "role": "authoring_input",
+      "sha256": "061169de196095fb6af5ef70b7711607b8946fe6b2f3f3b2bb62d8b1e01176c6"
+    },
+    {
+      "bytes": 2884,
+      "path": "tools/kbdu_airport_core_v4/buildings/airport_core_replacement_footprints.json",
+      "role": "authoring_input",
+      "sha256": "4d424eb3ce1c53c7a922ed20ef1a95349340d060af62c785a92416731bf255f4"
+    },
+    {
+      "bytes": 6927,
+      "path": "tools/kbdu_airport_core_v4/buildings/validate_airport_core_buildings.py",
+      "role": "authoring_input",
+      "sha256": "eaf96b7cabaf61d4a5423981b5f7b4822eb1285b15d6e3e486686773495a9a4f"
+    },
+    {
+      "bytes": 5217,
+      "path": "tools/kbdu_airport_core_v4/buildings/write_source_manifest.py",
+      "role": "authoring_input",
+      "sha256": "43b2c8e7b68b7b1e586fad13c4f35f9ac563cd0b74d7b5b8aa0f9db9caaf5b51"
+    },
+    {
+      "bytes": 3127,
+      "path": "tools/kbdu_airport_core_v4/buildings/write_unity_meta.py",
+      "role": "authoring_input",
+      "sha256": "8faa066d5e455c9437b5207639d4c4be736c011171c775b62061ca86f5b5a31b"
+    },
+    {
+      "bytes": 3011,
+      "path": "tools/kbdu_airport_core_v4/buildings/render_building_previews.py",
+      "role": "authoring_input",
+      "sha256": "47aef5669880f671c4f62ed6c47e37caa43dd8d974ca357ad5cbb3ab5221c83c"
+    },
+    {
+      "bytes": 2790,
+      "path": "tools/kbdu_airport_core_v4/buildings/make_reference_contact_sheet.py",
+      "role": "authoring_input",
+      "sha256": "bea8a28c909e38e387b73d0217292b5ebedfa7ad9c0321f8b24cbf48d61e38a6"
+    },
+    {
+      "bytes": 1307,
+      "path": "tools/kbdu_airport_core_v4/buildings/make_model_preview_contact_sheet.py",
+      "role": "authoring_input",
+      "sha256": "263aabfb2ff74d8baa6fb2c2c22c53a13e5ba52dbf1a0e17e380da02bb145be0"
+    }
+  ],
+  "author": "QuestFlight project",
+  "created_utc_date": "2026-07-17",
+  "external_reference_board_committed": false,
+  "external_reference_board_location": "Product artifact root / workstream_a / reference_board",
+  "factual_sources": [
+    {
+      "rights_handling": "facts only; City image remains external",
+      "url": "https://bouldercolorado.gov/airport-hangar-addresses",
+      "use": "official address arrangement and terminal identity"
+    },
+    {
+      "rights_handling": "facts only",
+      "url": "https://bouldercolorado.gov/services/airport-hangar-and-tie-down-leasing",
+      "use": "official Type 2 years, addresses, dimensions, door type/orientation, and floor"
+    },
+    {
+      "rights_handling": "facts only",
+      "url": "https://bouldercolorado.gov/projects/airport-master-plan",
+      "use": "official general-aviation and terminal-area context"
+    },
+    {
+      "rights_handling": "copyrighted reference-only image kept external",
+      "url": "https://airport-data.com/airport/photo/007472.html",
+      "use": "terminal massing and facade cues"
+    },
+    {
+      "rights_handling": "copyrighted reference-only image kept external",
+      "url": "https://airport-data.com/airport/photo/007473.html",
+      "use": "terminal facade and apron cues"
+    },
+    {
+      "rights_handling": "CC BY 4.0 copy kept external; no pixels embedded",
+      "url": "https://commons.wikimedia.org/wiki/File:Boulder_Municipal_Airport.JPG",
+      "use": "airport/apron scale and context"
+    },
+    {
+      "rights_handling": "reference-only images kept external",
+      "url": "https://stories.opengov.com/cityofboulderco/published/SoI4Kud_R",
+      "use": "airport-wide context"
+    }
+  ],
+  "license": "Project-authored deterministic geometry and scripts",
+  "limitations": [
+    "Models are reference-faithful authoring candidates, not survey-grade replicas.",
+    "No model is visually accepted until Unity atlas binding, clean plate, lighting, full-resolution QA, stereo review, and Quest budgets pass.",
+    "FuelServiceCore uses a project-authored experimental benchmark placement; no survey-grade public footprint was identified, so it is not an exact reconstruction and requires integrated Visual QA."
+  ],
+  "material_dependency": {
+    "hangar_kit_material": "AirportCoreHangarKitAtlas",
+    "owner": "Workstream B",
+    "terminal_material": "AirportCoreTerminalAtlas",
+    "textures_embedded_in_glb": false
+  },
+  "reference_photographs_embedded": false,
+  "schema_version": 1,
+  "status": "PROJECT_AUTHORED_CANDIDATE_REQUIRES_INTEGRATED_VISUAL_QA"
+}

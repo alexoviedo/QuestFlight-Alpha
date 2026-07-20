@@ -43,11 +43,19 @@ The exact KOG_THORNS `Cessna172` GLB listed in `docs/aircraft_rights_report.md` 
 
 - Commit only bounded, optimized derivatives required by the authored product scene.
 - Preserve the pinned FAA/BTS, USGS, and OSM snapshot date, requests, hashes, and coordinate frame.
+- Keep the current Near4096/Mid4096/Far2048 imagery levels aligned to one pinned local ENU coordinate contract. Their reviewed runtime imports use anisotropy 8, with mip bias `-0.15` for near/mid and `-0.10` for far. A replacement level or import-setting change is a new derived-asset revision and must carry its own extent, resolution, source, processing, size, hash, and import record.
 - Keep `© OpenStreetMap contributors` and an ODbL link visible in repository notices and in a user-accessible product credits/about surface.
 - When publicly distributing a Produced Work, also offer the OSM derivative database in machine-readable form as required by ODbL.
+- Identify OSM-derived meshes and rendered shoreline/context outputs as Produced Works, while separately identifying independently project-authored shaders, materials, atlases, and presentation geometry. Do not blur that license boundary.
 - Public-domain government data still receives source credit and no endorsement claim.
 - No Google Maps, Google Earth, Street View, or asset derived from their pixels or captures.
 - No raw DEM, orthophoto, OSM response, or archive in Git.
+
+## Environment source policy
+
+- Commit only the optimized runtime derivative of an approved HDRI. Keep the raw source external and pin the creator, official source, license, source hash, derivative method, derivative hash, and import settings in a committed manifest.
+- Project-authored water masks derived from a mapped shoreline retain the shoreline source attribution. Artistic depth or shore-distance channels must never be described as surveyed bathymetry.
+- A flight-aircraft asset is not automatically approved for duplicated scenery use. Parked aircraft require a separately reviewed static LOD, attribution treatment, visual purpose, render budget, and explicit serialized placement.
 
 ## Generated assets
 
@@ -60,6 +68,8 @@ Generated meshes, materials, textures, and prefabs must record:
 - whether the output is a database derivative, a Produced Work, or entirely project-authored.
 
 The production macro albedo is a project-authored Produced Work derived from pinned USGS/OSM facts. It is not aerial imagery and must not be described as photorealistic orthophotography.
+
+A serialized material setting such as Unity's instancing-variant flag is not evidence that a custom shader compiles or uses GPU instancing. Any GPU-instancing claim requires the shader variant, compatible renderer data, and validation evidence. Otherwise document the actual optimization, such as offline mesh batching and LODGroups.
 
 ## Release gate
 

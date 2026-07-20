@@ -104,10 +104,10 @@ namespace QuestFlightLab.Tests.PlayMode
             Assert.That(profile, Is.Not.Null);
             Assert.That(profile.aircraftId, Is.EqualTo(CockpitViewpointPersistence.DefaultAircraftId));
             Assert.That(profile.seatAnchorLocalPosition, Is.EqualTo(new Vector3(-0.28f, 0.72f, 0f)));
-            Assert.That(profile.nominalEyeLocalPosition, Is.EqualTo(new Vector3(-0.28f, 0.94f, -0.18f)));
-            Assert.That(profile.nominalEyeLocalPosition.z, Is.EqualTo(-0.18f).Within(0.0001f));
-            Assert.That(profile.EyeToPanelForwardDistanceMeters(), Is.EqualTo(0.497f).Within(0.001f));
-            Assert.That(profile.targetEyeToPanelDistanceMeters, Is.EqualTo(0.497f).Within(0.001f));
+            Assert.That(profile.nominalEyeLocalPosition, Is.EqualTo(new Vector3(-0.28f, 0.94f, -0.23f)));
+            Assert.That(profile.nominalEyeLocalPosition.z, Is.EqualTo(-0.23f).Within(0.0001f));
+            Assert.That(profile.EyeToPanelForwardDistanceMeters(), Is.EqualTo(0.547f).Within(0.001f));
+            Assert.That(profile.targetEyeToPanelDistanceMeters, Is.EqualTo(0.547f).Within(0.001f));
             Assert.That(marker.AircraftRig.PilotSeatAnchor.localPosition,
                 Is.EqualTo(profile.nominalEyeLocalPosition));
         }

@@ -1,0 +1,32 @@
+{
+    "schema": "questflight.aerial-scenery-v1.unity-local-lidar-mesh.v1",
+    "generatedUtc": "2026-07-19T04:15:00Z",
+    "label": "KBDU-inspired visual terrain / not for navigation",
+    "sourceObjAssetPath": "Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_NearTerrain_Fixed.obj",
+    "sourceObjSha256": "4689de66d4b47bdfc1a3ea6e8c33e906d4308bbb77317f23e3dc5185b5cefce8",
+    "sourceManifestSha256": "1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5",
+    "outputMeshAssetPath": "Assets/Production/Environment/AerialSceneryV1/TerrainIntegration/KBDU_Lidar_NearTerrain_UnityLocal_V1.asset",
+    "outputMeshAssetSha256": "00d92d21960f21b2e270f8f610a278d068e0bc70ee8c02f0441d389d879d33e6",
+    "conversion": "Direct parse of documented Unity-local +X east/+Y up/+Z north OBJ vertices and one-based triangle indices; generic OBJ handedness conversion bypassed.",
+    "vertexCount": 46426,
+    "triangleCount": 92000,
+    "boundsMinimum": {
+        "x": -2048.0,
+        "y": -44.28239822387695,
+        "z": -2048.0
+    },
+    "boundsMaximum": {
+        "x": 2048.0,
+        "y": 29.938732147216798,
+        "z": 2048.0
+    },
+    "sourceCoordinatesPreserved": true,
+    "genericObjImporterBypassed": true,
+    "runtimeConversionRequired": false,
+    "realWorldAccuracyEstablished": false,
+    "limitations": [
+        "This fixes asset-coordinate handedness only; it does not establish survey or navigation accuracy.",
+        "The frozen source OBJ and 3DEP provenance manifest remain unchanged.",
+        "The conversion is editor-only and the product serializes the native fixed mesh."
+    ]
+}

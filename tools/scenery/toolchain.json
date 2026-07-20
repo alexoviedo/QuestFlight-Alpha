@@ -1,0 +1,53 @@
+{
+  "artifact_install_policy": "External authoring tool only; never a product runtime dependency.",
+  "environment": {
+    "explicit_package_count": 112,
+    "install_location_policy": "External product-artifact root; never inside the repository or Unity project.",
+    "lock_bytes": 9220,
+    "lock_path": "tools/scenery/conda-lock-win-64.txt",
+    "lock_sha256": "8b7e1b1728a9071da8c929e22e35295870ea7c2d90515963e55288db0d10e756",
+    "name": "questflight-scenery",
+    "platform": "win-64",
+    "resolved_direct_packages": {
+      "gdal": "3.12.3",
+      "laspy": "2.6.1",
+      "lazrs-python": "0.8.1",
+      "libgdal-core": "3.12.3",
+      "libpdal-core": "2.10.0",
+      "numpy": "2.3.5",
+      "pillow": "11.3.0",
+      "pyproj": "3.7.2",
+      "pytest": "8.4.2",
+      "python": "3.12.13",
+      "python-pdal": "3.5.3",
+      "rasterio": "1.5.0",
+      "scipy": "1.16.3",
+      "shapely": "2.1.2",
+      "trimesh": "4.12.2"
+    },
+    "spec_path": "tools/scenery/environment.yml"
+  },
+  "micromamba": {
+    "archive_bytes": 4249942,
+    "archive_sha256": "c90484d65d84b88edffa8a9746f26a7cfd9c323f9a634dbf7b03fe7ce386dae1",
+    "archive_url": "https://micro.mamba.pm/api/micromamba/win-64/2.3.2",
+    "license": "BSD-3-Clause AND MIT AND OpenSSL",
+    "version": "2.3.2"
+  },
+  "optional_mesh_optimization": {
+    "gltfpack_installed": false,
+    "meshoptimizer_installed": false,
+    "reason": "No conda-forge win-64 entries were returned on 2026-07-18; the committed deliverable is OBJ and does not require either tool."
+  },
+  "schema_version": 1,
+  "verified": {
+    "gdal_cli_version": "3.12.3",
+    "laspy_sample_points": 4415,
+    "pdal_cli_version": "2.10.0",
+    "pdal_python_pipeline_sample_points": 4415,
+    "rasterio_driver_count": 190,
+    "sample_semantic": "smallest LAZ node in the frozen external CO_DRCOG_1_2020 snapshot",
+    "shapely_import_and_operation": true,
+    "trimesh_box_face_count": 12
+  }
+}

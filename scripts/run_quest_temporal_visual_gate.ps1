@@ -14,6 +14,8 @@ param(
   [int]$ReadinessTimeoutSeconds = 120,
   [ValidateRange(60, 180)]
   [int]$MeasurementTimeoutSeconds = 90,
+  [ValidateSet('production', 'sky_only', 'water_off', 'buildings_vegetation_off', 'reduced_texture_tier')]
+  [string]$IsolationProfile = 'production',
   [switch]$SkipInstall,
   [switch]$SkipScreenRecording,
   [switch]$StaticEvidenceOnly,
@@ -24,12 +26,20 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$QuestFrameBudgetMs = 1000.0 / 72.0
+$RequiredRefreshRateHz = 72.0
+$QuestFrameBudgetMs = 1000.0 / $RequiredRefreshRateHz
+$RequiredAverageCpuAndGpuMs = 12.8
 $RequiredP95Ms = $QuestFrameBudgetMs
 $RequiredOverBudgetRatio = 0.05
-$RequiredDrawCalls = 180
-$RequiredVisibleTriangles = 700000
-$RequiredSceneMaterials = 40
+$RequiredStaleFrames = 2
+$RequiredTears = 0
+$RequiredDrawCalls = 120
+$RequiredVisibleTriangles = 500000
+$RequiredSceneMaterials = 30
+$RequiredTransparentMaterialSlots = 2
+$RequiredVrApiSampleCount = 55
+$RequiredVrApiCoverageSeconds = 54.0
+$RequiredMeasurementSeconds = 60.0
 $LaunchSceneryMode = 'production_vertical_slice_v2'
 $OperatorRequest = 'Please put on the Quest 3, wake both Touch controllers, complete any Guardian/controller dialog, and remain normally seated. Do not physically step forward or backward. Tell me when the production cockpit is visible.'
 $script:ResolvedSerial = $DeviceSerial
@@ -111,6 +121,37 @@ function Get-RegexInt {
   return $Default
 }
 
+function Get-LogcatTimestampSeconds {
+  param([string]$Line)
+  $match = [regex]::Match(
+    $Line,
+    '^(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?')
+  if (-not $match.Success) { return $null }
+
+  try {
+    $timestamp = [DateTime]::new(
+      2000,
+      [int]$match.Groups[1].Value,
+      [int]$match.Groups[2].Value,
+      [int]$match.Groups[3].Value,
+      [int]$match.Groups[4].Value,
+      [int]$match.Groups[5].Value,
+      [DateTimeKind]::Unspecified)
+    $fraction = 0.0
+    if ($match.Groups[6].Success) {
+      [void][double]::TryParse(
+        '0.' + $match.Groups[6].Value,
+        [System.Globalization.NumberStyles]::Float,
+        [System.Globalization.CultureInfo]::InvariantCulture,
+        [ref]$fraction)
+    }
+    return ($timestamp - [DateTime]::new(2000, 1, 1)).TotalSeconds + $fraction
+  }
+  catch {
+    return $null
+  }
+}
+
 function Find-AppPidInLog {
   param([string[]]$Lines, [string]$ExplicitPid = '')
   if (-not [string]::IsNullOrWhiteSpace($ExplicitPid)) { return $ExplicitPid.Trim() }
@@ -120,13 +161,6 @@ function Find-AppPidInLog {
     if ($line -notmatch '\[QuestFlight\]') { continue }
     $match = [regex]::Match($line, '^\S+\s+\S+\s+(\d+)\s+\d+\s+[A-Z]\s+Unity\s*:')
     if ($match.Success) { $candidates += $match.Groups[1].Value }
-  }
-  if ($candidates.Count -eq 0) {
-    foreach ($line in $Lines) {
-      if ($line -notmatch 'VrApi\s*:.*FPS=.*SF=1\.00') { continue }
-      $match = [regex]::Match($line, '^\S+\s+\S+\s+(\d+)\s+\d+\s+[A-Z]\s+VrApi\s*:')
-      if ($match.Success) { $candidates += $match.Groups[1].Value }
-    }
   }
   if ($candidates.Count -eq 0) { return '' }
   return ($candidates | Group-Object | Sort-Object Count -Descending | Select-Object -First 1).Name
@@ -165,19 +199,34 @@ function Get-VrApiEvidence {
   $allLines = @(Get-Content -LiteralPath $LogcatPath)
   $window = Get-MeasurementLineWindow -Lines $allLines
   $appPid = Find-AppPidInLog -Lines $allLines -ExplicitPid $ExplicitAppPid
+  $productPidVerified = -not [string]::IsNullOrWhiteSpace($appPid)
   $samples = @()
+  $previousTimestampSeconds = $null
+  $timestampOffsetSeconds = 0.0
+  $secondsInLeapYear = 366.0 * 24.0 * 60.0 * 60.0
   foreach ($line in $window.lines) {
     if ($line -notmatch 'VrApi\s*:.*FPS=') { continue }
     $prefix = [regex]::Match($line, '^\S+\s+\S+\s+(\d+)\s+\d+\s+[A-Z]\s+VrApi\s*:\s*(.*)$')
     if (-not $prefix.Success) { continue }
     $processIdValue = $prefix.Groups[1].Value
     $metrics = $prefix.Groups[2].Value
-    if (-not [string]::IsNullOrWhiteSpace($appPid) -and $processIdValue -ne $appPid) { continue }
+    if (-not $productPidVerified -or $processIdValue -ne $appPid) { continue }
     # The app PID is the identity boundary. Quest firmware has emitted the
     # product row with both Fov=2 and Fov=0, so Fov is telemetry rather than an
-    # identity discriminator. SF=1.00 remains a fallback guard against vrshell
-    # compositor rows when PID inference must use VrApi output.
+    # identity discriminator. SF=1.00 is an additional filter, never a fallback
+    # identity: compositor rows must not be inferred as product evidence.
     if ($metrics -notmatch 'SF=1\.00') { continue }
+
+    $rawTimestampSeconds = Get-LogcatTimestampSeconds -Line $line
+    $timestampSeconds = $null
+    if ($null -ne $rawTimestampSeconds) {
+      if ($null -ne $previousTimestampSeconds -and
+          [double]$rawTimestampSeconds -lt ([double]$previousTimestampSeconds - (12.0 * 60.0 * 60.0))) {
+        $timestampOffsetSeconds += $secondsInLeapYear
+      }
+      $timestampSeconds = [double]$rawTimestampSeconds + $timestampOffsetSeconds
+      $previousTimestampSeconds = [double]$rawTimestampSeconds
+    }
 
     $fps = Get-RegexDouble $metrics 'FPS=([0-9.]+)/'
     $refresh = Get-RegexDouble $metrics 'FPS=[0-9.]+/([0-9.]+)'
@@ -186,6 +235,10 @@ function Get-VrApiEvidence {
     $clocks = [regex]::Match($metrics, ',(\d+)/(\d+)MHz')
     $samples += [pscustomobject]@{
       pid = [int]$processIdValue
+      timestampSeconds = $timestampSeconds
+      acceptanceTelemetryComplete = $metrics -match 'FPS=[0-9.]+/[0-9.]+' -and
+        $metrics -match 'Tear=\d+' -and $metrics -match 'Stale=\d+' -and
+        $metrics -match 'CPU&GPU=[0-9.]+ms'
       fovFieldValue = Get-RegexInt $metrics 'Fov=(\d+)' -1
       fps = $fps
       refreshHz = $refresh
@@ -222,12 +275,39 @@ function Get-VrApiEvidence {
   }
 
   $directGpu = @($samples | Where-Object { $_.gpuDurationMs -gt 0.01 } | ForEach-Object { $_.gpuDurationMs })
+  $timestampedSamples = @($samples | Where-Object { $null -ne $_.timestampSeconds })
+  $observedCoverageSeconds = 0.0
+  if ($timestampedSamples.Count -ge 2) {
+    $timestampRange = @($timestampedSamples | ForEach-Object { [double]$_.timestampSeconds }) |
+      Measure-Object -Minimum -Maximum
+    $observedCoverageSeconds = [Math]::Max(
+      0.0,
+      [double]$timestampRange.Maximum - [double]$timestampRange.Minimum)
+  }
+  $sampleCountSufficient = $samples.Count -ge $RequiredVrApiSampleCount
+  $timestampCoverageSufficient = $timestampedSamples.Count -eq $samples.Count -and
+    $observedCoverageSeconds -ge $RequiredVrApiCoverageSeconds
   $summary = [pscustomobject]@{
-    available = $samples.Count -gt 0
+    available = $productPidVerified -and $samples.Count -gt 0
+    identityVerifiedByProductPid = $productPidVerified
+    reason = $(if ($productPidVerified) { '' } else { 'No explicit or QuestFlight-authored product PID was present; compositor VrApi rows were excluded.' })
     appPid = $appPid
     exactMeasurementWindow = [bool]$window.exact
     sampleCount = $samples.Count
+    minimumRequiredSampleCount = $RequiredVrApiSampleCount
+    sampleCountSufficient = $sampleCountSufficient
+    timestampedSampleCount = $timestampedSamples.Count
+    observedCoverageSeconds = $observedCoverageSeconds
+    observedCoverageRatio = [Math]::Min(1.0, $observedCoverageSeconds / $RequiredMeasurementSeconds)
+    minimumRequiredCoverageSeconds = $RequiredVrApiCoverageSeconds
+    timestampCoverageSufficient = $timestampCoverageSufficient
+    acceptanceCoverageComplete = $sampleCountSufficient -and $timestampCoverageSufficient
     observedFovFieldValues = @($samples | ForEach-Object { $_.fovFieldValue } | Sort-Object -Unique)
+    observedRefreshRatesHz = @($samples | ForEach-Object { $_.refreshHz } | Where-Object { $_ -gt 0 } | Sort-Object -Unique)
+    acceptanceTelemetryComplete = $samples.Count -gt 0 -and
+      @($samples | Where-Object { -not $_.acceptanceTelemetryComplete }).Count -eq 0
+    quest3RefreshRate72Hz = $samples.Count -gt 0 -and
+      @($samples | Where-Object { [Math]::Abs([double]$_.refreshHz - $RequiredRefreshRateHz) -gt 0.5 }).Count -eq 0
     averageFps = Get-Average @($samples | ForEach-Object { $_.fps })
     p05Fps = Get-Percentile @($samples | ForEach-Object { $_.fps }) 0.05
     averageDeliveredIntervalFromFpsMs = Get-Average @($samples | ForEach-Object { $_.deliveredIntervalFromFpsMs })
@@ -258,7 +338,7 @@ function Get-VrApiEvidence {
     averageCflPrimaryMs = Get-Average @($samples | ForEach-Object { $_.cflPrimaryMs })
     p95CflSecondaryMs = Get-Percentile @($samples | ForEach-Object { $_.cflSecondaryMs }) 0.95
     p95IcflP95Ms = Get-Percentile @($samples | ForEach-Object { $_.icflP95Ms }) 0.95
-    semantics = 'App, CPU&GPU, GPU%, CPU%, stale, tear, clocks, levels, and thermal fields are VrApi rows filtered to the app PID and SF=1.00. Fov is recorded as telemetry because supported Quest firmware has emitted product rows with both Fov=0 and Fov=2. GD is direct GPU duration only when nonzero.'
+    semantics = 'App, CPU&GPU, GPU%, CPU%, stale, tear, clocks, levels, and thermal fields are VrApi rows filtered to a verified product PID and SF=1.00. SF=1.00 alone never identifies the app. Acceptance requires at least 55 timestamped one-second rows spanning at least 54 seconds of the 60-second measurement. Fov is recorded as telemetry because supported Quest firmware has emitted product rows with both Fov=0 and Fov=2. GD is direct GPU duration only when nonzero.'
   }
   return [pscustomobject]@{ summary = $summary; samples = @($samples) }
 }
@@ -276,6 +356,7 @@ function Get-RuntimeEvidenceSummary {
   $temporalFile = Get-LatestEvidenceJson -Root $EvidenceRoot -Prefix 'quest_temporal_visual_gate_'
   if ($null -ne $temporalFile) {
     $report = Get-Content -LiteralPath $temporalFile.FullName -Raw | ConvertFrom-Json
+    $reportSchemaVersion = [int](Get-ObjectProperty $report 'schemaVersion' 0)
     $budget = Get-ObjectProperty $report 'renderBudget'
     $runtimeDraw = [long](Get-ObjectProperty $report 'maximumRuntimeDrawCalls' 0)
     $auditDraw = [long](Get-ObjectProperty $budget 'estimatedInstancedDrawCalls' 0)
@@ -306,8 +387,28 @@ function Get-RuntimeEvidenceSummary {
       p95GpuFrameMs = [double](Get-ObjectProperty $report 'p95GpuFrameMs' 0)
       gpuTimingSamples = [int](Get-ObjectProperty $report 'gpuTimingSamples' 0)
       allocationRecorderAvailable = [bool](Get-ObjectProperty $report 'allocationRecorderAvailable' $false)
+      allocationMeasurementAvailable = [bool](Get-ObjectProperty $report 'allocationMeasurementAvailable' (
+        Get-ObjectProperty $report 'allocationRecorderAvailable' $false))
+      allocationMeasurementValidated = [bool](Get-ObjectProperty $report 'allocationMeasurementValidated' (
+        $(if ($reportSchemaVersion -lt 5) { Get-ObjectProperty $report 'allocationRecorderAvailable' $false } else { $false })))
+      allocationMeasurementSource = [string](Get-ObjectProperty $report 'allocationMeasurementSource' 'legacy Unity ProfilerRecorder')
+      allocationMeasurementScope = [string](Get-ObjectProperty $report 'allocationMeasurementScope' 'legacy report did not record scope')
+      allocationMeasurementSamples = [int](Get-ObjectProperty $report 'allocationMeasurementSamples' (
+        $(if ($reportSchemaVersion -lt 5) { Get-ObjectProperty $report 'sampleCount' 0 } else { 0 })))
+      allocationByteMeasurementAvailable = [bool](Get-ObjectProperty $report 'allocationByteMeasurementAvailable' (
+        Get-ObjectProperty $report 'allocationRecorderAvailable' $false))
+      managedAllocationCountMeasurementAvailable = [bool](Get-ObjectProperty $report 'managedAllocationCountMeasurementAvailable' $false)
+      allocationCounterCalibrationPassed = [bool](Get-ObjectProperty $report 'allocationCounterCalibrationPassed' $false)
+      allocationCounterCalibrationDelta = [long](Get-ObjectProperty $report 'allocationCounterCalibrationDelta' 0)
+      totalManagedAllocationCount = [long](Get-ObjectProperty $report 'totalManagedAllocationCount' ([long]::MaxValue))
+      maxManagedAllocationCountPerFrame = [long](Get-ObjectProperty $report 'maxManagedAllocationCountPerFrame' ([long]::MaxValue))
+      allocationMeasurementInvalidReason = [string](Get-ObjectProperty $report 'allocationMeasurementInvalidReason' '')
       averageGcAllocatedBytesPerFrame = [long](Get-ObjectProperty $report 'averageGcAllocatedBytesPerFrame' ([long]::MaxValue))
       maxGcAllocatedBytesPerFrame = [long](Get-ObjectProperty $report 'maxGcAllocatedBytesPerFrame' ([long]::MaxValue))
+      diagnosticIsolationProfile = [string](Get-ObjectProperty $report 'diagnosticIsolationProfile' 'production')
+      diagnosticIsolationActive = [bool](Get-ObjectProperty $report 'diagnosticIsolationActive' $false)
+      diagnosticDisabledRendererCount = [int](Get-ObjectProperty $report 'diagnosticDisabledRendererCount' 0)
+      diagnosticTextureMipmapLimit = [int](Get-ObjectProperty $report 'diagnosticTextureMipmapLimit' 0)
       drawCalls = $(if ($runtimeDraw -gt 0) { $runtimeDraw } else { $auditDraw })
       drawCallSource = $(if ($runtimeDraw -gt 0) { 'Unity runtime profiler counter' } else { 'QuestRenderBudgetAudit effective visible material-submesh slots before batching/instancing' })
       visibleTriangles = $(if ($runtimeTriangles -gt 0) { $runtimeTriangles } else { $auditTriangles })
@@ -319,6 +420,8 @@ function Get-RuntimeEvidenceSummary {
       transparentWaterRenderers = [int](Get-ObjectProperty $report 'transparentWaterRendererCount' 0)
       waterMaterials = [int](Get-ObjectProperty $report 'uniqueWaterMaterialCount' 0)
       waterTriangles = [long](Get-ObjectProperty $report 'waterTriangles' 0)
+      transparentMaterialSlots = [int](Get-ObjectProperty $report 'transparentMaterialSlots' (
+        Get-ObjectProperty $budget 'transparentMaterialSlots' ([int]::MaxValue)))
       productionVerticalSliceActive = [bool](Get-ObjectProperty $report 'productionVerticalSliceActive' $false)
       productionArchitectureVersion = [string](Get-ObjectProperty $report 'productionArchitectureVersion' '')
       authoredProductionHierarchyValid = [bool](Get-ObjectProperty $report 'authoredProductionHierarchyValid' $false)
@@ -377,8 +480,24 @@ function Get-RuntimeEvidenceSummary {
     p95GpuFrameMs = [double](Get-ObjectProperty $report 'p95GpuFrameMs' 0)
     gpuTimingSamples = $(if ([double](Get-ObjectProperty $report 'averageGpuFrameMs' 0) -gt 0.01) { [int](Get-ObjectProperty $report 'frameTimingManagerSamples' 0) } else { 0 })
     allocationRecorderAvailable = $false
+    allocationMeasurementAvailable = $false
+    allocationMeasurementValidated = $false
+    allocationMeasurementSource = 'unavailable'
+    allocationMeasurementScope = 'unavailable'
+    allocationMeasurementSamples = 0
+    allocationByteMeasurementAvailable = $false
+    managedAllocationCountMeasurementAvailable = $false
+    allocationCounterCalibrationPassed = $false
+    allocationCounterCalibrationDelta = 0
+    totalManagedAllocationCount = [long]::MaxValue
+    maxManagedAllocationCountPerFrame = [long]::MaxValue
+    allocationMeasurementInvalidReason = 'legacy evidence has no exact allocation counter'
     averageGcAllocatedBytesPerFrame = [long]::MaxValue
     maxGcAllocatedBytesPerFrame = [long]::MaxValue
+    diagnosticIsolationProfile = 'unknown'
+    diagnosticIsolationActive = $false
+    diagnosticDisabledRendererCount = 0
+    diagnosticTextureMipmapLimit = 0
     drawCalls = [long](Get-ObjectProperty $budget 'estimatedInstancedDrawCalls' 0)
     drawCallSource = 'QuestRenderBudgetAudit instancing estimate'
     visibleTriangles = [long](Get-ObjectProperty $budget 'estimatedFrustumTriangles' 0)
@@ -390,6 +509,7 @@ function Get-RuntimeEvidenceSummary {
     transparentWaterRenderers = -1
     waterMaterials = -1
     waterTriangles = -1
+    transparentMaterialSlots = [int](Get-ObjectProperty $budget 'transparentMaterialSlots' ([int]::MaxValue))
     realDataEnvironmentActive = $true
     proceduralFallbackActive = $false
     runtimeEnvironmentRoot = 'KBDU_RealData_World_NotForNavigation (from baseline runtime log)'
@@ -457,6 +577,9 @@ function Get-FaultSummary {
   $guardianDialogLines = @($lines | Where-Object {
     $_ -match '(?i)(GuardianDialogActivity|GuardianDialogMgr[^\r\n]*requestDialog|GUARDIAN_TRACKING_LOST)'
   })
+  $controllerDialogLines = @($lines | Where-Object {
+    $_ -match '(?i)(LaunchCheckControllerRequiredDialogActivity|common_system_dialog_app_launch_blocked_controller_required|controller[^\r\n]*(?:required|pair)[^\r\n]*dialog)'
+  })
   return [pscustomobject]@{
     crash = [bool]$crash
     anr = [bool]$anr
@@ -468,6 +591,9 @@ function Get-FaultSummary {
     thermalWarningLines = @($thermalWarningLines | Select-Object -Unique)
     guardianDialogDetected = $guardianDialogLines.Count -gt 0
     guardianDialogLines = @($guardianDialogLines | Select-Object -Unique -First 20)
+    controllerDialogDetected = $controllerDialogLines.Count -gt 0
+    controllerDialogLines = @($controllerDialogLines | Select-Object -Unique -First 20)
+    blockingSystemDialogDetected = $guardianDialogLines.Count -gt 0 -or $controllerDialogLines.Count -gt 0
   }
 }
 
@@ -641,17 +767,59 @@ function Write-GateSummary {
     [object[]]$PulledEvidence
   )
   $runtimeAvailable = [bool](Get-ObjectProperty $Runtime 'available' $false)
-  $p95Pass = $runtimeAvailable -and [double](Get-ObjectProperty $Runtime 'p95FrameMs' 999) -le $RequiredP95Ms
-  $overPass = $runtimeAvailable -and [double](Get-ObjectProperty $Runtime 'framesOverBudgetRatio' 1) -le $RequiredOverBudgetRatio
+  $deliveredP95Pass = $runtimeAvailable -and [double](Get-ObjectProperty $Runtime 'p95FrameMs' 999) -le $RequiredP95Ms
+  $deliveredOverPass = $runtimeAvailable -and [double](Get-ObjectProperty $Runtime 'framesOverBudgetRatio' 1) -le $RequiredOverBudgetRatio
   $drawPass = $runtimeAvailable -and [long](Get-ObjectProperty $Runtime 'drawCalls' ([long]::MaxValue)) -le $RequiredDrawCalls
   $trianglePass = $runtimeAvailable -and [long](Get-ObjectProperty $Runtime 'visibleTriangles' ([long]::MaxValue)) -le $RequiredVisibleTriangles
   $materialPass = $runtimeAvailable -and [int](Get-ObjectProperty $Runtime 'sceneMaterialCount' 0) -le $RequiredSceneMaterials
-  $allocationPass = $runtimeAvailable -and
-    [bool](Get-ObjectProperty $Runtime 'allocationRecorderAvailable' $false) -and
+  $transparentMaterialPass = $runtimeAvailable -and
+    [int](Get-ObjectProperty $Runtime 'transparentMaterialSlots' ([int]::MaxValue)) -le $RequiredTransparentMaterialSlots
+  $allocationByteAvailable = $runtimeAvailable -and
+    [bool](Get-ObjectProperty $Runtime 'allocationByteMeasurementAvailable' $false)
+  $allocationCountAvailable = $runtimeAvailable -and
+    [bool](Get-ObjectProperty $Runtime 'managedAllocationCountMeasurementAvailable' $false)
+  $allocationSampleCoveragePass = $runtimeAvailable -and
+    [int](Get-ObjectProperty $Runtime 'allocationMeasurementSamples' 0) -eq
+    [int](Get-ObjectProperty $Runtime 'sampleCount' -1)
+  $allocationBytePass = -not $allocationByteAvailable -or
     [long](Get-ObjectProperty $Runtime 'maxGcAllocatedBytesPerFrame' ([long]::MaxValue)) -eq 0
+  $allocationCountPass = -not $allocationCountAvailable -or
+    ([long](Get-ObjectProperty $Runtime 'maxManagedAllocationCountPerFrame' ([long]::MaxValue)) -eq 0 -and
+     [long](Get-ObjectProperty $Runtime 'totalManagedAllocationCount' ([long]::MaxValue)) -eq 0)
+  $allocationPass = $runtimeAvailable -and
+    [bool](Get-ObjectProperty $Runtime 'allocationMeasurementAvailable' $false) -and
+    [bool](Get-ObjectProperty $Runtime 'allocationMeasurementValidated' $false) -and
+    $allocationSampleCoveragePass -and ($allocationByteAvailable -or $allocationCountAvailable) -and
+    $allocationBytePass -and $allocationCountPass
+  $isolationProfilePass = $runtimeAvailable -and
+    [string](Get-ObjectProperty $Runtime 'diagnosticIsolationProfile' '') -eq $IsolationProfile
   $durationPass = $runtimeAvailable -and [double](Get-ObjectProperty $Runtime 'warmupSeconds' 0) -ge 90.0 -and [double](Get-ObjectProperty $Runtime 'measuredSeconds' 0) -ge 60.0
   $faultFree = -not $Faults.crash -and -not $Faults.anr -and -not $Faults.oom -and $Faults.unityExceptionCount -eq 0
-  $machinePass = $p95Pass -and $overPass -and $drawPass -and $trianglePass -and $materialPass -and $allocationPass -and $durationPass -and $faultFree -and -not $ThermalWarning
+  $deliveredCadencePass = $deliveredP95Pass -and $deliveredOverPass -and $durationPass
+
+  $vrApiAvailable = [bool](Get-ObjectProperty $VrApi 'available' $false)
+  $vrApiWindowPass = $vrApiAvailable -and [bool](Get-ObjectProperty $VrApi 'exactMeasurementWindow' $false)
+  $vrApiTelemetryPass = $vrApiAvailable -and [bool](Get-ObjectProperty $VrApi 'acceptanceTelemetryComplete' $false)
+  $vrApiSampleCountPass = $vrApiAvailable -and
+    [int](Get-ObjectProperty $VrApi 'sampleCount' 0) -ge $RequiredVrApiSampleCount
+  $vrApiCoveragePass = $vrApiAvailable -and
+    [int](Get-ObjectProperty $VrApi 'timestampedSampleCount' 0) -eq [int](Get-ObjectProperty $VrApi 'sampleCount' 0) -and
+    [double](Get-ObjectProperty $VrApi 'observedCoverageSeconds' 0) -ge $RequiredVrApiCoverageSeconds
+  $refreshRatePass = $vrApiAvailable -and [bool](Get-ObjectProperty $VrApi 'quest3RefreshRate72Hz' $false)
+  $combinedAveragePass = $vrApiAvailable -and
+    [double](Get-ObjectProperty $VrApi 'averageCpuAndGpuMs' 999) -le $RequiredAverageCpuAndGpuMs
+  $combinedP95Pass = $vrApiAvailable -and
+    [double](Get-ObjectProperty $VrApi 'p95CpuAndGpuMs' 999) -le $RequiredP95Ms
+  $combinedOverPass = $vrApiAvailable -and
+    [double](Get-ObjectProperty $VrApi 'cpuAndGpuSamplesOverBudgetRatio' 1) -le $RequiredOverBudgetRatio
+  $stalePass = $vrApiAvailable -and [int](Get-ObjectProperty $VrApi 'staleTotal' ([int]::MaxValue)) -le $RequiredStaleFrames
+  $tearPass = $vrApiAvailable -and [int](Get-ObjectProperty $VrApi 'tearTotal' ([int]::MaxValue)) -le $RequiredTears
+  $physicalTimingPass = $vrApiWindowPass -and $vrApiTelemetryPass -and $vrApiSampleCountPass -and
+    $vrApiCoveragePass -and $refreshRatePass -and $combinedAveragePass -and $combinedP95Pass -and
+    $combinedOverPass -and $stalePass -and $tearPass
+  $machinePass = $physicalTimingPass -and $drawPass -and $trianglePass -and $materialPass -and $transparentMaterialPass -and
+    $isolationProfilePass -and
+    $allocationPass -and $durationPass -and $faultFree -and -not $ThermalWarning
 
   $workloadSource = 'unavailable'
   $workloadAverage = 0.0
@@ -671,13 +839,23 @@ function Write-GateSummary {
     $workloadOverRatio = [double](Get-ObjectProperty $Runtime 'workloadSamplesOverBudgetRatio' 1)
     $workloadSampleCount = [int](Get-ObjectProperty $Runtime 'sampleCount' 0)
   }
-  $workloadTimingPass = $workloadSampleCount -gt 0 -and $workloadP95 -le $RequiredP95Ms -and $workloadOverRatio -le $RequiredOverBudgetRatio
-  $workloadGatePass = $workloadTimingPass -and $drawPass -and $trianglePass -and $faultFree -and -not $ThermalWarning
+  $workloadCoveragePass = if ($vrApiAvailable) {
+    $vrApiSampleCountPass -and $vrApiCoveragePass
+  } else {
+    $workloadSampleCount -gt 0
+  }
+  $workloadTimingPass = $workloadCoveragePass -and $workloadAverage -le $RequiredAverageCpuAndGpuMs -and
+    $workloadP95 -le $RequiredP95Ms -and $workloadOverRatio -le $RequiredOverBudgetRatio
+  $workloadGatePass = $workloadTimingPass -and $drawPass -and $trianglePass -and $materialPass -and $transparentMaterialPass -and
+    $faultFree -and -not $ThermalWarning
 
   $classification = if ($StaticOnly) {
     'NOT_RUN_BLOCKED_HEADSET_TEMPORAL_ACCEPTANCE'
   } elseif (-not $runtimeAvailable) {
     'FAIL_INCOMPLETE_RUNTIME_EVIDENCE'
+  } elseif (-not $vrApiAvailable -or -not $vrApiWindowPass -or -not $vrApiTelemetryPass -or
+            -not $vrApiSampleCountPass -or -not $vrApiCoveragePass) {
+    'FAIL_INCOMPLETE_VRAPI_EVIDENCE'
   } elseif ($machinePass) {
     'MACHINE_GATE_PASS_HUMAN_WITNESS_REQUIRED'
   } else {
@@ -695,7 +873,7 @@ function Write-GateSummary {
   } else { $null }
 
   $summary = [ordered]@{
-    schemaVersion = 2
+    schemaVersion = 5
     generatedUtc = [DateTime]::UtcNow.ToString('O')
     classification = $classification
     humanAcceptanceStatus = $HumanStatus
@@ -705,32 +883,60 @@ function Write-GateSummary {
     requirements = [ordered]@{
       warmupSeconds = 90
       measurementSeconds = 60
-      averageFrameMs = 'reported, not a hard gate in Clean Product Extraction V1'
+      targetRefreshRateHz = $RequiredRefreshRateHz
+      averageCpuAndGpuMsMax = $RequiredAverageCpuAndGpuMs
+      p95CpuAndGpuMsMax = $RequiredP95Ms
+      cpuAndGpuSamplesOverBudgetRatioMax = $RequiredOverBudgetRatio
+      vrApiSampleCountMin = $RequiredVrApiSampleCount
+      vrApiObservedCoverageSecondsMin = $RequiredVrApiCoverageSeconds
+      staleFramesMax = $RequiredStaleFrames
+      tearsMax = $RequiredTears
+      averageFrameMs = 'Unity delivered cadence is reported as supplemental composition evidence; app-PID VrApi CPU&GPU is the physical timing gate.'
       p95FrameMsMax = $RequiredP95Ms
       framesOverBudgetRatioMax = $RequiredOverBudgetRatio
       drawCallsMax = $RequiredDrawCalls
       visibleTrianglesMax = $RequiredVisibleTriangles
       sceneMaterialsMax = $RequiredSceneMaterials
+      transparentMaterialSlotsMax = $RequiredTransparentMaterialSlots
       steadyStateGcAllocatedBytesPerFrameMax = 0
     }
     deliveredCadenceGate = [ordered]@{
-      passed = $machinePass
-      semantics = 'Strict requested frame-series thresholds evaluated on the Unity delivered-frame intervals; at locked 72 Hz the average naturally approaches 13.889 ms.'
+      passed = $deliveredCadencePass
+      semantics = 'Supplemental Unity delivered-frame cadence evidence. At locked 72 Hz the average naturally approaches 13.889 ms; this is not the authoritative app workload gate.'
       durationPassed = $durationPass
-      p95Passed = $p95Pass
-      overBudgetRatioPassed = $overPass
+      p95Passed = $deliveredP95Pass
+      overBudgetRatioPassed = $deliveredOverPass
       drawCallsPassed = $drawPass
       visibleTrianglesPassed = $trianglePass
       sceneMaterialsPassed = $materialPass
+      transparentMaterialSlotsPassed = $transparentMaterialPass
+      requestedIsolationProfile = $IsolationProfile
+      appliedIsolationProfile = [string](Get-ObjectProperty $Runtime 'diagnosticIsolationProfile' '')
+      isolationProfileEchoPassed = $isolationProfilePass
       zeroSteadyStateGcAllocationsPassed = $allocationPass
       faultFree = $faultFree
       thermalPassed = -not $ThermalWarning
     }
+    physicalQuestTimingGate = [ordered]@{
+      passed = $physicalTimingPass
+      source = 'VrApi app-PID SF=1.00 rows inside exact measurement markers'
+      exactMeasurementWindowPassed = $vrApiWindowPass
+      acceptanceTelemetryCompletePassed = $vrApiTelemetryPass
+      minimumSampleCountPassed = $vrApiSampleCountPass
+      timestampCoveragePassed = $vrApiCoveragePass
+      refreshRate72HzPassed = $refreshRatePass
+      averageCpuAndGpuPassed = $combinedAveragePass
+      p95CpuAndGpuPassed = $combinedP95Pass
+      samplesOverBudgetRatioPassed = $combinedOverPass
+      staleFramesPassed = $stalePass
+      tearsPassed = $tearPass
+    }
     workloadGate = [ordered]@{
       passed = $workloadGatePass
       source = $workloadSource
-      semantics = 'Supplemental execution-workload gate. VrApi CPU&GPU values are one-second app-row samples, not a substitute for the delivered per-frame distribution.'
+      semantics = 'Execution-workload evidence. App-PID VrApi CPU&GPU one-second samples are authoritative for the physical hard gate; Unity FrameTimingManager is only a fallback diagnostic.'
       sampleCount = $workloadSampleCount
+      coveragePassed = $workloadCoveragePass
       averageMs = $workloadAverage
       p95Ms = $workloadP95
       samplesOverBudgetRatio = $workloadOverRatio
@@ -738,12 +944,20 @@ function Write-GateSummary {
       drawCallsPassed = $drawPass
       visibleTrianglesPassed = $trianglePass
       sceneMaterialsPassed = $materialPass
+      transparentMaterialSlotsPassed = $transparentMaterialPass
       faultFree = $faultFree
       thermalPassed = -not $ThermalWarning
     }
     machineGate = [ordered]@{
       passed = $machinePass
-      compatibilityNote = 'Alias of deliveredCadenceGate for existing evidence readers; workloadGate is intentionally separate.'
+      physicalTimingPassed = $physicalTimingPass
+      staticRuntimeBudgetsPassed = $drawPass -and $trianglePass -and $materialPass -and $transparentMaterialPass
+      transparentMaterialSlotsPassed = $transparentMaterialPass
+      zeroSteadyStateGcAllocationsPassed = $allocationPass
+      durationPassed = $durationPass
+      faultFree = $faultFree
+      thermalPassed = -not $ThermalWarning
+      compatibilityNote = 'Physical machine acceptance requires authoritative VrApi timing/stale/tear/refresh evidence with sufficient 60-second coverage plus runtime draw/triangle/material/transparency budgets, allocations, duration, faults, and thermal checks.'
     }
     runtime = $Runtime
     vrApiAppPidWindow = $VrApi
@@ -771,8 +985,8 @@ function Write-GateSummary {
     metricSemantics = [ordered]@{
       deliveredInterval = 'Unity Time.unscaledDeltaTime is the delivered-frame cadence. At synchronized 72 Hz it naturally centers near 13.889 ms, so it is reported separately from execution workload.'
       workload = 'Unity FrameTimingManager CPU/GPU values are workload evidence, but CPU may include XR wait and Quest GPU values may be zero.'
-      vrApi = 'VrApi is filtered to the app PID plus SF=1.00 and sliced between the measurement-start and evidence-written markers. Fov is recorded but is not used as an app-identity filter.'
-      acceptance = 'The requested average/p95/over-budget thresholds are evaluated against the delivered per-frame series without silently substituting another metric.'
+      vrApi = 'VrApi is filtered to the app PID plus SF=1.00 and sliced between the measurement-start and evidence-written markers. At least 55 timestamped rows spanning at least 54 seconds are required. Fov is recorded but is not used as an app-identity filter.'
+      acceptance = 'Physical machine acceptance uses sufficiently covered exact-window app-PID VrApi CPU&GPU average/p95/over-budget samples, stale, tear, verified 72 Hz, and runtime budgets including no more than two transparent material slots. Unity delivered cadence remains separately disclosed.'
     }
   }
 
@@ -785,7 +999,8 @@ function Write-GateSummary {
   [void]$md.AppendLine("- Classification: **$classification**")
   [void]$md.AppendLine("- Human acceptance: **$HumanStatus**")
   [void]$md.AppendLine("- Machine gate: **$(if ($machinePass) { 'PASS' } else { 'FAIL/NOT RUN' })**")
-  [void]$md.AppendLine("- Supplemental workload gate: **$(if ($workloadGatePass) { 'PASS' } else { 'FAIL/NOT RUN' })** ($workloadSource)")
+  [void]$md.AppendLine("- Physical VrApi timing gate: **$(if ($physicalTimingPass) { 'PASS' } else { 'FAIL/NOT RUN' })**")
+  [void]$md.AppendLine("- Supplemental delivered-cadence gate: **$(if ($deliveredCadencePass) { 'PASS' } else { 'FAIL/NOT RUN' })**")
   [void]$md.AppendLine("- Bottleneck diagnosis: $bottleneck")
   [void]$md.AppendLine()
   [void]$md.AppendLine('## Exact 90 s + 60 s timing gate')
@@ -795,8 +1010,13 @@ function Write-GateSummary {
     [void]$md.AppendLine("- Delivered interval average / p95 / p99: $(Format-Number $Runtime.averageFrameMs '0.000') / $(Format-Number $Runtime.p95FrameMs '0.000') / $(Format-Number $Runtime.p99FrameMs '0.000') ms")
     [void]$md.AppendLine("- Frames over 13.889 ms: $($Runtime.framesOverBudget) / $($Runtime.sampleCount) ($(Format-Number ([double]$Runtime.framesOverBudgetRatio * 100) '0.00')%)")
     [void]$md.AppendLine("- Workload average / p95: $(Format-Number $Runtime.averageWorkloadMs '0.000') / $(Format-Number $Runtime.p95WorkloadMs '0.000') ms")
-    [void]$md.AppendLine("- Draw calls: $($Runtime.drawCalls) ($($Runtime.drawCallSource)); visible triangles: $($Runtime.visibleTriangles) ($($Runtime.triangleSource)); scene materials: $(Get-ObjectProperty $Runtime 'sceneMaterialCount' 0)")
-    [void]$md.AppendLine("- GC allocation recorder / average / maximum: $($Runtime.allocationRecorderAvailable) / $($Runtime.averageGcAllocatedBytesPerFrame) / $($Runtime.maxGcAllocatedBytesPerFrame) bytes per frame")
+    [void]$md.AppendLine("- Draw calls: $($Runtime.drawCalls) ($($Runtime.drawCallSource)); visible triangles: $($Runtime.visibleTriangles) ($($Runtime.triangleSource)); scene materials: $(Get-ObjectProperty $Runtime 'sceneMaterialCount' 0); transparent material slots: $(Get-ObjectProperty $Runtime 'transparentMaterialSlots' ([int]::MaxValue)) (pass=$transparentMaterialPass)")
+    [void]$md.AppendLine("- GC byte recorder / average / maximum: $($Runtime.allocationRecorderAvailable) / $($Runtime.averageGcAllocatedBytesPerFrame) / $($Runtime.maxGcAllocatedBytesPerFrame) bytes per frame")
+    [void]$md.AppendLine("- Allocation measurement available / validated / samples: $($Runtime.allocationMeasurementAvailable) / $($Runtime.allocationMeasurementValidated) / $($Runtime.allocationMeasurementSamples) of $($Runtime.sampleCount)")
+    [void]$md.AppendLine("- Allocation source / scope: $($Runtime.allocationMeasurementSource) / $($Runtime.allocationMeasurementScope)")
+    [void]$md.AppendLine("- IL2CPP object counter calibration / delta / total / max per frame: $($Runtime.allocationCounterCalibrationPassed) / $($Runtime.allocationCounterCalibrationDelta) / $($Runtime.totalManagedAllocationCount) / $($Runtime.maxManagedAllocationCountPerFrame)")
+    [void]$md.AppendLine("- Allocation invalid reason: $(Get-ObjectProperty $Runtime 'allocationMeasurementInvalidReason' '')")
+    [void]$md.AppendLine("- Diagnostic isolation profile / disabled renderers / texture mip limit: $($Runtime.diagnosticIsolationProfile) / $($Runtime.diagnosticDisabledRendererCount) / $($Runtime.diagnosticTextureMipmapLimit)")
     [void]$md.AppendLine("- Production scene / architecture / backend: $(Get-ObjectProperty $Runtime 'productionVerticalSliceActive' $false) / $(Get-ObjectProperty $Runtime 'productionArchitectureVersion' '') / $(Get-ObjectProperty $Runtime 'authoritativePhysicsBackend' '')")
     [void]$md.AppendLine("- Active renderers / LOD groups / crossfade LOD groups: $($Runtime.activeRenderers) / $($Runtime.activeLodGroups) / $($Runtime.crossFadeLodGroups)")
     [void]$md.AppendLine("- Water surfaces / transparent water slots / materials / triangles: $($Runtime.waterRenderers) / $($Runtime.transparentWaterRenderers) / $($Runtime.waterMaterials) / $($Runtime.waterTriangles)")
@@ -805,16 +1025,19 @@ function Write-GateSummary {
     [void]$md.AppendLine('- Runtime measurement evidence was not produced.')
   }
   [void]$md.AppendLine()
-  [void]$md.AppendLine('The delivered interval is presentation cadence, not pure app execution time. The requested thresholds are still evaluated against that series; workload and VrApi values are reported separately rather than substituted silently.')
+  [void]$md.AppendLine('The delivered interval is presentation cadence, not pure app execution time. Physical acceptance uses exact-window app-PID VrApi CPU&GPU/stale/tear/refresh evidence; the Unity cadence series remains supplemental.')
   [void]$md.AppendLine()
   [void]$md.AppendLine('## App-PID VrApi evidence')
   [void]$md.AppendLine()
   if ([bool](Get-ObjectProperty $VrApi 'available' $false)) {
-    [void]$md.AppendLine("- PID / exact window / samples: $($VrApi.appPid) / $($VrApi.exactMeasurementWindow) / $($VrApi.sampleCount)")
+    [void]$md.AppendLine("- PID / exact window / samples: $($VrApi.appPid) / $($VrApi.exactMeasurementWindow) / $($VrApi.sampleCount); minimum=$RequiredVrApiSampleCount, pass=$vrApiSampleCountPass")
+    [void]$md.AppendLine("- Timestamped samples / observed span: $($VrApi.timestampedSampleCount) / $(Format-Number $VrApi.observedCoverageSeconds '0.000') s; minimum=$(Format-Number $RequiredVrApiCoverageSeconds '0.0') s, pass=$vrApiCoveragePass")
+    [void]$md.AppendLine("- Observed refresh rate(s) / 72 Hz passed: $(@($VrApi.observedRefreshRatesHz) -join ', ') / $refreshRatePass")
     [void]$md.AppendLine("- App average / p95: $(Format-Number $VrApi.averageAppMs '0.000') / $(Format-Number $VrApi.p95AppMs '0.000') ms")
-    [void]$md.AppendLine("- CPU&GPU average / p95: $(Format-Number $VrApi.averageCpuAndGpuMs '0.000') / $(Format-Number $VrApi.p95CpuAndGpuMs '0.000') ms")
+    [void]$md.AppendLine("- CPU&GPU average / p95: $(Format-Number $VrApi.averageCpuAndGpuMs '0.000') / $(Format-Number $VrApi.p95CpuAndGpuMs '0.000') ms; pass=$combinedAveragePass/$combinedP95Pass")
+    [void]$md.AppendLine("- CPU&GPU samples over 13.889 ms: $($VrApi.cpuAndGpuSamplesOverBudget) / $($VrApi.sampleCount) ($(Format-Number ([double]$VrApi.cpuAndGpuSamplesOverBudgetRatio * 100) '0.00')%); pass=$combinedOverPass")
     [void]$md.AppendLine("- GPU / CPU utilization average: $(Format-Number ([double]$VrApi.averageGpuUtilization * 100) '0.0')% / $(Format-Number ([double]$VrApi.averageCpuUtilization * 100) '0.0')%")
-    [void]$md.AppendLine("- Stale / tear total: $($VrApi.staleTotal) / $($VrApi.tearTotal); stale peak per one-second sample: $($VrApi.stalePeakPerSample)")
+    [void]$md.AppendLine("- Stale / tear total: $($VrApi.staleTotal) / $($VrApi.tearTotal); pass=$stalePass/$tearPass; stale peak per one-second sample: $($VrApi.stalePeakPerSample)")
     [void]$md.AppendLine("- Direct GPU ms available: $($VrApi.directGpuTimingAvailable); maximum CPU/GPU level: $($VrApi.maximumCpuLevel)/$($VrApi.maximumGpuLevel)")
   } else {
     [void]$md.AppendLine('- VrApi app-row evidence unavailable.')
@@ -891,6 +1114,7 @@ $screen = [pscustomobject]@{ started = $false; pulled = $false; bytes = 0; error
 $originalStayAwakeSetting = ''
 $stayAwakeSettingChanged = $false
 $questPowerAutomationChanged = $false
+$launchBlocked = $false
 
 try {
   $devices = Resolve-QuestDevice
@@ -939,7 +1163,8 @@ try {
 
   $launchOptionsPath = Join-Path $OutputDir 'launch_options.json'
   [ordered]@{ options = @(
-    [ordered]@{ key = 'qfl_scenery_mode'; value = $LaunchSceneryMode }
+    [ordered]@{ key = 'qfl_scenery_mode'; value = $LaunchSceneryMode },
+    [ordered]@{ key = 'qfl_environment_isolation'; value = $IsolationProfile }
   ) } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $launchOptionsPath -Encoding UTF8
   # Do not create the application evidence directory through adb. A directory
   # created by the shell user is readable but not writable by the release app
@@ -952,7 +1177,7 @@ try {
   Invoke-Adb -Arguments @('shell', 'rm', '-f', "$remoteEvidenceRoot/launch_options.json") -AllowFailure | Out-Null
   Invoke-Adb -Arguments @('shell', 'rmdir', $remoteEvidenceRoot) -AllowFailure | Out-Null
   Set-Content -LiteralPath (Join-Path $OutputDir 'launch_options_transport.txt') `
-    -Value 'qfl_scenery_mode is supplied through the Activity intent extra; no shell-owned app evidence directory was created.' -Encoding UTF8
+    -Value 'qfl_scenery_mode and qfl_environment_isolation are supplied through Activity intent extras; no shell-owned app evidence directory was created.' -Encoding UTF8
 
   if (-not $StaticEvidenceOnly -and -not $SuppressOperatorPrompt -and -not $NoHumanWitness) { Write-Host $OperatorRequest }
   Invoke-Adb -Arguments @('logcat', '-c') | Out-Null
@@ -960,7 +1185,8 @@ try {
   $component = "$PackageId/$Activity"
   $launch = Invoke-Adb -Arguments @(
     'shell', 'am', 'start', '-S', '-n', $component,
-    '--es', 'qfl_scenery_mode', $LaunchSceneryMode
+    '--es', 'qfl_scenery_mode', $LaunchSceneryMode,
+    '--es', 'qfl_environment_isolation', $IsolationProfile
   )
   Set-Content -LiteralPath (Join-Path $OutputDir 'app_launch.txt') -Value $launch -Encoding UTF8
 
@@ -972,13 +1198,20 @@ try {
   }
   Set-Content -LiteralPath (Join-Path $OutputDir 'app_pid.txt') -Value $appPid -Encoding UTF8
   if ([string]::IsNullOrWhiteSpace($appPid)) {
-    throw 'Production app did not acquire a PID after launch; see power/app_launch/logcat artifacts.'
+    # Quest may intercept the launch before the app gets a PID (for example the
+    # controller-required or Guardian dialog). Preserve a complete fail-closed
+    # summary so the aggregate gate can classify the required one-time action.
+    $launchBlocked = $true
+    $humanStatus = 'BLOCKED_APP_LAUNCH_SYSTEM_DIALOG_OR_RUNTIME_FAILURE'
   }
 
   if ($StaticEvidenceOnly) {
     [void](Wait-ForLogPattern -Path $logcatPath -Pattern '\[QuestFlight\]\[ProductionEnvironment\] Authored prefab validated:' -TimeoutSeconds ([Math]::Min(45, $ReadinessTimeoutSeconds)) -Stage 'Waiting for static product environment evidence')
     [void](Wait-ForLogPattern -Path $logcatPath -Pattern '\[QuestFlight\]\[AircraftLighting\]' -TimeoutSeconds 30 -Stage 'Waiting for static product aircraft evidence')
     Start-Sleep -Seconds 5
+  } elseif ($launchBlocked) {
+    Write-Warning 'Production app did not acquire a PID; preserving system-dialog and incomplete-runtime evidence.'
+    Start-Sleep -Seconds 1
   } else {
     $ready = Wait-ForLogPattern -Path $logcatPath -Pattern '\[QuestFlight\]\[TemporalVisualGate\] Readiness PASS' -TimeoutSeconds $ReadinessTimeoutSeconds -Stage 'Waiting for environment/cockpit/seat/evidence readiness'
     if (-not $ready) { Write-Warning 'Readiness PASS marker was not observed; the runtime report will force the gate to fail.' }

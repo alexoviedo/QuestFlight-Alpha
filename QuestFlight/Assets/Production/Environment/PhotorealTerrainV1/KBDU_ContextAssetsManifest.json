@@ -1,0 +1,544 @@
+{
+  "authoring_sources": [
+    {
+      "bytes": 21024,
+      "path": "tools/kbdu_orthophoto/build_context_assets.py",
+      "sha256": "d049e57439021abbedc360977608ff95408b52b8b778c35dee49f79aeff92d83"
+    },
+    {
+      "bytes": 55053,
+      "path": "QuestFlight/Assets/Editor/KbduPhotorealTerrainAssetAuthoring.cs",
+      "sha256": "23690bb89a29b220ca3e171d62c7a60b09f2751b282fe30836aec6c56509aa02"
+    },
+    {
+      "bytes": 8268,
+      "path": "tools/kbdu_orthophoto/build_parked_aircraft_lods.py",
+      "sha256": "dec5819d1b79c291e4db0118023b363136bcf029bc874c0e43ccadd6b389806a"
+    },
+    {
+      "bytes": 9283,
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader",
+      "sha256": "ad664abc983aa956a7b9cb072c1eda3cfb60d67e9dae319d9df9e653f263bd14"
+    },
+    {
+      "bytes": 2494,
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_OsmBuildingContext.shader",
+      "sha256": "d73272e34d20e5dd2b7b276b46451a3eb070b9e9dd7ec3233cea7d407d9e1772"
+    },
+    {
+      "bytes": 2249,
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_OpaqueVegetationContext.shader",
+      "sha256": "952eac7a6ccfe87ea8fc76d424caaeb8997dfddfe3680703a4da3c6eee830e41"
+    }
+  ],
+  "budgets": {
+    "active_draw_call_delta": 32,
+    "building_batch_count": 23,
+    "building_count": 2500,
+    "building_lod0_triangle_estimate": 44170,
+    "building_lod1_triangle_estimate": 25000,
+    "material_delta": 3,
+    "parked_aircraft_batch_count": 1,
+    "parked_aircraft_count": 3,
+    "parked_aircraft_lod0_triangle_estimate": 9600,
+    "parked_aircraft_lod1_triangle_estimate": 2700,
+    "vegetation_batch_count": 8,
+    "vegetation_instance_count": 246,
+    "vegetation_lod0_triangle_estimate": 18216,
+    "vegetation_lod1_triangle_estimate": 11316,
+    "vegetation_shrub_count": 24
+  },
+  "generated_unity_assets": {
+    "complete": true,
+    "expected_mesh_count": 64,
+    "files": [
+      {
+        "bytes": 52286,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn01_zn02_LOD0.asset",
+        "sha256": "0757286ef05876174efa1d94a797d2e36da97455185f4f1025a3fa3952b1d1da"
+      },
+      {
+        "bytes": 23092,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn01_zn02_LOD1.asset",
+        "sha256": "e00aee652136f691be199327e2a71663c346b60b47770544a129ce7095a32f23"
+      },
+      {
+        "bytes": 17636,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn01_zp01_LOD0.asset",
+        "sha256": "f645d56f1807c81af521a535195ff0b2fd9d76759193861c312a323537d0fd7f"
+      },
+      {
+        "bytes": 9090,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn01_zp01_LOD1.asset",
+        "sha256": "0802d985deed3e05306a7be67984e02ea0f6bff668be3404358ee2bf0b64aaac"
+      },
+      {
+        "bytes": 313493,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn02_zn01_LOD0.asset",
+        "sha256": "b497ce04d5f271d86b20c291195551f8a3c665ae1efdcc5e14c9f655c7ad3bea"
+      },
+      {
+        "bytes": 153292,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn02_zn01_LOD1.asset",
+        "sha256": "631c8c72c4dc7cd5484778286fc2fc5a2509ea4192fef4c7f5e8c229a6a59b84"
+      },
+      {
+        "bytes": 75618,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn02_zn02_LOD0.asset",
+        "sha256": "9d504514a0410ca66e296288f673817cffe2dc74834aaacf77a3371feaa7bec9"
+      },
+      {
+        "bytes": 32895,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn02_zn02_LOD1.asset",
+        "sha256": "d54e39ffd713d9dde9c8af8a8cd419f2d902c5bb6d30e49079908d78dc6f1b8d"
+      },
+      {
+        "bytes": 616874,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn02_zp00_LOD0.asset",
+        "sha256": "4011646e04064d4f4d42c2310f8946067b81613f88ef7027fde0cf52f5c74aa3"
+      },
+      {
+        "bytes": 398289,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn02_zp00_LOD1.asset",
+        "sha256": "863909e1f7a33e6314c2cc2327287fb5a6d4cbe719705f1f3a772aeb1fa43695"
+      },
+      {
+        "bytes": 81712,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn02_zp01_LOD0.asset",
+        "sha256": "11fe6e46d13b9bac1166b71dff8629e68e8dd54ee87af008adabaaaae9478368"
+      },
+      {
+        "bytes": 51094,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xn02_zp01_LOD1.asset",
+        "sha256": "ded5ea5d68b57d91900e604de6ca2b0f81ecacb1b066d10e80a82816e997e4a3"
+      },
+      {
+        "bytes": 75664,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xp00_zn02_LOD0.asset",
+        "sha256": "b3cc324603528e9d0f6609eba16ac4f3c734a4b2573916a15576d1185c6a3938"
+      },
+      {
+        "bytes": 28669,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xp00_zn02_LOD1.asset",
+        "sha256": "4afca8d32d8ed113808a6a3b333dddbc427c25507c3ae967acde7e7940df7b54"
+      },
+      {
+        "bytes": 438774,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xp00_zp01_LOD0.asset",
+        "sha256": "51414d86fb9a8f99cdf0376d5e357fc592cf53f2d9366c08bab282f336121f48"
+      },
+      {
+        "bytes": 258281,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xp00_zp01_LOD1.asset",
+        "sha256": "b0347eeb1c89f351e70cc451fbaa35568979edc85061cdbac429a5eb48ea012f"
+      },
+      {
+        "bytes": 27431,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xp01_zp01_LOD0.asset",
+        "sha256": "f1055b8dfc2908da3f640b1b6945e39f2bc2d715173ddb9b099969ec1b2f20c4"
+      },
+      {
+        "bytes": 18886,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_mid_xp01_zp01_LOD1.asset",
+        "sha256": "82f1f9c599bd1ff4f69536d8cb791cf8effc22a5669d529a6d539eca17baf0cc"
+      },
+      {
+        "bytes": 1394981,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn01_zn01_LOD0.asset",
+        "sha256": "8d641fb29588b6d597bbd62bb96e5a98be4660897aa72053b0da45c37a9b53c7"
+      },
+      {
+        "bytes": 1028301,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn01_zn01_LOD1.asset",
+        "sha256": "8d679054fa10d8112e3571c1c142b3eb4c2bc0238bd10a554191ea4c5cffa863"
+      },
+      {
+        "bytes": 129161,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn01_zn02_LOD0.asset",
+        "sha256": "ea51571116f4d4ba1379dfa0bc68e06b7134c8cec0df6d6dadbc8252fe58a22d"
+      },
+      {
+        "bytes": 86085,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn01_zn02_LOD1.asset",
+        "sha256": "6d0068970a9b2ed409f70993487c02ee29daa46c542495fb863491f7d3b81794"
+      },
+      {
+        "bytes": 45012,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn01_zp00_LOD0.asset",
+        "sha256": "4759b0a70830a71dbf47afb4244a84d9a9fe028b7427bdc91db31cd667a4a5b3"
+      },
+      {
+        "bytes": 31484,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn01_zp00_LOD1.asset",
+        "sha256": "c57160b8665bffbc494d87d90a3633a7461d1d42f54c8a4a554bec94457f61ea"
+      },
+      {
+        "bytes": 48269,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn01_zp01_LOD0.asset",
+        "sha256": "79c905f9b940aa06d74a43ecd66638878a5ec461401656202a6fbca4323336fb"
+      },
+      {
+        "bytes": 28688,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn01_zp01_LOD1.asset",
+        "sha256": "b59c89261bf2435dd4d262d675ca460137a078efabb1a61bae57e5d40b5c53a4"
+      },
+      {
+        "bytes": 949695,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn02_zn01_LOD0.asset",
+        "sha256": "621eec58513ca28885a81a7a4af9d1f14c9c6fb29fe4f8050b9776327fda691c"
+      },
+      {
+        "bytes": 483689,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn02_zn01_LOD1.asset",
+        "sha256": "e71dbf7d39311878d68ec1e7ed367c7f4802f6733191819095148eee0ccec588"
+      },
+      {
+        "bytes": 36360,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn02_zn02_LOD0.asset",
+        "sha256": "386231eca1bf2c63b552a609d9c11f258004b06b36ed5f2e00bf0c05fe0ca282"
+      },
+      {
+        "bytes": 17491,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn02_zn02_LOD1.asset",
+        "sha256": "5d63d41e4a50ed346a2b27b4e52a0c6ddf3b05339166323f54e72b99dd8b20c8"
+      },
+      {
+        "bytes": 320596,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn02_zp00_LOD0.asset",
+        "sha256": "76456667396bb77153390bc63515c77d7f058cd0a4d2571b13da8e248c1a0605"
+      },
+      {
+        "bytes": 174279,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn02_zp00_LOD1.asset",
+        "sha256": "16819a0473fd947c47014d22b44269d99629476ed13aa929a11774001e400546"
+      },
+      {
+        "bytes": 14037,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn02_zp01_LOD0.asset",
+        "sha256": "eb0bc24c2f03962f06721c4f06a812f18005da4450d7fffe04b81b57e3b8e61d"
+      },
+      {
+        "bytes": 10477,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xn02_zp01_LOD1.asset",
+        "sha256": "f44021eebf6979cced0c63201e1fdebb1fd5dd06370500f96d85666b108056e6"
+      },
+      {
+        "bytes": 565441,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp00_zn01_LOD0.asset",
+        "sha256": "2fb413b3da500b497ecdee02cf14a6c2b22ad1c678058162957a030458a6c35e"
+      },
+      {
+        "bytes": 387084,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp00_zn01_LOD1.asset",
+        "sha256": "e4af2791597344721cfe99a96f34d4f340104bc529b6d5fd2ba5cbd736b0077e"
+      },
+      {
+        "bytes": 189329,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp00_zn02_LOD0.asset",
+        "sha256": "3d7d190663f912562668e2fc665875f311e856903664856bd18571605cb0a1df"
+      },
+      {
+        "bytes": 65083,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp00_zn02_LOD1.asset",
+        "sha256": "968a76c4ce0e7683edff77c31a2d2a9b3def3a5b570725587e871d7f857739e7"
+      },
+      {
+        "bytes": 159139,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp00_zp00_LOD0.asset",
+        "sha256": "5438b352acdc1e5628bcf92f2e5ceb256ec49a29bf8d8c5930d92c357ec2703c"
+      },
+      {
+        "bytes": 81887,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp00_zp00_LOD1.asset",
+        "sha256": "f9372dd02fd0f6d83e9e214350d3471da4407d43fd61eede98b24544d10cf3d3"
+      },
+      {
+        "bytes": 243534,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp00_zp01_LOD0.asset",
+        "sha256": "47a3aa2914ad6250c3e964a5ba59abc37abc67b39f570b94d8ab83d1c0a4af23"
+      },
+      {
+        "bytes": 163077,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp00_zp01_LOD1.asset",
+        "sha256": "3202e02b63059263c7e0aa69958bc5cfe8e79cd0f4aa105e26b627f90a3db911"
+      },
+      {
+        "bytes": 34092,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp01_zn01_LOD0.asset",
+        "sha256": "9943269a9ba64f79fe68d3d931f9aabd60ff302135ec554484b627a703f0fdb7"
+      },
+      {
+        "bytes": 24479,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp01_zn01_LOD1.asset",
+        "sha256": "397b6a061110aa805d6b33a4fcc7ee9e054bc052ebc52aff791613a42e9f3a27"
+      },
+      {
+        "bytes": 25910,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp01_zp00_LOD0.asset",
+        "sha256": "c5901aac2bf5dc61a13dc9ff96266b7c59764467c7c9a84e8aaf9fa8c78936ff"
+      },
+      {
+        "bytes": 24485,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_near_xp01_zp00_LOD1.asset",
+        "sha256": "e876ccde32a8bdbb69a17cec96708f46ff37adbb69b101672ecac582be5f2fbd"
+      },
+      {
+        "bytes": 767880,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/parked_aircraft_airport_LOD0.asset",
+        "sha256": "448f9cb2ae138eafbd23e18f616e313f147eb1f21413acedee166c1145638598"
+      },
+      {
+        "bytes": 248949,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/parked_aircraft_airport_LOD1.asset",
+        "sha256": "6ff371b190cf2fcc9e31c82c86bbe69143b71d4fc8bbaea96fff742e36bd2c08"
+      },
+      {
+        "bytes": 72652,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_en_LOD0.asset",
+        "sha256": "1c8399caa6be64a4f3f3a21ae54cd2894b9ba4ed36d1f9499d614e39321fe019"
+      },
+      {
+        "bytes": 73548,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_en_LOD1.asset",
+        "sha256": "26c10849540e4c7063c94d2d7e6d27dff827b3086e77c8826043828a24881bfc"
+      },
+      {
+        "bytes": 97930,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_es_LOD0.asset",
+        "sha256": "a52e159647bef0a5531a698032fe04f9f097cabdcab069e2d5e756c49d7a6d9a"
+      },
+      {
+        "bytes": 99038,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_es_LOD1.asset",
+        "sha256": "1f48fed6d93281f08f48d66ebaf78cee1925da390aadf1dd2773f3b4ec142998"
+      },
+      {
+        "bytes": 57142,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_wn_LOD0.asset",
+        "sha256": "5d1cb3db89898fe028087034ae6b84d73a6f8d7c1966b09c63a0e31b484a6014"
+      },
+      {
+        "bytes": 57642,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_wn_LOD1.asset",
+        "sha256": "1c3e3089aa4186dde638ec54458eee4bd06a62f3e8916bbe4cfbed0322c5323a"
+      },
+      {
+        "bytes": 88618,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_ws_LOD0.asset",
+        "sha256": "f9105fef577c20f6ba5837202f3c6ca1c66d71c6bd0cb7be5031b1b87601de9f"
+      },
+      {
+        "bytes": 89484,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_ws_LOD1.asset",
+        "sha256": "3749db45fe2202a4c60b78954e03b1c19745337cb41e0cceaca7e77abd03078d"
+      },
+      {
+        "bytes": 124939,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_en_LOD0.asset",
+        "sha256": "4d80a13b7c7a8151dc5cf39b14451420a1240333bc12e44e5a82acc387e509cb"
+      },
+      {
+        "bytes": 79913,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_en_LOD1.asset",
+        "sha256": "f331506cd66e3905ec99e2bd2661ce8952b258b52ebfd13faacefb94e6fcfc1e"
+      },
+      {
+        "bytes": 180637,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_es_LOD0.asset",
+        "sha256": "f36c56ecbf2d0c66b8496cec8d9395410fe49258d8e081e2bd958939a70742fe"
+      },
+      {
+        "bytes": 114943,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_es_LOD1.asset",
+        "sha256": "d607c365e671370e43de64f41d1d3770084d14e9b13f1041892dae50c1ff5821"
+      },
+      {
+        "bytes": 79733,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_wn_LOD0.asset",
+        "sha256": "e621a887758533814b7e9f30ba32b59b35188fd9027c1ac6a1cc13158613466f"
+      },
+      {
+        "bytes": 51269,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_wn_LOD1.asset",
+        "sha256": "fd794e094b77c56eebd163cac0d2532a5372aaaaf9852253f4569024c43cd250"
+      },
+      {
+        "bytes": 388363,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_ws_LOD0.asset",
+        "sha256": "484acf07cd85d9a1e3cf54ba9cdba7320ec0ca9321e2cf0a7928e4e3909b3f87"
+      },
+      {
+        "bytes": 245501,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_ws_LOD1.asset",
+        "sha256": "6e406922095781e843e32419028d2d9f4e391416f3341754267dc545b8e66ce0"
+      },
+      {
+        "bytes": 221833,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_BatchedContext.prefab",
+        "sha256": "5a0231adac6879d63109cafaa3e07606ff45acd387b7fabcab68646afc90a689"
+      },
+      {
+        "bytes": 2015,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat",
+        "sha256": "7c30eba48da02f71f520c9c95f27529e39659c9c1a188cd3ad5be4bd96dfaf16"
+      },
+      {
+        "bytes": 977,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_OsmBuildings.mat",
+        "sha256": "24b002c9cd0511fa46a4453cd14577c38e527f97ac1c516b0d64d2d68cb42efc"
+      },
+      {
+        "bytes": 802,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ContextVegetation.mat",
+        "sha256": "6e188f4a5e363307b3356afc58998c11ee6559f0c1f135057ae80dc1e296f934"
+      },
+      {
+        "bytes": 799,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraft.mat",
+        "sha256": "ebd0dfc4bb8656efc7c8f1cb8b05247df1a840fb8c3fa2ff4599f2adc28724e4"
+      }
+    ],
+    "license_boundary": "Building meshes are OSM Produced Works; vegetation meshes, shaders, materials, atlas, and serialized hierarchy are project-authored. Parked-aircraft meshes are a CC BY 4.0 adaptation of the attributed KOG_THORNS source. Exact source terms remain above.",
+    "observed_mesh_count": 64,
+    "vegetation_mesh_triangle_accounting": {
+      "complete": true,
+      "expected_mesh_count": 16,
+      "files": [
+        {
+          "lod": "LOD0",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_en_LOD0.asset",
+          "triangles": 984
+        },
+        {
+          "lod": "LOD0",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_es_LOD0.asset",
+          "triangles": 1344
+        },
+        {
+          "lod": "LOD0",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_wn_LOD0.asset",
+          "triangles": 764
+        },
+        {
+          "lod": "LOD0",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_ws_LOD0.asset",
+          "triangles": 1212
+        },
+        {
+          "lod": "LOD0",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_en_LOD0.asset",
+          "triangles": 2224
+        },
+        {
+          "lod": "LOD0",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_es_LOD0.asset",
+          "triangles": 3244
+        },
+        {
+          "lod": "LOD0",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_wn_LOD0.asset",
+          "triangles": 1396
+        },
+        {
+          "lod": "LOD0",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_ws_LOD0.asset",
+          "triangles": 7048
+        },
+        {
+          "lod": "LOD1",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_en_LOD1.asset",
+          "triangles": 1012
+        },
+        {
+          "lod": "LOD1",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_es_LOD1.asset",
+          "triangles": 1380
+        },
+        {
+          "lod": "LOD1",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_wn_LOD1.asset",
+          "triangles": 782
+        },
+        {
+          "lod": "LOD1",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_mid_ws_LOD1.asset",
+          "triangles": 1242
+        },
+        {
+          "lod": "LOD1",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_en_LOD1.asset",
+          "triangles": 1104
+        },
+        {
+          "lod": "LOD1",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_es_LOD1.asset",
+          "triangles": 1610
+        },
+        {
+          "lod": "LOD1",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_wn_LOD1.asset",
+          "triangles": 690
+        },
+        {
+          "lod": "LOD1",
+          "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_near_ws_LOD1.asset",
+          "triangles": 3496
+        }
+      ],
+      "method": "sum serialized Unity Mesh m_SubMeshes indexCount values divided by three",
+      "missing_paths": [],
+      "observed_mesh_count": 16,
+      "totals_by_lod": {
+        "LOD0": 18216,
+        "LOD1": 11316
+      }
+    }
+  },
+  "label": "KBDU deterministic batched 3D context / not for navigation",
+  "limitations": [
+    "OSM completeness and tagged heights vary; deterministic source defaults remain visual cues, not surveyed structures.",
+    "Vegetation positions are deterministic cues near mapped roads/water, not a botanical inventory.",
+    "Six additional project-authored cottonwood cues sit along the south airport perimeter outside the runway safety strip.",
+    "Three static parked-aircraft scale cues use an opaque, exterior-only CC BY adaptation with source branding presentation removed; they are not flyable or interactive.",
+    "CC BY covers the model copyright, not manufacturer trademarks or endorsement; retain attribution and the recorded change notice.",
+    "Lead scene integration, culling setup, stereo inspection, and Quest timing remain required."
+  ],
+  "project_authored_assets": {
+    "atlas": {
+      "bytes": 13716,
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ContextAtlas.png",
+      "sha256": "51b0ef4df8f15c3b8366a2c8a62a517ea48931b85f173efabcb6767daf79153f"
+    },
+    "license": "Project-authored; repository license",
+    "recipe": {
+      "bytes": 433335,
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ContextBatchRecipe.json",
+      "sha256": "08eb086d0e7ef355fcbf4b282788c6702c91479db3289290c8e9becd93c8df69"
+    }
+  },
+  "schema_version": 1,
+  "source": {
+    "copyright": "© OpenStreetMap contributors",
+    "copyright_url": "https://www.openstreetmap.org/copyright",
+    "database": "OpenStreetMap bounded derivative",
+    "license": "Open Data Commons Open Database License 1.0",
+    "parked_aircraft": {
+      "canonical_url": "https://sketchfab.com/3d-models/cessna172-d1b15841c29c43d0862667300bad55a4",
+      "change_notice": "Project-generated static scenery adaptation: retained only exterior body geometry; removed cockpit, interior, glass, textures, materials, branding presentation, and animation; joined and decimated into two exterior-only opaque LOD meshes.",
+      "creator": "KOG_THORNS",
+      "license": "Creative Commons Attribution 4.0 International",
+      "license_spdx": "CC-BY-4.0",
+      "source_manifest": {
+        "bytes": 2697,
+        "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraftSourceManifest.json",
+        "sha256": "c24ed699960d5a818585d69c3433f134c87a246d772924976762d2a255525784"
+      },
+      "source_sha256": "a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872"
+    },
+    "project_authored_airport_perimeter_vegetation_count": 6,
+    "source_path": "QuestFlight/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_reference_context.json",
+    "source_sha256": "5d0d0c3c71532b5106119b8e647e303e12bdeb662960ef78543050166bb8e3e0",
+    "terrain_path": "QuestFlight/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_terrain_rings.json",
+    "terrain_sha256": "712fccb9bcbaf0b79f6f8bf8e7a9f59c05b022fe9e478b022d8ca2595aa767b7"
+  }
+}

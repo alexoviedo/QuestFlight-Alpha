@@ -1,0 +1,88 @@
+{
+  "cost": {
+    "estimated_texture_bytes_total": 2499712,
+    "schema": "questflight.airport-core-v4.water-vegetation-cost.v1",
+    "status": "TEXTURE_AND_RENDERER_PLANNING_ONLY",
+    "vegetation": {
+      "active_material_slots": 1,
+      "active_renderer_count": 1,
+      "atlas_astc_4x4_mip_bytes": 1398128,
+      "geometry_report_pending": false,
+      "transparent_material_slots": 0,
+      "triangles_by_lod": {
+        "lod0": 1428,
+        "lod1": 534,
+        "lod2": 84
+      },
+      "vertices_by_lod": {
+        "lod0": 1476,
+        "lod1": 552,
+        "lod2": 102
+      }
+    },
+    "water": {
+      "minor_mask_astc_6x6_mip_bytes": 158432,
+      "minor_water_renderer_delta": 0,
+      "reservoir_expected_active_renderers": 1,
+      "reservoir_mask_astc_6x6_mip_bytes": 626288,
+      "reservoir_renderer_delta": 0,
+      "transparent_material_slots": 0,
+      "wave_a_astc_6x6_mip_bytes": 158432,
+      "wave_b_astc_6x6_mip_bytes": 158432
+    }
+  },
+  "failures": [
+    {
+      "code": "WATER_MATERIAL_CONTRACT_MISMATCH",
+      "detail": "m_CustomRenderQueue: 2005"
+    },
+    {
+      "code": "WATER_MATERIAL_CONTRACT_MISMATCH",
+      "detail": "RenderType: Opaque"
+    },
+    {
+      "code": "VEGETATION_MATERIAL_CONTRACT_MISMATCH",
+      "detail": "m_CustomRenderQueue: 2450"
+    },
+    {
+      "code": "VEGETATION_MATERIAL_CONTRACT_MISMATCH",
+      "detail": "RenderType: TransparentCutout"
+    }
+  ],
+  "geometry_summary": {
+    "material_slots_per_lod": [
+      1,
+      1,
+      1
+    ],
+    "triangles_by_lod": {
+      "lod0": 1428,
+      "lod1": 534,
+      "lod2": 84
+    }
+  },
+  "offline_contract_passed": false,
+  "product_visual_acceptance": "NOT_RUN",
+  "quest_performance_acceptance": "NOT_RUN",
+  "schema": "questflight.airport-core-v4.water-vegetation-validation.v1",
+  "status": "FAIL",
+  "stereo_acceptance": "NOT_RUN",
+  "warnings": [
+    {
+      "code": "UNITY_INTEGRATION_PENDING",
+      "detail": "No product prefab/scene binding is asserted by this package."
+    },
+    {
+      "code": "MINOR_WATER_UV_BINDING_PENDING",
+      "detail": "The normalized minor-water mask is not georeferenced to final benchmark UVs."
+    },
+    {
+      "code": "VEGETATION_VISUAL_ACCEPTANCE_PENDING",
+      "detail": "Offline preview shows authored alpha-card layering; full-resolution Unity and stereo quality remain unproven."
+    },
+    {
+      "code": "STEREO_AND_QUEST_PENDING",
+      "detail": "No simulator stereo or physical Quest performance evidence is produced here."
+    }
+  ]
+}

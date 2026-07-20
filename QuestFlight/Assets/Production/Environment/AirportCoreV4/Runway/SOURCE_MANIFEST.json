@@ -1,0 +1,101 @@
+{
+  "contract": {
+    "alternatingMacroBlocks": false,
+    "colliderChanges": false,
+    "continuousBase": true,
+    "geometryChanges": false,
+    "instancing": true,
+    "markingAlignmentChanges": false,
+    "opaque": true
+  },
+  "estimatedAndroidResidentBytes": 2505152,
+  "featureChannels": {
+    "a": "edge dirt",
+    "b": "cracks/joints",
+    "g": "repairs",
+    "r": "rubber deposition"
+  },
+  "license": "CC0-1.0 source derivative plus project-authored procedural masks",
+  "orthophotoMedianLuma": 145.0189971923828,
+  "orthophotoReferenceSampleEnuMeters": [
+    -650.0,
+    -80.0,
+    650.0,
+    25.0
+  ],
+  "outputs": [
+    {
+      "bytes": 10705622,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_Albedo.png",
+      "sha256": "211181fcbad546c1211dc350baa35d4a7f056e205a4c108fc218318fa42f22a5"
+    },
+    {
+      "bytes": 9357865,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_Normal.png",
+      "sha256": "a367c62373ff28a63be87ed2b87a17b740490f81ddc6745d8479b8db5b4ef447"
+    },
+    {
+      "bytes": 7685293,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_MRAO.png",
+      "sha256": "5307c70d92f24ed46b4d9cd58adb9aa9ac0c5237735cd4ac0b7681275703f920"
+    },
+    {
+      "bytes": 8479,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.shader",
+      "sha256": "8dccfe21818f5cbc63fb0b08584311e830e2c6ee337ab46e7eee6d5a18a11e2d"
+    },
+    {
+      "bytes": 1560,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.mat",
+      "sha256": "1adf1f134dab34af8b91cb513350b7c76e152b820841aa391094789ecff19aff"
+    },
+    {
+      "bytes": 1001,
+      "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/INTEGRATION_CONTRACT.md",
+      "sha256": "4437515912b98ea6a16dbee3c445735f6b01e74b0145820794d2916b692e145b"
+    }
+  ],
+  "rawSource": [
+    {
+      "assetId": "asphalt_02",
+      "bytes": 3075676,
+      "externalFile": "asphalt_02_diffuse_2k.jpg",
+      "officialMd5": "336af399fd98a39ab986d8b3bf73b4ff",
+      "resolution": "2k",
+      "semantic": "diffuse",
+      "sha256": "28f5ba8690553f192c0e5e1a5ff40f34765b4b93f4cc7059b1a3e9c795b6c28c",
+      "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_diff_2k.jpg"
+    },
+    {
+      "assetId": "asphalt_02",
+      "bytes": 4943950,
+      "externalFile": "asphalt_02_normalOpenGl_2k.jpg",
+      "officialMd5": "77ebd1cc0b020ccaa1c6b58f103d1f75",
+      "resolution": "2k",
+      "semantic": "normalOpenGl",
+      "sha256": "ffe49db71a0fd34c1e259625df66a302a237597d6ef655307987ec4e45bc6f21",
+      "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_nor_gl_2k.jpg"
+    },
+    {
+      "assetId": "asphalt_02",
+      "bytes": 1299186,
+      "externalFile": "asphalt_02_arm_2k.jpg",
+      "officialMd5": "152c0fb79ad6f33040b79779fea98664",
+      "resolution": "2k",
+      "semantic": "arm",
+      "sha256": "ed70e88640e4ed51cf1c3e57cb20db26983599b20b867c2526439e3a2c849fea",
+      "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_arm_2k.jpg"
+    }
+  ],
+  "schemaVersion": 1,
+  "source": "Poly Haven asphalt_02 2K CC0 plus project-authored continuous runway-local shading",
+  "sourceLumaScale": 1.35,
+  "v431Correction": {
+    "bandAnalyzerThreshold": 0.1,
+    "diagnosis": "The constant-unlit isolation mode retained the bands. Mesh-to-terrain comparison found 52 of 106 runway vertices below terrain with signed clearance from -0.005092144 m to +0.004401267 m; exactly one pavement renderer, one marking renderer, no lightmap, no vertex colors, and no duplicate renderer were active.",
+    "runtimeChange": "Bounded opaque depth bias (Offset -1, -1) in the existing single pavement pass; no geometry, collider, transform, material, texture, or draw-count change.",
+    "finalPeakToTrough": 0.0949,
+    "baselinePeakToTrough": 0.3206
+  },
+  "status": "V4_3_1_RUNWAY_VISUAL_GATE_PASSED_FRAME_DEBUGGER_REPLAY_GATE_BLOCKED"
+}

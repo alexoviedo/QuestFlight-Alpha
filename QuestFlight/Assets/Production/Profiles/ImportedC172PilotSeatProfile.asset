@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Runtime.PilotSeatProfile
   aircraftId: imported_c172
   seatAnchorLocalPosition: {x: -0.28, y: 0.72, z: 0}
-  nominalEyeLocalPosition: {x: -0.28, y: 0.94, z: -0.18}
+  nominalEyeLocalPosition: {x: -0.28, y: 0.94, z: -0.23}
   minimumCalibrationOffset: {x: -0.25, y: -0.3, z: -0.35}
   maximumCalibrationOffset: {x: 0.25, y: 0.3, z: 0.35}
   maximumCalibrationYawDegrees: 15
@@ -23,4 +23,4 @@ MonoBehaviour:
   glareShieldReferencePoint: {x: -0.28, y: 0.98, z: 0.3}
   windshieldHorizonReferencePoint: {x: -0.28, y: 1.12, z: 0.72}
   minimumOutsideViewRatio: 0.2
-  targetEyeToPanelDistanceMeters: 0.497
+  targetEyeToPanelDistanceMeters: 0.547

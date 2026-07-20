@@ -1,0 +1,452 @@
+{
+  "assets": [
+    {
+      "bytes": 570187,
+      "dimensions": {
+        "height_pixels": 1024,
+        "width_pixels": 1024
+      },
+      "encoding": {
+        "bits_per_channel": 16,
+        "channel": "R",
+        "code_zero_semantic": "nodata_reserved",
+        "container": "PNG",
+        "decoded_source_z_meters": {
+          "offset": 1000.0,
+          "scale": 0.05
+        }
+      },
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_DTM_R16.png",
+      "semantic": "digital_terrain_model",
+      "sha256": "d5e703ea15af0c3bdd7a6280d68b56addcda1c481639cb09adef5dd9b18cb745"
+    },
+    {
+      "bytes": 933998,
+      "dimensions": {
+        "height_pixels": 1024,
+        "width_pixels": 1024
+      },
+      "encoding": {
+        "bits_per_channel": 16,
+        "channel": "R",
+        "code_zero_semantic": "nodata_reserved",
+        "container": "PNG",
+        "decoded_source_z_meters": {
+          "offset": 1000.0,
+          "scale": 0.05
+        }
+      },
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_DSM_R16.png",
+      "semantic": "digital_surface_model",
+      "sha256": "01622d3c3703de6e7dcb70587b04fc5409ccde83b45f37f97f612981de6bf8dc"
+    },
+    {
+      "bytes": 1273661,
+      "dimensions": {
+        "height_pixels": 1024,
+        "width_pixels": 1024
+      },
+      "encoding": {
+        "bits_per_channel": 8,
+        "channels": {
+          "A": "canopy_occlusion_proxy_0_to_1",
+          "B": "building_height_above_ground_0.25_meters_per_code",
+          "G": "canopy_multi_return_density_proxy_0_to_1",
+          "R": "canopy_height_above_ground_0.25_meters_per_code"
+        },
+        "container": "PNG"
+      },
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_SurfaceFeatures_RGBA8.png",
+      "semantic": "surface_features_canopy_building",
+      "sha256": "caeb502a111898aa800a679cced6549f94c49df11d7a9a1c30afdc2cadeb3af0"
+    },
+    {
+      "bytes": 988491,
+      "dimensions": {
+        "height_pixels": 1024,
+        "width_pixels": 1024
+      },
+      "encoding": {
+        "bits_per_channel": 8,
+        "channels": {
+          "A": {
+            "bit_0": "any_valid_surface_return",
+            "bit_1": "direct_classified_ground_support",
+            "bit_2": "canopy_present",
+            "bit_3": "building_present",
+            "bit_4": "dtm_nearest_fill_used",
+            "bit_5": "dsm_filled_or_floored_to_dtm",
+            "bit_6": "canopy_return_structure_heuristic_used",
+            "bit_7": "building_return_structure_heuristic_used"
+          },
+          "B": "normal_z_north_encoded_minus1_to1",
+          "G": "normal_y_up_encoded_minus1_to1",
+          "R": "normal_x_east_encoded_minus1_to1"
+        },
+        "container": "PNG"
+      },
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_SurfaceNormal_RGBA8.png",
+      "semantic": "terrain_surface_normal_and_validity",
+      "sha256": "cf8f3d49f49701e100db518ab488b3ace7a2691c99150c10912cb5a8d2d6eb51"
+    },
+    {
+      "bytes": 1454805,
+      "dimensions": {
+        "height_pixels": 1024,
+        "width_pixels": 1024
+      },
+      "encoding": {
+        "bits_per_channel": 8,
+        "channels": {
+          "A": "canopy_occlusion_proxy_0_to_1",
+          "B": "canopy_height_normal_z_north_encoded_minus1_to1",
+          "G": "canopy_height_normal_y_up_encoded_minus1_to1",
+          "R": "canopy_height_normal_x_east_encoded_minus1_to1"
+        },
+        "container": "PNG",
+        "derivation": "Normals from the Gaussian-smoothed canopy-height-above-ground raster; non-canopy pixels encode up and zero occlusion.",
+        "source_classification_status": "heuristic because no LAS vegetation classes are present"
+      },
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_CanopyNormalOcclusion_RGBA8.png",
+      "semantic": "canopy_height_normal_and_occlusion",
+      "sha256": "9d1b39f8efb45af07e7b06d89f5082b6b968cc39feb5a9ba45864bee9abe72cc"
+    },
+    {
+      "bytes": 22752,
+      "dimensions": {
+        "height_pixels": 1024,
+        "width_pixels": 1024
+      },
+      "encoding": {
+        "bits_per_channel": 8,
+        "channel": "R",
+        "container": "PNG",
+        "decoded_confidence": {
+          "offset": 0.0,
+          "scale": 0.00392156862745098
+        }
+      },
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_BuildingConfidence_R8.png",
+      "semantic": "building_height_confidence",
+      "sha256": "490107aeeaeed0edf5656703fdf7174ffc21bf64271f863c1ba77ea6e659a7e0"
+    },
+    {
+      "bytes": 3451412,
+      "dimensions": {
+        "triangle_count": 92000,
+        "vertex_count": 46426
+      },
+      "encoding": {
+        "container": "Wavefront OBJ",
+        "coordinates": "Unity local meters; +X east, +Y up, +Z north",
+        "height_source": "DTM plus documented runway-plane preservation blend",
+        "index_base": 1
+      },
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_NearTerrain_Fixed.obj",
+      "semantic": "fixed_near_terrain_mesh",
+      "sha256": "4689de66d4b47bdfc1a3ea6e8c33e906d4308bbb77317f23e3dc5185b5cefce8"
+    },
+    {
+      "bytes": 2319,
+      "dimensions": {
+        "runway_count": 1
+      },
+      "encoding": {
+        "container": "canonical UTF-8 JSON",
+        "schema_version": 1
+      },
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_RunwayPlaneInputs.json",
+      "semantic": "runway_plane_preservation_inputs",
+      "sha256": "e0ac3b6e8d076c46e00da041ede94ed7c91e0cd67ffb58df7390742db1570dee"
+    },
+    {
+      "bytes": 8805,
+      "dimensions": {
+        "sample_count": 1048576
+      },
+      "encoding": {
+        "container": "canonical UTF-8 JSON",
+        "schema_version": 1
+      },
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_NearTerrain_ErrorReport.json",
+      "semantic": "near_terrain_error_report",
+      "sha256": "b0f6fa4c9d92bc28b8d1e783d0864d170f65e08010f9b9c55282521332c247ea"
+    }
+  ],
+  "building_height_quality": {
+    "eligible_for_authoritative_override": false,
+    "meets_10_percent_vertical_error_gate": false,
+    "reason": "No surveyed truth/error study is available; source building class is absent at KBDU and the conservative channel uses an unclassified-return structure heuristic.",
+    "vertical_error_fraction_bound": null
+  },
+  "coordinate_mapping": {
+    "grid": {
+      "height_pixels": 1024,
+      "pixel_size_meters": 4.0,
+      "product_bounds_utm13n_meters": [
+        478664.1393769088,
+        4430102.874940165,
+        482760.1393769088,
+        4434198.874940165
+      ],
+      "product_crs_epsg": 32613,
+      "source_crs_epsg": 3857,
+      "width_pixels": 1024
+    },
+    "origin": {
+      "source_elevation_msl_meters": 1611.7824,
+      "utm13n_easting_meters": 480712.1393769088,
+      "utm13n_northing_meters": 4432150.874940165,
+      "wgs84_latitude_degrees": 40.03936527,
+      "wgs84_longitude_degrees": -105.22608958
+    },
+    "pixel_center_affine_local_meters": {
+      "x_at_column0_row0": -2046.0,
+      "x_per_column": 4.0,
+      "x_per_row": 0.0,
+      "z_at_column0_row0": 2046.0,
+      "z_per_column": 0.0,
+      "z_per_row": -4.0
+    },
+    "pixel_center_affine_utm13n_meters": {
+      "easting_at_column0_row0": 478666.1393769088,
+      "easting_per_column": 4.0,
+      "easting_per_row": 0.0,
+      "northing_at_column0_row0": 4434196.874940165,
+      "northing_per_column": 0.0,
+      "northing_per_row": -4.0
+    },
+    "unity_axes": {
+      "x": "east",
+      "y": "up",
+      "z": "north"
+    },
+    "vertical_mapping": {
+      "associated_wesm_original_workunit": {
+        "geoid": "GEOID18",
+        "vertical_crs_epsg": 5703
+      },
+      "local_y_formula": "decoded_source_z_meters - coordinate_mapping.origin.source_elevation_msl_meters",
+      "source_metadata_status": "EPT supplies metre-valued Z but does not identify a vertical CRS; the exact-workunit WESM record identifies the original workunit CRS, retained separately above.",
+      "source_vertical_crs": null
+    }
+  },
+  "inference": {
+    "building": {
+      "direct_class_available_inside_bounds": false,
+      "method": "classified building returns when present; otherwise planar predominantly single-return elevated-region heuristic",
+      "thresholds": {
+        "building_growth_max_multi_return_fraction": 0.15,
+        "building_min_component_pixels": 2,
+        "building_seed_max_multi_return_fraction": 0.08,
+        "building_seed_max_roughness_meters": 1.5,
+        "building_seed_min_height_meters": 2.0,
+        "elevated_min_height_meters": 1.5,
+        "elevated_min_returns_per_pixel": 2
+      }
+    },
+    "canopy": {
+      "direct_classes_available_inside_bounds": false,
+      "method": "classified vegetation returns when present; otherwise elevated multi-return heuristic",
+      "thresholds": {
+        "canopy_min_multi_return_fraction": 0.08,
+        "elevated_min_height_meters": 1.5,
+        "elevated_min_returns_per_pixel": 2
+      }
+    }
+  },
+  "label": "KBDU-inspired / not for navigation",
+  "license_and_provenance": {
+    "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+    "license": "United States Government Work / Public Domain",
+    "license_url": "https://www.usgs.gov/faqs/what-are-terms-uselicensing-map-services-and-data-national-map",
+    "public_domain_derivative": true,
+    "raw_data_committed": false,
+    "raw_data_policy": "External only; this manifest and all EPT source files are prohibited from Git."
+  },
+  "limitations": [
+    "Not for navigation; source collection date, accuracy, and current conditions differ.",
+    "EPT/STAC identify EPSG:3857 horizontally but do not identify a vertical CRS; the exact-workunit WESM row identifies the original workunit as EPSG:5703/GEOID18.",
+    "WESM records QL 1 and a Meets LPC status, but no numeric achieved accuracy or pulse density is carried into this product or inferred from that category.",
+    "Depth-8 EPT is a nominal 2.0693359375 m hierarchy selection, not the full-density source cloud.",
+    "The KBDU subset has no classified vegetation or building returns; canopy/building channels are conservative return-structure heuristics.",
+    "Nearest fill is exposed by validity bits and must not be mistaken for directly observed ground.",
+    "No source or scenario evidence supports 0.05 m real-world operational accuracy.",
+    "No standalone Quest performance claim is made by this offline data pipeline."
+  ],
+  "near_terrain": {
+    "error_report_semantic": "near_terrain_error_report",
+    "fixed_mesh_semantic": "fixed_near_terrain_mesh",
+    "geometric_integration_eligible": true,
+    "geometric_integration_status": "ELIGIBLE",
+    "operational_0_05_meter_real_world_accuracy_supported": false,
+    "preferred_triangle_budget_met": true,
+    "runway_inputs_semantic": "runway_plane_preservation_inputs"
+  },
+  "schema": "questflight.aerial-scenery-v1.lidar.v1",
+  "source": {
+    "classification_observation": {
+      "building_class_code": 6,
+      "building_class_present_inside_exact_bounds": false,
+      "counts_by_numeric_las_class_inside_exact_bounds": {
+        "1": 12496871,
+        "17": 8905,
+        "18": 3291,
+        "2": 6170420,
+        "20": 3481,
+        "31": 6,
+        "7": 64885,
+        "9": 86536
+      },
+      "vegetation_class_codes": [
+        3,
+        4,
+        5
+      ],
+      "vegetation_classes_present_inside_exact_bounds": []
+    },
+    "data_file_count": 758,
+    "data_inventory_sha256": "3056bfc4dae8f95fa7504a81d7a3aae4c5eb880cb308ee1841298c84f5bac101",
+    "dataset_id": "CO_DRCOG_1_2020",
+    "ept_url": "https://s3-us-west-2.amazonaws.com/usgs-lidar-public/CO_DRCOG_1_2020/ept.json",
+    "metadata_availability": {
+      "ept_stac_accuracy_metrics": null,
+      "ept_stac_horizontal_crs_epsg": 3857,
+      "ept_stac_vertical_crs": null,
+      "nominal_pulse_density_points_per_square_meter": null,
+      "nominal_pulse_spacing_meters": null,
+      "note": "EPT/STAC omit vertical CRS and accuracy/QL/density values. The exact-workunit WESM row supplies original-workunit CRS, QL, collection dates, and product status, but no numeric pulse-density or achieved-accuracy metric is inferred from QL.",
+      "wesm_achieved_accuracy_metrics": null,
+      "wesm_original_workunit_vertical_crs_epsg": 5703
+    },
+    "nominal_ept_resolution_meters": 2.0693359375,
+    "raw_snapshot_manifest_sha256": "8d5aa666d63cfeeb85321a2f4319be9520bc01a7ce1f73bec6441ed8b1aaa905",
+    "retrieved_utc": "2026-07-19T01:21:21.632516Z",
+    "stac_item_url": "https://s3-us-west-2.amazonaws.com/usgs-lidar-stac/ept/CO_DRCOG_1_2020.json",
+    "target_depth": 8,
+    "wesm": {
+      "csv_snapshot": {
+        "bytes": 2233144,
+        "last_modified_http": "Sat, 18 Jul 2026 06:54:47 GMT",
+        "retrieved_utc": "2026-07-19T01:50:01.163Z",
+        "sha256": "25079acea46bad8db53574c4343d0574177eabfa7515c6b5ec0686bbf85d044b",
+        "url": "https://rockyweb.usgs.gov/vdelivery/Datasets/Staged/Elevation/metadata/WESM.csv"
+      },
+      "record": {
+        "acquisition_end": "2020-08-03",
+        "acquisition_start": "2020-05-29",
+        "geoid": "GEOID18",
+        "horizontal_crs_epsg": 6342,
+        "lidar_point_cloud_category": "Meets",
+        "lidar_point_cloud_publication_date": "2021-12-22",
+        "lidar_point_cloud_reason": "Meets 3DEP LPC requirements",
+        "metadata_link": "https://prd-tnm.s3.amazonaws.com/index.html?prefix=StagedProducts/Elevation/metadata/CO_DRCOG_2020_B20/CO_DRCOG_1_2020",
+        "project": "CO_DRCOG_2020_B20",
+        "project_id": 193312,
+        "pulse_method": "linear-mode lidar",
+        "quality_level": "QL 1",
+        "source_dem_gsd_meters": 0.5,
+        "specification": "USGS Lidar Base Specification 2.1",
+        "vertical_crs_epsg": 5703,
+        "workunit": "CO_DRCOG_1_2020",
+        "workunit_id": 193309
+      }
+    }
+  },
+  "source_pipeline": [
+    {
+      "bytes": 9220,
+      "path": "tools/scenery/conda-lock-win-64.txt",
+      "sha256": "8b7e1b1728a9071da8c929e22e35295870ea7c2d90515963e55288db0d10e756"
+    },
+    {
+      "bytes": 351,
+      "path": "tools/scenery/environment.yml",
+      "sha256": "088a0218235af70f25c63704e815779bcefbd8fbc25aff3fa04f23133b9f09ab"
+    },
+    {
+      "bytes": 1898,
+      "path": "tools/scenery/toolchain.json",
+      "sha256": "4429663ad71f73c3420af92bd2adfe5135d3de241879a5c1cbf7c9cb9df20f40"
+    },
+    {
+      "bytes": 37565,
+      "path": "tools/scenery/lidar/build_near_terrain.py",
+      "sha256": "d17154dae030f0946b58e621af163a76ea1d9a8085331fb60efb6948a0698834"
+    },
+    {
+      "bytes": 16443,
+      "path": "tools/scenery/lidar/common.py",
+      "sha256": "e4fea841f6f2601bd9b49162a1c47c55406f75358e3e7c97b4a6c155c09c99ed"
+    },
+    {
+      "bytes": 3776,
+      "path": "tools/scenery/lidar/config.json",
+      "sha256": "b2ba812d79c457c5bb016a9c5b8113d23deeac19e7aecd7e58d9007f5fc107be"
+    },
+    {
+      "bytes": 41291,
+      "path": "tools/scenery/lidar/derive_surfaces.py",
+      "sha256": "994d2aac50d24918706294e07f20cf998b397cfcc4b18e8a78b75ece13aec8ed"
+    },
+    {
+      "bytes": 11881,
+      "path": "tools/scenery/lidar/ept_snapshot.py",
+      "sha256": "b5ed689ddd5f196f8280e06245138593137c13b5d35cbdf080a307e443efe783"
+    },
+    {
+      "bytes": 12999,
+      "path": "tools/scenery/lidar/validate_lidar.py",
+      "sha256": "51a22187e07fc4f56099547336572f689f89c7ffcdece34f410e9707d1011d20"
+    }
+  ],
+  "statistics": {
+    "coverage": {
+      "any_valid_surface_fraction": 0.9556875228881836,
+      "building_fraction": 0.014863967895507812,
+      "canopy_fraction": 0.2852201461791992,
+      "direct_ground_fraction": 0.9021472930908203,
+      "dsm_filled_from_dtm_fraction": 0.044312477111816406,
+      "dsm_floored_to_dtm_fraction": 0.006587028503417969,
+      "dtm_nearest_filled_fraction": 0.09785270690917969
+    },
+    "near_terrain_product_bytes": 3462536,
+    "point_counts": {
+      "by_class_inside_exact_bounds": {
+        "1": 12496871,
+        "17": 8905,
+        "18": 3291,
+        "2": 6170420,
+        "20": 3481,
+        "31": 6,
+        "7": 64885,
+        "9": 86536
+      },
+      "declared": 22373242,
+      "decoded": 22373242,
+      "inside_exact_product_bounds": 18834395,
+      "valid_surface": 18766219
+    },
+    "ranges_meters": {
+      "building_height_above_ground": [
+        0.0,
+        17.990966796875
+      ],
+      "canopy_height_above_ground": [
+        0.0,
+        34.5975341796875
+      ],
+      "dsm_source_z": [
+        1567.344970703125,
+        1658.89404296875
+      ],
+      "dtm_source_z": [
+        1567.306396484375,
+        1642.99609375
+      ],
+      "maximum_ground_fill_distance": 305.2867431640625
+    },
+    "raster_product_bytes": 5243894,
+    "total_product_bytes": 8706430
+  }
+}

@@ -165,6 +165,14 @@ if ($null -eq $orchestrationReport -or $orchestrationReport.classification -eq "
     $classification = "FAIL_SIMULATOR_ORCHESTRATION"
     $passed = $false
 }
+elseif (-not [bool]$orchestrationReport.activeRuntimePreserved -or
+        -not [bool]$orchestrationReport.persistentConfigurationRestored -or
+        [bool]$orchestrationReport.shippingAndroidConfigurationChanged) {
+    # State safety takes precedence over missing replay coverage. A blocked replay
+    # catalog must never conceal a machine-runtime or shipping-config mutation.
+    $classification = "FAIL_SIMULATOR_STATE_RESTORATION"
+    $passed = $false
+}
 elseif ($missingRecordings.Count -gt 0 -or $missingSessionReports.Count -gt 0) {
     $classification = "BLOCKED_MISSING_RECORDED_REPLAYS"
     $passed = $false
@@ -177,9 +185,13 @@ elseif (-not $contactSheet) {
     $classification = "FAIL_CONTACT_SHEET_NOT_GENERATED"
     $passed = $false
 }
+elseif (-not $liveStereoConnectionPassed) {
+    $classification = "FAIL_SIMULATOR_STEREO_OR_72HZ_CONNECTION"
+    $passed = $false
+}
 
 $report = [ordered]@{
-    schemaVersion = 1
+    schemaVersion = 3
     generatedUtc = [DateTime]::UtcNow.ToString("O")
     classification = $classification
     passed = $passed
@@ -200,7 +212,11 @@ $report = [ordered]@{
     logsRoot = Join-Path $qaRunDirectory "logs"
     activeRuntimePreserved = if ($orchestrationReport) { [bool]$orchestrationReport.activeRuntimePreserved } else { $false }
     persistentConfigurationRestored = if ($orchestrationReport) { [bool]$orchestrationReport.persistentConfigurationRestored } else { $false }
-    shippingAndroidConfigurationChanged = $false
+    shippingAndroidConfigurationChanged = if ($orchestrationReport) { [bool]$orchestrationReport.shippingAndroidConfigurationChanged } else { $false }
+    simulatorStateRestorationPassed = $null -ne $orchestrationReport -and
+        [bool]$orchestrationReport.activeRuntimePreserved -and
+        [bool]$orchestrationReport.persistentConfigurationRestored -and
+        -not [bool]$orchestrationReport.shippingAndroidConfigurationChanged
     fullResolutionLeadInspection = "REQUIRED_NOT_AUTOMATICALLY_CLAIMED"
     automatedChecks = @(
         "either eye nonblank",
@@ -238,6 +254,7 @@ $summary = @"
 - Meta Quest 3 profile / requested refresh: **Quest 3 / 72 Hz**
 - Active OpenXR runtime preserved: **$(if ($orchestrationReport) { $orchestrationReport.activeRuntimePreserved } else { $false })**
 - Meta persistent replay configuration restored: **$(if ($orchestrationReport) { $orchestrationReport.persistentConfigurationRestored } else { $false })**
+- Shipping Android configuration changed: **$(if ($orchestrationReport) { $orchestrationReport.shippingAndroidConfigurationChanged } else { $false })**
 - Live Meta OpenXR stereo/HMD/Touch connection: **$liveStereoConnectionPassed**
 - Missing VRS recordings: **$missingText**
 - Stereo contact sheet: ``$contactSheet``

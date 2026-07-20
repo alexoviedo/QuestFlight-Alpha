@@ -45,7 +45,10 @@ namespace T2.QuestFlight.Editor
                 ["Assets/Production/Prefabs/ProductionC172AircraftRig.prefab"] = "approved_production_aircraft_rig",
                 ["Assets/Scripts/Flight/Backends/FlightDynamicsCoordinator.cs"] = "approved_product_cleaned",
                 ["Assets/Scripts/Runtime/AircraftReferenceFrameRig.cs"] = "approved_product_cleaned",
-                ["Assets/Scripts/Runtime/QuestTemporalVisualGateRecorder.cs"] = "approved_product_cleaned"
+                ["Assets/Scripts/Runtime/QuestTemporalVisualGateRecorder.cs"] = "approved_product_cleaned",
+                ["Assets/Scripts/Environment/AirportParkingStandManifest.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Environment/ProductionPlacementManifest.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Environment/ProductionTerrainSurfaceAsset.cs"] = "approved_product_authored"
             };
 
         [MenuItem("T2 Quest Flight/Validation/Export Production Dependency Closure")]

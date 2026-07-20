@@ -42,12 +42,15 @@ Shader "QuestFlight/Production Sparse Vegetation"
                 half3 worldNormal : TEXCOORD0;
                 fixed4 color : COLOR;
                 UNITY_FOG_COORDS(1)
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
             v2f vert(appdata input)
             {
                 UNITY_SETUP_INSTANCE_ID(input);
                 v2f output;
+                UNITY_INITIALIZE_OUTPUT(v2f, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
                 output.position = UnityObjectToClipPos(input.vertex);
                 output.worldNormal = UnityObjectToWorldNormal(input.normal);
                 output.color = input.color * _Tint;
@@ -57,6 +60,8 @@ Shader "QuestFlight/Production Sparse Vegetation"
 
             fixed4 frag(v2f input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
                 half3 normal = normalize(input.worldNormal);
                 half diffuse = saturate(dot(normal, normalize(_WorldSpaceLightPos0.xyz)));
                 half3 ambient = ShadeSH9(half4(normal, 1.0));

@@ -31,11 +31,18 @@ def main() -> int:
     check("official_service", str(source.get("service_url", "")).startswith("https://imagery.nationalmap.gov/"), str(source.get("service_url")))
     check("public_domain", "public domain" in str(source.get("license_name", "")).lower(), str(source.get("license_name")))
     check("source_year", source.get("catalog_year") == 2019, f"year={source.get('catalog_year')}")
-    check("raw_lineage", len(source.get("raw_tiles", [])) == 5, f"tiles={len(source.get('raw_tiles', []))}")
+    expected_tile_count = sum(int(zone["tile_grid"]) ** 2 for zone in config["zones"])
+    check(
+        "raw_lineage",
+        len(source.get("raw_tiles", [])) == expected_tile_count,
+        f"tiles={len(source.get('raw_tiles', []))}, expected={expected_tile_count}",
+    )
     check("prohibited_sources", "No Google" in manifest.get("prohibited_sources_confirmation", ""), manifest.get("prohibited_sources_confirmation", ""))
 
     total_runtime = 0
     by_zone = {zone["id"]: zone for zone in config["zones"]}
+    assets_by_zone = {asset["zone_id"]: asset for asset in manifest.get("derived_assets", [])}
+    check("zone_set", set(assets_by_zone) == set(by_zone), f"zones={sorted(assets_by_zone)}")
     for asset in manifest.get("derived_assets", []):
         path = REPO_ROOT / asset["path"]
         zone = by_zone[asset["zone_id"]]
@@ -48,11 +55,10 @@ def main() -> int:
             expected = int(zone["atlas_size_pixels"])
             check(f"{asset['zone_id']}_dimensions", image.size == (expected, expected), f"size={image.size}")
             check(f"{asset['zone_id']}_mode", image.mode == "RGB", f"mode={image.mode}")
-        maximum_key = "maximum_committed_near_bytes" if asset["zone_id"] == "near_4km" else "maximum_committed_mid_bytes"
         check(
             f"{asset['zone_id']}_source_size",
-            path.stat().st_size <= int(config["unity"][maximum_key]),
-            f"bytes={path.stat().st_size}, maximum={config['unity'][maximum_key]}",
+            path.stat().st_size <= int(zone["maximum_committed_bytes"]),
+            f"bytes={path.stat().st_size}, maximum={zone['maximum_committed_bytes']}",
         )
         total_runtime += int(asset["android_import"]["estimated_mip_chain_bytes"])
         meta_path = Path(str(path) + ".meta")

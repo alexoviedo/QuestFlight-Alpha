@@ -1,0 +1,42 @@
+{
+  "derived_assets": [
+    {
+      "bytes": 204020,
+      "path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ProductionTerrainSurfaceV2.json",
+      "sha256": "9b9e17be98b15d4f9ddb42a5662f54f54936581ba7c4c17043103e912e6cd2d2"
+    },
+    {
+      "bytes": 898012,
+      "path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_NearTerrainV2_Normal.png",
+      "sha256": "4ba7833e6f27f8ee3abceb79caf502e53f09672525038eedea7d89df6d764cc8"
+    }
+  ],
+  "geometric_error_against_1m_source": {
+    "airport_average_error_meters": 0.0407,
+    "airport_maximum_error_meters": 3.7056,
+    "near_average_error_meters": 0.2117,
+    "near_maximum_error_meters": 14.1289,
+    "sealed_boundary_maximum_error_meters": 0.008
+  },
+  "raw_data_policy": "Raw DEM and service responses remain in the external artifact cache and are not committed.",
+  "runtime_layers": [
+    {
+      "id": "near_4km_v2",
+      "samples": 25921,
+      "spacing_meters": 25.0
+    },
+    {
+      "id": "airport_5m_v2",
+      "samples": 38841,
+      "spacing_meters": 5.0
+    }
+  ],
+  "runtime_triangle_estimate": 128000,
+  "schema_version": 1,
+  "source_credit": "USGS, The National Map: 3D Elevation Program",
+  "source_endpoint": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer",
+  "source_license": "United States government work; public domain / no use restrictions",
+  "source_raw_bytes": 67117862,
+  "source_raw_sha256": "93b32e8ef2fef464ff4ee49702d235b30eaff7d347f22b8c4add8848cd7e9d82",
+  "source_resolution_meters": 1.0
+}

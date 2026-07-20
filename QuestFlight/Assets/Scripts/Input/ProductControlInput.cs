@@ -26,7 +26,11 @@ namespace QuestFlightLab.Input
         public DeterministicGamepadInputSource AuthoredDeterministicInput => deterministicInput;
         public bool HasAuthoredSources => gamepad != null && deterministicInput != null;
 
-        private GamepadInputSnapshot _previous;
+        private readonly GamepadInputSnapshot _disconnectedFallback = GamepadInputSnapshot.Disconnected(0f, 0f);
+        private bool _previousButtonWest;
+        private bool _previousButtonNorth;
+        private bool _previousButtonEast;
+        private bool _previousStartButton;
         private float _throttle;
         private float _mixture = 1f;
         private float _carbHeat;
@@ -58,9 +62,11 @@ namespace QuestFlightLab.Input
         private void Update()
         {
             bool useDeterministic = deterministicMode && deterministicInput != null && deterministicInput.isActiveAndEnabled;
+            if (gamepad == null)
+                _disconnectedFallback.SetDisconnected(Time.unscaledTime, 0f);
             GamepadInputSnapshot snapshot = useDeterministic
                 ? deterministicInput.Current
-                : gamepad != null ? gamepad.Current : GamepadInputSnapshot.Disconnected(Time.unscaledTime, 0f);
+                : gamepad != null ? gamepad.Current : _disconnectedFallback;
 
             if (useDeterministic)
             {
@@ -77,19 +83,22 @@ namespace QuestFlightLab.Input
                 _trim = Mathf.Clamp(_trim + snapshot.dpadY * trimRatePerSecond * Time.unscaledDeltaTime, -1f, 1f);
             }
 
-            bool flapDown = WasPressed(snapshot.buttonWest, _previous?.buttonWest ?? false);
-            bool flapUp = WasPressed(snapshot.buttonNorth, _previous?.buttonNorth ?? false);
-            bool reset = WasPressed(snapshot.buttonEast, _previous?.buttonEast ?? false);
-            bool pause = WasPressed(snapshot.startButton, _previous?.startButton ?? false);
+            bool flapDown = WasPressed(snapshot.buttonWest, _previousButtonWest);
+            bool flapUp = WasPressed(snapshot.buttonNorth, _previousButtonNorth);
+            bool reset = WasPressed(snapshot.buttonEast, _previousButtonEast);
+            bool pause = WasPressed(snapshot.startButton, _previousStartButton);
             if (flapDown) _flaps = Mathf.Clamp01(_flaps + flapStep);
             if (flapUp) _flaps = Mathf.Clamp01(_flaps - flapStep);
             if (reset) _resetQueued = true;
             if (pause) Paused = !Paused;
 
-            Current = MapSnapshot(snapshot, invertElevator, _throttle, _trim, _flaps, _mixture, _carbHeat);
+            MapSnapshotInto(snapshot, invertElevator, _throttle, _trim, _flaps, _mixture, _carbHeat, Current);
             Current.resetPressed = reset;
             Current.pausePressed = pause;
-            _previous = snapshot;
+            _previousButtonWest = snapshot.buttonWest;
+            _previousButtonNorth = snapshot.buttonNorth;
+            _previousButtonEast = snapshot.buttonEast;
+            _previousStartButton = snapshot.startButton;
         }
 
         public bool ConsumeResetRequest()
@@ -108,20 +117,42 @@ namespace QuestFlightLab.Input
             float mixture,
             float carbHeat)
         {
-            if (snapshot == null) return AircraftControlState.Neutral(throttle);
-            return new AircraftControlState
+            AircraftControlState result = new AircraftControlState();
+            MapSnapshotInto(snapshot, invertElevator, throttle, trim, flaps, mixture, carbHeat, result);
+            return result;
+        }
+
+        public static void MapSnapshotInto(
+            GamepadInputSnapshot snapshot,
+            bool invertElevator,
+            float throttle,
+            float trim,
+            float flaps,
+            float mixture,
+            float carbHeat,
+            AircraftControlState result)
+        {
+            if (result == null) return;
+            if (snapshot == null)
             {
-                aileron = Mathf.Clamp(snapshot.leftStickX, -1f, 1f),
-                elevator = Mathf.Clamp(invertElevator ? -snapshot.leftStickY : snapshot.leftStickY, -1f, 1f),
-                rudder = Mathf.Clamp(snapshot.rightStickX, -1f, 1f),
-                throttle = Mathf.Clamp01(throttle),
-                mixture = Mathf.Clamp01(mixture),
-                carbHeat = Mathf.Clamp01(carbHeat),
-                trim = Mathf.Clamp(trim, -1f, 1f),
-                flaps = Mathf.Clamp01(flaps),
-                leftToeBrake = Mathf.Clamp01(snapshot.leftTrigger),
-                rightToeBrake = Mathf.Clamp01(snapshot.rightTrigger)
-            };
+                result.SetNeutral(throttle);
+                return;
+            }
+
+            result.aileron = Mathf.Clamp(snapshot.leftStickX, -1f, 1f);
+            result.elevator = Mathf.Clamp(invertElevator ? -snapshot.leftStickY : snapshot.leftStickY, -1f, 1f);
+            result.rudder = Mathf.Clamp(snapshot.rightStickX, -1f, 1f);
+            result.throttle = Mathf.Clamp01(throttle);
+            result.mixture = Mathf.Clamp01(mixture);
+            result.carbHeat = Mathf.Clamp01(carbHeat);
+            result.trim = Mathf.Clamp(trim, -1f, 1f);
+            result.flaps = Mathf.Clamp01(flaps);
+            result.leftToeBrake = Mathf.Clamp01(snapshot.leftTrigger);
+            result.rightToeBrake = Mathf.Clamp01(snapshot.rightTrigger);
+            result.markerPressed = false;
+            result.resetPressed = false;
+            result.pausePressed = false;
+            result.telemetryTogglePressed = false;
         }
 
         private static bool WasPressed(bool current, bool previous) => current && !previous;

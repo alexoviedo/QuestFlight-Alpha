@@ -1,0 +1,115 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: KBDU_TerrainPyramid
+  m_Shader: {fileID: 4800000, guid: b85fca478224ba34ba5ff705d4377c91, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _AerialCanopyHandoffMask:
+        m_Texture: {fileID: 2800000, guid: 449820e3dc7da0bfc6dc3067136b6f38, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _AerialCanopyNormalOcclusion:
+        m_Texture: {fileID: 2800000, guid: 8712b0de0c676fe0840fb2bc72cfa359, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _AerialCanopySurfaceFeatures:
+        m_Texture: {fileID: 2800000, guid: 694a8d7153f9db1f8ecd5293972f6d2b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _AerialTerrainNormalAndValidity:
+        m_Texture: {fileID: 2800000, guid: f9d0bb15e0b184658fc8707aec537a96, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _AirportCoreCleanPlateAlbedo:
+        m_Texture: {fileID: 2800000, guid: 88f4e3f036c5188a01ad866c28ff253d, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _AirportCoreCleanPlateMask:
+        m_Texture: {fileID: 2800000, guid: 29300e2ed120f4b81cadc8494df4cbb2, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedo:
+        m_Texture: {fileID: 2800000, guid: b0010fed8caac464193afe47db3cea77, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FarAlbedo:
+        m_Texture: {fileID: 2800000, guid: 4bb5907c5a3bfc745839a9e33642da4f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MidAlbedo:
+        m_Texture: {fileID: 2800000, guid: 00a5e9ef8375bf7c67c9fd6abfc48777, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NearAlbedo:
+        m_Texture: {fileID: 2800000, guid: 91d2ab1fc7e94a97b2bd8de9a2e13d31, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NearSourceNormal:
+        m_Texture: {fileID: 2800000, guid: f9d0bb15e0b184658fc8707aec537a96, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RecoveryMidNEAlbedo:
+        m_Texture: {fileID: 2800000, guid: c1aa918b164d4d67d146ca56a6773645, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RecoveryMidNWAlbedo:
+        m_Texture: {fileID: 2800000, guid: 227bc00bf254a063cd728d52a8919a36, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RecoveryMidSEAlbedo:
+        m_Texture: {fileID: 2800000, guid: cb143f206c9b5f97df6f8702520ac8e7, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RecoveryMidSWAlbedo:
+        m_Texture: {fileID: 2800000, guid: 590d05b773669eefbd0d6457a85f3253, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AerialCanopyColorStrength: 0.34
+    - _AerialCanopyHeightQuantumMeters: 0.25
+    - _AerialCanopyNormalStrength: 0.28
+    - _AirportCoreCleanPlateStrength: 1
+    - _DetailScale: 0.06666667
+    - _DiagnosticMode: 0
+    - _NearSourceNormalStrength: 0.42
+    - _Roughness: 0.92
+    m_Colors:
+    - _AerialCanopyLocalBounds: {r: -2048, g: -2048, b: 0.00024414062, a: 0.00024414062}
+    - _AerialCanopyTint: {r: 0.25, g: 0.34, b: 0.16, a: 1}
+    - _AirportCoreCleanPlateWorldMinInvSize: {r: -650, g: -575, b: 0.0014285714, a: 0.0014285714}
+    - _DetailFadeStartEnd: {r: 250, g: 2600, b: 0, a: 0}
+    - _DetailRadiusFadeStartEnd: {r: 4500, g: 6800, b: 0, a: 0}
+    - _FarWorldMinInvSize: {r: -12000, g: -12000, b: 0.000041666666, a: 0.000041666666}
+    - _MidBlendStartEnd: {r: 5000, g: 6000, b: 0, a: 0}
+    - _MidWorldMinInvSize: {r: -6000, g: -6000, b: 0.00008333333, a: 0.00008333333}
+    - _NearBlendStartEnd: {r: 1800, g: 1980, b: 0, a: 0}
+    - _NearSourceNormalFadeStartEnd: {r: 250, g: 3500, b: 0, a: 0}
+    - _NearWorldMinInvSize: {r: -2000, g: -2000, b: 0.00025, a: 0.00025}
+    - _RecoveryBlendStartEnd: {r: 3800, g: 4000, b: 0, a: 0}
+    - _RecoveryMidNEWorldMinInvSize: {r: -32, g: -32, b: 0.000246063, a: 0.000246063}
+    - _RecoveryMidNWWorldMinInvSize: {r: -4032, g: -32, b: 0.000246063, a: 0.000246063}
+    - _RecoveryMidSEWorldMinInvSize: {r: -32, g: -4032, b: 0.000246063, a: 0.000246063}
+    - _RecoveryMidSWWorldMinInvSize: {r: -4032, g: -4032, b: 0.000246063, a: 0.000246063}
+    - _Tint: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

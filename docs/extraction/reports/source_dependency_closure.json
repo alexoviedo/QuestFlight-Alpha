@@ -3,14 +3,382 @@
     "sourceCommit": "cd4131fa7732a6db2d7387921dfef33e2c206970",
     "scenePath": "Assets/Scenes/ProductionVerticalSlice.unity",
     "ready": true,
-    "approvedCount": 94,
+    "approvedCount": 256,
     "packageCount": 5,
     "conditionalLocalCount": 0,
     "rejectedCount": 0,
     "unknownCount": 0,
     "dependencies": [
         {
-            "assetPath": "Assets/Production/Environment/AirportKit/KBDU_AirportSharedAtlas.png",
+            "assetPath": "Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidBase12km_4096.jpg",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNE_2048.jpg",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNW_2048.jpg",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSE_2048.jpg",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSW_2048.jpg",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn001_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn001_zn002_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn001_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn001_zp001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn002_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xn002_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp000_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp000_zn002_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp000_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp000_zp001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp001_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_0-2km_hlod_1500m_xp001_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_2-4km_hlod_4000m_xn001_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_2-4km_hlod_4000m_xn001_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_2-4km_hlod_4000m_xp000_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/Generated/AerialBuildingsV1__buildings_2-4km_hlod_4000m_xp000_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_AerialBuildingShell.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_AerialBuildingShellsV2.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_AerialBuildingsV1.prefab",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_BuildingSpatialContractV1.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/KBDU_AerialSceneryManifestV1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_CanopyNormalOcclusion_RGBA8.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_SurfaceFeatures_RGBA8.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_SurfaceNormal_RGBA8.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/TerrainIntegration/KBDU_AirportPatch_LidarConformance_V1.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/TerrainIntegration/KBDU_AirportPatch_LidarConformed_V1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/TerrainIntegration/KBDU_Lidar_NearTerrain_UnityLocal_V1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/TerrainIntegration/KBDU_Lidar_NearTerrain_UnityLocal_V1.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_Distribution.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetationRoot.prefab",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetation_Tier0_Combined.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetation_Tier1_Combined.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Materials/AerialVegetation_AtlasCutout.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Runtime/AerialVegetationBatchRenderer.cs",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/SOURCE_MANIFEST.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Shaders/AerialVegetationOpaque.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Atlas.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_HandoffMask_R8.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Surface.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/AirportCoreBenchmarkManifest.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Buildings/AirportCoreBuildingSourceManifestV4.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Buildings/Data/AirportCoreBuildingValidationV4.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/CleanPlate/AirportCoreCleanPlate_Albedo.jpg",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/CleanPlate/AirportCoreOriginalShadowMask.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/CleanPlate/AirportCoreReplacementMask.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/CleanPlate/SOURCE_MANIFEST.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/AirportCorePropsCombined_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/AirportCorePropsCombined_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/AirportCorePropsCombined_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/AirportCoreVegetationCluster_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/AirportCoreVegetationCluster_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/AirportCoreVegetationCluster_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/ExecutiveTerminal_LOD0_V4.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/ExecutiveTerminal_LOD1_V4.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/ExecutiveTerminal_LOD2_V4.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/FuelServiceCore_LOD0_V4.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/FuelServiceCore_LOD1_V4.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/FuelServiceCore_LOD2_V4.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/KBDU_AirportTerrain_ErrorBounded_V4_2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/Type2THangarRow_LOD0_V4.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/Type2THangarRow_LOD1_V4.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/Type2THangarRow_LOD2_V4.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/buildings_0-2km_hlod_1500m_xn001_zn001_Filtered_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/buildings_0-2km_hlod_1500m_xn001_zn001_Filtered_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Generated/buildings_0-2km_hlod_1500m_xn001_zn001_Filtered_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Lighting/AirportCoreV42OneAtlas.giparams",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreBakedLit.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKitAtlas.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_Albedo.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_MRAO.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_Normal.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreTerminalAtlas.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreTerminal_Albedo.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreTerminal_MRAO.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreTerminal_Normal.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Materials/SOURCE_MANIFEST.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_Albedo.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_MRAO.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_Normal.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Runway/SOURCE_MANIFEST.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Vegetation/Materials/AirportCoreVegetation_V4.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Vegetation/Shaders/KBDUVegetationHeroV4.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Vegetation/Textures/AirportCoreVegetation_Atlas.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Water/Reports/AirportCoreWaterVegetation_ErrorReport.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportCoreV4/Water/Reports/AirportCoreWaterVegetation_SourceManifest.json",
             "classification": "approved_production"
         },
         {
@@ -38,66 +406,6 @@
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Fence_Signage_LOD0_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Fence_Signage_LOD1_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Fence_Signage_LOD2_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Fuel_Service_LOD0_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Fuel_Service_LOD1_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Fuel_Service_LOD2_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_A_Gable_LOD0_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_A_Gable_LOD1_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_A_Gable_LOD2_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_B_Wide_LOD0_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_B_Wide_LOD1_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_B_Wide_LOD2_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_C_Quonset_LOD0_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_C_Quonset_LOD1_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Hangar_C_Quonset_LOD2_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
             "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Production_SparseCottonwood_LOD0.asset",
             "classification": "approved_production"
         },
@@ -106,23 +414,7 @@
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Ramp_Props_LOD0_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Ramp_Props_LOD1_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Ramp_Props_LOD2_Combined.asset",
-            "classification": "approved_production"
-        },
-        {
             "assetPath": "Assets/Production/Environment/Generated/StandaloneRecovery/Terrain_AirportPatch_Near_Transition_Mesh.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/Terrain_AirportPatch_USGS_Mesh.asset",
             "classification": "approved_production"
         },
         {
@@ -131,26 +423,6 @@
         },
         {
             "assetPath": "Assets/Production/Environment/Generated/Terrain_Mid12km_USGS_Mesh.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Generated/Terrain_Near4km_USGS_Mesh.asset",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Materials/Production_AirportShared.mat",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Materials/Production_BoulderReservoir_Opaque.mat",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Materials/Production_FarTerrain_Immutable.mat",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Materials/Production_MacroGround.mat",
             "classification": "approved_production"
         },
         {
@@ -166,7 +438,335 @@
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/Materials/Production_WaterBank.mat",
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn001_zn002_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn001_zn002_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn001_zn002_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn001_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn001_zp000_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn001_zp000_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn001_zp001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn001_zp001_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn001_zp001_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn002_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn002_zn001_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn002_zn001_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn002_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn002_zp000_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xn002_zp000_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zn001_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zn001_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zn002_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zn002_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zn002_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zp000_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zp000_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zp001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zp001_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp000_zp001_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp001_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp001_zn001_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp001_zn001_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp001_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp001_zp000_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_0-2km_hlod_1500m_xp001_zp000_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xn001_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xn001_zn001_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xn001_zn001_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xn001_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xn001_zp000_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xn001_zp000_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xp000_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xp000_zn001_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xp000_zn001_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xp000_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xp000_zp000_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_2-4km_hlod_4000m_xp000_zp000_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xn001_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xn001_zn001_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xn001_zn001_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xn001_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xn001_zp000_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xn001_zp000_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xp000_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xp000_zn001_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xp000_zn001_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xp000_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xp000_zp000_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/buildings_4-6km_hlod_6000m_xp000_zp000_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/parked_aircraft_airport_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/parked_aircraft_airport_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/parked_aircraft_airport_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xn001_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xn001_zn001_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xn001_zn001_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xn001_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xn001_zp000_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xn001_zp000_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xp000_zn001_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xp000_zn001_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xp000_zn001_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xp000_zp000_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xp000_zp000_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Generated/vegetation_v2_hlod_1500m_xp000_zp000_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/KBDU_BatchedContext.prefab",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/KBDU_ContextAtlas.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/KBDU_ContextVegetation.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/KBDU_OpaqueVegetationContext.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/KBDU_OsmBuildingContext.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/KBDU_OsmBuildings.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraft.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Presentation/AircraftRunwayBlobShadow.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Presentation/AircraftRunwayBlobShadow.mat",
             "classification": "approved_production"
         },
         {
@@ -174,15 +774,39 @@
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/Textures/KBDU_NAIP_2019_Mid12km_2048.jpg",
+            "assetPath": "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_AirportParkingStandManifestV2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_NearTerrain_25m_V2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_ProductionPlacementManifestV2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_ProductionTerrainSurfaceV2.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/ReconstructionV2/KBDU_WaterFeatureManifestV2.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Sky/Kloppenheim03_PureSky_2K.hdr",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Sky/Kloppenheim03_PureSky_Skybox.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/Textures/KBDU_NAIP_2019_Far24km_2048.jpg",
             "classification": "approved_production"
         },
         {
             "assetPath": "Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
-            "classification": "approved_production"
-        },
-        {
-            "assetPath": "Assets/Production/Environment/Textures/ProductionKbduMacroAlbedo.png",
             "classification": "approved_production"
         },
         {
@@ -258,24 +882,12 @@
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Resources/QuestFlightLab/Environment/GroundMaterials/dry_ground_01_diff_1k.jpg",
-            "classification": "approved_cc0"
-        },
-        {
-            "assetPath": "Assets/Resources/QuestFlightLab/Environment/GroundMaterials/sparse_grass_diff_1k.jpg",
-            "classification": "approved_cc0"
-        },
-        {
             "assetPath": "Assets/Resources/QuestFlightLab/Environment/GroundMaterials/withered_grass_diff_1k.jpg",
             "classification": "approved_cc0"
         },
         {
-            "assetPath": "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionFarTerrain.shader",
+            "assetPath": "Assets/Resources/QuestFlightLab/Environment/Shaders/AircraftRunwayBlobShadow.shader",
             "classification": "approved_product_authored"
-        },
-        {
-            "assetPath": "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionMacroGround.shader",
-            "classification": "approved_production"
         },
         {
             "assetPath": "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionRunwayMarking.shader",
@@ -284,10 +896,6 @@
         {
             "assetPath": "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionSparseVegetation.shader",
             "classification": "approved_product_authored"
-        },
-        {
-            "assetPath": "Assets/Resources/QuestFlightLab/Environment/Shaders/ProductionStableWater.shader",
-            "classification": "approved_production"
         },
         {
             "assetPath": "Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
@@ -300,6 +908,14 @@
         {
             "assetPath": "Assets/Scenes/ProductionVerticalSlice.unity",
             "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scenes/ProductionVerticalSlice/LightingData.asset",
+            "classification": "approved_project_generated"
+        },
+        {
+            "assetPath": "Assets/Scenes/ProductionVerticalSlice/Lightmap-0_comp_light.exr",
+            "classification": "approved_project_generated"
         },
         {
             "assetPath": "Assets/Scripts/Aircraft/AircraftVisibilityProfileController.cs",
@@ -318,12 +934,44 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Scripts/Environment/AerialSceneryManifest.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/AerialSceneryRoot.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/AircraftRunwayBlobShadow.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/AirportCoreBenchmarkManifest.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/AirportCoreBenchmarkRoot.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/AirportParkingStandManifest.cs",
+            "classification": "approved_product_authored"
+        },
+        {
             "assetPath": "Assets/Scripts/Environment/MountainTemporalStabilityProbe.cs",
             "classification": "approved_production"
         },
         {
             "assetPath": "Assets/Scripts/Environment/ProductionEnvironmentRoot.cs",
             "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/ProductionPlacementManifest.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/ProductionTerrainSurfaceAsset.cs",
+            "classification": "approved_product_authored"
         },
         {
             "assetPath": "Assets/Scripts/Flight/AircraftState.cs",

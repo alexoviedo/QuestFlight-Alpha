@@ -44,6 +44,133 @@ function Get-OpenXrRegistrySnapshot {
     }
 }
 
+function Set-RegistryOpenXrRuntime {
+    param(
+        [Microsoft.Win32.RegistryView]$View,
+        [AllowNull()][string]$Value
+    )
+    $baseKey = [Microsoft.Win32.RegistryKey]::OpenBaseKey(
+        [Microsoft.Win32.RegistryHive]::LocalMachine,
+        $View)
+    try {
+        $key = $baseKey.OpenSubKey("SOFTWARE\Khronos\OpenXR\1", $true)
+        if ($null -eq $key) { throw "The machine OpenXR registry key is unavailable or not writable." }
+        try {
+            if ($null -eq $Value) { $key.DeleteValue("ActiveRuntime", $false) }
+            else { $key.SetValue("ActiveRuntime", $Value, [Microsoft.Win32.RegistryValueKind]::String) }
+        }
+        finally { $key.Dispose() }
+    }
+    finally { $baseKey.Dispose() }
+}
+
+function Restore-OpenXrRegistrySnapshot {
+    param([System.Collections.IDictionary]$Snapshot)
+    $beforeRestore = Get-OpenXrRegistrySnapshot
+    $errors = @()
+    $attempted = $false
+    foreach ($entry in @(
+        [ordered]@{ name = "runtime64"; view = [Microsoft.Win32.RegistryView]::Registry64 },
+        [ordered]@{ name = "runtime32"; view = [Microsoft.Win32.RegistryView]::Registry32 }
+    )) {
+        $name = [string]$entry.name
+        if ($beforeRestore[$name] -eq $Snapshot[$name]) { continue }
+        $attempted = $true
+        try { Set-RegistryOpenXrRuntime -View $entry.view -Value $Snapshot[$name] }
+        catch { $errors += ("{0}: {1}" -f $name, $_.Exception.Message) }
+    }
+    $afterRestore = Get-OpenXrRegistrySnapshot
+    [pscustomobject][ordered]@{
+        attempted = $attempted
+        succeeded = $afterRestore.runtime64 -eq $Snapshot.runtime64 -and
+            $afterRestore.runtime32 -eq $Snapshot.runtime32
+        errors = @($errors)
+        beforeRestore = $beforeRestore
+        afterRestore = $afterRestore
+    }
+}
+
+function Get-PreviousOpenXrRuntime64 {
+    $baseKey = [Microsoft.Win32.RegistryKey]::OpenBaseKey(
+        [Microsoft.Win32.RegistryHive]::LocalMachine,
+        [Microsoft.Win32.RegistryView]::Registry64)
+    try {
+        $key = $baseKey.OpenSubKey("SOFTWARE\Khronos\OpenXR\1", $false)
+        if ($null -eq $key) { return $null }
+        try { return [string]$key.GetValue("PreviousActiveRuntime", $null) }
+        finally { $key.Dispose() }
+    }
+    finally { $baseKey.Dispose() }
+}
+
+function Restore-MetaOpenXrRuntimeSnapshot {
+    param(
+        [System.Collections.IDictionary]$Snapshot,
+        [AllowNull()][object]$Installation
+    )
+    $beforeRestore = Get-OpenXrRegistrySnapshot
+    if ($beforeRestore.runtime64 -eq $Snapshot.runtime64 -and
+        $beforeRestore.runtime32 -eq $Snapshot.runtime32) {
+        return [pscustomobject][ordered]@{
+            attempted = $false
+            succeeded = $true
+            strategy = "AlreadyPreserved"
+            uacRequired = $false
+            errors = @()
+            beforeRestore = $beforeRestore
+            afterRestore = $beforeRestore
+        }
+    }
+
+    $previousRuntime64 = Get-PreviousOpenXrRuntime64
+    $deactivationScript = if ($Installation) {
+        Join-Path ([string]$Installation.Directory) "deactivate_simulator.ps1"
+    } else { $null }
+    $pairedMetaDeactivationSafe = $Installation -and
+        $beforeRestore.runtime64 -eq [string]$Installation.Manifest -and
+        $beforeRestore.runtime32 -eq $Snapshot.runtime32 -and
+        $previousRuntime64 -eq $Snapshot.runtime64 -and
+        (Test-Path -LiteralPath $deactivationScript -PathType Leaf)
+
+    if (-not $pairedMetaDeactivationSafe) {
+        $direct = Restore-OpenXrRegistrySnapshot -Snapshot $Snapshot
+        return [pscustomobject][ordered]@{
+            attempted = [bool]$direct.attempted
+            succeeded = [bool]$direct.succeeded
+            strategy = "DirectExactSnapshot"
+            uacRequired = $false
+            errors = @($direct.errors)
+            beforeRestore = $direct.beforeRestore
+            afterRestore = $direct.afterRestore
+        }
+    }
+
+    $errors = @()
+    try {
+        $arguments = '-NoProfile -ExecutionPolicy Bypass -File "{0}" -MessageTime 0' -f $deactivationScript
+        $process = Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList $arguments -PassThru -Wait -WindowStyle Hidden
+        if ($process.ExitCode -ne 0) { $errors += "Meta deactivation exited with code $($process.ExitCode)." }
+    }
+    catch { $errors += $_.Exception.Message }
+    $afterRestore = Get-OpenXrRegistrySnapshot
+    $previousAfter = Get-PreviousOpenXrRuntime64
+    $succeeded = $afterRestore.runtime64 -eq $Snapshot.runtime64 -and
+        $afterRestore.runtime32 -eq $Snapshot.runtime32 -and
+        [string]::IsNullOrWhiteSpace($previousAfter)
+    if (-not $succeeded -and $errors.Count -eq 0) {
+        $errors += "Meta's deactivation script did not restore the exact pre-run runtime snapshot."
+    }
+    [pscustomobject][ordered]@{
+        attempted = $true
+        succeeded = $succeeded
+        strategy = "MetaPairedDeactivationScript"
+        uacRequired = $true
+        errors = @($errors)
+        beforeRestore = $beforeRestore
+        afterRestore = $afterRestore
+    }
+}
+
 function Get-MetaXrSimulatorInstallation {
     $roots = @(
         (Join-Path $env:ProgramFiles "MetaXRSimulator"),
@@ -119,6 +246,7 @@ $previousRuntimeEnvironment = $env:XR_RUNTIME_JSON
 $childExitCode = $null
 $registryPreserved = $false
 $persistentConfigurationTouched = $false
+$runtimeRestoration = $null
 
 try {
     $installation = Get-MetaXrSimulatorInstallation
@@ -176,14 +304,13 @@ try {
 }
 finally {
     $env:XR_RUNTIME_JSON = $previousRuntimeEnvironment
-    $runtimeAfter = Get-OpenXrRegistrySnapshot
-    $registryPreserved =
-        $runtimeBefore.runtime64 -eq $runtimeAfter.runtime64 -and
-        $runtimeBefore.runtime32 -eq $runtimeAfter.runtime32
+    $runtimeRestoration = Restore-MetaOpenXrRuntimeSnapshot -Snapshot $runtimeBefore -Installation $installation
+    $runtimeAfter = $runtimeRestoration.afterRestore
+    $registryPreserved = [bool]$runtimeRestoration.succeeded
 }
 
 $report = [ordered]@{
-    schemaVersion = 1
+    schemaVersion = 2
     generatedUtc = [DateTime]::UtcNow.ToString("O")
     repository = $repoRoot
     officialDownloadPage = $officialDownloadPage
@@ -218,7 +345,12 @@ $report = [ordered]@{
     activeRuntimeBefore = $runtimeBefore
     activeRuntimeAfter = $runtimeAfter
     activeRuntimePreserved = $registryPreserved
-    runtimeActivationMethod = "Per-process XR_RUNTIME_JSON; machine registry is never modified."
+    activeRuntimeMutationDetected = [bool]$runtimeRestoration.attempted
+    activeRuntimeRestorationStrategy = [string]$runtimeRestoration.strategy
+    activeRuntimeRestorationRequiredUac = [bool]$runtimeRestoration.uacRequired
+    activeRuntimeRestorationErrors = @($runtimeRestoration.errors)
+    activeRuntimeBeforeRestoreAttempt = $runtimeRestoration.beforeRestore
+    runtimeActivationMethod = "Per-process XR_RUNTIME_JSON; any unexpected Meta-side machine-runtime mutation is restored to the exact pre-run snapshot or the gate fails closed."
     persistentConfigurationTouched = $persistentConfigurationTouched
     childCommand = $ChildCommand
     childExitCode = $childExitCode
@@ -240,7 +372,7 @@ $summary = @"
 - Device profile: **$deviceProfile**
 - Runtime manifest valid: **$simulatorManifestValid**
 - Active OpenXR runtime preserved: **$registryPreserved**
-- Runtime activation: per-process ``XR_RUNTIME_JSON``; no registry mutation or UAC during QA runs.
+- Runtime activation: per-process ``XR_RUNTIME_JSON``; any unexpected machine-runtime mutation is restored to the pre-run snapshot or reported as a fail-closed UAC/admin blocker.
 - Unity OpenXR / XR Management / Input System: ``$openXrVersion`` / ``$xrManagementVersion`` / ``$inputSystemVersion``
 - Obsolete embedded simulator package present: **$([bool]$embeddedSimulatorPackage)**
 - Shipping Android configuration changed: **False**
