@@ -313,8 +313,63 @@ Recovery V2 introduces no new external model or imagery provider. It reuses the 
 - building runtime inventory: `1c9f555a5dfbef345842fdb7ab63e55c19b92db0e64fcf4cffb4bf6373796d11`;
 - vegetation manifest: `315076dff38bb58c8ae23f05cd65aeb3953fbe730c61ccb785d47de8ffa1db49`.
 
-The current representation contains 2,875 fixed closed building shells and 24,804 orthophoto-only building features. Vegetation contains 22 Tier 0/1 placements in two batches; Tier 2/3 are orthophoto plus canopy-map representations. No raw OSM response, lidar point cloud, decoded NAIP raster, build, capture, or cache is committed.
+That historical Recovery V2 representation contains 2,875 fixed closed building shells and 24,804 orthophoto-only building features. Its vegetation contains 22 Tier 0/1 placements in two batches; Tier 2/3 are orthophoto plus canopy-map representations. Those counts describe the accepted baseline dependency closure, not the later Photoreal Aerial Surface V1 candidate below. No raw OSM response, lidar point cloud, decoded NAIP raster, build, capture, or cache is committed.
 
 ## Standalone Scenery Baseline V1 integration record
 
 The baseline integration introduces no new external visual asset, provider, or license. It promotes the validated Recovery V2 dependency closure unchanged. `Kloppenheim03_PureSky_2K.hdr` is normalized to the repository's existing Git LFS rule without changing its decoded bytes or rewriting history; the historical non-LFS blob is a bounded exception. The content SHA-256 remains `ffd28511add85d9508b51f50d3bbe4d822f4a5240800edb4f014edb75abdb1aa`. Future matching HDR revisions must use LFS.
+
+## Photoreal Aerial Surface V1 candidate records
+
+This section records the rights and deterministic lineage of the current feature-branch candidate. It does not establish final visual acceptance, literal photorealism, navigation suitability, or measured Quest performance.
+
+### City of Boulder 2020 aerial imagery
+
+The selected visual-context source is the City of Boulder ArcGIS item `22b7c93a74394696824258f807f345ba`, titled `2020 Imagery`. The official item identifies Pictometry International as producer, describes 9-inch orthogonal imagery flown in Spring and Summer 2020, and carries an explicit Creative Commons CC0 1.0 Universal link. The source credit retained for provenance is `City of Boulder; source imagery produced by Pictometry International (2020)`. CC0 does not imply City of Boulder or Pictometry endorsement.
+
+| Pinned source record | SHA-256 |
+| --- | --- |
+| ArcGIS item response | `b7f17522b698a8657e85b9b750bc5ca5e0e388976ac915907a13ccb76b52f4b0` |
+| normalized ArcGIS item contract | `aafc729bdb6dd666d003912b9db06025e1579e144733b1c7e4a49ce4ffd58663` |
+| map-service metadata response | `ddecdb4e09f830ce2f6e57a13b2bc5db64c5c7dae8e1adf99d716aca9580da80` |
+| normalized map-service contract | `177a053bdbc7ecd3484c21e6d39ecf7ca18ea810ab750f76e7ebfe48bad19c79` |
+| final canonical source snapshot | `6fa6baea9eb2d876577da883d88b029e018a75dad9728f3faad13bed76ead02b` |
+| ordered source tile set (5,551 tiles) | `41c88c222bae40db5ba061332e2919e99b682015c7ce7bc203f0c7d85c8a6906` |
+
+The official item, service, CC0 URL, bounded source-tile contract, processing settings, derivative hashes, and prohibited-source checks are pinned in `QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_AerialSurfaceV1_SourceManifest.json`. Raw ArcGIS responses, the complete source snapshot, and cache tiles remain external and are not committed.
+
+| Optimized runtime derivative | Runtime extent / resolution | SHA-256 |
+| --- | --- | --- |
+| `KBDU_City2020_Near4km_8192.jpg` | 4 km, 8192², 0.48828125 m/texel | `143c4946c06464dbdea1567cd5fe284acc4c5ba7718a38900a2e83a8eccbfb53` |
+| `KBDU_City2020_MidBase12km_8192.jpg` | 12 km, 8192², 1.46484375 m/texel | `f54243142070533985202d5aa656516008b290e1005f82b5237a4bc8fd82f110` |
+| `KBDU_City2020_MidNW_2048.jpg` | bounded mid cell, 2048², 1.984375 m/texel | `8337f2567ae444cc01f1dfae2c10e4eedb41ec3baf7531ba7b68f311939e8601` |
+| `KBDU_City2020_MidNE_2048.jpg` | bounded mid cell, 2048², 1.984375 m/texel | `74316eda5c927a74cf70ead1d9f818ffaf274d6515356a587b37f538a64dbfb4` |
+| `KBDU_City2020_MidSW_2048.jpg` | bounded mid cell, 2048², 1.984375 m/texel | `b56bd374dc98f6e4daa1e63b7f236d8ee0aed60ecad550d0404776431f7c82ac` |
+| `KBDU_City2020_MidSE_2048.jpg` | bounded mid cell, 2048², 1.984375 m/texel | `3f0ddf836a191b28e775c40788eaf7427450f06acd2a4e020817672978103fb0` |
+| `KBDU_City2020_Far24km_4096.jpg` | 24 km, 4096², 5.859375 m/texel | `222cebe04b7ad7d09198fca2a1ba39a2581286b448d5611c53723d53a578457b` |
+
+The runtime water policy is deliberately `orthophoto_only`: reservoir and minor-water pixels use the same selected aerial surface as adjacent terrain. This candidate introduces no water renderer, tint, transparency, reflection, animation, or extra water draw.
+
+### USGS 3DEP semantic-surface derivatives
+
+The terrain and elevated-surface inputs derive from USGS 3DEP work unit `CO_DRCOG_1_2020`, a United States government work/public-domain source. The canonical source inventory is `AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json` (SHA-256 `1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5`). Raw EPT/LAZ nodes and processing caches remain external and are prohibited from Git.
+
+| Compact derivative | Semantic | SHA-256 |
+| --- | --- | --- |
+| `KBDU_Lidar_DTM_R16.png` | bare-earth digital terrain model | `d5e703ea15af0c3bdd7a6280d68b56addcda1c481639cb09adef5dd9b18cb745` |
+| `KBDU_Lidar_DSM_R16.png` | digital surface model | `01622d3c3703de6e7dcb70587b04fc5409ccde83b45f37f97f612981de6bf8dc` |
+| `KBDU_AerialSurface_nDSM_R16.png` | normalized height above ground | `7c05d9e7d94264b1d64f241570ab687c51d38a8e5129652d51e463577d8cc961` |
+| `KBDU_AerialSurface_SurfaceClass_R8.png` | deterministic surface-class/validity flags | `a531df9852cc4794eb3a012888880fbdcd469df68c42c5cd5ebeda824c22a686` |
+| `KBDU_ProductAeqd_BareEarth_Fixed.obj` | fixed product-AEQD bare-earth authoring mesh | `cfdefa0c60f0432c4cbc5a52597b85a16a8afb8c3a7f3f09c6be0d0ed2f74ce4` |
+
+The fixed terrain has 46,426 vertices and 92,000 triangles. Its exact frame conversion, runway preservation, mesh-to-raster error, and public-domain lineage are pinned in `PhotorealAerialSurfaceV1/Terrain/KBDU_ProductAeqd_BareEarth_Manifest.json`; those measurements do not establish surveyed real-world accuracy.
+
+### OSM footprint and generated semantic meshes
+
+Building semantics use bounded OpenStreetMap footprints under ODbL-1.0 and retain `© OpenStreetMap contributors`. The compact source authority is `ReconstructionV2/KBDU_ReferenceContextV2.json` (SHA-256 `584a47ebde144760bb70c4f4a20bfd58baa591e368a1093164cc464506a8f104`); the raw Overpass response remains external. The current building-surface manifest covers 9,692 non-hero footprints in the 0–4 km semantic layer, while two additional airport-core footprints remain explicitly owned by authored hero objects. Sixteen closed, footprint-preserving batches contain 128,092 triangles. Heights prioritize OSM tags and deterministic rules; only 28 bounded candidates use non-authoritative lidar support, and no surveyed-height or 10-percent vertical-error claim is made.
+
+The canopy layer is not a sparse 22-tree representation. Its final policy is terrain-map-only outside the existing hero radius: 63,308 eligible pixels are handed to terrain shading, 144 source-eligible pixels remain in the separately authored hero radius, and the semantic layer owns zero raised canopy batches, zero raised triangles, and zero sparse individual-tree instances. Building/airport/water/road exclusions and two exact reviewed false-positive exclusions constrain the public-domain 3DEP-derived field. Because the source work unit contains no LAS vegetation or building classes, the return-structure classification is a deterministic visual heuristic, not a botanical inventory or surveyed semantic truth.
+
+One deterministic raised-canopy candidate is retained only as rejected-design evidence in the canopy manifest: 29 retained components and 1,960 triangles if emitted. It is inactive and was rejected after inspected QA because its silhouettes read as blocks and cliffs. It may not enter the runtime dependency closure.
+
+Generated OBJ authoring inputs are converted offline to coordinate-preserving Unity-native mesh assets for the 16 accepted building batches and one terrain mesh. The final semantic runtime owns no raised canopy native mesh. `PhotorealAerialSurfaceV1/KBDU_AerialSurface_UnityLocalMeshManifestV1.json` inventories accepted per-source and per-native hashes and verifies that the generic OBJ importer is not the runtime authority. Project-authored serialization, shaders, materials, masks, and conversion tools do not alter the ODbL boundary of the building footprints or the public-domain status of the 3DEP derivatives. Source archives, raw downloads, decoded working rasters, builds, captures, APKs, and caches remain uncommitted.

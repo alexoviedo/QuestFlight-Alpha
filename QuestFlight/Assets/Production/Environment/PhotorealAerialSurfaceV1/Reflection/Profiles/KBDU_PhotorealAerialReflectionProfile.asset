@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62dd93439c4be884daf68f0eb8105dec, type: 3}
+  m_Name: KBDU_PhotorealAerialReflectionProfile
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.PhotorealAerialReflectionProfile
+  schema: questflight.photoreal_aerial_surface.reflection.v1
+  status: FOUNDATION_AUTHORED_NOT_VISUALLY_ACCEPTED
+  globalGroundSkyReflection: {fileID: 8900000, guid: 9cd62c9524f06f1429cc2072e717d455, type: 3}
+  lowerHemisphereGroundColor: {r: 0.115, g: 0.128, b: 0.095, a: 1}
+  globalReflectionIntensity: 0.68
+  airportLocalReflection: {fileID: 8900000, guid: 9620436bfeef4a445a49f9cbd042f1fd, type: 3}
+  airportProbeLocalPosition: {x: -385, y: 5, z: -260}
+  airportProbeSize: {x: 260, y: 35, z: 240}
+  airportProbeBlendDistance: 24
+  airportProbeIntensity: 0.72
+  airportProbeResolution: 128
+  airportProbeBoxProjection: 0
+  runtimeProbeUpdates: 0
+  cockpitSunShadowCandidate:
+    enabledByDefault: 0
+    acceptedOnQuestHardware: 0
+    casterScope: 0
+    mapResolution: 1024
+    cascadeCount: 0
+    distanceMeters: 14
+    strength: 0.55
+    bias: 0.06
+    normalBias: 0.3
+    nearPlaneMeters: 0.2

@@ -1,0 +1,118 @@
+{
+  "evidence": {
+    "imagery": {
+      "acquisition_period": "Spring and Summer 2020; exact frame dates are not published",
+      "bytes": 26231194,
+      "dimensions_pixels": [
+        8192,
+        8192
+      ],
+      "license": "CC0-1.0",
+      "local_bounds_product_aeqd_meters": [
+        -2000.0,
+        -2000.0,
+        2000.0,
+        2000.0
+      ],
+      "meters_per_texel": 0.48828125,
+      "orientation": "image row 0=north; image column 0=west",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_Near4km_8192.jpg",
+      "provider_credit": "City of Boulder; source imagery produced by Pictometry International (2020)",
+      "review_use": "Visual semantic review only; not navigation, survey, or current-conditions evidence",
+      "sha256": "143c4946c06464dbdea1567cd5fe284acc4c5ba7718a38900a2e83a8eccbfb53"
+    },
+    "imagery_source_manifest": {
+      "bytes": 28616,
+      "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_AerialSurfaceV1_SourceManifest.json",
+      "sha256": "e4b8765a3bc0fc0c0f23a1099926569ac1fa90e636569f663c07cc46b636c061"
+    },
+    "lidar_source_manifest": {
+      "bytes": 16973,
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json",
+      "sha256": "1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5"
+    },
+    "reviewed_utc_date": "2026-07-20"
+  },
+  "exclusions": [
+    {
+      "expected_pre_exclusion_component": {
+        "bounds_inclusive": {
+          "maximum_column": 817,
+          "maximum_row": 625,
+          "minimum_column": 782,
+          "minimum_row": 590
+        },
+        "centroid_product_aeqd_meters": [
+          1159.3880585750355,
+          -378.1242224873031
+        ],
+        "centroid_utm13n_meters": [
+          481870.1054786035,
+          4431769.959685928
+        ],
+        "observed_component_order_index": 386,
+        "pixel_count": 944,
+        "run_count": 64,
+        "run_signature_sha256": "47408f161f41eac309ee2dfcf56266c58d1597c8bb34e254eafff065363d12fa",
+        "source_eligible_pixel_count": 778
+      },
+      "id": "city2020-reviewed-managed-rows-yard",
+      "reason": "The 2020 orthophoto shows managed rows or stock separated by broad bare/working aisles. The 4 m return-structure heuristic merges them into one broad continuous top surface, which is not visible continuous tree canopy.",
+      "semantic_disposition": "exclude_from_canopy_geometry_and_terrain_map_handoff"
+    },
+    {
+      "expected_pre_exclusion_component": {
+        "bounds_inclusive": {
+          "maximum_column": 397,
+          "maximum_row": 677,
+          "minimum_column": 366,
+          "minimum_row": 652
+        },
+        "centroid_product_aeqd_meters": [
+          -514.4463710777363,
+          -618.0278284902763
+        ],
+        "centroid_utm13n_meters": [
+          480196.32985309913,
+          4431534.39874969
+        ],
+        "observed_component_order_index": 419,
+        "pixel_count": 336,
+        "run_count": 44,
+        "run_signature_sha256": "29f92370a5e0f9fb1cef4e403702def13726494a9f48617f29d94ed822602855",
+        "source_eligible_pixel_count": 231
+      },
+      "id": "city2020-reviewed-institutional-roof",
+      "reason": "The 2020 orthophoto shows the component centered on a large bright institutional roof and attached hardscape, not visible tree canopy.",
+      "semantic_disposition": "exclude_from_canopy_geometry_and_terrain_map_handoff"
+    }
+  ],
+  "grid_contract": {
+    "connectivity": "8_neighbor",
+    "dimensions_pixels": [
+      1024,
+      1024
+    ],
+    "pixel_center_affine_utm13n_meters": {
+      "easting_at_column0_row0": 478666.1393769088,
+      "easting_per_column": 4.0,
+      "easting_per_row": 0.0,
+      "northing_at_column0_row0": 4434196.874940165,
+      "northing_per_column": 0.0,
+      "northing_per_row": -4.0
+    },
+    "pixel_size_meters": 4.0,
+    "product_crs": "WGS84 azimuthal equidistant centered on serialized KBDU origin",
+    "raster_crs_epsg": 32613
+  },
+  "label": "KBDU canopy exact reviewed non-canopy exclusions",
+  "policy": {
+    "application": "Match exact components in the pre-exclusion 250-1500 m geometry ownership raster, remove their full ownership cells from canopy source eligibility, and reserve those cells as geometry exclusions before deterministic recomputation.",
+    "fail_closed": true,
+    "global_imagery_likelihood_threshold": null,
+    "match_mode": "exact_pre_exclusion_geometry_component",
+    "maximum_exclusion_count": 2,
+    "run_signature_encoding": "SHA-256 of concatenated little-endian uint16 (row, start_column, end_column_exclusive) records in canonical component-run order"
+  },
+  "schema": "questflight.photoreal-aerial-surface-v1.canopy-reviewed-exclusions.v1"
+}

@@ -1,0 +1,221 @@
+#if UNITY_EDITOR
+using System;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using NUnit.Framework;
+using QuestFlightLab.PhotorealAerialSurfaceV1.Reflection;
+using QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+namespace QuestFlightLab.Tests.EditMode
+{
+    public class PhotorealAerialReflectionContractEditModeTests
+    {
+        private const string WindowShaderPath =
+            "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitWindowReflection.shader";
+        private const string InstrumentShaderPath =
+            "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader";
+        private const string RuntimeProfileSourcePath =
+            "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Runtime/PhotorealAerialReflectionProfile.cs";
+
+        [Test]
+        public void ProfileKeepsOneStaticProbeAndDefaultOffShadowCandidate()
+        {
+            PhotorealAerialReflectionProfile profile =
+                AssetDatabase.LoadAssetAtPath<PhotorealAerialReflectionProfile>(
+                    PhotorealAerialReflectionAuthoring.ProfilePath);
+            Assert.That(profile, Is.Not.Null);
+            Assert.That(profile.TryValidate(out string report), Is.True, report);
+            Assert.That(profile.GlobalGroundSkyReflection, Is.Not.Null);
+            Assert.That(profile.GlobalGroundSkyReflection.width, Is.EqualTo(128));
+            Assert.That(profile.AirportLocalReflection, Is.Not.Null);
+            Assert.That(profile.AirportLocalReflection.width, Is.EqualTo(128));
+            Assert.That(profile.AirportLocalReflection, Is.Not.SameAs(profile.GlobalGroundSkyReflection));
+            Assert.That(profile.RuntimeProbeUpdates, Is.False);
+            Assert.That(profile.AirportProbeResolution, Is.EqualTo(128));
+            Assert.That(profile.AirportProbeBoxProjection, Is.False);
+
+            CockpitSunShadowCandidate shadow = profile.CockpitShadowCandidate;
+            Assert.That(shadow.EnabledByDefault, Is.False);
+            Assert.That(shadow.AcceptedOnQuestHardware, Is.False);
+            Assert.That(shadow.CasterScope, Is.EqualTo(CockpitSunShadowCasterScope.CockpitInteriorOnly));
+            Assert.That(shadow.MapResolution, Is.EqualTo(1024));
+            Assert.That(shadow.CascadeCount, Is.Zero);
+            Assert.That(shadow.DistanceMeters, Is.InRange(8f, 16f));
+        }
+
+        [Test]
+        public void GroundSkyCubemapsUsePinnedQuestImportContract()
+        {
+            foreach (string path in new[]
+                     {
+                         PhotorealAerialReflectionAuthoring.GlobalReflectionPath,
+                         PhotorealAerialReflectionAuthoring.AirportLocalReflectionPath
+                     })
+            {
+                Cubemap cubemap = AssetDatabase.LoadAssetAtPath<Cubemap>(path);
+                Assert.That(cubemap, Is.Not.Null, path);
+                Assert.That(cubemap.width, Is.EqualTo(128), path);
+                TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                Assert.That(importer, Is.Not.Null, path);
+                Assert.That(importer.textureShape, Is.EqualTo(TextureImporterShape.TextureCube), path);
+                Assert.That(importer.generateCubemap,
+                    Is.EqualTo(TextureImporterGenerateCubemap.Cylindrical), path);
+                Assert.That(importer.sRGBTexture, Is.False, path);
+                Assert.That(importer.mipmapEnabled, Is.True, path);
+                Assert.That(importer.streamingMipmaps, Is.False, path);
+                TextureImporterSettings settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
+                Assert.That(settings.cubemapConvolution,
+                    Is.EqualTo(TextureImporterCubemapConvolution.Specular), path);
+                TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
+                Assert.That(android.overridden, Is.True, path);
+                Assert.That(android.maxTextureSize, Is.EqualTo(128), path);
+                Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_HDR_6x6), path);
+            }
+        }
+
+        [Test]
+        public void ReflectionSourceExrsAreDistinctAndHaveNonconstantLowerHemispheres()
+        {
+            string globalPath = PhotorealAerialReflectionAuthoring.GlobalReflectionPath;
+            string localPath = PhotorealAerialReflectionAuthoring.AirportLocalReflectionPath;
+            Assert.That(File.ReadAllBytes(globalPath), Is.Not.EqualTo(File.ReadAllBytes(localPath)));
+
+            Color[] global = ReadLowerHemisphere(globalPath, "Global");
+            Color[] local = ReadLowerHemisphere(localPath, "Local");
+            Assert.That(LuminanceStandardDeviation(global), Is.GreaterThan(0.005f));
+            Assert.That(LuminanceStandardDeviation(local), Is.GreaterThan(0.005f));
+            Assert.That(MeanAbsoluteDifference(global, local), Is.GreaterThan(0.003f));
+
+            string manifest = File.ReadAllText(PhotorealAerialReflectionAuthoring.ManifestPath);
+            Assert.That(manifest, Does.Contain(Sha256(globalPath)));
+            Assert.That(manifest, Does.Contain(Sha256(localPath)));
+            Assert.That(manifest, Does.Contain(Sha256(
+                PhotorealAerialReflectionAuthoring.SourceNearOrthophotoPath)));
+            Assert.That(manifest, Does.Contain(Sha256(
+                PhotorealAerialReflectionAuthoring.SourceMidOrthophotoPath)));
+            Assert.That(manifest, Does.Contain(Sha256(
+                PhotorealAerialReflectionAuthoring.SourceFarOrthophotoPath)));
+            Assert.That(manifest, Does.Contain("bilinear_direction_to_ground_proxy"));
+        }
+
+        [Test]
+        public void CockpitGlazingUsesTwoRestrainedSinglePassShaders()
+        {
+            Material window = AssetDatabase.LoadAssetAtPath<Material>(
+                PhotorealAerialReflectionAuthoring.WindowMaterialPath);
+            Material instrument = AssetDatabase.LoadAssetAtPath<Material>(
+                PhotorealAerialReflectionAuthoring.InstrumentGlassMaterialPath);
+            Assert.That(window, Is.Not.Null);
+            Assert.That(instrument, Is.Not.Null);
+            Assert.That(window.shader.name, Is.EqualTo(PhotorealAerialReflectionAuthoring.WindowShaderName));
+            Assert.That(instrument.shader.name, Is.EqualTo(PhotorealAerialReflectionAuthoring.InstrumentGlassShaderName));
+            Assert.That(window.passCount, Is.EqualTo(1));
+            Assert.That(instrument.passCount, Is.EqualTo(1));
+            Assert.That(window.renderQueue, Is.EqualTo((int)RenderQueue.Transparent + 12));
+            Assert.That(instrument.renderQueue, Is.EqualTo((int)RenderQueue.Transparent + 16));
+            Assert.That(window.GetFloat("_WindshieldOpacity"), Is.LessThanOrEqualTo(0.05f));
+            Assert.That(window.GetFloat("_SideWindowOpacity"), Is.LessThanOrEqualTo(0.07f));
+            Assert.That(instrument.GetFloat("_Opacity"), Is.LessThanOrEqualTo(0.02f));
+            Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.LessThanOrEqualTo(0.10f));
+
+            foreach (string path in new[] { WindowShaderPath, InstrumentShaderPath })
+            {
+                Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(path);
+                Assert.That(shader, Is.Not.Null, path);
+                Assert.That(ShaderUtil.GetShaderMessages(shader),
+                    Has.None.Matches<ShaderMessage>(message =>
+                        string.Equals(message.severity.ToString(), "Error", System.StringComparison.OrdinalIgnoreCase)),
+                    path);
+                string source = File.ReadAllText(path);
+                Assert.That(source, Does.Contain("UNITY_SPECCUBE_BLENDING"), path);
+                Assert.That(source, Does.Contain("UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX"), path);
+                Assert.That(source, Does.Contain("Blend One OneMinusSrcAlpha"), path);
+                Assert.That(source, Does.Contain("ZWrite Off"), path);
+                Assert.That(source, Does.Not.Contain("GrabPass"), path);
+                Assert.That(source, Does.Not.Contain("_CameraOpaqueTexture"), path);
+                Assert.That(source, Does.Not.Contain("_CameraDepthTexture"), path);
+                Assert.That(source, Does.Not.Contain("refraction"), path);
+                Assert.That(source, Does.Not.Contain("raymarch"), path);
+            }
+        }
+
+        [Test]
+        public void RuntimeProfileCannotConstructOrUpdateProductHierarchy()
+        {
+            string source = File.ReadAllText(RuntimeProfileSourcePath);
+            foreach (string forbidden in new[]
+                     {
+                         "AddComponent", "Instantiate", "new GameObject", "Camera", "RenderProbe",
+                         "void Update(", "void LateUpdate(", "void FixedUpdate("
+                     })
+                Assert.That(source, Does.Not.Contain(forbidden), forbidden);
+            Assert.That(PhotorealAerialReflectionProfile.MaximumRuntimeProbeRenderCount, Is.Zero);
+            Assert.That(PhotorealAerialReflectionProfile.RequiredAirportProbeCount, Is.EqualTo(1));
+        }
+
+        private static Color[] ReadLowerHemisphere(string sourcePath, string suffix)
+        {
+            string temporaryPath =
+                "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Textures/" +
+                "__ReflectionContractTest_" + suffix + ".exr";
+            AssetDatabase.DeleteAsset(temporaryPath);
+            try
+            {
+                File.Copy(sourcePath, temporaryPath, true);
+                AssetDatabase.ImportAsset(temporaryPath, ImportAssetOptions.ForceSynchronousImport);
+                TextureImporter importer = AssetImporter.GetAtPath(temporaryPath) as TextureImporter;
+                Assert.That(importer, Is.Not.Null);
+                importer.textureType = TextureImporterType.Default;
+                importer.textureShape = TextureImporterShape.Texture2D;
+                importer.sRGBTexture = false;
+                importer.isReadable = true;
+                importer.mipmapEnabled = false;
+                importer.maxTextureSize = 256;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.SaveAndReimport();
+                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(temporaryPath);
+                Assert.That(texture, Is.Not.Null);
+                Assert.That(texture.width, Is.EqualTo(256));
+                Assert.That(texture.height, Is.EqualTo(128));
+                Color[] pixels = texture.GetPixels(0);
+                return pixels.Take(256 * 64).ToArray();
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(temporaryPath);
+            }
+        }
+
+        private static float LuminanceStandardDeviation(Color[] pixels)
+        {
+            double mean = pixels.Average(pixel =>
+                pixel.r * 0.2126d + pixel.g * 0.7152d + pixel.b * 0.0722d);
+            double variance = pixels.Average(pixel =>
+            {
+                double luminance = pixel.r * 0.2126d + pixel.g * 0.7152d + pixel.b * 0.0722d;
+                return (luminance - mean) * (luminance - mean);
+            });
+            return (float)Math.Sqrt(variance);
+        }
+
+        private static float MeanAbsoluteDifference(Color[] left, Color[] right)
+        {
+            Assert.That(left.Length, Is.EqualTo(right.Length));
+            return (float)left.Zip(right, (a, b) =>
+                (Math.Abs(a.r - b.r) + Math.Abs(a.g - b.g) + Math.Abs(a.b - b.b)) / 3d).Average();
+        }
+
+        private static string Sha256(string path)
+        {
+            using (FileStream stream = File.OpenRead(path))
+            using (SHA256 algorithm = SHA256.Create())
+                return string.Concat(algorithm.ComputeHash(stream).Select(value => value.ToString("x2")));
+        }
+    }
+}
+#endif

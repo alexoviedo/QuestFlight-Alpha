@@ -24,7 +24,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _AerialCanopyHandoffMask:
-        m_Texture: {fileID: 2800000, guid: 449820e3dc7da0bfc6dc3067136b6f38, type: 3}
+        m_Texture: {fileID: 2800000, guid: 18a13b1451535438808209b855d29d2b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _AerialCanopyNormalOcclusion:
@@ -52,15 +52,15 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FarAlbedo:
-        m_Texture: {fileID: 2800000, guid: 4bb5907c5a3bfc745839a9e33642da4f, type: 3}
+        m_Texture: {fileID: 2800000, guid: 5c913aef598ec2a751b1b49b06e68d15, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MidAlbedo:
-        m_Texture: {fileID: 2800000, guid: 00a5e9ef8375bf7c67c9fd6abfc48777, type: 3}
+        m_Texture: {fileID: 2800000, guid: adf9e4cbca21c5442fbdcd1b92b6b393, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NearAlbedo:
-        m_Texture: {fileID: 2800000, guid: 91d2ab1fc7e94a97b2bd8de9a2e13d31, type: 3}
+        m_Texture: {fileID: 2800000, guid: 0021365d50509d2abe127a826626ee6e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NearSourceNormal:
@@ -68,19 +68,19 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RecoveryMidNEAlbedo:
-        m_Texture: {fileID: 2800000, guid: c1aa918b164d4d67d146ca56a6773645, type: 3}
+        m_Texture: {fileID: 2800000, guid: 5f68a9e25093743a7f819ab3bb05126a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RecoveryMidNWAlbedo:
-        m_Texture: {fileID: 2800000, guid: 227bc00bf254a063cd728d52a8919a36, type: 3}
+        m_Texture: {fileID: 2800000, guid: 97c04d162a83f7b25a581bd7b4ab8ebe, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RecoveryMidSEAlbedo:
-        m_Texture: {fileID: 2800000, guid: cb143f206c9b5f97df6f8702520ac8e7, type: 3}
+        m_Texture: {fileID: 2800000, guid: b5c87397d1638de087a1dff62e9da408, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RecoveryMidSWAlbedo:
-        m_Texture: {fileID: 2800000, guid: 590d05b773669eefbd0d6457a85f3253, type: 3}
+        m_Texture: {fileID: 2800000, guid: fef60605d09a177c1ae99bcb8c10f726, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -95,7 +95,11 @@ Material:
     - _Roughness: 0.92
     m_Colors:
     - _AerialCanopyLocalBounds: {r: -2048, g: -2048, b: 0.00024414062, a: 0.00024414062}
-    - _AerialCanopyTint: {r: 0.25, g: 0.34, b: 0.16, a: 1}
+    - _AerialCanopyProductToSourceRow0: {r: 0.99960136, g: 0.0025375222, b: -3.0146167e-11, a: 0}
+    - _AerialCanopyProductToSourceRow1: {r: -0.0025375225, g: 0.99960136, b: 4.110161e-10, a: 0}
+    - _AerialCanopySourceToProductRow0: {r: 0.9999968, g: -0.0025385262, b: 0, a: 0}
+    - _AerialCanopySourceToProductRow1: {r: 0.0025385262, g: 0.9999968, b: 0, a: 0}
+    - _AerialCanopyTint: {r: 0.24999994, g: 0.33999994, b: 0.15999994, a: 1}
     - _AirportCoreCleanPlateWorldMinInvSize: {r: -650, g: -575, b: 0.0014285714, a: 0.0014285714}
     - _DetailFadeStartEnd: {r: 250, g: 2600, b: 0, a: 0}
     - _DetailRadiusFadeStartEnd: {r: 4500, g: 6800, b: 0, a: 0}

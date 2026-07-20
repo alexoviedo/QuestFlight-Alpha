@@ -22,7 +22,20 @@ Contains information from OpenStreetMap.
 - Copyright and attribution: <https://www.openstreetmap.org/copyright>
 - Database license: Open Data Commons Open Database License 1.0, <https://opendatacommons.org/licenses/odbl/1-0/>
 
-The product's bounded, simplified derivative database is `kbdu_reference_context.json`. It is made available under ODbL-1.0. The rendered meshes and macro image are Produced Works derived from that database and from public-domain/project-authored inputs.
+The product's bounded derivative databases include `kbdu_reference_context.json` and the OSM-footprint authority recorded in `KBDU_ReferenceContextV2.json`. They are governed by ODbL-1.0. Rendered context meshes, footprint-preserving building surfaces, and macro images are Produced Works derived from those databases and from public-domain/project-authored inputs. Project-authored shaders, materials, and serialization do not alter the ODbL boundary of the source data.
+
+## City of Boulder 2020 aerial imagery
+
+The Photoreal Aerial Surface V1 candidate includes bounded, optimized derivatives of the City of Boulder ArcGIS item `22b7c93a74394696824258f807f345ba`, `2020 Imagery`.
+
+- Publisher: City of Boulder
+- Source imagery producer: Pictometry International
+- Source period: Spring and Summer 2020
+- License: Creative Commons CC0 1.0 Universal, <https://creativecommons.org/publicdomain/zero/1.0/>
+- Official item: <https://www.arcgis.com/home/item.html?id=22b7c93a74394696824258f807f345ba>
+- Official map service: <https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer>
+
+Attribution is not required by CC0, but the source credit `City of Boulder; source imagery produced by Pictometry International (2020)` is retained as provenance. Raw item/service responses, source snapshots, and cache tiles are not distributed. Exact source-contract and derivative hashes are recorded in `QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_AerialSurfaceV1_SourceManifest.json`. The imagery is visual context only, is not current or survey data, and is not suitable for navigation. Use does not imply endorsement by the City of Boulder or Pictometry International.
 
 ## Poly Haven CC0 textures
 
@@ -51,12 +64,14 @@ Poly Haven assets are dedicated under CC0 1.0. Attribution is not required, but 
 The product includes bounded derivatives of United States government data that the source agencies identify as public domain or unrestricted for public use.
 
 - Federal Aviation Administration and USDOT Bureau of Transportation Statistics, NTAD Aviation Facilities and Runways.
-- U.S. Geological Survey 3D Elevation Program (3DEP).
+- U.S. Geological Survey 3D Elevation Program (3DEP), including bounded DTM, DSM, normalized-height, terrain, surface-class, and canopy derivatives.
 - U.S. Geological Survey / USDA Farm Service Agency, 2019 National Agriculture Imagery Program (NAIP) natural-color imagery distributed through The National Map.
 
 Courtesy credit: Federal Aviation Administration (FAA); USDOT Bureau of Transportation Statistics (BTS); U.S. Geological Survey 3D Elevation Program (3DEP); USGS, USDA, The National Map: Orthoimagery.
 
-The product includes only bounded, optimized NAIP derivatives. Raw imagery exports and source archives are not distributed. Exact acquisition date, raster IDs, service endpoint, bounds, processing, and hashes are recorded in `tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json`.
+The product includes only bounded, optimized government-data derivatives. Raw NAIP imagery exports, raw 3DEP EPT/LAZ nodes, source archives, and processing caches are not distributed. Exact NAIP acquisition records and hashes are in `tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json`; exact 3DEP lineage and compact-output hashes are in `QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json` and the manifests under `QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1`.
+
+In the Photoreal Aerial Surface V1 candidate, the 3DEP-derived canopy presentation is terrain-map-only outside the existing hero radius; no raised canopy mesh is active. A measured raised-mesh candidate remains only as rejected-design evidence and is excluded from the runtime dependency closure.
 
 No agency logo is included and no agency endorsement, navigation suitability, surveying accuracy, FAA approval, or training credit is claimed.
 

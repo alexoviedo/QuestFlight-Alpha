@@ -1,0 +1,805 @@
+{
+    "schema": "questflight.photoreal-aerial-surface-v1.unity-local-native-meshes.v1",
+    "generatedUtc": "2026-07-20T18:30:00Z",
+    "coordinateFrame": "KBDU local tangent ENU; Unity +X=east, +Y=up, +Z=north",
+    "conversion": "Direct editor-only parse of documented Unity-local OBJ vertices and one-based triangle indices; Unity generic OBJ handedness conversion is bypassed.",
+    "sourceCoordinatesPreserved": true,
+    "genericObjImporterBypassed": true,
+    "runtimeConversionRequired": false,
+    "buildingBatches": [
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn001.obj",
+            "sourceObjSha256": "a7f6a4edfffedbb9cab15c53110e2b2ddc57939c027ef8af7c7f395ef5b0c3df",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn001_zn001.asset",
+            "outputMeshAssetSha256": "456277d979914f53e365c2def7f319493c3ba63e3b175a06744fddc43e3484d5",
+            "sourceVertexCount": 10562,
+            "nativeVertexCount": 31686,
+            "triangleCount": 16120,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": -2044.0,
+                "y": -26.3799991607666,
+                "z": -2008.0
+            },
+            "sourceBoundsMaximum": {
+                "x": 22.5,
+                "y": 15.670000076293946,
+                "z": -72.0
+            },
+            "sourceBoundsCentroid": {
+                "x": -1010.75,
+                "y": -5.354999542236328,
+                "z": -1040.0
+            },
+            "nativeBoundsMinimum": {
+                "x": -2044.0,
+                "y": -26.3799991607666,
+                "z": -2008.0
+            },
+            "nativeBoundsMaximum": {
+                "x": 22.5,
+                "y": 15.670000076293946,
+                "z": -72.0
+            },
+            "nativeBoundsCentroid": {
+                "x": -1010.75,
+                "y": -5.354999542236328,
+                "z": -1040.0
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn002.obj",
+            "sourceObjSha256": "0ca548a07619867c6be0c739d6271127d60ed001b915d4f3dd70c831fc6b0d12",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn001_zn002.asset",
+            "outputMeshAssetSha256": "c36d84b9a65d2f3c922d44b3f874d026317520f6253be379fb663890b8d0486d",
+            "sourceVertexCount": 10370,
+            "nativeVertexCount": 31110,
+            "triangleCount": 16060,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": -2033.5,
+                "y": -20.239999771118165,
+                "z": -4002.0
+            },
+            "sourceBoundsMaximum": {
+                "x": 36.0,
+                "y": 15.699995040893555,
+                "z": -1983.0
+            },
+            "sourceBoundsCentroid": {
+                "x": -998.75,
+                "y": -2.2700023651123049,
+                "z": -2992.5
+            },
+            "nativeBoundsMinimum": {
+                "x": -2033.5,
+                "y": -20.239999771118165,
+                "z": -4002.0
+            },
+            "nativeBoundsMaximum": {
+                "x": 36.0,
+                "y": 15.69999885559082,
+                "z": -1983.0
+            },
+            "nativeBoundsCentroid": {
+                "x": -998.75,
+                "y": -2.2699999809265138,
+                "z": -2992.5
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zp000.obj",
+            "sourceObjSha256": "3614649ada734557a467faf5a549d491d98be0bdbea19ccf855c70305945534b",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn001_zp000.asset",
+            "outputMeshAssetSha256": "67b92798c762adb27acb2b4c3283b48f316213bfe54f04ae743e7bf3bb0a349b",
+            "sourceVertexCount": 3320,
+            "nativeVertexCount": 9960,
+            "triangleCount": 5052,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": -2004.5,
+                "y": -9.079999923706055,
+                "z": 10.5
+            },
+            "sourceBoundsMaximum": {
+                "x": -13.5,
+                "y": 28.07000160217285,
+                "z": 1988.5
+            },
+            "sourceBoundsCentroid": {
+                "x": -1009.0,
+                "y": 9.495000839233399,
+                "z": 999.5
+            },
+            "nativeBoundsMinimum": {
+                "x": -2004.5,
+                "y": -9.080000877380371,
+                "z": 10.5
+            },
+            "nativeBoundsMaximum": {
+                "x": -13.5,
+                "y": 28.06999969482422,
+                "z": 1988.5
+            },
+            "nativeBoundsCentroid": {
+                "x": -1009.0,
+                "y": 9.494999885559082,
+                "z": 999.5
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zp001.obj",
+            "sourceObjSha256": "6ec4ca30b7f8165b4ff9c6d3836ef7382373c69249195bd16aeb2aec18fcddda",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn001_zp001.asset",
+            "outputMeshAssetSha256": "117157cb374e3ac7f28d67c3982323421a4c0c0d93dccbda6919bb0a5c6dc514",
+            "sourceVertexCount": 1266,
+            "nativeVertexCount": 3798,
+            "triangleCount": 1964,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": -1952.5,
+                "y": -30.540000915527345,
+                "z": 2019.0
+            },
+            "sourceBoundsMaximum": {
+                "x": 1.0,
+                "y": 28.799999237060548,
+                "z": 3721.0
+            },
+            "sourceBoundsCentroid": {
+                "x": -975.75,
+                "y": -0.8700008392333984,
+                "z": 2870.0
+            },
+            "nativeBoundsMinimum": {
+                "x": -1952.5,
+                "y": -30.540000915527345,
+                "z": 2019.0
+            },
+            "nativeBoundsMaximum": {
+                "x": 1.0,
+                "y": 28.799999237060548,
+                "z": 3721.0
+            },
+            "nativeBoundsCentroid": {
+                "x": -975.75,
+                "y": -0.8700008392333984,
+                "z": 2870.0
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn001.obj",
+            "sourceObjSha256": "fbbe3d323f0ed1ee01682bda79bf5f0dc53dda89232ace8748d50c7f1d74c895",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn002_zn001.asset",
+            "outputMeshAssetSha256": "81231dbbe810b54774797e4ce58d3a3267eb42a9742360f59e8ebd1518d08998",
+            "sourceVertexCount": 20744,
+            "nativeVertexCount": 62232,
+            "triangleCount": 31852,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": -3967.0,
+                "y": -8.630000114440918,
+                "z": -2040.0
+            },
+            "sourceBoundsMaximum": {
+                "x": -1968.0,
+                "y": 40.5099983215332,
+                "z": 46.0
+            },
+            "sourceBoundsCentroid": {
+                "x": -2967.5,
+                "y": 15.9399995803833,
+                "z": -997.0
+            },
+            "nativeBoundsMinimum": {
+                "x": -3967.0,
+                "y": -8.630001068115235,
+                "z": -2040.0
+            },
+            "nativeBoundsMaximum": {
+                "x": -1968.0,
+                "y": 40.5099983215332,
+                "z": 46.0
+            },
+            "nativeBoundsCentroid": {
+                "x": -2967.5,
+                "y": 15.939998626708985,
+                "z": -997.0
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn002.obj",
+            "sourceObjSha256": "dfce53638824010130c9334eefaea25d9c0dadf0e73dc1bd99fc4da29b7a0606",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn002_zn002.asset",
+            "outputMeshAssetSha256": "9fd9382c6f3523be5026a8b3d49cf8e3c2388e7e3389af0a7803d7287ca8c75b",
+            "sourceVertexCount": 2516,
+            "nativeVertexCount": 7548,
+            "triangleCount": 3888,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": -3420.0,
+                "y": -8.520000457763672,
+                "z": -3341.5
+            },
+            "sourceBoundsMaximum": {
+                "x": -1961.0,
+                "y": 15.780000686645508,
+                "z": -1994.5
+            },
+            "sourceBoundsCentroid": {
+                "x": -2690.5,
+                "y": 3.630000114440918,
+                "z": -2668.0
+            },
+            "nativeBoundsMinimum": {
+                "x": -3420.0,
+                "y": -8.520000457763672,
+                "z": -3341.5
+            },
+            "nativeBoundsMaximum": {
+                "x": -1961.0,
+                "y": 15.779998779296875,
+                "z": -1994.5
+            },
+            "nativeBoundsCentroid": {
+                "x": -2690.5,
+                "y": 3.6299996376037599,
+                "z": -2668.0
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp000.obj",
+            "sourceObjSha256": "6d190fa757cf1f5493ef885c35587e9e2d4404836706ca4e0c8c03d86f6e05a6",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn002_zp000.asset",
+            "outputMeshAssetSha256": "caebb2aa172a03263138a875cff9b16f3352a9560f40f22344c38ef00d1fc91a",
+            "sourceVertexCount": 14336,
+            "nativeVertexCount": 43008,
+            "triangleCount": 21960,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": -3969.0,
+                "y": 11.989997863769532,
+                "z": -31.0
+            },
+            "sourceBoundsMaximum": {
+                "x": -1990.5,
+                "y": 58.70000457763672,
+                "z": 2002.0
+            },
+            "sourceBoundsCentroid": {
+                "x": -2979.75,
+                "y": 35.345001220703128,
+                "z": 985.5
+            },
+            "nativeBoundsMinimum": {
+                "x": -3969.0,
+                "y": 11.990001678466797,
+                "z": -31.0
+            },
+            "nativeBoundsMaximum": {
+                "x": -1990.5,
+                "y": 58.70000076293945,
+                "z": 2002.0
+            },
+            "nativeBoundsCentroid": {
+                "x": -2979.75,
+                "y": 35.345001220703128,
+                "z": 985.5
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp001.obj",
+            "sourceObjSha256": "d26babb461718c053ede90399b30b3a8a58b71027666c458bd9c02dd9abe723c",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn002_zp001.asset",
+            "outputMeshAssetSha256": "92a16b365235b9722a3ecce01d1c4607c26ea470b491632f4ea2c0413e06c9db",
+            "sourceVertexCount": 122,
+            "nativeVertexCount": 366,
+            "triangleCount": 192,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": -3364.0,
+                "y": 18.259998321533204,
+                "z": 2034.5
+            },
+            "sourceBoundsMaximum": {
+                "x": -2032.5,
+                "y": 53.380001068115237,
+                "z": 2546.5
+            },
+            "sourceBoundsCentroid": {
+                "x": -2698.25,
+                "y": 35.81999969482422,
+                "z": 2290.5
+            },
+            "nativeBoundsMinimum": {
+                "x": -3364.0,
+                "y": 18.259998321533204,
+                "z": 2034.5
+            },
+            "nativeBoundsMaximum": {
+                "x": -2032.5,
+                "y": 53.380001068115237,
+                "z": 2546.5
+            },
+            "nativeBoundsCentroid": {
+                "x": -2698.25,
+                "y": 35.81999969482422,
+                "z": 2290.5
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zn001.obj",
+            "sourceObjSha256": "6c32def8e2ac9820eda2ead0b5c8e4a8cf5790db0e6549090039818af9c289e9",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp000_zn001.asset",
+            "outputMeshAssetSha256": "074c2f9137c906ad144a80e4c827c0b7489ea04964f501783e064134f355e351",
+            "sourceVertexCount": 2970,
+            "nativeVertexCount": 8910,
+            "triangleCount": 4588,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": -43.0,
+                "y": -36.97999954223633,
+                "z": -2011.5
+            },
+            "sourceBoundsMaximum": {
+                "x": 1910.0,
+                "y": 7.569999694824219,
+                "z": -128.0
+            },
+            "sourceBoundsCentroid": {
+                "x": 933.5,
+                "y": -14.704999923706055,
+                "z": -1069.75
+            },
+            "nativeBoundsMinimum": {
+                "x": -43.0,
+                "y": -36.97999954223633,
+                "z": -2011.5
+            },
+            "nativeBoundsMaximum": {
+                "x": 1910.0,
+                "y": 7.569999694824219,
+                "z": -128.0
+            },
+            "nativeBoundsCentroid": {
+                "x": 933.5,
+                "y": -14.704999923706055,
+                "z": -1069.75
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zn002.obj",
+            "sourceObjSha256": "536058e23a75f1ea75df97dbf8c300f8ebcee489f4f21abebdc587acc45c7bea",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp000_zn002.asset",
+            "outputMeshAssetSha256": "a596797e86078966c51bc2498b23f7f7815b71e4ff1a867a95afcb866f0163f8",
+            "sourceVertexCount": 5116,
+            "nativeVertexCount": 15348,
+            "triangleCount": 7892,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": -35.0,
+                "y": -25.979999542236329,
+                "z": -4014.0
+            },
+            "sourceBoundsMaximum": {
+                "x": 1985.0,
+                "y": 10.619998931884766,
+                "z": -1989.5
+            },
+            "sourceBoundsCentroid": {
+                "x": 975.0,
+                "y": -7.680000305175781,
+                "z": -3001.75
+            },
+            "nativeBoundsMinimum": {
+                "x": -35.0,
+                "y": -25.979999542236329,
+                "z": -4014.0
+            },
+            "nativeBoundsMaximum": {
+                "x": 1985.0,
+                "y": 10.619998931884766,
+                "z": -1989.5
+            },
+            "nativeBoundsCentroid": {
+                "x": 975.0,
+                "y": -7.679999828338623,
+                "z": -3001.75
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp000.obj",
+            "sourceObjSha256": "602ab0a36376a675abcad08f685f67b61a0ddb8e0f3f778e3672d5ce6d44e1e6",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp000_zp000.asset",
+            "outputMeshAssetSha256": "8371105223f6376b7814b9c0bce903f117f27e7d5cbd0f5de57077ed5ac00789",
+            "sourceVertexCount": 3548,
+            "nativeVertexCount": 10644,
+            "triangleCount": 5400,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": 9.0,
+                "y": -39.380001068115237,
+                "z": 104.0
+            },
+            "sourceBoundsMaximum": {
+                "x": 2003.5,
+                "y": -0.43000030517578127,
+                "z": 2009.5
+            },
+            "sourceBoundsCentroid": {
+                "x": 1006.25,
+                "y": -19.905000686645509,
+                "z": 1056.75
+            },
+            "nativeBoundsMinimum": {
+                "x": 9.0,
+                "y": -39.380001068115237,
+                "z": 104.0
+            },
+            "nativeBoundsMaximum": {
+                "x": 2003.5,
+                "y": -0.43000030517578127,
+                "z": 2009.5
+            },
+            "nativeBoundsCentroid": {
+                "x": 1006.25,
+                "y": -19.905000686645509,
+                "z": 1056.75
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp001.obj",
+            "sourceObjSha256": "827db46686316eb452826829c680f382eae0610f9f26879909842b11a9cbfab1",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp000_zp001.asset",
+            "outputMeshAssetSha256": "fb23377898fb0e32a5fec146b322468b38d49367af78841a99012f6e6d71e42f",
+            "sourceVertexCount": 2522,
+            "nativeVertexCount": 7566,
+            "triangleCount": 3904,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": 60.5,
+                "y": -41.980003356933597,
+                "z": 1993.0
+            },
+            "sourceBoundsMaximum": {
+                "x": 2016.0,
+                "y": -7.279998779296875,
+                "z": 3610.5
+            },
+            "sourceBoundsCentroid": {
+                "x": 1038.25,
+                "y": -24.630001068115236,
+                "z": 2801.75
+            },
+            "nativeBoundsMinimum": {
+                "x": 60.5,
+                "y": -41.97999954223633,
+                "z": 1993.0
+            },
+            "nativeBoundsMaximum": {
+                "x": 2016.0,
+                "y": -7.279998779296875,
+                "z": 3610.5
+            },
+            "nativeBoundsCentroid": {
+                "x": 1038.25,
+                "y": -24.6299991607666,
+                "z": 2801.75
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zn001.obj",
+            "sourceObjSha256": "d290da52199826b0b19236a90ff28d4eadae5a1089aefeb55ee572820d767b86",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp001_zn001.asset",
+            "outputMeshAssetSha256": "cd1d31044abecc465ffa1b783b7b2f7e59d67270977914ee7e4d4ad773686001",
+            "sourceVertexCount": 8,
+            "nativeVertexCount": 24,
+            "triangleCount": 12,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": 2591.0,
+                "y": -45.459999084472659,
+                "z": -156.0
+            },
+            "sourceBoundsMaximum": {
+                "x": 2595.0,
+                "y": -41.959999084472659,
+                "z": -151.0
+            },
+            "sourceBoundsCentroid": {
+                "x": 2593.0,
+                "y": -43.709999084472659,
+                "z": -153.5
+            },
+            "nativeBoundsMinimum": {
+                "x": 2591.0,
+                "y": -45.459999084472659,
+                "z": -156.0
+            },
+            "nativeBoundsMaximum": {
+                "x": 2595.0,
+                "y": -41.959999084472659,
+                "z": -151.0
+            },
+            "nativeBoundsCentroid": {
+                "x": 2593.0,
+                "y": -43.709999084472659,
+                "z": -153.5
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zn002.obj",
+            "sourceObjSha256": "58424ad4b26d49ab98bbcb98c308042d2ff4b8b9c2ccf71cc6e057b2f08afd39",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp001_zn002.asset",
+            "outputMeshAssetSha256": "e52c87c2d89b1c39028c0fe4ba04a0ec0cb27f54560a5485459d190a4fcd9696",
+            "sourceVertexCount": 502,
+            "nativeVertexCount": 1506,
+            "triangleCount": 776,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": 1994.0,
+                "y": -14.460000038146973,
+                "z": -3427.0
+            },
+            "sourceBoundsMaximum": {
+                "x": 2671.5,
+                "y": 19.290000915527345,
+                "z": -2607.0
+            },
+            "sourceBoundsCentroid": {
+                "x": 2332.75,
+                "y": 2.4149999618530275,
+                "z": -3017.0
+            },
+            "nativeBoundsMinimum": {
+                "x": 1994.0,
+                "y": -14.459999084472657,
+                "z": -3427.0
+            },
+            "nativeBoundsMaximum": {
+                "x": 2671.5,
+                "y": 19.290000915527345,
+                "z": -2607.0
+            },
+            "nativeBoundsCentroid": {
+                "x": 2332.75,
+                "y": 2.4150004386901857,
+                "z": -3017.0
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zp000.obj",
+            "sourceObjSha256": "c604d9883f6b5d92575f3d6d1a82dd51254b57d11d571791517c9a85436e854b",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp001_zp000.asset",
+            "outputMeshAssetSha256": "2be6330927669b228c3d57f3268b1e52dea562ed41310e9f38896780bc87411b",
+            "sourceVertexCount": 2538,
+            "nativeVertexCount": 7614,
+            "triangleCount": 3904,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": 1984.5,
+                "y": -51.290000915527347,
+                "z": 60.0
+            },
+            "sourceBoundsMaximum": {
+                "x": 3902.5,
+                "y": -24.830001831054689,
+                "z": 2007.5
+            },
+            "sourceBoundsCentroid": {
+                "x": 2943.5,
+                "y": -38.060001373291019,
+                "z": 1033.75
+            },
+            "nativeBoundsMinimum": {
+                "x": 1984.5,
+                "y": -51.290000915527347,
+                "z": 60.0
+            },
+            "nativeBoundsMaximum": {
+                "x": 3902.5,
+                "y": -24.830001831054689,
+                "z": 2007.5
+            },
+            "nativeBoundsCentroid": {
+                "x": 2943.5,
+                "y": -38.060001373291019,
+                "z": 1033.75
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        },
+        {
+            "semanticRoot": "ProductionBuildingSurfaceLayer",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zp001.obj",
+            "sourceObjSha256": "fd97c274494edb37a0185994e4da35db3ecddffe90931a7d2da484f7e385ae36",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp001_zp001.asset",
+            "outputMeshAssetSha256": "f476a564aaf2c36f4b424c62ac094f5780efddd80a7968441ec32f65323fe2cb",
+            "sourceVertexCount": 2990,
+            "nativeVertexCount": 8970,
+            "triangleCount": 4528,
+            "hardNormalSplit": true,
+            "sourceIndexTopologyPreserved": false,
+            "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": 1983.5,
+                "y": -41.779998779296878,
+                "z": 1991.0
+            },
+            "sourceBoundsMaximum": {
+                "x": 3414.0,
+                "y": -24.199996948242189,
+                "z": 3371.0
+            },
+            "sourceBoundsCentroid": {
+                "x": 2698.75,
+                "y": -32.98999786376953,
+                "z": 2681.0
+            },
+            "nativeBoundsMinimum": {
+                "x": 1983.5,
+                "y": -41.779998779296878,
+                "z": 1991.0
+            },
+            "nativeBoundsMaximum": {
+                "x": 3414.0,
+                "y": -24.19999885559082,
+                "z": 3371.0
+            },
+            "nativeBoundsCentroid": {
+                "x": 2698.75,
+                "y": -32.98999786376953,
+                "z": 2681.0
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        }
+    ],
+    "canopyBatches": [],
+    "terrainBatches": [
+        {
+            "semanticRoot": "ProductAeqdBareEarthTerrain",
+            "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Terrain/KBDU_ProductAeqd_BareEarth_Fixed.obj",
+            "sourceObjSha256": "cfdefa0c60f0432c4cbc5a52597b85a16a8afb8c3a7f3f09c6be0d0ed2f74ce4",
+            "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Terrain/Native/KBDU_ProductAeqd_BareEarth_Fixed.asset",
+            "outputMeshAssetSha256": "fa6050cc4563cfa6951c0230436a06ca0f96c1c277e99fe6f1016dac550b5426",
+            "sourceVertexCount": 46426,
+            "nativeVertexCount": 46426,
+            "triangleCount": 92000,
+            "hardNormalSplit": false,
+            "sourceIndexTopologyPreserved": true,
+            "normalPolicy": "area_weighted_shared_source_vertices",
+            "indexFormat": "UInt16",
+            "sourceBoundsMinimum": {
+                "x": -2048.0,
+                "y": -44.38909912109375,
+                "z": -2048.0
+            },
+            "sourceBoundsMaximum": {
+                "x": 2048.0,
+                "y": 28.74725341796875,
+                "z": 2048.0
+            },
+            "sourceBoundsCentroid": {
+                "x": 0.0,
+                "y": -7.8209228515625,
+                "z": 0.0
+            },
+            "nativeBoundsMinimum": {
+                "x": -2048.0,
+                "y": -44.38909912109375,
+                "z": -2048.0
+            },
+            "nativeBoundsMaximum": {
+                "x": 2048.0,
+                "y": 28.747268676757814,
+                "z": 2048.0
+            },
+            "nativeBoundsCentroid": {
+                "x": 0.0,
+                "y": -7.820916175842285,
+                "z": 0.0
+            },
+            "sourceCoordinatesPreserved": true,
+            "genericObjImporterBypassed": true
+        }
+    ],
+    "terrainSourceManifestAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Terrain/KBDU_ProductAeqd_BareEarth_Manifest.json",
+    "terrainSourceManifestSha256": "969ffd1a3682c5136b9db6f4ad977470fcbb149610d1d032a752a4a1b21c7130",
+    "terrainErrorReportAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Terrain/KBDU_ProductAeqd_BareEarth_ErrorReport.json",
+    "terrainErrorReportSha256": "9711929a90896ccee7a9e0b61545e91743e84a42601d6e463303a2dc5dd1b3fa",
+    "limitations": [
+        "This conversion preserves authored asset coordinates; it does not establish survey accuracy.",
+        "Source OBJ files remain offline authoring inputs and are not product-prefab dependencies.",
+        "Static topology and asset size are not physical Quest performance evidence."
+    ]
+}

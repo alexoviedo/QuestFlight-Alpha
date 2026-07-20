@@ -514,6 +514,16 @@
       "path": "Assets/Scenes/ProductionVerticalSlice/Lightmap-0_comp_light.exr",
       "classification": "approved_project_generated",
       "reason": "Project-generated single-atlas baked lightmap for the bounded airport-core benchmark, hash-pinned by the V4.2 bake manifest."
+    },
+    {
+      "path": "Assets/Scripts/Environment/GeospatialMipController.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored serialized geospatial texture-selection controller; it changes only material sampling state and does not construct or repair the product hierarchy."
+    },
+    {
+      "path": "Assets/Scripts/Environment/PhotorealAerialSurfaceRoot.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored fail-closed contract for the explicitly serialized semantic terrain, footprint-building, and map-only canopy hierarchy; it performs no runtime construction or repair."
     }
   ],
   "product_replacements": [

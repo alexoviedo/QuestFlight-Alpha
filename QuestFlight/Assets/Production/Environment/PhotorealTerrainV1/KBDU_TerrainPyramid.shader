@@ -35,6 +35,10 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
         _AerialCanopyNormalOcclusion ("Aerial canopy normal/occlusion", 2D) = "gray" {}
         _AerialCanopyHandoffMask ("Aerial canopy geometry/map ownership", 2D) = "black" {}
         _AerialCanopyLocalBounds ("Aerial canopy min XZ / inverse size", Vector) = (-2048,-2048,0.000244140625,0.000244140625)
+        _AerialCanopyProductToSourceRow0 ("Product AEQD to lidar UTM row 0", Vector) = (1,0,0,0)
+        _AerialCanopyProductToSourceRow1 ("Product AEQD to lidar UTM row 1", Vector) = (0,1,0,0)
+        _AerialCanopySourceToProductRow0 ("Lidar UTM normal to product row 0", Vector) = (1,0,0,0)
+        _AerialCanopySourceToProductRow1 ("Lidar UTM normal to product row 1", Vector) = (0,1,0,0)
         _AerialCanopyHeightQuantumMeters ("Aerial canopy height quantum", Float) = 0.25
         _AerialCanopyColorStrength ("Aerial canopy color strength", Range(0,1)) = 0
         _AerialCanopyNormalStrength ("Aerial canopy normal strength", Range(0,1)) = 0

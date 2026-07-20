@@ -1,0 +1,117 @@
+{
+  "schema": "questflight.photoreal_aerial_surface.reflection_manifest.v1",
+  "status": "FOUNDATION_AUTHORED_NOT_VISUALLY_ACCEPTED",
+  "shipping_target": "Standalone Quest 3 / Android ARM64 / Vulkan / OpenXR",
+  "source": {
+    "sky_asset": "QuestFlight/Assets/Production/Environment/Sky/Kloppenheim03_PureSky_2K.hdr",
+    "sky_source_manifest": "QuestFlight/Assets/Production/Environment/Sky/SOURCE_MANIFEST.json",
+    "sky_license": "CC0-1.0",
+    "sky_sha256": "ffd28511add85d9508b51f50d3bbe4d822f4a5240800edb4f014edb75abdb1aa",
+    "orthophoto_source_manifest": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_AerialSurfaceV1_SourceManifest.json",
+    "orthophoto_license": "CC0-1.0",
+    "near_orthophoto": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_Near4km_8192.jpg",
+    "near_orthophoto_sha256": "143c4946c06464dbdea1567cd5fe284acc4c5ba7718a38900a2e83a8eccbfb53",
+    "mid_orthophoto": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidBase12km_8192.jpg",
+    "mid_orthophoto_sha256": "f54243142070533985202d5aa656516008b290e1005f82b5237a4bc8fd82f110",
+    "far_orthophoto": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_Far24km_4096.jpg",
+    "far_orthophoto_sha256": "222cebe04b7ad7d09198fca2a1ba39a2581286b448d5611c53723d53a578457b",
+    "upper_hemisphere": "Exact bilinear sample of the committed HDR sky; no alternate sky or runtime capture.",
+    "lower_hemisphere": "bilinear_direction_to_ground_proxy over committed City AerialSurfaceV1 orthophotos",
+    "authoring_code": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Editor/PhotorealAerialReflectionAuthoring.cs"
+  },
+  "runtime_assets": {
+    "global_ground_sky_reflection": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Textures/KBDU_GlobalGroundSkyReflection_256.exr",
+      "equirectangular_pixels": [256, 128],
+      "cubemap_face_pixels": 128,
+      "convolution": "Specular",
+      "android_format": "ASTC_HDR_6x6",
+      "mipmaps": true,
+      "ground_sources": "mid+far",
+      "sampling": "bilinear_direction_to_ground_proxy",
+      "proxy_center_xz_meters": [0, 0],
+      "proxy_height_meters": 720,
+      "maximum_radius_meters": 11200,
+      "lower_hemisphere_rgb_mean_linear": [0.211453, 0.193347, 0.16022],
+      "lower_hemisphere_rgb_standard_deviation_linear": [0.090224, 0.093604, 0.102978],
+      "lower_hemisphere_luminance_standard_deviation_linear": 0.09331,
+      "sha256": "ffbc8a0eb093c528ad22266e75b5327c0c4c93e071758c0f46e96ce73536b39a",
+      "bytes": 107192
+    },
+    "airport_local_reflection": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Textures/KBDU_AirportLocalReflection_256.exr",
+      "equirectangular_pixels": [256, 128],
+      "cubemap_face_pixels": 128,
+      "convolution": "Specular",
+      "android_format": "ASTC_HDR_6x6",
+      "mipmaps": true,
+      "ground_sources": "near",
+      "sampling": "bilinear_direction_to_ground_proxy",
+      "proxy_center_xz_meters": [-385, -260],
+      "proxy_height_meters": 72,
+      "maximum_radius_meters": 1700,
+      "lower_hemisphere_rgb_mean_linear": [0.26997, 0.246193, 0.214007],
+      "lower_hemisphere_rgb_standard_deviation_linear": [0.082745, 0.08769, 0.096598],
+      "lower_hemisphere_luminance_standard_deviation_linear": 0.087057,
+      "sha256": "7752397d6afa1ed1bc9694013759cb388ec67a1a15872b08662bbeae446ddbed",
+      "bytes": 95645
+    },
+    "profile": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Profiles/KBDU_PhotorealAerialReflectionProfile.asset",
+      "sha256": "0d21dc56c59d548128accd3898b87ef478f02691ca0a257536b127fff6cf63b8",
+      "bytes": 1424
+    },
+    "window_material": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionCockpitWindowReflection.mat",
+      "sha256": "4e692f891475d5e4476e88e63775e8c739a3788bb8436191951da1bb333b82a5",
+      "bytes": 1097
+    },
+    "instrument_glass_material": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentGlassReflection.mat",
+      "sha256": "6d3d5a20171dcf603f5ec96284b24341650ec79ae53a2137acfc77e8b7f54e2b",
+      "bytes": 937
+    },
+    "window_shader": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitWindowReflection.shader",
+      "sha256": "d57186ffb0ecf6985d41d940c4cea733530a83c1e9ef2a8c729ad449a8bd1b04",
+      "bytes": 5531
+    },
+    "instrument_glass_shader": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader",
+      "sha256": "a28f8276699ea02a52b9a7f6a968375ec64e5da5313210dc70ec4e79ac33ea6a",
+      "bytes": 4537
+    }
+  },
+  "integration_contract": {
+    "global_reflection_mode": "Custom static imagery-aware global cubemap",
+    "airport_probe_texture": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Textures/KBDU_AirportLocalReflection_256.exr",
+    "airport_probe_count": 1,
+    "airport_probe_mode": "Custom distinct static texture, ViaScripting refresh mode, culling mask zero",
+    "runtime_probe_render_count": 0,
+    "screen_space_reflections": false,
+    "reflection_camera": false,
+    "refraction_camera": false,
+    "aircraft_probe_anchor": "AircraftSimulationRoot/CenterOfGravityReference",
+    "aircraft_probe_usage": "BlendProbesAndSkybox"
+  },
+  "android_budget": {
+    "new_reflection_probes": 1,
+    "new_runtime_probe_cameras": 0,
+    "new_runtime_probe_updates": 0,
+    "new_renderers": 0,
+    "new_draw_calls": 0,
+    "new_materials": 2,
+    "disabled_duplicate_exterior_glass_renderers": 1,
+    "static_cubemap_count": 2,
+    "estimated_combined_cubemap_bytes": 126144
+  },
+  "cockpit_shadow_candidate": {
+    "enabled_by_default": false,
+    "accepted_on_quest_hardware": false,
+    "selection": "Editor-only scoped A/B; exact prior state is restored on dispose",
+    "map_resolution": 1024,
+    "cascade_count": 0,
+    "distance_meters": 14.0
+  },
+  "acceptance_boundary": "Assets-only authoring modifies no product scene or prefab. Lead integration, inspected stereo Visual QA, Android build validation, and physical Quest frame/thermal evidence remain required."
+}

@@ -1,0 +1,321 @@
+{
+  "authored_surface": {
+    "height_sampling": "exact product AEQD to origin-relative UTM13N followed by bilinear DTM sampling",
+    "runway_blend_coordinate_frame": "product AEQD",
+    "runway_blend_vertex_fraction": 0.041052308232403016,
+    "runway_exact_plane_vertex_fraction": 0.021107600491486748
+  },
+  "border_lock": {
+    "exact_4096_meter_product_square": true,
+    "product_bounds_meters": [
+      -2048.0,
+      -2048.0,
+      2048.0,
+      2048.0
+    ]
+  },
+  "comparison": {
+    "mesh_vs_authored_target": {
+      "global": {
+        "maximum_absolute_meters": 10.247037225879012,
+        "mean_absolute_meters": 0.156361727111434,
+        "mean_signed_meters": 0.0022630084592665345,
+        "p50_absolute_meters": 0.07326502826651904,
+        "p95_absolute_meters": 0.6047750890279531,
+        "p99_absolute_meters": 1.0958536132565655,
+        "rmse_meters": 0.2791227292155279,
+        "sample_count": 1048576,
+        "within_0_05_meter_fraction": 0.3959693908691406
+      },
+      "operational_core": {
+        "maximum_absolute_meters": 2.9547142046017143,
+        "mean_absolute_meters": 0.09680581004897212,
+        "mean_signed_meters": -0.005052780058272631,
+        "p50_absolute_meters": 0.044432318439248775,
+        "p95_absolute_meters": 0.38097640985018905,
+        "p99_absolute_meters": 0.7820576502773974,
+        "rmse_meters": 0.18030512924623893,
+        "sample_count": 80000,
+        "within_0_05_meter_fraction": 0.5341
+      },
+      "remaining_after_declared_outliers": {
+        "maximum_absolute_meters": 1.3873709153417622,
+        "mean_absolute_meters": 0.10107131548359088,
+        "mean_signed_meters": 0.0019495368424757933,
+        "p50_absolute_meters": 0.05626281753529838,
+        "p95_absolute_meters": 0.3577234791809813,
+        "p99_absolute_meters": 0.6080789348972165,
+        "rmse_meters": 0.16141942216432903,
+        "sample_count": 804915,
+        "within_0_05_meter_fraction": 0.46453227980594225
+      },
+      "runway_pavement": {
+        "maximum_absolute_meters": 4.528938006842509e-07,
+        "mean_absolute_meters": 1.5903658136552138e-07,
+        "mean_signed_meters": 3.7036250168509654e-10,
+        "p50_absolute_meters": 1.4688680494145956e-07,
+        "p95_absolute_meters": 3.5759842376137385e-07,
+        "p99_absolute_meters": 4.100349542568439e-07,
+        "rmse_meters": 1.9162226871205635e-07,
+        "sample_count": 1611,
+        "within_0_05_meter_fraction": 1.0
+      }
+    },
+    "mesh_vs_sampled_bare_earth_before_runway_preservation": {
+      "global": {
+        "maximum_absolute_meters": 10.247037225879012,
+        "mean_absolute_meters": 0.1591158752538312,
+        "mean_signed_meters": 2.6373529044353573e-05,
+        "p50_absolute_meters": 0.07464557198375132,
+        "p95_absolute_meters": 0.6157995583668026,
+        "p99_absolute_meters": 1.110003625043987,
+        "rmse_meters": 0.2829275358114235,
+        "sample_count": 1048576,
+        "within_0_05_meter_fraction": 0.39079952239990234
+      },
+      "operational_core": {
+        "maximum_absolute_meters": 2.9547142046017143,
+        "mean_absolute_meters": 0.1329049805810003,
+        "mean_signed_meters": -0.03436880141568081,
+        "p50_absolute_meters": 0.0561434529078042,
+        "p95_absolute_meters": 0.5651922403362962,
+        "p99_absolute_meters": 1.084716042588461,
+        "rmse_meters": 0.24604794097341265,
+        "sample_count": 80000,
+        "within_0_05_meter_fraction": 0.4663375
+      },
+      "runway_pavement": {
+        "maximum_absolute_meters": 1.4439538382971477,
+        "mean_absolute_meters": 0.742313236170849,
+        "mean_signed_meters": -0.7388402180408488,
+        "p50_absolute_meters": 0.8017916069836701,
+        "p95_absolute_meters": 1.334097810499884,
+        "p99_absolute_meters": 1.4053610832677126,
+        "rmse_meters": 0.8550074579198665,
+        "sample_count": 1611,
+        "within_0_05_meter_fraction": 0.04965859714463067
+      }
+    },
+    "runway_mesh_vs_input_plane": {
+      "maximum_absolute_meters": 4.528938006842509e-07,
+      "mean_absolute_meters": 1.5903658136552138e-07,
+      "mean_signed_meters": 3.7036250168509654e-10,
+      "p50_absolute_meters": 1.4688680494145956e-07,
+      "p95_absolute_meters": 3.5759842376137385e-07,
+      "p99_absolute_meters": 4.100349542568439e-07,
+      "rmse_meters": 1.9162226871205635e-07,
+      "sample_count": 1611,
+      "within_0_05_meter_fraction": 1.0
+    }
+  },
+  "evaluation": {
+    "product_sample_grid": "1024 x 1024 regular AEQD pixel centres over [-2048,2048]^2",
+    "sample_count": 1048576,
+    "triangle_interpolation": "Exact OBJ triangles including deterministic corner-to-center refinement"
+  },
+  "geometric_integration_eligibility": {
+    "declared_outliers": {
+      "cell_count": 9650,
+      "criterion": "authored corner-plus-product-sample source-Z range exceeds 1.5 m",
+      "pixel_count": 243661,
+      "pixel_fraction": 0.23237323760986328,
+      "source_variation_threshold_meters": 1.5
+    },
+    "observed_outside_declared_outliers": {
+      "maximum_absolute_meters": 1.3873709153417622,
+      "mean_absolute_meters": 0.10107131548359088,
+      "mean_signed_meters": 0.0019495368424757933,
+      "p50_absolute_meters": 0.05626281753529838,
+      "p95_absolute_meters": 0.3577234791809813,
+      "p99_absolute_meters": 0.6080789348972165,
+      "rmse_meters": 0.16141942216432903,
+      "sample_count": 804915,
+      "within_0_05_meter_fraction": 0.46453227980594225
+    },
+    "status": "ELIGIBLE",
+    "thresholds": {
+      "maximum_absolute_meters": 1.5,
+      "mean_absolute_meters": 0.15,
+      "p95_absolute_meters": 0.5
+    }
+  },
+  "height_sampling": {
+    "mesh_grid_clamped_to_lidar_pixel_center_domain_count": 558,
+    "product_evaluation_clamped_to_lidar_pixel_center_domain_count": 1880,
+    "refined_centers_clamped_to_lidar_pixel_center_domain_count": 0,
+    "source_raster_frame": "origin-relative UTM13N deltas",
+    "target_geometry_frame": "product AEQD"
+  },
+  "horizontal_frame_contract": {
+    "diagnostic_affine_product_from_utm_delta": {
+      "matrix_xz": [
+        [
+          1.0003923483229664,
+          -0.002539530253518825
+        ],
+        [
+          0.0025395302727407435,
+          1.000392340518264
+        ]
+      ],
+      "maximum_allowed_residual_meters": 0.005,
+      "maximum_residual_meters": 0.002037462155562308,
+      "offset_xz_meters": [
+        3.1201782469145734e-11,
+        -4.1110080042791894e-10
+      ],
+      "sample_grid_size_per_axis": 17,
+      "use_for_production_conversion": false
+    },
+    "exact_conversion": {
+      "always_xy": true,
+      "implementation": "pyproj.Transformer",
+      "maximum_allowed_round_trip_residual_meters": 1e-06,
+      "maximum_round_trip_residual_meters": 3.026798367500305e-09,
+      "product_aeqd_to_utm13n_delta_formula": "(E,N)=transform(product_aeqd_x,product_aeqd_z); x_utm_delta=E-origin_easting; z_utm_delta=N-origin_northing",
+      "utm13n_delta_to_product_aeqd_formula": "product_aeqd_x,product_aeqd_z=transform(origin_easting+x_utm_delta,origin_northing+z_utm_delta)"
+    },
+    "lidar_raster_frame": {
+      "coordinates": "origin-relative UTM easting/northing deltas",
+      "crs_epsg": 32613,
+      "historical_affine_field": "coordinate_mapping.pixel_center_affine_local_meters",
+      "origin_easting_meters": 480712.1393769088,
+      "origin_northing_meters": 4432150.874940165
+    },
+    "maximum_product_offset_from_utm_delta_meters": 7.4440861283288235,
+    "product_geometry_frame": {
+      "axes": {
+        "x": "east",
+        "z": "north"
+      },
+      "crs_proj4": "+proj=aeqd +lat_0=40.039365270000 +lon_0=-105.226089580000 +datum=WGS84 +units=m +no_defs",
+      "name": "KBDU product-local WGS84 azimuthal equidistant"
+    },
+    "pyproj_version": "3.7.2",
+    "runtime_affine_coefficients": {
+      "position_maximum_allowed_residual_meters": 0.005,
+      "position_maximum_residual_meters": 0.002036656527875971,
+      "product_to_utm_x_from_product_x": 0.999601363966432,
+      "product_to_utm_x_from_product_z": 0.0025375223324244265,
+      "product_to_utm_x_offset_meters": -3.014616685237858e-11,
+      "product_to_utm_z_from_product_x": -0.002537522351631147,
+      "product_to_utm_z_from_product_z": 0.9996013717649634,
+      "product_to_utm_z_offset_meters": 4.110160992618484e-10,
+      "utm_normal_to_product_rotation_degrees_counterclockwise": 0.14544698815903367,
+      "utm_normal_to_product_x_from_utm_x": 0.9999967779374186,
+      "utm_normal_to_product_x_from_utm_z": -0.002538526104050839,
+      "utm_normal_to_product_z_from_utm_x": 0.002538526104050839,
+      "utm_normal_to_product_z_from_utm_z": 0.9999967779374186
+    }
+  },
+  "mesh": {
+    "adaptive_refinement": {
+      "added_center_vertices": 850,
+      "base_triangle_count": 90300,
+      "final_triangle_count": 92000,
+      "selection_metric": "maximum absolute base-mesh error at product sample centres; descending with cell-index tie break",
+      "triangle_delta": 1700,
+      "worst_selected_base_cell_error_meters": 13.483832613945879
+    },
+    "axis": {
+      "x_count": 216,
+      "x_max_spacing_meters": 22.690909090909372,
+      "x_min_spacing_meters": 3.2430066959998385,
+      "z_count": 211,
+      "z_max_spacing_meters": 22.88888888888914,
+      "z_min_spacing_meters": 0.30000000000000426
+    },
+    "triangle_count": 92000,
+    "vertex_count": 46426
+  },
+  "operational_0_05_meter_tolerance": {
+    "geometric_reconstruction_all_core_samples_within_tolerance": false,
+    "real_world_accuracy_supported": false,
+    "reason": "Mesh-to-raster reconstruction is not surveyed real-world accuracy evidence."
+  },
+  "runway_preservation": {
+    "blend": {
+      "core_lateral_margin_meters": 4.0,
+      "outer_end_margin_meters": 55.0,
+      "outer_lateral_margin_meters": 40.0
+    },
+    "coordinate_frame": "product AEQD",
+    "endpoint_distance_meters": 1250.3851522287043,
+    "primary_runway_id": "08/26",
+    "width_meters": 22.86
+  },
+  "schema": "questflight.photoreal-aerial-surface-v1.product-aeqd-bare-earth-error.v1",
+  "source_contract_sha256": "b42c6b97d941d70aab7b4b625042709dbeac8bae38cf71f480745b034a452c32",
+  "verification_anchors": [
+    {
+      "authored_local_y_meters": -8.68268,
+      "product_x_meters": -2048.0,
+      "product_z_meters": -2048.0,
+      "runway_blend_weight": 0.0,
+      "source_dtm_msl_meters": 1603.0997199700446,
+      "utm_x_delta_meters": -2052.380439156841,
+      "utm_z_delta_meters": -2041.9887988017872,
+      "vertex_index_zero_based": 0
+    },
+    {
+      "authored_local_y_meters": -18.9324,
+      "product_x_meters": 2048.0,
+      "product_z_meters": -2048.0,
+      "runway_blend_weight": 0.0,
+      "source_dtm_msl_meters": 1592.85,
+      "utm_x_delta_meters": 2041.9867470169556,
+      "utm_z_delta_meters": -2052.378507955,
+      "vertex_index_zero_based": 215
+    },
+    {
+      "authored_local_y_meters": 18.467268,
+      "product_x_meters": -2048.0,
+      "product_z_meters": 2048.0,
+      "runway_blend_weight": 0.0,
+      "source_dtm_msl_meters": 1630.2496681679854,
+      "utm_x_delta_meters": -2041.9867267194204,
+      "utm_z_delta_meters": 2052.382489858195,
+      "vertex_index_zero_based": 45360
+    },
+    {
+      "authored_local_y_meters": -33.733159,
+      "product_x_meters": 2048.0,
+      "product_z_meters": 2048.0,
+      "runway_blend_weight": 0.0,
+      "source_dtm_msl_meters": 1578.0492408449763,
+      "utm_x_delta_meters": 2052.3804188598297,
+      "utm_z_delta_meters": 2041.9848168995231,
+      "vertex_index_zero_based": 45575
+    },
+    {
+      "authored_local_y_meters": -1.240959,
+      "product_x_meters": 0.0,
+      "product_z_meters": 0.0,
+      "runway_blend_weight": 0.6266664662613513,
+      "source_dtm_msl_meters": 1611.0125,
+      "utm_x_delta_meters": 0.0,
+      "utm_z_delta_meters": 0.0,
+      "vertex_index_zero_based": 24084
+    },
+    {
+      "authored_local_y_meters": -0.0514,
+      "product_x_meters": -629.757,
+      "product_z_meters": -30.671,
+      "runway_blend_weight": 1.0,
+      "source_dtm_msl_meters": 1611.7052015466304,
+      "utm_x_delta_meters": -629.5838762695785,
+      "utm_z_delta_meters": -29.060759618878365,
+      "vertex_index_zero_based": 22315
+    },
+    {
+      "authored_local_y_meters": -2.9704,
+      "product_x_meters": 620.628,
+      "product_z_meters": -30.054,
+      "runway_blend_weight": 1.0,
+      "source_dtm_msl_meters": 1608.805517682065,
+      "utm_x_delta_meters": 620.3042392670177,
+      "utm_z_delta_meters": -31.616867422126234,
+      "vertex_index_zero_based": 22611
+    }
+  ]
+}

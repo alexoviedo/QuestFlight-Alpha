@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "reviewed_utc_date": "2026-07-20",
+  "purpose": "Legally usable orthogonal aerial imagery for the fixed KBDU standalone Quest terrain texture footprint",
+  "decision": {
+    "selected_candidate_id": "city_of_boulder_2020_9inch",
+    "selection_basis": [
+      "The official ArcGIS item is public and carries an explicit CC0 1.0 Universal dedication.",
+      "The item describes 9-inch orthogonal imagery captured in Spring and Summer 2020.",
+      "The cached service covers the full existing 24 km local footprint and exposes reviewed LOD 15 through 18 tiles.",
+      "Its reviewed cache samples are materially denser and newer than the existing 2019 USGS NAIP fallback at KBDU."
+    ],
+    "legal_review_note": "This engineering rights audit records publisher metadata and license links; it is not legal advice. Re-review if the pinned item revision, service contract, or use scope changes."
+  },
+  "candidates": [
+    {
+      "id": "city_of_boulder_2020_9inch",
+      "status": "selected",
+      "publisher": "City of Boulder",
+      "producer": "Pictometry International",
+      "title": "2020 Imagery",
+      "acquisition_period": "Spring and Summer 2020; exact frame dates are not published in the item",
+      "nominal_source_resolution": "9 inches (0.2286 m), as stated by the publisher",
+      "runtime_cache_samples": "ArcGIS Web Mercator cached MIXED/JPEG tiles; LOD 15, 16, 17, and 18 only",
+      "license": {
+        "name": "Creative Commons CC0 1.0 Universal",
+        "spdx": "CC0-1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "publisher_policy_url": "https://bouldercolorado.gov/services/open-data"
+      },
+      "credit": "City of Boulder; source imagery produced by Pictometry International (2020)",
+      "urls": {
+        "official_item": "https://www.arcgis.com/home/item.html?id=22b7c93a74394696824258f807f345ba",
+        "item_metadata": "https://www.arcgis.com/sharing/rest/content/items/22b7c93a74394696824258f807f345ba?f=json",
+        "map_service": "https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer",
+        "service_metadata": "https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer?f=pjson",
+        "tile_template": "https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer/tile/{level}/{row}/{column}"
+      },
+      "pinned_contract": {
+        "arcgis_item_id": "22b7c93a74394696824258f807f345ba",
+        "arcgis_item_modified_epoch_ms": 1707343148000,
+        "arcgis_item_response_sha256": "b7f17522b698a8657e85b9b750bc5ca5e0e388976ac915907a13ccb76b52f4b0",
+        "arcgis_item_contract_sha256": "aafc729bdb6dd666d003912b9db06025e1579e144733b1c7e4a49ce4ffd58663",
+        "service_metadata_response_sha256": "ddecdb4e09f830ce2f6e57a13b2bc5db64c5c7dae8e1adf99d716aca9580da80",
+        "service_contract_sha256": "177a053bdbc7ecd3484c21e6d39ecf7ca18ea810ab750f76e7ebfe48bad19c79",
+        "service_wkid": 3857,
+        "cache_tile_pixels": 256,
+        "cache_format": "MIXED",
+        "maximum_export_width_pixels": 4096,
+        "maximum_export_height_pixels": 4096
+      },
+      "final_source_snapshot": {
+        "canonical_snapshot_sha256": "6fa6baea9eb2d876577da883d88b029e018a75dad9728f3faad13bed76ead02b",
+        "source_tile_count": 5551,
+        "source_tile_bytes": 85223758,
+        "source_tile_set_sha256": "41c88c222bae40db5ba061332e2919e99b682015c7ce7bc203f0c7d85c8a6906"
+      },
+      "use_constraints": [
+        "Visual context only; not current airport, survey, or navigation data.",
+        "Do not imply publisher or producer endorsement.",
+        "Do not infer 0.2286 m runtime detail from coarser selected cache LODs.",
+        "Retain the exact item, service, tile, derivative, and tool hashes in the handoff manifest."
+      ]
+    },
+    {
+      "id": "city_of_boulder_2024_aerial",
+      "status": "rejected_pending_written_rights_clearance",
+      "publisher": "City of Boulder",
+      "title": "2024 Aerial City of Boulder",
+      "urls": {
+        "official_item": "https://www.arcgis.com/home/item.html?id=0be14d94439c4035aa2121cd657d6268",
+        "item_metadata": "https://www.arcgis.com/sharing/rest/content/items/0be14d94439c4035aa2121cd657d6268?f=json",
+        "image_service": "https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/2024_Aerial_City_of_Boulder/ImageServer"
+      },
+      "decision_reason": "The inspected item and service did not publish an imagery-specific license or sufficient credit/rights terms. Newer pixels do not override the repository's binary-source license requirement."
+    },
+    {
+      "id": "boulder_county_open_data_catalog",
+      "status": "rejected_no_verified_orthophoto_candidate",
+      "publisher": "Boulder County",
+      "license": {
+        "name": "Creative Commons Attribution 4.0 International for catalog data, subject to each dataset record",
+        "spdx": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "urls": {
+        "official_policy": "https://bouldercounty.gov/government/open-data/",
+        "hub_item": "https://www.arcgis.com/home/item.html?id=86bdfd2ee529413aa6a107a43b4f6e3a",
+        "content_group": "https://www.arcgis.com/home/group.html?id=b2d3c1b63a3c452fa7141f70f017f0b6"
+      },
+      "decision_reason": "The inspected official open-data group did not expose a suitable orthophoto item with source-specific rights and resolution metadata for this milestone. Generic basemap imagery was not treated as licensed source imagery."
+    },
+    {
+      "id": "usgs_hro",
+      "status": "rejected_older_than_selected_source",
+      "publisher": "U.S. Geological Survey",
+      "acquisition_period": "2000 through 2016 archive",
+      "nominal_source_resolution": "1 meter or finer",
+      "license": {
+        "name": "United States public domain",
+        "spdx": "LicenseRef-US-Public-Domain",
+        "url": "https://www.usgs.gov/centers/eros/science/usgs-eros-archive-aerial-photography-high-resolution-orthoimagery-hro"
+      },
+      "urls": {
+        "official_archive": "https://www.usgs.gov/centers/eros/science/usgs-eros-archive-aerial-photography-high-resolution-orthoimagery-hro",
+        "dataset_doi": "https://doi.org/10.5066/F73X84W6",
+        "official_imagery_faq": "https://www.usgs.gov/faqs/what-aerial-imagery-data-set-should-i-use-earthexplorer"
+      },
+      "decision_reason": "Legally usable, but older and not a fidelity improvement over the selected explicit-CC0 2020 source for the KBDU footprint."
+    },
+    {
+      "id": "usgs_naip_2019_kbdu",
+      "status": "retained_as_legal_alignment_fallback_not_selected_for_v1",
+      "publisher": "U.S. Geological Survey / U.S. Department of Agriculture",
+      "acquisition_date": "2019-09-19 for the existing KBDU source tile",
+      "nominal_source_resolution": "0.6 m for m_4010563_sw_13_060_20190919",
+      "license": {
+        "name": "United States public domain",
+        "spdx": "LicenseRef-US-Public-Domain"
+      },
+      "urls": {
+        "usgs_naip_plus_service": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer",
+        "usda_current_naip_service": "https://apps.geo.fpac.usda.gov/geo-imagery/rest/services/naip/conus_naip/ImageServer",
+        "official_imagery_faq": "https://www.usgs.gov/faqs/what-aerial-imagery-data-set-should-i-use-earthexplorer"
+      },
+      "decision_reason": "The unchanged existing texture is used only as a geospatial alignment reference. The selected 2020 City source is newer and has denser reviewed cache samples around the airport."
+    }
+  ],
+  "prohibited_sources": [
+    "Google imagery and Google-derived pixels",
+    "Commercial basemap imagery without an explicit redistribution/modification license",
+    "Any aerial source whose publisher, acquisition date/range, or rights cannot be recorded",
+    "AI-generated or AI-upscaled replacement pixels"
+  ]
+}

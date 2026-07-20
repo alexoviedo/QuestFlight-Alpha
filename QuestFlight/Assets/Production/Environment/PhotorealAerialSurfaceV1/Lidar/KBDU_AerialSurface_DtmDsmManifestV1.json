@@ -1,0 +1,189 @@
+{
+  "assets": [
+    {
+      "bytes": 570187,
+      "ownership": "referenced_existing_public_domain_derivative",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_DTM_R16.png",
+      "semantic": "digital_terrain_model",
+      "sha256": "d5e703ea15af0c3bdd7a6280d68b56addcda1c481639cb09adef5dd9b18cb745"
+    },
+    {
+      "bytes": 933998,
+      "ownership": "referenced_existing_public_domain_derivative",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_Lidar_DSM_R16.png",
+      "semantic": "digital_surface_model",
+      "sha256": "01622d3c3703de6e7dcb70587b04fc5409ccde83b45f37f97f612981de6bf8dc"
+    },
+    {
+      "bytes": 873442,
+      "dimensions": {
+        "height_pixels": 1024,
+        "width_pixels": 1024
+      },
+      "encoding": {
+        "bits_per_channel": 16,
+        "channel": "R",
+        "container": "PNG",
+        "decoded_height_above_ground_meters": {
+          "offset": 0.0,
+          "scale": 0.05
+        }
+      },
+      "ownership": "new_compact_public_domain_derivative",
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Lidar/KBDU_AerialSurface_nDSM_R16.png",
+      "semantic": "normalized_digital_surface_model",
+      "sha256": "7c05d9e7d94264b1d64f241570ab687c51d38a8e5129652d51e463577d8cc961"
+    }
+  ],
+  "coordinate_mapping": {
+    "grid": {
+      "height_pixels": 1024,
+      "pixel_size_meters": 4.0,
+      "product_bounds_utm13n_meters": [
+        478664.1393769088,
+        4430102.874940165,
+        482760.1393769088,
+        4434198.874940165
+      ],
+      "product_crs_epsg": 32613,
+      "source_crs_epsg": 3857,
+      "width_pixels": 1024
+    },
+    "origin": {
+      "source_elevation_msl_meters": 1611.7824,
+      "utm13n_easting_meters": 480712.1393769088,
+      "utm13n_northing_meters": 4432150.874940165,
+      "wgs84_latitude_degrees": 40.03936527,
+      "wgs84_longitude_degrees": -105.22608958
+    },
+    "pixel_center_affine_local_meters": {
+      "x_at_column0_row0": -2046.0,
+      "x_per_column": 4.0,
+      "x_per_row": 0.0,
+      "z_at_column0_row0": 2046.0,
+      "z_per_column": 0.0,
+      "z_per_row": -4.0
+    },
+    "pixel_center_affine_utm13n_meters": {
+      "easting_at_column0_row0": 478666.1393769088,
+      "easting_per_column": 4.0,
+      "easting_per_row": 0.0,
+      "northing_at_column0_row0": 4434196.874940165,
+      "northing_per_column": 0.0,
+      "northing_per_row": -4.0
+    },
+    "unity_axes": {
+      "x": "east",
+      "y": "up",
+      "z": "north"
+    },
+    "vertical_mapping": {
+      "associated_wesm_original_workunit": {
+        "geoid": "GEOID18",
+        "vertical_crs_epsg": 5703
+      },
+      "local_y_formula": "decoded_source_z_meters - coordinate_mapping.origin.source_elevation_msl_meters",
+      "source_metadata_status": "EPT supplies metre-valued Z but does not identify a vertical CRS; the exact-workunit WESM record identifies the original workunit CRS, retained separately above.",
+      "source_vertical_crs": null
+    }
+  },
+  "derivation": {
+    "formula": "max(DSM_R16_code - DTM_R16_code, 0)",
+    "raw_ept_laz_committed": false,
+    "source_height_quantization_meters": 0.05
+  },
+  "horizontal_frame_contract": {
+    "diagnostic_affine_product_from_utm_delta": {
+      "matrix_xz": [
+        [
+          1.0003923483229664,
+          -0.002539530253518825
+        ],
+        [
+          0.0025395302727407435,
+          1.000392340518264
+        ]
+      ],
+      "maximum_allowed_residual_meters": 0.005,
+      "maximum_residual_meters": 0.002037462155562308,
+      "offset_xz_meters": [
+        3.1201782469145734e-11,
+        -4.1110080042791894e-10
+      ],
+      "sample_grid_size_per_axis": 17,
+      "use_for_production_conversion": false
+    },
+    "exact_conversion": {
+      "always_xy": true,
+      "implementation": "pyproj.Transformer",
+      "maximum_allowed_round_trip_residual_meters": 1e-06,
+      "maximum_round_trip_residual_meters": 3.026798367500305e-09,
+      "product_aeqd_to_utm13n_delta_formula": "(E,N)=transform(product_aeqd_x,product_aeqd_z); x_utm_delta=E-origin_easting; z_utm_delta=N-origin_northing",
+      "utm13n_delta_to_product_aeqd_formula": "product_aeqd_x,product_aeqd_z=transform(origin_easting+x_utm_delta,origin_northing+z_utm_delta)"
+    },
+    "lidar_raster_frame": {
+      "coordinates": "origin-relative UTM easting/northing deltas",
+      "crs_epsg": 32613,
+      "historical_affine_field": "coordinate_mapping.pixel_center_affine_local_meters",
+      "origin_easting_meters": 480712.1393769088,
+      "origin_northing_meters": 4432150.874940165
+    },
+    "maximum_product_offset_from_utm_delta_meters": 7.4440861283288235,
+    "product_geometry_frame": {
+      "axes": {
+        "x": "east",
+        "z": "north"
+      },
+      "crs_proj4": "+proj=aeqd +lat_0=40.039365270000 +lon_0=-105.226089580000 +datum=WGS84 +units=m +no_defs",
+      "name": "KBDU product-local WGS84 azimuthal equidistant"
+    },
+    "pyproj_version": "3.7.2",
+    "runtime_affine_coefficients": {
+      "position_maximum_allowed_residual_meters": 0.005,
+      "position_maximum_residual_meters": 0.002036656527875971,
+      "product_to_utm_x_from_product_x": 0.999601363966432,
+      "product_to_utm_x_from_product_z": 0.0025375223324244265,
+      "product_to_utm_x_offset_meters": -3.014616685237858e-11,
+      "product_to_utm_z_from_product_x": -0.002537522351631147,
+      "product_to_utm_z_from_product_z": 0.9996013717649634,
+      "product_to_utm_z_offset_meters": 4.110160992618484e-10,
+      "utm_normal_to_product_rotation_degrees_counterclockwise": 0.14544698815903367,
+      "utm_normal_to_product_x_from_utm_x": 0.9999967779374186,
+      "utm_normal_to_product_x_from_utm_z": -0.002538526104050839,
+      "utm_normal_to_product_z_from_utm_x": 0.002538526104050839,
+      "utm_normal_to_product_z_from_utm_z": 0.9999967779374186
+    }
+  },
+  "license_and_provenance": {
+    "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP)",
+    "license": "United States Government Work / Public Domain",
+    "license_url": "https://www.usgs.gov/faqs/what-are-terms-uselicensing-map-services-and-data-national-map",
+    "public_domain_derivative": true,
+    "raw_data_committed": false,
+    "raw_data_policy": "External only; this manifest and all EPT source files are prohibited from Git."
+  },
+  "limitations": [
+    "Not for navigation.",
+    "Raster pixel centres are origin-relative UTM13N deltas and require the exact recorded transform before comparison with product AEQD geometry or imagery.",
+    "The source is a depth-8 EPT subset and a 4 m product grid, not full-density lidar.",
+    "DTM/DSM quantization bounds nDSM error but no surveyed vertical truth study is available."
+  ],
+  "metrics": {
+    "all_pixel_count": 1048576,
+    "elevated_pixel_count": 915334,
+    "elevated_pixel_fraction": 0.8729305267333984,
+    "maximum_height_meters": 34.6,
+    "negative_dsm_minus_dtm_pixel_count_clamped": 0,
+    "p50_height_meters_all_pixels": 0.15000000000000002,
+    "p95_height_meters_all_pixels": 14.65,
+    "p99_height_meters_all_pixels": 20.75,
+    "quantization_maximum_absolute_error_meters": 0.05
+  },
+  "schema": "questflight.photoreal-aerial-surface-v1.dtm-dsm.v1",
+  "source_commit": "197283fc4f17ae1f78db57c6fcc4e27dc995cd66",
+  "source_lidar_manifest": {
+    "bytes": 16973,
+    "path": "QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json",
+    "sha256": "1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5"
+  }
+}

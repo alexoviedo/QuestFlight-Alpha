@@ -1,0 +1,910 @@
+{
+  "coordinate_frame": "KBDU local tangent ENU approximation (WGS84 azimuthal equidistant); Unity +X=east, +Z=north",
+  "derived_assets": [
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 3589696,
+        "filter": "trilinear",
+        "format": "ASTC_10x10",
+        "mip_bias": 0.0,
+        "mipmaps": true,
+        "streaming_mipmaps": true,
+        "wrap": "clamp"
+      },
+      "bytes": 8680911,
+      "channel_statistics": [
+        {
+          "mean": 135.015697,
+          "standard_deviation": 32.070865
+        },
+        {
+          "mean": 122.133465,
+          "standard_deviation": 24.116295
+        },
+        {
+          "mean": 95.355316,
+          "standard_deviation": 21.982424
+        }
+      ],
+      "dimensions_pixels": [
+        4096,
+        4096
+      ],
+      "id": "far_24km",
+      "local_bounds_meters": [
+        -12000.0,
+        -12000.0,
+        12000.0,
+        12000.0
+      ],
+      "meters_per_texel": [
+        5.859375,
+        5.859375
+      ],
+      "nominal_cell_bounds_meters": null,
+      "output_name": "KBDU_City2020_Far24km_4096.jpg",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_Far24km_4096.jpg",
+      "replacement": {
+        "android_astc_block": [
+          6,
+          6
+        ],
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "estimated_full_mip_chain_bytes": 2497712,
+        "mode": "one_for_one",
+        "path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Far24km_2048.jpg",
+        "sha256": "799be878d5c6be73b5596cbea70ee4e122859a528231608e40796f1020617b33"
+      },
+      "sha256": "222cebe04b7ad7d09198fca2a1ba39a2581286b448d5611c53723d53a578457b",
+      "shader_property": "_FarAlbedo",
+      "source_cache": {
+        "approximate_ground_resolution_at_origin_meters": 3.6575243813857834,
+        "level": 15,
+        "tile_count": 812,
+        "tile_range": {
+          "column_max": 6819,
+          "column_min": 6792,
+          "level": 15,
+          "resolution_web_mercator_meters": 4.77731426794937,
+          "row_max": 12414,
+          "row_min": 12386
+        },
+        "tile_set_sha256": "081ba64545ac776cd5030ea250de91f29600ecf0392e4b113480d56c748489aa",
+        "web_mercator_resolution_meters": 4.77731426794937
+      },
+      "unity_meta": {
+        "guid": "5c913aef598ec2a751b1b49b06e68d15",
+        "sha256": "06148003869e5dbdcbf7b3a85d670ad70aca8e5023b2765309354a9fd3cede46"
+      },
+      "world_min_inverse_size": [
+        -12000.0,
+        -12000.0,
+        4.1666666666666665e-05,
+        4.1666666666666665e-05
+      ]
+    },
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 14348096,
+        "filter": "trilinear",
+        "format": "ASTC_10x10",
+        "mip_bias": 0.0,
+        "mipmaps": true,
+        "streaming_mipmaps": true,
+        "wrap": "clamp"
+      },
+      "bytes": 32184440,
+      "channel_statistics": [
+        {
+          "mean": 137.107548,
+          "standard_deviation": 30.874006
+        },
+        {
+          "mean": 123.516613,
+          "standard_deviation": 23.988517
+        },
+        {
+          "mean": 96.805786,
+          "standard_deviation": 23.904751
+        }
+      ],
+      "dimensions_pixels": [
+        8192,
+        8192
+      ],
+      "id": "mid_base_12km",
+      "local_bounds_meters": [
+        -6000.0,
+        -6000.0,
+        6000.0,
+        6000.0
+      ],
+      "meters_per_texel": [
+        1.46484375,
+        1.46484375
+      ],
+      "nominal_cell_bounds_meters": null,
+      "output_name": "KBDU_City2020_MidBase12km_8192.jpg",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidBase12km_8192.jpg",
+      "replacement": {
+        "android_astc_block": [
+          10,
+          10
+        ],
+        "dimensions_pixels": [
+          4096,
+          4096
+        ],
+        "estimated_full_mip_chain_bytes": 3589696,
+        "mode": "one_for_one",
+        "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidBase12km_4096.jpg",
+        "sha256": "6d547c0d1ccc7ff646f59cc2d6ba209d601dda9da0cb61f00beea899b8aeff24"
+      },
+      "sha256": "f54243142070533985202d5aa656516008b290e1005f82b5237a4bc8fd82f110",
+      "shader_property": "_MidAlbedo",
+      "source_cache": {
+        "approximate_ground_resolution_at_origin_meters": 0.9143810952451625,
+        "level": 17,
+        "tile_count": 2970,
+        "tile_range": {
+          "column_max": 27250,
+          "column_min": 27197,
+          "level": 17,
+          "resolution_web_mercator_meters": 1.1943285668550503,
+          "row_max": 49629,
+          "row_min": 49575
+        },
+        "tile_set_sha256": "c6a2339b19af01c2bd62a7f60937b481698b65718934d9d9f9a55da63f42aa1a",
+        "web_mercator_resolution_meters": 1.1943285668550503
+      },
+      "unity_meta": {
+        "guid": "adf9e4cbca21c5442fbdcd1b92b6b393",
+        "sha256": "a7d86dfadab4211a7357fee87ef870eab2d840c4e4a50c46cf18f5355336da63"
+      },
+      "world_min_inverse_size": [
+        -6000.0,
+        -6000.0,
+        8.333333333333333e-05,
+        8.333333333333333e-05
+      ]
+    },
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 2497712,
+        "filter": "trilinear",
+        "format": "ASTC_6x6",
+        "mip_bias": -0.15,
+        "mipmaps": true,
+        "streaming_mipmaps": true,
+        "wrap": "clamp"
+      },
+      "bytes": 1844965,
+      "channel_statistics": [
+        {
+          "mean": 134.048473,
+          "standard_deviation": 33.209046
+        },
+        {
+          "mean": 120.71489,
+          "standard_deviation": 27.862035
+        },
+        {
+          "mean": 95.457493,
+          "standard_deviation": 28.103665
+        }
+      ],
+      "dimensions_pixels": [
+        2048,
+        2048
+      ],
+      "id": "mid_ne",
+      "local_bounds_meters": [
+        -32.0,
+        -32.0,
+        4032.0,
+        4032.0
+      ],
+      "meters_per_texel": [
+        1.984375,
+        1.984375
+      ],
+      "nominal_cell_bounds_meters": [
+        0.0,
+        0.0,
+        4000.0,
+        4000.0
+      ],
+      "output_name": "KBDU_City2020_MidNE_2048.jpg",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidNE_2048.jpg",
+      "replacement": {
+        "android_astc_block": [
+          6,
+          6
+        ],
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "estimated_full_mip_chain_bytes": 2497712,
+        "mode": "one_for_one",
+        "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNE_2048.jpg",
+        "sha256": "91ea5f1f4517c081900634073767b22abf821c9d5115de5de8ff0e706c16d907"
+      },
+      "sha256": "74316eda5c927a74cf70ead1d9f818ffaf274d6515356a587b37f538a64dbfb4",
+      "shader_property": "_RecoveryMidNEAlbedo",
+      "source_cache": {
+        "approximate_ground_resolution_at_origin_meters": 1.8287621906928917,
+        "level": 16,
+        "tile_count": 132,
+        "tile_range": {
+          "column_max": 13621,
+          "column_min": 13611,
+          "level": 16,
+          "resolution_web_mercator_meters": 2.388657133974685,
+          "row_max": 24802,
+          "row_min": 24791
+        },
+        "tile_set_sha256": "dc4a10de9565431b5b497971e9e70cc82cafc358e208e609b80b9d61b1ffc4bd",
+        "web_mercator_resolution_meters": 2.388657133974685
+      },
+      "unity_meta": {
+        "guid": "5f68a9e25093743a7f819ab3bb05126a",
+        "sha256": "bcc2ab55eff7dd9d9f97ff0cd87bc38728c110a8726cf8cae06452190e63c9b0"
+      },
+      "world_min_inverse_size": [
+        -32.0,
+        -32.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ]
+    },
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 2497712,
+        "filter": "trilinear",
+        "format": "ASTC_6x6",
+        "mip_bias": -0.15,
+        "mipmaps": true,
+        "streaming_mipmaps": true,
+        "wrap": "clamp"
+      },
+      "bytes": 1782663,
+      "channel_statistics": [
+        {
+          "mean": 138.877644,
+          "standard_deviation": 29.702676
+        },
+        {
+          "mean": 124.418644,
+          "standard_deviation": 24.094287
+        },
+        {
+          "mean": 96.76889,
+          "standard_deviation": 24.657191
+        }
+      ],
+      "dimensions_pixels": [
+        2048,
+        2048
+      ],
+      "id": "mid_nw",
+      "local_bounds_meters": [
+        -4032.0,
+        -32.0,
+        32.0,
+        4032.0
+      ],
+      "meters_per_texel": [
+        1.984375,
+        1.984375
+      ],
+      "nominal_cell_bounds_meters": [
+        -4000.0,
+        0.0,
+        0.0,
+        4000.0
+      ],
+      "output_name": "KBDU_City2020_MidNW_2048.jpg",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidNW_2048.jpg",
+      "replacement": {
+        "android_astc_block": [
+          6,
+          6
+        ],
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "estimated_full_mip_chain_bytes": 2497712,
+        "mode": "one_for_one",
+        "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidNW_2048.jpg",
+        "sha256": "677142d71bb8b66ba4e181c5a2d966cd73a4b87e21c631eef3c48a339c00b054"
+      },
+      "sha256": "8337f2567ae444cc01f1dfae2c10e4eedb41ec3baf7531ba7b68f311939e8601",
+      "shader_property": "_RecoveryMidNWAlbedo",
+      "source_cache": {
+        "approximate_ground_resolution_at_origin_meters": 1.8287621906928917,
+        "level": 16,
+        "tile_count": 144,
+        "tile_range": {
+          "column_max": 13613,
+          "column_min": 13602,
+          "level": 16,
+          "resolution_web_mercator_meters": 2.388657133974685,
+          "row_max": 24802,
+          "row_min": 24791
+        },
+        "tile_set_sha256": "b4b7a28f95074d29eb25c4fd64c37724342140b792eb10e40aa818e6f47ea610",
+        "web_mercator_resolution_meters": 2.388657133974685
+      },
+      "unity_meta": {
+        "guid": "97c04d162a83f7b25a581bd7b4ab8ebe",
+        "sha256": "769d6dff0bc25ab700f0c1eaa3a4f8446efb4a297f0c311b24332ac69cf56260"
+      },
+      "world_min_inverse_size": [
+        -4032.0,
+        -32.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ]
+    },
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 2497712,
+        "filter": "trilinear",
+        "format": "ASTC_6x6",
+        "mip_bias": -0.15,
+        "mipmaps": true,
+        "streaming_mipmaps": true,
+        "wrap": "clamp"
+      },
+      "bytes": 1641210,
+      "channel_statistics": [
+        {
+          "mean": 132.174576,
+          "standard_deviation": 42.348922
+        },
+        {
+          "mean": 120.084629,
+          "standard_deviation": 32.207164
+        },
+        {
+          "mean": 96.079155,
+          "standard_deviation": 30.670089
+        }
+      ],
+      "dimensions_pixels": [
+        2048,
+        2048
+      ],
+      "id": "mid_se",
+      "local_bounds_meters": [
+        -32.0,
+        -4032.0,
+        4032.0,
+        32.0
+      ],
+      "meters_per_texel": [
+        1.984375,
+        1.984375
+      ],
+      "nominal_cell_bounds_meters": [
+        0.0,
+        -4000.0,
+        4000.0,
+        0.0
+      ],
+      "output_name": "KBDU_City2020_MidSE_2048.jpg",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidSE_2048.jpg",
+      "replacement": {
+        "android_astc_block": [
+          6,
+          6
+        ],
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "estimated_full_mip_chain_bytes": 2497712,
+        "mode": "one_for_one",
+        "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSE_2048.jpg",
+        "sha256": "3d4cc4dd0adaa40c28ffe719a347574a26ff8928e92d04d89910c9aac15a64c2"
+      },
+      "sha256": "3f0ddf836a191b28e775c40788eaf7427450f06acd2a4e020817672978103fb0",
+      "shader_property": "_RecoveryMidSEAlbedo",
+      "source_cache": {
+        "approximate_ground_resolution_at_origin_meters": 1.8287621906928917,
+        "level": 16,
+        "tile_count": 121,
+        "tile_range": {
+          "column_max": 13621,
+          "column_min": 13611,
+          "level": 16,
+          "resolution_web_mercator_meters": 2.388657133974685,
+          "row_max": 24810,
+          "row_min": 24800
+        },
+        "tile_set_sha256": "0186fe4e423670405e7c3db30f2b2a6656b97cf350e39d69873328355b07533a",
+        "web_mercator_resolution_meters": 2.388657133974685
+      },
+      "unity_meta": {
+        "guid": "b5c87397d1638de087a1dff62e9da408",
+        "sha256": "2930b6472c23b3d96f0cf45783c6e8ff43fdca304d34f416cf72081abf6daaab"
+      },
+      "world_min_inverse_size": [
+        -32.0,
+        -4032.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ]
+    },
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 2497712,
+        "filter": "trilinear",
+        "format": "ASTC_6x6",
+        "mip_bias": -0.15,
+        "mipmaps": true,
+        "streaming_mipmaps": true,
+        "wrap": "clamp"
+      },
+      "bytes": 2247989,
+      "channel_statistics": [
+        {
+          "mean": 128.401276,
+          "standard_deviation": 36.584508
+        },
+        {
+          "mean": 120.032589,
+          "standard_deviation": 32.516406
+        },
+        {
+          "mean": 101.25362,
+          "standard_deviation": 32.595326
+        }
+      ],
+      "dimensions_pixels": [
+        2048,
+        2048
+      ],
+      "id": "mid_sw",
+      "local_bounds_meters": [
+        -4032.0,
+        -4032.0,
+        32.0,
+        32.0
+      ],
+      "meters_per_texel": [
+        1.984375,
+        1.984375
+      ],
+      "nominal_cell_bounds_meters": [
+        -4000.0,
+        -4000.0,
+        0.0,
+        0.0
+      ],
+      "output_name": "KBDU_City2020_MidSW_2048.jpg",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidSW_2048.jpg",
+      "replacement": {
+        "android_astc_block": [
+          6,
+          6
+        ],
+        "dimensions_pixels": [
+          2048,
+          2048
+        ],
+        "estimated_full_mip_chain_bytes": 2497712,
+        "mode": "one_for_one",
+        "path": "QuestFlight/Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/KBDU_NAIP_2019_MidSW_2048.jpg",
+        "sha256": "47fe667d0eb344a43dc4469ef332918fc930123187836afe0f5798d5e272e526"
+      },
+      "sha256": "b56bd374dc98f6e4daa1e63b7f236d8ee0aed60ecad550d0404776431f7c82ac",
+      "shader_property": "_RecoveryMidSWAlbedo",
+      "source_cache": {
+        "approximate_ground_resolution_at_origin_meters": 1.8287621906928917,
+        "level": 16,
+        "tile_count": 132,
+        "tile_range": {
+          "column_max": 13613,
+          "column_min": 13602,
+          "level": 16,
+          "resolution_web_mercator_meters": 2.388657133974685,
+          "row_max": 24810,
+          "row_min": 24800
+        },
+        "tile_set_sha256": "49fd0684d2328b727faab646e1e9501191b33db4a2c62205893009499b09ae24",
+        "web_mercator_resolution_meters": 2.388657133974685
+      },
+      "unity_meta": {
+        "guid": "fef60605d09a177c1ae99bcb8c10f726",
+        "sha256": "a425e67fd0656f3c94a34df0b4fd65646944d273a984d506397b51528ad22b36"
+      },
+      "world_min_inverse_size": [
+        -4032.0,
+        -4032.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ]
+    },
+    {
+      "android_import": {
+        "anisotropy": 8,
+        "estimated_full_mip_chain_bytes": 22369664,
+        "filter": "trilinear",
+        "format": "ASTC_8x8",
+        "mip_bias": -0.15,
+        "mipmaps": true,
+        "streaming_mipmaps": true,
+        "wrap": "clamp"
+      },
+      "bytes": 26231194,
+      "channel_statistics": [
+        {
+          "mean": 133.924454,
+          "standard_deviation": 35.907694
+        },
+        {
+          "mean": 120.955811,
+          "standard_deviation": 29.556672
+        },
+        {
+          "mean": 97.622074,
+          "standard_deviation": 29.634805
+        }
+      ],
+      "dimensions_pixels": [
+        8192,
+        8192
+      ],
+      "id": "near_4km",
+      "local_bounds_meters": [
+        -2000.0,
+        -2000.0,
+        2000.0,
+        2000.0
+      ],
+      "meters_per_texel": [
+        0.48828125,
+        0.48828125
+      ],
+      "nominal_cell_bounds_meters": null,
+      "output_name": "KBDU_City2020_Near4km_8192.jpg",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_Near4km_8192.jpg",
+      "replacement": {
+        "android_astc_block": [
+          6,
+          6
+        ],
+        "dimensions_pixels": [
+          4096,
+          4096
+        ],
+        "estimated_full_mip_chain_bytes": 9961536,
+        "mode": "one_for_one",
+        "path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
+        "sha256": "446e5c7fa13fc653de1f3e8404829c0e54b7e919fe99ebfba79d747a0b1dadea"
+      },
+      "sha256": "143c4946c06464dbdea1567cd5fe284acc4c5ba7718a38900a2e83a8eccbfb53",
+      "shader_property": "_NearAlbedo",
+      "source_cache": {
+        "approximate_ground_resolution_at_origin_meters": 0.45719054772386447,
+        "level": 18,
+        "tile_count": 1369,
+        "tile_range": {
+          "column_max": 54466,
+          "column_min": 54430,
+          "level": 18,
+          "resolution_web_mercator_meters": 0.5971642835598172,
+          "row_max": 99222,
+          "row_min": 99186
+        },
+        "tile_set_sha256": "f87eb47e6502699ce170a0f8772f317ae163a3c97a2be6fc555315d5d73769f2",
+        "web_mercator_resolution_meters": 0.5971642835598172
+      },
+      "unity_meta": {
+        "guid": "0021365d50509d2abe127a826626ee6e",
+        "sha256": "4f4bb6e4d3591c2b298ef330843b8046f803544ef07938cfc1055dffa4f20491"
+      },
+      "world_min_inverse_size": [
+        -2000.0,
+        -2000.0,
+        0.00025,
+        0.00025
+      ]
+    }
+  ],
+  "enu_alignment_check": {
+    "baseline_path": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
+    "baseline_sha256": "446e5c7fa13fc653de1f3e8404829c0e54b7e919fe99ebfba79d747a0b1dadea",
+    "comparison_resolution_pixels": [
+      1024,
+      1024
+    ],
+    "east_north_shift_meters": [
+      0.0,
+      -0.0
+    ],
+    "maximum_shift_meters": 8.0,
+    "meters_per_comparison_pixel": 3.90625,
+    "method": "windowed phase correlation of multi-scale grayscale edges",
+    "passed": true,
+    "peak_correlation": 0.351280332,
+    "shift_magnitude_meters": 0.0,
+    "shift_rows_columns_pixels": [
+      0.0,
+      0.0
+    ]
+  },
+  "label": "KBDU photoreal aerial surface V1 / visual context only / not for navigation",
+  "limitations": [
+    "Visual context only; not current airport, survey, or navigation data.",
+    "City source flights occurred in Spring and Summer 2020; the item does not publish exact frame dates.",
+    "The service cache uses lossy source tiles; the runtime JPEG quality does not create source detail.",
+    "Full-chain ASTC mip accounting is not a measured controller residency, bandwidth, frame-time, or thermal result.",
+    "Integration still requires inspected stereo simulator captures and standard Visual QA."
+  ],
+  "origin": {
+    "elevation_msl_meters": 1611.7824,
+    "latitude_degrees": 40.03936527,
+    "longitude_degrees": -105.22608958
+  },
+  "processing": {
+    "ai_upscaling": false,
+    "files": [
+      {
+        "bytes": 9646,
+        "path": "tools/aerial_surface/config.json",
+        "sha256": "af1b378f935820dd950345076c0b21f3484ef6ff1ed0ba5efc30c12d74b4c8fc"
+      },
+      {
+        "bytes": 61751,
+        "path": "tools/aerial_surface/build_texture_pyramid.py",
+        "sha256": "85ce89b5d6474b51c65fb2b8362dee5d97329d2e0ea0ca5ee6c1409f6722a38c"
+      }
+    ],
+    "jpeg": {
+      "optimize": false,
+      "progressive": false,
+      "quality": 92,
+      "subsampling": "4:4:4"
+    },
+    "orientation": "image row 0=north; image column 0=west; Unity UV v increases toward local +Z/north",
+    "projection": "WGS84 azimuthal equidistant centered on the serialized KBDU origin",
+    "resampling": "lanczos",
+    "synthetic_detail": false,
+    "toolchain": {
+      "gdal": "3.12.3",
+      "numpy": "2.3.5",
+      "pillow": "11.3.0",
+      "pyproj": "3.7.2",
+      "python": "3.12.13",
+      "rasterio": "1.5.0",
+      "scipy": "1.16.3"
+    }
+  },
+  "prohibited_sources_confirmation": "No Google, commercial basemap, unlicensed 2024 City imagery, unclear-rights County basemap, AI-generated, or AI-upscaled pixels are used.",
+  "raw_policy": "The full source snapshot, ArcGIS response bodies, and every raw cache tile remain beneath the external artifact/cache root. Only compact derivatives, paired Unity metadata, and this manifest are handoff candidates.",
+  "runtime": {
+    "anisotropy": 8,
+    "baseline_projected_scene_texture_bytes": 186549554,
+    "baseline_replaced_android_bytes": 26039792,
+    "budget": {
+      "baseline_projected_scene_texture_bytes": 186549554,
+      "headroom_bytes": 9392894,
+      "net_full_mip_delta_bytes": 24258512,
+      "new_full_astc_mip_bytes": 50298304,
+      "projected_scene_texture_bytes": 210808066,
+      "replaced_full_astc_mip_bytes": 26039792,
+      "scene_texture_ceiling_bytes": 220200960
+    },
+    "controller_owned_texture_ids": [
+      "near_4km",
+      "mid_nw",
+      "mid_ne",
+      "mid_sw",
+      "mid_se",
+      "mid_base_12km",
+      "far_24km"
+    ],
+    "controller_type": "QuestFlightLab.Environment.GeospatialMipController",
+    "far_meters_per_texel": 5.859375,
+    "filter_mode": "trilinear",
+    "fixed_local_uv_vectors": {
+      "_FarAlbedo": [
+        -12000.0,
+        -12000.0,
+        4.1666666666666665e-05,
+        4.1666666666666665e-05
+      ],
+      "_MidAlbedo": [
+        -6000.0,
+        -6000.0,
+        8.333333333333333e-05,
+        8.333333333333333e-05
+      ],
+      "_NearAlbedo": [
+        -2000.0,
+        -2000.0,
+        0.00025,
+        0.00025
+      ],
+      "_RecoveryMidNEAlbedo": [
+        -32.0,
+        -32.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ],
+      "_RecoveryMidNWAlbedo": [
+        -4032.0,
+        -32.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ],
+      "_RecoveryMidSEAlbedo": [
+        -32.0,
+        -4032.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ],
+      "_RecoveryMidSWAlbedo": [
+        -4032.0,
+        -4032.0,
+        0.00024606299212598425,
+        0.00024606299212598425
+      ]
+    },
+    "hard_ceiling_bytes": 220200960,
+    "mipmaps": true,
+    "near_meters_per_texel": 0.48828125,
+    "pattern_meters_per_texel": 1.46484375,
+    "projected_scene_android_texture_bytes": 210808066,
+    "replacement_only": true,
+    "runtime_set_android_bytes": 50298304,
+    "scene_texture_ceiling_bytes": 220200960,
+    "selection_mode": "explicit GeospatialMipController-managed mip residency for seven fixed ENU shader tiles; no camera transform ownership or hierarchy construction",
+    "shader_bindings": {
+      "_FarAlbedo": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_Far24km_4096.jpg",
+      "_MidAlbedo": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidBase12km_8192.jpg",
+      "_NearAlbedo": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_Near4km_8192.jpg",
+      "_RecoveryMidNEAlbedo": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidNE_2048.jpg",
+      "_RecoveryMidNWAlbedo": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidNW_2048.jpg",
+      "_RecoveryMidSEAlbedo": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidSE_2048.jpg",
+      "_RecoveryMidSWAlbedo": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidSW_2048.jpg"
+    },
+    "streaming_mipmaps": true,
+    "streaming_ownership_note": "The explicitly serialized GeospatialMipController owns mip residency requests for all seven fixed ENU shader textures. Full-chain ASTC accounting remains the conservative worst-case budget.",
+    "wrap_mode": "clamp"
+  },
+  "schema_version": 1,
+  "scope_guards": {
+    "far_texture_replacement": true,
+    "google_imagery_allowed": false,
+    "mountain_changes": false,
+    "runtime_controller_required": true,
+    "runway_changes": false,
+    "shipping_target": "Standalone Quest 3 / Android ARM64 / Vulkan / OpenXR",
+    "sky_changes": false,
+    "world_extent_expansion": false
+  },
+  "seam_checks": {
+    "east_north_to_south": {
+      "comparison_dimensions_pixels": [
+        2048,
+        32
+      ],
+      "limit": 12.0,
+      "local_overlap_bounds_meters": [
+        -32.0,
+        -32.0,
+        4032.0,
+        32.0
+      ],
+      "maximum_mean_absolute_channel_delta": 1.576706,
+      "mean_absolute_channel_delta": [
+        1.445206,
+        1.359482,
+        1.576706
+      ],
+      "passed": true
+    },
+    "north_west_to_east": {
+      "comparison_dimensions_pixels": [
+        32,
+        2048
+      ],
+      "limit": 12.0,
+      "local_overlap_bounds_meters": [
+        -32.0,
+        -32.0,
+        32.0,
+        4032.0
+      ],
+      "maximum_mean_absolute_channel_delta": 1.472321,
+      "mean_absolute_channel_delta": [
+        1.322174,
+        1.243942,
+        1.472321
+      ],
+      "passed": true
+    },
+    "south_west_to_east": {
+      "comparison_dimensions_pixels": [
+        32,
+        2048
+      ],
+      "limit": 12.0,
+      "local_overlap_bounds_meters": [
+        -32.0,
+        -4032.0,
+        32.0,
+        32.0
+      ],
+      "maximum_mean_absolute_channel_delta": 2.641418,
+      "mean_absolute_channel_delta": [
+        2.365524,
+        2.279602,
+        2.641418
+      ],
+      "passed": true
+    },
+    "west_north_to_south": {
+      "comparison_dimensions_pixels": [
+        2048,
+        32
+      ],
+      "limit": 12.0,
+      "local_overlap_bounds_meters": [
+        -4032.0,
+        -32.0,
+        32.0,
+        32.0
+      ],
+      "maximum_mean_absolute_channel_delta": 1.994843,
+      "mean_absolute_channel_delta": [
+        1.785767,
+        1.706024,
+        1.994843
+      ],
+      "passed": true
+    }
+  },
+  "source": {
+    "acquisition_period": "Spring and Summer 2020",
+    "arcgis_item_contract_sha256": "aafc729bdb6dd666d003912b9db06025e1579e144733b1c7e4a49ce4ffd58663",
+    "arcgis_item_id": "22b7c93a74394696824258f807f345ba",
+    "arcgis_item_metadata_url": "https://www.arcgis.com/sharing/rest/content/items/22b7c93a74394696824258f807f345ba?f=json",
+    "arcgis_item_response_sha256": "b7f17522b698a8657e85b9b750bc5ca5e0e388976ac915907a13ccb76b52f4b0",
+    "arcgis_item_url": "https://www.arcgis.com/home/item.html?id=22b7c93a74394696824258f807f345ba",
+    "credit": "City of Boulder; source imagery produced by Pictometry International (2020)",
+    "id": "city_of_boulder_2020_9inch",
+    "license_name": "Creative Commons CC0 1.0 Universal",
+    "license_spdx": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "producer": "Pictometry International",
+    "provider": "City of Boulder",
+    "service_contract_sha256": "177a053bdbc7ecd3484c21e6d39ecf7ca18ea810ab750f76e7ebfe48bad19c79",
+    "service_metadata_response_sha256": "ddecdb4e09f830ce2f6e57a13b2bc5db64c5c7dae8e1adf99d716aca9580da80",
+    "service_metadata_url": "https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer?f=pjson",
+    "service_url": "https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer",
+    "source_resolution_meters": 0.2286,
+    "source_snapshot_sha256": "6fa6baea9eb2d876577da883d88b029e018a75dad9728f3faad13bed76ead02b",
+    "source_tile_count": 5551,
+    "source_tile_set_sha256": "41c88c222bae40db5ba061332e2919e99b682015c7ce7bc203f0c7d85c8a6906",
+    "tile_url_template": "https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer/tile/{level}/{row}/{column}"
+  },
+  "water_policy": {
+    "mode": "orthophoto_only",
+    "rule": "Reservoir and minor water sample the selected aerial surface exactly like adjacent terrain; no water renderer, material, tint, transparency, reflection, animation, or extra draw is introduced."
+  }
+}

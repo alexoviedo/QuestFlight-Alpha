@@ -11,7 +11,8 @@ namespace QuestFlight.Editor
 {
     /// <summary>
     /// Offline-only compiler that makes the preserved airport operational patch
-    /// meet the frozen lidar near terrain without changing either source asset.
+    /// meet the coordinate-correct product-AEQD bare-earth terrain without
+    /// changing either source asset.
     /// The product continues to serialize a fixed mesh; no runtime repair occurs.
     /// </summary>
     public static class AirportPatchLidarConformanceAuthoring
@@ -19,7 +20,9 @@ namespace QuestFlight.Editor
         public const string SourcePatchPath =
             "Assets/Production/Environment/AirportCoreV4/Generated/KBDU_AirportTerrain_ErrorBounded_V4_2.asset";
         public const string SourceLidarPath =
-            LidarTerrainUnityAssetAuthoring.OutputMeshPath;
+            PhotorealAerialSurfaceNativeMeshAuthoring.TerrainNativePath;
+        public const string ProductTerrainManifestPath =
+            PhotorealAerialSurfaceNativeMeshAuthoring.TerrainManifestPath;
         public const string FrozenLidarManifestPath =
             "Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json";
         public const string FrozenRunwayInputPath =
@@ -32,6 +35,8 @@ namespace QuestFlight.Editor
             "1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5";
         public const string FrozenRunwayInputSha256 =
             "e0ac3b6e8d076c46e00da041ede94ed7c91e0cd67ffb58df7390742db1570dee";
+        public const string ProductTerrainManifestSha256 =
+            "969ffd1a3682c5136b9db6f4ad977470fcbb149610d1d032a752a4a1b21c7130";
         public const float BoundarySampleSpacingMeters = 1f;
         public const float MaximumBoundaryMismatchMeters = 0.03f;
         public const float MaximumOriginalBoundaryAdjustmentMeters = 2f;
@@ -61,8 +66,9 @@ namespace QuestFlight.Editor
         {
             VerifyFrozenInput(FrozenLidarManifestPath, FrozenLidarManifestSha256);
             VerifyFrozenInput(FrozenRunwayInputPath, FrozenRunwayInputSha256);
+            VerifyFrozenInput(ProductTerrainManifestPath, ProductTerrainManifestSha256);
             Mesh sourcePatch = LoadRequiredMesh(SourcePatchPath);
-            Mesh lidar = LidarTerrainUnityAssetAuthoring.CompileForAerialSceneryV1Integration();
+            Mesh lidar = LoadRequiredMesh(SourceLidarPath);
             EnsureFolder(OutputRoot);
 
             CompileResult result = Compile(sourcePatch, lidar);
@@ -117,6 +123,8 @@ namespace QuestFlight.Editor
             if (!string.Equals(report.lidarManifestSha256, FrozenLidarManifestSha256,
                     StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(report.runwayInputSha256, FrozenRunwayInputSha256,
+                    StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(report.productTerrainManifestSha256, ProductTerrainManifestSha256,
                     StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Frozen lidar/runway provenance changed.");
         }
@@ -233,7 +241,9 @@ namespace QuestFlight.Editor
                 sourceLidarAssetSha256 = Sha256(SourceLidarPath),
                 lidarManifestSha256 = FrozenLidarManifestSha256,
                 runwayInputSha256 = FrozenRunwayInputSha256,
-                method = "Subdivide only outer airport-patch boundary edges to <=1 m, sample the frozen fixed lidar surface, and fan-triangulate the affected visual boundary triangles.",
+                productTerrainManifestAssetPath = ProductTerrainManifestPath,
+                productTerrainManifestSha256 = ProductTerrainManifestSha256,
+                method = "Subdivide only outer airport-patch boundary edges to <=1 m, sample the coordinate-correct product-AEQD bare-earth surface, and fan-triangulate the affected visual boundary triangles.",
                 boundarySampleSpacingMeters = BoundarySampleSpacingMeters,
                 sourceVertexCount = sourceVertices.Length,
                 outputVertexCount = vertices.Count,
@@ -258,6 +268,7 @@ namespace QuestFlight.Editor
                 limitations = new[]
                 {
                     "Boundary agreement is between two authored visual meshes, not surveyed real-world accuracy.",
+                    "The product-AEQD near terrain samples the pinned public-domain DTM; lidar DSM/nDSM never displaces terrain.",
                     "The airport patch remains the operational-core visual override; physics and the authoritative V2 terrain query asset are unchanged.",
                     "The frozen lidar source OBJ, runway geometry/collider, water, and terrain outside the airport patch are not modified."
                 }
@@ -422,6 +433,8 @@ namespace QuestFlight.Editor
             public string outputMeshAssetSha256;
             public string lidarManifestSha256;
             public string runwayInputSha256;
+            public string productTerrainManifestAssetPath;
+            public string productTerrainManifestSha256;
             public string method;
             public float boundarySampleSpacingMeters;
             public int sourceVertexCount;

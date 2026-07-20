@@ -13,36 +13,36 @@ MonoBehaviour:
   m_Name: KBDU_AerialSceneryManifestV1
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.AerialSceneryManifest
   schemaVersion: 1
-  label: "KBDU aerial scenery representation V1 \u2014 not for navigation"
+  label: "KBDU photoreal aerial semantic surface V1 \u2014 not for navigation"
   horizontalCrs: EPSG:32613
-  sourceLicense: USGS 3DEP public domain; OSM derivatives ODbL-1.0; project-authored
-    vegetation
-  generatedUtc: 2026-07-19T03:30:00Z
-  lidarSourceManifest: {fileID: 4900000, guid: 3805ff9f812ab01d6800c44d22bd8e55, type: 3}
+  sourceLicense: City of Boulder 2020 imagery CC0-1.0; USGS 3DEP public domain; OSM
+    derivatives ODbL-1.0
+  generatedUtc: 2026-07-20T18:30:00Z
+  lidarSourceManifest: {fileID: 4900000, guid: 79edf231e6f80c0376b3cc76db14d018, type: 3}
   terrainCoordinateConversionReport: {fileID: 4900000, guid: 292a667d9299b6b43b8b6a9f9a49e5c5, type: 3}
   terrainConformanceReport: {fileID: 4900000, guid: 34110522981e40742b7f5f2e79f8026a, type: 3}
-  vegetationSourceManifest: {fileID: 4900000, guid: c159bb8c36e0782d50c6081453babbbe, type: 3}
-  buildingSourceManifest: {fileID: 4900000, guid: 60a323546a5c4f13bd11d09d53a42e72, type: 3}
-  lidarPipelineSha256: 1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5
-  vegetationPipelineSha256: 315076dff38bb58c8ae23f05cd65aeb3953fbe730c61ccb785d47de8ffa1db49
-  buildingPipelineSha256: 132cf7f768621becc0dab60b976f3d777b17f03323fc8f9f29bfd9d50dde4521
+  vegetationSourceManifest: {fileID: 4900000, guid: 482d1e01085d6223959c00f8d636a202, type: 3}
+  buildingSourceManifest: {fileID: 4900000, guid: 726e93e7a23d9ba2581a647625de2449, type: 3}
+  lidarPipelineSha256: 6fc3ae5091fb35599a5f8614be96a67e57b6b1f8e60924fc0aef0c939ff7fb2c
+  vegetationPipelineSha256: 91e643188b1363639c30e8bf22b148912500d5ceb4f7b6b32ce5695c0aba1600
+  buildingPipelineSha256: 1c35bcc519ec58e6d55575d34fef89f9ab8d51b0ea52976c1a44b2b323834c08
   worldMinimumMeters: {x: -2048, y: -2048}
   worldSizeMeters: {x: 4096, y: 4096}
   surfaceFeatures: {fileID: 2800000, guid: 694a8d7153f9db1f8ecd5293972f6d2b, type: 3}
   surfaceNormals: {fileID: 2800000, guid: f9d0bb15e0b184658fc8707aec537a96, type: 3}
   canopyNormals: {fileID: 2800000, guid: 8712b0de0c676fe0840fb2bc72cfa359, type: 3}
   canopyOcclusion: {fileID: 2800000, guid: 8712b0de0c676fe0840fb2bc72cfa359, type: 3}
-  canopyGeometryHandoff: {fileID: 2800000, guid: 449820e3dc7da0bfc6dc3067136b6f38, type: 3}
+  canopyGeometryHandoff: {fileID: 2800000, guid: 18a13b1451535438808209b855d29d2b, type: 3}
   airportPatchMesh: {fileID: 4300000, guid: 8940b62f91a872a4fb89cdb8415406db, type: 2}
-  nearTerrainMesh: {fileID: 4300000, guid: 795292fa54f48ec4d8e15cab1e90dbb7, type: 2}
+  nearTerrainMesh: {fileID: 4300000, guid: 69fcc93902cb4fc4383fcb2da6701274, type: 2}
   midTerrainMesh: {fileID: 4300000, guid: 4f672962bf8d5274ab31831c906c0bb3, type: 2}
   boundedSourcePointCount: 18834395
-  canopyComponentCount: 323
+  canopyComponentCount: 0
   nearTreeInstanceCount: 22
   midGroveClusterCount: 0
-  representedBuildingCount: 2875
-  orthophotoOnlyBuildingCount: 24804
-  buildingFootprintInflationMaximum: 1.099701
+  representedBuildingCount: 9692
+  orthophotoOnlyBuildingCount: 17987
+  buildingFootprintInflationMaximum: 1.05
   terrainMeanAbsoluteErrorMeters: 0.10746558
   terrainP95ErrorMeters: 0.37577444
   terrainMaximumErrorMeters: 1.4611648
