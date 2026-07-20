@@ -2,18 +2,21 @@
 
 ## Outcome
 
-**PARTIAL — preserve and push `feature/photoreal-aerial-surface-v1`; do not
-merge or tag it as a photoreal baseline.**
+**ACCEPTED DEVELOPMENT BASELINE — merge `feature/photoreal-aerial-surface-v1`
+to `main` and tag the exact integrated result.**
 
 The milestone materially fixes the semantic-topology defect that caused lidar
 relief and generated geometry to miss the features visible in the ground
 imagery. Product validation, dependency closure, 114 EditMode tests, nine
 PlayMode tests, the 81-view machine Visual QA, the scoped static budget, and an
-Android release-style build pass. The result is not merge-ready because full-
-resolution lead inspection still finds context-building art, close vegetation,
-canopy volume, oblique image sharpness, and reflection/lighting presentation
-below the requested visual targets. No physical Quest timing or worn visual
-acceptance was collected for this exact APK.
+Android release-style build pass. Full-resolution machine review still finds
+close vegetation, canopy volume, and some reflection/lighting presentation below
+the requested visual targets. A subsequent worn Quest 3 smoke of the exact APK
+confirmed correct building/ground alignment, mostly strong building presentation,
+consistent left/right ground sharpness, no noticed stereo instability or
+discomfort, and an overall human score of 8/10. The remaining visible blocker is
+the absence of rounded canopy volume. No physical Quest timing acceptance was
+collected for this exact APK.
 
 This document does not claim literal photorealism, surveyed topology, navigation
 accuracy, FAA approval, training credit, final flight-model fidelity, or final
@@ -202,6 +205,29 @@ requested high lead-review targets and original 8/10 merge gate were not met.
 The semantically correct map-only canopy is preferable to false raised relief,
 but its weak volume is still a visible product limitation.
 
+### Worn Quest 3 smoke
+
+The exact 134,254,889-byte APK with SHA-256
+`37ae3ce45f6acde21d181d9708dfb884b22a3599f17321628ca81c7fe5310d11`
+was installed and launched on the connected Quest 3. Android reported the Unity
+activity active with PID `6254`; the captured launch log contained no matching
+crash, ANR, OOM, or Unity-exception signature.
+
+Alex reported:
+
+- buildings and ground semantic features were aligned;
+- buildings were grounded and mostly looked great;
+- canopy shading aligned with photographed vegetation but still lacked raised,
+  rounded volume;
+- left/right ground sharpness was consistent;
+- no noticed stereo instability or discomfort; and
+- overall worn visual quality **8/10**.
+
+The smoke artifacts are external at
+`C:\Users\ovied\Dev\T2\T2-QuestFlight-product-artifacts\quick_headset_smoke_20260720_173210`.
+This short visual witness is sufficient for a development-baseline merge. It is
+not a frame-time, thermal, allocation, comfort-duration, or release acceptance.
+
 Key external evidence:
 
 - standard contact sheet:
@@ -230,12 +256,13 @@ absent. Simulator evidence is API/stereo/tracking/composition evidence only.
 | Product dependency closure | PASS |
 | EditMode | PASS, 114/114 |
 | PlayMode | PASS, 9/9 |
-| Production Visual QA | PASS machine integrity, 81/81; lead art gate PARTIAL |
+| Production Visual QA | PASS machine integrity, 81/81; machine lead art review 6.8/10 |
 | Static Quest planning budget | PASS within the scoped candidate ceilings |
 | Meta XR live stereo | PASS |
 | Meta XR aggregate replay | BLOCKED, ten missing genuine recordings |
 | Android release-style build | PASS |
-| Physical Quest timing/worn acceptance | NOT RUN for this APK |
+| Worn Quest visual smoke | PASS development baseline, 8/10; canopy-volume defect retained |
+| Physical Quest timing acceptance | NOT RUN for this APK |
 
 The Android build uses scene `Assets/Scenes/ProductionVerticalSlice.unity` and
 application ID `com.alexoviedo.t2.questflight`. The uncommitted build output is
@@ -245,16 +272,15 @@ SHA-256
 
 ## Delivery decision and next bounded milestone
 
-Preserve and push the feature branch as meaningful partial progress. Keep
-`main` and `standalone-scenery-baseline-v1` unchanged; do not create a
-`photoreal-aerial-surface-v1` tag. The branch demonstrates the correct semantic
-and coordinate architecture, not finished art.
+Merge and tag the exact feature result as an accepted standalone Quest
+development baseline. The worn 8/10 witness resolves the earlier machine-only
+art uncertainty while preserving the canopy-volume limitation explicitly. This
+is not a claim of literal photorealism or release readiness.
 
-The next bounded milestone should be **Quest-bounded semantic building and hero-
-vegetation art acceptance**: retain the exact AEQD/UTM transform, DTM terrain,
-OSM footprint batches, ownership masks, City imagery pyramid, and terrain-map
-canopy; improve only visible roof/facade forms/material response and a small
-near-airport tree/grove set, while holding the current static ceilings. Do not
-reintroduce raised canopy patches, sparse map-wide trees, generic OBJ importing,
-or another imagery/lidar ingestion pass. A short worn headset art smoke and
-physical timing gate will be required before any later merge decision.
+The next bounded milestone should be **rounded, flight-scale canopy volume**:
+retain the exact AEQD/UTM transform, DTM terrain, OSM footprint batches,
+ownership masks, City imagery pyramid, and aligned terrain-map canopy; add only
+a screen-size-bounded rounded grove representation for meaningful near/mid
+components while holding current static ceilings. Do not reintroduce raised
+terrain patches, per-tree map-wide scattering, generic OBJ importing, or another
+imagery/lidar ingestion pass.
