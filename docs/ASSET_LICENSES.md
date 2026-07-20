@@ -314,3 +314,7 @@ Recovery V2 introduces no new external model or imagery provider. It reuses the 
 - vegetation manifest: `315076dff38bb58c8ae23f05cd65aeb3953fbe730c61ccb785d47de8ffa1db49`.
 
 The current representation contains 2,875 fixed closed building shells and 24,804 orthophoto-only building features. Vegetation contains 22 Tier 0/1 placements in two batches; Tier 2/3 are orthophoto plus canopy-map representations. No raw OSM response, lidar point cloud, decoded NAIP raster, build, capture, or cache is committed.
+
+## Standalone Scenery Baseline V1 integration record
+
+The baseline integration introduces no new external visual asset, provider, or license. It promotes the validated Recovery V2 dependency closure unchanged. `Kloppenheim03_PureSky_2K.hdr` is normalized to the repository's existing Git LFS rule without changing its decoded bytes or rewriting history; the historical non-LFS blob is a bounded exception. The content SHA-256 remains `ffd28511add85d9508b51f50d3bbe4d822f4a5240800edb4f014edb75abdb1aa`. Future matching HDR revisions must use LFS.

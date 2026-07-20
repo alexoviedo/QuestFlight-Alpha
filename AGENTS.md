@@ -26,3 +26,5 @@
 - Legacy R&D systems may not reenter the product dependency closure.
 - The Unity prototype backend remains authoritative until native JSBSim passes every promotion gate.
 - Do not commit raw orthophotos, source archives, caches, generated builds, or unclear-license assets.
+- The annotated tag `standalone-scenery-baseline-v1` identifies the authoritative standalone scenery development baseline; it is not a release or photorealism/performance acceptance claim.
+- Failed scenery and URP experiment branches may not enter the active product dependency closure without a separately scoped, validated milestone.
