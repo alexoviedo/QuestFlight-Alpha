@@ -13,7 +13,56 @@ Run from the repository root:
 .\scripts\run_standalone_quest_gate.ps1
 ```
 
-`validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current standard Visual QA is a 56-view capture set and requires inspection of every full-resolution image. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. The baseline hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. Historical branch-specific values below are evidence only.
+`validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current feature candidate captures 81 Visual-QA views; every full-resolution image requires inspection. Historical milestones below retain their original capture counts. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. The accepted-baseline hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. Historical and feature-scoped values below are evidence only.
+
+## Photoreal Aerial Surface V1 semantic-alignment closure
+
+The result on `feature/photoreal-aerial-surface-v1`, sourced from main
+`197283fc4f17ae1f78db57c6fcc4e27dc995cd66`, is **PARTIAL — preserve the
+feature branch, do not merge or tag**. Its semantic/coordinate architecture and
+machine gates pass, but its full-resolution building, vegetation, oblique-ground,
+and reflection presentation remains below the milestone's lead visual targets.
+
+- aerial-surface Python unit suite: PASS 40/40; deterministic semantic validator:
+  PASS;
+- exact horizontal-frame contract: PASS at `3.026798e-9` m exact round-trip
+  residual and `0.002037` m runtime-affine residual; generic OBJ runtime
+  importing is bypassed;
+- bare-earth terrain: PASS at 46,426 vertices / 92,000 triangles, with
+  outside-high-variation MAE/p95/max of 0.101071/0.357723/1.387371 m,
+  `4.528938e-7` m runway-plane residual, and 0 m airport-boundary disagreement
+  over 4,404 probes;
+- building semantics: PASS for 9,692 non-hero OSM footprints, 16 native batches,
+  128,092 triangles, two separately owned hero footprints, and no mirrored or
+  cell-sized HLOD representation;
+- canopy ownership: PASS for zero raised meshes/triangles/draws, 63,308
+  terrain-map pixels plus 144 hero-owned pixels, and 100% exact assignment. The
+  deterministic 29-component / 1,960-triangle raised candidate is inactive and
+  rejected after inspected block/cliff silhouettes;
+- ProductIntegrity and product dependency closure: PASS; full EditMode: PASS
+  114/114; PlayMode: PASS 9/9;
+- production Visual QA: `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`, 81/81
+  captures. Every full-resolution r7 image, the affected final-validation-r3
+  seam/semantic frames, and both live-stereo eyes were inspected. Lead overall
+  aerial scenery improved from 5.5 to 6.8/10 but remains below the original
+  8/10 merge target; machine nonblank and structural checks do not override the
+  art-quality shortfall;
+- scoped static planning budget: PASS at 53 selected draws, 601,406 selected
+  triangles, 751,459 serialized scene triangles, 26 visible materials,
+  211,849,528 estimated texture bytes, three transparent slots, 13 shaders / 18
+  keyword combinations, and 4x MSAA;
+- Meta XR Simulator 201.0: live Quest-3-profile 72 Hz stereo/HMD/both-Touch
+  session PASS with scene-consistent nonblank eyes; aggregate
+  `BLOCKED_MISSING_RECORDED_REPLAYS` for all ten absent genuine `.vrs` files;
+- Android release-style build: PASS, application
+  `com.alexoviedo.t2.questflight`, 134,254,889 bytes, SHA-256
+  `37ae3ce45f6acde21d181d9708dfb884b22a3599f17321628ca81c7fe5310d11`;
+- physical Quest hardware timing/worn acceptance: NOT RUN for this APK.
+
+The complete record is
+`docs/evidence/PHOTOREAL_AERIAL_SURFACE_V1_2026-07-20.md`; external logs and
+captures are under
+`C:\Users\ovied\Dev\T2\T2-QuestFlight-product-artifacts\photoreal_aerial_surface_v1_20260720_114230`.
 
 ## Standalone Scenery Baseline V1
 

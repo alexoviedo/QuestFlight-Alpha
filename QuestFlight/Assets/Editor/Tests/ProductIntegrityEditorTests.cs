@@ -20,7 +20,9 @@ namespace QuestFlight.Editor.Tests
             ProductIntegrityReport report = ProductIntegrityValidator.Validate();
             Assert.That(report.passed, Is.True, report.ToString());
             Assert.That(report.rendererCount, Is.LessThanOrEqualTo(180));
-            Assert.That(report.triangleCount, Is.LessThanOrEqualTo(700000));
+            Assert.That(ProductIntegrityValidator.MaximumSerializedSceneTriangles, Is.EqualTo(700000),
+                "The historical/default product-integrity ceiling is frozen.");
+            Assert.That(report.triangleCount, Is.LessThanOrEqualTo(report.serializedTriangleCeiling));
             Assert.That(report.materialCount, Is.LessThanOrEqualTo(40));
         }
 

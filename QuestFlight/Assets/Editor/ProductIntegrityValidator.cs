@@ -29,6 +29,8 @@ namespace QuestFlight.Editor
         public int rendererCount;
         public int triangleCount;
         public int materialCount;
+        public int serializedTriangleCeiling;
+        public string serializedTriangleBudgetContract = "unclassified";
         public string aircraftPresentation = "unclassified";
 
         public bool passed => failures.Count == 0;
@@ -37,7 +39,8 @@ namespace QuestFlight.Editor
         {
             string summary =
                 $"passed={passed}; assets={assetCount}; sceneObjects={sceneObjectCount}; renderers={rendererCount}; " +
-                $"triangles={triangleCount}; materials={materialCount}; aircraft={aircraftPresentation}";
+                $"triangles={triangleCount}/{serializedTriangleCeiling} ({serializedTriangleBudgetContract}); " +
+                $"materials={materialCount}; aircraft={aircraftPresentation}";
             if (failures.Count > 0) summary += "; failures=" + string.Join(" | ", failures);
             if (warnings.Count > 0) summary += "; warnings=" + string.Join(" | ", warnings);
             return summary;
@@ -47,6 +50,12 @@ namespace QuestFlight.Editor
     /// <summary>Read-only integrity gate for the clean product repository and its one authored scene.</summary>
     public static class ProductIntegrityValidator
     {
+        // Historical/default serialized dependency-closure ceiling. Do not broaden this
+        // contract to accommodate a new representation; explicit product representations
+        // own a separately named ceiling below. QuestPerformanceBudgetBatchRunner still
+        // enforces the stricter 650k selected-view ceiling after fixed LOD selection.
+        public const int MaximumSerializedSceneTriangles = 700000;
+        public const int MaximumPhotorealAerialSurfaceSerializedSceneTriangles = 800000;
         private static readonly IReadOnlyDictionary<string, string> RequiredPackages =
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -492,9 +501,21 @@ namespace QuestFlight.Editor
                 }
                 report.triangleCount = (int)Math.Min(int.MaxValue, triangles);
                 report.materialCount = materials.Count;
+                bool usesPhotorealAerialSurface = roots
+                    .SelectMany(root => root.GetComponentsInChildren<PhotorealAerialSurfaceRoot>(true))
+                    .Any(surface => surface != null && surface.gameObject.activeInHierarchy);
+                report.serializedTriangleCeiling = usesPhotorealAerialSurface
+                    ? MaximumPhotorealAerialSurfaceSerializedSceneTriangles
+                    : MaximumSerializedSceneTriangles;
+                report.serializedTriangleBudgetContract = usesPhotorealAerialSurface
+                    ? "photoreal_aerial_surface_v1"
+                    : "historical_default";
                 Require(report.rendererCount <= 180,
                     $"scene renderer budget exceeded: {report.rendererCount}/180", report);
-                Require(triangles <= 700000, $"scene triangle budget exceeded: {triangles}/700000", report);
+                Require(triangles <= report.serializedTriangleCeiling,
+                    $"serialized scene triangle budget exceeded: {triangles}/{report.serializedTriangleCeiling} " +
+                    $"({report.serializedTriangleBudgetContract}); " +
+                    "selected-view Quest budget is validated separately", report);
                 Require(materials.Count <= 40, $"scene material budget exceeded: {materials.Count}/40", report);
 
                 Transform aircraftVisual = productRoot != null

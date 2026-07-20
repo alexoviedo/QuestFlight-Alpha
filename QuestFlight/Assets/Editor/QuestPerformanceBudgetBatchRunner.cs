@@ -23,10 +23,12 @@ namespace QuestFlight.Editor
     /// </summary>
     public static class QuestPerformanceBudgetBatchRunner
     {
-        private const int DrawCallTarget = 120;
-        private const long VisibleTriangleTarget = 600000L;
-        private const int MaterialTarget = 25;
-        private const long TextureMemoryTargetBytes = 180L * 1024L * 1024L;
+        // Photoreal Aerial Surface V1 replaces scenery and imagery in-place. These are
+        // hard development-baseline ceilings, not measured Quest performance claims.
+        private const int DrawCallTarget = 75;
+        private const long VisibleTriangleTarget = 650000L;
+        private const int MaterialTarget = 28;
+        private const long TextureMemoryTargetBytes = 210L * 1024L * 1024L;
         private const int TransparentMaterialSlotTarget = 3;
         private const string OutputEnvironmentVariable = "QFL_PERFORMANCE_BUDGET_DIR";
         private const string VisualReportEnvironmentVariable = "QFL_VISUAL_QA_REPORT";
@@ -74,7 +76,7 @@ namespace QuestFlight.Editor
                 .Single(camera => camera.CompareTag("MainCamera"));
 
             MaterialShaderReport materialReport = BuildMaterialShaderReport(renderers, vegetationBatches);
-            TextureMemoryReport textureReport = BuildTextureReport(materialReport.materials);
+            TextureMemoryReport textureReport = BuildTextureReport(materialReport.materials, roots);
             LodCullingReport lodReport = BuildLodReport(roots, renderers, vegetationBatches);
             StaticViewBudget defaultView = CaptureViewBudget(mainCamera, renderers);
             ProductionVisualQaBatchRunner.ProductionVisualQaReport visualReport = ReadVisualQaReport();
@@ -290,7 +292,9 @@ namespace QuestFlight.Editor
             };
         }
 
-        private static TextureMemoryReport BuildTextureReport(IEnumerable<MaterialEntry> materialEntries)
+        private static TextureMemoryReport BuildTextureReport(
+            IEnumerable<MaterialEntry> materialEntries,
+            IEnumerable<GameObject> roots)
         {
             Dictionary<string, TextureEntry> textures = new Dictionary<string, TextureEntry>(StringComparer.OrdinalIgnoreCase);
             foreach (MaterialEntry materialEntry in materialEntries)
@@ -309,6 +313,32 @@ namespace QuestFlight.Editor
                 }
             }
             AddTextureEstimate(textures, RenderSettings.customReflectionTexture);
+            foreach (PhotorealAerialSurfaceRoot surface in roots.SelectMany(root =>
+                         root.GetComponentsInChildren<PhotorealAerialSurfaceRoot>(true)))
+            {
+                AddTextureEstimate(textures, surface.nearOrthophoto);
+                AddTextureEstimate(textures, surface.midOrthophoto);
+                AddTextureEstimate(textures, surface.farOrthophoto);
+                AddTextureEstimate(textures, surface.normalizedSurfaceHeight);
+                AddTextureEstimate(textures, surface.surfaceClassification);
+                AddTextureEstimate(textures, surface.buildingOwnershipMask);
+                AddTextureEstimate(textures, surface.canopyOwnershipMask);
+            }
+            foreach (GeospatialMipController controller in roots.SelectMany(root =>
+                         root.GetComponentsInChildren<GeospatialMipController>(true)))
+            {
+                AddTextureEstimate(textures, controller.near4Km);
+                AddTextureEstimate(textures, controller.midNorthWest);
+                AddTextureEstimate(textures, controller.midNorthEast);
+                AddTextureEstimate(textures, controller.midSouthWest);
+                AddTextureEstimate(textures, controller.midSouthEast);
+                AddTextureEstimate(textures, controller.midBase12Km);
+                AddTextureEstimate(textures, controller.far24Km);
+            }
+            foreach (ReflectionProbe probe in roots.SelectMany(root =>
+                         root.GetComponentsInChildren<ReflectionProbe>(true)))
+                if (probe.mode == ReflectionProbeMode.Custom)
+                    AddTextureEstimate(textures, probe.customBakedTexture);
             foreach (LightmapData lightmap in LightmapSettings.lightmaps ?? Array.Empty<LightmapData>())
             {
                 if (lightmap == null) continue;
@@ -550,6 +580,16 @@ namespace QuestFlight.Editor
             long baseBytes;
             if (astcBlocks.TryGetValue(normalizedFormat, out int block))
                 baseBytes = (long)Math.Ceiling(width / (double)block) * (long)Math.Ceiling(height / (double)block) * 16L;
+            else if (string.Equals(normalizedFormat, "R8", StringComparison.Ordinal) ||
+                     string.Equals(normalizedFormat, "Alpha8", StringComparison.Ordinal))
+                baseBytes = (long)width * height;
+            else if (string.Equals(normalizedFormat, "R16", StringComparison.Ordinal) ||
+                     string.Equals(normalizedFormat, "RGB565", StringComparison.Ordinal) ||
+                     string.Equals(normalizedFormat, "RGBA4444", StringComparison.Ordinal) ||
+                     string.Equals(normalizedFormat, "ARGB4444", StringComparison.Ordinal))
+                baseBytes = (long)width * height * 2L;
+            else if (string.Equals(normalizedFormat, "RGB24", StringComparison.Ordinal))
+                baseBytes = (long)width * height * 3L;
             else
                 baseBytes = (long)width * height * 4L;
             return mipmaps ? (long)Math.Ceiling(baseBytes * 4d / 3d) : baseBytes;

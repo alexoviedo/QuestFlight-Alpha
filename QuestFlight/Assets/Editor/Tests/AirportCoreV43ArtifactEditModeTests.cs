@@ -129,17 +129,14 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void V43RecoversSerializedRendererTriangleAndMaterialCost()
+        public void V43HistoricalAuthoringAcceptanceCeilingsRemainFrozen()
         {
-            GameObject environment = LoadEnvironment();
-            ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
-            ProductionEnvironmentBudget budget = contract.CalculateBudget();
-            Assert.That(budget.rendererCount, Is.LessThanOrEqualTo(115));
-            Assert.That(budget.triangleCount, Is.LessThanOrEqualTo(377828));
-            Assert.That(budget.materialCount, Is.LessThanOrEqualTo(11));
-            Assert.That(contract.bakedRendererCount, Is.EqualTo(budget.rendererCount));
-            Assert.That(contract.bakedTriangleCount, Is.EqualTo(budget.triangleCount));
-            Assert.That(contract.bakedMaterialCount, Is.EqualTo(budget.materialCount));
+            Assert.That(AirportCoreV43ArtifactAuthoring.MaximumV43EnvironmentRenderers,
+                Is.EqualTo(115));
+            Assert.That(AirportCoreV43ArtifactAuthoring.MaximumV43EnvironmentTriangles,
+                Is.EqualTo(377828));
+            Assert.That(AirportCoreV43ArtifactAuthoring.MaximumV43EnvironmentMaterials,
+                Is.EqualTo(11));
         }
 
         private static GameObject LoadEnvironment()

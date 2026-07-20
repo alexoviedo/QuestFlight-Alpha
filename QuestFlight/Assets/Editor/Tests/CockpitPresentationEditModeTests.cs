@@ -13,6 +13,8 @@ namespace QuestFlightLab.Tests.EditMode
     {
         private const string AircraftPrefabPath = "Assets/Production/Prefabs/ProductionC172AircraftRig.prefab";
         private const string CockpitMaterialFolder = "Assets/Production/Materials/Cockpit";
+        private const string AuthoredReflectionMaterialFolder =
+            "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials";
         private const string CockpitRootName = "ImportedCockpitInterior";
 
         [Test]
@@ -34,13 +36,17 @@ namespace QuestFlightLab.Tests.EditMode
                     Assert.That(renderer.shadowCastingMode, Is.EqualTo(ShadowCastingMode.Off), renderer.name);
                     Assert.That(renderer.receiveShadows, Is.False, renderer.name);
                     Assert.That(renderer.lightProbeUsage, Is.EqualTo(LightProbeUsage.Off), renderer.name);
-                    Assert.That(renderer.reflectionProbeUsage, Is.EqualTo(ReflectionProbeUsage.Simple), renderer.name);
+                    Assert.That(renderer.reflectionProbeUsage,
+                        Is.EqualTo(ReflectionProbeUsage.BlendProbesAndSkybox), renderer.name);
                     Assert.That(renderer.motionVectorGenerationMode, Is.EqualTo(MotionVectorGenerationMode.ForceNoMotion), renderer.name);
                     foreach (Material material in renderer.sharedMaterials)
                     {
                         Assert.That(material, Is.Not.Null, renderer.name);
                         string path = AssetDatabase.GetAssetPath(material).Replace('\\', '/');
-                        Assert.That(path, Does.StartWith(CockpitMaterialFolder + "/"), path);
+                        Assert.That(path.StartsWith(CockpitMaterialFolder + "/", StringComparison.Ordinal) ||
+                                    path.StartsWith(AuthoredReflectionMaterialFolder + "/",
+                                        StringComparison.Ordinal),
+                            Is.True, path);
                         if (materials.Add(material) && HasBakedOcclusion(material)) bakedAoMaterials++;
                         if (material.HasProperty("roughnessFactor"))
                             Assert.That(material.GetFloat("roughnessFactor"), Is.InRange(0.28f, 0.88f), material.name);

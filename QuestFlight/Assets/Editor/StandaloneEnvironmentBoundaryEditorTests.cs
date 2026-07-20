@@ -101,7 +101,7 @@ namespace QuestFlight.EditorTests
                 Assert.That(sourceAirport, Is.Not.Null);
                 Assert.That(sourceAirport.triangles.Length / 3, Is.EqualTo(76800));
                 Assert.That(AssetDatabase.GetAssetPath(Required(root, "Terrain_Near4km_USGS").sharedMesh),
-                    Is.EqualTo(AerialSceneryV1IntegrationAuthoring.NearTerrainPath));
+                    Is.EqualTo(PhotorealAerialSurfaceNativeMeshAuthoring.TerrainNativePath));
                 Assert.That(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(Required(root,
                     "Terrain_Mid12km_USGS").sharedMesh)), Is.EqualTo("4f672962bf8d5274ab31831c906c0bb3"));
                 Assert.That(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(Required(root,

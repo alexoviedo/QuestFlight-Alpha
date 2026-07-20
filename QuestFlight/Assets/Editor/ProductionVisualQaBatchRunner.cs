@@ -7,6 +7,7 @@ using System.Text;
 using QuestFlightLab.Aircraft;
 using QuestFlightLab.Environment;
 using QuestFlightLab.Flight;
+using QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor;
 using QuestFlightLab.Runtime;
 using Unity.XR.CoreUtils;
 using UnityEditor;
@@ -26,10 +27,10 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 56;
-        private const int DrawCallTarget = 120;
-        private const long VisibleTriangleTarget = 600000L;
-        private const int SceneMaterialTarget = 25;
+        private const int RequiredShotCount = 81;
+        private const int DrawCallTarget = 75;
+        private const long VisibleTriangleTarget = 650000L;
+        private const int SceneMaterialTarget = 28;
         private const string ProductionScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
         private static readonly Vector3 RepresentativeCalibrationOffset = new Vector3(0.015f, 0.020f, -0.025f);
 
@@ -76,6 +77,10 @@ namespace QuestFlightLab.Editor
                     report.shots.Where(shot => shot.id.StartsWith("v4_after_", StringComparison.Ordinal)).ToList(),
                     outputDir,
                     "airport_core_after_contact_sheet.png");
+                report.photorealSurfaceContactSheetPath = BuildContactSheet(
+                    report.shots.Where(shot => shot.id.StartsWith("pasv1_", StringComparison.Ordinal)).ToList(),
+                    outputDir,
+                    "photoreal_aerial_surface_contact_sheet.png");
                 FinalizeReport(context, report);
             }
             catch (Exception exception)
@@ -534,7 +539,439 @@ namespace QuestFlightLab.Editor
             SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
             context.animator?.ClearControlStateForTest();
             context.visibility?.SetCockpitView();
+            RenderPhotorealAerialSurfaceShots(context, report, outputDir, width, height);
             RenderAirportCoreBenchmarkAbShots(context, report, outputDir, width, height);
+        }
+
+        private static void RenderPhotorealAerialSurfaceShots(
+            VisualContext context,
+            ProductionVisualQaReport report,
+            string outputDir,
+            int width,
+            int height)
+        {
+            PhotorealAerialSurfaceRoot surface = context.environment
+                .GetComponentsInChildren<PhotorealAerialSurfaceRoot>(true).Single();
+            Renderer[] buildings = surface.buildingSurfaceRenderers.Where(item => item != null).ToArray();
+            Renderer[] canopy = surface.canopySurfaceRenderers.Where(item => item != null).ToArray();
+            Renderer[] authoredCanopyRenderers = surface.productionCanopySurfaceLayer
+                .GetComponentsInChildren<Renderer>(true);
+            if (canopy.Length != 0 || authoredCanopyRenderers.Length != 0)
+            {
+                throw new InvalidOperationException(
+                    "Photoreal Aerial Surface V1 ordinary canopy must be terrain-map-only; " +
+                    $"contract={canopy.Length}, hierarchy={authoredCanopyRenderers.Length} renderers.");
+            }
+            Vector3 center = context.runwayMidpoint;
+
+            Vector3 leftLow = center - context.runwayRight * 520f - context.runwayForward * 260f + Vector3.up * 115f;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_01_ground_left_low", "Photoreal surface left low-oblique", "photoreal_ground",
+                leftLow, LookAt(leftLow, center - context.runwayRight * 120f), 52f, ViewProfile.Environment));
+            Vector3 rightLow = center + context.runwayRight * 620f - context.runwayForward * 220f + Vector3.up * 115f;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_02_ground_right_low", "Photoreal surface right low-oblique", "photoreal_ground",
+                rightLow, LookAt(rightLow, center + context.runwayRight * 180f), 52f, ViewProfile.Environment));
+
+            foreach ((string id, string title, float altitude, float lateral) in new[]
+                     {
+                         ("pasv1_03_ground_100m", "Aerial surface at 100 m AGL", 100f, 390f),
+                         ("pasv1_04_ground_300m", "Aerial surface at 300 m AGL", 300f, 760f),
+                         ("pasv1_05_ground_500m", "Aerial surface at 500 m AGL", 500f, 1120f)
+                     })
+            {
+                Vector3 cameraPosition = center - context.runwayRight * lateral -
+                                         context.runwayForward * lateral * 0.35f + Vector3.up * altitude;
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    id, title, "photoreal_ground", cameraPosition,
+                    LookAt(cameraPosition, center + context.runwayForward * 260f), 55f, ViewProfile.Environment));
+            }
+
+            Material terrain = AssetDatabase.LoadAssetAtPath<Material>(
+                "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat");
+            float previousDiagnostic = terrain.GetFloat("_DiagnosticMode");
+            Vector3 diagnosticCamera = center - context.runwayRight * 820f + Vector3.up * 520f;
+            try
+            {
+                terrain.SetFloat("_DiagnosticMode", 1f);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "pasv1_06_texture_source_heatmap", "Texture-pyramid source-level diagnostic",
+                    "photoreal_diagnostic", diagnosticCamera, LookAt(diagnosticCamera, center), 56f,
+                    ViewProfile.Environment));
+                terrain.SetFloat("_DiagnosticMode", 3f);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "pasv1_07_texture_overlap_boundary", "Texture overlap and boundary diagnostic",
+                    "photoreal_diagnostic", diagnosticCamera, LookAt(diagnosticCamera, center), 56f,
+                    ViewProfile.Environment));
+            }
+            finally
+            {
+                terrain.SetFloat("_DiagnosticMode", previousDiagnostic);
+            }
+
+            CaptureSemanticDistanceShot(context, report, outputDir, width, height, buildings, center,
+                500f, "pasv1_08_buildings_500m", "2.5D building surface at 500 m", "photoreal_building");
+            CaptureSemanticDistanceShot(context, report, outputDir, width, height, buildings, center,
+                1000f, "pasv1_09_buildings_1km", "2.5D building surface at 1 km", "photoreal_building");
+            CaptureSemanticDistanceShot(context, report, outputDir, width, height, buildings, center,
+                3000f, "pasv1_10_buildings_3km", "2.5D building surface at 3 km", "photoreal_building");
+
+            Vector3 nearBuildingPoint = RepresentativeSurfacePointAtRadius(buildings, center, 650f);
+            Vector3 roofCamera = nearBuildingPoint + Vector3.up * 180f;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_11_building_roof_topdown", "Orthophoto-integrated building roofs",
+                "photoreal_building", roofCamera,
+                LookAt(roofCamera, nearBuildingPoint), 38f, ViewProfile.Environment));
+            Vector3 facadeCamera = nearBuildingPoint - context.runwayForward * 85f +
+                                   context.runwayRight * 32f + Vector3.up * 18f;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_12_building_facade", "Shared facade-atlas response",
+                "photoreal_building", facadeCamera,
+                LookAt(facadeCamera, nearBuildingPoint + Vector3.up * 4f), 42f,
+                ViewProfile.Environment));
+
+            CanopyMapEvidence canopyEvidence = BuildCanopyMapEvidence(terrain, context.environment, center);
+            CanopyMapSample canopy250 = canopyEvidence.SelectAtRadius(250f);
+            CanopyMapSample canopy500 = canopyEvidence.SelectAtRadius(500f);
+            CanopyMapSample canopy1000 = canopyEvidence.SelectAtRadius(1000f);
+            CanopyMapSample canopyPatternSample = canopyEvidence.SelectAtRadius(1400f);
+            CanopyMapSample canopyTopSample = canopyEvidence.SelectDensest(250f, 1500f);
+
+            CaptureCanopyMapDistanceShot(context, report, outputDir, width, height, canopy250, center,
+                250f, "pasv1_13_canopy_250m", "Terrain-map canopy at 250 m", "photoreal_canopy");
+            CaptureCanopyMapDistanceShot(context, report, outputDir, width, height, canopy500, center,
+                500f, "pasv1_14_canopy_500m", "Terrain-map canopy at 500 m", "photoreal_canopy");
+            CaptureCanopyMapDistanceShot(context, report, outputDir, width, height, canopy1000, center,
+                1000f, "pasv1_15_canopy_1km", "Terrain-map canopy at 1 km", "photoreal_canopy");
+
+            Vector3 canopyPatternDirection = Vector3.ProjectOnPlane(
+                canopyPatternSample.worldPosition - center, Vector3.up).normalized;
+            if (canopyPatternDirection.sqrMagnitude < 0.5f)
+                throw new InvalidOperationException("Pattern-altitude canopy-map target has no stable radial direction.");
+            Vector3 canopyPattern = canopyPatternSample.worldPosition - canopyPatternDirection * 360f +
+                                    Vector3.up * 430f;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_16_canopy_pattern", "Terrain-map canopy from pattern altitude", "photoreal_canopy",
+                canopyPattern, LookAt(canopyPattern, canopyPatternSample.worldPosition), 50f,
+                ViewProfile.Environment));
+            Vector3 canopyTop = canopyTopSample.worldPosition + Vector3.up * 520f;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_17_canopy_topdown", "Terrain-map canopy top-down integration", "photoreal_canopy",
+                canopyTop, LookAt(canopyTop, canopyTopSample.worldPosition), 44f, ViewProfile.Environment));
+
+            float previousTerrainDiagnostic = terrain.GetFloat("_DiagnosticMode");
+            float previousCanopyColorStrength = terrain.GetFloat("_AerialCanopyColorStrength");
+            float previousCanopyNormalStrength = terrain.GetFloat("_AerialCanopyNormalStrength");
+            Color previousCanopyTint = terrain.GetColor("_AerialCanopyTint");
+            try
+            {
+                // The terrain shader's texture-level diagnostics deliberately bypass the
+                // canopy branch. Keep the production branch active and exaggerate only its
+                // serialized map response so this editor-only capture proves exact handoff
+                // ownership without adding a runtime renderer or shader variant.
+                terrain.SetFloat("_DiagnosticMode", 0f);
+                terrain.SetFloat("_AerialCanopyColorStrength", 1f);
+                terrain.SetFloat("_AerialCanopyNormalStrength", 0f);
+                terrain.SetColor("_AerialCanopyTint", new Color(0.02f, 1f, 0.92f, 1f));
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "pasv1_21_canopy_height_heatmap", "Terrain canopy-map handoff diagnostic",
+                    "photoreal_diagnostic", canopyTop, LookAt(canopyTop, canopyTopSample.worldPosition), 44f,
+                    ViewProfile.Environment));
+            }
+            finally
+            {
+                terrain.SetFloat("_DiagnosticMode", previousTerrainDiagnostic);
+                terrain.SetFloat("_AerialCanopyColorStrength", previousCanopyColorStrength);
+                terrain.SetFloat("_AerialCanopyNormalStrength", previousCanopyNormalStrength);
+                terrain.SetColor("_AerialCanopyTint", previousCanopyTint);
+            }
+
+            SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
+            Vector3 pilotEye = context.rig.PilotSeatAnchor.position;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_22_cockpit_windshield", "Cockpit windshield material response",
+                "photoreal_cockpit", pilotEye,
+                context.originalAircraftRotation * Quaternion.Euler(0f, 1.5f, 0f), 72f,
+                ViewProfile.Cockpit));
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_18_cockpit_side_window", "Cockpit side-window material response",
+                "photoreal_cockpit", pilotEye,
+                context.originalAircraftRotation * Quaternion.Euler(-2f, 68f, 0f), 68f,
+                ViewProfile.Cockpit));
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_23_instrument_glass", "Instrument-cover reflection response",
+                "photoreal_cockpit", pilotEye + context.rig.transform.TransformVector(
+                    new Vector3(0f, -0.025f, 0.015f)),
+                context.originalAircraftRotation * Quaternion.Euler(9f, 0f, 0f), 56f,
+                ViewProfile.Cockpit));
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_24_cockpit_ao_only", "Stable cockpit AO-only profile",
+                "photoreal_cockpit", pilotEye,
+                context.originalAircraftRotation * Quaternion.Euler(6f, 0f, 0f), 62f,
+                ViewProfile.Cockpit));
+            Vector3 aircraftTarget = context.rig.transform.position + Vector3.up * 0.2f;
+            Vector3 underside = aircraftTarget - context.rig.transform.forward * 8f +
+                                context.rig.transform.right * 5f - Vector3.up * 3.2f;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_19_aircraft_underside_reflection", "Aircraft underside ground/sky reflection balance",
+                "photoreal_reflection", underside, LookAt(underside, aircraftTarget), 48f,
+                ViewProfile.External));
+            Vector3 externalReflection = aircraftTarget - context.rig.transform.forward * 12f +
+                                         context.rig.transform.right * 8f + Vector3.up * 4.5f;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_25_aircraft_external_reflection", "Aircraft exterior reflection balance",
+                "photoreal_reflection", externalReflection, LookAt(externalReflection, aircraftTarget), 52f,
+                ViewProfile.External));
+
+            PhotorealAerialReflectionAuthoring.WithCockpitShadowCandidateForDevelopment(
+                context.scene,
+                () =>
+                {
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "pasv1_20_cockpit_shadow_candidate", "Development-selectable bounded cockpit shadow",
+                    "photoreal_cockpit", pilotEye,
+                    context.originalAircraftRotation * Quaternion.Euler(6f, 0f, 0f), 62f,
+                    ViewProfile.Cockpit));
+                });
+        }
+
+        private static void CaptureSemanticDistanceShot(
+            VisualContext context,
+            ProductionVisualQaReport report,
+            string outputDir,
+            int width,
+            int height,
+            Renderer[] renderers,
+            Vector3 reference,
+            float radius,
+            string id,
+            string title,
+            string category)
+        {
+            Vector3 target = RepresentativeSurfacePointAtRadius(renderers, reference, radius);
+            Vector3 horizontal = Vector3.ProjectOnPlane(target - reference, Vector3.up).normalized;
+            if (horizontal.sqrMagnitude < 0.01f) horizontal = Vector3.forward;
+            Vector3 cameraPosition = target - horizontal * Mathf.Clamp(radius * 0.22f, 70f, 420f) +
+                                     Vector3.up * Mathf.Clamp(radius * 0.18f, 38f, 380f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                id, title, category, cameraPosition,
+                LookAt(cameraPosition, target + Vector3.up * 4f), 46f, ViewProfile.Environment));
+        }
+
+        private static void CaptureCanopyMapDistanceShot(
+            VisualContext context,
+            ProductionVisualQaReport report,
+            string outputDir,
+            int width,
+            int height,
+            CanopyMapSample sample,
+            Vector3 reference,
+            float radius,
+            string id,
+            string title,
+            string category)
+        {
+            if (sample.maskCode < 128 || sample.localSupportPixels < 4)
+                throw new InvalidOperationException($"{id} does not target a supported canopy-map pixel.");
+            Vector3 horizontal = Vector3.ProjectOnPlane(sample.worldPosition - reference, Vector3.up).normalized;
+            if (horizontal.sqrMagnitude < 0.5f)
+                throw new InvalidOperationException($"{id} canopy-map target has no stable view direction.");
+            Vector3 cameraPosition = sample.worldPosition -
+                                     horizontal * Mathf.Clamp(radius * 0.22f, 70f, 420f) +
+                                     Vector3.up * Mathf.Clamp(radius * 0.18f, 38f, 380f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                id, title, category, cameraPosition,
+                LookAt(cameraPosition, sample.worldPosition + Vector3.up * 1.5f), 46f,
+                ViewProfile.Environment));
+        }
+
+        private static CanopyMapEvidence BuildCanopyMapEvidence(
+            Material terrain,
+            ProductionEnvironmentRoot environment,
+            Vector3 reference)
+        {
+            if (terrain == null || terrain.shader == null ||
+                terrain.shader.name != "QuestFlight/KBDU Terrain Pyramid")
+                throw new InvalidOperationException("Canopy-map QA requires the authoritative terrain material.");
+            foreach (string property in new[]
+                     {
+                         "_AerialCanopyHandoffMask",
+                         "_AerialCanopySurfaceFeatures",
+                         "_AerialCanopyNormalOcclusion",
+                         "_AerialCanopyLocalBounds",
+                         "_AerialCanopyProductToSourceRow0",
+                         "_AerialCanopyProductToSourceRow1",
+                         "_AerialCanopyColorStrength",
+                         "_AerialCanopyNormalStrength",
+                         "_AerialCanopyTint",
+                         "_DiagnosticMode"
+                     })
+            {
+                if (!terrain.HasProperty(property))
+                    throw new InvalidOperationException("Terrain canopy-map binding is missing: " + property);
+            }
+            if (terrain.GetFloat("_AerialCanopyColorStrength") <= 0f ||
+                terrain.GetFloat("_AerialCanopyNormalStrength") <= 0f)
+                throw new InvalidOperationException("Production canopy-map response is disabled on the terrain material.");
+            if (terrain.GetTexture("_AerialCanopySurfaceFeatures") == null ||
+                terrain.GetTexture("_AerialCanopyNormalOcclusion") == null)
+                throw new InvalidOperationException("Terrain canopy-map source textures are not serialized.");
+            Texture2D handoff = terrain.GetTexture("_AerialCanopyHandoffMask") as Texture2D;
+            if (handoff == null)
+                throw new InvalidOperationException("Terrain canopy-map handoff is not a Texture2D asset.");
+            string handoffPath = AssetDatabase.GetAssetPath(handoff);
+            if (string.IsNullOrWhiteSpace(handoffPath))
+                throw new InvalidOperationException("Terrain canopy-map handoff has no asset path.");
+            string absolutePath = Path.GetFullPath(Path.Combine(
+                Application.dataPath, "..", handoffPath.Replace('/', Path.DirectorySeparatorChar)));
+            if (!File.Exists(absolutePath))
+                throw new FileNotFoundException("Terrain canopy-map handoff file is missing.", absolutePath);
+
+            Texture2D readable = new Texture2D(2, 2, TextureFormat.RGBA32, false, true);
+            Color32[] pixels;
+            int textureWidth;
+            int textureHeight;
+            try
+            {
+                if (!ImageConversion.LoadImage(readable, File.ReadAllBytes(absolutePath), false))
+                    throw new InvalidOperationException("Terrain canopy-map handoff PNG could not be decoded.");
+                textureWidth = readable.width;
+                textureHeight = readable.height;
+                pixels = readable.GetPixels32();
+            }
+            finally
+            {
+                Object.DestroyImmediate(readable);
+            }
+            if (textureWidth < 2 || textureHeight < 2 || pixels.Length != textureWidth * textureHeight)
+                throw new InvalidOperationException("Terrain canopy-map handoff dimensions are invalid.");
+
+            int stride = textureWidth + 1;
+            int[] integral = new int[stride * (textureHeight + 1)];
+            int nonzeroPixelCount = 0;
+            for (int y = 0; y < textureHeight; y++)
+            {
+                int rowCount = 0;
+                for (int x = 0; x < textureWidth; x++)
+                {
+                    bool owned = pixels[y * textureWidth + x].r >= 128;
+                    if (owned)
+                    {
+                        rowCount++;
+                        nonzeroPixelCount++;
+                    }
+                    integral[(y + 1) * stride + x + 1] = integral[y * stride + x + 1] + rowCount;
+                }
+            }
+            if (nonzeroPixelCount < 256)
+                throw new InvalidOperationException(
+                    $"Terrain canopy-map handoff has insufficient nonzero evidence: {nonzeroPixelCount} pixels.");
+
+            Vector4 bounds = terrain.GetVector("_AerialCanopyLocalBounds");
+            Vector4 row0 = terrain.GetVector("_AerialCanopyProductToSourceRow0");
+            Vector4 row1 = terrain.GetVector("_AerialCanopyProductToSourceRow1");
+            if (bounds.z <= 0f || bounds.w <= 0f)
+                throw new InvalidOperationException("Terrain canopy-map inverse bounds are invalid.");
+            float determinant = row0.x * row1.y - row0.y * row1.x;
+            if (!float.IsFinite(determinant) || Mathf.Abs(determinant) < 0.5f)
+                throw new InvalidOperationException("Terrain canopy-map product/source transform is singular.");
+            if (environment.authoritativeTerrainSurface == null)
+                throw new InvalidOperationException("Canopy-map QA requires the authoritative terrain query asset.");
+
+            List<CanopyMapSample> samples = new List<CanopyMapSample>(nonzeroPixelCount);
+            const int supportRadiusPixels = 10;
+            for (int y = 0; y < textureHeight; y++)
+            {
+                for (int x = 0; x < textureWidth; x++)
+                {
+                    byte maskCode = pixels[y * textureWidth + x].r;
+                    if (maskCode < 128) continue;
+                    float u = (x + 0.5f) / textureWidth;
+                    float v = (y + 0.5f) / textureHeight;
+                    float sourceX = bounds.x + u / bounds.z;
+                    float sourceZ = bounds.y + v / bounds.w;
+                    float relativeX = sourceX - row0.z;
+                    float relativeZ = sourceZ - row1.z;
+                    float productX = (row1.y * relativeX - row0.y * relativeZ) / determinant;
+                    float productZ = (-row1.x * relativeX + row0.x * relativeZ) / determinant;
+                    if (!float.IsFinite(productX) || !float.IsFinite(productZ) ||
+                        !environment.authoritativeTerrainSurface.TrySample(
+                            productX, productZ, out ProductionTerrainSample terrainSample))
+                        continue;
+                    int support = SumIntegralWindow(
+                        integral, stride, textureWidth, textureHeight,
+                        x - supportRadiusPixels, y - supportRadiusPixels,
+                        x + supportRadiusPixels, y + supportRadiusPixels);
+                    Vector3 world = new Vector3(productX, terrainSample.heightMeters + 0.05f, productZ);
+                    float planarRadius = Vector2.Distance(
+                        new Vector2(world.x, world.z), new Vector2(reference.x, reference.z));
+                    samples.Add(new CanopyMapSample(
+                        world, x, y, maskCode, support, planarRadius));
+                }
+            }
+            if (samples.Count < 256)
+                throw new InvalidOperationException(
+                    $"Only {samples.Count}/{nonzeroPixelCount} canopy-map pixels map to authored terrain.");
+            return new CanopyMapEvidence(samples, nonzeroPixelCount);
+        }
+
+        private static int SumIntegralWindow(
+            int[] integral,
+            int stride,
+            int width,
+            int height,
+            int minimumX,
+            int minimumY,
+            int maximumX,
+            int maximumY)
+        {
+            int x0 = Mathf.Clamp(minimumX, 0, width);
+            int y0 = Mathf.Clamp(minimumY, 0, height);
+            int x1 = Mathf.Clamp(maximumX + 1, 0, width);
+            int y1 = Mathf.Clamp(maximumY + 1, 0, height);
+            return integral[y1 * stride + x1] - integral[y0 * stride + x1] -
+                   integral[y1 * stride + x0] + integral[y0 * stride + x0];
+        }
+
+        private static Vector3 RepresentativeSurfacePointAtRadius(
+            IEnumerable<Renderer> renderers,
+            Vector3 reference,
+            float radius)
+        {
+            bool found = false;
+            float bestScore = float.PositiveInfinity;
+            Vector3 best = reference;
+            foreach (Renderer renderer in renderers.Where(item => item != null))
+            {
+                MeshFilter filter = renderer.GetComponent<MeshFilter>();
+                Mesh mesh = filter != null ? filter.sharedMesh : null;
+                if (mesh == null) continue;
+                Vector3[] vertices = mesh.vertices;
+                float elevatedThreshold = renderer.bounds.min.y + Mathf.Min(1.5f, renderer.bounds.size.y * 0.2f);
+                foreach (Vector3 vertex in vertices)
+                {
+                    Vector3 world = filter.transform.TransformPoint(vertex);
+                    if (world.y < elevatedThreshold) continue;
+                    float planarRadius = Vector2.Distance(
+                        new Vector2(world.x, world.z), new Vector2(reference.x, reference.z));
+                    float score = Mathf.Abs(planarRadius - radius);
+                    if (score >= bestScore) continue;
+                    bestScore = score;
+                    best = world;
+                    found = true;
+                }
+            }
+            if (!found)
+                throw new InvalidOperationException($"No elevated semantic-surface vertex exists near {radius:0} m.");
+            return best;
+        }
+
+        private static Renderer ClosestRendererAtRadius(Renderer[] renderers, Vector3 reference, float radius)
+        {
+            if (renderers == null || renderers.Length == 0)
+                throw new InvalidOperationException("A semantic QA view has no authored renderer.");
+            return renderers.OrderBy(item => Mathf.Abs(
+                Vector3.ProjectOnPlane(item.bounds.center - reference, Vector3.up).magnitude - radius)).First();
         }
 
         private static void RenderAirportCoreBenchmarkAbShots(
@@ -1040,6 +1477,7 @@ namespace QuestFlightLab.Editor
             builder.AppendLine($"- Scene: `{report.scenePath}`; architecture `{report.architectureVersion}`");
             builder.AppendLine($"- Captures: {report.shots.Count}/{report.requiredShotCount}; contact sheet `{report.contactSheetPath}`");
             builder.AppendLine($"- Airport-core A/B sheets: `{report.airportCoreBeforeContactSheetPath}` / `{report.airportCoreAfterContactSheetPath}`");
+            builder.AppendLine($"- Photoreal aerial surface sheet: `{report.photorealSurfaceContactSheetPath}`");
             builder.AppendLine($"- Authored hierarchy/environment contract: {report.authoredHierarchyPassed}/{report.productionEnvironmentContractPassed}");
             builder.AppendLine($"- One enabled XR Origin: {report.singleEnabledXrOrigin}");
             builder.AppendLine($"- Legacy bootstrap/UI suppressed: {report.legacyBootstrapAndUiSuppressed}");
@@ -1352,6 +1790,95 @@ namespace QuestFlightLab.Editor
             }
         }
 
+        private sealed class CanopyMapEvidence
+        {
+            private readonly IReadOnlyList<CanopyMapSample> samples;
+            private readonly int sourceNonzeroPixelCount;
+
+            public CanopyMapEvidence(
+                IReadOnlyList<CanopyMapSample> samples,
+                int sourceNonzeroPixelCount)
+            {
+                this.samples = samples ?? throw new ArgumentNullException(nameof(samples));
+                this.sourceNonzeroPixelCount = sourceNonzeroPixelCount;
+                if (samples.Count == 0)
+                    throw new InvalidOperationException("Canopy-map evidence has no terrain-mapped samples.");
+            }
+
+            public CanopyMapSample SelectAtRadius(float desiredRadiusMeters)
+            {
+                float tolerance = Mathf.Max(100f, desiredRadiusMeters * 0.35f);
+                CanopyMapSample[] eligible = samples
+                    .Where(sample => Mathf.Abs(sample.planarRadiusMeters - desiredRadiusMeters) <= tolerance)
+                    .ToArray();
+                if (eligible.Length == 0)
+                {
+                    float nearest = samples.Min(sample =>
+                        Mathf.Abs(sample.planarRadiusMeters - desiredRadiusMeters));
+                    throw new InvalidOperationException(
+                        $"No nonzero terrain canopy-map pixel exists within {tolerance:0.0} m of " +
+                        $"the {desiredRadiusMeters:0.0} m QA radius; nearest error={nearest:0.0} m, " +
+                        $"sourceNonzero={sourceNonzeroPixelCount}.");
+                }
+                int strongestSupport = eligible.Max(sample => sample.localSupportPixels);
+                int supportFloor = Mathf.Max(4, strongestSupport / 3);
+                return eligible
+                    .Where(sample => sample.localSupportPixels >= supportFloor)
+                    .OrderBy(sample => Mathf.Abs(sample.planarRadiusMeters - desiredRadiusMeters))
+                    .ThenByDescending(sample => sample.localSupportPixels)
+                    .ThenBy(sample => sample.pixelY)
+                    .ThenBy(sample => sample.pixelX)
+                    .First();
+            }
+
+            public CanopyMapSample SelectDensest(float minimumRadiusMeters, float maximumRadiusMeters)
+            {
+                CanopyMapSample[] eligible = samples.Where(sample =>
+                    sample.planarRadiusMeters >= minimumRadiusMeters &&
+                    sample.planarRadiusMeters <= maximumRadiusMeters).ToArray();
+                if (eligible.Length == 0)
+                    throw new InvalidOperationException(
+                        $"No nonzero terrain canopy-map pixel exists in the required " +
+                        $"{minimumRadiusMeters:0}-{maximumRadiusMeters:0} m QA band.");
+                CanopyMapSample selected = eligible
+                    .OrderByDescending(sample => sample.localSupportPixels)
+                    .ThenBy(sample => sample.planarRadiusMeters)
+                    .ThenBy(sample => sample.pixelY)
+                    .ThenBy(sample => sample.pixelX)
+                    .First();
+                if (selected.localSupportPixels < 4)
+                    throw new InvalidOperationException(
+                        "The densest terrain canopy-map QA target has insufficient local support.");
+                return selected;
+            }
+        }
+
+        private readonly struct CanopyMapSample
+        {
+            public readonly Vector3 worldPosition;
+            public readonly int pixelX;
+            public readonly int pixelY;
+            public readonly byte maskCode;
+            public readonly int localSupportPixels;
+            public readonly float planarRadiusMeters;
+
+            public CanopyMapSample(
+                Vector3 worldPosition,
+                int pixelX,
+                int pixelY,
+                byte maskCode,
+                int localSupportPixels,
+                float planarRadiusMeters)
+            {
+                this.worldPosition = worldPosition;
+                this.pixelX = pixelX;
+                this.pixelY = pixelY;
+                this.maskCode = maskCode;
+                this.localSupportPixels = localSupportPixels;
+                this.planarRadiusMeters = planarRadiusMeters;
+            }
+        }
+
         private struct ImageStats
         {
             public int width, height;
@@ -1364,6 +1891,7 @@ namespace QuestFlightLab.Editor
             public int schemaVersion = 1;
             public string generatedUtc, unityVersion, scenePath, architectureVersion, outputDirectory, contactSheetPath;
             public string airportCoreBeforeContactSheetPath, airportCoreAfterContactSheetPath;
+            public string photorealSurfaceContactSheetPath;
             public int renderWidth, renderHeight, requiredShotCount;
             public bool productionEnvironmentContractPassed, authoredHierarchyPassed, singleEnabledXrOrigin, legacyBootstrapAndUiSuppressed;
             public string productionEnvironmentContract;

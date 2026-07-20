@@ -17,7 +17,7 @@ namespace QuestFlight.Editor.Tests
         private const string TerrainShaderPath =
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader";
         private const string GroundRoot =
-            "Assets/Production/Environment/AerialSceneryRecoveryV2/Ground/";
+            "Assets/Production/Environment/AerialSurfaceV1/Ground/";
         private const string BuildingPrefabPath =
             "Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_AerialBuildingsV1.prefab";
         private const string VegetationPrefabPath =
@@ -70,21 +70,21 @@ namespace QuestFlight.Editor.Tests
             Material material = AssetDatabase.LoadAssetAtPath<Material>(TerrainMaterialPath);
             Assert.That(material, Is.Not.Null);
             AssertTexture(material, "_NearAlbedo",
-                "Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
-                4096, TextureImporterFormat.ASTC_6x6);
-            AssertTexture(material, "_RecoveryMidNWAlbedo", GroundRoot + "KBDU_NAIP_2019_MidNW_2048.jpg",
+                GroundRoot + "KBDU_City2020_Near4km_8192.jpg",
+                8192, TextureImporterFormat.ASTC_8x8);
+            AssertTexture(material, "_RecoveryMidNWAlbedo", GroundRoot + "KBDU_City2020_MidNW_2048.jpg",
                 2048, TextureImporterFormat.ASTC_6x6);
-            AssertTexture(material, "_RecoveryMidNEAlbedo", GroundRoot + "KBDU_NAIP_2019_MidNE_2048.jpg",
+            AssertTexture(material, "_RecoveryMidNEAlbedo", GroundRoot + "KBDU_City2020_MidNE_2048.jpg",
                 2048, TextureImporterFormat.ASTC_6x6);
-            AssertTexture(material, "_RecoveryMidSWAlbedo", GroundRoot + "KBDU_NAIP_2019_MidSW_2048.jpg",
+            AssertTexture(material, "_RecoveryMidSWAlbedo", GroundRoot + "KBDU_City2020_MidSW_2048.jpg",
                 2048, TextureImporterFormat.ASTC_6x6);
-            AssertTexture(material, "_RecoveryMidSEAlbedo", GroundRoot + "KBDU_NAIP_2019_MidSE_2048.jpg",
+            AssertTexture(material, "_RecoveryMidSEAlbedo", GroundRoot + "KBDU_City2020_MidSE_2048.jpg",
                 2048, TextureImporterFormat.ASTC_6x6);
-            AssertTexture(material, "_MidAlbedo", GroundRoot + "KBDU_NAIP_2019_MidBase12km_4096.jpg",
-                4096, TextureImporterFormat.ASTC_10x10);
+            AssertTexture(material, "_MidAlbedo", GroundRoot + "KBDU_City2020_MidBase12km_8192.jpg",
+                8192, TextureImporterFormat.ASTC_10x10);
             AssertTexture(material, "_FarAlbedo",
-                "Assets/Production/Environment/Textures/KBDU_NAIP_2019_Far24km_2048.jpg",
-                2048, TextureImporterFormat.ASTC_6x6);
+                GroundRoot + "KBDU_City2020_Far24km_4096.jpg",
+                4096, TextureImporterFormat.ASTC_10x10);
 
             Assert.That(material.GetVector("_NearBlendStartEnd"),
                 Is.EqualTo(new Vector4(1800f, 1980f, 0f, 0f)));
@@ -96,14 +96,14 @@ namespace QuestFlight.Editor.Tests
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
             ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
             Assert.That(AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo),
-                Is.EqualTo(GroundRoot + "KBDU_NAIP_2019_MidBase12km_4096.jpg"));
+                Is.EqualTo(GroundRoot + "KBDU_City2020_MidBase12km_8192.jpg"));
 
             TextAsset source = AssetDatabase.LoadAssetAtPath<TextAsset>(
-                GroundRoot + "KBDU_GroundImageryRecoveryV2_SourceManifest.json");
+                GroundRoot + "KBDU_AerialSurfaceV1_SourceManifest.json");
             Assert.That(source, Is.Not.Null);
-            Assert.That(source.text, Does.Contain("USGSNAIPPlus"));
-            Assert.That(source.text, Does.Contain("public domain"));
-            Assert.That(source.text, Does.Contain("2019"));
+            Assert.That(source.text, Does.Contain("22b7c93a74394696824258f807f345ba"));
+            Assert.That(source.text, Does.Contain("CC0-1.0"));
+            Assert.That(source.text, Does.Contain("2020"));
         }
 
         [Test]
@@ -171,8 +171,8 @@ namespace QuestFlight.Editor.Tests
             TextureImporter importer = AssetImporter.GetAtPath(expectedPath) as TextureImporter;
             Assert.That(importer, Is.Not.Null, property);
             Assert.That(importer.mipmapEnabled, Is.True, property);
-            Assert.That(importer.streamingMipmaps, Is.False,
-                property + " uses custom world-space UVs, so automatic streaming residency is invalid.");
+            Assert.That(importer.streamingMipmaps, Is.True,
+                property + " must be managed through explicit requested-mip ownership.");
             Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Trilinear), property);
             Assert.That(importer.anisoLevel, Is.GreaterThanOrEqualTo(8), property);
             Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp), property);

@@ -3,10 +3,10 @@
 ```text
 ProductionWorldRoot
 ├── ProductionEnvironmentRoot (serialized baked environment)
-│   ├── Shared-ENU near/mid/far terrain and orthophoto pyramid
-│   ├── Authoritative fixed terrain surface and placement manifests (V2 branch)
-│   ├── Fixed closed building-shell batches, two near vegetation batches, and parked-aircraft HLOD
-│   ├── Terrain-owned Tier-2/3 canopy shading and orthophoto-only water (recovery branch)
+│   ├── Product-AEQD near/mid/far terrain and aligned orthophoto pyramid
+│   ├── Fixed DTM-only bare-earth terrain and semantic ownership manifests
+│   ├── OSM-footprint building batches, authored hero objects, and parked-aircraft HLOD
+│   ├── Terrain-owned ordinary-canopy shading and orthophoto-only water
 │   └── Bounded aircraft/runway blob shadow
 ├── ProductionInputRoot
 ├── AircraftSimulationRoot (one Unity prototype authority, CG pivot)
@@ -28,13 +28,13 @@ The hierarchy exists before frame zero. OpenXR owns tracked camera motion. Calib
 
 The shipping architecture is standalone Quest 3 only: Android ARM64, IL2CPP, Vulkan, OpenXR single-pass instanced stereo, ASTC, and 4x MSAA. A Windows/OpenXR process may exist only as a development host for Meta XR Simulator and is never a shipping profile or required runtime dependency. The simulator establishes stereo/tracking/input/composition behavior, not mobile GPU or thermal performance.
 
-The environment uses one east-north-up coordinate frame for the near, mid, and far terrain meshes and their public-domain orthophoto atlases. Explicit overlap bands blend the aligned pyramid levels without independent tile transforms. Shared materials and offline spatial batching bound scene cost. The accepted `standalone-scenery-baseline-v1` context-building shells deliberately use no runtime scale-changing LODGroups; no batch is described as GPU instanced unless its renderer and shader variants prove it.
+Visible environment geometry uses one product-local WGS84 AEQD east-north-up coordinate frame for the near, mid, and far terrain meshes and aligned orthophoto atlases. Lidar data textures retain their source-relative UTM 13N raster frame and are sampled only through the pinned transform described below; treating the two numeric grids as identical is invalid. Explicit overlap bands blend the aligned imagery levels without independent tile transforms. Shared materials and offline spatial batching bound scene cost. The accepted `standalone-scenery-baseline-v1` context-building shells deliberately use no runtime scale-changing LODGroups; no batch is described as GPU instanced unless its renderer and shader variants prove it.
 
 On Environment Reconstruction V2, `IProductionTerrainSurface` is the single query contract for height, normal, terrain zone, imagery UV, land-cover, runway/apron, water, and footprint-plane data. `ProductionPlacementManifest` serializes every grounded building, vegetation instance, parked aircraft, and represented water feature. Authoring and validation consume these assets; runtime code does not rebuild the world or repair its hierarchy.
 
-Lighting is one directional sun plus a CC0 photographic HDR sky used for skybox, ambient lighting, and a static custom reflection. In the accepted baseline the reservoir and minor-water renderers/material bindings are inactive and the photographed orthophoto is the only water presentation; retained source assets are not in the active visual dependency closure. A bounded authored blob shadow supplies runway contact without a realtime aircraft shadow map. Volumetric clouds and screen-space atmosphere effects are excluded.
+Lighting is one directional sun plus a CC0 photographic HDR sky used for skybox and ambient lighting. The current feature candidate adds static, imagery-aware global and bounded airport reflection textures without a runtime probe render; this foundation is not yet visually accepted. Reservoir and minor-water renderers/material bindings remain inactive and the photographed orthophoto is the only water presentation. A bounded authored blob shadow supplies runway contact without a realtime aircraft shadow map. Volumetric clouds and screen-space atmosphere effects are excluded.
 
-The current planning gate fails closed above 120 draw calls, 600,000 visible triangles, 25 visible materials, 180 MiB of estimated texture memory, or three transparent material slots. Mipmapped ASTC textures, bounded effects, fixed terrain, and no steady-state runtime hierarchy construction keep the budget predictable. The 56-view Editor QA and static inventory complement—without replacing—the physical-headset gate.
+The accepted-baseline planning gate fails closed above 120 draw calls, 600,000 visible triangles, 25 visible materials, 180 MiB of estimated texture memory, or three transparent material slots. Mipmapped ASTC textures, bounded effects, fixed terrain, and no steady-state runtime hierarchy construction keep the budget predictable. Visual-QA capture counts are milestone-specific (81 views on the current feature candidate); Editor QA and static inventory complement—without replacing—the physical-headset gate.
 
 Physical performance acceptance is fixed at 72 Hz and requires three distinct unrecorded runs of the same APK. Each run warms for 90 seconds and measures for 60 seconds. Only the physical Quest can establish app-PID CPU+GPU timing, stale/tear counts, thermals, controller/Guardian state, comfort, and worn-display quality; simulator or Editor timing cannot.
 
@@ -53,6 +53,40 @@ This branch remains a failed visual benchmark despite structural and budget vali
 On `feature/aerial-scenery-recovery-v2`, the active context representation covers all 27,679 bounded OSM source features exactly once: 2,875 fixed closed shells (26 hero, 1,152 near, 1,697 mid) and 24,804 ordinary features represented by orthophoto only. Sixteen shell renderers share one opaque material, total 46,005 triangles, and use no runtime LODGroup or per-building update. Tier 0/1 vegetation contains 22 deterministic placements (3/19) in two draws, 12,860 triangles, and one alpha-clipped material. Tier 2 owns no geometry or draw; Tier 2/3 canopy response comes from the orthophoto plus lidar height/normal/occlusion maps within the local 4,096 m square coverage.
 
 The same recovery adds four 2048² hot-zone ground quadrants at 1.984375 m/texel and one 4096² 12 km fallback at 2.9296875 m/texel, derived from the official public-domain 2019 USGS/USDA NAIP Plus source. World-space selection blends the original near atlas through the quadrants and fallback without runtime hierarchy changes. Mip chains remain resident because a correct custom-UV streaming contract has not been proven. This removes gross repetition at normal flight distances but does not restore source detail at taxi range. This representation is now the tagged standalone scenery development baseline. Machine review remains 5.3/10 while the prior worn smoke was approximately 7/10; neither score is a photorealism, public-release, or final performance claim.
+
+On `feature/photoreal-aerial-surface-v1`, the product uses a hybrid semantic
+surface rather than applying lidar DSM/nDSM to one raised ground mesh.
+`ProductionBareEarthTerrain` is sampled only from the 3DEP DTM;
+`ProductionBuildingSurfaceLayer` contains 9,692 OSM-footprint buildings in 16
+offline batches / 128,092 triangles; `ProductionCanopySurfaceLayer` is a
+fail-closed zero-geometry ownership root; and existing authored airport objects
+own the hero layer. Ordinary canopy outside the 250 m hero radius modifies the
+existing terrain draw through height, density, normal, occlusion, and ownership
+maps. The 63,308 terrain-map pixels plus 144 hero-owned pixels account for all
+63,452 eligible pixels exactly once. A 29-component / 1,960-triangle raised
+candidate is recorded only as rejected evidence because its blocks and closing
+skirts read as false ground relief.
+
+The lidar rasters retain origin-relative UTM zone 13N coordinates while product
+geometry, OSM, orthophoto, and Unity world coordinates remain in the KBDU-local
+WGS84 AEQD frame. Their deltas differ by up to 7.444086 m. Offline generation
+uses an exact AEQD↔UTM transform; the runtime sampling affine stays within
+0.002037 m and rotates source normals into product axes. A coordinate-preserving
+editor compiler bypasses Unity's generic OBJ handedness conversion, so the
+serialized terrain and building native meshes use identity transforms without
+runtime repair. This architecture is specified in
+`docs/AERIAL_SURFACE_ARCHITECTURE.md` and
+`docs/DSM_BUILDING_CANOPY_PIPELINE.md`.
+
+The same branch uses a fixed seven-texture City of Boulder 2020 CC0 pyramid
+(0.48828125 m/texel near, 1.46484375 m/texel pattern base, 5.859375 m/texel
+far) with explicit mip-residency ownership. Its scoped static planning result is
+53 selected draws, 601,406 selected triangles, 26 visible materials,
+211,849,528 estimated texture bytes, three transparent slots, and 4x MSAA. The
+static gates and Android build pass, but context-building art, hero vegetation,
+canopy volume, oblique imagery, and reflection/lighting presentation remain
+below the milestone's visual bar. It is therefore a branch-only partial result,
+not the tagged authority or a photorealism/performance claim.
 
 On `feature/airport-core-artifact-v4-3-1`, deterministic R0–R11 isolation proves that runway bands persist with constant unlit pavement and no markings. The runway has one pavement renderer and one marking renderer, no lightmap, no vertex colors, no duplicate, and an exact pavement/collider mesh identity; 52 of 106 pavement vertices nevertheless intersect the terrain over a signed clearance range of -5.09 to +4.40 mm. The existing opaque pavement pass therefore uses a bounded depth bias (`Offset -1, -1`) without changing geometry, physics, transforms, materials, textures, or draw count. Minor-water evidence cameras prove three OSM-backed nonzero mask components at ground, oblique, and aerial ranges; the architecture remains terrain-integrated and zero-draw-call. Reservoir assets are unchanged.
 

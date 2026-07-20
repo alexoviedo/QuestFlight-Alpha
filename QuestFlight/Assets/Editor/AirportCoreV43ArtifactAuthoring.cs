@@ -25,6 +25,9 @@ namespace QuestFlight.Editor
         public const string SourceMinorWaterMeshPath =
             "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_OtherWaterFeatures_Surface_V2.asset";
         public const int MaskResolution = 512;
+        public const int MaximumV43EnvironmentRenderers = 115;
+        public const int MaximumV43EnvironmentTriangles = 377828;
+        public const int MaximumV43EnvironmentMaterials = 11;
 
         public static void RunBatch()
         {
@@ -92,6 +95,16 @@ namespace QuestFlight.Editor
                 root.manifest.minorWaterUsesTerrainMask = true;
 
                 ProductionEnvironmentBudget budget = contract.CalculateBudget();
+                if (budget.rendererCount > MaximumV43EnvironmentRenderers ||
+                    budget.triangleCount > MaximumV43EnvironmentTriangles ||
+                    budget.materialCount > MaximumV43EnvironmentMaterials)
+                {
+                    throw new InvalidOperationException(
+                        $"V4.3 historical environment budget exceeded: " +
+                        $"{budget.rendererCount}/{MaximumV43EnvironmentRenderers} renderers, " +
+                        $"{budget.triangleCount}/{MaximumV43EnvironmentTriangles} triangles, " +
+                        $"{budget.materialCount}/{MaximumV43EnvironmentMaterials} materials.");
+                }
                 contract.bakedRendererCount = budget.rendererCount;
                 contract.bakedTriangleCount = budget.triangleCount;
                 contract.bakedMaterialCount = budget.materialCount;

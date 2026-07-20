@@ -191,13 +191,15 @@ namespace QuestFlightLab.EditorTests
         {
             ProductionEnvironmentRoot contract = LoadPrefab().GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.uniqueMacroAlbedo, Is.Not.Null);
-            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(4096),
-                "The bounded mid-zone macro texture is authored at the standalone recovery target resolution");
+            Assert.That(AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo), Is.EqualTo(
+                "Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidBase12km_8192.jpg"));
+            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(8192),
+                "The bounded mid-zone macro texture is authored at the Aerial Surface V1 resolution");
             Assert.That(contract.macroRepeatedTileSimilarity, Is.LessThan(0.985f));
             TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo));
             Assert.That(importer.mipmapEnabled, Is.True);
-            Assert.That(importer.streamingMipmaps, Is.False,
-                "Custom world-space macro UVs require bounded full residency.");
+            Assert.That(importer.streamingMipmaps, Is.True,
+                "Custom world-space macro UVs require explicit requested-mip ownership.");
             Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Trilinear));
             Assert.That(importer.anisoLevel, Is.GreaterThanOrEqualTo(4));
             Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));

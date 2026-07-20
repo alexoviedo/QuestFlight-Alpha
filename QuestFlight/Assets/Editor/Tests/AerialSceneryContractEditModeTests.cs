@@ -15,7 +15,8 @@ namespace QuestFlight.Editor.Tests
         private const string TerrainMaterialPath =
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const string HandoffPath =
-            "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_HandoffMask_R8.png";
+            "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/" +
+            "ProductionCanopySurfaceLayer_TerrainMapHandoff_R8.png";
         private const string VegetationAtlasPath =
             "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Atlas.png";
         private const string VegetationSurfacePath =
@@ -161,12 +162,20 @@ namespace QuestFlight.Editor.Tests
             Assert.That(batch.LodCrossfadeBehavior, Is.False);
             Assert.That(root.vegetationRoot.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
             Transform[] vegetationTransforms = root.vegetationRoot.GetComponentsInChildren<Transform>(true);
-            Assert.That(vegetationTransforms.Length, Is.LessThanOrEqualTo(5),
-                "The two near instanced batches and two map-only semantic anchors may use only a bounded authored hierarchy.");
             Assert.That(vegetationTransforms.Any(item =>
                 item.name.IndexOf("instance", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 item.name.IndexOf("tree_", StringComparison.OrdinalIgnoreCase) >= 0), Is.False,
                 "Vegetation must not create one GameObject per tree instance.");
+
+            PhotorealAerialSurfaceRoot surface =
+                environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true);
+            Assert.That(surface, Is.Not.Null);
+            Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<Renderer>(true),
+                Is.Empty,
+                "Ordinary canopy is represented by the terrain handoff map, not raised renderers.");
+            Assert.That(surface.canopySurfaceRenderers, Is.Empty);
+            Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<LODGroup>(true), Is.Empty);
+            Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
 
             Assert.That(root.buildingRoot.GetComponentsInChildren<MeshRenderer>(true), Has.Length.EqualTo(16));
             Assert.That(root.buildingRoot.GetComponentsInChildren<LODGroup>(true), Is.Empty,

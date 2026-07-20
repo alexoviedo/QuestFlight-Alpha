@@ -27,7 +27,7 @@ namespace QuestFlightLab.Tests.EditMode
                 AerialSceneryRoot aerial = root.GetComponentInChildren<AerialSceneryRoot>(true);
                 Assert.That(aerial, Is.Not.Null);
                 Assert.That(aerial.TryValidateContract(out string aerialReport), Is.True, aerialReport);
-                Assert.That(contract.bakeToolVersion, Is.EqualTo("aerial_scenery_representation_v1"));
+                Assert.That(contract.bakeToolVersion, Is.EqualTo("photoreal_aerial_surface_v1"));
                 Assert.That(contract.authoritativeTerrainSurface, Is.Not.Null);
                 Assert.That(contract.productionPlacementManifest, Is.Not.Null);
                 Assert.That(contract.productionPlacementManifest.entries.Length, Is.EqualTo(28336));
@@ -175,14 +175,16 @@ namespace QuestFlightLab.Tests.EditMode
             GameObject prefab = LoadPrefab();
             ProductionEnvironmentRoot contract = prefab.GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.uniqueMacroAlbedo, Is.Not.Null);
-            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(4096));
-            Assert.That(contract.uniqueMacroAlbedo.height, Is.EqualTo(4096));
+            Assert.That(AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo), Is.EqualTo(
+                "Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_MidBase12km_8192.jpg"));
+            Assert.That(contract.uniqueMacroAlbedo.width, Is.EqualTo(8192));
+            Assert.That(contract.uniqueMacroAlbedo.height, Is.EqualTo(8192));
             Assert.That(contract.macroRepeatedTileSimilarity, Is.LessThan(0.985f));
             string path = AssetDatabase.GetAssetPath(contract.uniqueMacroAlbedo);
             TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);
             Assert.That(importer.mipmapEnabled, Is.True);
-            Assert.That(importer.streamingMipmaps, Is.False,
-                "Custom world-space macro UVs require bounded full residency.");
+            Assert.That(importer.streamingMipmaps, Is.True,
+                "Custom world-space macro UVs require explicit requested-mip ownership.");
             Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Trilinear));
             Assert.That(importer.anisoLevel, Is.GreaterThanOrEqualTo(4));
             Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));
