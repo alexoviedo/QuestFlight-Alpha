@@ -68,6 +68,9 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_MRAO.png";
         public const string FacadeNormalPath =
             "Assets/Production/Environment/AirportCoreV4/Materials/AirportCoreHangarKit_Normal.png";
+        public const string FacadeReflectionPath =
+            "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Textures/" +
+            "KBDU_GlobalGroundSkyReflection_256.exr";
         public const string NearPath = GroundRoot + "/KBDU_City2020_Near4km_8192.jpg";
         public const string MidNwPath = GroundRoot + "/KBDU_City2020_MidNW_2048.jpg";
         public const string MidNePath = GroundRoot + "/KBDU_City2020_MidNE_2048.jpg";
@@ -159,15 +162,12 @@ namespace QuestFlight.Editor
                 Transform heroLayer = CreateLayer(vegetationRepresentation,
                     PhotorealAerialSurfaceRoot.HeroLayerName);
 
-                GameObject vegetationPrefab = LoadRequired<GameObject>(VegetationPrefabPath);
-                GameObject nearVegetation = InstantiateNested(vegetationPrefab, heroLayer,
-                    "NearHeroVegetation_0_250m");
                 Renderer[] buildingRenderers = InstantiateNativeMeshBatches(
                     PhotorealAerialSurfaceNativeMeshAuthoring.BuildingNativeRoot,
                     buildingLayer, buildingMaterial, "BuildingSurfaceBatch");
                 Renderer[] canopyRenderers = InstantiateNativeMeshBatches(
                     PhotorealAerialSurfaceNativeMeshAuthoring.CanopyNativeRoot,
-                    canopyLayer, canopyMaterial, "CanopySurfaceBatch", allowEmpty: true);
+                    canopyLayer, canopyMaterial, "CanopySurfaceBatch");
 
                 aerial.buildingRoot = buildingLayer;
                 aerial.vegetationRoot = vegetationRepresentation;
@@ -177,13 +177,12 @@ namespace QuestFlight.Editor
                     buildingManifest, canopyManifest);
                 aerial.manifest = aerialManifest;
 
-                AerialVegetationBatchRenderer nearBatch =
-                    nearVegetation.GetComponentsInChildren<AerialVegetationBatchRenderer>(true).Single();
                 int canopyTriangles = CountTriangles(canopyRenderers);
-                aerial.bakedVegetationRendererCount = canopyRenderers.Length + nearBatch.NonEmptyDrawCount;
-                aerial.bakedVegetationTriangleCount = checked(canopyTriangles +
-                    (int)nearBatch.FullyInstancedTriangleCount);
-                aerial.bakedVegetationMaterialCount = nearBatch.SharedMaterial != null ? 1 : 0;
+                aerial.bakedVegetationRendererCount = canopyRenderers.Length;
+                aerial.bakedVegetationTriangleCount = canopyTriangles;
+                aerial.bakedVegetationMaterialCount = canopyRenderers
+                    .SelectMany(renderer => renderer.sharedMaterials)
+                    .Where(material => material != null).Distinct().Count();
                 aerial.bakeToolVersion = BakeToolVersion;
                 aerial.bakeUtc = BakeUtc;
 
@@ -384,6 +383,7 @@ namespace QuestFlight.Editor
             material.SetTexture("_FacadeAtlas", LoadRequired<Texture2D>(FacadeAtlasPath));
             material.SetTexture("_FacadeMRAO", LoadRequired<Texture2D>(FacadeMraoPath));
             material.SetTexture("_FacadeNormal", LoadRequired<Texture2D>(FacadeNormalPath));
+            material.SetTexture("_FacadeReflectionCube", LoadRequired<Cubemap>(FacadeReflectionPath));
             material.SetTexture("_CanopyNormalOcclusion", canopyNormal);
             material.SetTexture("_NormalizedSurfaceHeight", normalizedHeight);
             material.SetVector("_NearWorldMinInvSize", new Vector4(-2000f, -2000f, 1f / 4000f, 1f / 4000f));
@@ -664,10 +664,11 @@ namespace QuestFlight.Editor
             RequireContains(buildings, "ODbL-1.0", "building license");
             RequireContains(buildings, "0-2km", "near building coverage band");
             RequireContains(buildings, "2-4km", "mid building coverage band");
-            RequireContains(canopy, "terrain_canopy_map_only_outside_hero_radius",
-                "terrain-map-only canopy representation");
-            RequireContains(canopy, "\"mesh_batch_count\": 0",
-                "zero raised-canopy mesh batches");
+            RequireContains(canopy,
+                "semantic_rounded_groves_0_1500m_over_continuous_terrain_canopy",
+                "semantic rounded-grove canopy representation");
+            RequireContains(canopy, "\"mesh_batch_count\": 4",
+                "four bounded raised-canopy mesh batches");
             RequireContains(canopy, "REJECTED_BLOCK_AND_CLIFF_SILHOUETTES",
                 "rejected raised-canopy candidate decision");
             RequireContains(canopy, "\"vertical_boundary_skirts\": false",

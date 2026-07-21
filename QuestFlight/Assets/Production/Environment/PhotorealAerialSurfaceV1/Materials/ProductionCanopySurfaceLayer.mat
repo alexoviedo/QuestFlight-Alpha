@@ -39,6 +39,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: a982fb48de6f3a492598ea7fe8a16d71, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _FacadeReflectionCube:
+        m_Texture: {fileID: 8900000, guid: 9cd62c9524f06f1429cc2072e717d455, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _NearAlbedo:
         m_Texture: {fileID: 2800000, guid: 0021365d50509d2abe127a826626ee6e, type: 3}
         m_Scale: {x: 1, y: 1}

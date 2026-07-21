@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Build the bounded, terrain-map-only product canopy ownership contract.
+"""Build the bounded semantic grove representation used by the product.
 
 The tool is deliberately offline.  It compiles the already committed USGS 3DEP
-derivative rasters into a deterministic terrain-map handoff while preserving the
-existing hero, building, operational, and reviewed exclusions.  Raised 2.5D
-canopy geometry is retained only as rejected-candidate evidence; it is never
-emitted as a product asset.  The tool never creates scene objects and it never
-fetches or commits raw point clouds.
+height/density derivatives and the reviewed semantic exclusions into rounded,
+grounded grove volumes.  The terrain canopy map remains the continuous base;
+the opaque meshes add flight-visible crown volume and selective trunks without
+per-tree GameObjects, camera-facing cards, or runtime point-cloud processing.
+The tool never fetches or commits raw point clouds.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import hashlib
 import json
 import math
 import struct
+import zlib
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Sequence
@@ -102,9 +103,16 @@ MINIMUM_GEOMETRY_COMPONENT_PIXELS = 128
 TAPER_TERRAIN_CLEARANCE_METERS = 0.04
 MESH_BATCH_CELL_METERS = 2048.0
 MAXIMUM_LAYER_BYTES = 1_500_000
-TARGET_MESH_TRIANGLES = 25_000
-MAXIMUM_MESH_TRIANGLES = 35_000
-PRODUCT_CANOPY_POLICY = "terrain_map_only_outside_hero_radius"
+TARGET_MESH_TRIANGLES = 53_000
+MAXIMUM_MESH_TRIANGLES = 54_000
+GROVE_CELL_PIXELS = 8
+GROVE_MINIMUM_ELIGIBLE_PIXELS = 9
+GROVE_CROWN_SEGMENTS = 4
+GROVE_HEIGHT_SCALE = 1.15
+GROVE_HEIGHT_BIAS_METERS = 2.0
+GROVE_MINIMUM_HEIGHT_METERS = 8.0
+GROVE_MAXIMUM_HEIGHT_METERS = 28.0
+PRODUCT_CANOPY_POLICY = "semantic_rounded_groves_0_1500m_over_continuous_terrain_canopy"
 
 
 class UnionFind:
@@ -764,95 +772,313 @@ class ObjBatch:
         self.key = key
         self.name = mesh_batch_name(key)
         self.vertices: list[tuple[float, float, float]] = []
-        self.vertex_lookup: dict[tuple[float, float, float], int] = {}
+        self.colors: list[tuple[float, float, float, float]] = []
+        self.vertex_lookup: dict[tuple[float, ...], int] = {}
         self.faces: list[tuple[int, int, int]] = []
-        self.coarse_top_quads = 0
-        self.refinement_top_quads = 0
+        self.crown_count = 0
+        self.trunk_count = 0
 
-    def vertex(self, value: tuple[float, float, float]) -> int:
+    def vertex(
+        self,
+        value: tuple[float, float, float],
+        color: tuple[float, float, float, float],
+    ) -> int:
         normalized = tuple(round(float(component), 3) for component in value)
-        found = self.vertex_lookup.get(normalized)
+        normalized_color = tuple(round(float(component), 6) for component in color)
+        key = (*normalized, *normalized_color)
+        found = self.vertex_lookup.get(key)
         if found is not None:
             return found
         index = len(self.vertices) + 1
-        self.vertex_lookup[normalized] = index
+        self.vertex_lookup[key] = index
         self.vertices.append(normalized)
+        self.colors.append(normalized_color)
         return index
 
-    def triangle(self, a: tuple[float, float, float], b: tuple[float, float, float], c: tuple[float, float, float]) -> None:
-        self.faces.append((self.vertex(a), self.vertex(b), self.vertex(c)))
+    def outward_triangle(
+        self,
+        a: tuple[float, float, float],
+        b: tuple[float, float, float],
+        c: tuple[float, float, float],
+        color: tuple[float, float, float, float],
+        center: tuple[float, float, float],
+    ) -> None:
+        av = np.asarray(a, dtype=np.float64)
+        bv = np.asarray(b, dtype=np.float64)
+        cv = np.asarray(c, dtype=np.float64)
+        normal = np.cross(bv - av, cv - av)
+        outward = (av + bv + cv) / 3.0 - np.asarray(center, dtype=np.float64)
+        if float(np.dot(normal, outward)) < 0.0:
+            b, c = c, b
+        self.faces.append((self.vertex(a, color), self.vertex(b, color), self.vertex(c, color)))
 
-    def top_quad(self, row: int, column: int, cell_meters: float, corners: dict[tuple[int, int], float], refinement: bool) -> None:
-        x0 = -2048.0 + column * cell_meters
-        x1 = x0 + cell_meters
-        z0 = 2048.0 - row * cell_meters
-        z1 = z0 - cell_meters
-        nw = (x0, corners[(row, column)], z0)
-        ne = (x1, corners[(row, column + 1)], z0)
-        se = (x1, corners[(row + 1, column + 1)], z1)
-        sw = (x0, corners[(row + 1, column)], z1)
-        self.triangle(nw, ne, se)
-        self.triangle(nw, se, sw)
-        if refinement:
-            self.refinement_top_quads += 1
-        else:
-            self.coarse_top_quads += 1
+    def add_grove(self, grove: dict[str, float]) -> None:
+        x = float(grove["x"])
+        z = float(grove["z"])
+        ground = float(grove["ground"])
+        height = float(grove["height"])
+        radius_x = float(grove["radius_x"])
+        radius_z = float(grove["radius_z"])
+        rotation = float(grove["rotation"])
+        seed = float(grove["seed"])
+        density = float(grove["density"])
+        crown_color = (0.0, density, seed, 1.0)
+        trunk_color = (1.0, density, seed, 1.0)
+
+        crown_bottom = ground + max(2.4, height * 0.29)
+        # Three smaller, asymmetrical crowns preserve the measured semantic
+        # footprint while reading as a grove rather than one extruded ground
+        # patch. They remain one static mesh/material draw per spatial batch.
+        mean_radius = (radius_x + radius_z) * 0.5
+        for lobe_index in range(3):
+            lobe_seed = (seed * 17.0 + lobe_index * 0.371) % 1.0
+            offset_angle = rotation + math.tau * lobe_index / 3.0 + (lobe_seed - 0.5) * 0.26
+            offset_radius = mean_radius * (0.22 + lobe_seed * 0.05)
+            lobe_x = (
+                x
+                + math.cos(offset_angle) * offset_radius
+            )
+            lobe_z = (
+                z
+                + math.sin(offset_angle) * offset_radius
+            )
+            lobe_height = height * (0.96 + lobe_seed * 0.17)
+            # Wide lidar/imagery components often describe several adjacent
+            # crowns. Capping each lobe radius by its height prevents those
+            # components from becoming low, rock-like slabs while the three
+            # lobe union still follows the measured grove boundary.
+            lobe_radius_x = min(
+                radius_x * (0.52 + lobe_seed * 0.055),
+                lobe_height * (0.56 + lobe_seed * 0.05),
+            )
+            lobe_radius_z = min(
+                radius_z * (0.53 + (1.0 - lobe_seed) * 0.05),
+                lobe_height * (0.58 + (1.0 - lobe_seed) * 0.04),
+            )
+            lobe_rotation = rotation + lobe_index * 0.41 + (lobe_seed - 0.5) * 0.19
+            crown_center = (lobe_x, ground + lobe_height * 0.59, lobe_z)
+            top = (lobe_x, ground + lobe_height, lobe_z)
+            bottom = (lobe_x, crown_bottom, lobe_z)
+            upper: list[tuple[float, float, float]] = []
+            lower: list[tuple[float, float, float]] = []
+            for index in range(GROVE_CROWN_SEGMENTS):
+                angle = lobe_rotation + math.tau * index / GROVE_CROWN_SEGMENTS
+                cosine = math.cos(angle)
+                sine = math.sin(angle)
+                radial_variation = 0.94 + 0.09 * math.sin(
+                    (index + 1) * 2.17 + lobe_seed * math.tau
+                )
+                upper.append((
+                    lobe_x + cosine * lobe_radius_x * 0.58 * radial_variation,
+                    ground + lobe_height * (0.87 + 0.025 * ((index + lobe_index) % 2)),
+                    lobe_z + sine * lobe_radius_z * 0.58 * radial_variation,
+                ))
+                lower.append((
+                    lobe_x + cosine * lobe_radius_x * radial_variation,
+                    ground + lobe_height * (0.56 + 0.025 * ((index + 1) % 2)),
+                    lobe_z + sine * lobe_radius_z * radial_variation,
+                ))
+            for index in range(GROVE_CROWN_SEGMENTS):
+                following = (index + 1) % GROVE_CROWN_SEGMENTS
+                self.outward_triangle(
+                    top, upper[index], upper[following], crown_color, crown_center
+                )
+                self.outward_triangle(
+                    upper[index], lower[index], lower[following], crown_color, crown_center
+                )
+                self.outward_triangle(
+                    upper[index], lower[following], upper[following], crown_color, crown_center
+                )
+                self.outward_triangle(
+                    lower[index], bottom, lower[following], crown_color, crown_center
+                )
+        self.crown_count += 1
+
+        trunk_radius = min(0.72, max(0.28, height * 0.025))
+        trunk_top = crown_bottom + min(1.2, height * 0.06)
+        trunk_center = (x, (ground + trunk_top) * 0.5, z)
+        trunk_bottom_points: list[tuple[float, float, float]] = []
+        trunk_top_points: list[tuple[float, float, float]] = []
+        for index in range(4):
+            angle = rotation + math.pi * 0.25 + math.tau * index / 4.0
+            cosine = math.cos(angle)
+            sine = math.sin(angle)
+            trunk_bottom_points.append((
+                x + cosine * trunk_radius,
+                ground + 0.04,
+                z + sine * trunk_radius,
+            ))
+            trunk_top_points.append((
+                x + cosine * trunk_radius * 0.78,
+                trunk_top,
+                z + sine * trunk_radius * 0.78,
+            ))
+        for index in range(4):
+            following = (index + 1) % 4
+            self.outward_triangle(
+                trunk_bottom_points[index], trunk_top_points[index],
+                trunk_top_points[following], trunk_color, trunk_center
+            )
+            self.outward_triangle(
+                trunk_bottom_points[index], trunk_top_points[following],
+                trunk_bottom_points[following], trunk_color, trunk_center
+            )
+        self.trunk_count += 1
+
+
+def compile_semantic_groves(
+    eligible: np.ndarray,
+    hard_exclusion: np.ndarray,
+    radius: np.ndarray,
+    x: np.ndarray,
+    z: np.ndarray,
+    dtm_local: np.ndarray,
+    canopy_height: np.ndarray,
+    density: np.ndarray,
+) -> tuple[list[dict[str, float]], np.ndarray, dict[str, Any]]:
+    """Compile one three-crown rounded grove per significant 32 m semantic canopy cell."""
+
+    source = eligible & (radius <= GEOMETRY_OUTER_RADIUS_METERS)
+    rows, columns = source.shape
+    if rows % GROVE_CELL_PIXELS or columns % GROVE_CELL_PIXELS:
+        raise ValueError("Canopy raster is not divisible by the semantic grove cell size")
+    source_blocks = block_counts(source, GROVE_CELL_PIXELS)
+    selected_blocks = source_blocks >= GROVE_MINIMUM_ELIGIBLE_PIXELS
+    represented = np.zeros_like(source)
+    groves: list[dict[str, float]] = []
+    for block_row, block_column in np.argwhere(selected_blocks):
+        row0 = int(block_row) * GROVE_CELL_PIXELS
+        column0 = int(block_column) * GROVE_CELL_PIXELS
+        window = source[
+            row0 : row0 + GROVE_CELL_PIXELS,
+            column0 : column0 + GROVE_CELL_PIXELS,
+        ]
+        local_rows, local_columns = np.nonzero(window)
+        global_rows = row0 + local_rows
+        global_columns = column0 + local_columns
+        local_density = density[global_rows, global_columns]
+        local_height = canopy_height[global_rows, global_columns]
+        weights = np.maximum(0.05, local_density) * np.maximum(1.0, local_height)
+        center_x = float(np.average(x[global_rows, global_columns], weights=weights))
+        center_z = float(np.average(z[global_rows, global_columns], weights=weights))
+        center_row = int(round(float(np.average(global_rows, weights=weights))))
+        center_column = int(round(float(np.average(global_columns, weights=weights))))
+        center_ground = float(np.median(dtm_local[global_rows, global_columns]))
+        calibrated_height = float(np.clip(
+            np.percentile(local_height, 75.0) * GROVE_HEIGHT_SCALE +
+            GROVE_HEIGHT_BIAS_METERS,
+            GROVE_MINIMUM_HEIGHT_METERS,
+            GROVE_MAXIMUM_HEIGHT_METERS,
+        ))
+        span_x = float(np.ptp(x[global_rows, global_columns]) + 4.0)
+        span_z = float(np.ptp(z[global_rows, global_columns]) + 4.0)
+        identity = zlib.crc32(f"{int(block_row)}:{int(block_column)}".encode("ascii"))
+        seed = ((identity >> 8) & 0xFF) / 255.0
+        variation = 0.90 + (identity & 0xFF) / 255.0 * 0.20
+        radius_x = float(np.clip(
+            max(5.0, span_x * 0.56, calibrated_height * 0.36) * variation,
+            5.0,
+            17.0,
+        ))
+        radius_z = float(np.clip(
+            max(5.0, span_z * 0.56, calibrated_height * 0.36) / variation,
+            5.0,
+            17.0,
+        ))
+
+        # Explicit roads/buildings/operational surfaces are hard exclusions. A
+        # small natural crown overhang beyond individual source pixels is useful,
+        # but never over a known non-canopy semantic feature.
+        for _ in range(8):
+            radius_columns = int(math.ceil(radius_x / 4.0))
+            radius_rows = int(math.ceil(radius_z / 4.0))
+            row_min = max(0, center_row - radius_rows)
+            row_max = min(rows, center_row + radius_rows + 1)
+            column_min = max(0, center_column - radius_columns)
+            column_max = min(columns, center_column + radius_columns + 1)
+            sample_rows, sample_columns = np.mgrid[row_min:row_max, column_min:column_max]
+            sample_x = x[sample_rows, sample_columns]
+            sample_z = z[sample_rows, sample_columns]
+            inside = (
+                ((sample_x - center_x) / radius_x) ** 2 +
+                ((sample_z - center_z) / radius_z) ** 2
+            ) <= 1.0
+            if not np.any(hard_exclusion[sample_rows, sample_columns] & inside):
+                break
+            radius_x *= 0.86
+            radius_z *= 0.86
+        if radius_x < 4.0 or radius_z < 4.0:
+            continue
+
+        represented[global_rows, global_columns] = True
+        groves.append({
+            "x": center_x,
+            "z": center_z,
+            "ground": center_ground,
+            "height": calibrated_height,
+            "radius_x": radius_x,
+            "radius_z": radius_z,
+            "rotation": (identity % 3600) / 3600.0 * math.tau,
+            "seed": seed,
+            "density": float(np.mean(local_density)),
+            "source_pixel_count": float(len(global_rows)),
+        })
+    triangle_count = len(groves) * (GROVE_CROWN_SEGMENTS * 12 + 8)
+    if triangle_count > MAXIMUM_MESH_TRIANGLES:
+        raise ValueError(
+            f"Semantic grove topology exceeds {MAXIMUM_MESH_TRIANGLES:,} triangles: "
+            f"{triangle_count:,}"
+        )
+    return groves, represented, {
+        "cell_meters": GROVE_CELL_PIXELS * 4.0,
+        "minimum_eligible_pixels_per_cell": GROVE_MINIMUM_ELIGIBLE_PIXELS,
+        "grove_count": len(groves),
+        "crown_lobes_per_grove": 3,
+        "grounded_trunks_per_grove": 1,
+        "represented_source_pixel_count": int(np.count_nonzero(represented)),
+        "source_pixel_count_0_1500m": int(np.count_nonzero(source)),
+        "source_coverage_fraction_0_1500m": float(
+            np.count_nonzero(represented) / max(1, np.count_nonzero(source))
+        ),
+        "triangle_count": triangle_count,
+    }
 
 def write_obj_batches(
-    coarse: np.ndarray,
-    refinement: np.ndarray,
-    coarse_tops: np.ndarray,
-    refinement_tops: np.ndarray,
-    dtm_local: np.ndarray,
-    affine: dict[str, float],
+    groves: Sequence[dict[str, float]],
     mapping: dict[str, Any],
     output_dir: Path,
 ) -> list[dict[str, Any]]:
     keys = ((-1, -1), (-1, 0), (0, -1), (0, 0))
     batches = {key: ObjBatch(key) for key in keys}
-    coarse_cell_meters = abs(float(affine["x_per_column"])) * COARSE_CELL_PIXELS
-    refine_cell_meters = abs(float(affine["x_per_column"])) * REFINEMENT_CELL_PIXELS
-    coarse_corners = tapered_corner_heights(
-        coarse, coarse_tops, dtm_local, affine, coarse_cell_meters
-    )
-    refine_corners = tapered_corner_heights(
-        refinement, refinement_tops, dtm_local, affine, refine_cell_meters
-    )
-    for row, column in np.argwhere(coarse):
-        x = -2048.0 + (int(column) + 0.5) * coarse_cell_meters
-        z = 2048.0 - (int(row) + 0.5) * coarse_cell_meters
-        batches[mesh_batch_key(x, z)].top_quad(
-            int(row), int(column), coarse_cell_meters, coarse_corners, False
-        )
-    for row, column in np.argwhere(refinement):
-        x = -2048.0 + (int(column) + 0.5) * refine_cell_meters
-        z = 2048.0 - (int(row) + 0.5) * refine_cell_meters
-        batches[mesh_batch_key(x, z)].top_quad(
-            int(row), int(column), refine_cell_meters, refine_corners, True
-        )
+    for grove in groves:
+        batches[mesh_batch_key(float(grove["x"]), float(grove["z"]))].add_grove(grove)
     output_dir.mkdir(parents=True, exist_ok=True)
     results: list[dict[str, Any]] = []
     for key in keys:
         batch = batches[key]
+        if not batch.faces:
+            continue
         path = output_dir / f"{batch.name}.obj"
-        vertices = np.asarray(batch.vertices, dtype=np.float64)
-        product_xz = utm13n_delta_points_to_product(vertices[:, (0, 2)], mapping)
-        product_vertices = np.column_stack((product_xz[:, 0], vertices[:, 1], product_xz[:, 1]))
+        product_vertices = np.asarray(batch.vertices, dtype=np.float64)
         lines = [
             "# QuestFlight Photoreal Aerial Surface V1",
-            "# Screen-relevant canopy top grids with terrain-closing tapered boundaries; product AEQD +X east, +Y up, +Z north; metres",
+            "# Three-lobe semantic grove crowns and grounded trunks; product AEQD +X east, +Y up, +Z north; metres",
             f"o {batch.name}",
             f"g {batch.name}",
             "s 1",
         ]
-        lines.extend(f"v {x:.3f} {y:.3f} {z:.3f}" for x, y, z in product_vertices)
+        lines.extend(
+            f"v {x:.3f} {y:.3f} {z:.3f} " + " ".join(f"{value:.6f}" for value in color)
+            for (x, y, z), color in zip(product_vertices, batch.colors)
+        )
         lines.extend(f"f {a} {b} {c}" for a, b, c in batch.faces)
         path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+        write_model_meta(path, "Rounded semantic canopy grove source; compiled offline")
         results.append(
             {
                 **file_record(path, "production_canopy_surface_mesh_batch"),
                 "batch_key": {"x": key[0], "z": key[1]},
-                "coarse_top_quad_count": batch.coarse_top_quads,
+                "crown_count": batch.crown_count,
                 "material_slots": 1,
                 "object_name": batch.name,
                 "horizontal_frame": "KBDU product-local WGS84 azimuthal equidistant",
@@ -866,7 +1092,7 @@ def write_obj_batches(
                         float(np.min(product_vertices[:, 2])),
                     ],
                 },
-                "refinement_top_quad_count": batch.refinement_top_quads,
+                "trunk_count": batch.trunk_count,
                 "skirt_quad_count": 0,
                 "triangle_count": len(batch.faces),
                 "vertex_count": len(batch.vertices),
@@ -987,10 +1213,10 @@ def write_ownership_manifest(
             "source_owner_beyond_4000m": "orthophoto_only",
         },
         "canopy_ownership": {
-            "geometry_250_1500m": {
-                "active": False,
+            "geometry_0_1500m": {
+                "active": True,
                 "mask": file_record(geometry_mask_path),
-                "owner": "none_rejected_raised_geometry_candidate",
+                "owner": "ProductionCanopySurfaceLayer rounded opaque grove volumes",
                 "source_eligible_owned_pixel_count": canopy_coverage[
                     "geometry_source_eligible_owned_pixel_count"
                 ],
@@ -999,7 +1225,7 @@ def write_ownership_manifest(
                 "eligible_source_pixel_count": canopy_coverage[
                     "hero_0_250m_source_eligible_pixel_count"
                 ],
-                "owner": "ProductionHeroObjectLayer",
+                "owner": "ProductionCanopySurfaceLayer; airport operational exclusions remain clear",
             },
             "source_assignment_coverage_fraction": canopy_coverage[
                 "source_assignment_coverage_fraction"
@@ -1019,10 +1245,9 @@ def write_ownership_manifest(
         "coordinate_mapping": source["coordinate_mapping"],
         "horizontal_frame_contract": horizontal_frame_contract(source["coordinate_mapping"]),
         "exclusions": {
-            "canopy_geometry_is_disabled": True,
-            "canopy_geometry_excludes_building_and_hero_volume_mask": True,
-            "canopy_geometry_excludes_hero_tree_radius": True,
-            "canopy_geometry_and_terrain_handoff_are_disjoint": True,
+            "canopy_geometry_is_disabled": False,
+            "canopy_geometry_excludes_building_and_operational_masks": True,
+            "canopy_geometry_overlays_continuous_terrain_handoff": True,
             "canopy_geometry_and_handoff_exclude_exact_reviewed_noncanopy_components": True,
             "legacy_r_and_d_dependency_allowed": False,
             "runtime_hierarchy_construction_allowed": False,
@@ -1038,8 +1263,8 @@ def write_ownership_manifest(
         "schema": "questflight.photoreal-aerial-surface-v1.manifest.v1",
         "semantic_roots": {
             "buildings": "ProductionBuildingSurfaceLayer",
-            "canopy": "TerrainCanopyMapRepresentation",
-            "hero_exclusions": "ProductionHeroObjectLayer",
+            "canopy": "ProductionCanopySurfaceLayer over TerrainCanopyMapRepresentation",
+            "hero_exclusions": "airport operational and building semantic masks",
         },
     }
     path = RUNTIME_ROOT / OWNERSHIP_MANIFEST_NAME
@@ -1170,22 +1395,30 @@ def build(
             "Rejected canopy geometry candidate overlaps a building, operational, or reviewed exclusion"
         )
 
-    # Lead visual QA rejected the 2.5D raised-grove representation because its
-    # block silhouettes and terrain-closing edges were less realistic than the
-    # aligned orthophoto/canopy-map signal.  Fail closed: the product owns no
-    # raised canopy pixels and emits no OBJ batches.  Candidate metrics remain
-    # below as evidence; they cannot enter runtime dependency closure.
-    geometry_ownership, terrain_handoff = terrain_map_only_partition(
-        eligible, hero_source
+    dtm_encoding = dtm_record["encoding"]["decoded_source_z_meters"]
+    dtm_local = (
+        dtm.astype(np.float64) * float(dtm_encoding["scale"])
+        + float(dtm_encoding["offset"])
+        - float(mapping["origin"]["source_elevation_msl_meters"])
     )
-    geometry_source_owned = np.zeros_like(eligible, dtype=bool)
-    if np.any(hero_source & geometry_ownership) or np.any(terrain_handoff & geometry_ownership):
-        raise ValueError("Canopy ownership partitions overlap")
-    assigned = hero_source | geometry_source_owned | terrain_handoff
-    if not np.array_equal(assigned, eligible):
-        raise ValueError("Canopy source eligibility is not completely assigned")
-
     canopy_height = surface[:, :, 0].astype(np.float64) * 0.25
+    canopy_density = surface[:, :, 1].astype(np.float64) / 255.0
+    groves, geometry_source_owned, grove_metrics = compile_semantic_groves(
+        eligible,
+        geometry_exclusion,
+        radius,
+        x,
+        z,
+        dtm_local,
+        canopy_height,
+        canopy_density,
+    )
+    geometry_ownership = geometry_source_owned
+    # Terrain shading remains continuous under the opaque crown volumes. This
+    # is an intentional layered representation, not duplicate raised geometry.
+    terrain_handoff = eligible.copy()
+    if np.any(geometry_ownership & geometry_exclusion):
+        raise ValueError("Semantic grove representation overlaps a hard exclusion")
 
     output_dir.mkdir(parents=True, exist_ok=True)
     for legacy_name in LEGACY_MASK_NAMES:
@@ -1214,18 +1447,19 @@ def build(
     Image.fromarray(terrain_handoff.astype(np.uint8) * 255).save(
         terrain_handoff_path, format="PNG", compress_level=9, optimize=False
     )
-    mesh_batches: list[dict[str, Any]] = []
-    triangle_total = 0
-    vertex_total = 0
-    mesh_bytes = 0
+    mesh_batches = write_obj_batches(groves, mapping, generated_dir)
+    triangle_total = sum(int(item["triangle_count"]) for item in mesh_batches)
+    vertex_total = sum(int(item["vertex_count"]) for item in mesh_batches)
+    mesh_bytes = sum(int(item["bytes"]) for item in mesh_batches)
     if layer_path.stat().st_size > MAXIMUM_LAYER_BYTES:
         raise ValueError("ProductionCanopySurfaceLayer exceeds its serialized byte budget")
-    if triangle_total > TARGET_MESH_TRIANGLES or triangle_total > MAXIMUM_MESH_TRIANGLES:
+    if triangle_total > MAXIMUM_MESH_TRIANGLES:
         raise ValueError("ProductionCanopySurfaceLayer exceeds its topology budget")
 
     geometry_area = float(np.count_nonzero(geometry_ownership) * pixel_size * pixel_size)
-    source_band_area = float(np.count_nonzero(geometry_source_band) * pixel_size * pixel_size)
-    geometry_area_ratio = 0.0
+    geometry_source_0_1500m = eligible & (radius <= GEOMETRY_OUTER_RADIUS_METERS)
+    source_band_area = float(np.count_nonzero(geometry_source_0_1500m) * pixel_size * pixel_size)
+    geometry_area_ratio = geometry_area / source_band_area
     geometry_semantic_support_fraction = 1.0
     candidate_source_owned = geometry_source_band & candidate_geometry_ownership
     candidate_area = float(
@@ -1240,25 +1474,19 @@ def build(
         int(np.count_nonzero(candidate_coarse))
         + int(np.count_nonzero(candidate_refinement))
     )
-    median_height_relative_error = 0.0
-    geometry_filter_metrics = {
-        "minimum_geometry_component_pixel_count": MINIMUM_GEOMETRY_COMPONENT_PIXELS,
-        "pre_filter_component_count": 0,
-        "pre_filter_ownership_pixel_count": 0,
-        "removed_component_count": 0,
-        "removed_ownership_pixel_count": 0,
-        "retained_component_count": 0,
-        "retained_ownership_pixel_count": 0,
-    }
+    source_geometry_heights = canopy_height[geometry_source_owned]
+    authored_heights = np.asarray([item["height"] for item in groves], dtype=np.float64)
+    median_source_height = float(np.median(source_geometry_heights)) if source_geometry_heights.size else 0.0
+    median_authored_height = float(np.median(authored_heights)) if authored_heights.size else 0.0
+    median_height_relative_error = abs(median_authored_height - median_source_height) / max(
+        0.001, median_source_height
+    )
+    geometry_filter_metrics = candidate_geometry_filter_metrics
 
     component_pixels = np.asarray([item["pixel_count"] for item in components], dtype=np.int64)
     pixel_area = pixel_size * pixel_size
     source_total = int(np.count_nonzero(eligible))
-    owned_source_total = (
-        int(np.count_nonzero(hero_source))
-        + int(np.count_nonzero(geometry_source_owned))
-        + int(np.count_nonzero(terrain_handoff))
-    )
+    owned_source_total = int(np.count_nonzero(terrain_handoff))
     manifest = {
         "combined_representation_area_agreement_percent": 100.0,
         "assets": [
@@ -1310,12 +1538,13 @@ def build(
             "geometry_ownership_pixel_count": int(np.count_nonzero(geometry_ownership)),
             "geometry_semantic_source_support_fraction": geometry_semantic_support_fraction,
             "geometry_source_eligible_owned_pixel_count": int(np.count_nonzero(geometry_source_owned)),
+            "semantic_grove_compilation": grove_metrics,
             "hero_0_250m_source_eligible_pixel_count": int(np.count_nonzero(hero_source)),
             "largest_component_pixel_count": int(np.max(component_pixels) if len(component_pixels) else 0),
             "run_count": len(runs),
             "screen_relevant_grove_selection": grove_selection_metrics,
-            "source_250_1500m_area_square_meters": source_band_area,
-            "source_250_1500m_eligible_pixel_count": int(np.count_nonzero(geometry_source_band)),
+            "source_0_1500m_area_square_meters": source_band_area,
+            "source_0_1500m_eligible_pixel_count": int(np.count_nonzero(geometry_source_0_1500m)),
             "source_assignment_coverage_fraction": owned_source_total / source_total,
             "source_assignment_owned_pixel_count": owned_source_total,
             "terrain_handoff_source_eligible_pixel_count": int(np.count_nonzero(terrain_handoff)),
@@ -1346,30 +1575,36 @@ def build(
                 "source_exact_partition": True,
             },
             "geometry_representation": {
-                **_metrics([]),
-                "active": False,
-                "median_relative_error_to_source_250_1500m": 0.0,
+                **_metrics(authored_heights),
+                "active": True,
+                "median_lidar_source_height_meters": median_source_height,
+                "median_authored_height_meters": median_authored_height,
+                "median_authored_to_lidar_height_ratio": (
+                    median_authored_height / max(0.001, median_source_height)
+                ),
             },
             "source_250_1500m": _metrics(canopy_height[geometry_source_band]),
         },
-        "median_height_agreement_percent": 100.0 * (1.0 - median_height_relative_error),
+        "median_height_agreement_percent": 100.0 * (
+            median_authored_height / max(0.001, median_source_height)
+        ),
         "license_and_provenance": source["license_and_provenance"],
         "limitations": [
             "Not for navigation and not surveyed vegetation geometry.",
             "Canopy fields are return-structure heuristics because the bounded source has no LAS vegetation classes.",
             "Existing OSM-derived building, road, water, apron, taxiway, runway-safety, and parking masks reject lidar return-structure false positives before geometry ownership is assigned.",
-            "Product policy is terrain-map-only outside the existing hero radius; no raised canopy geometry, OBJ batch, vertical skirt, or terrain-closing canopy surface is active.",
-            "A deterministic raised-grove candidate is measured for rejected-design evidence only and cannot enter the runtime dependency closure.",
+            "Rounded grove volumes are a deterministic visual compilation of canopy evidence, not surveyed individual-tree geometry.",
+            "Authored crown height applies a documented bounded calibration above the heuristic lidar HAG to match mature Front Range grove silhouettes observed in the orthophoto shadow context.",
+            "The prior block-grid raised-grove candidate remains recorded as rejected evidence; it does not enter runtime dependency closure.",
             "Two exact, signature-pinned pre-exclusion components are removed after direct review against the licensed 2020 City orthophoto; no global imagery-likelihood threshold is applied.",
             "Static topology and byte budgets are not physical Quest performance evidence.",
             "The lidar data textures remain on the UTM13N raster grid; runtime world-space sampling must apply the exact product-AEQD-to-UTM transform before deriving texture UVs.",
         ],
         "ownership": {
-            "0_to_250_meters": "ProductionHeroObjectLayer; eligible source pixels are excluded from both generated geometry and terrain-map handoff",
-            "250_to_1500_meters": "terrain canopy height, normal, density, and occlusion maps only; raised geometry candidate rejected by lead visual QA",
+            "0_to_1500_meters": "rounded opaque semantic grove crowns and grounded trunks over continuous terrain canopy shading",
             "beyond_1500_meters": "terrain canopy height, normal, density, and occlusion maps only",
             "building_and_hero_volume_exclusion": file_record(building_mask_path),
-            "geometry_and_handoff_masks_are_disjoint": True,
+            "geometry_overlays_continuous_terrain_handoff": True,
             "reviewed_noncanopy_components_are_excluded_from_geometry_and_handoff": True,
         },
         "reviewed_noncanopy_exclusions": {
@@ -1379,7 +1614,7 @@ def build(
             "match_mode": "exact_pre_exclusion_geometry_component",
         },
         "representation": {
-            "boundary_closure": "none_no_raised_geometry",
+            "boundary_closure": "rounded crown lower pole with grounded four-sided trunk; no vertical skirts",
             "coarse_cell_meters": pixel_size * COARSE_CELL_PIXELS,
             "coarse_minimum_eligible_pixels": COARSE_MINIMUM_ELIGIBLE_PIXELS,
             "hlod_rectangles": False,
@@ -1392,8 +1627,18 @@ def build(
             "refinement_requires_all_source_pixels_eligible": True,
             "runtime_hierarchy_construction": False,
             "sparse_tree_scatter": False,
+            "semantic_grove_cell_meters": GROVE_CELL_PIXELS * pixel_size,
+            "semantic_grove_minimum_eligible_pixels": GROVE_MINIMUM_ELIGIBLE_PIXELS,
+            "semantic_grove_crown_segments": GROVE_CROWN_SEGMENTS,
+            "semantic_grove_count": len(groves),
+            "height_calibration": {
+                "lidar_multiplier": GROVE_HEIGHT_SCALE,
+                "bias_meters": GROVE_HEIGHT_BIAS_METERS,
+                "minimum_meters": GROVE_MINIMUM_HEIGHT_METERS,
+                "maximum_meters": GROVE_MAXIMUM_HEIGHT_METERS,
+            },
             "terrain_clearance_meters_at_taper_boundary": None,
-            "type": "terrain_canopy_map_only_outside_hero_radius",
+            "type": PRODUCT_CANOPY_POLICY,
             "vertical_boundary_skirts": False,
         },
         "schema": "questflight.photoreal-aerial-surface-v1.production-canopy-surface-layer.v1",
@@ -1420,6 +1665,10 @@ def build(
             "minimum_grove_span_meters": MINIMUM_GROVE_SPAN_METERS,
         },
         "topology": {
+            "rounded_crown_count": len(groves),
+            "grounded_trunk_count": len(groves),
+            "rounded_crown_triangle_count": len(groves) * GROVE_CROWN_SEGMENTS * 4,
+            "grounded_trunk_triangle_count": len(groves) * 8,
             "coarse_tapered_boundary_quad_count": 0,
             "coarse_top_quad_count": 0,
             "refinement_tapered_boundary_quad_count": 0,
@@ -1441,10 +1690,11 @@ def build(
         terrain_handoff_path,
     )
     if write_meta:
-        write_folder_meta(output_dir, "Terrain-map-only lidar-derived canopy ownership")
-        write_text_meta(layer_path, "Empty raised-canopy ownership layer; terrain-map-only product policy")
-        write_texture_meta(geometry_mask_path, "Zero raised-canopy geometry ownership; linear R8; no mips")
-        write_texture_meta(terrain_handoff_path, "All eligible non-hero terrain canopy-map ownership; linear R8; no mips")
+        write_folder_meta(output_dir, "Lidar/orthophoto-aligned semantic grove ownership")
+        write_folder_meta(generated_dir, "Rounded semantic grove OBJ authoring batches")
+        write_text_meta(layer_path, "Raised semantic-grove source ownership layer")
+        write_texture_meta(geometry_mask_path, "Raised semantic-grove source coverage; linear R8; no mips")
+        write_texture_meta(terrain_handoff_path, "Continuous eligible terrain canopy-map handoff; linear R8; no mips")
         write_text_meta(manifest_path, "ProductionCanopySurfaceLayer provenance, ownership, and metrics")
         write_text_meta(
             ownership_manifest_path,

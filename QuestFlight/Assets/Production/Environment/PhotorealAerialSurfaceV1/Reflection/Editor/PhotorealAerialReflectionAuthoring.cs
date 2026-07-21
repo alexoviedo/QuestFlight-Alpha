@@ -63,6 +63,12 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             "Assets/Production/Prefabs/ProductionC172AircraftRig.prefab";
         public const string ProductionScenePath =
             "Assets/Scenes/ProductionVerticalSlice.unity";
+        public const string ProductionWorldPrefabPath =
+            "Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab";
+        public const string MainSunName = "Sun";
+        public const string CockpitShadowSunName = "CockpitShadowSun";
+        public const string CockpitShadowLayerName = "CockpitSunShadow";
+        public const int CockpitShadowLayer = 30;
         public const string SourceWindowMaterialPath =
             "Assets/Production/Materials/Cockpit/Cockpit_GlassMat_New_-8047257934222504514.mat";
         public const string SourceInstrumentGlassMaterialPath =
@@ -71,8 +77,10 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
         public const string FoundationObjectName = "PhotorealAerialReflectionFoundation";
         public const string AirportProbeObjectName = "KBDU_AirportReflectionProbe";
         public const string CockpitRootName = "ImportedCockpitInterior";
-        public const string DuplicateExteriorGlassRendererName =
+        public const string ExteriorWindowRendererName =
             "Cessna_Exterior_Glass_MAT_0_Glass_MAT_0";
+        public const string InstrumentCoverRendererName =
+            "GlassPartNew_GlassMat_New_0_GlassMat_New_0";
 
         private const int ReflectionEquirectangularWidth = 256;
         private const int ReflectionEquirectangularHeight = 128;
@@ -124,6 +132,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             PhotorealAerialReflectionProfile profile = LoadRequired<PhotorealAerialReflectionProfile>(ProfilePath);
             IntegrateEnvironmentPrefab(profile);
             IntegrateAircraftPrefab();
+            IntegrateCockpitShadowSun();
             IntegrateSceneReflection(profile);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
@@ -579,14 +588,15 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
 
             Material window = LoadOrCreateMaterial(WindowMaterialPath, windowShader,
                 "ProductionCockpitWindowReflection");
+            window.SetTexture("_AuthoredReflectionCube", LoadRequired<Cubemap>(GlobalReflectionPath));
             window.SetColor("_WindshieldTint", new Color(0.77f, 0.86f, 0.95f, 1f));
             window.SetColor("_SideWindowTint", new Color(0.70f, 0.82f, 0.92f, 1f));
-            window.SetFloat("_WindshieldOpacity", 0.045f);
-            window.SetFloat("_SideWindowOpacity", 0.065f);
-            window.SetFloat("_FresnelOpacity", 0.105f);
-            window.SetFloat("_ReflectionStrength", 0.42f);
-            window.SetFloat("_DirectGlintStrength", 0.055f);
-            window.SetFloat("_PerceptualRoughness", 0.18f);
+            window.SetFloat("_WindshieldOpacity", 0.13f);
+            window.SetFloat("_SideWindowOpacity", 0.16f);
+            window.SetFloat("_FresnelOpacity", 0.18f);
+            window.SetFloat("_ReflectionStrength", 0.50f);
+            window.SetFloat("_DirectGlintStrength", 0.085f);
+            window.SetFloat("_PerceptualRoughness", 0.14f);
             window.SetFloat("_SideAxisStart", 0.52f);
             window.SetFloat("_SideAxisEnd", 0.82f);
             window.renderQueue = (int)RenderQueue.Transparent + 12;
@@ -728,10 +738,16 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 if (rig.CenterOfGravityReference.parent != rig.transform ||
                     rig.CenterOfGravityReference.localPosition.sqrMagnitude > 0.000001f)
                     throw new InvalidOperationException("Reflection anchor must be the existing aircraft CG reference.");
+                Transform cockpit = FindDescendant(rig.AircraftVisualRoot, CockpitRootName);
+                if (cockpit == null)
+                    throw new InvalidOperationException("Authored cockpit root is missing.");
+                foreach (Transform item in cockpit.GetComponentsInChildren<Transform>(true))
+                    item.gameObject.layer = CockpitShadowLayer;
 
                 int windowSlots = 0;
                 int instrumentSlots = 0;
-                int duplicateExteriorGlassRenderers = 0;
+                int activeInstrumentSlots = 0;
+                int exteriorWindowRenderers = 0;
                 Renderer[] renderers = rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true);
                 foreach (Renderer renderer in renderers)
                 {
@@ -739,12 +755,26 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     renderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbesAndSkybox;
                     renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
                     Material[] materials = renderer.sharedMaterials;
+                    bool exteriorWindow = string.Equals(renderer.name, ExteriorWindowRendererName,
+                        StringComparison.Ordinal);
+                    bool instrumentCover = string.Equals(renderer.name, InstrumentCoverRendererName,
+                        StringComparison.Ordinal);
                     for (int index = 0; index < materials.Length; index++)
                     {
-                        if (materials[index] == sourceWindow)
+                        if (exteriorWindow)
                         {
                             materials[index] = window;
                             windowSlots++;
+                        }
+                        else if (instrumentCover)
+                        {
+                            materials[index] = instrument;
+                            instrumentSlots++;
+                        }
+                        else if (materials[index] == sourceWindow)
+                        {
+                            materials[index] = instrument;
+                            instrumentSlots++;
                         }
                         else if (materials[index] == window)
                         {
@@ -761,24 +791,97 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                         }
                     }
                     renderer.sharedMaterials = materials;
-                    if (string.Equals(renderer.name, DuplicateExteriorGlassRendererName,
-                            StringComparison.Ordinal))
-                    {
-                        // The authored cockpit window mesh is double-sided and supplies the
-                        // single aircraft glazing surface for interior and exterior views.
-                        // Keeping this overlapping imported exterior shell would add a fourth
-                        // transparent slot and double-blend the same glazing volume.
+                    // The imported GlassPartNew shell duplicates the actual MI
+                    // instrument cover. Keep its deterministic binding for source
+                    // traceability, but do not spend a second transparent draw on it.
+                    // The authoritative MI cover remains enabled and reflective.
+                    if (instrumentCover)
                         renderer.enabled = false;
-                        duplicateExteriorGlassRenderers++;
+                    if (exteriorWindow)
+                    {
+                        renderer.enabled = true;
+                        Mesh windowMesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
+                        if (windowMesh == null || windowMesh.bounds.size.x < 1.0f ||
+                            windowMesh.bounds.size.y < 0.5f || windowMesh.bounds.size.z < 2.0f)
+                            throw new InvalidOperationException(
+                                "The authoritative exterior cockpit glazing mesh has implausible bounds.");
+                        exteriorWindowRenderers++;
                     }
+                    if (renderer.enabled)
+                        activeInstrumentSlots += materials.Count(material => material == instrument);
+                    bool cockpitOwned = renderer.transform == cockpit ||
+                                        renderer.transform.IsChildOf(cockpit);
+                    bool transparentGlass = renderer.sharedMaterials.Any(material =>
+                        material == window || material == instrument);
+                    bool primaryCaster = cockpitOwned && !transparentGlass &&
+                        (renderer.name.IndexOf("Interior_Body", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                         renderer.name.IndexOf("Interior_Seats", StringComparison.OrdinalIgnoreCase) >= 0);
+                    renderer.shadowCastingMode = primaryCaster
+                        ? ShadowCastingMode.On
+                        : ShadowCastingMode.Off;
+                    renderer.receiveShadows = cockpitOwned && !transparentGlass;
                     EditorUtility.SetDirty(renderer);
                 }
-                if (windowSlots != 1 || instrumentSlots != 1 || duplicateExteriorGlassRenderers != 1)
+                if (windowSlots != 1 || instrumentSlots != 2 || activeInstrumentSlots != 1 ||
+                    exteriorWindowRenderers != 1)
                     throw new InvalidOperationException(
-                        "Expected one authored window, one instrument-glass slot, and one disabled " +
-                        $"overlapping exterior-glass renderer; found {windowSlots}/{instrumentSlots}/" +
-                        duplicateExteriorGlassRenderers + ".");
+                        "Expected one full-cabin exterior window slot, two serialized/one active " +
+                        "instrument-glass slots, " +
+                        $"and one enabled exterior glazing renderer; found {windowSlots}/" +
+                        $"{instrumentSlots}/{activeInstrumentSlots}/{exteriorWindowRenderers}.");
                 PrefabUtility.SaveAsPrefabAsset(root, AircraftPrefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        private static void IntegrateCockpitShadowSun()
+        {
+            UnityEngine.Object tagManager = AssetDatabase.LoadAllAssetsAtPath(
+                "ProjectSettings/TagManager.asset").Single();
+            SerializedObject tagSettings = new SerializedObject(tagManager);
+            SerializedProperty layers = tagSettings.FindProperty("layers");
+            if (layers == null || layers.arraySize <= CockpitShadowLayer)
+                throw new InvalidOperationException("Unity layer table is incomplete.");
+            layers.GetArrayElementAtIndex(CockpitShadowLayer).stringValue = CockpitShadowLayerName;
+            tagSettings.ApplyModifiedPropertiesWithoutUndo();
+
+            GameObject root = PrefabUtility.LoadPrefabContents(ProductionWorldPrefabPath);
+            try
+            {
+                Transform mainSunTransform = FindDescendant(root.transform, MainSunName);
+                if (mainSunTransform == null)
+                    throw new InvalidOperationException("The authored product sun is missing.");
+                Light mainSun = mainSunTransform.GetComponent<Light>();
+                if (mainSun == null || mainSun.type != LightType.Directional)
+                    throw new InvalidOperationException("The authored product sun is not directional.");
+                Transform existing = FindDescendant(root.transform, CockpitShadowSunName);
+                if (existing != null) UnityEngine.Object.DestroyImmediate(existing.gameObject);
+
+                GameObject shadowObject = new GameObject(CockpitShadowSunName);
+                shadowObject.transform.SetParent(mainSunTransform.parent, false);
+                shadowObject.transform.localRotation = mainSunTransform.localRotation;
+                Light shadowSun = shadowObject.AddComponent<Light>();
+                shadowSun.type = LightType.Directional;
+                shadowSun.color = mainSun.color;
+                shadowSun.colorTemperature = mainSun.colorTemperature;
+                shadowSun.useColorTemperature = mainSun.useColorTemperature;
+                shadowSun.intensity = mainSun.intensity;
+                shadowSun.bounceIntensity = 0f;
+                shadowSun.renderMode = LightRenderMode.ForcePixel;
+                shadowSun.cullingMask = 1 << CockpitShadowLayer;
+                shadowSun.shadows = LightShadows.Hard;
+                shadowSun.shadowCustomResolution = 512;
+                shadowSun.shadowStrength = 0.48f;
+                shadowSun.shadowBias = 0.035f;
+                shadowSun.shadowNormalBias = 0.24f;
+                shadowSun.shadowNearPlane = 0.10f;
+                mainSun.cullingMask &= ~(1 << CockpitShadowLayer);
+                EditorUtility.SetDirty(mainSun);
+                EditorUtility.SetDirty(shadowSun);
+                PrefabUtility.SaveAsPrefabAsset(root, ProductionWorldPrefabPath);
             }
             finally
             {
@@ -902,14 +1005,40 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             if (aircraftRenderers.SelectMany(renderer => renderer.sharedMaterials).Count(material =>
                     material == LoadRequired<Material>(WindowMaterialPath)) != 1 ||
                 aircraftRenderers.SelectMany(renderer => renderer.sharedMaterials).Count(material =>
-                    material == LoadRequired<Material>(InstrumentGlassMaterialPath)) != 1)
+                    material == LoadRequired<Material>(InstrumentGlassMaterialPath)) != 2)
                 throw new InvalidOperationException("Dedicated cockpit glass bindings are incomplete.");
-            Renderer[] duplicateExteriorGlass = aircraftRenderers.Where(renderer =>
-                string.Equals(renderer.name, DuplicateExteriorGlassRendererName,
-                    StringComparison.Ordinal)).ToArray();
-            if (duplicateExteriorGlass.Length != 1 || duplicateExteriorGlass[0].enabled)
+            Renderer[] activeInstrumentCovers = aircraftRenderers.Where(renderer => renderer.enabled &&
+                renderer.sharedMaterials.Any(material =>
+                    material == LoadRequired<Material>(InstrumentGlassMaterialPath))).ToArray();
+            Renderer decorativeInstrumentCover = aircraftRenderers.Single(renderer =>
+                string.Equals(renderer.name, InstrumentCoverRendererName,
+                    StringComparison.Ordinal));
+            if (activeInstrumentCovers.Length != 1 || decorativeInstrumentCover.enabled)
                 throw new InvalidOperationException(
-                    "The overlapping imported exterior-glass renderer must remain uniquely disabled.");
+                    "Only the authoritative MI instrument cover may consume a transparent draw.");
+            Renderer[] exteriorWindowRenderers = aircraftRenderers.Where(renderer =>
+                string.Equals(renderer.name, ExteriorWindowRendererName,
+                    StringComparison.Ordinal)).ToArray();
+            if (exteriorWindowRenderers.Length != 1 || !exteriorWindowRenderers[0].enabled ||
+                exteriorWindowRenderers[0].sharedMaterials.Single() !=
+                LoadRequired<Material>(WindowMaterialPath))
+                throw new InvalidOperationException(
+                    "The full-cabin exterior glazing mesh must be uniquely enabled and reflective.");
+
+            Transform cockpit = FindDescendant(rig.AircraftVisualRoot, CockpitRootName);
+            if (cockpit == null || cockpit.GetComponentsInChildren<Transform>(true)
+                    .Any(item => item.gameObject.layer != CockpitShadowLayer))
+                throw new InvalidOperationException("Cockpit-only shadow layer assignment is incomplete.");
+            GameObject worldAsset = LoadRequired<GameObject>(ProductionWorldPrefabPath);
+            Light mainSun = FindDescendant(worldAsset.transform, MainSunName)?.GetComponent<Light>();
+            Light cockpitSun = FindDescendant(worldAsset.transform,
+                CockpitShadowSunName)?.GetComponent<Light>();
+            if (mainSun == null || cockpitSun == null || !cockpitSun.enabled ||
+                cockpitSun.type != LightType.Directional || cockpitSun.shadows != LightShadows.Hard ||
+                cockpitSun.shadowCustomResolution != 512 ||
+                cockpitSun.cullingMask != (1 << CockpitShadowLayer) ||
+                (mainSun.cullingMask & (1 << CockpitShadowLayer)) != 0)
+                throw new InvalidOperationException("Bounded cockpit-only shadow sun is incomplete.");
 
             Scene scene = EditorSceneManager.OpenScene(ProductionScenePath, OpenSceneMode.Single);
             if (RenderSettings.defaultReflectionMode != DefaultReflectionMode.Custom ||

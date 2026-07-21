@@ -22,17 +22,21 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _AuthoredReflectionCube:
+        m_Texture: {fileID: 8900000, guid: 9cd62c9524f06f1429cc2072e717d455, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _DirectGlintStrength: 0.055
-    - _FresnelOpacity: 0.105
-    - _PerceptualRoughness: 0.18
-    - _ReflectionStrength: 0.42
+    - _DirectGlintStrength: 0.085
+    - _FresnelOpacity: 0.18
+    - _PerceptualRoughness: 0.14
+    - _ReflectionStrength: 0.5
     - _SideAxisEnd: 0.82
     - _SideAxisStart: 0.52
-    - _SideWindowOpacity: 0.065
-    - _WindshieldOpacity: 0.045
+    - _SideWindowOpacity: 0.16
+    - _WindshieldOpacity: 0.13
     m_Colors:
     - _SideWindowTint: {r: 0.7, g: 0.82, b: 0.92, a: 1}
     - _WindshieldTint: {r: 0.77, g: 0.86, b: 0.95, a: 1}

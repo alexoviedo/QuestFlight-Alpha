@@ -119,11 +119,17 @@ namespace QuestFlightLab.Environment
             Require(benchmarkSun == null || benchmarkSun.lightmapBakeType == LightmapBakeType.Baked,
                 "benchmark static sun must be baked", failures);
 #endif
+#if UNITY_EDITOR
+            // Probe positions are an authored Editor contract. Unity may strip
+            // LightProbeGroup source positions from an Android player after
+            // baking, so runtime validation must not report a false product
+            // failure for data that is intentionally Editor-only.
             Require(probePositions != null && probePositions.Length == 18,
                 "airport light-probe volume must contain the authored 18 probes", failures);
             Require(probePositions == null ||
                     probePositions.Select(position => position.y).Distinct().Count() >= 2,
                 "airport light probes must occupy at least two heights", failures);
+#endif
             Require(airportReflectionProbe == null || airportReflectionProbe.mode == ReflectionProbeMode.Baked,
                 "airport reflection probe must be baked", failures);
             Require(v2RunwayMaterial != null,

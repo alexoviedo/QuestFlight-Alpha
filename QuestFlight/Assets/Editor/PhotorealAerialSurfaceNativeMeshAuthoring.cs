@@ -36,7 +36,7 @@ namespace QuestFlight.Editor
         public const string ReportPath = SurfaceRoot + "/KBDU_AerialSurface_UnityLocalMeshManifestV1.json";
         public const string DeterministicGeneratedUtc = "2026-07-20T18:30:00Z";
         public const int ExpectedBuildingBatchCount = 16;
-        public const int ExpectedCanopyBatchCount = 0;
+        public const int ExpectedCanopyBatchCount = 4;
         public const int ExpectedTerrainBatchCount = 1;
         public const int MaximumTerrainTriangleCount = 92000;
 
@@ -193,6 +193,7 @@ namespace QuestFlight.Editor
                 out List<Vector3> nativeVertices,
                 out List<Vector3> nativeNormals,
                 out List<Color32> nativeColors,
+                out List<Vector2> nativeUvs,
                 out List<int> nativeIndices);
 
             Mesh compiled = new Mesh
@@ -205,6 +206,7 @@ namespace QuestFlight.Editor
             compiled.SetVertices(nativeVertices);
             compiled.SetNormals(nativeNormals);
             if (parsed.hasExplicitColors) compiled.SetColors(nativeColors);
+            if (parsed.hasExplicitUvs) compiled.SetUVs(0, nativeUvs);
             compiled.SetTriangles(nativeIndices, 0, true);
             compiled.RecalculateBounds();
 
@@ -254,7 +256,8 @@ namespace QuestFlight.Editor
                 nativeBoundsCentroid = nativeBounds.center,
                 sourceCoordinatesPreserved = true,
                 genericObjImporterBypassed = true,
-                semanticVertexColors = parsed.hasExplicitColors
+                semanticVertexColors = parsed.hasExplicitColors,
+                semanticWallLocalUvs = parsed.hasExplicitUvs
             };
         }
 
@@ -313,6 +316,17 @@ namespace QuestFlight.Editor
                         }
                     }
                 }
+                else if (line.StartsWith("vt ", StringComparison.Ordinal) ||
+                         line.StartsWith("vt\t", StringComparison.Ordinal))
+                {
+                    string[] values = Split(line);
+                    if (values.Length != 3)
+                        throw new InvalidOperationException("Unsupported OBJ UV record: " + assetPath);
+                    parsed.hasExplicitUvs = true;
+                    parsed.uvs.Add(new Vector2(
+                        float.Parse(values[1], CultureInfo.InvariantCulture),
+                        float.Parse(values[2], CultureInfo.InvariantCulture)));
+                }
                 else if (line.StartsWith("f ", StringComparison.Ordinal) ||
                          line.StartsWith("f\t", StringComparison.Ordinal))
                 {
@@ -330,6 +344,9 @@ namespace QuestFlight.Editor
 
             if (parsed.vertices.Count == 0 || parsed.triangles.Count == 0)
                 throw new InvalidOperationException("Semantic-surface OBJ is empty: " + assetPath);
+            if (parsed.hasExplicitUvs && parsed.uvs.Count != parsed.vertices.Count)
+                throw new InvalidOperationException(
+                    "Semantic-surface OBJ requires one wall-local UV per vertex: " + assetPath);
             return parsed;
         }
 
@@ -339,16 +356,19 @@ namespace QuestFlight.Editor
             out List<Vector3> vertices,
             out List<Vector3> normals,
             out List<Color32> colors,
+            out List<Vector2> uvs,
             out List<int> indices)
         {
             if (normalPolicy == NativeNormalPolicy.SmoothSharedSourceVertices)
             {
-                BuildSharedVertexArrays(parsed, out vertices, out normals, out colors, out indices);
+                BuildSharedVertexArrays(parsed, out vertices, out normals, out colors, out uvs,
+                    out indices);
                 return;
             }
 
             vertices = new List<Vector3>(parsed.vertices.Count * 2);
             colors = new List<Color32>(parsed.vertices.Count * 2);
+            uvs = new List<Vector2>(parsed.vertices.Count * 2);
             List<Vector3> normalSums = new List<Vector3>(parsed.vertices.Count * 2);
             indices = new List<int>(parsed.triangles.Count * 3);
             Dictionary<VertexKey, int> nativeByKey = new Dictionary<VertexKey, int>();
@@ -382,6 +402,7 @@ namespace QuestFlight.Editor
                         nativeByKey.Add(key, nativeIndex);
                         vertices.Add(parsed.vertices[sourceIndex]);
                         colors.Add(parsed.colors[sourceIndex]);
+                        uvs.Add(parsed.hasExplicitUvs ? parsed.uvs[sourceIndex] : Vector2.zero);
                         normalSums.Add(Vector3.zero);
                     }
                     normalSums[nativeIndex] += triangle.smoothingGroup == 0 ? faceNormal : cross;
@@ -391,6 +412,7 @@ namespace QuestFlight.Editor
 
             normals = normalSums.Select(value => value.normalized).ToList();
             if (vertices.Count != normals.Count || vertices.Count != colors.Count ||
+                vertices.Count != uvs.Count ||
                 indices.Count != parsed.triangles.Count * 3)
                 throw new InvalidOperationException("Native semantic-surface topology is inconsistent.");
         }
@@ -400,10 +422,14 @@ namespace QuestFlight.Editor
             out List<Vector3> vertices,
             out List<Vector3> normals,
             out List<Color32> colors,
+            out List<Vector2> uvs,
             out List<int> indices)
         {
             vertices = new List<Vector3>(parsed.vertices);
             colors = parsed.colors.Select(value => (Color32)value).ToList();
+            uvs = parsed.hasExplicitUvs
+                ? new List<Vector2>(parsed.uvs)
+                : Enumerable.Repeat(Vector2.zero, vertices.Count).ToList();
             List<Vector3> normalSums = Enumerable.Repeat(Vector3.zero, vertices.Count).ToList();
             indices = new List<int>(parsed.triangles.Count * 3);
             foreach (ParsedTriangle triangle in parsed.triangles)
@@ -427,6 +453,7 @@ namespace QuestFlight.Editor
                     "Native terrain OBJ contains an unreferenced vertex or cancelling vertex normal.");
             normals = normalSums.Select(value => value.normalized).ToList();
             if (vertices.Count != parsed.vertices.Count || colors.Count != parsed.colors.Count ||
+                uvs.Count != parsed.vertices.Count ||
                 indices.Count != parsed.triangles.Count * 3)
                 throw new InvalidOperationException("Native terrain source-index topology is inconsistent.");
         }
@@ -466,10 +493,15 @@ namespace QuestFlight.Editor
                     mesh.bounds);
                 bool isBuilding = string.Equals(record.semanticRoot,
                     "ProductionBuildingSurfaceLayer", StringComparison.Ordinal);
-                if (record.semanticVertexColors != isBuilding ||
-                    mesh.HasVertexAttribute(VertexAttribute.Color) != isBuilding)
+                bool isCanopy = string.Equals(record.semanticRoot,
+                    "ProductionCanopySurfaceLayer", StringComparison.Ordinal);
+                bool semanticColorsExpected = isBuilding || isCanopy;
+                if (record.semanticVertexColors != semanticColorsExpected ||
+                    mesh.HasVertexAttribute(VertexAttribute.Color) != semanticColorsExpected ||
+                    record.semanticWallLocalUvs != isBuilding ||
+                    mesh.HasVertexAttribute(VertexAttribute.TexCoord0) != isBuilding)
                     throw new InvalidOperationException(
-                        "Semantic facade color stream contract failed: " + record.outputMeshAssetPath);
+                        "Semantic vertex-stream contract failed: " + record.outputMeshAssetPath);
             }
             BatchRecord terrain = report.terrainBatches.Single();
             if (!string.Equals(terrain.sourceObjAssetPath, TerrainSourcePath,
@@ -542,8 +574,10 @@ namespace QuestFlight.Editor
         {
             public readonly List<Vector3> vertices = new List<Vector3>();
             public readonly List<Color> colors = new List<Color>();
+            public readonly List<Vector2> uvs = new List<Vector2>();
             public readonly List<ParsedTriangle> triangles = new List<ParsedTriangle>();
             public bool hasExplicitColors;
+            public bool hasExplicitUvs;
         }
 
         private enum NativeNormalPolicy
@@ -649,6 +683,7 @@ namespace QuestFlight.Editor
             public bool sourceCoordinatesPreserved;
             public bool genericObjImporterBypassed;
             public bool semanticVertexColors;
+            public bool semanticWallLocalUvs;
         }
     }
 }

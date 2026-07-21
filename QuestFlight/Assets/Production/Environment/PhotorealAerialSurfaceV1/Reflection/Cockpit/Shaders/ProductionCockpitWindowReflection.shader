@@ -4,6 +4,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
     {
         _WindshieldTint ("Windshield Tint", Color) = (0.77, 0.86, 0.95, 1)
         _SideWindowTint ("Side Window Tint", Color) = (0.70, 0.82, 0.92, 1)
+        [NoScaleOffset] _AuthoredReflectionCube ("Authored Ground/Sky Reflection", Cube) = "black" {}
         _WindshieldOpacity ("Windshield Opacity", Range(0, 0.2)) = 0.045
         _SideWindowOpacity ("Side Window Opacity", Range(0, 0.2)) = 0.065
         _FresnelOpacity ("Edge Fresnel Opacity", Range(0, 0.2)) = 0.085
@@ -38,6 +39,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
 
             fixed4 _WindshieldTint;
             fixed4 _SideWindowTint;
+            samplerCUBE _AuthoredReflectionCube;
             half _WindshieldOpacity;
             half _SideWindowOpacity;
             half _FresnelOpacity;
@@ -116,8 +118,12 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
 
                 half3 tint = lerp(_WindshieldTint.rgb, _SideWindowTint.rgb, sideWeight);
                 half3 reflectionDirection = reflect(-viewDirection, normal);
-                half3 reflection = SampleAuthoredReflection(
+                half3 probeReflection = SampleAuthoredReflection(
                     input.worldPosition, viewDirection, reflectionDirection);
+                half3 authoredReflection = texCUBElod(
+                    _AuthoredReflectionCube,
+                    half4(reflectionDirection, _PerceptualRoughness * 5.0h)).rgb;
+                half3 reflection = max(probeReflection, authoredReflection * 0.82h);
                 half reflectionWeight = _ReflectionStrength * (0.32h + fresnel * 0.68h);
                 half reflectionVisibility = saturate(opacity * 2.75h + fresnel * 0.05h);
                 half3 premultiplied = tint * opacity * 0.08h +

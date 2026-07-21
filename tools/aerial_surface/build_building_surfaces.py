@@ -503,7 +503,13 @@ def mesh_batch_name(key: tuple[int, int]) -> str:
     )
 
 
-def facade_semantics(feature: dict[str, Any], osm_id: int, base_y: float) -> dict[str, int]:
+def facade_semantics(
+    feature: dict[str, Any],
+    osm_id: int,
+    base_y: float,
+    points: Sequence[tuple[int, int]],
+    selected_height: float,
+) -> dict[str, int]:
     """Map OSM usage to a coherent, compact facade contract.
 
     The selector is authored once per source footprint and copied to every
@@ -533,6 +539,15 @@ def facade_semantics(feature: dict[str, Any], osm_id: int, base_y: float) -> dic
         "terrace", "bungalow", "cabin", "farm", "static_caravan",
     }
 
+    area_square_meters = abs(signed_area2(points)) * (
+        HORIZONTAL_QUANTIZATION_METERS * HORIZONTAL_QUANTIZATION_METERS * 0.5
+    )
+    xs = [point[0] for point in points]
+    zs = [point[1] for point in points]
+    width = max(1.0, (max(xs) - min(xs)) * HORIZONTAL_QUANTIZATION_METERS)
+    depth = max(1.0, (max(zs) - min(zs)) * HORIZONTAL_QUANTIZATION_METERS)
+    aspect = max(width, depth) / min(width, depth)
+
     if building in industrial or use in industrial:
         tile = (FACADE_TILE_CORRUGATED, FACADE_TILE_WEATHERED_METAL,
                 FACADE_TILE_LIGHT_METAL)[identity % 3]
@@ -544,21 +559,45 @@ def facade_semantics(feature: dict[str, Any], osm_id: int, base_y: float) -> dic
         tile = FACADE_TILE_BRICK if identity % 3 else FACADE_TILE_CONCRETE
         semantic = SEMANTIC_CIVIC
     elif building in residential or use in residential:
-        tile = FACADE_TILE_BRICK if identity % 4 else FACADE_TILE_CONCRETE
+        selector = identity % 20
+        tile = (FACADE_TILE_BRICK if selector < 9 else
+                FACADE_TILE_CONCRETE if selector < 17 else
+                FACADE_TILE_LIGHT_METAL)
         semantic = SEMANTIC_RESIDENTIAL
     else:
-        # Unclassified structures remain neutral rather than receiving a
-        # visibly random industrial/residential mixture.
-        tile = FACADE_TILE_CONCRETE
-        semantic = SEMANTIC_OTHER
+        # Untagged OSM buildings dominate the context set. Infer a bounded
+        # family from footprint proportions instead of assigning every one the
+        # same concrete skin. One family remains constant across the complete
+        # footprint, so the result is varied at neighborhood scale but coherent
+        # on each structure.
+        if area_square_meters >= 1100.0 or aspect >= 2.75:
+            tile = (FACADE_TILE_CORRUGATED, FACADE_TILE_WEATHERED_METAL,
+                    FACADE_TILE_LIGHT_METAL)[identity % 3]
+            semantic = SEMANTIC_INDUSTRIAL
+        elif area_square_meters <= 450.0 and selected_height <= 12.5:
+            selector = identity % 20
+            tile = (FACADE_TILE_BRICK if selector < 8 else
+                    FACADE_TILE_CONCRETE if selector < 16 else
+                    FACADE_TILE_LIGHT_METAL)
+            semantic = SEMANTIC_RESIDENTIAL
+        else:
+            tile = FACADE_TILE_CONCRETE if identity % 3 else FACADE_TILE_LIGHT_METAL
+            semantic = SEMANTIC_COMMERCIAL
 
+    edge_lengths = [
+        math.hypot(
+            points[(index + 1) % len(points)][0] - points[index][0],
+            points[(index + 1) % len(points)][1] - points[index][1],
+        ) * HORIZONTAL_QUANTIZATION_METERS
+        for index in range(len(points))
+    ]
+    ranked_edges = sorted(range(len(points)), key=lambda index: (-edge_lengths[index], index))
+    entrance_edge = ranked_edges[identity % min(2, len(ranked_edges))]
     return {
         "facade_tile": tile,
         "facade_semantic_code": semantic,
         "facade_seed_code": (identity >> 8) & 0xFF,
-        "facade_base_height_code": int(round(
-            max(0.0, min(1.0, (base_y + 64.0) / 128.0)) * 255.0
-        )),
+        "facade_entrance_edge": entrance_edge,
     }
 
 
@@ -678,28 +717,83 @@ def write_obj_batches(
         for record in sorted(batches[key], key=lambda item: item["feature_index"]):
             base = record["base_code"] * VERTICAL_QUANTIZATION_METERS
             top = base + record["selected_height_code"] * VERTICAL_QUANTIZATION_METERS
-            semantic_color = (
+            roof_color = (
                 record["facade_tile"] / 255.0,
                 record["facade_seed_code"] / 255.0,
-                record["facade_base_height_code"] / 255.0,
+                0.0,
                 record["facade_semantic_code"] / 255.0,
             )
+            authored_vertices: list[tuple[float, float, float]] = []
+            authored_uvs: list[tuple[float, float]] = []
+            authored_colors: list[tuple[float, float, float, float]] = []
+            authored_faces: list[tuple[int, int, int]] = []
+
+            def add_vertex(
+                position: tuple[float, float, float],
+                uv: tuple[float, float],
+                color: tuple[float, float, float, float],
+            ) -> int:
+                authored_vertices.append(position)
+                authored_uvs.append(uv)
+                authored_colors.append(color)
+                return len(authored_vertices) - 1
+
+            # Roof and floor preserve the exact simplified footprint. Wall
+            # vertices are intentionally duplicated per edge so UV.x is metres
+            # along that specific wall and UV.y is metres above its foundation.
+            floor_indices: list[int] = []
+            roof_indices: list[int] = []
             for x_q, z_q in record["points"]:
                 x = x_q * HORIZONTAL_QUANTIZATION_METERS
                 z = z_q * HORIZONTAL_QUANTIZATION_METERS
-                color = " ".join(f"{value:.6f}" for value in semantic_color)
-                lines.append(f"v {x:.3f} {base:.3f} {z:.3f} {color}")
-                lines.append(f"v {x:.3f} {top:.3f} {z:.3f} {color}")
-            indices = record["indices"]
-            for offset in range(0, len(indices), 3):
-                a, b, c = indices[offset : offset + 3]
-                lines.append(
-                    f"f {vertex_offset + a} {vertex_offset + b} {vertex_offset + c}"
+                floor_indices.append(add_vertex((x, base, z), (0.0, 0.0), roof_color))
+                roof_indices.append(add_vertex((x, top, z), (0.0, 0.0), roof_color))
+            for a, b, c in triangulate_polygon(record["points"]):
+                authored_faces.append((roof_indices[a], roof_indices[c], roof_indices[b]))
+                authored_faces.append((floor_indices[a], floor_indices[b], floor_indices[c]))
+
+            points = record["points"]
+            height = top - base
+            for edge_index in range(len(points)):
+                following = (edge_index + 1) % len(points)
+                ax = points[edge_index][0] * HORIZONTAL_QUANTIZATION_METERS
+                az = points[edge_index][1] * HORIZONTAL_QUANTIZATION_METERS
+                bx = points[following][0] * HORIZONTAL_QUANTIZATION_METERS
+                bz = points[following][1] * HORIZONTAL_QUANTIZATION_METERS
+                wall_length = math.hypot(bx - ax, bz - az)
+                entrance = 1 if edge_index == record["facade_entrance_edge"] else 0
+                semantic_code = record["facade_semantic_code"] + entrance
+                wall_color = (
+                    record["facade_tile"] / 255.0,
+                    record["facade_seed_code"] / 255.0,
+                    min(1.0, wall_length / 64.0),
+                    semantic_code / 255.0,
                 )
-            count = len(record["points"]) * 2
+                base_a = add_vertex((ax, base, az), (0.0, 0.0), wall_color)
+                top_a = add_vertex((ax, top, az), (0.0, height), wall_color)
+                base_b = add_vertex((bx, base, bz), (wall_length, 0.0), wall_color)
+                top_b = add_vertex((bx, top, bz), (wall_length, height), wall_color)
+                authored_faces.append((base_a, top_b, base_b))
+                authored_faces.append((base_a, top_a, top_b))
+
+            for position, uv, semantic_color in zip(
+                authored_vertices, authored_uvs, authored_colors
+            ):
+                color = " ".join(f"{value:.6f}" for value in semantic_color)
+                lines.append(
+                    f"v {position[0]:.3f} {position[1]:.3f} {position[2]:.3f} {color}"
+                )
+                lines.append(f"vt {uv[0]:.4f} {uv[1]:.4f}")
+            for a, b, c in authored_faces:
+                lines.append(
+                    f"f {vertex_offset + a}/{vertex_offset + a} "
+                    f"{vertex_offset + b}/{vertex_offset + b} "
+                    f"{vertex_offset + c}/{vertex_offset + c}"
+                )
+            count = len(authored_vertices)
             vertex_offset += count
             vertex_count += count
-            triangle_count += len(indices) // 3
+            triangle_count += len(authored_faces)
         path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
         results.append(
             {
@@ -924,7 +1018,7 @@ def build(
         if zone == "2-4km":
             flags |= FLAG_ZONE_2_TO_4_KM
         part = str(source_identity.get("part", "geometry:0"))
-        semantics = facade_semantics(feature, osm_id, base_y)
+        semantics = facade_semantics(feature, osm_id, base_y, points, selected_height)
         records.append(
             {
                 "base_code": quantize_signed(base_y),
@@ -993,7 +1087,7 @@ def build(
     mesh_triangle_total = sum(int(item["triangle_count"]) for item in mesh_batches)
     mesh_vertex_total = sum(int(item["vertex_count"]) for item in mesh_batches)
     mesh_byte_total = sum(int(item["bytes"]) for item in mesh_batches)
-    if mesh_triangle_total != total_triangles or mesh_vertex_total != total_points * 2:
+    if mesh_triangle_total != total_triangles or mesh_vertex_total != total_points * 6:
         raise ValueError("Building OBJ batches do not match the semantic layer topology")
     if layer_path.stat().st_size > MAXIMUM_LAYER_BYTES:
         raise ValueError("ProductionBuildingSurfaceLayer exceeds its serialized byte budget")
@@ -1096,10 +1190,16 @@ def build(
             "encoding": {
                 "vertex_color_r": "AirportCore shared atlas tile index / 255",
                 "vertex_color_g": "stable per-building variation seed / 255",
-                "vertex_color_b": "building base height mapped from [-64,+64] m to [0,1]",
-                "vertex_color_a": "semantic usage code / 255",
+                "vertex_color_b": "wall length in metres mapped from [0,64] to [0,1]",
+                "vertex_color_a": "semantic usage code plus entrance-wall bit, divided by 255",
             },
-            "material_policy": "one coherent usage-derived facade family per OSM footprint",
+            "wall_local_uv_contract": {
+                "u": "metres along one duplicated wall edge",
+                "v": "metres above that building foundation",
+                "roof_and_floor": "zero; top-facing orthophoto path ignores facade UV",
+            },
+            "opening_contract": "physical-size opaque windows and one eligible entrance wall per footprint",
+            "material_policy": "one coherent usage-derived facade family per OSM footprint; stable category-bounded tint variation",
             "atlas_tiles": {
                 "brick_masonry": FACADE_TILE_BRICK,
                 "light_metal_panel": FACADE_TILE_LIGHT_METAL,

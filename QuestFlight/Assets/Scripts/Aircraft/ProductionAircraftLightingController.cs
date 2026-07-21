@@ -12,6 +12,8 @@ namespace QuestFlightLab.Aircraft
         public int reflectionAwareRendererCount;
         public int realtimeShadowCasterCountDisabled;
         public int realtimeShadowReceiverCountDisabled;
+        public int boundedCockpitShadowCasterCount;
+        public int boundedCockpitShadowReceiverCount;
         public int remainingRealtimeShadowCasterCount;
         public int remainingRealtimeShadowReceiverCount;
         public int cockpitMaterialCloneCount;
@@ -26,9 +28,10 @@ namespace QuestFlightLab.Aircraft
     }
 
     /// <summary>
-    /// Applies a deterministic Quest cockpit-lighting treatment to authored renderers. Realtime
-    /// cockpit shadows remain disabled; restrained authored AO, softened coarse cabin normals,
-    /// sky reflections, and base-texture instrument emission provide stable depth/readability.
+    /// Applies a deterministic Quest cockpit-lighting treatment to authored renderers. One
+    /// separately-layered 512px hard-shadow sun affects only opaque cockpit receivers, while
+    /// two primary cabin meshes cast. Authored AO, softened coarse cabin normals, static sky
+    /// reflections, and base-texture instrument emission preserve stable depth/readability.
     /// No light, camera, mesh, or hierarchy is created.
     /// </summary>
     [DisallowMultipleComponent]
@@ -36,7 +39,7 @@ namespace QuestFlightLab.Aircraft
     {
         public const float DefaultStaticDepthStrength = 0.30f;
         public const float MaximumStaticDepthStrength = 0.42f;
-        public const float DefaultCockpitOcclusionStrength = 0.64f;
+        public const float DefaultCockpitOcclusionStrength = 1.0f;
         public const float DefaultCoarseNormalStrength = 0.42f;
         public const float DefaultInstrumentReadabilityEmission = 0.20f;
 
@@ -112,7 +115,7 @@ namespace QuestFlightLab.Aircraft
                 cockpitOcclusionStrength = Mathf.Clamp01(occlusionStrength),
                 coarseNormalStrength = Mathf.Clamp01(normalStrength),
                 instrumentReadabilityEmission = Mathf.Clamp(instrumentEmission, 0f, 0.5f),
-                strategy = "no_realtime_cockpit_shadows_plus_strengthened_baked_ao_soft_normals_and_base_texture_instrument_emission"
+                strategy = "bounded_512px_cockpit_only_hard_shadow_plus_baked_ao_soft_normals_and_base_texture_instrument_emission"
             };
             Dictionary<Material, Material> cockpitClones = new Dictionary<Material, Material>();
 
@@ -125,19 +128,29 @@ namespace QuestFlightLab.Aircraft
                 renderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbesAndSkybox;
                 report.reflectionAwareRendererCount++;
 
-                if (renderer.shadowCastingMode != ShadowCastingMode.Off)
-                {
-                    renderer.shadowCastingMode = ShadowCastingMode.Off;
-                    report.realtimeShadowCasterCountDisabled++;
-                }
-                if (renderer.receiveShadows)
-                {
-                    renderer.receiveShadows = false;
-                    report.realtimeShadowReceiverCountDisabled++;
-                }
-
                 string identity = RendererIdentity(renderer);
-                if (!IsCockpitRenderer(identity)) continue;
+                bool cockpit = IsCockpitRenderer(identity);
+                bool transparentGlass = IsTransparentGlass(renderer);
+                bool caster = cockpit && !transparentGlass && IsPrimaryCockpitShadowCaster(identity);
+                bool receiver = cockpit && !transparentGlass;
+                ShadowCastingMode desiredCasting = caster
+                    ? ShadowCastingMode.On
+                    : ShadowCastingMode.Off;
+                if (renderer.shadowCastingMode != desiredCasting)
+                {
+                    if (desiredCasting == ShadowCastingMode.Off)
+                        report.realtimeShadowCasterCountDisabled++;
+                    renderer.shadowCastingMode = desiredCasting;
+                }
+                if (renderer.receiveShadows != receiver)
+                {
+                    if (!receiver) report.realtimeShadowReceiverCountDisabled++;
+                    renderer.receiveShadows = receiver;
+                }
+                if (caster) report.boundedCockpitShadowCasterCount++;
+                if (receiver) report.boundedCockpitShadowReceiverCount++;
+
+                if (!cockpit) continue;
                 Material[] materials = renderer.sharedMaterials;
                 bool changed = false;
                 for (int index = 0; index < materials.Length; index++)
@@ -187,7 +200,7 @@ namespace QuestFlightLab.Aircraft
         {
             if (material.HasProperty("occlusionTexture_strength"))
             {
-                float bounded = Mathf.Min(material.GetFloat("occlusionTexture_strength"), report.cockpitOcclusionStrength);
+                float bounded = Mathf.Max(material.GetFloat("occlusionTexture_strength"), report.cockpitOcclusionStrength);
                 material.SetFloat("occlusionTexture_strength", bounded);
                 report.cockpitOcclusionMaterialCountTuned++;
             }
@@ -197,6 +210,21 @@ namespace QuestFlightLab.Aircraft
             {
                 material.SetFloat("normalTexture_scale", report.coarseNormalStrength);
                 report.cockpitNormalMaterialCountTuned++;
+            }
+
+            if (material.HasProperty("baseColorFactor") &&
+                rendererIdentity.IndexOf("Glass", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                float depthWeight =
+                    rendererIdentity.IndexOf("Seats", StringComparison.OrdinalIgnoreCase) >= 0 ? 0.78f :
+                    rendererIdentity.IndexOf("SeatGear", StringComparison.OrdinalIgnoreCase) >= 0 ? 0.70f :
+                    rendererIdentity.IndexOf("Interior_Body", StringComparison.OrdinalIgnoreCase) >= 0 ? 0.62f :
+                    rendererIdentity.IndexOf("Paddle", StringComparison.OrdinalIgnoreCase) >= 0 ? 0.50f :
+                    0.24f;
+                Color baseColor = material.GetColor("baseColorFactor");
+                float depth = 1f - report.staticDepthStrength * depthWeight;
+                material.SetColor("baseColorFactor", new Color(
+                    baseColor.r * depth, baseColor.g * depth, baseColor.b * depth, baseColor.a));
             }
 
             if (!IsReadableInstrumentMaterial(rendererIdentity) || !material.HasProperty("emissiveFactor")) return;
@@ -230,6 +258,25 @@ namespace QuestFlightLab.Aircraft
                    identity.IndexOf("Static_TXT", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    identity.IndexOf("ButtonPlate", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    identity.IndexOf("Buttons_MAT", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static bool IsPrimaryCockpitShadowCaster(string identity)
+        {
+            return identity.IndexOf("Interior_Body", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   identity.IndexOf("Interior_Seats", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static bool IsTransparentGlass(Renderer renderer)
+        {
+            foreach (Material material in renderer.sharedMaterials)
+            {
+                if (material == null || material.shader == null) continue;
+                string shader = material.shader.name;
+                if (shader.IndexOf("Cockpit Window Reflection", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    shader.IndexOf("Instrument Glass Reflection", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return true;
+            }
+            return false;
         }
 
         private static string RendererIdentity(Renderer renderer)

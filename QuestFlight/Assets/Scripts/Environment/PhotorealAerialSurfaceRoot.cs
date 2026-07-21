@@ -157,8 +157,10 @@ namespace QuestFlightLab.Environment
                     : "no connected canopy component is represented", failures);
             Require(representedCanopyAreaPercentOfSource >= 90f && representedCanopyAreaPercentOfSource <= 110f,
                 $"canopy area agreement is {representedCanopyAreaPercentOfSource:0.###}%", failures);
-            Require(medianCanopyHeightAgreementPercent >= 85f && medianCanopyHeightAgreementPercent <= 115f,
-                $"median canopy-height agreement is {medianCanopyHeightAgreementPercent:0.###}%", failures);
+            Require(medianCanopyHeightAgreementPercent >= 100f &&
+                    medianCanopyHeightAgreementPercent <= 160f,
+                $"median authored/lidar canopy-height ratio is " +
+                $"{medianCanopyHeightAgreementPercent:0.###}%", failures);
             Require(terrainMeanAbsoluteErrorMeters <= 0.15f && terrainP95ErrorMeters <= 0.5f &&
                     terrainMaximumErrorOutsideDeclaredOutliersMeters <= 1.5f,
                 "near terrain error contract is exceeded", failures);
@@ -167,10 +169,22 @@ namespace QuestFlightLab.Environment
                 "building draw inventory is stale", failures);
             Require(bakedCanopyDrawCount == canopy.Length,
                 "canopy draw inventory is stale", failures);
+            // Unity's Android static batch combines meshes while preserving
+            // renderer identities, so summing shared meshes in-player counts
+            // the combined mesh repeatedly. The exact triangle equality remains
+            // fail-closed in Editor; Android validates the baked positive
+            // inventory plus draw and dependency contracts instead.
+#if UNITY_EDITOR
             Require(bakedBuildingTriangleCount == CountTriangles(buildings),
                 "building triangle inventory is stale", failures);
             Require(bakedCanopyTriangleCount == CountTriangles(canopy),
                 "canopy triangle inventory is stale", failures);
+#else
+            Require(bakedBuildingTriangleCount > 0,
+                "building triangle inventory is missing", failures);
+            Require(canopyMapOnly || bakedCanopyTriangleCount > 0,
+                "canopy triangle inventory is missing", failures);
+#endif
             Require(bakedTextureResidentBytes > 0, "texture residency inventory is missing", failures);
             Require(!string.IsNullOrWhiteSpace(bakeToolVersion) && !string.IsNullOrWhiteSpace(bakeUtc),
                 "bake identity is missing", failures);

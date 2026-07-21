@@ -118,10 +118,11 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(instrument.passCount, Is.EqualTo(1));
             Assert.That(window.renderQueue, Is.EqualTo((int)RenderQueue.Transparent + 12));
             Assert.That(instrument.renderQueue, Is.EqualTo((int)RenderQueue.Transparent + 16));
-            Assert.That(window.GetFloat("_WindshieldOpacity"), Is.LessThanOrEqualTo(0.05f));
-            Assert.That(window.GetFloat("_SideWindowOpacity"), Is.LessThanOrEqualTo(0.07f));
-            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.38f, 0.45f));
-            Assert.That(window.GetFloat("_DirectGlintStrength"), Is.InRange(0.04f, 0.08f));
+            Assert.That(window.GetTexture("_AuthoredReflectionCube"), Is.Not.Null);
+            Assert.That(window.GetFloat("_WindshieldOpacity"), Is.InRange(0.12f, 0.14f));
+            Assert.That(window.GetFloat("_SideWindowOpacity"), Is.InRange(0.15f, 0.17f));
+            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.49f, 0.50f));
+            Assert.That(window.GetFloat("_DirectGlintStrength"), Is.InRange(0.08f, 0.10f));
             Assert.That(instrument.GetFloat("_Opacity"), Is.LessThanOrEqualTo(0.02f));
             Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.LessThanOrEqualTo(0.10f));
 
@@ -148,7 +149,25 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(windowSource, Does.Contain("sunGlint"));
             Assert.That(windowSource, Does.Contain("_DirectGlintStrength"));
             Assert.That(windowSource, Does.Contain("reflectionVisibility"));
-            Assert.That(windowSource, Does.Contain("reflectionVisibility"));
+            Assert.That(windowSource, Does.Contain("_AuthoredReflectionCube"));
+        }
+
+        [Test]
+        public void OnlyAuthoritativeInstrumentCoverConsumesTransparentDraw()
+        {
+            GameObject aircraft = AssetDatabase.LoadAssetAtPath<GameObject>(
+                PhotorealAerialReflectionAuthoring.AircraftPrefabPath);
+            Assert.That(aircraft, Is.Not.Null);
+            Material instrument = AssetDatabase.LoadAssetAtPath<Material>(
+                PhotorealAerialReflectionAuthoring.InstrumentGlassMaterialPath);
+            Renderer[] covers = aircraft.GetComponentsInChildren<Renderer>(true)
+                .Where(renderer => renderer.sharedMaterials.Contains(instrument)).ToArray();
+            Assert.That(covers, Has.Length.EqualTo(2));
+            Assert.That(covers.Count(renderer => renderer.enabled), Is.EqualTo(1));
+            Renderer decorative = covers.Single(renderer => string.Equals(renderer.name,
+                PhotorealAerialReflectionAuthoring.InstrumentCoverRendererName,
+                StringComparison.Ordinal));
+            Assert.That(decorative.enabled, Is.False);
         }
 
         [Test]
