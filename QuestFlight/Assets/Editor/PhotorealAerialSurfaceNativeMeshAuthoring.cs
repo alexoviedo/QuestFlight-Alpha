@@ -192,6 +192,7 @@ namespace QuestFlight.Editor
             BuildNativeArrays(parsed, normalPolicy,
                 out List<Vector3> nativeVertices,
                 out List<Vector3> nativeNormals,
+                out List<Color32> nativeColors,
                 out List<int> nativeIndices);
 
             Mesh compiled = new Mesh
@@ -203,6 +204,7 @@ namespace QuestFlight.Editor
             };
             compiled.SetVertices(nativeVertices);
             compiled.SetNormals(nativeNormals);
+            if (parsed.hasExplicitColors) compiled.SetColors(nativeColors);
             compiled.SetTriangles(nativeIndices, 0, true);
             compiled.RecalculateBounds();
 
@@ -251,7 +253,8 @@ namespace QuestFlight.Editor
                 nativeBoundsMaximum = nativeBounds.max,
                 nativeBoundsCentroid = nativeBounds.center,
                 sourceCoordinatesPreserved = true,
-                genericObjImporterBypassed = true
+                genericObjImporterBypassed = true,
+                semanticVertexColors = parsed.hasExplicitColors
             };
         }
 
@@ -267,12 +270,30 @@ namespace QuestFlight.Editor
                     line.StartsWith("v\t", StringComparison.Ordinal))
                 {
                     string[] values = Split(line);
-                    if (values.Length != 4)
+                    if (values.Length != 4 && values.Length != 7 && values.Length != 8)
                         throw new InvalidOperationException("Unsupported OBJ vertex record: " + assetPath);
                     parsed.vertices.Add(new Vector3(
                         float.Parse(values[1], CultureInfo.InvariantCulture),
                         float.Parse(values[2], CultureInfo.InvariantCulture),
                         float.Parse(values[3], CultureInfo.InvariantCulture)));
+                    if (values.Length > 4)
+                    {
+                        parsed.hasExplicitColors = true;
+                        parsed.colors.Add(new Color(
+                            float.Parse(values[4], CultureInfo.InvariantCulture),
+                            float.Parse(values[5], CultureInfo.InvariantCulture),
+                            float.Parse(values[6], CultureInfo.InvariantCulture),
+                            values.Length == 8
+                                ? float.Parse(values[7], CultureInfo.InvariantCulture)
+                                : 1f));
+                    }
+                    else
+                    {
+                        if (parsed.hasExplicitColors)
+                            throw new InvalidOperationException(
+                                "OBJ cannot mix semantic-colored and uncolored vertices: " + assetPath);
+                        parsed.colors.Add(Color.white);
+                    }
                 }
                 else if (line.StartsWith("s ", StringComparison.Ordinal) ||
                          line.StartsWith("s\t", StringComparison.Ordinal))
@@ -317,15 +338,17 @@ namespace QuestFlight.Editor
             NativeNormalPolicy normalPolicy,
             out List<Vector3> vertices,
             out List<Vector3> normals,
+            out List<Color32> colors,
             out List<int> indices)
         {
             if (normalPolicy == NativeNormalPolicy.SmoothSharedSourceVertices)
             {
-                BuildSharedVertexArrays(parsed, out vertices, out normals, out indices);
+                BuildSharedVertexArrays(parsed, out vertices, out normals, out colors, out indices);
                 return;
             }
 
             vertices = new List<Vector3>(parsed.vertices.Count * 2);
+            colors = new List<Color32>(parsed.vertices.Count * 2);
             List<Vector3> normalSums = new List<Vector3>(parsed.vertices.Count * 2);
             indices = new List<int>(parsed.triangles.Count * 3);
             Dictionary<VertexKey, int> nativeByKey = new Dictionary<VertexKey, int>();
@@ -358,6 +381,7 @@ namespace QuestFlight.Editor
                         nativeIndex = vertices.Count;
                         nativeByKey.Add(key, nativeIndex);
                         vertices.Add(parsed.vertices[sourceIndex]);
+                        colors.Add(parsed.colors[sourceIndex]);
                         normalSums.Add(Vector3.zero);
                     }
                     normalSums[nativeIndex] += triangle.smoothingGroup == 0 ? faceNormal : cross;
@@ -366,7 +390,8 @@ namespace QuestFlight.Editor
             }
 
             normals = normalSums.Select(value => value.normalized).ToList();
-            if (vertices.Count != normals.Count || indices.Count != parsed.triangles.Count * 3)
+            if (vertices.Count != normals.Count || vertices.Count != colors.Count ||
+                indices.Count != parsed.triangles.Count * 3)
                 throw new InvalidOperationException("Native semantic-surface topology is inconsistent.");
         }
 
@@ -374,9 +399,11 @@ namespace QuestFlight.Editor
             ParsedObj parsed,
             out List<Vector3> vertices,
             out List<Vector3> normals,
+            out List<Color32> colors,
             out List<int> indices)
         {
             vertices = new List<Vector3>(parsed.vertices);
+            colors = parsed.colors.Select(value => (Color32)value).ToList();
             List<Vector3> normalSums = Enumerable.Repeat(Vector3.zero, vertices.Count).ToList();
             indices = new List<int>(parsed.triangles.Count * 3);
             foreach (ParsedTriangle triangle in parsed.triangles)
@@ -399,7 +426,7 @@ namespace QuestFlight.Editor
                 throw new InvalidOperationException(
                     "Native terrain OBJ contains an unreferenced vertex or cancelling vertex normal.");
             normals = normalSums.Select(value => value.normalized).ToList();
-            if (vertices.Count != parsed.vertices.Count ||
+            if (vertices.Count != parsed.vertices.Count || colors.Count != parsed.colors.Count ||
                 indices.Count != parsed.triangles.Count * 3)
                 throw new InvalidOperationException("Native terrain source-index topology is inconsistent.");
         }
@@ -437,6 +464,12 @@ namespace QuestFlight.Editor
                     new Bounds(record.sourceBoundsCentroid,
                         record.sourceBoundsMaximum - record.sourceBoundsMinimum),
                     mesh.bounds);
+                bool isBuilding = string.Equals(record.semanticRoot,
+                    "ProductionBuildingSurfaceLayer", StringComparison.Ordinal);
+                if (record.semanticVertexColors != isBuilding ||
+                    mesh.HasVertexAttribute(VertexAttribute.Color) != isBuilding)
+                    throw new InvalidOperationException(
+                        "Semantic facade color stream contract failed: " + record.outputMeshAssetPath);
             }
             BatchRecord terrain = report.terrainBatches.Single();
             if (!string.Equals(terrain.sourceObjAssetPath, TerrainSourcePath,
@@ -508,7 +541,9 @@ namespace QuestFlight.Editor
         private sealed class ParsedObj
         {
             public readonly List<Vector3> vertices = new List<Vector3>();
+            public readonly List<Color> colors = new List<Color>();
             public readonly List<ParsedTriangle> triangles = new List<ParsedTriangle>();
+            public bool hasExplicitColors;
         }
 
         private enum NativeNormalPolicy
@@ -613,6 +648,7 @@ namespace QuestFlight.Editor
             public Vector3 nativeBoundsCentroid;
             public bool sourceCoordinatesPreserved;
             public bool genericObjImporterBypassed;
+            public bool semanticVertexColors;
         }
     }
 }

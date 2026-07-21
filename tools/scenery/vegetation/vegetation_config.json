@@ -33,6 +33,13 @@
     "grove_near_priority_minimum_clusters": 26,
     "grove_source_footprint_width_m": 34.0,
     "grove_source_footprint_depth_m": 30.0,
+    "tier2_shadow_height_calibration": {
+      "source_authored_height_m": 11.785,
+      "lidar_hag_multiplier": 1.28,
+      "minimum_apparent_height_m": 15.0,
+      "maximum_apparent_height_m": 26.0,
+      "rationale": "The worn Quest smoke found aligned but consistently short Tier 2 crowns. Lidar HAG remains the spatial cue, while this bounded apparent-height envelope restores mature-tree proportions consistent with the long shadows already baked into the orthophoto."
+    },
     "canonical_heights_m": {
       "cottonwood": 15.0,
       "willow_riparian": 9.2,

@@ -704,6 +704,13 @@ def cluster_instance(
     footprint_depth = float(config["sampling"]["grove_source_footprint_depth_m"])
     scale_x = radius_major * 2.0 / footprint_width
     scale_z = radius_minor * 2.0 / footprint_depth
+    height_calibration = config["sampling"]["tier2_shadow_height_calibration"]
+    apparent_height = clamp(
+        hag * float(height_calibration["lidar_hag_multiplier"]),
+        float(height_calibration["minimum_apparent_height_m"]),
+        float(height_calibration["maximum_apparent_height_m"]),
+    )
+    scale_y = apparent_height / float(height_calibration["source_authored_height_m"])
     components = sorted({member.component for member in members})
     digest = stable_digest(seed, stable_input_hash, "cluster", index, ",".join(map(str, components)))
     return {
@@ -715,7 +722,7 @@ def cluster_instance(
         "z": round(z, 3),
         "yaw_degrees": round(math.degrees(yaw_radians) % 180.0, 3),
         "scale_x": round(scale_x, 4),
-        "scale_y": round(clamp(hag / 6.4, 0.65, 1.65), 4),
+        "scale_y": round(scale_y, 4),
         "scale_z": round(scale_z, 4),
         "tint_r": round(0.74 + digest[2] / 255.0 * 0.08, 4),
         "tint_g": round(0.78 + digest[3] / 255.0 * 0.10, 4),
@@ -729,6 +736,7 @@ def cluster_instance(
         "footprint_yaw_degrees": round(math.degrees(yaw_radians) % 180.0, 3),
         "footprint_area_m2": round(math.pi * radius_major * radius_minor, 3),
         "mean_canopy_hag_m": round(hag, 3),
+        "apparent_canopy_height_m": round(apparent_height, 3),
         "mean_vegetation_density": round(density, 5),
     }
 

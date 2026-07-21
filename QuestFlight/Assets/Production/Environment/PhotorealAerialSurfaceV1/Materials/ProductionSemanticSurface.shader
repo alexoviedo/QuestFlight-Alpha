@@ -89,6 +89,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
             {
                 float4 vertex : POSITION;
                 half3 normal : NORMAL;
+                fixed4 color : COLOR;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -98,6 +99,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 float3 worldPosition : TEXCOORD0;
                 half3 worldNormal : TEXCOORD1;
                 UNITY_FOG_COORDS(2)
+                fixed4 semanticData : TEXCOORD3;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -110,6 +112,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 output.position = UnityObjectToClipPos(input.vertex);
                 output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
                 output.worldNormal = UnityObjectToWorldNormal(input.normal);
+                output.semanticData = input.color;
                 UNITY_TRANSFER_FOG(output, output.position);
                 return output;
             }
@@ -207,23 +210,24 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
             fixed3 SampleFacade(
                 float3 worldPosition,
                 half3 worldNormal,
+                fixed4 semanticData,
                 out half roughness,
                 out half metallic,
                 out half ao,
                 out half3 mappedNormal)
             {
-                // One stable 96 m world cell avoids material switches across ordinary walls
-                // while diversifying brick, concrete, and metal context surfaces without
-                // creating per-building materials.
-                float2 cellSeed = floor(worldPosition.xz / 96.0);
-                half selector = frac(sin(dot(cellSeed, float2(12.9898, 78.233))) * 43758.5453);
-                half2 cell = selector < 0.28h ? half2(0.0h, 0.0h) :
-                    (selector < 0.54h ? half2(1.0h, 1.0h) :
-                    (selector < 0.80h ? half2(1.0h, 0.0h) : half2(2.0h, 2.0h)));
+                // Offline OSM usage classification is constant across every vertex of a
+                // source footprint.  This replaces the former world-cell randomizer, so
+                // a structure can never switch between unrelated facade families.
+                half tileIndex = floor(semanticData.r * 255.0h + 0.5h);
+                half2 cell = half2(fmod(tileIndex, 4.0h), floor(tileIndex * 0.25h));
                 half3 weights = pow(abs(worldNormal), 8.0h);
                 weights /= max(weights.x + weights.y + weights.z, 0.0001h);
-                float2 localUv = worldPosition.zy * 0.105;
-                if (weights.z > weights.x) localUv = worldPosition.xy * 0.105;
+                half physicalScale = tileIndex < 0.5h ? 0.25h :
+                    (tileIndex < 1.5h ? 0.19h :
+                    (tileIndex < 6.0h ? 0.12h : 0.20h));
+                float2 localUv = worldPosition.zy * physicalScale;
+                if (weights.z > weights.x) localUv = worldPosition.xy * physicalScale;
                 half2 atlasUv = (cell + 0.02h + frac(localUv) * 0.96h) * 0.25h;
                 fixed3 albedo = tex2D(_FacadeAtlas, atlasUv).rgb;
                 half3 mrao = tex2D(_FacadeMRAO, atlasUv).rgb;
@@ -240,6 +244,64 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     tangent * tangentNormal.x + bitangent * tangentNormal.y +
                     worldNormal * tangentNormal.z);
                 return albedo;
+            }
+
+            half SoftInterval(half value, half minimumValue, half maximumValue, half width)
+            {
+                return smoothstep(minimumValue - width, minimumValue + width, value) *
+                       (1.0h - smoothstep(maximumValue - width, maximumValue + width, value));
+            }
+
+            fixed3 ApplyFacadeFeatures(
+                fixed3 facade,
+                float3 worldPosition,
+                half3 worldNormal,
+                fixed4 semanticData,
+                out half windowMask,
+                out half bakedGlint)
+            {
+                half usageCode = floor(semanticData.a * 255.0h + 0.5h);
+                half industrial = step(112.0h, usageCode) * (1.0h - step(144.0h, usageCode));
+                half stableSeed = semanticData.g;
+                half baseY = semanticData.b * 128.0h - 64.0h;
+                float horizontal = abs(worldNormal.x) > abs(worldNormal.z)
+                    ? worldPosition.z : worldPosition.x;
+                half heightAboveBase = max(0.0h, worldPosition.y - baseY);
+                half moduleWidth = lerp(3.25h, 5.2h, industrial);
+                half module = frac(horizontal / moduleWidth + stableSeed * 7.13h);
+                half storey = frac(heightAboveBase / 3.1h);
+                half pixelFootprint = max(fwidth(horizontal), fwidth(worldPosition.y));
+                half featureFade = 1.0h - smoothstep(0.10h, 0.30h, pixelFootprint);
+                half edge = saturate(pixelFootprint * 0.35h + 0.012h);
+
+                half ordinaryWindow = SoftInterval(module, 0.20h, 0.80h, edge) *
+                    SoftInterval(storey, 0.30h, 0.77h, edge);
+                half industrialWindow = SoftInterval(module, 0.30h, 0.68h, edge) *
+                    SoftInterval(storey, 0.62h, 0.84h, edge) *
+                    step(0.58h, frac(stableSeed * 19.17h + floor(horizontal / moduleWidth)));
+                windowMask = lerp(ordinaryWindow, industrialWindow, industrial) * featureFade;
+
+                half groundStorey = 1.0h - smoothstep(3.0h, 3.35h, heightAboveBase);
+                half doorModule = frac(horizontal / lerp(13.0h, 18.0h, industrial) +
+                                       stableSeed * 5.31h);
+                half doorMask = SoftInterval(doorModule, 0.10h, lerp(0.28h, 0.62h, industrial), edge) *
+                    SoftInterval(heightAboveBase, 0.08h, lerp(2.55h, 3.75h, industrial), edge) *
+                    groundStorey * featureFade;
+                windowMask *= 1.0h - doorMask;
+
+                // Static, opaque sky/ground colors provide reflection cues without an
+                // additional transparent pass or realtime probe.  A restrained sunward
+                // highlight produces a glint only at useful close-view pixel sizes.
+                half facingSky = saturate(0.5h + worldNormal.y * 0.5h);
+                fixed3 bakedWindow = lerp(fixed3(0.055h, 0.075h, 0.085h),
+                    fixed3(0.22h, 0.34h, 0.43h), facingSky + 0.28h);
+                fixed3 doorColor = industrial > 0.5h
+                    ? fixed3(0.19h, 0.21h, 0.22h)
+                    : fixed3(0.15h, 0.11h, 0.085h);
+                facade = lerp(facade, bakedWindow, windowMask * 0.92h);
+                facade = lerp(facade, doorColor, doorMask * 0.90h);
+                bakedGlint = windowMask * featureFade;
+                return facade;
             }
 
             fixed4 frag(v2f input) : SV_Target
@@ -271,12 +333,18 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 half roughness;
                 half metallic = 0.0h;
                 half surfaceAo = 1.0h;
+                half facadeWindowMask = 0.0h;
+                half facadeGlintMask = 0.0h;
                 fixed3 sideColor;
                 if (_SemanticMode < 0.5h)
                 {
                     half3 facadeNormal;
-                    sideColor = SampleFacade(input.worldPosition, geometricNormal, roughness,
+                    sideColor = SampleFacade(input.worldPosition, geometricNormal,
+                        input.semanticData, roughness,
                         metallic, surfaceAo, facadeNormal) * _SideTint.rgb;
+                    sideColor = ApplyFacadeFeatures(sideColor, input.worldPosition,
+                        geometricNormal, input.semanticData, facadeWindowMask, facadeGlintMask);
+                    facadeGlintMask *= 1.0h - topWeight;
                     geometricNormal = normalize(lerp(facadeNormal, geometricNormal, topWeight));
                 }
                 else
@@ -322,6 +390,11 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     lerp(52.0h, 6.0h, roughness)) * (1.0h - roughness) *
                     lerp(0.08h, 0.24h, metallic);
                 color += _LightColor0.rgb * specular;
+                if (_SemanticMode < 0.5h && facadeGlintMask > 0.001h)
+                {
+                    half facadeSun = pow(saturate(dot(geometricNormal, halfDirection)), 28.0h);
+                    color += _LightColor0.rgb * facadeSun * facadeGlintMask * 0.34h;
+                }
 
                 fixed4 output = fixed4(color, 1.0h);
                 UNITY_APPLY_FOG(input.fogCoord, output);

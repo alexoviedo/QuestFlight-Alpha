@@ -1,14 +1,14 @@
 {
   "asset_manifests": {
     "building": {
-      "bytes": 29815,
+      "bytes": 30517,
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/ProductionBuildingSurfaceLayer_Manifest.json",
-      "sha256": "1c35bcc519ec58e6d55575d34fef89f9ab8d51b0ea52976c1a44b2b323834c08"
+      "sha256": "de80acfbed6af7d0cae4f00fb8bfcad5f0bb122f6ae90bbcfdc4736c4ec952a9"
     },
     "canopy": {
       "bytes": 26900,
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer_Manifest.json",
-      "sha256": "91e643188b1363639c30e8bf22b148912500d5ceb4f7b6b32ce5695c0aba1600"
+      "sha256": "31d0a04df73623e0458298e7b89eb6f8ed6ddc431ccf873c90d28de122b7fb21"
     },
     "classification": {
       "bytes": 9341,

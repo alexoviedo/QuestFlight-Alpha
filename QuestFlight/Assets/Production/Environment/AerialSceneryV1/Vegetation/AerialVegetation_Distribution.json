@@ -481,6 +481,7 @@
       "batch_id": "tier2_instanced_fixed_groves",
       "instances": [
         {
+          "apparent_canopy_height_m": 25.964,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -493,7 +494,7 @@
           "mean_canopy_hag_m": 20.285,
           "mean_vegetation_density": 0.88333,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 2.2032,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -508,6 +509,7 @@
           "z": -527.826
         },
         {
+          "apparent_canopy_height_m": 26.0,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -520,7 +522,7 @@
           "mean_canopy_hag_m": 21.107,
           "mean_vegetation_density": 0.88314,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 2.2062,
           "scale_z": 1.6,
           "source_member_count": 35,
           "source_object": "AerialGroveCluster_T2",
@@ -535,6 +537,7 @@
           "z": 334.766
         },
         {
+          "apparent_canopy_height_m": 24.462,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -547,7 +550,7 @@
           "mean_canopy_hag_m": 19.111,
           "mean_vegetation_density": 0.81514,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 2.0757,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -562,6 +565,7 @@
           "z": 528.984
         },
         {
+          "apparent_canopy_height_m": 26.0,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -574,7 +578,7 @@
           "mean_canopy_hag_m": 21.167,
           "mean_vegetation_density": 0.84129,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 2.2062,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -589,6 +593,7 @@
           "z": 627.521
         },
         {
+          "apparent_canopy_height_m": 22.619,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -601,7 +606,7 @@
           "mean_canopy_hag_m": 17.671,
           "mean_vegetation_density": 0.8614,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.9193,
           "scale_z": 1.6,
           "source_member_count": 35,
           "source_object": "AerialGroveCluster_T2",
@@ -616,6 +621,7 @@
           "z": 530.053
         },
         {
+          "apparent_canopy_height_m": 23.799,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -628,7 +634,7 @@
           "mean_canopy_hag_m": 18.593,
           "mean_vegetation_density": 0.85815,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 2.0194,
           "scale_z": 1.6,
           "source_member_count": 35,
           "source_object": "AerialGroveCluster_T2",
@@ -643,6 +649,7 @@
           "z": 142.805
         },
         {
+          "apparent_canopy_height_m": 22.299,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -655,7 +662,7 @@
           "mean_canopy_hag_m": 17.421,
           "mean_vegetation_density": 0.85759,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.8922,
           "scale_z": 1.6,
           "source_member_count": 35,
           "source_object": "AerialGroveCluster_T2",
@@ -670,6 +677,7 @@
           "z": 241.231
         },
         {
+          "apparent_canopy_height_m": 26.0,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -682,7 +690,7 @@
           "mean_canopy_hag_m": 20.618,
           "mean_vegetation_density": 0.85052,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 2.2062,
           "scale_z": 1.6,
           "source_member_count": 34,
           "source_object": "AerialGroveCluster_T2",
@@ -697,6 +705,7 @@
           "z": 431.248
         },
         {
+          "apparent_canopy_height_m": 19.191,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -709,7 +718,7 @@
           "mean_canopy_hag_m": 14.993,
           "mean_vegetation_density": 0.85748,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.6284,
           "scale_z": 1.6,
           "source_member_count": 35,
           "source_object": "AerialGroveCluster_T2",
@@ -724,6 +733,7 @@
           "z": -625.494
         },
         {
+          "apparent_canopy_height_m": 20.242,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -736,7 +746,7 @@
           "mean_canopy_hag_m": 15.814,
           "mean_vegetation_density": 0.84011,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.7176,
           "scale_z": 1.6,
           "source_member_count": 35,
           "source_object": "AerialGroveCluster_T2",
@@ -751,6 +761,7 @@
           "z": -630.032
         },
         {
+          "apparent_canopy_height_m": 18.302,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -763,7 +774,7 @@
           "mean_canopy_hag_m": 14.299,
           "mean_vegetation_density": 0.81514,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.553,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -778,6 +789,7 @@
           "z": -1009.038
         },
         {
+          "apparent_canopy_height_m": 16.862,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -790,7 +802,7 @@
           "mean_canopy_hag_m": 13.174,
           "mean_vegetation_density": 0.8281,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.4308,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -805,6 +817,7 @@
           "z": -815.385
         },
         {
+          "apparent_canopy_height_m": 21.897,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -817,7 +830,7 @@
           "mean_canopy_hag_m": 17.107,
           "mean_vegetation_density": 0.79126,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.8581,
           "scale_z": 1.6,
           "source_member_count": 35,
           "source_object": "AerialGroveCluster_T2",
@@ -832,6 +845,7 @@
           "z": -338.216
         },
         {
+          "apparent_canopy_height_m": 19.698,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -844,7 +858,7 @@
           "mean_canopy_hag_m": 15.389,
           "mean_vegetation_density": 0.75708,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.6714,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -859,6 +873,7 @@
           "z": -1295.903
         },
         {
+          "apparent_canopy_height_m": 19.538,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -871,7 +886,7 @@
           "mean_canopy_hag_m": 15.264,
           "mean_vegetation_density": 0.81613,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.6579,
           "scale_z": 1.6,
           "source_member_count": 35,
           "source_object": "AerialGroveCluster_T2",
@@ -886,6 +901,7 @@
           "z": -530.422
         },
         {
+          "apparent_canopy_height_m": 16.96,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -898,7 +914,7 @@
           "mean_canopy_hag_m": 13.25,
           "mean_vegetation_density": 0.80566,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.4391,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -913,6 +929,7 @@
           "z": -817.849
         },
         {
+          "apparent_canopy_height_m": 16.071,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -925,7 +942,7 @@
           "mean_canopy_hag_m": 12.556,
           "mean_vegetation_density": 0.81667,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.3637,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -940,6 +957,7 @@
           "z": -720.981
         },
         {
+          "apparent_canopy_height_m": 20.315,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -952,7 +970,7 @@
           "mean_canopy_hag_m": 15.871,
           "mean_vegetation_density": 0.78465,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.7238,
           "scale_z": 1.6,
           "source_member_count": 35,
           "source_object": "AerialGroveCluster_T2",
@@ -967,6 +985,7 @@
           "z": 526.4
         },
         {
+          "apparent_canopy_height_m": 18.133,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -979,7 +998,7 @@
           "mean_canopy_hag_m": 14.167,
           "mean_vegetation_density": 0.76525,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.5387,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -994,6 +1013,7 @@
           "z": -1392.252
         },
         {
+          "apparent_canopy_height_m": 16.924,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1006,7 +1026,7 @@
           "mean_canopy_hag_m": 13.222,
           "mean_vegetation_density": 0.79139,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.4361,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -1021,6 +1041,7 @@
           "z": 239.728
         },
         {
+          "apparent_canopy_height_m": 17.538,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1033,7 +1054,7 @@
           "mean_canopy_hag_m": 13.701,
           "mean_vegetation_density": 0.78551,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.4881,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -1048,6 +1069,7 @@
           "z": -625.068
         },
         {
+          "apparent_canopy_height_m": 18.898,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1060,7 +1082,7 @@
           "mean_canopy_hag_m": 14.764,
           "mean_vegetation_density": 0.7963,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.6036,
           "scale_z": 1.6,
           "source_member_count": 35,
           "source_object": "AerialGroveCluster_T2",
@@ -1075,6 +1097,7 @@
           "z": -1487.328
         },
         {
+          "apparent_canopy_height_m": 16.027,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1087,7 +1110,7 @@
           "mean_canopy_hag_m": 12.521,
           "mean_vegetation_density": 0.79423,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.3599,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -1102,6 +1125,7 @@
           "z": -719.807
         },
         {
+          "apparent_canopy_height_m": 16.907,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1114,7 +1138,7 @@
           "mean_canopy_hag_m": 13.208,
           "mean_vegetation_density": 0.77298,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.4346,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -1129,6 +1153,7 @@
           "z": -1008.628
         },
         {
+          "apparent_canopy_height_m": 16.729,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1141,7 +1166,7 @@
           "mean_canopy_hag_m": 13.069,
           "mean_vegetation_density": 0.77702,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.4195,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -1156,6 +1181,7 @@
           "z": -1006.29
         },
         {
+          "apparent_canopy_height_m": 16.711,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1168,7 +1194,7 @@
           "mean_canopy_hag_m": 13.056,
           "mean_vegetation_density": 0.77876,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.418,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -1183,6 +1209,7 @@
           "z": -817.413
         },
         {
+          "apparent_canopy_height_m": 16.308,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1195,7 +1222,7 @@
           "mean_canopy_hag_m": 12.741,
           "mean_vegetation_density": 0.76325,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.3838,
           "scale_z": 1.6,
           "source_member_count": 27,
           "source_object": "AerialGroveCluster_T2",
@@ -1210,6 +1237,7 @@
           "z": 1961.332
         },
         {
+          "apparent_canopy_height_m": 18.522,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1222,7 +1250,7 @@
           "mean_canopy_hag_m": 14.47,
           "mean_vegetation_density": 0.76173,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.5716,
           "scale_z": 1.6,
           "source_member_count": 25,
           "source_object": "AerialGroveCluster_T2",
@@ -1237,6 +1265,7 @@
           "z": 334.67
         },
         {
+          "apparent_canopy_height_m": 15.0,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1249,7 +1278,7 @@
           "mean_canopy_hag_m": 11.523,
           "mean_vegetation_density": 0.73797,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.2728,
           "scale_z": 1.6,
           "source_member_count": 22,
           "source_object": "AerialGroveCluster_T2",
@@ -1264,6 +1293,7 @@
           "z": 1577.271
         },
         {
+          "apparent_canopy_height_m": 17.376,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1276,7 +1306,7 @@
           "mean_canopy_hag_m": 13.575,
           "mean_vegetation_density": 0.77137,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.4744,
           "scale_z": 1.6,
           "source_member_count": 20,
           "source_object": "AerialGroveCluster_T2",
@@ -1291,6 +1321,7 @@
           "z": 1005.612
         },
         {
+          "apparent_canopy_height_m": 15.0,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1303,7 +1334,7 @@
           "mean_canopy_hag_m": 10.273,
           "mean_vegetation_density": 0.62888,
           "scale_x": 1.4118,
-          "scale_y": 1.6051,
+          "scale_y": 1.2728,
           "scale_z": 1.6,
           "source_member_count": 22,
           "source_object": "AerialGroveCluster_T2",
@@ -1318,6 +1349,7 @@
           "z": 1484.932
         },
         {
+          "apparent_canopy_height_m": 15.0,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1330,7 +1362,7 @@
           "mean_canopy_hag_m": 7.443,
           "mean_vegetation_density": 0.53048,
           "scale_x": 1.4118,
-          "scale_y": 1.163,
+          "scale_y": 1.2728,
           "scale_z": 1.6,
           "source_member_count": 22,
           "source_object": "AerialGroveCluster_T2",
@@ -1345,6 +1377,7 @@
           "z": -997.46
         },
         {
+          "apparent_canopy_height_m": 15.0,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1357,7 +1390,7 @@
           "mean_canopy_hag_m": 4.576,
           "mean_vegetation_density": 0.4283,
           "scale_x": 1.4118,
-          "scale_y": 0.715,
+          "scale_y": 1.2728,
           "scale_z": 1.6,
           "source_member_count": 23,
           "source_object": "AerialGroveCluster_T2",
@@ -1372,6 +1405,7 @@
           "z": -1473.775
         },
         {
+          "apparent_canopy_height_m": 18.64,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1486.494,
           "footprint_radius_major_m": 24.0,
@@ -1384,7 +1418,7 @@
           "mean_canopy_hag_m": 14.562,
           "mean_vegetation_density": 0.78309,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.5817,
           "scale_z": 1.3143,
           "source_member_count": 16,
           "source_object": "AerialGroveCluster_T2",
@@ -1399,6 +1433,7 @@
           "z": 42.938
         },
         {
+          "apparent_canopy_height_m": 16.213,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1411,7 +1446,7 @@
           "mean_canopy_hag_m": 12.667,
           "mean_vegetation_density": 0.73098,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.3758,
           "scale_z": 1.6,
           "source_member_count": 15,
           "source_object": "AerialGroveCluster_T2",
@@ -1426,6 +1461,7 @@
           "z": 1611.07
         },
         {
+          "apparent_canopy_height_m": 15.0,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1438,7 +1474,7 @@
           "mean_canopy_hag_m": 4.388,
           "mean_vegetation_density": 0.36961,
           "scale_x": 1.4118,
-          "scale_y": 0.6855,
+          "scale_y": 1.2728,
           "scale_z": 1.6,
           "source_member_count": 20,
           "source_object": "AerialGroveCluster_T2",
@@ -1453,6 +1489,7 @@
           "z": -344.574
         },
         {
+          "apparent_canopy_height_m": 24.507,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1465,7 +1502,7 @@
           "mean_canopy_hag_m": 19.146,
           "mean_vegetation_density": 0.84031,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 2.0795,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -1480,6 +1517,7 @@
           "z": -1971.61
         },
         {
+          "apparent_canopy_height_m": 22.738,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1492,7 +1530,7 @@
           "mean_canopy_hag_m": 17.764,
           "mean_vegetation_density": 0.85163,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.9294,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -1507,6 +1545,7 @@
           "z": 629.205
         },
         {
+          "apparent_canopy_height_m": 22.684,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1519,7 +1558,7 @@
           "mean_canopy_hag_m": 17.722,
           "mean_vegetation_density": 0.8451,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.9249,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -1534,6 +1573,7 @@
           "z": 1390.335
         },
         {
+          "apparent_canopy_height_m": 20.347,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1546,7 +1586,7 @@
           "mean_canopy_hag_m": 15.896,
           "mean_vegetation_density": 0.84074,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.7265,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -1561,6 +1601,7 @@
           "z": -1969.515
         },
         {
+          "apparent_canopy_height_m": 20.293,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1573,7 +1614,7 @@
           "mean_canopy_hag_m": 15.854,
           "mean_vegetation_density": 0.83943,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.722,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",
@@ -1588,6 +1629,7 @@
           "z": 714.551
         },
         {
+          "apparent_canopy_height_m": 20.524,
           "archetype": "fixed_upper_canopy_cell_aggregate",
           "footprint_area_m2": 1809.557,
           "footprint_radius_major_m": 24.0,
@@ -1600,7 +1642,7 @@
           "mean_canopy_hag_m": 16.035,
           "mean_vegetation_density": 0.83322,
           "scale_x": 1.4118,
-          "scale_y": 1.65,
+          "scale_y": 1.7416,
           "scale_z": 1.6,
           "source_member_count": 36,
           "source_object": "AerialGroveCluster_T2",

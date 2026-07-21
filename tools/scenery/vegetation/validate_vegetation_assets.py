@@ -212,6 +212,14 @@ def validate(repo_root: Path) -> dict[str, Any]:
                         f"Tier2 minor radius is not bounded in {stable_id}")
                 require(float(instance["mean_canopy_hag_m"]) > 0.0,
                         f"Tier2 canopy height is invalid in {stable_id}")
+                calibration = config["sampling"]["tier2_shadow_height_calibration"]
+                apparent_height = float(instance["apparent_canopy_height_m"])
+                require(float(calibration["minimum_apparent_height_m"]) <= apparent_height <=
+                        float(calibration["maximum_apparent_height_m"]),
+                        f"Tier2 apparent canopy height is outside the worn/shadow envelope in {stable_id}")
+                expected_scale = apparent_height / float(calibration["source_authored_height_m"])
+                require(abs(float(instance["scale_y"]) - expected_scale) <= 0.0002,
+                        f"Tier2 vertical scale is not derived from apparent canopy height in {stable_id}")
             source_triangle_count += runtime_triangles
             tier_actual_triangles[tier] += runtime_triangles
 

@@ -5,7 +5,7 @@
       "bytes": 316159,
       "license": "Project-authored",
       "path": "Assets/ArtSource/Blender/AerialSceneryV1/AerialVegetationMultiscale.blend",
-      "sha256": "27d86eb8805b2cc60fad05a0a92afa526f1e4b46069ccd3332cc31439287c8ef",
+      "sha256": "eaf9670ddd1f46bbbd34fd537425e11e0cbb16009678c198fdf142a031777fd9",
       "source": "Deterministic Blender 5.1 project source"
     },
     {
@@ -23,24 +23,24 @@
       "source": "Four-tier vegetation and integration contract"
     },
     {
-      "bytes": 69798,
+      "bytes": 71787,
       "license": "Project-authored derivative of USGS 3DEP United States Government Work / Public Domain input",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_Distribution.json",
-      "sha256": "af7b102b3d1372d8f6a2d7944080e5e5a07672096819d00be882157e4eb52235",
+      "sha256": "a77121acf9e33f64d5d0d177356d6ef62a6ffd61b7fedd9e3e6412006217080d",
       "source": "Validated lidar-derived distribution; frozen source hashes embedded"
     },
     {
       "bytes": 12709,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_GeometryReport.json",
-      "sha256": "30745b7f37ea39269fb05968792ac5cf78d343d17825d0c933363741c7e6a3b0",
+      "sha256": "ef0710b0e3b662cf0e645cbc4c2248d243bf48892b6a4de3d37a15e51e693e6a",
       "source": "Blender-authored structural and budget report"
     },
     {
       "bytes": 12335,
       "license": "Project-authored derivative of USGS 3DEP United States Government Work / Public Domain input",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_HandoffMaskReport.json",
-      "sha256": "7dc6854ee9890451cca8b461729d5922858abfa6a6b3d61cce347f1181ac0e95",
+      "sha256": "ba913f1dde63fd9cf7c10b9c529f6c2143b74a8fc5f58b86c50a85034f3fa67b",
       "source": "Deterministic handoff inputs, semantics, exclusions, coverage, and hash report"
     },
     {
@@ -58,10 +58,10 @@
       "source": "Deterministic Unity prefab authoring entry point"
     },
     {
-      "bytes": 21792,
+      "bytes": 21796,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetationRoot.prefab",
-      "sha256": "5bd78532bb525f023324faed3d6dfe7975dbd317fa6998dc6108178b55978d8b",
+      "sha256": "50fc2e698314081376aed149f8497c9e9c61b363ab92808162ea5491680ef5b1",
       "source": "Deterministic three-draw vegetation prefab: two near editor-baked batches plus one fixed Tier2 instanced grove batch over retained terrain-canopy shading"
     },
     {
@@ -89,7 +89,7 @@
       "bytes": 495772,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Models/AerialVegetationMultiscale.fbx",
-      "sha256": "38893ad4847b2caa283eed5bb910bfb9f7f6d9c3e7820c21928551d73c64268d",
+      "sha256": "842c7c4e679af8ba82534d6c6df72d421be97021feb65e477cfc2cb4e592cc6b",
       "source": "FBX export from AerialVegetationMultiscale.blend"
     },
     {
@@ -149,10 +149,10 @@
       "source": "Deterministic 1K atlas generator"
     },
     {
-      "bytes": 51397,
+      "bytes": 51832,
       "license": "Project-authored",
       "path": "tools/scenery/vegetation/generate_vegetation_distribution.py",
-      "sha256": "88fbf71f612766c3c6fb8ce03a644fa5cb9b2a8503907a205f9d3963ff0bc420",
+      "sha256": "ef3828ca4d54e12bd0f6f5dcb712c2e89e3a7273a7e14be9a8b5ae9fe0aff806",
       "source": "Validated lidar distribution generator"
     },
     {
@@ -163,10 +163,10 @@
       "source": "Deterministic eligible-canopy and spatial ownership mask generator"
     },
     {
-      "bytes": 4899,
+      "bytes": 5381,
       "license": "Project-authored",
       "path": "tools/scenery/vegetation/vegetation_config.json",
-      "sha256": "7e2d7f3a6d7eeb8d24a273afd795574ce64e87224a82a0d20825a0ebd4b0971b",
+      "sha256": "df2f07d24dcbb99453925dc63152b8dee27253497faa0cc8240f7e9526caac77",
       "source": "Pinned vegetation tiers, sampling, ownership handoff, and budgets"
     }
   ],

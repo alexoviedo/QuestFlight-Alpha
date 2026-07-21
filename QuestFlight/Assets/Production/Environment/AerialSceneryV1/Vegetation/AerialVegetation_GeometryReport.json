@@ -426,9 +426,9 @@
     "tier2_source_object": "AerialGroveCluster_T2",
     "tier2_triangles_per_instance": 540
   },
-  "runtime_fbx_sha256": "38893ad4847b2caa283eed5bb910bfb9f7f6d9c3e7820c21928551d73c64268d",
+  "runtime_fbx_sha256": "842c7c4e679af8ba82534d6c6df72d421be97021feb65e477cfc2cb4e592cc6b",
   "schema": "questflight.aerial-scenery-v1.vegetation-geometry.v1",
-  "source_blend_sha256": "27d86eb8805b2cc60fad05a0a92afa526f1e4b46069ccd3332cc31439287c8ef",
+  "source_blend_sha256": "eaf9670ddd1f46bbbd34fd537425e11e0cbb16009678c198fdf142a031777fd9",
   "status": "SOURCE_GEOMETRY_VALIDATED_INTEGRATION_AND_STEREO_QA_PENDING",
   "tier2_source_matches_exact_triangle_contract": true
 }

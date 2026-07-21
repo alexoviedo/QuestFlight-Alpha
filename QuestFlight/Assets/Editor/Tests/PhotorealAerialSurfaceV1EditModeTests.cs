@@ -142,6 +142,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(canopy, Is.Empty,
                 "Ordinary canopy must not deform bare-earth terrain or use raised surface geometry.");
             Assert.That(buildings.SelectMany(item => item.sharedMaterials).Distinct().Count(), Is.EqualTo(1));
+            Assert.That(buildings.All(item => item.GetComponent<MeshFilter>().sharedMesh
+                    .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color)), Is.True,
+                "Every active context-building batch must carry its per-footprint semantic facade stream.");
             Assert.That(canopy.SelectMany(item => item.sharedMaterials).Distinct(), Is.Empty);
             Assert.That(buildings.Concat(canopy).All(item => item.shadowCastingMode ==
                 UnityEngine.Rendering.ShadowCastingMode.Off), Is.True);
@@ -277,6 +280,13 @@ namespace QuestFlight.Editor.Tests
             Assert.That(materials.All(material => material.renderQueue <= (int)UnityEngine.Rendering.RenderQueue.Geometry),
                 Is.True);
             Assert.That(materials.All(material => material.passCount == 1), Is.True);
+            string shaderSource = File.ReadAllText(Path.GetFullPath(
+                Path.Combine(Application.dataPath, "..", ShaderPath)));
+            Assert.That(shaderSource, Does.Contain("input.semanticData"));
+            Assert.That(shaderSource, Does.Contain("ApplyFacadeFeatures"));
+            Assert.That(shaderSource, Does.Contain("facadeGlintMask"));
+            Assert.That(shaderSource, Does.Not.Contain("floor(worldPosition.xz / 96.0)"),
+                "Facade identity must come from the offline semantic footprint, not world-cell randomness.");
         }
 
         [Test]
@@ -453,7 +463,13 @@ namespace QuestFlight.Editor.Tests
                 {
                     string[] values = line.Split(new[] { ' ', '\t' },
                         StringSplitOptions.RemoveEmptyEntries);
-                    Assert.That(values, Has.Length.EqualTo(4), path);
+                    bool isBuildingSemanticSource = path.Contains(
+                        "ProductionBuildingSurfaceLayer_", StringComparison.Ordinal);
+                    Assert.That(values.Length, Is.EqualTo(isBuildingSemanticSource ? 8 : 4), path);
+                    if (isBuildingSemanticSource)
+                        for (int channel = 4; channel < 8; channel++)
+                            Assert.That(float.Parse(values[channel], CultureInfo.InvariantCulture),
+                                Is.InRange(0f, 1f), path);
                     Vector3 value = new Vector3(
                         float.Parse(values[1], CultureInfo.InvariantCulture),
                         float.Parse(values[2], CultureInfo.InvariantCulture),

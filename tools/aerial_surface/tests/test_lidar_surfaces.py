@@ -16,8 +16,14 @@ TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 
 from build_building_surfaces import (
+    FACADE_TILE_BRICK,
+    FACADE_TILE_CONCRETE,
+    FACADE_TILE_CORRUGATED,
+    FACADE_TILE_LIGHT_METAL,
+    FACADE_TILE_WEATHERED_METAL,
     closed_surface_indices,
     edge_multiplicity,
+    facade_semantics,
     simplify_footprint,
     triangulate_polygon,
 )
@@ -204,6 +210,29 @@ class ClassificationContractTests(unittest.TestCase):
 
 
 class SurfaceTopologyTests(unittest.TestCase):
+    def test_facade_semantics_are_usage_derived_and_building_stable(self) -> None:
+        residential = facade_semantics(
+            {"tags": {"building": "house"}}, 101, 2.5
+        )
+        industrial = facade_semantics(
+            {"tags": {"building": "hangar"}}, 202, -1.0
+        )
+        unknown = facade_semantics(
+            {"tags": {"building": "yes"}}, 303, 0.0
+        )
+        self.assertIn(residential["facade_tile"], {FACADE_TILE_BRICK, FACADE_TILE_CONCRETE})
+        self.assertIn(
+            industrial["facade_tile"],
+            {FACADE_TILE_LIGHT_METAL, FACADE_TILE_CORRUGATED,
+             FACADE_TILE_WEATHERED_METAL},
+        )
+        self.assertEqual(unknown["facade_tile"], FACADE_TILE_CONCRETE)
+        self.assertEqual(
+            industrial,
+            facade_semantics({"tags": {"building": "hangar"}}, 202, -1.0),
+        )
+        self.assertTrue(0 <= industrial["facade_base_height_code"] <= 255)
+
     def test_closed_building_surface_has_two_incident_faces_per_edge(self) -> None:
         points = [(0, 0), (0, 20), (20, 20), (20, 0)]
         if sum(
@@ -529,6 +558,19 @@ class CommittedAssetContractTests(unittest.TestCase):
         self.assertEqual(report["terrain"]["vertex_count"], 46_426)
         self.assertTrue(report["terrain"]["border_locked"])
         self.assertEqual(report["terrain"]["geometric_integration_status"], "ELIGIBLE")
+        building_manifest = load_json(
+            RUNTIME_ROOT / "Buildings" / "ProductionBuildingSurfaceLayer_Manifest.json"
+        )
+        semantic = building_manifest["facade_semantics"]
+        self.assertEqual(
+            semantic["material_policy"],
+            "one coherent usage-derived facade family per OSM footprint",
+        )
+        self.assertEqual(
+            set(semantic["atlas_tiles"].values()),
+            {FACADE_TILE_BRICK, FACADE_TILE_LIGHT_METAL, FACADE_TILE_CONCRETE,
+             FACADE_TILE_CORRUGATED, FACADE_TILE_WEATHERED_METAL},
+        )
 
     def test_committed_canopy_assets_are_map_only_with_pinned_hashes(self) -> None:
         manifest = load_json(CANOPY_OUTPUT_DIR / CANOPY_MANIFEST_NAME)

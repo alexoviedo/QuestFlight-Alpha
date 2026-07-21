@@ -222,6 +222,15 @@ class VegetationPipelineTests(unittest.TestCase):
             self.assertTrue(first["coverage_agreement"]["tier2"]["terrain_map_retained_beneath_geometry"])
             self.assertFalse(first["coverage_agreement"]["tier2"]["geometry_carves_handoff"])
             self.assertEqual(first["coverage_agreement"]["tier3"]["eligible_canopy_coverage_ratio"], 1.0)
+            calibration = self.config["sampling"]["tier2_shadow_height_calibration"]
+            source_height = float(calibration["source_authored_height_m"])
+            for instance in next(
+                batch for batch in first["batches"] if int(batch["tier"]) == 2
+            )["instances"]:
+                apparent = float(instance["apparent_canopy_height_m"])
+                self.assertGreaterEqual(apparent, float(calibration["minimum_apparent_height_m"]))
+                self.assertLessEqual(apparent, float(calibration["maximum_apparent_height_m"]))
+                self.assertAlmostEqual(float(instance["scale_y"]), apparent / source_height, places=3)
 
     def test_tier2_clusters_never_carve_handoff_mask(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -78,6 +78,20 @@ MINIMUM_FOOTPRINT_AREA_RATIO = 0.90
 MAXIMUM_FOOTPRINT_AREA_RATIO = 1.05
 MAXIMUM_HAUSDORFF_ERROR_METERS = 10.0
 
+# Shared AirportCore atlas tiles.  Context meshes carry these compact semantic
+# selectors as vertex colors so every face of one source building resolves to
+# one coherent facade family without creating per-building materials.
+FACADE_TILE_BRICK = 0
+FACADE_TILE_LIGHT_METAL = 1
+FACADE_TILE_CONCRETE = 5
+FACADE_TILE_CORRUGATED = 8
+FACADE_TILE_WEATHERED_METAL = 10
+SEMANTIC_RESIDENTIAL = 32
+SEMANTIC_CIVIC = 64
+SEMANTIC_COMMERCIAL = 96
+SEMANTIC_INDUSTRIAL = 128
+SEMANTIC_OTHER = 160
+
 
 def signed_area2(points: Sequence[tuple[int, int]]) -> int:
     return sum(
@@ -489,6 +503,65 @@ def mesh_batch_name(key: tuple[int, int]) -> str:
     )
 
 
+def facade_semantics(feature: dict[str, Any], osm_id: int, base_y: float) -> dict[str, int]:
+    """Map OSM usage to a coherent, compact facade contract.
+
+    The selector is authored once per source footprint and copied to every
+    vertex.  The stable identity only chooses variation *within* a plausible
+    family; it never mixes unrelated materials across one structure.
+    """
+
+    tags = feature.get("tags") or {}
+    building = str(tags.get("building", "")).strip().lower()
+    use = str(tags.get("building:use", tags.get("amenity", ""))).strip().lower()
+    identity = zlib.crc32(f"{osm_id}:{building}:{use}".encode("utf-8")) & 0xFFFFFFFF
+
+    industrial = {
+        "hangar", "industrial", "warehouse", "shed", "garage", "garages",
+        "service", "farm_auxiliary", "barn", "storage_tank",
+    }
+    commercial = {
+        "commercial", "retail", "office", "hotel", "supermarket",
+        "transportation", "train_station",
+    }
+    civic = {
+        "civic", "public", "government", "school", "college", "university",
+        "hospital", "dormitory", "church", "cathedral", "chapel",
+    }
+    residential = {
+        "house", "detached", "semidetached_house", "apartments", "residential",
+        "terrace", "bungalow", "cabin", "farm", "static_caravan",
+    }
+
+    if building in industrial or use in industrial:
+        tile = (FACADE_TILE_CORRUGATED, FACADE_TILE_WEATHERED_METAL,
+                FACADE_TILE_LIGHT_METAL)[identity % 3]
+        semantic = SEMANTIC_INDUSTRIAL
+    elif building in commercial or use in commercial:
+        tile = FACADE_TILE_LIGHT_METAL if identity % 4 == 0 else FACADE_TILE_CONCRETE
+        semantic = SEMANTIC_COMMERCIAL
+    elif building in civic or use in civic:
+        tile = FACADE_TILE_BRICK if identity % 3 else FACADE_TILE_CONCRETE
+        semantic = SEMANTIC_CIVIC
+    elif building in residential or use in residential:
+        tile = FACADE_TILE_BRICK if identity % 4 else FACADE_TILE_CONCRETE
+        semantic = SEMANTIC_RESIDENTIAL
+    else:
+        # Unclassified structures remain neutral rather than receiving a
+        # visibly random industrial/residential mixture.
+        tile = FACADE_TILE_CONCRETE
+        semantic = SEMANTIC_OTHER
+
+    return {
+        "facade_tile": tile,
+        "facade_semantic_code": semantic,
+        "facade_seed_code": (identity >> 8) & 0xFF,
+        "facade_base_height_code": int(round(
+            max(0.0, min(1.0, (base_y + 64.0) / 128.0)) * 255.0
+        )),
+    }
+
+
 def write_model_meta(path: Path, note: str) -> None:
     Path(str(path) + ".meta").write_text(
         f"""fileFormatVersion: 2
@@ -605,11 +678,18 @@ def write_obj_batches(
         for record in sorted(batches[key], key=lambda item: item["feature_index"]):
             base = record["base_code"] * VERTICAL_QUANTIZATION_METERS
             top = base + record["selected_height_code"] * VERTICAL_QUANTIZATION_METERS
+            semantic_color = (
+                record["facade_tile"] / 255.0,
+                record["facade_seed_code"] / 255.0,
+                record["facade_base_height_code"] / 255.0,
+                record["facade_semantic_code"] / 255.0,
+            )
             for x_q, z_q in record["points"]:
                 x = x_q * HORIZONTAL_QUANTIZATION_METERS
                 z = z_q * HORIZONTAL_QUANTIZATION_METERS
-                lines.append(f"v {x:.3f} {base:.3f} {z:.3f}")
-                lines.append(f"v {x:.3f} {top:.3f} {z:.3f}")
+                color = " ".join(f"{value:.6f}" for value in semantic_color)
+                lines.append(f"v {x:.3f} {base:.3f} {z:.3f} {color}")
+                lines.append(f"v {x:.3f} {top:.3f} {z:.3f} {color}")
             indices = record["indices"]
             for offset in range(0, len(indices), 3):
                 a, b, c = indices[offset : offset + 3]
@@ -844,6 +924,7 @@ def build(
         if zone == "2-4km":
             flags |= FLAG_ZONE_2_TO_4_KM
         part = str(source_identity.get("part", "geometry:0"))
+        semantics = facade_semantics(feature, osm_id, base_y)
         records.append(
             {
                 "base_code": quantize_signed(base_y),
@@ -859,6 +940,7 @@ def build(
                 "selected_height_code": quantize_unsigned(selected_height),
                 "support_code": int(round(support * 255.0)),
                 "zone": zone,
+                **semantics,
             }
         )
         total_points += len(points)
@@ -1009,6 +1091,25 @@ def build(
                 [abs(value) for value in height_deltas]
             ),
             "surveyed_vertical_error_fraction_bound": None,
+        },
+        "facade_semantics": {
+            "encoding": {
+                "vertex_color_r": "AirportCore shared atlas tile index / 255",
+                "vertex_color_g": "stable per-building variation seed / 255",
+                "vertex_color_b": "building base height mapped from [-64,+64] m to [0,1]",
+                "vertex_color_a": "semantic usage code / 255",
+            },
+            "material_policy": "one coherent usage-derived facade family per OSM footprint",
+            "atlas_tiles": {
+                "brick_masonry": FACADE_TILE_BRICK,
+                "light_metal_panel": FACADE_TILE_LIGHT_METAL,
+                "concrete_stucco": FACADE_TILE_CONCRETE,
+                "corrugated_metal": FACADE_TILE_CORRUGATED,
+                "weathered_metal": FACADE_TILE_WEATHERED_METAL,
+            },
+            "semantic_counts": dict(sorted(Counter(
+                str(record["facade_semantic_code"]) for record in records
+            ).items())),
         },
         "license_and_provenance": {
             "footprints": "OpenStreetMap ODbL-1.0 derivative; © OpenStreetMap contributors",

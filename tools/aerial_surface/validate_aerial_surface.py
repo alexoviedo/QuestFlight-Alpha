@@ -156,6 +156,7 @@ def parse_obj(path: Path) -> dict[str, Any]:
     objects: list[str] = []
     groups: list[str] = []
     vertices: list[tuple[float, float, float]] = []
+    colors: list[tuple[float, float, float, float] | None] = []
     faces: list[tuple[int, int, int]] = []
     forbidden: list[str] = []
     for raw in path.read_text(encoding="utf-8").splitlines():
@@ -166,8 +167,18 @@ def parse_obj(path: Path) -> dict[str, Any]:
             groups.append(line[2:].strip())
         elif line.startswith("v "):
             fields = line.split()
-            require(len(fields) == 4, f"Non-position vertex in {path}")
+            require(len(fields) in (4, 7, 8), f"Unsupported vertex record in {path}")
             vertices.append((float(fields[1]), float(fields[2]), float(fields[3])))
+            colors.append(
+                (
+                    float(fields[4]),
+                    float(fields[5]),
+                    float(fields[6]),
+                    float(fields[7]) if len(fields) == 8 else 1.0,
+                )
+                if len(fields) > 4
+                else None
+            )
         elif line.startswith("f "):
             fields = line.split()[1:]
             require(len(fields) == 3, f"Non-triangle face in {path}")
@@ -178,6 +189,7 @@ def parse_obj(path: Path) -> dict[str, Any]:
             forbidden.append(line)
     return {
         "faces": faces,
+        "colors": colors,
         "forbidden_material_lines": forbidden,
         "groups": groups,
         "objects": objects,
@@ -211,6 +223,21 @@ def validate_obj_records(
         vertices = len(parsed["vertices"])
         require(triangles == int(record["triangle_count"]), f"OBJ triangle count changed: {path}")
         require(vertices == int(record["vertex_count"]), f"OBJ vertex count changed: {path}")
+        if expected_prefix == "ProductionBuildingSurfaceLayer_":
+            require(all(color is not None for color in parsed["colors"]),
+                    f"Building OBJ lacks semantic facade colors: {path}")
+            allowed_tiles = {0, 1, 5, 8, 10}
+            decoded_tiles = {
+                int(round(float(color[0]) * 255.0))
+                for color in parsed["colors"] if color is not None
+            }
+            require(decoded_tiles <= allowed_tiles,
+                    f"Building OBJ uses an unsupported facade tile: {path}")
+            require(all(
+                0.0 <= channel <= 1.0
+                for color in parsed["colors"] if color is not None
+                for channel in color
+            ), f"Building semantic color is outside [0,1]: {path}")
         if "product_bounds_xz_meters" in record:
             require(
                 record.get("horizontal_frame")
