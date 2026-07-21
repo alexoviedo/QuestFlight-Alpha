@@ -5,9 +5,9 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
         _WindshieldTint ("Windshield Tint", Color) = (0.77, 0.86, 0.95, 1)
         _SideWindowTint ("Side Window Tint", Color) = (0.70, 0.82, 0.92, 1)
         [NoScaleOffset] _AuthoredReflectionCube ("Authored Ground/Sky Reflection", Cube) = "black" {}
-        _WindshieldOpacity ("Windshield Opacity", Range(0, 0.2)) = 0.045
-        _SideWindowOpacity ("Side Window Opacity", Range(0, 0.2)) = 0.065
-        _FresnelOpacity ("Edge Fresnel Opacity", Range(0, 0.2)) = 0.085
+        _WindshieldOpacity ("Windshield Opacity", Range(0, 0.3)) = 0.13
+        _SideWindowOpacity ("Side Window Opacity", Range(0, 0.3)) = 0.16
+        _FresnelOpacity ("Edge Fresnel Opacity", Range(0, 0.3)) = 0.18
         _ReflectionStrength ("Reflection Strength", Range(0, 0.5)) = 0.24
         _DirectGlintStrength ("Directional Glint Strength", Range(0, 0.12)) = 0.055
         _PerceptualRoughness ("Perceptual Roughness", Range(0.05, 1)) = 0.24
@@ -22,7 +22,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
         Cull Off
         ZWrite Off
         ZTest LEqual
-        Blend One OneMinusSrcAlpha
+        Blend SrcAlpha OneMinusSrcAlpha
 
         Pass
         {
@@ -31,11 +31,8 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
             #pragma target 3.0
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile __ UNITY_SPECCUBE_BLENDING
-            #pragma multi_compile __ UNITY_SPECCUBE_BOX_PROJECTION
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
-            #include "UnityGlobalIllumination.cginc"
 
             fixed4 _WindshieldTint;
             fixed4 _SideWindowTint;
@@ -78,30 +75,6 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
                 return output;
             }
 
-            half3 SampleAuthoredReflection(float3 worldPosition, half3 viewDirection, half3 reflectionDirection)
-            {
-                UnityGIInput data;
-                UNITY_INITIALIZE_OUTPUT(UnityGIInput, data);
-                data.worldPos = worldPosition;
-                data.worldViewDir = viewDirection;
-                data.probeHDR[0] = unity_SpecCube0_HDR;
-                data.probeHDR[1] = unity_SpecCube1_HDR;
-                #if defined(UNITY_SPECCUBE_BLENDING) || defined(UNITY_SPECCUBE_BOX_PROJECTION)
-                    data.boxMin[0] = unity_SpecCube0_BoxMin;
-                #endif
-                #ifdef UNITY_SPECCUBE_BOX_PROJECTION
-                    data.boxMax[0] = unity_SpecCube0_BoxMax;
-                    data.probePosition[0] = unity_SpecCube0_ProbePosition;
-                    data.boxMax[1] = unity_SpecCube1_BoxMax;
-                    data.boxMin[1] = unity_SpecCube1_BoxMin;
-                    data.probePosition[1] = unity_SpecCube1_ProbePosition;
-                #endif
-                Unity_GlossyEnvironmentData glossy;
-                glossy.roughness = _PerceptualRoughness;
-                glossy.reflUVW = reflectionDirection;
-                return UnityGI_IndirectSpecular(data, 1.0h, glossy);
-            }
-
             fixed4 frag(v2f input, fixed facing : VFACE) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
@@ -114,25 +87,24 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
                 half sideWeight = smoothstep(_SideAxisStart, _SideAxisEnd, abs(localNormal.x));
                 half opacity = lerp(_WindshieldOpacity, _SideWindowOpacity, sideWeight) +
                                fresnel * _FresnelOpacity;
-                opacity = min(opacity, 0.20h);
+                opacity = min(opacity, 0.26h);
 
                 half3 tint = lerp(_WindshieldTint.rgb, _SideWindowTint.rgb, sideWeight);
                 half3 reflectionDirection = reflect(-viewDirection, normal);
-                half3 probeReflection = SampleAuthoredReflection(
-                    input.worldPosition, viewDirection, reflectionDirection);
-                half3 authoredReflection = texCUBElod(
-                    _AuthoredReflectionCube,
-                    half4(reflectionDirection, _PerceptualRoughness * 5.0h)).rgb;
-                half3 reflection = max(probeReflection, authoredReflection * 0.82h);
-                half reflectionWeight = _ReflectionStrength * (0.32h + fresnel * 0.68h);
-                half reflectionVisibility = saturate(opacity * 2.75h + fresnel * 0.05h);
-                half3 premultiplied = tint * opacity * 0.08h +
-                                      reflection * reflectionWeight * reflectionVisibility;
+                half3 authoredReflection = texCUBE(
+                    _AuthoredReflectionCube, reflectionDirection).rgb;
+                half skyWeight = smoothstep(-0.08h, 0.20h, reflectionDirection.y);
+                half3 proceduralGround = half3(0.13h, 0.15h, 0.10h);
+                half3 proceduralSky = half3(0.34h, 0.48h, 0.62h);
+                half3 proceduralReflection = lerp(proceduralGround, proceduralSky, skyWeight);
+                half3 reflection = max(authoredReflection * 0.82h, proceduralReflection);
+                half reflectionWeight = saturate(_ReflectionStrength * (0.55h + fresnel * 0.45h));
+                half3 color = lerp(tint * 0.22h, reflection, reflectionWeight);
                 half3 sunDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half sunGlint = pow(saturate(dot(
                     reflect(-sunDirection, normal), viewDirection)), 96.0h);
-                premultiplied += _LightColor0.rgb * sunGlint * _DirectGlintStrength;
-                return fixed4(premultiplied, opacity);
+                color += _LightColor0.rgb * sunGlint * _DirectGlintStrength;
+                return fixed4(color, opacity);
             }
             ENDCG
         }

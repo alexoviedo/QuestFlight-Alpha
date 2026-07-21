@@ -17,6 +17,10 @@ namespace QuestFlight.Editor.Tests
         [Test]
         public void FullProductIntegrityGatePasses()
         {
+            // Android texture-compression selection is Editor session state. Make
+            // this gate deterministic when run in a fresh batch process instead of
+            // relying on a prior build having selected ASTC in the same process.
+            ProductProjectConfigurator.ConfigureProject();
             ProductIntegrityReport report = ProductIntegrityValidator.Validate();
             Assert.That(report.passed, Is.True, report.ToString());
             Assert.That(report.rendererCount, Is.LessThanOrEqualTo(180));

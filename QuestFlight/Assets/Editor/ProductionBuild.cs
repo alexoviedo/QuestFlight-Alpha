@@ -44,9 +44,38 @@ namespace QuestFlight.Editor
             if (report.summary.result != BuildResult.Succeeded)
                 throw new InvalidOperationException(
                     $"Quest product build failed: {report.summary.result}; errors={report.summary.totalErrors}");
+            ValidateCompiledProductShaders();
             Debug.Log(
                 $"[QuestFlight][Build] SUCCESS apk={apkPath}; bytes={report.summary.totalSize}; " +
                 $"duration={report.summary.totalTime}; development={development}");
+        }
+
+        private static void ValidateCompiledProductShaders()
+        {
+            string[] dependencies = AssetDatabase.GetDependencies(
+                ProductProjectConfigurator.ProductionScenePath, true);
+            string[] failures = dependencies
+                .Where(path => path.EndsWith(".shader", StringComparison.OrdinalIgnoreCase))
+                .Select(path => new
+                {
+                    path,
+                    shader = AssetDatabase.LoadAssetAtPath<Shader>(path)
+                })
+                .Where(item => item.shader == null || !item.shader.isSupported ||
+                    ShaderUtil.GetShaderMessages(item.shader).Any(message =>
+                        string.Equals(message.severity.ToString(), "Error",
+                            StringComparison.OrdinalIgnoreCase)))
+                .Select(item => item.shader == null
+                    ? item.path + ": missing shader asset"
+                    : item.path + ": " + string.Join(" | ", ShaderUtil.GetShaderMessages(item.shader)
+                        .Where(message => string.Equals(message.severity.ToString(), "Error",
+                            StringComparison.OrdinalIgnoreCase))
+                        .Select(message => message.message)))
+                .ToArray();
+            if (failures.Length != 0)
+                throw new InvalidOperationException(
+                    "Android product dependency contains unsupported or failed shaders:\n" +
+                    string.Join("\n", failures));
         }
 
         public static void PerformAndroidBuildBatch()

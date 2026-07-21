@@ -132,14 +132,14 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             PhotorealAerialReflectionProfile profile = LoadRequired<PhotorealAerialReflectionProfile>(ProfilePath);
             IntegrateEnvironmentPrefab(profile);
             IntegrateAircraftPrefab();
-            IntegrateCockpitShadowSun();
+            RemoveRejectedCockpitShadowSun();
             IntegrateSceneReflection(profile);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             ValidateIntegratedFoundation();
             Debug.Log(
                 "[QuestFlight][PhotorealAerialReflection] LEAD_INTEGRATION_SUCCESS. " +
-                "The development shadow candidate remains default-off and was not applied.");
+                "The rejected realtime cockpit shadow sun is absent; static material depth remains authoritative.");
         }
 
         public static void IntegrateForLeadBatch()
@@ -735,6 +735,15 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 AircraftReferenceFrameRig rig = root.GetComponent<AircraftReferenceFrameRig>();
                 if (rig == null || rig.CenterOfGravityReference == null || rig.AircraftVisualRoot == null)
                     throw new InvalidOperationException("Authored aircraft CG/visual references are missing.");
+                QuestFlightLab.Aircraft.ProductionAircraftLightingController lighting =
+                    root.GetComponentInChildren<QuestFlightLab.Aircraft.ProductionAircraftLightingController>(true);
+                if (lighting == null)
+                    throw new InvalidOperationException("Authored aircraft lighting controller is missing.");
+                SerializedObject lightingSettings = new SerializedObject(lighting);
+                SetFloat(lightingSettings, "staticDepthStrength",
+                    QuestFlightLab.Aircraft.ProductionAircraftLightingController.DefaultStaticDepthStrength);
+                lightingSettings.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(lighting);
                 if (rig.CenterOfGravityReference.parent != rig.transform ||
                     rig.CenterOfGravityReference.localPosition.sqrMagnitude > 0.000001f)
                     throw new InvalidOperationException("Reflection anchor must be the existing aircraft CG reference.");
@@ -742,7 +751,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 if (cockpit == null)
                     throw new InvalidOperationException("Authored cockpit root is missing.");
                 foreach (Transform item in cockpit.GetComponentsInChildren<Transform>(true))
-                    item.gameObject.layer = CockpitShadowLayer;
+                    item.gameObject.layer = 0;
 
                 int windowSlots = 0;
                 int instrumentSlots = 0;
@@ -813,13 +822,12 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                                         renderer.transform.IsChildOf(cockpit);
                     bool transparentGlass = renderer.sharedMaterials.Any(material =>
                         material == window || material == instrument);
-                    bool primaryCaster = cockpitOwned && !transparentGlass &&
-                        (renderer.name.IndexOf("Interior_Body", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                         renderer.name.IndexOf("Interior_Seats", StringComparison.OrdinalIgnoreCase) >= 0);
-                    renderer.shadowCastingMode = primaryCaster
-                        ? ShadowCastingMode.On
-                        : ShadowCastingMode.Off;
-                    renderer.receiveShadows = cockpitOwned && !transparentGlass;
+                    // The worn candidate proved that a tiny cockpit-only realtime
+                    // shadow map creates unstable overlapping triangle silhouettes in
+                    // stereo. Cockpit depth is therefore static/material-authored; no
+                    // cockpit renderer participates in realtime shadowing.
+                    renderer.shadowCastingMode = ShadowCastingMode.Off;
+                    renderer.receiveShadows = false;
                     EditorUtility.SetDirty(renderer);
                 }
                 if (windowSlots != 1 || instrumentSlots != 2 || activeInstrumentSlots != 1 ||
@@ -837,7 +845,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             }
         }
 
-        private static void IntegrateCockpitShadowSun()
+        private static void RemoveRejectedCockpitShadowSun()
         {
             UnityEngine.Object tagManager = AssetDatabase.LoadAllAssetsAtPath(
                 "ProjectSettings/TagManager.asset").Single();
@@ -845,7 +853,9 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             SerializedProperty layers = tagSettings.FindProperty("layers");
             if (layers == null || layers.arraySize <= CockpitShadowLayer)
                 throw new InvalidOperationException("Unity layer table is incomplete.");
-            layers.GetArrayElementAtIndex(CockpitShadowLayer).stringValue = CockpitShadowLayerName;
+            if (string.Equals(layers.GetArrayElementAtIndex(CockpitShadowLayer).stringValue,
+                    CockpitShadowLayerName, StringComparison.Ordinal))
+                layers.GetArrayElementAtIndex(CockpitShadowLayer).stringValue = string.Empty;
             tagSettings.ApplyModifiedPropertiesWithoutUndo();
 
             GameObject root = PrefabUtility.LoadPrefabContents(ProductionWorldPrefabPath);
@@ -859,28 +869,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     throw new InvalidOperationException("The authored product sun is not directional.");
                 Transform existing = FindDescendant(root.transform, CockpitShadowSunName);
                 if (existing != null) UnityEngine.Object.DestroyImmediate(existing.gameObject);
-
-                GameObject shadowObject = new GameObject(CockpitShadowSunName);
-                shadowObject.transform.SetParent(mainSunTransform.parent, false);
-                shadowObject.transform.localRotation = mainSunTransform.localRotation;
-                Light shadowSun = shadowObject.AddComponent<Light>();
-                shadowSun.type = LightType.Directional;
-                shadowSun.color = mainSun.color;
-                shadowSun.colorTemperature = mainSun.colorTemperature;
-                shadowSun.useColorTemperature = mainSun.useColorTemperature;
-                shadowSun.intensity = mainSun.intensity;
-                shadowSun.bounceIntensity = 0f;
-                shadowSun.renderMode = LightRenderMode.ForcePixel;
-                shadowSun.cullingMask = 1 << CockpitShadowLayer;
-                shadowSun.shadows = LightShadows.Hard;
-                shadowSun.shadowCustomResolution = 512;
-                shadowSun.shadowStrength = 0.48f;
-                shadowSun.shadowBias = 0.035f;
-                shadowSun.shadowNormalBias = 0.24f;
-                shadowSun.shadowNearPlane = 0.10f;
-                mainSun.cullingMask &= ~(1 << CockpitShadowLayer);
+                mainSun.cullingMask |= 1 << CockpitShadowLayer;
                 EditorUtility.SetDirty(mainSun);
-                EditorUtility.SetDirty(shadowSun);
                 PrefabUtility.SaveAsPrefabAsset(root, ProductionWorldPrefabPath);
             }
             finally
@@ -1027,18 +1017,17 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
 
             Transform cockpit = FindDescendant(rig.AircraftVisualRoot, CockpitRootName);
             if (cockpit == null || cockpit.GetComponentsInChildren<Transform>(true)
-                    .Any(item => item.gameObject.layer != CockpitShadowLayer))
-                throw new InvalidOperationException("Cockpit-only shadow layer assignment is incomplete.");
+                    .Any(item => item.gameObject.layer != 0) ||
+                cockpit.GetComponentsInChildren<Renderer>(true).Any(renderer =>
+                    renderer.shadowCastingMode != ShadowCastingMode.Off || renderer.receiveShadows))
+                throw new InvalidOperationException("Static-only cockpit depth contract is incomplete.");
             GameObject worldAsset = LoadRequired<GameObject>(ProductionWorldPrefabPath);
             Light mainSun = FindDescendant(worldAsset.transform, MainSunName)?.GetComponent<Light>();
             Light cockpitSun = FindDescendant(worldAsset.transform,
                 CockpitShadowSunName)?.GetComponent<Light>();
-            if (mainSun == null || cockpitSun == null || !cockpitSun.enabled ||
-                cockpitSun.type != LightType.Directional || cockpitSun.shadows != LightShadows.Hard ||
-                cockpitSun.shadowCustomResolution != 512 ||
-                cockpitSun.cullingMask != (1 << CockpitShadowLayer) ||
-                (mainSun.cullingMask & (1 << CockpitShadowLayer)) != 0)
-                throw new InvalidOperationException("Bounded cockpit-only shadow sun is incomplete.");
+            if (mainSun == null || cockpitSun != null ||
+                (mainSun.cullingMask & (1 << CockpitShadowLayer)) == 0)
+                throw new InvalidOperationException("Rejected cockpit shadow sun remains active.");
 
             Scene scene = EditorSceneManager.OpenScene(ProductionScenePath, OpenSceneMode.Single);
             if (RenderSettings.defaultReflectionMode != DefaultReflectionMode.Custom ||

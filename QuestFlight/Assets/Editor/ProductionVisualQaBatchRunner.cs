@@ -284,12 +284,11 @@ namespace QuestFlightLab.Editor
             if (cockpitLighting == null)
                 throw new InvalidOperationException("Authored production aircraft lighting controller is missing.");
             ProductionAircraftLightingReport lightingReport = cockpitLighting.ApplyAuthoredLightingNow();
-            if (lightingReport == null || lightingReport.boundedCockpitShadowCasterCount != 2 ||
-                lightingReport.boundedCockpitShadowReceiverCount < 8 ||
-                lightingReport.remainingRealtimeShadowCasterCount != 2 ||
-                lightingReport.remainingRealtimeShadowReceiverCount !=
-                lightingReport.boundedCockpitShadowReceiverCount)
-                throw new InvalidOperationException("Bounded cockpit-only shadow policy did not apply.");
+            if (lightingReport == null || lightingReport.boundedCockpitShadowCasterCount != 0 ||
+                lightingReport.boundedCockpitShadowReceiverCount != 0 ||
+                lightingReport.remainingRealtimeShadowCasterCount != 0 ||
+                lightingReport.remainingRealtimeShadowReceiverCount != 0)
+                throw new InvalidOperationException("Static-only cockpit depth policy did not apply.");
 
             foreach (Camera existing in scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Camera>(true)))
                 existing.enabled = false;
@@ -1671,7 +1670,6 @@ namespace QuestFlightLab.Editor
             private readonly bool hasMinorWaterStrength;
             private readonly float v4MinorWaterStrength;
             private readonly Light globalSun;
-            private readonly Light cockpitShadowSun;
             private readonly Quaternion v4SunRotation;
             private readonly Color v4SunColor;
             private readonly float v4SunIntensity;
@@ -1698,11 +1696,9 @@ namespace QuestFlightLab.Editor
                     .ToArray();
                 globalSun = sceneSuns.SingleOrDefault(item => string.Equals(item.name,
                     PhotorealAerialReflectionAuthoring.MainSunName, StringComparison.Ordinal));
-                cockpitShadowSun = sceneSuns.SingleOrDefault(item => string.Equals(item.name,
-                    PhotorealAerialReflectionAuthoring.CockpitShadowSunName, StringComparison.Ordinal));
-                if (sceneSuns.Length != 2 || globalSun == null || cockpitShadowSun == null)
+                if (sceneSuns.Length != 1 || globalSun == null)
                     throw new InvalidOperationException(
-                        "Expected the authored global and cockpit-only directional suns for V4 A/B; " +
+                        "Expected one authored global directional sun for V4 A/B; " +
                         $"found {sceneSuns.Length}.");
                 v4SunRotation = globalSun.transform.rotation;
                 v4SunColor = globalSun.color;
@@ -1728,9 +1724,6 @@ namespace QuestFlightLab.Editor
                 globalSun.transform.rotation = root.v2SunRotation;
                 globalSun.color = root.v2SunColor;
                 globalSun.intensity = root.v2SunIntensity;
-                cockpitShadowSun.transform.rotation = root.v2SunRotation;
-                cockpitShadowSun.color = root.v2SunColor;
-                cockpitShadowSun.intensity = root.v2SunIntensity;
             }
 
             public void RestoreV4()
@@ -1745,9 +1738,6 @@ namespace QuestFlightLab.Editor
                 globalSun.transform.rotation = v4SunRotation;
                 globalSun.color = v4SunColor;
                 globalSun.intensity = v4SunIntensity;
-                cockpitShadowSun.transform.rotation = v4SunRotation;
-                cockpitShadowSun.color = v4SunColor;
-                cockpitShadowSun.intensity = v4SunIntensity;
             }
 
             private void ApplyContextMeshes(Mesh[] meshes)

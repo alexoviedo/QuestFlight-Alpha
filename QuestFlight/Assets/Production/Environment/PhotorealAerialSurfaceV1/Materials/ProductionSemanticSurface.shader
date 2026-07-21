@@ -212,151 +212,151 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     dot(_CanopySourceToProductRow1.xy, sourceNormalXZ));
             }
 
-            fixed3 SampleFacade(
+            float3 SampleFacade(
                 float3 worldPosition,
-                half3 worldNormal,
-                fixed4 semanticData,
+                float3 worldNormal,
+                float4 semanticData,
                 float2 wallUv,
-                out half roughness,
-                out half metallic,
-                out half ao,
-                out half3 mappedNormal)
+                out float roughness,
+                out float metallic,
+                out float ao,
+                out float3 mappedNormal)
             {
                 // Offline OSM usage classification is constant across every vertex of a
                 // source footprint.  This replaces the former world-cell randomizer, so
                 // a structure can never switch between unrelated facade families.
-                half tileIndex = floor(semanticData.r * 255.0h + 0.5h);
-                half2 cell = half2(fmod(tileIndex, 4.0h), floor(tileIndex * 0.25h));
+                float tileIndex = floor(semanticData.r * 255.0 + 0.5);
+                float2 cell = float2(frac(tileIndex * 0.25) * 4.0, floor(tileIndex * 0.25));
                 // Atlas scale is expressed in repeats per metre. The previous
                 // values enlarged brick courses, panels, and corrugation enough
                 // to read as a toy skin in-headset.
-                half physicalScale = tileIndex < 0.5h ? 0.68h :
-                    (tileIndex < 1.5h ? 0.34h :
-                    (tileIndex < 6.0h ? 0.22h : 0.38h));
+                float physicalScale = tileIndex < 0.5 ? 0.68 :
+                    (tileIndex < 1.5 ? 0.34 :
+                    (tileIndex < 6.0 ? 0.22 : 0.38));
                 float2 localUv = wallUv * physicalScale;
-                half2 atlasUv = (cell + 0.02h + frac(localUv) * 0.96h) * 0.25h;
-                fixed3 albedo = tex2D(_FacadeAtlas, atlasUv).rgb;
-                half encodedUsage = floor(semanticData.a * 255.0h + 0.5h);
-                half usageCode = encodedUsage - fmod(encodedUsage, 2.0h);
-                half residential = step(16.0h, usageCode) * (1.0h - step(48.0h, usageCode));
-                half civic = step(48.0h, usageCode) * (1.0h - step(80.0h, usageCode));
-                half commercial = step(80.0h, usageCode) * (1.0h - step(112.0h, usageCode));
-                half industrial = step(112.0h, usageCode) * (1.0h - step(144.0h, usageCode));
-                half seed = semanticData.g;
-                fixed3 residentialTint = lerp(fixed3(0.82h, 0.78h, 0.70h),
-                                               fixed3(1.05h, 1.02h, 0.94h), seed);
-                fixed3 civicTint = lerp(fixed3(0.86h, 0.89h, 0.92h),
-                                        fixed3(1.04h, 0.98h, 0.88h), seed);
-                fixed3 commercialTint = lerp(fixed3(0.82h, 0.88h, 0.94h),
-                                             fixed3(1.02h, 1.03h, 1.0h), seed);
-                fixed3 industrialTint = lerp(fixed3(0.76h, 0.79h, 0.80h),
-                                             fixed3(1.03h, 0.98h, 0.90h), seed);
-                fixed3 familyTint = residentialTint * residential + civicTint * civic +
+                float2 atlasUv = (cell + 0.02 + frac(localUv) * 0.96) * 0.25;
+                float3 albedo = tex2D(_FacadeAtlas, atlasUv).rgb;
+                float encodedUsage = floor(semanticData.a * 255.0 + 0.5);
+                float usageCode = floor(encodedUsage * 0.5) * 2.0;
+                float residential = step(16.0, usageCode) * (1.0 - step(48.0, usageCode));
+                float civic = step(48.0, usageCode) * (1.0 - step(80.0, usageCode));
+                float commercial = step(80.0, usageCode) * (1.0 - step(112.0, usageCode));
+                float industrial = step(112.0, usageCode) * (1.0 - step(144.0, usageCode));
+                float seed = semanticData.g;
+                float3 residentialTint = lerp(float3(0.82, 0.78, 0.70),
+                                               float3(1.05, 1.02, 0.94), seed);
+                float3 civicTint = lerp(float3(0.86, 0.89, 0.92),
+                                        float3(1.04, 0.98, 0.88), seed);
+                float3 commercialTint = lerp(float3(0.82, 0.88, 0.94),
+                                             float3(1.02, 1.03, 1.0), seed);
+                float3 industrialTint = lerp(float3(0.76, 0.79, 0.80),
+                                             float3(1.03, 0.98, 0.90), seed);
+                float3 familyTint = residentialTint * residential + civicTint * civic +
                     commercialTint * commercial + industrialTint * industrial +
-                    fixed3(0.93h, 0.94h, 0.92h) *
-                    (1.0h - saturate(residential + civic + commercial + industrial));
+                    float3(0.93, 0.94, 0.92) *
+                    (1.0 - saturate(residential + civic + commercial + industrial));
                 albedo *= familyTint;
-                half3 mrao = tex2D(_FacadeMRAO, atlasUv).rgb;
-                roughness = saturate(max(0.58h, mrao.g));
+                float3 mrao = tex2D(_FacadeMRAO, atlasUv).rgb;
+                roughness = saturate(max(0.58, mrao.g));
                 metallic = saturate(mrao.r);
                 ao = saturate(mrao.b);
-                half3 tangentNormal = UnpackNormal(tex2D(_FacadeNormal, atlasUv));
-                tangentNormal.xy *= 0.42h;
-                half3 tangent = normalize(cross(half3(0.0h, 1.0h, 0.0h), worldNormal));
-                if (dot(tangent, tangent) < 0.1h) tangent = half3(1.0h, 0.0h, 0.0h);
-                half3 bitangent = normalize(cross(worldNormal, tangent));
-                if (bitangent.y < 0.0h) bitangent = -bitangent;
+                float3 tangentNormal = UnpackNormal(tex2D(_FacadeNormal, atlasUv));
+                tangentNormal.xy *= 0.42;
+                float3 tangent = normalize(cross(float3(0.0, 1.0, 0.0), worldNormal));
+                if (dot(tangent, tangent) < 0.1) tangent = float3(1.0, 0.0, 0.0);
+                float3 bitangent = normalize(cross(worldNormal, tangent));
+                if (bitangent.y < 0.0) bitangent = -bitangent;
                 mappedNormal = normalize(
                     tangent * tangentNormal.x + bitangent * tangentNormal.y +
                     worldNormal * tangentNormal.z);
                 return albedo;
             }
 
-            half SoftInterval(half value, half minimumValue, half maximumValue, half width)
+            float SoftInterval(float value, float minimumValue, float maximumValue, float width)
             {
                 return smoothstep(minimumValue - width, minimumValue + width, value) *
                        (1.0h - smoothstep(maximumValue - width, maximumValue + width, value));
             }
 
-            fixed3 ApplyFacadeFeatures(
-                fixed3 facade,
+            float3 ApplyFacadeFeatures(
+                float3 facade,
                 float3 worldPosition,
-                half3 worldNormal,
-                fixed4 semanticData,
+                float3 worldNormal,
+                float4 semanticData,
                 float2 wallUv,
-                out half windowMask,
-                out half bakedGlint)
+                out float windowMask,
+                out float bakedGlint)
             {
-                half encodedUsage = floor(semanticData.a * 255.0h + 0.5h);
-                half entranceWall = fmod(encodedUsage, 2.0h);
-                half usageCode = encodedUsage - entranceWall;
-                half residential = step(16.0h, usageCode) * (1.0h - step(48.0h, usageCode));
-                half civic = step(48.0h, usageCode) * (1.0h - step(80.0h, usageCode));
-                half commercial = step(80.0h, usageCode) * (1.0h - step(112.0h, usageCode));
-                half industrial = step(112.0h, usageCode) * (1.0h - step(144.0h, usageCode));
-                half stableSeed = semanticData.g;
-                half wallLength = max(0.5h, semanticData.b * 64.0h);
-                half horizontal = wallUv.x;
-                half heightAboveBase = max(0.0h, wallUv.y);
-                half moduleWidth = residential * 3.0h + civic * 3.6h +
-                    commercial * 3.2h + industrial * 6.8h +
-                    (1.0h - saturate(residential + civic + commercial + industrial)) * 3.6h;
-                half floorHeight = residential * 2.9h + civic * 3.5h +
-                    commercial * 3.35h + industrial * 4.2h +
-                    (1.0h - saturate(residential + civic + commercial + industrial)) * 3.2h;
-                half cornerClearance = lerp(0.75h, 1.2h, industrial);
-                half usableWall = step(cornerClearance, horizontal) *
+                float encodedUsage = floor(semanticData.a * 255.0 + 0.5);
+                float usageCode = floor(encodedUsage * 0.5) * 2.0;
+                float entranceWall = saturate(encodedUsage - usageCode);
+                float residential = step(16.0, usageCode) * (1.0 - step(48.0, usageCode));
+                float civic = step(48.0, usageCode) * (1.0 - step(80.0, usageCode));
+                float commercial = step(80.0, usageCode) * (1.0 - step(112.0, usageCode));
+                float industrial = step(112.0, usageCode) * (1.0 - step(144.0, usageCode));
+                float stableSeed = semanticData.g;
+                float wallLength = max(0.5, semanticData.b * 64.0);
+                float horizontal = wallUv.x;
+                float heightAboveBase = max(0.0, wallUv.y);
+                float moduleWidth = residential * 3.0 + civic * 3.6 +
+                    commercial * 3.2 + industrial * 6.8 +
+                    (1.0 - saturate(residential + civic + commercial + industrial)) * 3.6;
+                float floorHeight = residential * 2.9 + civic * 3.5 +
+                    commercial * 3.35 + industrial * 4.2 +
+                    (1.0 - saturate(residential + civic + commercial + industrial)) * 3.2;
+                float cornerClearance = lerp(0.75, 1.2, industrial);
+                float usableWall = step(cornerClearance, horizontal) *
                     step(horizontal, wallLength - cornerClearance);
-                half module = frac((horizontal - cornerClearance) / moduleWidth + stableSeed * 0.17h);
-                half storey = frac(heightAboveBase / floorHeight);
-                half pixelFootprint = max(fwidth(horizontal), fwidth(heightAboveBase));
-                half featureFade = 1.0h - smoothstep(0.10h, 0.30h, pixelFootprint);
-                half edge = saturate(pixelFootprint * 0.35h + 0.012h);
+                float module = frac((horizontal - cornerClearance) / moduleWidth + stableSeed * 0.17);
+                float storey = frac(heightAboveBase / floorHeight);
+                float pixelFootprint = max(fwidth(horizontal), fwidth(heightAboveBase));
+                float featureFade = 1.0 - smoothstep(0.10, 0.30, pixelFootprint);
+                float edge = saturate(pixelFootprint * 0.35 + 0.012);
 
-                half residentialWindow = SoftInterval(module, 0.30h, 0.70h, edge) *
-                    SoftInterval(storey, 0.30h, 0.75h, edge);
-                half civicWindow = SoftInterval(module, 0.24h, 0.76h, edge) *
-                    SoftInterval(storey, 0.24h, 0.78h, edge);
-                half commercialWindow = SoftInterval(module, 0.20h, 0.80h, edge) *
-                    SoftInterval(storey, 0.22h, 0.80h, edge);
-                half industrialWindow = SoftInterval(module, 0.36h, 0.64h, edge) *
-                    SoftInterval(storey, 0.64h, 0.83h, edge) *
-                    step(0.58h, frac(stableSeed * 19.17h + floor(horizontal / moduleWidth)));
-                half otherWindow = SoftInterval(module, 0.31h, 0.69h, edge) *
-                    SoftInterval(storey, 0.31h, 0.74h, edge);
+                float residentialWindow = SoftInterval(module, 0.30, 0.70, edge) *
+                    SoftInterval(storey, 0.30, 0.75, edge);
+                float civicWindow = SoftInterval(module, 0.24, 0.76, edge) *
+                    SoftInterval(storey, 0.24, 0.78, edge);
+                float commercialWindow = SoftInterval(module, 0.20, 0.80, edge) *
+                    SoftInterval(storey, 0.22, 0.80, edge);
+                float industrialWindow = SoftInterval(module, 0.36, 0.64, edge) *
+                    SoftInterval(storey, 0.64, 0.83, edge) *
+                    step(0.58, frac(stableSeed * 19.17 + floor(horizontal / moduleWidth)));
+                float otherWindow = SoftInterval(module, 0.31, 0.69, edge) *
+                    SoftInterval(storey, 0.31, 0.74, edge);
                 windowMask = (residentialWindow * residential + civicWindow * civic +
                     commercialWindow * commercial + industrialWindow * industrial +
                     otherWindow * (1.0h - saturate(residential + civic + commercial + industrial))) *
                     featureFade * usableWall;
 
-                half groundStorey = 1.0h - smoothstep(floorHeight, floorHeight + 0.25h,
+                float groundStorey = 1.0 - smoothstep(floorHeight, floorHeight + 0.25,
                     heightAboveBase);
-                half doorWidth = lerp(1.05h, 3.4h, industrial);
-                half doorHeight = lerp(2.25h, 3.8h, industrial);
-                half doorCenter = lerp(cornerClearance + doorWidth * 0.6h,
-                    wallLength - cornerClearance - doorWidth * 0.6h, stableSeed);
-                half doorMask = (1.0h - smoothstep(doorWidth * 0.48h,
-                    doorWidth * 0.55h + pixelFootprint, abs(horizontal - doorCenter))) *
-                    SoftInterval(heightAboveBase, 0.06h, doorHeight, edge) *
+                float doorWidth = lerp(1.05, 3.4, industrial);
+                float doorHeight = lerp(2.25, 3.8, industrial);
+                float doorCenter = lerp(cornerClearance + doorWidth * 0.6,
+                    wallLength - cornerClearance - doorWidth * 0.6, stableSeed);
+                float doorMask = (1.0 - smoothstep(doorWidth * 0.48,
+                    doorWidth * 0.55 + pixelFootprint, abs(horizontal - doorCenter))) *
+                    SoftInterval(heightAboveBase, 0.06, doorHeight, edge) *
                     groundStorey * featureFade * entranceWall * usableWall;
-                windowMask *= 1.0h - doorMask;
+                windowMask *= 1.0 - doorMask;
 
                 // Static, opaque sky/ground colors provide reflection cues without an
                 // additional transparent pass or realtime probe.  A restrained sunward
                 // highlight produces a glint only at useful close-view pixel sizes.
-                half3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - worldPosition);
-                half3 reflectionDirection = reflect(-viewDirection, normalize(worldNormal));
-                fixed3 reflectedEnvironment = texCUBE(_FacadeReflectionCube,
+                float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - worldPosition);
+                float3 reflectionDirection = reflect(-viewDirection, normalize(worldNormal));
+                float3 reflectedEnvironment = texCUBE(_FacadeReflectionCube,
                     reflectionDirection).rgb;
-                half windowVertical = frac(heightAboveBase / floorHeight);
-                half skyCue = saturate(0.26h + windowVertical * 0.54h + stableSeed * 0.10h);
-                fixed3 bakedWindow = lerp(fixed3(0.025h, 0.040h, 0.052h),
-                    max(reflectedEnvironment, fixed3(0.16h, 0.25h, 0.34h)), skyCue);
-                fixed3 doorColor = industrial > 0.5h
-                    ? fixed3(0.19h, 0.21h, 0.22h)
-                    : fixed3(0.15h, 0.11h, 0.085h);
-                facade = lerp(facade, bakedWindow, windowMask * 0.92h);
-                facade = lerp(facade, doorColor, doorMask * 0.90h);
+                float windowVertical = frac(heightAboveBase / floorHeight);
+                float skyCue = saturate(0.26 + windowVertical * 0.54 + stableSeed * 0.10);
+                float3 bakedWindow = lerp(float3(0.025, 0.040, 0.052),
+                    max(reflectedEnvironment, float3(0.16, 0.25, 0.34)), skyCue);
+                float3 doorColor = industrial > 0.5
+                    ? float3(0.19, 0.21, 0.22)
+                    : float3(0.15, 0.11, 0.085);
+                facade = lerp(facade, bakedWindow, windowMask * 0.92);
+                facade = lerp(facade, doorColor, doorMask * 0.90);
                 bakedGlint = windowMask * featureFade;
                 return facade;
             }
@@ -387,15 +387,15 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     return fixed4(lerp(low, high, saturate(height * 4.0h)), 1.0h);
                 }
 
-                half roughness;
-                half metallic = 0.0h;
-                half surfaceAo = 1.0h;
-                half facadeWindowMask = 0.0h;
-                half facadeGlintMask = 0.0h;
-                fixed3 sideColor;
+                float roughness;
+                float metallic = 0.0;
+                float surfaceAo = 1.0;
+                float facadeWindowMask = 0.0;
+                float facadeGlintMask = 0.0;
+                float3 sideColor;
                 if (_SemanticMode < 0.5h)
                 {
-                    half3 facadeNormal;
+                    float3 facadeNormal;
                     sideColor = SampleFacade(input.worldPosition, geometricNormal,
                         input.semanticData, input.wallUv, roughness,
                         metallic, surfaceAo, facadeNormal) * _SideTint.rgb;

@@ -540,11 +540,11 @@ namespace QuestFlight.Editor
             Require(terrain != null && material != null,
                 "airport terrain clean-plate binding is missing", violations);
             if (material == null) return;
-            Require(material.HasProperty("_AirportCoreCleanPlateAlbedo") &&
-                    ReferenceEquals(material.GetTexture("_AirportCoreCleanPlateAlbedo"), manifest.cleanPlateAlbedo),
+            Require(material.HasProperty("_AirportCoreCleanPlateAlbedo") && SameAsset(
+                    material.GetTexture("_AirportCoreCleanPlateAlbedo"), manifest.cleanPlateAlbedo),
                 "clean-plate albedo is not integrated into the authoritative terrain material", violations);
-            Require(material.HasProperty("_AirportCoreCleanPlateMask") &&
-                    ReferenceEquals(material.GetTexture("_AirportCoreCleanPlateMask"), manifest.replacementMask),
+            Require(material.HasProperty("_AirportCoreCleanPlateMask") && SameAsset(
+                    material.GetTexture("_AirportCoreCleanPlateMask"), manifest.replacementMask),
                 "clean-plate replacement mask is not integrated into the authoritative terrain material", violations);
             Require(material.HasProperty("_AirportCoreCleanPlateStrength") &&
                     material.GetFloat("_AirportCoreCleanPlateStrength") > 0.999f,
@@ -558,6 +558,13 @@ namespace QuestFlight.Editor
                         .SelectMany(renderer => renderer.sharedMaterials ?? Array.Empty<Material>())
                         .All(item => item == null || !string.Equals(item.name, "AirportCoreCleanPlate", StringComparison.Ordinal)),
                 "obsolete clean-plate overlay material remains in the benchmark", violations);
+        }
+
+        private static bool SameAsset(UnityEngine.Object left, UnityEngine.Object right)
+        {
+            if (left == null || right == null) return false;
+            return string.Equals(AssetDatabase.GetAssetPath(left), AssetDatabase.GetAssetPath(right),
+                StringComparison.Ordinal);
         }
 
         private static int RendererTriangles(Renderer renderer)

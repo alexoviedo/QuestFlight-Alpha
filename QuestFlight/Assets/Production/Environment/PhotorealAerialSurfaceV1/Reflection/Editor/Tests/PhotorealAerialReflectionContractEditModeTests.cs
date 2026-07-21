@@ -135,9 +135,7 @@ namespace QuestFlightLab.Tests.EditMode
                         string.Equals(message.severity.ToString(), "Error", System.StringComparison.OrdinalIgnoreCase)),
                     path);
                 string source = File.ReadAllText(path);
-                Assert.That(source, Does.Contain("UNITY_SPECCUBE_BLENDING"), path);
                 Assert.That(source, Does.Contain("UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX"), path);
-                Assert.That(source, Does.Contain("Blend One OneMinusSrcAlpha"), path);
                 Assert.That(source, Does.Contain("ZWrite Off"), path);
                 Assert.That(source, Does.Not.Contain("GrabPass"), path);
                 Assert.That(source, Does.Not.Contain("_CameraOpaqueTexture"), path);
@@ -148,8 +146,13 @@ namespace QuestFlightLab.Tests.EditMode
             string windowSource = File.ReadAllText(WindowShaderPath);
             Assert.That(windowSource, Does.Contain("sunGlint"));
             Assert.That(windowSource, Does.Contain("_DirectGlintStrength"));
-            Assert.That(windowSource, Does.Contain("reflectionVisibility"));
             Assert.That(windowSource, Does.Contain("_AuthoredReflectionCube"));
+            Assert.That(windowSource, Does.Contain("texCUBE"));
+            Assert.That(windowSource, Does.Contain("proceduralGround"));
+            Assert.That(windowSource, Does.Contain("Blend SrcAlpha OneMinusSrcAlpha"));
+            Assert.That(windowSource, Does.Not.Contain("UnityGI_IndirectSpecular"));
+            string instrumentSource = File.ReadAllText(InstrumentShaderPath);
+            Assert.That(instrumentSource, Does.Contain("Blend One OneMinusSrcAlpha"));
         }
 
         [Test]

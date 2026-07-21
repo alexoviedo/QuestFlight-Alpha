@@ -83,19 +83,19 @@ Shader "QuestFlight/Airport Core V4/Vegetation Hero Cutout"
                 return output;
             }
 
-            fixed4 frag(v2f input, fixed face : VFACE) : SV_Target
+            fixed4 frag(v2f input) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input);
                 fixed4 atlas = tex2D(_MainTex, input.uv);
                 clip(atlas.a - _Cutoff);
                 fixed4 instanceTint = UNITY_ACCESS_INSTANCED_PROP(Props, _InstanceTint);
-                half3 normal = normalize(input.normalWorld) * (face >= 0 ? 1.0h : -1.0h);
+                half3 normal = normalize(input.normalWorld);
                 half3 lighting;
                 #ifdef LIGHTMAP_ON
                     lighting = DecodeLightmap(UNITY_SAMPLE_TEX2D(unity_Lightmap, input.lightmapUv));
                 #else
                     half3 ambient = max(ShadeSH9(half4(normal,1.0h)), 0.0h) * 0.35h;
-                    half ndl = saturate(dot(normal, normalize(_WorldSpaceLightPos0.xyz)));
+                    half ndl = saturate(abs(dot(normal, normalize(_WorldSpaceLightPos0.xyz))));
                     half wrap = lerp(_BackfaceLight, 1.0h, ndl);
                     lighting = saturate(ambient + _LightColor0.rgb * (0.06h + wrap * 0.40h));
                 #endif

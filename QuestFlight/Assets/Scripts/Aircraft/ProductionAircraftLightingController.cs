@@ -28,16 +28,16 @@ namespace QuestFlightLab.Aircraft
     }
 
     /// <summary>
-    /// Applies a deterministic Quest cockpit-lighting treatment to authored renderers. One
-    /// separately-layered 512px hard-shadow sun affects only opaque cockpit receivers, while
-    /// two primary cabin meshes cast. Authored AO, softened coarse cabin normals, static sky
+    /// Applies a deterministic Quest cockpit-lighting treatment to authored renderers.
+    /// Authored AO, bounded material darkening, softened coarse cabin normals, static sky
     /// reflections, and base-texture instrument emission preserve stable depth/readability.
-    /// No light, camera, mesh, or hierarchy is created.
+    /// Realtime cockpit casters and receivers stay disabled because worn stereo review proved
+    /// the former small shadow map flickered. No light, camera, mesh, or hierarchy is created.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class ProductionAircraftLightingController : MonoBehaviour
     {
-        public const float DefaultStaticDepthStrength = 0.30f;
+        public const float DefaultStaticDepthStrength = 0.38f;
         public const float MaximumStaticDepthStrength = 0.42f;
         public const float DefaultCockpitOcclusionStrength = 1.0f;
         public const float DefaultCoarseNormalStrength = 0.42f;
@@ -115,7 +115,7 @@ namespace QuestFlightLab.Aircraft
                 cockpitOcclusionStrength = Mathf.Clamp01(occlusionStrength),
                 coarseNormalStrength = Mathf.Clamp01(normalStrength),
                 instrumentReadabilityEmission = Mathf.Clamp(instrumentEmission, 0f, 0.5f),
-                strategy = "bounded_512px_cockpit_only_hard_shadow_plus_baked_ao_soft_normals_and_base_texture_instrument_emission"
+                strategy = "static_material_depth_plus_baked_ao_soft_normals_and_base_texture_instrument_emission_no_realtime_cockpit_shadows"
             };
             Dictionary<Material, Material> cockpitClones = new Dictionary<Material, Material>();
 
@@ -130,25 +130,18 @@ namespace QuestFlightLab.Aircraft
 
                 string identity = RendererIdentity(renderer);
                 bool cockpit = IsCockpitRenderer(identity);
-                bool transparentGlass = IsTransparentGlass(renderer);
-                bool caster = cockpit && !transparentGlass && IsPrimaryCockpitShadowCaster(identity);
-                bool receiver = cockpit && !transparentGlass;
-                ShadowCastingMode desiredCasting = caster
-                    ? ShadowCastingMode.On
-                    : ShadowCastingMode.Off;
+                ShadowCastingMode desiredCasting = ShadowCastingMode.Off;
                 if (renderer.shadowCastingMode != desiredCasting)
                 {
                     if (desiredCasting == ShadowCastingMode.Off)
                         report.realtimeShadowCasterCountDisabled++;
                     renderer.shadowCastingMode = desiredCasting;
                 }
-                if (renderer.receiveShadows != receiver)
+                if (renderer.receiveShadows)
                 {
-                    if (!receiver) report.realtimeShadowReceiverCountDisabled++;
-                    renderer.receiveShadows = receiver;
+                    report.realtimeShadowReceiverCountDisabled++;
+                    renderer.receiveShadows = false;
                 }
-                if (caster) report.boundedCockpitShadowCasterCount++;
-                if (receiver) report.boundedCockpitShadowReceiverCount++;
 
                 if (!cockpit) continue;
                 Material[] materials = renderer.sharedMaterials;
@@ -258,12 +251,6 @@ namespace QuestFlightLab.Aircraft
                    identity.IndexOf("Static_TXT", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    identity.IndexOf("ButtonPlate", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    identity.IndexOf("Buttons_MAT", StringComparison.OrdinalIgnoreCase) >= 0;
-        }
-
-        private static bool IsPrimaryCockpitShadowCaster(string identity)
-        {
-            return identity.IndexOf("Interior_Body", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                   identity.IndexOf("Interior_Seats", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private static bool IsTransparentGlass(Renderer renderer)
