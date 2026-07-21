@@ -100,10 +100,10 @@
       "source": "Preallocated runtime instance batch renderer"
     },
     {
-      "bytes": 4891,
+      "bytes": 4912,
       "license": "Project-authored",
       "path": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Shaders/AerialCanopyMap.cginc",
-      "sha256": "fcc62093f5d6b4b90f4a9c621da60931bb5de40628119b0dee697b4b0e7b9c64",
+      "sha256": "f4f211a1739eb96f7bdc94ae73adaae5db89ef9696a471335afdbbd553789309",
       "source": "Tier 3 canopy-map shader include with bounds and R8 ownership gating"
     },
     {

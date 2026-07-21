@@ -65,7 +65,7 @@ canonical upstream record is the public-domain USGS 3DEP manifest:
 Its SHA-256 is
 `1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5`.
 The final vegetation `SOURCE_MANIFEST.json` is 9,197 bytes with SHA-256
-`7358f7d5870d0ed9cc7b12d00baa39e35f5a7b87498dd0e88cc352a3ba505f32`.
+`edeb44cdeb7b7a39283b984acdb799188be1dce6ad87c01febcf14437e1a3ad1`.
 It records no external vegetation asset. Raw EPT/LAZ, source downloads,
 processing caches, screenshots, simulator output, builds, and APKs remain
 outside Git.

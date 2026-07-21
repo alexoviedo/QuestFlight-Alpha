@@ -386,7 +386,7 @@ recorded by `AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json`, SHA-256
 
 The canonical current inventory is
 `AerialSceneryV1/Vegetation/SOURCE_MANIFEST.json`: 9,197 bytes, SHA-256
-`7358f7d5870d0ed9cc7b12d00baa39e35f5a7b87498dd0e88cc352a3ba505f32`.
+`edeb44cdeb7b7a39283b984acdb799188be1dce6ad87c01febcf14437e1a3ad1`.
 Its `external_assets` list is empty. The `.blend`, `.fbx`, and raster derivatives
 are governed by the repository's existing Git LFS rules; every committed asset
 retains its paired Unity `.meta` file. No new third-party notice is required.

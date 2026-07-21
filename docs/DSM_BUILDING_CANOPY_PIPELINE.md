@@ -298,7 +298,7 @@ Scenery V1 vegetation contract and `SOURCE_MANIFEST.json` govern the additive
 rounded-grove presentation, its public-domain 3DEP-derived distribution, and
 its project-authored geometry. The final vegetation source manifest is 9,197
 bytes with SHA-256
-`7358f7d5870d0ed9cc7b12d00baa39e35f5a7b87498dd0e88cc352a3ba505f32`.
+`edeb44cdeb7b7a39283b984acdb799188be1dce6ad87c01febcf14437e1a3ad1`.
 
 ## Ownership and exclusion contract
 
