@@ -5,7 +5,7 @@
 This document covers the deterministic Workstream B asset-authoring pipeline for
 `PhotorealAerialSurfaceV1`. It produces compact lidar derivatives,
 OSM-footprint building surface meshes, a fixed bare-earth terrain mesh, and a
-terrain-map-only canopy ownership contract under:
+terrain-map canopy ownership contract under:
 
 `QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1`
 
@@ -225,8 +225,8 @@ reviewed-false-positive, and hero exclusions:
 | Distance from product origin | Owner and representation |
 | --- | --- |
 | 0-250 m | Existing hero trees; excluded from the ordinary terrain-map handoff |
-| 250-1500 m | Terrain canopy height, density, normal, and occlusion maps in the existing terrain draw |
-| Beyond 1500 m | The same terrain canopy-map representation; no canopy geometry |
+| 250-1500 m | Terrain canopy maps plus selected fixed-world Tier-2 grove clusters |
+| Beyond 1500 m | Terrain canopy-map representation; 12 bounded Tier-2 clusters remain where the deterministic distribution selects them |
 
 `ProductionCanopySurfaceLayer` is now a fail-closed ownership contract, not a
 raised surface layer. Its active geometry mask, component table, run table,
@@ -246,6 +246,21 @@ invitation to infer geometry. The terrain-map texture is sampled in the lidar
 UTM raster frame only after the product-AEQD-to-UTM transform; its horizontal
 normal components are rotated back into product axes. It adds no renderer, no
 material, and no draw beyond the existing terrain draw.
+
+Rounded Canopy Volume V1 does not change that semantic ownership or generate a
+raised terrain layer. It adds 42 project-authored `AerialGroveCluster_T2`
+instances at deterministic semantic locations, 30 within 1.5 km. Each source
+cluster has 540 triangles; one fixed-world `DrawMeshInstanced` batch therefore
+adds 22,680 triangles and one draw. The existing terrain-map response remains
+beneath every cluster. The matrix authorer explicitly right-multiplies
+`Quaternion.Euler(-90, 0, 0)` to convert Blender Z-up mesh vertices to Unity
+Y-up while retaining product ENU placement and yaw.
+
+The grove overlay is not camera-facing, does not crossfade or dither, creates no
+per-tree runtime GameObject or `Update`, and adds no texture, material,
+transparent slot, shader, or shader variant. T0/T1 remain unchanged at 12,860
+triangles and two draws; total vegetation is 35,540 triangles, three draws, and
+one shared material.
 
 The final deterministic generation reports:
 
@@ -277,6 +292,13 @@ The canopy manifest schema is
 It must assert terrain-map-only product policy, zero geometry ownership and
 topology, exact handoff assignment, reviewed exclusions, stable hashes, and the
 inactive status of the rejected candidate.
+
+That schema continues to govern semantic ownership. The separate Aerial
+Scenery V1 vegetation contract and `SOURCE_MANIFEST.json` govern the additive
+rounded-grove presentation, its public-domain 3DEP-derived distribution, and
+its project-authored geometry. The final vegetation source manifest is 9,197
+bytes with SHA-256
+`7358f7d5870d0ed9cc7b12d00baa39e35f5a7b87498dd0e88cc352a3ba505f32`.
 
 ## Ownership and exclusion contract
 
@@ -339,13 +361,16 @@ The validator must verify, at minimum:
 - the two exact hero-building exclusions and their separate owner;
 - simplification area, inflation, Hausdorff, topology, and 130,000-triangle bounds;
 - all 16 building OBJ names, one-object/one-group structure, and no embedded material;
-- disjoint building, hero-tree, zero-valued canopy-geometry, and terrain-map ownership;
+- disjoint building, hero-tree, zero-valued terrain-relief geometry, and terrain-map ownership;
 - zero active canopy mesh batches, components, runs, vertices, triangles, skirts,
   and additional draws;
 - all 63,308 eligible ordinary pixels in the terrain-map handoff, all 144 hero
   pixels preserved, and exact 100% assignment;
 - the inactive, deterministic 29-component/1,960-triangle rejected candidate;
 - exact canopy geometry-ownership and terrain-map-handoff texture names;
+- exactly 42 fixed-world Tier-2 grove matrices, 540 triangles per source
+  cluster, one instanced draw, the explicit Z-up-to-Y-up matrix, and no
+  camera-facing/crossfade/per-tree runtime path;
 - exact AEQD/UTM round trips, affine runtime residual, and data-texture sampling vectors;
 - product terrain topology, bounds, reconstruction error, and runway preservation;
 - native/source bounds and centroids with no generic OBJ runtime dependency; and
@@ -378,7 +403,9 @@ metadata but must not rewrite the shared
 
 Data textures are imported as linear, uncompressed, no-mip textures. Generated
 building OBJ importers must not search for or create materials, animation, or
-colliders; the canopy product policy emits no OBJ assets.
+colliders; the semantic canopy-surface policy emits no OBJ assets. The separate
+project-authored vegetation family is exported from its recorded Blender source
+and committed through the repository's Git LFS rules.
 Do not hand-edit generated assets or their manifests; change the deterministic
 tool and regenerate. Do not commit `Library`, `Temp`, `Obj`, `Logs`, `Builds`,
 APKs, captures, package caches, raw downloads, source archives, or assets with

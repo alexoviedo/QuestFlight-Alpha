@@ -11,6 +11,7 @@ asset_path,classification
 "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetation_Tier0_Combined.asset","approved_production"
 "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetation_Tier1_Combined.asset","approved_production"
 "Assets/Production/Environment/AerialSceneryV1/Vegetation/Materials/AerialVegetation_AtlasCutout.mat","approved_production"
+"Assets/Production/Environment/AerialSceneryV1/Vegetation/Models/AerialVegetationMultiscale.fbx","approved_production"
 "Assets/Production/Environment/AerialSceneryV1/Vegetation/Runtime/AerialVegetationBatchRenderer.cs","approved_production"
 "Assets/Production/Environment/AerialSceneryV1/Vegetation/Shaders/AerialVegetationOpaque.shader","approved_production"
 "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_Atlas.png","approved_production"

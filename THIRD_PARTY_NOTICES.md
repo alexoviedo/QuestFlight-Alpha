@@ -71,7 +71,7 @@ Courtesy credit: Federal Aviation Administration (FAA); USDOT Bureau of Transpor
 
 The product includes only bounded, optimized government-data derivatives. Raw NAIP imagery exports, raw 3DEP EPT/LAZ nodes, source archives, and processing caches are not distributed. Exact NAIP acquisition records and hashes are in `tools/kbdu_orthophoto/kbdu_orthophoto_manifest.json`; exact 3DEP lineage and compact-output hashes are in `QuestFlight/Assets/Production/Environment/AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json` and the manifests under `QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1`.
 
-In the Photoreal Aerial Surface V1 candidate, the 3DEP-derived canopy presentation is terrain-map-only outside the existing hero radius; no raised canopy mesh is active. A measured raised-mesh candidate remains only as rejected-design evidence and is excluded from the runtime dependency closure.
+The tagged Photoreal Aerial Surface V1 baseline uses a 3DEP-derived terrain-map canopy presentation outside the existing hero radius. Rounded Canopy Volume V1 retains that map and adds one bounded, project-authored fixed-world grove batch whose placement and height/density parameters derive from the same public-domain 3DEP evidence. The older raised-terrain candidate remains rejected and excluded from the runtime dependency closure. Neither representation is a botanical inventory or surveyed canopy record.
 
 No agency logo is included and no agency endorsement, navigation suitability, surveying accuracy, FAA approval, or training credit is claimed.
 

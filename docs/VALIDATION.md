@@ -15,13 +15,49 @@ Run from the repository root:
 
 `validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current feature candidate captures 81 Visual-QA views; every full-resolution image requires inspection. Historical milestones below retain their original capture counts. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. The accepted-baseline hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. Historical and feature-scoped values below are evidence only.
 
+## Rounded Canopy Volume V1 closure
+
+The bounded candidate on `feature/rounded-canopy-volume-v1` starts from tagged
+source `82fb39c5c84f4a96b321b53242ecd46348d6d244`. Its machine delivery gates pass;
+recorded simulator replay and physical Quest acceptance remain incomplete.
+
+- vegetation source/contract validator: PASS; focused Python: PASS 9/9;
+- T0/T1: unchanged at 22 instances, 12,860 triangles, two draws;
+- Tier 2: PASS for 42 fixed-world, non-camera-facing grove clusters, 540
+  triangles each / 22,680 total, in one `DrawMeshInstanced` batch and one shared
+  material; 30 clusters are within 1.5 km;
+- axis contract: PASS for explicit Blender Z-up to Unity Y-up
+  `Quaternion.Euler(-90, 0, 0)` conversion, right-multiplied into each matrix;
+- no new texture, material, transparent slot, shader, or shader variant; no
+  per-tree GameObject/`Update`, crossfade, dither, or camera-facing billboard;
+- EditMode: PASS 114/114; PlayMode: PASS 9/9; one-command product validation and
+  dependency closure: PASS;
+- production Visual QA: `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; the
+  lead inspected the full-resolution canopy and unrelated regression frames;
+- static planning budget: PASS at 54 draws, 624,086 selected triangles, 774,139
+  serialized triangles, 26 visible / 27 active materials, 211,849,528 estimated
+  texture bytes, three transparent slots, 13 shaders / 18 variants, and 4x MSAA;
+- Meta XR Simulator: live Quest-3-profile connection, nonblank stereo, HMD, and
+  both Touch devices PASS with both eyes inspected; aggregate
+  `BLOCKED_MISSING_RECORDED_REPLAYS` because all ten `.vrs` files are absent;
+- Android release-style build: PASS, 133,992,887 bytes, SHA-256
+  `0d31c39f113c3ed5edf286259f35f25cf18852b0129445621b79bf32999851d9`;
+- physical Quest worn/timing acceptance: NOT RUN for this APK.
+
+Static and Meta XR Simulator evidence is not standalone Quest performance. The
+prior source APK's 8/10 worn score is not revalidated or attributed to this
+build. Full evidence is in
+`docs/evidence/ROUNDED_CANOPY_VOLUME_V1_2026-07-20.md`.
+
 ## Photoreal Aerial Surface V1 semantic-alignment closure
 
-The result on `feature/photoreal-aerial-surface-v1`, sourced from main
-`197283fc4f17ae1f78db57c6fcc4e27dc995cd66`, is **PARTIAL — preserve the
-feature branch, do not merge or tag**. Its semantic/coordinate architecture and
-machine gates pass, but its full-resolution building, vegetation, oblique-ground,
-and reflection presentation remains below the milestone's lead visual targets.
+The original machine closure on `feature/photoreal-aerial-surface-v1`, sourced
+from main `197283fc4f17ae1f78db57c6fcc4e27dc995cd66`, was partial because its
+full-resolution art remained below the original lead target. A subsequent worn
+smoke of the exact APK scored 8/10; commit
+`82fb39c5c84f4a96b321b53242ecd46348d6d244` is now the accepted development
+baseline tagged `photoreal-aerial-surface-v1`. Neither result is release or
+physical performance acceptance.
 
 - aerial-surface Python unit suite: PASS 40/40; deterministic semantic validator:
   PASS;

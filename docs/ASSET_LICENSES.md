@@ -319,9 +319,9 @@ That historical Recovery V2 representation contains 2,875 fixed closed building 
 
 The baseline integration introduces no new external visual asset, provider, or license. It promotes the validated Recovery V2 dependency closure unchanged. `Kloppenheim03_PureSky_2K.hdr` is normalized to the repository's existing Git LFS rule without changing its decoded bytes or rewriting history; the historical non-LFS blob is a bounded exception. The content SHA-256 remains `ffd28511add85d9508b51f50d3bbe4d822f4a5240800edb4f014edb75abdb1aa`. Future matching HDR revisions must use LFS.
 
-## Photoreal Aerial Surface V1 candidate records
+## Photoreal Aerial Surface V1 records
 
-This section records the rights and deterministic lineage of the current feature-branch candidate. It does not establish final visual acceptance, literal photorealism, navigation suitability, or measured Quest performance.
+This section records the rights and deterministic lineage of the tagged development baseline. It does not establish literal photorealism, navigation suitability, release acceptance, or measured Quest performance.
 
 ### City of Boulder 2020 aerial imagery
 
@@ -373,3 +373,26 @@ The canopy layer is not a sparse 22-tree representation. Its final policy is ter
 One deterministic raised-canopy candidate is retained only as rejected-design evidence in the canopy manifest: 29 retained components and 1,960 triangles if emitted. It is inactive and was rejected after inspected QA because its silhouettes read as blocks and cliffs. It may not enter the runtime dependency closure.
 
 Generated OBJ authoring inputs are converted offline to coordinate-preserving Unity-native mesh assets for the 16 accepted building batches and one terrain mesh. The final semantic runtime owns no raised canopy native mesh. `PhotorealAerialSurfaceV1/KBDU_AerialSurface_UnityLocalMeshManifestV1.json` inventories accepted per-source and per-native hashes and verifies that the generic OBJ importer is not the runtime authority. Project-authored serialization, shaders, materials, masks, and conversion tools do not alter the ODbL boundary of the building footprints or the public-domain status of the 3DEP derivatives. Source archives, raw downloads, decoded working rasters, builds, captures, APKs, and caches remain uncommitted.
+
+## Rounded Canopy Volume V1 derivative record
+
+Rounded Canopy Volume V1 introduces no new external asset, imagery provider, or
+license boundary. Its Blender source, exported `AerialGroveCluster_T2` mesh,
+atlas, material presentation, shaders, authoring code, and configuration are
+project-authored. The 42 fixed-world cluster locations and their height/density
+parameters are deterministic derivatives of the public-domain USGS 3DEP source
+recorded by `AerialSceneryV1/Lidar/KBDU_LidarManifestV1.json`, SHA-256
+`1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5`.
+
+The canonical current inventory is
+`AerialSceneryV1/Vegetation/SOURCE_MANIFEST.json`: 9,197 bytes, SHA-256
+`7358f7d5870d0ed9cc7b12d00baa39e35f5a7b87498dd0e88cc352a3ba505f32`.
+Its `external_assets` list is empty. The `.blend`, `.fbx`, and raster derivatives
+are governed by the repository's existing Git LFS rules; every committed asset
+retains its paired Unity `.meta` file. No new third-party notice is required.
+
+The 3DEP work unit lacks vegetation classes 3/4/5 and building class 6, so its
+canopy placement is a deterministic visual heuristic rather than botanical or
+surveyed truth. Raw EPT/LAZ, downloads, processing caches, rejected grove
+experiments, screenshots, simulator recordings, builds, and APKs remain
+external and must not be committed.

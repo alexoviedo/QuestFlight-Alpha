@@ -52,6 +52,10 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Models/AerialVegetationMultiscale.fbx",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Runtime/AerialVegetationBatchRenderer.cs",
             "classification": "approved_production"
         },

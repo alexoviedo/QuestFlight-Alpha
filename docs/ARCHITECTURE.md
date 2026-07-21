@@ -6,7 +6,7 @@ ProductionWorldRoot
 │   ├── Product-AEQD near/mid/far terrain and aligned orthophoto pyramid
 │   ├── Fixed DTM-only bare-earth terrain and semantic ownership manifests
 │   ├── OSM-footprint building batches, authored hero objects, and parked-aircraft HLOD
-│   ├── Terrain-owned ordinary-canopy shading and orthophoto-only water
+│   ├── Terrain-owned canopy shading, one fixed-world Tier-2 grove batch, and orthophoto-only water
 │   └── Bounded aircraft/runway blob shadow
 ├── ProductionInputRoot
 ├── AircraftSimulationRoot (one Unity prototype authority, CG pivot)
@@ -83,10 +83,32 @@ The same branch uses a fixed seven-texture City of Boulder 2020 CC0 pyramid
 far) with explicit mip-residency ownership. Its scoped static planning result is
 53 selected draws, 601,406 selected triangles, 26 visible materials,
 211,849,528 estimated texture bytes, three transparent slots, and 4x MSAA. The
-static gates and Android build pass, but context-building art, hero vegetation,
-canopy volume, oblique imagery, and reflection/lighting presentation remain
-below the milestone's visual bar. It is therefore a branch-only partial result,
-not the tagged authority or a photorealism/performance claim.
+original machine gates and Android build passed, but the first lead review
+remained below its visual bar. A later worn smoke of the exact APK scored 8/10
+and the commit became the tagged development baseline
+`photoreal-aerial-surface-v1`. That tag is not a literal-photorealism, release,
+or final Quest-performance claim.
+
+On `feature/rounded-canopy-volume-v1`, the tagged Photoreal Aerial Surface V1
+terrain-map representation remains active and owns the broad aligned canopy
+response. A bounded additive Tier-2 layer submits 42 project-authored
+`AerialGroveCluster_T2` matrices through one `DrawMeshInstanced` call and the
+existing shared vegetation material. Each cluster has 540 triangles; the layer
+adds 22,680 triangles and one draw while adding no texture, material,
+transparent slot, shader, or shader variant. Thirty clusters lie within 1.5 km.
+
+The matrices are fixed in world orientation and do not select or rotate per
+eye. The editor authorer explicitly right-multiplies
+`Quaternion.Euler(-90, 0, 0)` to convert the Blender Z-up mesh to Unity Y-up
+without changing ENU placement or yaw. T0/T1 remain the existing 22 instances,
+12,860 triangles, and two draws; total vegetation is 35,540 triangles, three
+draws, and one material. No ordinary tree owns a runtime GameObject or
+`Update`, and no LOD crossfade, dither, or camera-facing billboard is used.
+
+Lidar/CHM supplies only placement, height, and density evidence. It never
+displaces the DTM terrain and does not establish botanical or surveyed truth.
+The live Meta XR stereo/HMD/Touch check passes, but recorded motion/transition
+replays and physical Quest timing remain unproven.
 
 On `feature/airport-core-artifact-v4-3-1`, deterministic R0–R11 isolation proves that runway bands persist with constant unlit pavement and no markings. The runway has one pavement renderer and one marking renderer, no lightmap, no vertex colors, no duplicate, and an exact pavement/collider mesh identity; 52 of 106 pavement vertices nevertheless intersect the terrain over a signed clearance range of -5.09 to +4.40 mm. The existing opaque pavement pass therefore uses a bounded depth bias (`Offset -1, -1`) without changing geometry, physics, transforms, materials, textures, or draw count. Minor-water evidence cameras prove three OSM-backed nonzero mask components at ground, oblique, and aerial ranges; the architecture remains terrain-integrated and zero-draw-call. Reservoir assets are unchanged.
 
