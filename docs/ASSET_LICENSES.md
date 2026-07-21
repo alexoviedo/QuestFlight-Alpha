@@ -396,3 +396,11 @@ canopy placement is a deterministic visual heuristic rather than botanical or
 surveyed truth. Raw EPT/LAZ, downloads, processing caches, rejected grove
 experiments, screenshots, simulator recordings, builds, and APKs remain
 external and must not be committed.
+
+## Quest Visual Fidelity V1 derivative record
+
+Quest Visual Fidelity V1 introduces no new third-party asset or license boundary. The height-calibrated grove distribution, facade semantic mapping, native vertex-color streams, procedural opaque facade response, cockpit-window response, and baked-occlusion calibration are project-authored derivatives of already recorded inputs.
+
+Building semantics continue to derive from bounded OpenStreetMap footprint/tag data under ODbL-1.0 with `© OpenStreetMap contributors`. Canopy placement continues to derive from the public-domain USGS 3DEP work unit `CO_DRCOG_1_2020`. Facade pixels use the existing documented project/CC0 building atlas; no new texture, photograph, archive, model, or external source was downloaded or committed.
+
+The regenerated Blender, FBX, OBJ, Unity-native mesh, prefab, configuration, shader, and manifest files retain their paired Unity metadata and established source/license records. Raw geospatial data, caches, screenshots, simulator evidence, build outputs, and APKs remain external to Git.

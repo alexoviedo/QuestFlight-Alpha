@@ -228,3 +228,17 @@ Every run must satisfy all of the following: at least 55 timestamped app-PID `SF
 The Quest VrApi parser identifies samples by a verified product PID and `SF=1.00`; `SF=1.00` alone is never allowed to infer app identity. It records `Fov` as telemetry rather than using it as an identity discriminator because supported Quest firmware has emitted product rows with both `Fov=0` and `Fov=2`. `validate_product.ps1` runs regression fixtures covering both forms, rejects different-PID and compositor-only rows, and distinguishes the Quest controller-required launch dialog from Guardian while treating either as a blocking system dialog.
 
 Editor and Meta XR Simulator gates prove dependency, serialization, budget, image-integrity, stereo API, tracking, input, composition, and build contracts within their stated limits. They do not prove comfort, handling fidelity, sustained Quest frame timing, thermals, or worn visual quality. Those claims require the physical headset.
+
+## Quest Visual Fidelity V1 closure
+
+The bounded canopy/facade/cockpit pass closes its machine gate:
+
+- aerial-surface Python tests: PASS 22/22;
+- vegetation Python tests: PASS 9/9; vegetation asset validation: PASS;
+- Unity EditMode: PASS 114/114; PlayMode: PASS 9/9;
+- production Visual QA: PASS 81/81 with classification `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; affected full-resolution frames were inspected;
+- static Quest planning: PASS at 54 draws, 624,086 selected triangles, 774,139 serialized triangles, 26 visible materials, 211,849,528 estimated texture bytes, three transparent slots, 13 shaders/18 variants, and 4x MSAA;
+- Meta XR live Quest-3-profile stereo/HMD/both Touch: PASS; aggregate `BLOCKED_MISSING_RECORDED_REPLAYS` for ten absent genuine `.vrs` sessions;
+- Android release-style build: PASS, 133,529,570-byte APK, SHA-256 `643f377140eb641c6ef921047bd7c044d61e672e91e9a67c4bd6232950d961e6`.
+
+The earlier worn 8/10 smoke used a different 133,992,887-byte APK with SHA-256 `0d31c39f113c3ed5edf286259f35f25cf18852b0129445621b79bf32999851d9`. It is retained as direction-setting evidence only; no worn score, comfort result, or physical Quest timing is claimed for the final binary. See `docs/evidence/QUEST_VISUAL_FIDELITY_V1_2026-07-20.md`.
