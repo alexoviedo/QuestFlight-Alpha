@@ -152,15 +152,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root.authoritativeAirportPatch.sharedMesh, Is.SameAs(root.manifest.airportPatchMesh));
             Assert.That(root.baselineAirportPatchMesh, Is.Not.SameAs(root.manifest.airportPatchMesh));
 
-            AerialVegetationBatchRenderer batch = root.vegetationRoot
-                .GetComponentsInChildren<AerialVegetationBatchRenderer>(true).Single();
-            Assert.That(batch.NonEmptyDrawCount, Is.EqualTo(3));
-            Assert.That(batch.FullyInstancedTriangleCount, Is.EqualTo(35540));
-            Assert.That(batch.SharedMaterial, Is.Not.Null);
-            Assert.That(batch.FixedOrientationOnly, Is.True);
-            Assert.That(batch.CameraFacingBehavior, Is.False);
-            Assert.That(batch.LodCrossfadeBehavior, Is.False);
-            Assert.That(batch.Batches.Single(item => item.Tier == 2).Matrices, Has.Length.EqualTo(42));
+            Assert.That(root.vegetationRoot
+                .GetComponentsInChildren<AerialVegetationBatchRenderer>(true), Is.Empty,
+                "The product uses compiled semantic grove meshes, never callback-driven tree draws.");
             Assert.That(root.vegetationRoot.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
             Transform[] vegetationTransforms = root.vegetationRoot.GetComponentsInChildren<Transform>(true);
             Assert.That(vegetationTransforms.Any(item =>
@@ -172,9 +166,11 @@ namespace QuestFlight.Editor.Tests
                 environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true);
             Assert.That(surface, Is.Not.Null);
             Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<Renderer>(true),
-                Is.Empty,
-                "Ordinary canopy is represented by the terrain handoff map, not raised renderers.");
-            Assert.That(surface.canopySurfaceRenderers, Is.Empty);
+                Has.Length.EqualTo(4));
+            Assert.That(surface.canopySurfaceRenderers, Has.Length.EqualTo(4));
+            Assert.That(surface.canopySurfaceRenderers.Sum(item =>
+                (long)item.GetComponent<MeshFilter>().sharedMesh.GetIndexCount(0) / 3L),
+                Is.LessThanOrEqualTo(54000));
             Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<LODGroup>(true), Is.Empty);
             Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
 
@@ -195,15 +191,6 @@ namespace QuestFlight.Editor.Tests
                 "The exact Tier0-2 exclusion boundary must not bleed through mips.");
             Assert.That(handoff.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));
             Assert.That(handoff.GetPlatformTextureSettings("Android").overridden, Is.True);
-            foreach (string path in new[] { VegetationAtlasPath, VegetationSurfacePath })
-            {
-                TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
-                Assert.That(importer, Is.Not.Null, path);
-                Assert.That(importer.mipmapEnabled, Is.True, path);
-                Assert.That(importer.streamingMipmaps, Is.True, path);
-                Assert.That(importer.GetPlatformTextureSettings("Android").format,
-                    Is.EqualTo(TextureImporterFormat.ASTC_6x6), path);
-            }
             foreach (string path in new[] { SurfaceFeaturesPath, SurfaceNormalPath, CanopyNormalPath })
             {
                 TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;

@@ -242,3 +242,20 @@ The bounded canopy/facade/cockpit pass closes its machine gate:
 - Android release-style build: PASS, 133,529,570-byte APK, SHA-256 `584821b6022a5e583b971d80df04579c23f450989b125acc0ef2eb0011cc7e6f`.
 
 The earlier worn 8/10 smoke used a different 133,992,887-byte APK with SHA-256 `0d31c39f113c3ed5edf286259f35f25cf18852b0129445621b79bf32999851d9`. It is retained as direction-setting evidence only; no worn score, comfort result, or physical Quest timing is claimed for the final binary. See `docs/evidence/QUEST_VISUAL_FIDELITY_V1_2026-07-20.md`.
+
+## Worn Visual Runtime V1 merge-candidate closure
+
+The exact source candidate closes its pre-worn machine gate:
+
+- canopy/building generators compile and emit deterministic manifests and hashes;
+- Unity EditMode: PASS 115/115; PlayMode: PASS 9/9;
+- full `validate_product.ps1`: PASS, including product integrity, provenance, dependency closure, source policy, allocation fixtures, and static performance checks;
+- production Visual QA: PASS 81/81 with classification `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; the affected canopy, facade, cockpit-glass, and cockpit-shadow frames were inspected at full resolution;
+- static Quest planning: PASS at 55 selected draws, 624,890 selected triangles, 793,677 serialized mesh triangles, 25 visible materials, 210,601,912 estimated texture bytes, three transparent slots, 12 shaders/17 variants, and 4x MSAA;
+- Meta XR Simulator 201.0 live Quest-3-profile stereo/HMD/both Touch: PASS for `cockpit_neutral`; aggregate status remains `BLOCKED_MISSING_RECORDED_REPLAYS` for the ten absent genuine `.vrs` sessions;
+- Android release-style build: PASS, 134,060,510-byte APK, SHA-256 `eb9499403126e4820ca0e42130ee1bddd84ff35c5b6909c9eb7184062ec431e8`.
+
+The machine pass establishes a test-ready merge candidate, not worn visual,
+comfort, frame-time, stale/tear, thermal, or release acceptance. Those claims
+remain withheld until the exact APK is inspected or measured on the physical
+Quest 3. See `docs/evidence/WORN_VISUAL_RUNTIME_V1_2026-07-21.md`.

@@ -33,14 +33,19 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(lighting, Is.Not.Null);
                 SerializedObject lightingObject = new SerializedObject(lighting);
                 Assert.That(lightingObject.FindProperty("cockpitOcclusionStrength").floatValue,
-                    Is.EqualTo(0.64f).Within(0.0001f));
+                    Is.EqualTo(1.0f).Within(0.0001f));
 
                 HashSet<Material> materials = new HashSet<Material>();
                 int bakedAoMaterials = 0;
+                int shadowCasters = 0;
+                int shadowReceivers = 0;
                 foreach (Renderer renderer in renderers)
                 {
-                    Assert.That(renderer.shadowCastingMode, Is.EqualTo(ShadowCastingMode.Off), renderer.name);
-                    Assert.That(renderer.receiveShadows, Is.False, renderer.name);
+                    Assert.That(renderer.gameObject.layer,
+                        Is.EqualTo(QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
+                            .PhotorealAerialReflectionAuthoring.CockpitShadowLayer), renderer.name);
+                    if (renderer.shadowCastingMode != ShadowCastingMode.Off) shadowCasters++;
+                    if (renderer.receiveShadows) shadowReceivers++;
                     Assert.That(renderer.lightProbeUsage, Is.EqualTo(LightProbeUsage.Off), renderer.name);
                     Assert.That(renderer.reflectionProbeUsage,
                         Is.EqualTo(ReflectionProbeUsage.BlendProbesAndSkybox), renderer.name);
@@ -61,6 +66,8 @@ namespace QuestFlightLab.Tests.EditMode
 
                 Assert.That(materials.Count, Is.InRange(10, 18));
                 Assert.That(bakedAoMaterials, Is.GreaterThanOrEqualTo(3), "Existing baked AO maps must be preserved");
+                Assert.That(shadowCasters, Is.EqualTo(2));
+                Assert.That(shadowReceivers, Is.GreaterThanOrEqualTo(8));
             }
             finally
             {

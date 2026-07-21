@@ -20,8 +20,6 @@ namespace QuestFlight.Editor.Tests
             "Assets/Production/Environment/AerialSurfaceV1/Ground/";
         private const string BuildingPrefabPath =
             "Assets/Production/Environment/AerialSceneryV1/Buildings/KBDU_AerialBuildingsV1.prefab";
-        private const string VegetationPrefabPath =
-            "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetationRoot.prefab";
         private const string SeatProfilePath =
             "Assets/Production/Profiles/ImportedC172PilotSeatProfile.asset";
         private const string AircraftPrefabPath =
@@ -46,22 +44,29 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void ProductUsesBoundedNearGrovesAndFixedWorldTier2Clusters()
+        public void ProductUsesGroundedSemanticGrovesAndContinuousFarCanopy()
         {
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(VegetationPrefabPath);
-            Assert.That(prefab, Is.Not.Null);
-            AerialVegetationBatchRenderer batch =
-                prefab.GetComponentsInChildren<AerialVegetationBatchRenderer>(true).Single();
-            Assert.That(batch.NonEmptyDrawCount, Is.EqualTo(3));
-            Assert.That(batch.FullyInstancedTriangleCount, Is.EqualTo(35540));
-            Assert.That(batch.SharedMaterial, Is.Not.Null);
-            Assert.That(batch.FixedOrientationOnly, Is.True);
-            Assert.That(batch.CameraFacingBehavior, Is.False);
-            Assert.That(batch.LodCrossfadeBehavior, Is.False);
-            Assert.That(prefab.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
-            Assert.That(prefab.GetComponentsInChildren<Transform>(true).Any(item =>
-                item.name == "Tier2_FixedWorldOrientedGroves_500m_4000m"), Is.True);
-            Assert.That(batch.Batches.Single(item => item.Tier == 2).Matrices, Has.Length.EqualTo(42));
+            GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
+            Assert.That(environment, Is.Not.Null);
+            PhotorealAerialSurfaceRoot surface =
+                environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true);
+            Assert.That(surface, Is.Not.Null);
+            Assert.That(surface.canopySurfaceRenderers, Has.Length.EqualTo(4));
+            Assert.That(surface.canopySurfaceRenderers.All(renderer =>
+                renderer != null && renderer.enabled &&
+                renderer.GetComponent<MeshFilter>()?.sharedMesh != null), Is.True);
+            Assert.That(surface.canopySurfaceRenderers.Sum(renderer =>
+                renderer.GetComponent<MeshFilter>().sharedMesh.triangles.Length / 3),
+                Is.EqualTo(52976));
+            Assert.That(surface.canopySurfaceRenderers.Select(renderer => renderer.sharedMaterial)
+                .Distinct().Count(), Is.EqualTo(1));
+            Assert.That(surface.productionCanopySurfaceLayer
+                .GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
+            Assert.That(surface.productionCanopySurfaceLayer
+                .GetComponentsInChildren<AerialVegetationBatchRenderer>(true), Is.Empty,
+                "The product canopy must be serialized semantic geometry, not callback-only draws.");
+            Assert.That(surface.canopySurfaceManifest.text,
+                Does.Contain("semantic_rounded_groves_0_1500m_over_continuous_terrain_canopy"));
         }
 
         [Test]

@@ -115,3 +115,35 @@ On `feature/airport-core-artifact-v4-3-1`, deterministic R0–R11 isolation prov
 The final V4 camera-aware estimator selects one renderer per `LODGroup` and respects the camera mask, frustum, and `forceRenderingOff`. Its per-view results are distinct from the aggregate ProductIntegrity inventory, which intentionally counts inactive A/B content and every serialized LOD. On V4.2 the scopes report 506,254 maximum selected-LOD triangles versus 698,328 serialized aggregate triangles. Neither estimator is physical Quest timing evidence.
 
 The product Credits/About surface must expose the KOG_THORNS CC BY 4.0 attribution and `© OpenStreetMap contributors` with the ODbL URL. A missing or hash-mismatched aircraft asset is an Editor/build failure; the runtime never downloads or reconstructs it.
+
+## Worn Visual Runtime V1
+
+The candidate on `fix/worn-visual-runtime-v1` replaces the former 42 repeated
+Tier-2 grove cues with 946 deterministic semantic groves compiled offline from
+the aligned canopy evidence. Eligible source pixels are clipped against
+building, road, runway, and water ownership masks, grounded to the DTM, and
+represented by three asymmetric height-proportional rounded crowns plus one
+grounded trunk per authored cell. Four fixed native mesh batches contain 52,976
+triangles and use one opaque shared material. There are no camera-facing
+billboards, runtime callbacks, per-tree GameObjects, LOD crossfades, or per-eye
+selection. The terrain canopy map continues the response beyond the bounded
+raised-geometry zone.
+
+The 9,692 accepted OSM footprint shells remain 16 fixed batches and 128,092
+triangles. Offline authoring now emits per-wall vertices, physical metre-scale
+UV coordinates, a stable entrance wall, and semantic residential, commercial,
+industrial, and civic classification. One opaque shared shader derives coherent
+category palettes, floor/module scale, corner margins, entrance-only doors,
+and cubemap-backed window glint without adding a renderer, material, texture,
+transparent pass, or runtime update. These remain inferred context shells, not
+surveyed hero architecture.
+
+The full cabin-glass mesh owns one one-pass static ground/sky reflection
+material visible from the seated view. Cockpit depth is supplied by two opaque
+layer-30 casters and a single `CockpitShadowSun` that renders only layer 30 with
+hard 512-resolution shadows, no cascades, and no runtime construction. The
+main environment sun excludes layer 30, glass casts no shadow, and one redundant
+imported transparent instrument shell is disabled while the authoritative
+instrument cover remains. The architecture therefore preserves one XR Origin,
+one tracked Main Camera, one flight authority, and standalone Android/OpenXR
+ownership while keeping the transparent-slot ceiling unchanged.

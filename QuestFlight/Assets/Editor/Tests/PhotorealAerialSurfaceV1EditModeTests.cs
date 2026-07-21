@@ -131,7 +131,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void BuildingsAreOfflineBatchedAndOrdinaryCanopyIsTerrainMapOnly()
+        public void BuildingsAndRoundedSemanticGrovesAreOfflineBatched()
         {
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
             PhotorealAerialSurfaceRoot root =
@@ -139,13 +139,18 @@ namespace QuestFlight.Editor.Tests
             Renderer[] buildings = root.buildingSurfaceRenderers;
             Renderer[] canopy = root.canopySurfaceRenderers;
             Assert.That(buildings, Has.Length.InRange(1, 16));
-            Assert.That(canopy, Is.Empty,
-                "Ordinary canopy must not deform bare-earth terrain or use raised surface geometry.");
+            Assert.That(canopy, Has.Length.EqualTo(4));
             Assert.That(buildings.SelectMany(item => item.sharedMaterials).Distinct().Count(), Is.EqualTo(1));
             Assert.That(buildings.All(item => item.GetComponent<MeshFilter>().sharedMesh
                     .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color)), Is.True,
                 "Every active context-building batch must carry its per-footprint semantic facade stream.");
-            Assert.That(canopy.SelectMany(item => item.sharedMaterials).Distinct(), Is.Empty);
+            Assert.That(canopy.SelectMany(item => item.sharedMaterials).Distinct().Count(), Is.EqualTo(1));
+            Assert.That(buildings.All(item => item.GetComponent<MeshFilter>().sharedMesh
+                    .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord0)), Is.True,
+                "Building facades require wall-local metre UVs.");
+            Assert.That(canopy.All(item => item.GetComponent<MeshFilter>().sharedMesh
+                    .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color)), Is.True,
+                "Canopy batches require crown/trunk semantic colors.");
             Assert.That(buildings.Concat(canopy).All(item => item.shadowCastingMode ==
                 UnityEngine.Rendering.ShadowCastingMode.Off), Is.True);
             Assert.That(root.productionBuildingSurfaceLayer.GetComponentsInChildren<LODGroup>(true), Is.Empty);
@@ -159,13 +164,13 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root.midBuildingCoveragePercent, Is.GreaterThanOrEqualTo(98f));
             Assert.That(root.maximumBuildingFootprintInflationPercent, Is.LessThanOrEqualTo(5f));
             Assert.That(root.canopySurfaceManifest.text,
-                Does.Contain("terrain_canopy_map_only_outside_hero_radius"));
-            Assert.That(root.canopySurfaceManifest.text, Does.Contain("\"mesh_batch_count\": 0"));
+                Does.Contain("semantic_rounded_groves_0_1500m_over_continuous_terrain_canopy"));
+            Assert.That(root.canopySurfaceManifest.text, Does.Contain("\"mesh_batch_count\": 4"));
             Assert.That(root.canopySurfaceManifest.text,
                 Does.Contain("REJECTED_BLOCK_AND_CLIFF_SILHOUETTES"));
-            Assert.That(root.representedCanopyComponentCount, Is.Zero);
+            Assert.That(root.representedCanopyComponentCount, Is.GreaterThan(0));
             Assert.That(root.representedCanopyAreaPercentOfSource, Is.InRange(90f, 110f));
-            Assert.That(root.medianCanopyHeightAgreementPercent, Is.InRange(85f, 115f));
+            Assert.That(root.medianCanopyHeightAgreementPercent, Is.InRange(100f, 160f));
         }
 
         [Test]
@@ -275,7 +280,7 @@ namespace QuestFlight.Editor.Tests
                 environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true);
             Material[] materials = root.buildingSurfaceRenderers.Concat(root.canopySurfaceRenderers)
                 .SelectMany(renderer => renderer.sharedMaterials).Distinct().ToArray();
-            Assert.That(materials, Has.Length.EqualTo(1));
+            Assert.That(materials, Has.Length.EqualTo(2));
             Assert.That(materials.All(material => material.shader == shader), Is.True);
             Assert.That(materials.All(material => material.renderQueue <= (int)UnityEngine.Rendering.RenderQueue.Geometry),
                 Is.True);
@@ -283,8 +288,10 @@ namespace QuestFlight.Editor.Tests
             string shaderSource = File.ReadAllText(Path.GetFullPath(
                 Path.Combine(Application.dataPath, "..", ShaderPath)));
             Assert.That(shaderSource, Does.Contain("input.semanticData"));
+            Assert.That(shaderSource, Does.Contain("input.wallUv"));
             Assert.That(shaderSource, Does.Contain("ApplyFacadeFeatures"));
             Assert.That(shaderSource, Does.Contain("facadeGlintMask"));
+            Assert.That(shaderSource, Does.Contain("_FacadeReflectionCube"));
             Assert.That(shaderSource, Does.Not.Contain("floor(worldPosition.xz / 96.0)"),
                 "Facade identity must come from the offline semantic footprint, not world-cell randomness.");
         }
@@ -319,15 +326,18 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void CockpitReflectionUsesOneGlazingSurfaceWithoutDuplicateTransparentShell()
+        public void CockpitReflectionUsesTheFullCabinWindowMesh()
         {
             GameObject aircraft = AssetDatabase.LoadAssetAtPath<GameObject>(AircraftPath);
             Renderer[] renderers = aircraft.GetComponentsInChildren<Renderer>(true);
-            Renderer[] duplicateExteriorGlass = renderers.Where(renderer =>
+            Renderer[] exteriorGlass = renderers.Where(renderer =>
                 renderer.name == "Cessna_Exterior_Glass_MAT_0_Glass_MAT_0").ToArray();
-            Assert.That(duplicateExteriorGlass, Has.Length.EqualTo(1));
-            Assert.That(duplicateExteriorGlass[0].enabled, Is.False,
-                "The double-sided authored cockpit glazing replaces the overlapping imported exterior shell.");
+            Assert.That(exteriorGlass, Has.Length.EqualTo(1));
+            Assert.That(exteriorGlass[0].enabled, Is.True);
+            Assert.That(exteriorGlass[0].GetComponent<MeshFilter>().sharedMesh.bounds.size.x,
+                Is.GreaterThan(1f));
+            Assert.That(exteriorGlass[0].GetComponent<MeshFilter>().sharedMesh.bounds.size.z,
+                Is.GreaterThan(2f));
             Assert.That(renderers.Where(renderer => renderer.enabled)
                 .SelectMany(renderer => renderer.sharedMaterials)
                 .Count(material => material != null && material.name == "ProductionCockpitWindowReflection"),
@@ -463,10 +473,11 @@ namespace QuestFlight.Editor.Tests
                 {
                     string[] values = line.Split(new[] { ' ', '\t' },
                         StringSplitOptions.RemoveEmptyEntries);
-                    bool isBuildingSemanticSource = path.Contains(
-                        "ProductionBuildingSurfaceLayer_", StringComparison.Ordinal);
-                    Assert.That(values.Length, Is.EqualTo(isBuildingSemanticSource ? 8 : 4), path);
-                    if (isBuildingSemanticSource)
+                    bool isSemanticSource =
+                        path.Contains("ProductionBuildingSurfaceLayer_", StringComparison.Ordinal) ||
+                        path.Contains("ProductionCanopySurfaceLayer_", StringComparison.Ordinal);
+                    Assert.That(values.Length, Is.EqualTo(isSemanticSource ? 8 : 4), path);
+                    if (isSemanticSource)
                         for (int channel = 4; channel < 8; channel++)
                             Assert.That(float.Parse(values[channel], CultureInfo.InvariantCulture),
                                 Is.InRange(0f, 1f), path);

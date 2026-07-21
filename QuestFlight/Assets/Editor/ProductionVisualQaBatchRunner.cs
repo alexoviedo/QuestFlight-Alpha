@@ -284,9 +284,12 @@ namespace QuestFlightLab.Editor
             if (cockpitLighting == null)
                 throw new InvalidOperationException("Authored production aircraft lighting controller is missing.");
             ProductionAircraftLightingReport lightingReport = cockpitLighting.ApplyAuthoredLightingNow();
-            if (lightingReport == null || lightingReport.remainingRealtimeShadowCasterCount != 0 ||
-                lightingReport.remainingRealtimeShadowReceiverCount != 0)
-                throw new InvalidOperationException("Stable no-realtime-shadow cockpit lighting policy did not apply.");
+            if (lightingReport == null || lightingReport.boundedCockpitShadowCasterCount != 2 ||
+                lightingReport.boundedCockpitShadowReceiverCount < 8 ||
+                lightingReport.remainingRealtimeShadowCasterCount != 2 ||
+                lightingReport.remainingRealtimeShadowReceiverCount !=
+                lightingReport.boundedCockpitShadowReceiverCount)
+                throw new InvalidOperationException("Bounded cockpit-only shadow policy did not apply.");
 
             foreach (Camera existing in scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Camera>(true)))
                 existing.enabled = false;
@@ -556,12 +559,13 @@ namespace QuestFlightLab.Editor
             Renderer[] canopy = surface.canopySurfaceRenderers.Where(item => item != null).ToArray();
             Renderer[] authoredCanopyRenderers = surface.productionCanopySurfaceLayer
                 .GetComponentsInChildren<Renderer>(true);
-            if (canopy.Length != 0 || authoredCanopyRenderers.Length != 0)
-            {
+            if (canopy.Length != 4 || authoredCanopyRenderers.Length != 4 ||
+                canopy.Any(renderer => !renderer.enabled ||
+                                       renderer.GetComponent<MeshFilter>()?.sharedMesh == null) ||
+                canopy.Select(renderer => renderer.sharedMaterial).Distinct().Count() != 1)
                 throw new InvalidOperationException(
-                    "Photoreal Aerial Surface V1 ordinary canopy must be terrain-map-only; " +
-                    $"contract={canopy.Length}, hierarchy={authoredCanopyRenderers.Length} renderers.");
-            }
+                    "Photoreal Aerial Surface V1 must expose four enabled, one-material semantic grove " +
+                    $"batches; contract={canopy.Length}, hierarchy={authoredCanopyRenderers.Length}.");
             Vector3 center = context.runwayMidpoint;
 
             Vector3 leftLow = center - context.runwayRight * 520f - context.runwayForward * 260f + Vector3.up * 115f;
@@ -633,13 +637,10 @@ namespace QuestFlightLab.Editor
             CanopyMapEvidence canopyEvidence = BuildCanopyMapEvidence(terrain, context.environment, center);
             CanopyMapSample canopy250 = canopyEvidence.SelectAtRadius(250f);
             CanopyMapSample canopyTopSample = canopyEvidence.SelectDensest(250f, 1500f);
-            AerialVegetationBatchRenderer vegetationBatch = context.environment
-                .GetComponentsInChildren<AerialVegetationBatchRenderer>(true).Single();
-            Matrix4x4[] tier2Groves = vegetationBatch.Batches.Single(item => item.Tier == 2).Matrices;
-            Vector3 grove500 = SelectGroveAtRadius(tier2Groves, center, 500f);
-            Vector3 grove1000 = SelectGroveAtRadius(tier2Groves, center, 1000f);
-            Vector3 grovePattern = SelectGroveAtRadius(tier2Groves, center, 1400f);
-            Vector3 groveTop = SelectGroveAtRadius(tier2Groves, center, 900f);
+            Vector3 grove500 = RepresentativeSurfacePointAtRadius(canopy, center, 500f);
+            Vector3 grove1000 = RepresentativeSurfacePointAtRadius(canopy, center, 1000f);
+            Vector3 grovePattern = RepresentativeSurfacePointAtRadius(canopy, center, 1400f);
+            Vector3 groveTop = RepresentativeSurfacePointAtRadius(canopy, center, 900f);
 
             CaptureCanopyMapDistanceShot(context, report, outputDir, width, height, canopy250, center,
                 250f, "pasv1_13_canopy_250m", "Terrain-map canopy at 250 m", "photoreal_canopy");
@@ -710,7 +711,7 @@ namespace QuestFlightLab.Editor
                 context.originalAircraftRotation * Quaternion.Euler(9f, 0f, 0f), 56f,
                 ViewProfile.Cockpit));
             Capture(context, report, outputDir, width, height, new ShotDefinition(
-                "pasv1_24_cockpit_ao_only", "Stable cockpit AO-only profile",
+                "pasv1_24_cockpit_ao_only", "Stable cockpit AO and bounded sun-shadow profile",
                 "photoreal_cockpit", pilotEye,
                 context.originalAircraftRotation * Quaternion.Euler(6f, 0f, 0f), 62f,
                 ViewProfile.Cockpit));
@@ -728,16 +729,11 @@ namespace QuestFlightLab.Editor
                 "photoreal_reflection", externalReflection, LookAt(externalReflection, aircraftTarget), 52f,
                 ViewProfile.External));
 
-            PhotorealAerialReflectionAuthoring.WithCockpitShadowCandidateForDevelopment(
-                context.scene,
-                () =>
-                {
-                Capture(context, report, outputDir, width, height, new ShotDefinition(
-                    "pasv1_20_cockpit_shadow_candidate", "Development-selectable bounded cockpit shadow",
-                    "photoreal_cockpit", pilotEye,
-                    context.originalAircraftRotation * Quaternion.Euler(6f, 0f, 0f), 62f,
-                    ViewProfile.Cockpit));
-                });
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_20_cockpit_shadow_candidate", "Serialized bounded cockpit sun shadow",
+                "photoreal_cockpit", pilotEye,
+                context.originalAircraftRotation * Quaternion.Euler(6f, 0f, 0f), 62f,
+                ViewProfile.Cockpit));
         }
 
         private static void CaptureSemanticDistanceShot(
@@ -1675,6 +1671,7 @@ namespace QuestFlightLab.Editor
             private readonly bool hasMinorWaterStrength;
             private readonly float v4MinorWaterStrength;
             private readonly Light globalSun;
+            private readonly Light cockpitShadowSun;
             private readonly Quaternion v4SunRotation;
             private readonly Color v4SunColor;
             private readonly float v4SunIntensity;
@@ -1699,10 +1696,14 @@ namespace QuestFlightLab.Editor
                     .Where(item => item != null && item.gameObject.scene.IsValid() &&
                                    item.type == LightType.Directional && item != root.benchmarkSun)
                     .ToArray();
-                if (sceneSuns.Length != 1)
+                globalSun = sceneSuns.SingleOrDefault(item => string.Equals(item.name,
+                    PhotorealAerialReflectionAuthoring.MainSunName, StringComparison.Ordinal));
+                cockpitShadowSun = sceneSuns.SingleOrDefault(item => string.Equals(item.name,
+                    PhotorealAerialReflectionAuthoring.CockpitShadowSunName, StringComparison.Ordinal));
+                if (sceneSuns.Length != 2 || globalSun == null || cockpitShadowSun == null)
                     throw new InvalidOperationException(
-                        $"Expected one global directional sun for V4 A/B, found {sceneSuns.Length}.");
-                globalSun = sceneSuns[0];
+                        "Expected the authored global and cockpit-only directional suns for V4 A/B; " +
+                        $"found {sceneSuns.Length}.");
                 v4SunRotation = globalSun.transform.rotation;
                 v4SunColor = globalSun.color;
                 v4SunIntensity = globalSun.intensity;
@@ -1727,6 +1728,9 @@ namespace QuestFlightLab.Editor
                 globalSun.transform.rotation = root.v2SunRotation;
                 globalSun.color = root.v2SunColor;
                 globalSun.intensity = root.v2SunIntensity;
+                cockpitShadowSun.transform.rotation = root.v2SunRotation;
+                cockpitShadowSun.color = root.v2SunColor;
+                cockpitShadowSun.intensity = root.v2SunIntensity;
             }
 
             public void RestoreV4()
@@ -1741,6 +1745,9 @@ namespace QuestFlightLab.Editor
                 globalSun.transform.rotation = v4SunRotation;
                 globalSun.color = v4SunColor;
                 globalSun.intensity = v4SunIntensity;
+                cockpitShadowSun.transform.rotation = v4SunRotation;
+                cockpitShadowSun.color = v4SunColor;
+                cockpitShadowSun.intensity = v4SunIntensity;
             }
 
             private void ApplyContextMeshes(Mesh[] meshes)
