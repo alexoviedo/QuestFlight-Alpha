@@ -239,6 +239,6 @@ The bounded canopy/facade/cockpit pass closes its machine gate:
 - production Visual QA: PASS 81/81 with classification `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; affected full-resolution frames were inspected;
 - static Quest planning: PASS at 54 draws, 624,086 selected triangles, 774,139 serialized triangles, 26 visible materials, 211,849,528 estimated texture bytes, three transparent slots, 13 shaders/18 variants, and 4x MSAA;
 - Meta XR live Quest-3-profile stereo/HMD/both Touch: PASS; aggregate `BLOCKED_MISSING_RECORDED_REPLAYS` for ten absent genuine `.vrs` sessions;
-- Android release-style build: PASS, 133,529,570-byte APK, SHA-256 `643f377140eb641c6ef921047bd7c044d61e672e91e9a67c4bd6232950d961e6`.
+- Android release-style build: PASS, 133,529,570-byte APK, SHA-256 `584821b6022a5e583b971d80df04579c23f450989b125acc0ef2eb0011cc7e6f`.
 
 The earlier worn 8/10 smoke used a different 133,992,887-byte APK with SHA-256 `0d31c39f113c3ed5edf286259f35f25cf18852b0129445621b79bf32999851d9`. It is retained as direction-setting evidence only; no worn score, comfort result, or physical Quest timing is claimed for the final binary. See `docs/evidence/QUEST_VISUAL_FIDELITY_V1_2026-07-20.md`.

@@ -41,7 +41,7 @@ This adds no realtime reflection probe or cockpit shadow map. Window reflection 
 - Production Visual QA: **81/81 PASS**, classification `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; every affected full-resolution frame was inspected.
 - Static Quest planning gate: **PASS** at 54 maximum selected draws, 624,086 maximum visible triangles, 774,139 serialized scene triangles, 26 visible materials, 211,849,528 estimated texture bytes (202.04 MiB), three transparent slots, 13 shaders / 18 keyword combinations, and 4x MSAA.
 - Meta XR Simulator: live Quest-3-profile stereo, HMD, and both Touch controllers **PASS** with nonblank, scene-consistent eyes; aggregate remains `BLOCKED_MISSING_RECORDED_REPLAYS` because all ten genuine `.vrs` sessions are absent.
-- Android release-style build: **PASS**; APK is 133,529,570 bytes, SHA-256 `643f377140eb641c6ef921047bd7c044d61e672e91e9a67c4bd6232950d961e6`.
+- Android release-style build: **PASS**; APK is 133,529,570 bytes, SHA-256 `584821b6022a5e583b971d80df04579c23f450989b125acc0ef2eb0011cc7e6f`.
 
 Meta XR Simulator timing is not Quest performance. The static report is planning evidence, not physical frame, thermal, stale/tear, allocation, or comfort acceptance.
 
