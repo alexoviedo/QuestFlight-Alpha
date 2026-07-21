@@ -46,22 +46,22 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void ProductUsesBoundedTwoDrawNearGrovesAndMapOnlyTier2()
+        public void ProductUsesBoundedNearGrovesAndFixedWorldTier2Clusters()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(VegetationPrefabPath);
             Assert.That(prefab, Is.Not.Null);
             AerialVegetationBatchRenderer batch =
                 prefab.GetComponentsInChildren<AerialVegetationBatchRenderer>(true).Single();
-            Assert.That(batch.NonEmptyDrawCount, Is.EqualTo(2));
-            Assert.That(batch.FullyInstancedTriangleCount, Is.EqualTo(12860));
+            Assert.That(batch.NonEmptyDrawCount, Is.EqualTo(3));
+            Assert.That(batch.FullyInstancedTriangleCount, Is.EqualTo(35540));
             Assert.That(batch.SharedMaterial, Is.Not.Null);
             Assert.That(batch.FixedOrientationOnly, Is.True);
             Assert.That(batch.CameraFacingBehavior, Is.False);
             Assert.That(batch.LodCrossfadeBehavior, Is.False);
             Assert.That(prefab.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
             Assert.That(prefab.GetComponentsInChildren<Transform>(true).Any(item =>
-                item.name == "Tier2_OrthophotoLidarCanopyTerrainShading_500m_4000m"), Is.True);
-            Assert.That(batch.Batches.Any(item => item.Tier == 2), Is.False);
+                item.name == "Tier2_FixedWorldOrientedGroves_500m_4000m"), Is.True);
+            Assert.That(batch.Batches.Single(item => item.Tier == 2).Matrices, Has.Length.EqualTo(42));
         }
 
         [Test]

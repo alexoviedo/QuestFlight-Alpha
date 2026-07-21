@@ -29,6 +29,8 @@
     "minimum_tree_spacing_m": 12.0,
     "grove_cluster_cell_m": 96.0,
     "grove_cluster_max_radius_m": 24.0,
+    "grove_near_priority_radius_m": 1500.0,
+    "grove_near_priority_minimum_clusters": 26,
     "grove_source_footprint_width_m": 34.0,
     "grove_source_footprint_depth_m": 30.0,
     "canonical_heights_m": {
@@ -49,7 +51,7 @@
       2048.0
     ],
     "tier0_tier1_footprint": "conservative oriented source-mesh horizontal AABB",
-    "tier2_footprint": "none; Tier 2 is terrain canopy shading and owns no geometry",
+    "tier2_footprint": "none; fixed Tier 2 grove clusters are additive visual volume and never carve the canopy map",
     "eligible_canopy_gate": "same DTM/surface-feature HAG, density, and building exclusion used by distribution",
     "zero_padding_m": 16.0,
     "smoothstep_feather_m": 64.0,
@@ -92,13 +94,16 @@
     },
     {
       "tier": 2,
-      "label": "mid_orthophoto_lidar_canopy_terrain_shading",
+      "label": "mid_fixed_world_oriented_grove_clusters_over_canopy_map",
       "minimum_radius_m": 500.0,
       "maximum_radius_m": 4000.0,
-      "maximum_instances": 0,
-      "source_objects": [],
-      "ownership_mode": "orthophoto plus existing lidar canopy normal and occlusion terrain shading",
-      "geometry_draws": 0
+      "maximum_instances": 42,
+      "source_objects": [
+        "AerialGroveCluster_T2"
+      ],
+      "ownership_mode": "fixed world-oriented alpha-clip grove clusters over orthophoto plus lidar canopy normal and occlusion terrain shading; terrain map ownership is retained beneath geometry",
+      "geometry_draws": 1,
+      "carves_handoff_mask": false
     },
     {
       "tier": 3,
@@ -112,11 +117,11 @@
   ],
   "runtime_budget": {
     "shared_materials": 1,
-    "maximum_simultaneous_draws": 2,
-    "maximum_visible_triangles": 15184,
-    "authored_geometry_worst_case_triangles": 15176,
-    "tier2_procedural_triangles_per_instance": 0,
-    "maximum_instances_per_draw": 1,
+    "maximum_simultaneous_draws": 3,
+    "maximum_visible_triangles": 36860,
+    "authored_geometry_worst_case_triangles": 35540,
+    "tier2_source_triangles_per_instance": 540,
+    "maximum_instances_per_draw": 42,
     "vegetation_texture_bytes_excluding_shared_lidar_maps": 12233384,
     "texture_memory_breakdown_uncompressed_full_mips": {
       "color_alpha_atlas_rgba8": 5592404,
@@ -127,6 +132,7 @@
     "ordinary_vertical_billboards": 0,
     "one_gameobject_per_tree": false,
     "steady_state_environment_allocations": 0,
-    "editor_baked_meshes": 2
+    "editor_baked_meshes": 2,
+    "instanced_source_mesh_batches": 1
   }
 }

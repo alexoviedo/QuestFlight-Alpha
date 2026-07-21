@@ -256,11 +256,20 @@ def build_mask(
                     "half_extent_x_m": round(half_x, 4),
                     "half_extent_z_m": round(half_z, 4),
                 })
+            elif tier == 2:
+                # Tier 2 is deliberately additive visual volume.  The lidar
+                # canopy map remains visible beneath every fixed grove cluster,
+                # so these instances never participate in ownership rasterization.
+                if str(instance.get("source_object")) != "AerialGroveCluster_T2":
+                    raise ValueError(f"Unexpected Tier2 source object in {stable_id}")
             else:
                 raise ValueError(f"Unexpected geometry batch tier {tier}")
 
-    if batch_counts != {0: 3, 1: 19} or len(records) != 22:
-        raise ValueError(f"Ownership mask requires exact Tier0/Tier1 3/19 placement counts, got {batch_counts}")
+    if batch_counts != {0: 3, 1: 19, 2: 42} or len(records) != 22:
+        raise ValueError(
+            "Ownership mask requires exact Tier0/Tier1/Tier2 3/19/42 placement counts "
+            f"while rasterizing only Tier0/Tier1, got {batch_counts}"
+        )
     return mask, records
 
 
@@ -410,7 +419,7 @@ def main() -> int:
             "smoothstep_feather_m": args.feather_m,
             "combination": "minimum quantized handoff value across all authored footprints",
             "tier0_tier1_footprint": "conservative oriented rectangle from the source mesh horizontal AABB and authored transform",
-            "tier2_footprint": "none; Tier2 has zero geometry and therefore does not carve the canopy map",
+            "tier2_footprint": "none; 42 additive fixed grove clusters retain terrain-canopy-map ownership beneath them",
             "scalar_handoff_uniform": None,
             "tier3_spatial_domain": "Tier2/Tier3 lidar canopy terrain shading inside the validated lidar square",
             "eligible_canopy_gate": {

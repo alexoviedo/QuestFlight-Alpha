@@ -41,9 +41,9 @@ struct QuestFlightAerialCanopySample
 
 inline float2 QuestFlightAerialCanopyUv(float2 localXZ)
 {
-    // The product world and orthophoto use the KBDU-local AEQD frame. The compact
-    // lidar maps retain their source UTM13N grid. Convert before sampling so canopy
-    // relief stays on the photographed trees rather than drifting several metres.
+    // Product world/orthophoto positions use KBDU-local AEQD while the compact
+    // lidar textures retain their source UTM13N grid. Convert before sampling
+    // so the canopy response stays on the photographed trees.
     float2 sourceXZ = float2(
         dot(_AerialCanopyProductToSourceRow0.xy, localXZ) + _AerialCanopyProductToSourceRow0.z,
         dot(_AerialCanopyProductToSourceRow1.xy, localXZ) + _AerialCanopyProductToSourceRow1.z);

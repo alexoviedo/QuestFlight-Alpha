@@ -26,10 +26,12 @@ EXPECTED_TRIANGLES = {
     "AerialTree_SparseConifer_T1": 508,
     "AerialShrub_Regional_T0": 1438,
     "AerialShrub_Regional_T1": 524,
+    "AerialGroveCluster_T2": 540,
 }
 EXPECTED_BATCHES = {
     0: ("tier0_editor_baked", "heterogeneous_fixed_orientation_editor_bake", 3),
     1: ("tier1_editor_baked", "heterogeneous_fixed_orientation_editor_bake", 19),
+    2: ("tier2_instanced_fixed_groves", "fixed_world_oriented_source_mesh_instancing", 42),
 }
 
 
@@ -155,23 +157,34 @@ def validate(repo_root: Path) -> dict[str, Any]:
                 f"Distribution input hash mismatch for {semantic}")
 
     batches = sorted(distribution["batches"], key=lambda record: int(record["tier"]))
-    require(distribution.get("batch_count") == 2 and len(batches) == 2, "Distribution must contain two near batches")
-    require(distribution.get("instance_count") == 22, "Distribution must contain 22 Tier0/Tier1 placements")
+    require(distribution.get("batch_count") == 3 and len(batches) == 3,
+            "Distribution must contain two near batches and one Tier2 grove batch")
+    require(distribution.get("instance_count") == 64,
+            "Distribution must contain 22 Tier0/Tier1 placements and 42 Tier2 groves")
     require(float(config["tiers"][2]["minimum_radius_m"]) == 500.0,
             "Tier2 canopy must begin at the pilot-visible 500 m boundary")
-    require(int(config["tiers"][2]["maximum_instances"]) == 0 and
-            config["tiers"][2]["source_objects"] == [] and
-            int(config["tiers"][2]["geometry_draws"]) == 0,
-            "Tier2 must be a zero-geometry terrain-shading representation")
-    require(int(distribution["statistics"]["tier2_selected"]) == 0 and
-            int(distribution["statistics"]["tier2_geometry_draws"]) == 0,
-            "Distribution retained Tier2 geometry")
-    require(distribution["runtime_policy"]["tier2_geometry_instances"] == 0 and
-            distribution["runtime_policy"]["tier2_geometry_draws"] == 0,
-            "Tier2 runtime policy retained geometry")
+    require(int(config["tiers"][2]["maximum_instances"]) == 42 and
+            config["tiers"][2]["source_objects"] == ["AerialGroveCluster_T2"] and
+            int(config["tiers"][2]["geometry_draws"]) == 1 and
+            config["tiers"][2]["carves_handoff_mask"] is False,
+            "Tier2 must be exactly 42 fixed grove placements in one additive draw")
+    require(int(distribution["statistics"]["tier2_selected"]) == 42 and
+            int(distribution["statistics"]["tier2_geometry_draws"]) == 1,
+            "Distribution Tier2 grove count/draw contract mismatch")
+    tier2_instances = next(batch for batch in batches if int(batch["tier"]) == 2)["instances"]
+    near_priority_count = sum(
+        (float(instance["x"]) ** 2 + float(instance["z"]) ** 2) ** 0.5 < 1500.0
+        for instance in tier2_instances
+    )
+    require(near_priority_count >= 26,
+            "Tier2 distribution does not reserve 26 grove clusters inside the pilot-visible 1.5 km band")
+    require(distribution["runtime_policy"]["tier2_geometry_instances"] == 42 and
+            distribution["runtime_policy"]["tier2_geometry_draws"] == 1 and
+            distribution["runtime_policy"]["tier2_geometry_carves_handoff"] is False,
+            "Tier2 runtime policy must retain map ownership beneath one grove draw")
     stable_ids: set[str] = set()
     source_triangle_count = 0
-    tier_actual_triangles = {0: 0, 1: 0}
+    tier_actual_triangles = {0: 0, 1: 0, 2: 0}
     configured_sources = {
         int(record["tier"]): set(record["source_objects"])
         for record in config["tiers"] if int(record["tier"]) < 3
@@ -192,10 +205,18 @@ def validate(repo_root: Path) -> dict[str, Any]:
             require(all(float(instance[key]) > 0.0 for key in ("scale_x", "scale_y", "scale_z")),
                     f"Non-positive placement scale in {stable_id}")
             runtime_triangles = EXPECTED_TRIANGLES[source]
+            if tier == 2:
+                require(0.0 < float(instance["footprint_radius_major_m"]) <= 24.0,
+                        f"Tier2 major radius is not bounded in {stable_id}")
+                require(0.0 < float(instance["footprint_radius_minor_m"]) <= 24.0,
+                        f"Tier2 minor radius is not bounded in {stable_id}")
+                require(float(instance["mean_canopy_hag_m"]) > 0.0,
+                        f"Tier2 canopy height is invalid in {stable_id}")
             source_triangle_count += runtime_triangles
             tier_actual_triangles[tier] += runtime_triangles
 
-    require(distribution["runtime_policy"]["runtime_batches_after_editor_bake"] == 2,
+    require(distribution["runtime_policy"]["runtime_batches_after_editor_bake"] == 3 and
+            distribution["runtime_policy"]["source_draws_maximum"] == 3,
             "Runtime batch count policy mismatch")
     require(distribution["runtime_policy"]["tier3_final_weight"].startswith("R8 eligible-canopy"),
             "Distribution does not name the final R8 Tier3 weight")
@@ -227,12 +248,9 @@ def validate(repo_root: Path) -> dict[str, Any]:
     require(geometry["source_blend_sha256"] == sha256(blend_path), "Blend hash mismatch")
     require(geometry["atlas_sha256"] == sha256(atlas_path), "Geometry atlas hash mismatch")
     require(geometry["atlas_report_sha256"] == sha256(atlas_report_path), "Geometry atlas-report hash mismatch")
-    worst_case = (
-        3 * max(EXPECTED_TRIANGLES[name] for name in configured_sources[0])
-        + 19 * max(EXPECTED_TRIANGLES[name] for name in configured_sources[1])
-    )
-    require(worst_case == 15176 and worst_case <= 15184, "Worst-case vegetation triangle budget mismatch")
-    require(source_triangle_count <= worst_case, "Authored distribution exceeds worst-case triangle evidence")
+    deterministic_authored_total = 35540
+    require(source_triangle_count == deterministic_authored_total and source_triangle_count <= 36860,
+            "Deterministic authored vegetation triangle budget mismatch")
 
     require(atlas_report.get("schema") == "questflight.aerial-scenery-v1.vegetation-atlas.v1",
             "Atlas report schema mismatch")
@@ -291,7 +309,7 @@ def validate(repo_root: Path) -> dict[str, Any]:
             all(int(record["tier"]) in (0, 1) for record in expected_footprints),
             "Handoff must carve only the 22 Tier0/Tier1 geometry footprints")
     require(handoff_report["statistics"]["tier_counts"] == {"0": 3, "1": 19, "2": 0},
-            "Handoff report retained Tier2 geometry ownership")
+            "Handoff report must rasterize only Tier0/Tier1; Tier2 is additive map-owned geometry")
 
     shader = shader_path.read_text(encoding="utf-8")
     for required in (
@@ -302,10 +320,18 @@ def validate(repo_root: Path) -> dict[str, Any]:
     require("Blend SrcAlpha" not in shader and "billboard" not in shader.lower(),
             "Vegetation shader contains prohibited broad blend or billboard behavior")
     include = include_path.read_text(encoding="utf-8")
+    include_template = (tool_root / "templates" / "AerialCanopyMap.cginc").read_text(encoding="utf-8")
+    require(include == include_template,
+            "Generated canopy include differs from its deterministic source template")
     for required in (
         "sampler2D _AerialCanopyHandoffMask", "sample.coverage = geometryToMapHandoff",
         "half insideBounds = step(0.0, uv.x)", "float2 sampledUv = saturate(uv)",
-        "sampler2D _AerialCanopyNormalOcclusion", "sample.canopyNormalLocal = normalize(canopyNormalAndOcclusion.rgb",
+        "sampler2D _AerialCanopyNormalOcclusion", "_AerialCanopyProductToSourceRow0",
+        "_AerialCanopyProductToSourceRow1", "_AerialCanopySourceToProductRow0",
+        "_AerialCanopySourceToProductRow1",
+        "dot(_AerialCanopyProductToSourceRow0.xy, localXZ)",
+        "dot(_AerialCanopySourceToProductRow0.xy, sourceNormal.xz)",
+        "sample.canopyNormalLocal = normalize(half3(productNormalXZ.x, sourceNormal.y, productNormalXZ.y))",
     ):
         require(required in include, f"Tier3 include is missing {required}")
     require("_AerialCanopyMapHandoffWeight" not in include,
@@ -322,16 +348,15 @@ def validate(repo_root: Path) -> dict[str, Any]:
     editor = editor_path.read_text(encoding="utf-8")
     for required in (
         "AerialVegetation_AtlasCutout.mat", "BuildCombinedTierMesh",
-        "ExpectedDrawCount = 2", "ExpectedSourcePlacementCount = 22", FROZEN_LIDAR_SHA256,
-        "Tier2_OrthophotoLidarCanopyTerrainShading_500m_4000m",
+        "ExpectedDrawCount = 3", "ExpectedSourcePlacementCount = 64", FROZEN_LIDAR_SHA256,
+        "AerialGroveCluster_T2", "Tier2_FixedWorldOrientedGroves_500m_4000m",
         "Tier3_OrthophotoLidarCanopyTerrainShading_Far",
     ):
         require(required in editor, f"Editor authoring entry point is missing {required}")
-    for prohibited in (
-        "BuildUpperCanopyTierMesh", "AddUpperCanopyCrownLobe", "Tier2CrownLobes",
-        "Tier2TrianglesPerPlacement", "AerialVegetation_Tier2_Combined.asset",
-    ):
-        require(prohibited not in editor, f"Rejected Tier2 geometry authoring remains: {prohibited}")
+    for prohibited in ("BuildUpperCanopyTierMesh", "AddUpperCanopyCrownLobe", "Tier2CrownLobes"):
+        require(prohibited not in editor, f"Rejected procedural Tier2 geometry authoring remains: {prohibited}")
+    require("AerialVegetation_Tier2_Combined.asset" not in editor,
+            "Tier2 must remain one instanced source-mesh draw, not an editor-combined mesh")
     require("ProductionEnvironmentRoot.prefab" not in editor and "LoadScene" not in editor,
             "Vegetation authoring entry point performs unauthorized product-scene integration")
 
@@ -354,7 +379,7 @@ def validate(repo_root: Path) -> dict[str, Any]:
     require(contract.get("schema") == "questflight.aerial-scenery-v1.vegetation-contract.v1",
             "Vegetation contract schema mismatch")
     require(contract["rendering_policy"]["shared_materials"] == 1 and
-            contract["rendering_policy"]["maximum_draws"] == 2 and
+            contract["rendering_policy"]["maximum_draws"] == 3 and
             contract["rendering_policy"]["alpha_blending"] is False and
             contract["rendering_policy"]["camera_facing_geometry"] is False,
             "Vegetation contract rendering policy mismatch")
@@ -362,27 +387,28 @@ def validate(repo_root: Path) -> dict[str, Any]:
             contract["representations"][3]["scalar_handoff_uniform"] is None,
             "Vegetation contract Tier3 handoff mismatch")
     require(contract["representations"][2]["range_m"] == [500.0, 4000.0] and
-            contract["representations"][2]["geometry_instances"] == 0 and
-            contract["representations"][2]["geometry_draws"] == 0 and
-            contract["representations"][2]["geometry_triangles"] == 0 and
-            "lidar_canopy_normal_occlusion" in contract["representations"][2]["mode"],
-            "Vegetation contract Tier2 map-only representation mismatch")
+            contract["representations"][2]["source_objects"] == ["AerialGroveCluster_T2"] and
+            contract["representations"][2]["geometry_instances"] == 42 and
+            contract["representations"][2]["geometry_draws"] == 1 and
+            contract["representations"][2]["geometry_triangles"] == 22680 and
+            contract["representations"][2]["carves_canopy_map_handoff"] is False and
+            contract["representations"][2]["terrain_map_retained_beneath_geometry"] is True,
+            "Vegetation contract Tier2 additive grove representation mismatch")
     require(contract["legacy_renderer_roots_to_disable_during_authored_integration"] == expected_legacy_roots(),
             "Legacy vegetation renderer inventory mismatch")
 
     prefab = prefab_path.read_text(encoding="utf-8")
     for required in (
-        "authoredSourcePlacementCount: 22", "authoredDrawCount: 2",
+        "authoredSourcePlacementCount: 64", "authoredDrawCount: 3",
         f"authoredFullyInstancedTriangleCount: {source_triangle_count}", "authoredMaterialCount: 1",
         "fixedOrientationOnly: 1", "cameraFacingBehavior: 0", "lodCrossfadeBehavior: 0",
         "Tier0_EditorBakedTrees_0m_500m", "Tier1_EditorBakedTrees_500m_1500m",
-        "Tier2_OrthophotoLidarCanopyTerrainShading_500m_4000m",
+        "Tier2_FixedWorldOrientedGroves_500m_4000m",
         "Tier3_OrthophotoLidarCanopyTerrainShading_Far",
     ):
         require(required in prefab, f"Generated vegetation prefab is missing {required}")
-    require("tier2_editor_baked_fixed_groves" not in prefab and
-            "AerialVegetation_Tier2_Combined" not in prefab,
-            "Generated vegetation prefab retains rejected Tier2 geometry")
+    require("AerialVegetation_Tier2_Combined" not in prefab,
+            "Generated vegetation prefab must instance the Tier2 source mesh rather than retain a combined mesh")
 
     require(source_manifest.get("schema") == "questflight.aerial-scenery-v1.vegetation-source-manifest.v1",
             "Source manifest schema mismatch")
@@ -448,16 +474,16 @@ def validate(repo_root: Path) -> dict[str, Any]:
         "surface_atlas_sha256": sha256(surface_path),
         "handoff_mask_sha256": sha256(handoff_path),
         "handoff_mask_runtime_bytes": 1048576,
-        "placement_counts": {str(tier): EXPECTED_BATCHES[tier][2] for tier in range(2)},
-        "source_placement_count": 22,
-        "non_empty_draw_count": 2,
+        "placement_counts": {str(tier): EXPECTED_BATCHES[tier][2] for tier in range(3)},
+        "source_placement_count": 64,
+        "non_empty_draw_count": 3,
         "fully_instanced_triangle_count": source_triangle_count,
-        "triangle_ceiling": 15184,
-        "worst_case_triangle_contract": worst_case,
+        "triangle_ceiling": 36860,
+        "deterministic_authored_triangle_contract": deterministic_authored_total,
         "material_count": 1,
-        "tier2_geometry_instances": 0,
-        "tier2_geometry_draws": 0,
-        "tier2_geometry_triangles": 0,
+        "tier2_geometry_instances": 42,
+        "tier2_geometry_draws": 1,
+        "tier2_geometry_triangles": 22680,
         "tier2_terrain_shading_owned_pixels": int(
             distribution["statistics"]["tier2_terrain_shading_owned_pixels"]
         ),

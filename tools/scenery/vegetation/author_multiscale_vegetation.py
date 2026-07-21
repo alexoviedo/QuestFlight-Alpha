@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Author deterministic, project-owned multiscale vegetation source meshes.
 
-Run with Blender 5.x in background mode. The five regional archetypes and a
-reference ten-tree grove use project-authored atlas-cutout foliage on fixed 3D
-card clusters with visible tapered wood. Tier 0/1 cottonwood, willow, and
-deciduous sources are compact multi-tree micro-groves; Unity compiles three
-overlapping, alpha-clipped upper-crown lobes per Tier 2 cell. No representation
-creates one GameObject or draw call per tree.
+Run with Blender 5.x in background mode. The five regional archetypes and the
+exported ten-tree Tier 2 grove use project-authored atlas-cutout foliage on
+fixed 3D card clusters with visible tapered wood. Tier 0/1 cottonwood, willow,
+and deciduous sources are compact multi-tree micro-groves; the Tier 2 source is
+baked into fixed, world-oriented grove instances. No representation creates one
+GameObject or draw call per tree.
 """
 
 from __future__ import annotations
@@ -34,6 +34,11 @@ LOGICAL_REPORT = (
     "AerialVegetation_GeometryReport.json"
 )
 GUID_NAMESPACE = "questflight:aerial-scenery-v1:vegetation:"
+TIER2_GROVE_OBJECT_NAME = "AerialGroveCluster_T2"
+TIER2_GROVE_INSTANCE_COUNT = 42
+TIER2_GROVE_EXPECTED_TRIANGLES = 540
+ACCEPTED_NEAR_RUNTIME_TRIANGLES = 12860
+MAXIMUM_TOTAL_VEGETATION_TRIANGLES = 36860
 
 
 def sha256(path: Path) -> str:
@@ -673,24 +678,33 @@ def grove_builder() -> MeshBuilder:
     for index, (x, y, height, crown_radius, phase, atlas_cell) in enumerate(trees):
         color = varied_color(colors[atlas_cell], index, 5.17)
         base = Vector((x, y, 0.0))
-        trunk_top = base + Vector((math.sin(phase) * 0.18, math.cos(phase) * 0.16, height * 0.68))
-        builder.cylinder(base, trunk_top, 0.24, 0.105, 3, TRUNK if atlas_cell != "sparse_conifer" else CONIFER_TRUNK)
-        centers = [
-            base + Vector((math.cos(phase) * crown_radius * 0.32,
-                           math.sin(phase) * crown_radius * 0.32, height * 0.80)),
-            base + Vector((math.cos(phase + 2.1) * crown_radius * 0.34,
-                           math.sin(phase + 2.1) * crown_radius * 0.34, height * 0.76)),
-            base + Vector((math.cos(phase + 4.2) * crown_radius * 0.22,
-                           math.sin(phase + 4.2) * crown_radius * 0.22, height * 0.94)),
-        ]
-        for branch_index, target in enumerate(centers[:2]):
-            branch_start = base + Vector((0.0, 0.0, height * (0.46 + branch_index * 0.08)))
-            builder.cylinder(branch_start, target, 0.095, 0.035, 3,
-                             TRUNK if atlas_cell != "sparse_conifer" else CONIFER_TRUNK)
+        # Tier 2 begins beyond the range where branch silhouettes add useful
+        # information.  Spend the exact same triangle budget on a compact,
+        # seven-lobe crown instead, leaving only a short grounding trunk.  The
+        # overlapping fixed cards create useful top/oblique volume without a
+        # camera-facing billboard or the long branch "spears" seen in QA.
+        trunk_top = base + Vector((math.sin(phase) * 0.10, math.cos(phase) * 0.09, height * 0.56))
+        builder.cylinder(base, trunk_top, 0.18, 0.07, 3,
+                         TRUNK if atlas_cell != "sparse_conifer" else CONIFER_TRUNK)
+        centers = [base + Vector((0.0, 0.0, height * 0.91))]
+        for lobe_index in range(3):
+            angle = phase + lobe_index * (2.0 * math.pi / 3.0)
+            centers.append(base + Vector((
+                math.cos(angle) * crown_radius * 0.36,
+                math.sin(angle) * crown_radius * 0.36,
+                height * 0.74,
+            )))
+        for lobe_index in range(3):
+            angle = phase + math.pi / 3.0 + lobe_index * (2.0 * math.pi / 3.0)
+            centers.append(base + Vector((
+                math.cos(angle) * crown_radius * 0.22,
+                math.sin(angle) * crown_radius * 0.22,
+                height * 0.88,
+            )))
         add_card_crown(
             builder,
             centers,
-            (crown_radius * 0.88, crown_radius * 1.46),
+            (crown_radius * 0.62, crown_radius * 0.96),
             atlas_cell,
             color,
             2,
@@ -758,6 +772,7 @@ def create_object(
     obj["questflight_role"] = role
     obj["representation_tier"] = tier
     obj["geometry_mode"] = "alpha_test_fixed_cards_and_closed_tapered_wood"
+    obj["world_orientation"] = "fixed"
     obj["camera_facing"] = False
     obj["ordinary_vertical_billboard"] = False
     obj["alpha_blended"] = False
@@ -795,6 +810,7 @@ def create_object(
         "apparent_tree_units": builder.apparent_tree_units,
         "alpha_clip": True,
         "alpha_blend": False,
+        "fixed_world_orientation": True,
         "camera_facing_faces": 0,
         "negative_scale": any(component < 0 for component in obj.scale),
     }
@@ -889,6 +905,8 @@ def render_previews(objects: list[bpy.types.Object], preview_dir: Path) -> list[
         ("regional_t0_oblique", tier0_names, Vector((31, -45, 27)), Vector((0, 0, 6.2))),
         ("regional_t0_top", tier0_names, Vector((0, -0.5, 66)), Vector((0, 0, 1.0))),
         ("regional_t1_oblique", tier1_names, Vector((29, -44, 25)), Vector((0, 0, 6.0))),
+        ("tier2_grove_oblique", [TIER2_GROVE_OBJECT_NAME], Vector((32, -46, 28)), Vector((0, 0, 5.2))),
+        ("tier2_grove_top", [TIER2_GROVE_OBJECT_NAME], Vector((0, -0.5, 58)), Vector((0, 0, 1.0))),
     )
     records: list[dict] = []
     panel_paths: list[Path] = []
@@ -958,6 +976,13 @@ def main() -> int:
     scene.unit_settings.system = "METRIC"
     scene.unit_settings.scale_length = 1.0
     material = make_material(atlas_path)
+    tier2_grove = grove_builder()
+    if len(tier2_grove.faces) != TIER2_GROVE_EXPECTED_TRIANGLES:
+        raise ValueError(
+            f"{TIER2_GROVE_OBJECT_NAME} changed from its deterministic "
+            f"{TIER2_GROVE_EXPECTED_TRIANGLES}-triangle contract: "
+            f"{len(tier2_grove.faces)}"
+        )
     definitions = (
         ("AerialTree_Cottonwood_T0", cottonwood_builder(0), 0, "regional_cottonwood"),
         ("AerialTree_Cottonwood_T1", cottonwood_builder(1), 1, "regional_cottonwood"),
@@ -969,6 +994,7 @@ def main() -> int:
         ("AerialTree_SparseConifer_T1", conifer_builder(1), 1, "sparse_conifer"),
         ("AerialShrub_Regional_T0", shrub_builder(0), 0, "regional_shrub"),
         ("AerialShrub_Regional_T1", shrub_builder(1), 1, "regional_shrub"),
+        (TIER2_GROVE_OBJECT_NAME, tier2_grove, 2, "regional_grove_cluster"),
     )
     objects: list[bpy.types.Object] = []
     reports: list[dict] = []
@@ -1006,19 +1032,38 @@ def main() -> int:
     triangle_by_name = {record["name"]: record["triangles"] for record in reports}
     tier0_triangles = [value for name, value in triangle_by_name.items() if name.endswith("_T0")]
     tier1_triangles = [value for name, value in triangle_by_name.items() if name.endswith("_T1")]
+    tier2_triangles = triangle_by_name[TIER2_GROVE_OBJECT_NAME]
+    near_source_worst_case_triangles = (
+        3 * max(tier0_triangles)
+        + 19 * max(tier1_triangles)
+    )
+    tier2_runtime_triangles = TIER2_GROVE_INSTANCE_COUNT * tier2_triangles
+    total_runtime_triangles = ACCEPTED_NEAR_RUNTIME_TRIANGLES + tier2_runtime_triangles
+    if total_runtime_triangles > MAXIMUM_TOTAL_VEGETATION_TRIANGLES:
+        raise ValueError(
+            "Tier 0/1 plus Tier 2 vegetation exceeds the standalone Quest ceiling: "
+            f"{total_runtime_triangles} > {MAXIMUM_TOTAL_VEGETATION_TRIANGLES}"
+        )
     per_view_budget = {
         "tier0_instance_cap": 3,
         "tier1_instance_cap": 19,
-        "tier2_instance_cap": 0,
-        "tier2_runtime_triangles_per_instance": 0,
-        "tier2_runtime_representation": "Orthophoto plus existing lidar canopy normal and occlusion terrain shading; no geometry",
-        "worst_case_triangles": (
-            3 * max(tier0_triangles)
-            + 19 * max(tier1_triangles)
+        "tier2_instance_cap": TIER2_GROVE_INSTANCE_COUNT,
+        "tier2_runtime_triangles_per_instance": tier2_triangles,
+        "tier2_runtime_triangles": tier2_runtime_triangles,
+        "tier2_runtime_representation": (
+            "42 fixed world-oriented project-authored atlas-card grove instances "
+            "compiled into one shared-material batch"
         ),
-        "replacement_ceiling_triangles": 15184,
+        "tier2_fixed_world_orientation": True,
+        "tier2_camera_facing": False,
+        "tier2_shared_material_count": 1,
+        "accepted_near_runtime_triangles": ACCEPTED_NEAR_RUNTIME_TRIANGLES,
+        "near_source_worst_case_triangles": near_source_worst_case_triangles,
+        "worst_case_triangles": total_runtime_triangles,
+        "replacement_ceiling_triangles": MAXIMUM_TOTAL_VEGETATION_TRIANGLES,
         "source_triangle_bands": {"tier0_minimum": 1000, "tier0_maximum": 3000,
-                                  "tier1_minimum": 250, "tier1_maximum": 800},
+                                  "tier1_minimum": 250, "tier1_maximum": 800,
+                                  "tier2_exact": TIER2_GROVE_EXPECTED_TRIANGLES},
     }
     report = {
         "schema": "questflight.aerial-scenery-v1.vegetation-geometry.v1",
@@ -1030,6 +1075,10 @@ def main() -> int:
         "atlas_report_sha256": sha256(atlas_report_path),
         "objects": reports,
         "all_one_material": all(item["material_slots"] == 1 for item in reports),
+        "all_one_shared_material": all(
+            len(obj.material_slots) == 1 and obj.material_slots[0].material == material
+            for obj in objects
+        ),
         "all_vertex_colored": all(item["color_attributes"] == 1 for item in reports),
         "all_grounded_within_0p5m_terrain_intersection": all(
             item["ground_error_m"] <= 0.5 for item in reports
@@ -1041,19 +1090,35 @@ def main() -> int:
         ),
         "all_tier0_sources_in_quality_band": all(1000 <= value <= 3000 for value in tier0_triangles),
         "all_tier1_sources_in_quality_band": all(250 <= value <= 800 for value in tier1_triangles),
+        "tier2_source_matches_exact_triangle_contract": (
+            tier2_triangles == TIER2_GROVE_EXPECTED_TRIANGLES
+        ),
         "regional_archetypes": ["cottonwood", "willow_riparian", "general_deciduous", "sparse_conifer", "shrub"],
         "ordinary_vertical_billboards": 0,
         "camera_facing_geometry": 0,
         "per_view_budget_contract": per_view_budget,
         "runtime_contract": {
             "one_gameobject_per_tree": False,
-            "draw_api": "two editor-baked near-tier meshes serialized in one prefab",
+            "draw_api": (
+                "two editor-baked near-tier meshes plus one fixed-world "
+                "DrawMeshInstanced middle-tier batch serialized in one prefab"
+            ),
             "material_count": 1,
             "alpha_mode": "clip",
             "broad_alpha_blend": False,
-            "maximum_simultaneous_source_draws": 2,
-            "preferred_simultaneous_source_draws": 2,
-            "tier2_geometry_draws": 0,
+            "maximum_simultaneous_source_draws": 3,
+            "preferred_simultaneous_source_draws": 3,
+            "tier2_geometry_draws": 1,
+            "tier2_source_object": TIER2_GROVE_OBJECT_NAME,
+            "tier2_instance_count": TIER2_GROVE_INSTANCE_COUNT,
+            "tier2_triangles_per_instance": tier2_triangles,
+            "tier2_runtime_triangles": tier2_runtime_triangles,
+            "tier2_fixed_world_orientation": True,
+            "tier2_camera_facing": False,
+            "tier2_instanced_source_mesh_batch": True,
+            "accepted_near_runtime_triangles": ACCEPTED_NEAR_RUNTIME_TRIANGLES,
+            "expected_total_vegetation_triangles": total_runtime_triangles,
+            "maximum_total_vegetation_triangles": MAXIMUM_TOTAL_VEGETATION_TRIANGLES,
         },
     }
     report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")

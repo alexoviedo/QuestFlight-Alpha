@@ -632,32 +632,36 @@ namespace QuestFlightLab.Editor
 
             CanopyMapEvidence canopyEvidence = BuildCanopyMapEvidence(terrain, context.environment, center);
             CanopyMapSample canopy250 = canopyEvidence.SelectAtRadius(250f);
-            CanopyMapSample canopy500 = canopyEvidence.SelectAtRadius(500f);
-            CanopyMapSample canopy1000 = canopyEvidence.SelectAtRadius(1000f);
-            CanopyMapSample canopyPatternSample = canopyEvidence.SelectAtRadius(1400f);
             CanopyMapSample canopyTopSample = canopyEvidence.SelectDensest(250f, 1500f);
+            AerialVegetationBatchRenderer vegetationBatch = context.environment
+                .GetComponentsInChildren<AerialVegetationBatchRenderer>(true).Single();
+            Matrix4x4[] tier2Groves = vegetationBatch.Batches.Single(item => item.Tier == 2).Matrices;
+            Vector3 grove500 = SelectGroveAtRadius(tier2Groves, center, 500f);
+            Vector3 grove1000 = SelectGroveAtRadius(tier2Groves, center, 1000f);
+            Vector3 grovePattern = SelectGroveAtRadius(tier2Groves, center, 1400f);
+            Vector3 groveTop = SelectGroveAtRadius(tier2Groves, center, 900f);
 
             CaptureCanopyMapDistanceShot(context, report, outputDir, width, height, canopy250, center,
                 250f, "pasv1_13_canopy_250m", "Terrain-map canopy at 250 m", "photoreal_canopy");
-            CaptureCanopyMapDistanceShot(context, report, outputDir, width, height, canopy500, center,
-                500f, "pasv1_14_canopy_500m", "Terrain-map canopy at 500 m", "photoreal_canopy");
-            CaptureCanopyMapDistanceShot(context, report, outputDir, width, height, canopy1000, center,
-                1000f, "pasv1_15_canopy_1km", "Terrain-map canopy at 1 km", "photoreal_canopy");
+            CaptureGroveDistanceShot(context, report, outputDir, width, height, grove500, center,
+                500f, "pasv1_14_canopy_500m", "Fixed grove volume at 500 m", "photoreal_canopy");
+            CaptureGroveDistanceShot(context, report, outputDir, width, height, grove1000, center,
+                1000f, "pasv1_15_canopy_1km", "Fixed grove volume at 1 km", "photoreal_canopy");
 
             Vector3 canopyPatternDirection = Vector3.ProjectOnPlane(
-                canopyPatternSample.worldPosition - center, Vector3.up).normalized;
+                grovePattern - center, Vector3.up).normalized;
             if (canopyPatternDirection.sqrMagnitude < 0.5f)
-                throw new InvalidOperationException("Pattern-altitude canopy-map target has no stable radial direction.");
-            Vector3 canopyPattern = canopyPatternSample.worldPosition - canopyPatternDirection * 360f +
+                throw new InvalidOperationException("Pattern-altitude grove target has no stable radial direction.");
+            Vector3 canopyPattern = grovePattern - canopyPatternDirection * 360f +
                                     Vector3.up * 430f;
             Capture(context, report, outputDir, width, height, new ShotDefinition(
-                "pasv1_16_canopy_pattern", "Terrain-map canopy from pattern altitude", "photoreal_canopy",
-                canopyPattern, LookAt(canopyPattern, canopyPatternSample.worldPosition), 50f,
+                "pasv1_16_canopy_pattern", "Fixed grove volume from pattern altitude", "photoreal_canopy",
+                canopyPattern, LookAt(canopyPattern, grovePattern + Vector3.up * 8f), 50f,
                 ViewProfile.Environment));
-            Vector3 canopyTop = canopyTopSample.worldPosition + Vector3.up * 520f;
+            Vector3 canopyTop = groveTop + Vector3.up * 520f;
             Capture(context, report, outputDir, width, height, new ShotDefinition(
-                "pasv1_17_canopy_topdown", "Terrain-map canopy top-down integration", "photoreal_canopy",
-                canopyTop, LookAt(canopyTop, canopyTopSample.worldPosition), 44f, ViewProfile.Environment));
+                "pasv1_17_canopy_topdown", "Fixed grove volume top-down integration", "photoreal_canopy",
+                canopyTop, LookAt(canopyTop, groveTop), 44f, ViewProfile.Environment));
 
             float previousTerrainDiagnostic = terrain.GetFloat("_DiagnosticMode");
             float previousCanopyColorStrength = terrain.GetFloat("_AerialCanopyColorStrength");
@@ -675,7 +679,8 @@ namespace QuestFlightLab.Editor
                 terrain.SetColor("_AerialCanopyTint", new Color(0.02f, 1f, 0.92f, 1f));
                 Capture(context, report, outputDir, width, height, new ShotDefinition(
                     "pasv1_21_canopy_height_heatmap", "Terrain canopy-map handoff diagnostic",
-                    "photoreal_diagnostic", canopyTop, LookAt(canopyTop, canopyTopSample.worldPosition), 44f,
+                    "photoreal_diagnostic", canopyTopSample.worldPosition + Vector3.up * 520f,
+                    LookAt(canopyTopSample.worldPosition + Vector3.up * 520f, canopyTopSample.worldPosition), 44f,
                     ViewProfile.Environment));
             }
             finally
@@ -783,6 +788,48 @@ namespace QuestFlightLab.Editor
                 id, title, category, cameraPosition,
                 LookAt(cameraPosition, sample.worldPosition + Vector3.up * 1.5f), 46f,
                 ViewProfile.Environment));
+        }
+
+        private static void CaptureGroveDistanceShot(
+            VisualContext context,
+            ProductionVisualQaReport report,
+            string outputDir,
+            int width,
+            int height,
+            Vector3 target,
+            Vector3 reference,
+            float radius,
+            string id,
+            string title,
+            string category)
+        {
+            Vector3 horizontal = Vector3.ProjectOnPlane(target - reference, Vector3.up).normalized;
+            if (horizontal.sqrMagnitude < 0.5f)
+                throw new InvalidOperationException($"{id} grove target has no stable view direction.");
+            Vector3 cameraPosition = target - horizontal * Mathf.Clamp(radius * 0.22f, 70f, 420f) +
+                                     Vector3.up * Mathf.Clamp(radius * 0.18f, 38f, 380f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                id, title, category, cameraPosition,
+                LookAt(cameraPosition, target + Vector3.up * 8f), 46f,
+                ViewProfile.Environment));
+        }
+
+        private static Vector3 SelectGroveAtRadius(
+            IEnumerable<Matrix4x4> matrices,
+            Vector3 reference,
+            float desiredRadiusMeters)
+        {
+            Vector3[] positions = matrices
+                .Select(matrix => (Vector3)matrix.GetColumn(3))
+                .ToArray();
+            if (positions.Length == 0)
+                throw new InvalidOperationException("Tier 2 grove QA has no authored matrices.");
+            return positions
+                .OrderBy(position => Mathf.Abs(
+                    Vector3.ProjectOnPlane(position - reference, Vector3.up).magnitude - desiredRadiusMeters))
+                .ThenBy(position => position.x)
+                .ThenBy(position => position.z)
+                .First();
         }
 
         private static CanopyMapEvidence BuildCanopyMapEvidence(

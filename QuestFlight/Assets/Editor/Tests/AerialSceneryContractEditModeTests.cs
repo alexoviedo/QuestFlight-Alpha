@@ -154,12 +154,13 @@ namespace QuestFlight.Editor.Tests
 
             AerialVegetationBatchRenderer batch = root.vegetationRoot
                 .GetComponentsInChildren<AerialVegetationBatchRenderer>(true).Single();
-            Assert.That(batch.NonEmptyDrawCount, Is.EqualTo(2));
-            Assert.That(batch.FullyInstancedTriangleCount, Is.EqualTo(12860));
+            Assert.That(batch.NonEmptyDrawCount, Is.EqualTo(3));
+            Assert.That(batch.FullyInstancedTriangleCount, Is.EqualTo(35540));
             Assert.That(batch.SharedMaterial, Is.Not.Null);
             Assert.That(batch.FixedOrientationOnly, Is.True);
             Assert.That(batch.CameraFacingBehavior, Is.False);
             Assert.That(batch.LodCrossfadeBehavior, Is.False);
+            Assert.That(batch.Batches.Single(item => item.Tier == 2).Matrices, Has.Length.EqualTo(42));
             Assert.That(root.vegetationRoot.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
             Transform[] vegetationTransforms = root.vegetationRoot.GetComponentsInChildren<Transform>(true);
             Assert.That(vegetationTransforms.Any(item =>

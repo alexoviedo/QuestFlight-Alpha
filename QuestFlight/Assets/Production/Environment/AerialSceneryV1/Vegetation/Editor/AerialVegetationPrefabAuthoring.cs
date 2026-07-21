@@ -10,9 +10,9 @@ namespace QuestFlightLab.Environment.Editor
 {
     /// <summary>
     /// Deterministically bakes lidar-derived heterogeneous vegetation placements
-    /// into one serialized mesh per near visible tier. The resulting prefab has two
-    /// non-empty instanced draws, one shared material, and no per-tree GameObjects.
-    /// Tier 2 and Tier 3 are owned by the orthophoto/lidar canopy terrain shading path.
+    /// into one serialized mesh per near visible tier plus one fixed-orientation,
+    /// GPU-instanced grove batch for the middle tier. The terrain canopy map remains
+    /// visible beneath the grove volume, and no per-tree GameObjects are created.
     /// Product-scene placement and legacy-renderer disabling remain lead-owned.
     /// </summary>
     public static class AerialVegetationPrefabAuthoring
@@ -27,25 +27,35 @@ namespace QuestFlightLab.Environment.Editor
             "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated";
         public const string PrefabPath = GeneratedFolder + "/AerialVegetationRoot.prefab";
 
-        private const int ExpectedDrawCount = 2;
-        private const int ExpectedSourcePlacementCount = 22;
-        private const long VisibleTriangleCeiling = 15184;
+        private const int ExpectedDrawCount = 3;
+        private const int ExpectedSourcePlacementCount = 64;
+        private const long VisibleTriangleCeiling = 36860;
         private const string FrozenLidarManifestSha256 =
             "1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5";
 
         private static readonly string[] ExpectedBatchIds =
         {
             "tier0_editor_baked",
-            "tier1_editor_baked"
+            "tier1_editor_baked",
+            "tier2_instanced_fixed_groves"
         };
 
         private static readonly string[] ExpectedSourceModes =
         {
             "heterogeneous_fixed_orientation_editor_bake",
-            "heterogeneous_fixed_orientation_editor_bake"
+            "heterogeneous_fixed_orientation_editor_bake",
+            "fixed_world_oriented_source_mesh_instancing"
         };
 
-        private static readonly int[] ExpectedTierPlacementCounts = { 3, 19 };
+        // Mesh subassets imported from the project-authored Blender FBX retain
+        // Blender's Z-up vertex basis.  The usual FBX node rotation is not
+        // available when Graphics.DrawMeshInstanced consumes a Mesh directly,
+        // so bake the exact Z-up -> Unity Y-up conversion into every authored
+        // batch matrix.  Right-multiplication preserves ENU placement/yaw.
+        private static readonly Matrix4x4 SourceAxisConversion =
+            Matrix4x4.Rotate(Quaternion.Euler(-90f, 0f, 0f));
+
+        private static readonly int[] ExpectedTierPlacementCounts = { 3, 19, 42 };
 
         private static readonly HashSet<string>[] AllowedSourcesByTier =
         {
@@ -64,6 +74,10 @@ namespace QuestFlightLab.Environment.Editor
                 "AerialTree_Deciduous_T1",
                 "AerialTree_SparseConifer_T1",
                 "AerialShrub_Regional_T1"
+            }, StringComparer.Ordinal),
+            new HashSet<string>(new[]
+            {
+                "AerialGroveCluster_T2"
             }, StringComparer.Ordinal)
         };
 
@@ -128,17 +142,34 @@ namespace QuestFlightLab.Environment.Editor
             for (int tier = 0; tier < orderedRecords.Length; tier++)
             {
                 DistributionBatchRecord record = orderedRecords[tier];
-                Mesh combined = BuildCombinedTierMesh(record, sourceMeshes);
-                string assetPath = GeneratedFolder + "/AerialVegetation_Tier" + tier + "_Combined.asset";
-                Mesh saved = WriteMeshAsset(assetPath, combined);
-                tierTriangles[tier] = TriangleCount(saved);
+                Mesh runtimeMesh;
+                Matrix4x4[] matrices;
+                Vector4[] tints;
+                if (tier < 2)
+                {
+                    Mesh combined = BuildCombinedTierMesh(record, sourceMeshes);
+                    string assetPath = GeneratedFolder + "/AerialVegetation_Tier" + tier + "_Combined.asset";
+                    runtimeMesh = WriteMeshAsset(assetPath, combined);
+                    matrices = new[] { Matrix4x4.identity };
+                    tints = new[] { Vector4.one };
+                }
+                else
+                {
+                    runtimeMesh = ResolveMesh(sourceMeshes, "AerialGroveCluster_T2");
+                    ValidateSourceMesh(runtimeMesh);
+                    matrices = record.instances
+                        .Select(instance => InstanceMatrix(instance) * SourceAxisConversion)
+                        .ToArray();
+                    tints = record.instances.Select(InstanceTint).ToArray();
+                }
+                tierTriangles[tier] = TriangleCount(runtimeMesh) * matrices.Length;
                 sourcePlacementCount += record.instances.Length;
                 runtimeBatches[tier] = new AerialVegetationBatchRenderer.Batch(
                     record.batch_id,
                     record.tier,
-                    saved,
-                    new[] { Matrix4x4.identity },
-                    new[] { Vector4.one });
+                    runtimeMesh,
+                    matrices,
+                    tints);
             }
 
             if (sourcePlacementCount != distribution.instance_count ||
@@ -176,7 +207,7 @@ namespace QuestFlightLab.Environment.Editor
 
                 CreateTierAnchor(root.transform, "Tier0_EditorBakedTrees_0m_500m");
                 CreateTierAnchor(root.transform, "Tier1_EditorBakedTrees_500m_1500m");
-                CreateTierAnchor(root.transform, "Tier2_OrthophotoLidarCanopyTerrainShading_500m_4000m");
+                CreateTierAnchor(root.transform, "Tier2_FixedWorldOrientedGroves_500m_4000m");
                 CreateTierAnchor(root.transform, "Tier3_OrthophotoLidarCanopyTerrainShading_Far");
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
@@ -220,7 +251,7 @@ namespace QuestFlightLab.Environment.Editor
                 distribution.batches == null ||
                 distribution.batches.Length != ExpectedDrawCount)
             {
-                throw new InvalidOperationException("Vegetation distribution must contain exactly two near editor-baked batches.");
+                    throw new InvalidOperationException("Vegetation distribution must contain two near baked batches and one mid grove batch.");
             }
 
             DistributionBatchRecord[] ordered = new DistributionBatchRecord[ExpectedDrawCount];
@@ -252,7 +283,7 @@ namespace QuestFlightLab.Environment.Editor
             if (ordered.Any(record => record == null) ||
                 distribution.instance_count != ExpectedSourcePlacementCount)
             {
-                throw new InvalidOperationException("Vegetation distribution does not satisfy the Tier0/Tier1 3/19 placement contract.");
+                throw new InvalidOperationException("Vegetation distribution does not satisfy the Tier0/Tier1/Tier2 3/19/42 placement contract.");
             }
             return ordered;
         }
@@ -297,15 +328,7 @@ namespace QuestFlightLab.Environment.Editor
             foreach (DistributionInstanceRecord instance in record.instances)
             {
                 Mesh source = ResolveMesh(sourceMeshes, instance.source_object);
-                if (!source.isReadable)
-                {
-                    throw new InvalidOperationException(
-                        source.name + " is not readable. The deterministic editor bake requires ModelImporter.isReadable.");
-                }
-                if (source.subMeshCount != 1 || source.GetTopology(0) != MeshTopology.Triangles)
-                {
-                    throw new InvalidOperationException(source.name + " must contain exactly one triangle submesh.");
-                }
+                ValidateSourceMesh(source);
 
                 Vector3[] sourceVertices = source.vertices;
                 Vector3[] sourceNormals = source.normals;
@@ -321,10 +344,7 @@ namespace QuestFlightLab.Environment.Editor
                         source.name + " must import normals, tangents, UV0, and vertex colors for every vertex.");
                 }
 
-                Matrix4x4 transform = Matrix4x4.TRS(
-                    new Vector3(instance.x, instance.y, instance.z),
-                    Quaternion.Euler(0f, instance.yaw_degrees, 0f),
-                    new Vector3(instance.scale_x, instance.scale_y, instance.scale_z));
+                Matrix4x4 transform = InstanceMatrix(instance) * SourceAxisConversion;
                 Matrix4x4 normalTransform = transform.inverse.transpose;
                 int vertexOffset = vertices.Count;
                 for (int vertexIndex = 0; vertexIndex < sourceVertices.Length; vertexIndex++)
@@ -370,6 +390,32 @@ namespace QuestFlightLab.Environment.Editor
             combined.SetTriangles(indices, 0, false);
             combined.RecalculateBounds();
             return combined;
+        }
+
+        private static void ValidateSourceMesh(Mesh source)
+        {
+            if (!source.isReadable)
+            {
+                throw new InvalidOperationException(
+                    source.name + " is not readable. The deterministic editor bake requires ModelImporter.isReadable.");
+            }
+            if (source.subMeshCount != 1 || source.GetTopology(0) != MeshTopology.Triangles)
+            {
+                throw new InvalidOperationException(source.name + " must contain exactly one triangle submesh.");
+            }
+        }
+
+        private static Matrix4x4 InstanceMatrix(DistributionInstanceRecord instance)
+        {
+            return Matrix4x4.TRS(
+                new Vector3(instance.x, instance.y, instance.z),
+                Quaternion.Euler(0f, instance.yaw_degrees, 0f),
+                new Vector3(instance.scale_x, instance.scale_y, instance.scale_z));
+        }
+
+        private static Vector4 InstanceTint(DistributionInstanceRecord instance)
+        {
+            return new Vector4(instance.tint_r, instance.tint_g, instance.tint_b, instance.tint_a);
         }
 
         private static Mesh WriteMeshAsset(string assetPath, Mesh generated)

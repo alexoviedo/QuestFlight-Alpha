@@ -153,13 +153,21 @@ class VegetationPipelineTests(unittest.TestCase):
             self.assertEqual(decoded_r16.gray16(0, 0), 1)
             self.assertEqual(decoded_r16.gray16(1, 0), 65535)
 
-    def test_tier2_is_explicitly_map_only(self) -> None:
+    def test_tier2_is_fixed_world_oriented_and_map_owned(self) -> None:
         tier2 = next(record for record in self.config["tiers"] if int(record["tier"]) == 2)
         self.assertEqual(tier2["minimum_radius_m"], 180.0)
-        self.assertEqual(tier2["maximum_instances"], 0)
-        self.assertEqual(tier2["source_objects"], [])
-        self.assertEqual(tier2["geometry_draws"], 0)
+        self.assertEqual(tier2["maximum_instances"], 42)
+        self.assertEqual(tier2["source_objects"], ["AerialGroveCluster_T2"])
+        self.assertEqual(tier2["geometry_draws"], 1)
+        self.assertFalse(tier2["carves_handoff_mask"])
         self.assertNotIn("upper_canopy_lobes_per_placement", tier2)
+
+    def test_canopy_shader_template_preserves_semantic_frame_transform(self) -> None:
+        include = (TOOL_DIR / "templates" / "AerialCanopyMap.cginc").read_text(encoding="utf-8")
+        self.assertIn("_AerialCanopyProductToSourceRow0", include)
+        self.assertIn("dot(_AerialCanopyProductToSourceRow0.xy, localXZ)", include)
+        self.assertIn("_AerialCanopySourceToProductRow0", include)
+        self.assertIn("dot(_AerialCanopySourceToProductRow0.xy, sourceNormal.xz)", include)
 
     def test_handoff_weight_is_spatially_feathered_and_eligible_canopy_gated(self) -> None:
         self.assertEqual(handoff.quantized_handoff(-1.0, 16.0, 64.0), 0)
@@ -187,26 +195,76 @@ class VegetationPipelineTests(unittest.TestCase):
             )
             self.assertEqual(first["status"], "TEST_ONLY_SYNTHETIC")
             self.assertEqual(first["source_kind"], "synthetic_test_fixture")
-            self.assertEqual(first["batch_count"], 2)
+            self.assertEqual(first["batch_count"], 3)
             counts = {batch["batch_id"]: len(batch["instances"]) for batch in first["batches"]}
             self.assertLessEqual(counts["tier0_editor_baked"], 3)
             self.assertLessEqual(counts["tier1_editor_baked"], 19)
-            self.assertNotIn("tier2_editor_baked_fixed_groves", counts)
+            self.assertGreater(counts["tier2_instanced_fixed_groves"], 0)
+            self.assertLessEqual(counts["tier2_instanced_fixed_groves"], 42)
             stable_ids = [instance["stable_id"] for batch in first["batches"] for instance in batch["instances"]]
             self.assertEqual(len(stable_ids), len(set(stable_ids)))
             self.assertFalse(first["runtime_policy"]["one_gameobject_per_tree"])
             self.assertEqual(first["runtime_policy"]["ordinary_vertical_billboards"], 0)
-            self.assertEqual(first["runtime_policy"]["source_draws_maximum"], 2)
+            self.assertEqual(first["runtime_policy"]["source_draws_maximum"], 3)
             self.assertFalse(first["runtime_policy"]["camera_facing"])
             self.assertEqual(first["runtime_policy"]["alpha_mode"], "clip")
-            self.assertEqual(first["runtime_policy"]["tier2_geometry_instances"], 0)
-            self.assertEqual(first["runtime_policy"]["tier2_geometry_draws"], 0)
+            self.assertEqual(
+                first["runtime_policy"]["tier2_geometry_instances"],
+                counts["tier2_instanced_fixed_groves"],
+            )
+            self.assertEqual(first["runtime_policy"]["tier2_geometry_draws"], 1)
+            self.assertFalse(first["runtime_policy"]["tier2_geometry_carves_handoff"])
             self.assertEqual(
                 first["runtime_policy"]["tier2_representation"],
-                "orthophoto_plus_lidar_canopy_normal_occlusion_terrain_shading",
+                "fixed_world_oriented_grove_clusters_over_orthophoto_lidar_canopy_shading",
             )
             self.assertEqual(first["coverage_agreement"]["tier2"]["canopy_mask_coverage_ratio"], 1.0)
+            self.assertTrue(first["coverage_agreement"]["tier2"]["terrain_map_retained_beneath_geometry"])
+            self.assertFalse(first["coverage_agreement"]["tier2"]["geometry_carves_handoff"])
             self.assertEqual(first["coverage_agreement"]["tier3"]["eligible_canopy_coverage_ratio"], 1.0)
+
+    def test_tier2_clusters_never_carve_handoff_mask(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest_path, _ = self._fixture(root)
+            inputs = pipeline.load_inputs(root, manifest_path, self.config)
+            distribution = pipeline.build_distribution(
+                inputs, self.config, allow_synthetic_test_input=True
+            )
+            tier2_batch = next(batch for batch in distribution["batches"] if int(batch["tier"]) == 2)
+            # The compact fixture may select fewer than the production cap. Pad
+            # with deterministic copies solely to exercise the exact production
+            # handoff batch-count contract.
+            originals = tier2_batch["instances"]
+            self.assertTrue(originals)
+            tier2_batch["instances"] = [
+                dict(originals[index % len(originals)], stable_id=f"fixture-tier2-{index:02d}")
+                for index in range(42)
+            ]
+            geometry_names = {
+                instance["source_object"]
+                for batch in distribution["batches"]
+                if int(batch["tier"]) in (0, 1)
+                for instance in batch["instances"]
+            }
+            geometry = {
+                "objects": [
+                    {"name": name, "bounds_min": [-2.0, -2.0, 0.0], "bounds_max": [2.0, 2.0, 8.0]}
+                    for name in sorted(geometry_names)
+                ]
+            }
+            affine = {
+                "x_at_column0_row0": -254.0,
+                "z_at_column0_row0": 254.0,
+                "x_per_column": 4.0,
+                "z_per_row": -4.0,
+            }
+            mask, footprints = handoff.build_mask(
+                distribution, geometry, 128, 128, affine, 16.0, 64.0
+            )
+            self.assertEqual(len(footprints), 22)
+            self.assertTrue(all(record["tier"] in (0, 1) for record in footprints))
+            self.assertTrue(any(value == 255 for value in mask))
 
     def test_cluster_spatial_index_matches_brute_force_ellipse_queries(self) -> None:
         clusters = [

@@ -5,6 +5,7 @@
   "geometry_to_map_handoff_mask": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Textures/AerialVegetation_HandoffMask_R8.png",
   "geometry_to_map_handoff_report": "Assets/Production/Environment/AerialSceneryV1/Vegetation/AerialVegetation_HandoffMaskReport.json",
   "geometry_triangles": {
+    "AerialGroveCluster_T2": 540,
     "AerialShrub_Regional_T0": 1438,
     "AerialShrub_Regional_T1": 524,
     "AerialTree_Cottonwood_T0": 1328,
@@ -48,9 +49,9 @@
     "alpha_testing": true,
     "alpha_to_coverage": true,
     "camera_facing_geometry": false,
-    "geometry_ownership_handoff": "R8 Tier0/Tier1 geometry complement on the exact lidar grid; Tier2 never carves the canopy map",
+    "geometry_ownership_handoff": "R8 Tier0/Tier1 geometry complement on the exact lidar grid; additive Tier2 fixed grove clusters never carve the canopy map",
     "lod_crossfade": false,
-    "maximum_draws": 2,
+    "maximum_draws": 3,
     "one_gameobject_per_tree": false,
     "ordinary_vertical_billboards": false,
     "runtime_hierarchy_construction": false,
@@ -93,18 +94,25 @@
       "tier": 1
     },
     {
+      "alpha_blending": false,
       "camera_facing": false,
       "canopy_map_handoff_texture": "_AerialCanopyHandoffMask",
-      "geometry_draws": 0,
-      "geometry_instances": 0,
-      "geometry_triangles": 0,
-      "maximum_instances": 0,
-      "mode": "orthophoto_plus_existing_lidar_canopy_normal_occlusion_terrain_shading",
+      "carves_canopy_map_handoff": false,
+      "geometry_draws": 1,
+      "geometry_instances": 42,
+      "geometry_triangles": 22680,
+      "instancing": "one shared source-mesh batch",
+      "lod_crossfade": false,
+      "maximum_instances": 42,
+      "mode": "fixed_world_oriented_alpha_clip_grove_clusters_over_existing_lidar_canopy_terrain_shading",
       "range_m": [
         500.0,
         4000.0
       ],
-      "source_objects": [],
+      "source_objects": [
+        "AerialGroveCluster_T2"
+      ],
+      "terrain_map_retained_beneath_geometry": true,
       "tier": 2
     },
     {
@@ -127,7 +135,7 @@
         "scalar_handoff_uniform": null,
         "smoothstep_feather_m": 64.0,
         "tier0_tier1_footprint": "conservative oriented rectangle from the source mesh horizontal AABB and authored transform",
-        "tier2_footprint": "none; Tier2 has zero geometry and therefore does not carve the canopy map",
+        "tier2_footprint": "none; 42 additive fixed grove clusters retain terrain-canopy-map ownership beneath them",
         "tier3_spatial_domain": "Tier2/Tier3 lidar canopy terrain shading inside the validated lidar square",
         "zero_padding_m": 16.0
       },
@@ -144,11 +152,12 @@
   "runtime_batch_renderer": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Runtime/AerialVegetationBatchRenderer.cs",
   "runtime_budget": {
     "alpha_blended_material_slots": 0,
-    "authored_geometry_worst_case_triangles": 15176,
+    "authored_geometry_worst_case_triangles": 35540,
     "editor_baked_meshes": 2,
-    "maximum_instances_per_draw": 1,
-    "maximum_simultaneous_draws": 2,
-    "maximum_visible_triangles": 15184,
+    "instanced_source_mesh_batches": 1,
+    "maximum_instances_per_draw": 42,
+    "maximum_simultaneous_draws": 3,
+    "maximum_visible_triangles": 36860,
     "one_gameobject_per_tree": false,
     "ordinary_vertical_billboards": 0,
     "shared_materials": 1,
@@ -158,7 +167,7 @@
       "ownership_handoff_mask_r8": 1048576,
       "packed_surface_atlas_rgba8": 5592404
     },
-    "tier2_procedural_triangles_per_instance": 0,
+    "tier2_source_triangles_per_instance": 540,
     "vegetation_texture_bytes_excluding_shared_lidar_maps": 12233384
   },
   "runtime_model": "Assets/Production/Environment/AerialSceneryV1/Vegetation/Models/AerialVegetationMultiscale.fbx",

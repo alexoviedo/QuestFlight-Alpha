@@ -18,6 +18,10 @@ sampler2D _AerialCanopyNormalOcclusion;
 // which cannot describe ownership over the finite 4,096 m lidar square.
 sampler2D _AerialCanopyHandoffMask;
 float4 _AerialCanopyLocalBounds;
+float4 _AerialCanopyProductToSourceRow0;
+float4 _AerialCanopyProductToSourceRow1;
+float4 _AerialCanopySourceToProductRow0;
+float4 _AerialCanopySourceToProductRow1;
 half _AerialCanopyHeightQuantumMeters;
 half _AerialCanopyColorStrength;
 half _AerialCanopyNormalStrength;
@@ -37,7 +41,13 @@ struct QuestFlightAerialCanopySample
 
 inline float2 QuestFlightAerialCanopyUv(float2 localXZ)
 {
-    float2 uv = (localXZ - _AerialCanopyLocalBounds.xy) * _AerialCanopyLocalBounds.zw;
+    // Product world/orthophoto positions use KBDU-local AEQD while the compact
+    // lidar textures retain their source UTM13N grid. Convert before sampling
+    // so the canopy response stays on the photographed trees.
+    float2 sourceXZ = float2(
+        dot(_AerialCanopyProductToSourceRow0.xy, localXZ) + _AerialCanopyProductToSourceRow0.z,
+        dot(_AerialCanopyProductToSourceRow1.xy, localXZ) + _AerialCanopyProductToSourceRow1.z);
+    float2 uv = (sourceXZ - _AerialCanopyLocalBounds.xy) * _AerialCanopyLocalBounds.zw;
     // Source row zero is north; Unity texture V zero is south after import.
     return float2(uv.x, uv.y);
 }
@@ -62,7 +72,11 @@ inline QuestFlightAerialCanopySample QuestFlightSampleAerialCanopy(float2 localX
     sample.coverage = geometryToMapHandoff;
     sample.terrainValidity = step(0.5h / 255.0h, terrainNormalAndValidity.a) * insideBounds;
     sample.geometryToMapHandoff = geometryToMapHandoff;
-    sample.canopyNormalLocal = normalize(canopyNormalAndOcclusion.rgb * 2.0h - 1.0h);
+    half3 sourceNormal = canopyNormalAndOcclusion.rgb * 2.0h - 1.0h;
+    half2 productNormalXZ = half2(
+        dot(_AerialCanopySourceToProductRow0.xy, sourceNormal.xz),
+        dot(_AerialCanopySourceToProductRow1.xy, sourceNormal.xz));
+    sample.canopyNormalLocal = normalize(half3(productNormalXZ.x, sourceNormal.y, productNormalXZ.y));
     return sample;
 }
 

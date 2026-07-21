@@ -12,8 +12,8 @@ namespace QuestFlightLab.Environment.Editor
 {
     /// <summary>
     /// Captures deterministic, product-independent evidence of the two near
-    /// vegetation meshes. Tier 2 intentionally has no geometry. This tool never
-    /// edits or saves the product scene.
+    /// vegetation meshes and the fixed world-oriented middle-distance grove.
+    /// This tool never edits or saves the product scene.
     /// </summary>
     public static class AerialVegetationEvidenceAuthoring
     {
@@ -23,8 +23,12 @@ namespace QuestFlightLab.Environment.Editor
             "Assets/Production/Environment/AerialSceneryV1/Vegetation/Materials/AerialVegetation_AtlasCutout.mat";
         private const string MeshRoot =
             "Assets/Production/Environment/AerialSceneryV1/Vegetation/Generated/AerialVegetation_Tier";
+        private const string ModelPath =
+            "Assets/Production/Environment/AerialSceneryV1/Vegetation/Models/AerialVegetationMultiscale.fbx";
         private const int Width = 1600;
         private const int Height = 900;
+        private static readonly Matrix4x4 SourceAxisConversion =
+            Matrix4x4.Rotate(Quaternion.Euler(-90f, 0f, 0f));
 
         [MenuItem("QuestFlight/Aerial Scenery V1/Capture Vegetation Evidence")]
         public static void CaptureBatch()
@@ -45,9 +49,9 @@ namespace QuestFlightLab.Environment.Editor
                 throw new InvalidOperationException("Vegetation evidence source assets are missing.");
             }
             DistributionRecord distribution = JsonUtility.FromJson<DistributionRecord>(distributionAsset.text);
-            if (distribution?.batches == null || distribution.batches.Length != 2)
+            if (distribution?.batches == null || distribution.batches.Length != 3)
             {
-                throw new InvalidOperationException("Vegetation distribution must contain two near batches.");
+                throw new InvalidOperationException("Vegetation distribution must contain two near batches and one grove batch.");
             }
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -99,12 +103,21 @@ namespace QuestFlightLab.Environment.Editor
             {
                 DistributionInstanceRecord tier0 = Nearest(distribution, 0);
                 DistributionInstanceRecord tier1 = Nearest(distribution, 1);
+                DistributionInstanceRecord tier2 = Nearest(distribution, 2);
                 captures.Add(Capture(
                     outputDirectory, camera, ground, meshFilter, 0, "tier0_microgrove_oblique",
                     Target(tier0, 0.48f), new Vector3(-38f, 24f, -42f)));
                 captures.Add(Capture(
                     outputDirectory, camera, ground, meshFilter, 1, "tier1_microgrove_oblique",
                     Target(tier1, 0.44f), new Vector3(-52f, 33f, -58f)));
+                captures.Add(Capture(
+                    outputDirectory, camera, ground, meshFilter, 2, "tier2_grove_oblique",
+                    Target(tier2, 0.48f), new Vector3(-70f, 45f, -75f), tier2));
+                captures.Add(Capture(
+                    outputDirectory, camera, ground, meshFilter, 2, "tier2_grove_top",
+                    Target(tier2, 0.35f), new Vector3(0f, 120f, 0f), tier2, true));
+                Mesh tier2Mesh = LoadTier2Mesh();
+                int tier2Triangles = tier2Mesh.triangles.Length / 3 * Instances(distribution, 2).Length;
                 string reportPath = Path.Combine(outputDirectory, "aerial_vegetation_evidence.json");
                 File.WriteAllText(reportPath, JsonUtility.ToJson(new EvidenceReport
                 {
@@ -112,12 +125,12 @@ namespace QuestFlightLab.Environment.Editor
                     status = "DETERMINISTIC_SOURCE_REPRESENTATION_EVIDENCE_NOT_PRODUCT_VISUAL_ACCEPTANCE",
                     width = Width,
                     height = Height,
-                    draw_count = 2,
+                    draw_count = 3,
                     material_count = 1,
-                    selected_triangles = 12860,
-                    tier2_geometry_draw_count = 0,
-                    tier2_geometry_triangle_count = 0,
-                    tier2_representation = "orthophoto_plus_lidar_canopy_normal_occlusion_terrain_shading",
+                    selected_triangles = 12860 + tier2Triangles,
+                    tier2_geometry_draw_count = 1,
+                    tier2_geometry_triangle_count = tier2Triangles,
+                    tier2_representation = "fixed_world_oriented_grove_instances_plus_lidar_canopy_terrain_shading",
                     captures = captures.ToArray(),
                 }, true) + System.Environment.NewLine);
                 Debug.Log("Vegetation evidence captured: " + reportPath);
@@ -142,14 +155,24 @@ namespace QuestFlightLab.Environment.Editor
             string name,
             Vector3 target,
             Vector3 cameraOffset,
+            DistributionInstanceRecord placement = null,
             bool topDown = false)
         {
-            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(MeshRoot + tier + "_Combined.asset");
+            bool ownsPreviewMesh = tier == 2;
+            Mesh mesh = ownsPreviewMesh
+                ? CreateAxisConvertedPreviewMesh(LoadTier2Mesh())
+                : AssetDatabase.LoadAssetAtPath<Mesh>(MeshRoot + tier + "_Combined.asset");
             if (mesh == null)
             {
                 throw new InvalidOperationException("Generated vegetation mesh is missing for tier " + tier + ".");
             }
             meshFilter.sharedMesh = mesh;
+            meshFilter.transform.SetPositionAndRotation(
+                placement == null ? Vector3.zero : new Vector3(placement.x, placement.y, placement.z),
+                placement == null ? Quaternion.identity : Quaternion.Euler(0f, placement.yaw_degrees, 0f));
+            meshFilter.transform.localScale = placement == null
+                ? Vector3.one
+                : new Vector3(placement.scale_x, placement.scale_y, placement.scale_z);
             ground.transform.position = new Vector3(target.x, target.y - 0.5f, target.z);
             Vector3 cameraPosition = target + cameraOffset;
             camera.transform.position = cameraPosition;
@@ -192,7 +215,54 @@ namespace QuestFlightLab.Environment.Editor
                 renderTexture.Release();
                 UnityEngine.Object.DestroyImmediate(renderTexture);
                 UnityEngine.Object.DestroyImmediate(screenshot);
+                if (ownsPreviewMesh)
+                {
+                    UnityEngine.Object.DestroyImmediate(mesh);
+                }
             }
+        }
+
+        private static Mesh CreateAxisConvertedPreviewMesh(Mesh source)
+        {
+            Mesh preview = UnityEngine.Object.Instantiate(source);
+            preview.name = source.name + "_UnityAxisPreview";
+
+            Vector3[] vertices = preview.vertices;
+            for (int index = 0; index < vertices.Length; index++)
+            {
+                vertices[index] = SourceAxisConversion.MultiplyPoint3x4(vertices[index]);
+            }
+            preview.vertices = vertices;
+
+            Vector3[] normals = preview.normals;
+            for (int index = 0; index < normals.Length; index++)
+            {
+                normals[index] = SourceAxisConversion.MultiplyVector(normals[index]).normalized;
+            }
+            preview.normals = normals;
+
+            Vector4[] tangents = preview.tangents;
+            for (int index = 0; index < tangents.Length; index++)
+            {
+                Vector3 direction = SourceAxisConversion.MultiplyVector(
+                    new Vector3(tangents[index].x, tangents[index].y, tangents[index].z)).normalized;
+                tangents[index] = new Vector4(direction.x, direction.y, direction.z, tangents[index].w);
+            }
+            preview.tangents = tangents;
+            preview.RecalculateBounds();
+            return preview;
+        }
+
+        private static Mesh LoadTier2Mesh()
+        {
+            Mesh mesh = AssetDatabase.LoadAllAssetsAtPath(ModelPath).OfType<Mesh>()
+                .FirstOrDefault(item => string.Equals(item.name, "AerialGroveCluster_T2", StringComparison.Ordinal) ||
+                                        string.Equals(item.name, "AerialGroveCluster_T2_Mesh", StringComparison.Ordinal));
+            if (mesh == null)
+            {
+                throw new InvalidOperationException("Tier 2 grove source mesh is missing from " + ModelPath + ".");
+            }
+            return mesh;
         }
 
         private static Vector3 Target(DistributionInstanceRecord instance, float heightFraction)
@@ -249,6 +319,10 @@ namespace QuestFlightLab.Environment.Editor
             public float x;
             public float y;
             public float z;
+            public float yaw_degrees;
+            public float scale_x;
+            public float scale_y;
+            public float scale_z;
             public float mean_canopy_hag_m;
         }
 

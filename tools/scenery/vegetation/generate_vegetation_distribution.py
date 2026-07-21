@@ -717,9 +717,9 @@ def cluster_instance(
         "scale_x": round(scale_x, 4),
         "scale_y": round(clamp(hag / 6.4, 0.65, 1.65), 4),
         "scale_z": round(scale_z, 4),
-        "tint_r": round(0.88 + digest[2] / 255.0 * 0.08, 4),
-        "tint_g": round(0.92 + digest[3] / 255.0 * 0.06, 4),
-        "tint_b": round(0.82 + digest[4] / 255.0 * 0.09, 4),
+        "tint_r": round(0.74 + digest[2] / 255.0 * 0.08, 4),
+        "tint_g": round(0.78 + digest[3] / 255.0 * 0.10, 4),
+        "tint_b": round(0.68 + digest[4] / 255.0 * 0.10, 4),
         "tint_a": 1.0,
         "grove_component": components[0],
         "grove_components": components,
@@ -836,14 +836,16 @@ def coverage_metrics(
         "eligible_canopy_pixels": eligible_pixels,
         "eligible_canopy_area_m2": round(eligible_pixels * pixel_area, 3),
         "tier2": {
-            "representation": "orthophoto_plus_lidar_canopy_normal_occlusion_terrain_shading",
+            "representation": "fixed_world_oriented_grove_clusters_over_orthophoto_lidar_canopy_shading",
             "eligible_canopy_pixels": tier2_canopy_pixels,
             "canopy_mask_area_m2": round(tier2_canopy_pixels * pixel_area, 3),
             "terrain_shading_owned_pixels": tier2_canopy_pixels,
             "terrain_shading_owned_area_m2": round(tier2_canopy_pixels * pixel_area, 3),
             "canopy_mask_coverage_ratio": 1.0,
-            "geometry_instances": 0,
-            "geometry_draws": 0,
+            "geometry_instances": len(clusters),
+            "geometry_draws": 1 if clusters else 0,
+            "geometry_carves_handoff": False,
+            "terrain_map_retained_beneath_geometry": True,
         },
         "tier3": {
             "scope": "source_input_availability_before_final_spatial_handoff",
@@ -1006,9 +1008,32 @@ def build_distribution(
     })
 
     tier2 = tier_config(config, 2)
-    if int(tier2["maximum_instances"]) != 0 or tier2.get("source_objects") != []:
-        raise ValueError("Tier2 must remain a zero-geometry orthophoto/lidar canopy-shading representation")
-    tier2_instances: list[dict[str, Any]] = []
+    if tier2.get("source_objects") != ["AerialGroveCluster_T2"]:
+        raise ValueError("Tier2 must use only the fixed world-oriented AerialGroveCluster_T2 source")
+    if int(tier2.get("geometry_draws", -1)) != 1 or tier2.get("carves_handoff_mask") is not False:
+        raise ValueError("Tier2 must use one additive geometry draw without carving the canopy-map handoff")
+    selected2 = select_clusters(
+        [candidate for candidate in candidates if in_tier(candidate, tier2)],
+        int(tier2["maximum_instances"]),
+        float(config["sampling"]["grove_cluster_cell_m"]),
+        seed,
+        near_priority_maximum_radius_m=float(
+            config["sampling"]["grove_near_priority_radius_m"]
+        ),
+        near_priority_minimum_clusters=int(
+            config["sampling"]["grove_near_priority_minimum_clusters"]
+        ),
+    )
+    tier2_instances = [
+        cluster_instance(index, members, seed, stable_input_hash, config)
+        for index, members in selected2
+    ]
+    batches.append({
+        "batch_id": "tier2_instanced_fixed_groves",
+        "tier": 2,
+        "source_mode": "fixed_world_oriented_source_mesh_instancing",
+        "instances": tier2_instances,
+    })
     coverage = coverage_metrics(inputs, eligible_mask, tier2, tier2_instances)
 
     output_kind = "TEST_ONLY_SYNTHETIC" if allow_synthetic_test_input else "VALIDATED_LIDAR_DERIVATIVE"
@@ -1036,13 +1061,23 @@ def build_distribution(
         "instance_count": sum(len(batch["instances"]) for batch in batches),
         "batches": batches,
         "coverage_agreement": coverage,
-        "cluster_footprints": [],
+        "cluster_footprints": [
+            {
+                "stable_id": instance["stable_id"],
+                "radius_major_m": instance["footprint_radius_major_m"],
+                "radius_minor_m": instance["footprint_radius_minor_m"],
+                "yaw_degrees": instance["footprint_yaw_degrees"],
+                "analytic_area_m2": instance["footprint_area_m2"],
+                "handoff_ownership": "terrain_canopy_map_retained_beneath_cluster",
+            }
+            for instance in tier2_instances
+        ],
         "statistics": {
             "coarse_candidates": len(candidates),
             "tier0_selected": len(selected0),
             "tier1_selected": len(selected1),
-            "tier2_selected": 0,
-            "tier2_geometry_draws": 0,
+            "tier2_selected": len(selected2),
+            "tier2_geometry_draws": 1 if tier2_instances else 0,
             "tier2_terrain_shading_owned_pixels": coverage["tier2"]["terrain_shading_owned_pixels"],
             "archetype_counts": dict(sorted(
                 (archetype, sum(1 for instance in tier0_instances + tier1_instances if instance["archetype"] == archetype))
@@ -1055,8 +1090,8 @@ def build_distribution(
             "batch_renderer_gameobjects": 1,
             "ordinary_vertical_billboards": 0,
             "alpha_blended_material_slots": 0,
-            "source_draws_maximum": 2,
-            "runtime_batches_after_editor_bake": 2,
+            "source_draws_maximum": 3,
+            "runtime_batches_after_editor_bake": 3,
             "fixed_orientation_atlas_cards": True,
             "camera_facing": False,
             "lod_crossfade": False,
@@ -1064,9 +1099,10 @@ def build_distribution(
             "tier3_geometry_instances": 0,
             "tier3_final_weight": "R8 eligible-canopy and Tier0-1 geometry ownership mask",
             "tier3_scalar_handoff": False,
-            "tier2_representation": "orthophoto_plus_lidar_canopy_normal_occlusion_terrain_shading",
-            "tier2_geometry_instances": 0,
-            "tier2_geometry_draws": 0,
+            "tier2_representation": "fixed_world_oriented_grove_clusters_over_orthophoto_lidar_canopy_shading",
+            "tier2_geometry_instances": len(tier2_instances),
+            "tier2_geometry_draws": 1 if tier2_instances else 0,
+            "tier2_geometry_carves_handoff": False,
         },
     }
     return result
@@ -1117,7 +1153,10 @@ def main() -> int:
             if int(batch["tier"]) in (0, 1)
             for instance in batch["instances"]
         ]
-        write_coverage_overlay(args.coverage_overlay.resolve(), inputs, eligible_mask, tier2, [], trees)
+        clusters = next(
+            batch["instances"] for batch in distribution["batches"] if int(batch["tier"]) == 2
+        )
+        write_coverage_overlay(args.coverage_overlay.resolve(), inputs, eligible_mask, tier2, clusters, trees)
     print(json.dumps({
         "status": distribution["status"],
         "output": str(output_path),

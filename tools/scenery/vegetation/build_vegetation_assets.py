@@ -150,7 +150,7 @@ TextureImporter:
     normalMapFilter: 0
     flipGreenChannel: 0
   isReadable: 0
-  streamingMipmaps: 0
+  streamingMipmaps: {1 if mipmaps and not single_channel_r8 else 0}
   streamingMipmapsPriority: 0
   vTOnly: 0
   ignoreMipmapLimit: 0
@@ -212,7 +212,7 @@ TextureImporter:
     buildTarget: Android
     maxTextureSize: 1024
     resizeAlgorithm: 0
-    textureFormat: {63 if single_channel_r8 else -1}
+    textureFormat: {63 if single_channel_r8 else 50}
     textureCompression: 0
     compressionQuality: 100
     crunchedCompression: 0
@@ -352,13 +352,21 @@ def write_contract(
             {
                 "tier": 2,
                 "range_m": [tiers[2]["minimum_radius_m"], tiers[2]["maximum_radius_m"]],
-                "mode": "orthophoto_plus_existing_lidar_canopy_normal_occlusion_terrain_shading",
-                "source_objects": [],
-                "maximum_instances": 0,
-                "geometry_instances": 0,
-                "geometry_draws": 0,
-                "geometry_triangles": 0,
+                "mode": "fixed_world_oriented_alpha_clip_grove_clusters_over_existing_lidar_canopy_terrain_shading",
+                "source_objects": tiers[2]["source_objects"],
+                "maximum_instances": tiers[2]["maximum_instances"],
+                "geometry_instances": tiers[2]["maximum_instances"],
+                "geometry_draws": tiers[2]["geometry_draws"],
+                "geometry_triangles": (
+                    tiers[2]["maximum_instances"]
+                    * config["runtime_budget"]["tier2_source_triangles_per_instance"]
+                ),
+                "instancing": "one shared source-mesh batch",
                 "camera_facing": False,
+                "lod_crossfade": False,
+                "alpha_blending": False,
+                "carves_canopy_map_handoff": False,
+                "terrain_map_retained_beneath_geometry": True,
                 "canopy_map_handoff_texture": "_AerialCanopyHandoffMask",
             },
             {
@@ -381,7 +389,7 @@ def write_contract(
         "runtime_budget": config["runtime_budget"],
         "rendering_policy": {
             "shared_materials": 1,
-            "maximum_draws": 2,
+            "maximum_draws": 3,
             "transparent_material_slots": 0,
             "alpha_blending": False,
             "alpha_testing": True,
@@ -394,7 +402,7 @@ def write_contract(
             "one_gameobject_per_tree": False,
             "runtime_hierarchy_construction": False,
             "steady_state_allocations": 0,
-            "geometry_ownership_handoff": "R8 Tier0/Tier1 geometry complement on the exact lidar grid; Tier2 never carves the canopy map",
+            "geometry_ownership_handoff": "R8 Tier0/Tier1 geometry complement on the exact lidar grid; additive Tier2 fixed grove clusters never carve the canopy map",
         },
         "legacy_renderer_roots_to_disable_during_authored_integration": legacy_roots(),
         "legacy_disable_policy": (
@@ -578,7 +586,7 @@ def main() -> int:
         alpha_cutout=False,
         single_channel_r8=True,
         mipmaps=False,
-        note="Final lidar-canopy and Tier0/Tier1 ownership weight; Tier2 has zero geometry; R8, no mips, exact frozen lidar grid",
+        note="Final lidar-canopy and Tier0/Tier1 ownership weight; additive Tier2 grove geometry never carves it; R8, no mips, exact frozen lidar grid",
     )
     default_meta(handoff_report_path, "Tier3 eligible-canopy and geometry-ownership handoff report")
 
@@ -616,7 +624,7 @@ def main() -> int:
         (atlas_path, "Deterministic project-authored 1K bark and foliage atlas for Tier0/Tier1 micro-groves"),
         (surface_path, "Deterministic packed normal XY, roughness, and AO atlas"),
         (atlas_report_path, "Deterministic atlas layout, source, license, and hash report"),
-        (handoff_mask_path, "Final R8 eligible-canopy and Tier0/Tier1 geometry ownership weight; Tier2 remains map-owned"),
+        (handoff_mask_path, "Final R8 eligible-canopy and Tier0/Tier1 geometry ownership weight; Tier2 remains map-owned beneath additive clusters"),
         (handoff_report_path, "Deterministic handoff inputs, semantics, exclusions, coverage, and hash report"),
         (shader_path, "Fixed-card alpha-test Built-in Render Pipeline vegetation shader"),
         (include_path, "Tier 3 canopy-map shader include with bounds and R8 ownership gating"),
@@ -640,7 +648,7 @@ def main() -> int:
     )
     source_files.append((
         VEGETATION_ROOT / "Generated/AerialVegetationRoot.prefab",
-        "Deterministic two-draw near-vegetation prefab; Tier2/Tier3 remain terrain-shaded; product-scene integration remains lead-owned",
+        "Deterministic three-draw vegetation prefab: two near editor-baked batches plus one fixed Tier2 instanced grove batch over retained terrain-canopy shading",
     ))
     source_files.append((distribution_path, "Validated lidar-derived distribution; frozen source hashes embedded"))
     write_source_manifest(source_manifest_path, source_files)
