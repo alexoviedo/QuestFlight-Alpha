@@ -583,9 +583,10 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             window.SetColor("_SideWindowTint", new Color(0.70f, 0.82f, 0.92f, 1f));
             window.SetFloat("_WindshieldOpacity", 0.045f);
             window.SetFloat("_SideWindowOpacity", 0.065f);
-            window.SetFloat("_FresnelOpacity", 0.085f);
-            window.SetFloat("_ReflectionStrength", 0.24f);
-            window.SetFloat("_PerceptualRoughness", 0.24f);
+            window.SetFloat("_FresnelOpacity", 0.105f);
+            window.SetFloat("_ReflectionStrength", 0.42f);
+            window.SetFloat("_DirectGlintStrength", 0.055f);
+            window.SetFloat("_PerceptualRoughness", 0.18f);
             window.SetFloat("_SideAxisStart", 0.52f);
             window.SetFloat("_SideAxisEnd", 0.82f);
             window.renderQueue = (int)RenderQueue.Transparent + 12;

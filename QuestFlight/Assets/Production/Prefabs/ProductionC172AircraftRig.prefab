@@ -5759,7 +5759,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.ProductionAircraftLightingController
   importedAircraftRoot: {fileID: 6466588389976723443}
   staticDepthStrength: 0.3
-  cockpitOcclusionStrength: 0.32
+  cockpitOcclusionStrength: 0.64
   coarseNormalStrength: 0.42
   instrumentReadabilityEmission: 0.2
 --- !u!114 &1221598877841403682

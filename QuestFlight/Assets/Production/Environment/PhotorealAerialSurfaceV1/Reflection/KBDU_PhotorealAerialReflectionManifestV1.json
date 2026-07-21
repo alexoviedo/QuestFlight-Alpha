@@ -63,8 +63,8 @@
     },
     "window_material": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionCockpitWindowReflection.mat",
-      "sha256": "4e692f891475d5e4476e88e63775e8c739a3788bb8436191951da1bb333b82a5",
-      "bytes": 1097
+      "sha256": "f64d6e2685a426b09e81f49876212ad7ff41554bc3cc5478dfcbef163fe0a426",
+      "bytes": 1131
     },
     "instrument_glass_material": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentGlassReflection.mat",
@@ -73,8 +73,8 @@
     },
     "window_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitWindowReflection.shader",
-      "sha256": "d57186ffb0ecf6985d41d940c4cea733530a83c1e9ef2a8c729ad449a8bd1b04",
-      "bytes": 5531
+      "sha256": "668d5f852c1031dc433af23a3c1291183e68f785ce2b26eac0fa0d247a2acec3",
+      "bytes": 6080
     },
     "instrument_glass_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader",

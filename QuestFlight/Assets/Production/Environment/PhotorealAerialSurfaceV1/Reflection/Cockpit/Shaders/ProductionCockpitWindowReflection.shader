@@ -8,6 +8,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
         _SideWindowOpacity ("Side Window Opacity", Range(0, 0.2)) = 0.065
         _FresnelOpacity ("Edge Fresnel Opacity", Range(0, 0.2)) = 0.085
         _ReflectionStrength ("Reflection Strength", Range(0, 0.5)) = 0.24
+        _DirectGlintStrength ("Directional Glint Strength", Range(0, 0.12)) = 0.055
         _PerceptualRoughness ("Perceptual Roughness", Range(0.05, 1)) = 0.24
         _SideAxisStart ("Side Axis Start", Range(0, 1)) = 0.52
         _SideAxisEnd ("Side Axis End", Range(0, 1)) = 0.82
@@ -32,6 +33,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
             #pragma multi_compile __ UNITY_SPECCUBE_BLENDING
             #pragma multi_compile __ UNITY_SPECCUBE_BOX_PROJECTION
             #include "UnityCG.cginc"
+            #include "Lighting.cginc"
             #include "UnityGlobalIllumination.cginc"
 
             fixed4 _WindshieldTint;
@@ -40,6 +42,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
             half _SideWindowOpacity;
             half _FresnelOpacity;
             half _ReflectionStrength;
+            half _DirectGlintStrength;
             half _PerceptualRoughness;
             half _SideAxisStart;
             half _SideAxisEnd;
@@ -116,8 +119,13 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
                 half3 reflection = SampleAuthoredReflection(
                     input.worldPosition, viewDirection, reflectionDirection);
                 half reflectionWeight = _ReflectionStrength * (0.32h + fresnel * 0.68h);
+                half reflectionVisibility = saturate(opacity * 2.75h + fresnel * 0.05h);
                 half3 premultiplied = tint * opacity * 0.08h +
-                                      reflection * reflectionWeight * opacity;
+                                      reflection * reflectionWeight * reflectionVisibility;
+                half3 sunDirection = normalize(_WorldSpaceLightPos0.xyz);
+                half sunGlint = pow(saturate(dot(
+                    reflect(-sunDirection, normal), viewDirection)), 96.0h);
+                premultiplied += _LightColor0.rgb * sunGlint * _DirectGlintStrength;
                 return fixed4(premultiplied, opacity);
             }
             ENDCG

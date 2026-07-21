@@ -120,6 +120,8 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(instrument.renderQueue, Is.EqualTo((int)RenderQueue.Transparent + 16));
             Assert.That(window.GetFloat("_WindshieldOpacity"), Is.LessThanOrEqualTo(0.05f));
             Assert.That(window.GetFloat("_SideWindowOpacity"), Is.LessThanOrEqualTo(0.07f));
+            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.38f, 0.45f));
+            Assert.That(window.GetFloat("_DirectGlintStrength"), Is.InRange(0.04f, 0.08f));
             Assert.That(instrument.GetFloat("_Opacity"), Is.LessThanOrEqualTo(0.02f));
             Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.LessThanOrEqualTo(0.10f));
 
@@ -142,6 +144,11 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(source, Does.Not.Contain("refraction"), path);
                 Assert.That(source, Does.Not.Contain("raymarch"), path);
             }
+            string windowSource = File.ReadAllText(WindowShaderPath);
+            Assert.That(windowSource, Does.Contain("sunGlint"));
+            Assert.That(windowSource, Does.Contain("_DirectGlintStrength"));
+            Assert.That(windowSource, Does.Contain("reflectionVisibility"));
+            Assert.That(windowSource, Does.Contain("reflectionVisibility"));
         }
 
         [Test]

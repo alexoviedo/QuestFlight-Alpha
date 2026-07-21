@@ -28,6 +28,12 @@ namespace QuestFlightLab.Tests.EditMode
                 Renderer[] renderers = cockpit.GetComponentsInChildren<Renderer>(true);
                 Assert.That(renderers.Length, Is.GreaterThanOrEqualTo(12));
                 Assert.That(cockpit.GetComponentsInChildren<Light>(true), Is.Empty);
+                QuestFlightLab.Aircraft.ProductionAircraftLightingController lighting =
+                    root.GetComponentInChildren<QuestFlightLab.Aircraft.ProductionAircraftLightingController>(true);
+                Assert.That(lighting, Is.Not.Null);
+                SerializedObject lightingObject = new SerializedObject(lighting);
+                Assert.That(lightingObject.FindProperty("cockpitOcclusionStrength").floatValue,
+                    Is.EqualTo(0.64f).Within(0.0001f));
 
                 HashSet<Material> materials = new HashSet<Material>();
                 int bakedAoMaterials = 0;

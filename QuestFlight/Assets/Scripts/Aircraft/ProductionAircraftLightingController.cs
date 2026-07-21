@@ -36,7 +36,7 @@ namespace QuestFlightLab.Aircraft
     {
         public const float DefaultStaticDepthStrength = 0.30f;
         public const float MaximumStaticDepthStrength = 0.42f;
-        public const float DefaultCockpitOcclusionStrength = 0.32f;
+        public const float DefaultCockpitOcclusionStrength = 0.64f;
         public const float DefaultCoarseNormalStrength = 0.42f;
         public const float DefaultInstrumentReadabilityEmission = 0.20f;
 
@@ -112,7 +112,7 @@ namespace QuestFlightLab.Aircraft
                 cockpitOcclusionStrength = Mathf.Clamp01(occlusionStrength),
                 coarseNormalStrength = Mathf.Clamp01(normalStrength),
                 instrumentReadabilityEmission = Mathf.Clamp(instrumentEmission, 0f, 0.5f),
-                strategy = "no_realtime_cockpit_shadows_plus_bounded_ao_soft_normals_and_base_texture_instrument_emission"
+                strategy = "no_realtime_cockpit_shadows_plus_strengthened_baked_ao_soft_normals_and_base_texture_instrument_emission"
             };
             Dictionary<Material, Material> cockpitClones = new Dictionary<Material, Material>();
 
