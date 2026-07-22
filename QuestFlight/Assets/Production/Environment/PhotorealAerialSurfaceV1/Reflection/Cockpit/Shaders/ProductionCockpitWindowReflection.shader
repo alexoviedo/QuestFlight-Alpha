@@ -164,13 +164,22 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
                     exteriorReflection,
                     saturate(_InteriorSkyLeak + fresnel * 0.10h));
                 half3 reflection = lerp(exteriorReflection, interiorReflection, interiorMix);
-                half reflectionWeight = saturate(_ReflectionStrength * (0.55h + fresnel * 0.45h));
-                half3 color = lerp(tint * 0.22h, reflection, reflectionWeight);
+                // Premultiplied transmission and reflected radiance are separate optical
+                // terms. The previous path mixed reflection into a tint and then multiplied
+                // the result by the low transmission alpha, suppressing cabin content twice.
+                // Keep the accepted clear-glass alpha while preserving a visible, bounded
+                // four-to-eighteen percent cabin reflection across normal/grazing views.
+                half opticalReflection = saturate(
+                    _ReflectionStrength * (0.12h + fresnel * 0.28h));
+                half3 liftedReflection = lerp(
+                    reflection, sqrt(saturate(reflection)), 0.32h);
+                half3 premultiplied = tint * opacity * 0.025h +
+                                      liftedReflection * opticalReflection;
                 half3 sunDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half sunGlint = pow(saturate(dot(
                     reflect(-sunDirection, normal), viewDirection)), 96.0h);
-                color += _LightColor0.rgb * sunGlint * _DirectGlintStrength;
-                return fixed4(color * opacity, opacity);
+                premultiplied += _LightColor0.rgb * sunGlint * _DirectGlintStrength;
+                return fixed4(premultiplied, opacity);
             }
             ENDCG
         }

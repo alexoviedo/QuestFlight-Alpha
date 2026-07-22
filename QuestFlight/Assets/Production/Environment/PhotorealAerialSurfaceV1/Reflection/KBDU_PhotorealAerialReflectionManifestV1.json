@@ -78,7 +78,7 @@
     },
     "window_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitWindowReflection.shader",
-      "sha256": "c68543a4ee869bfa32c28bbc23ceac625ac3719ac054adda0888dcfd99e481c1",
+      "sha256": "bd227043e177ca8d6a7d582f183c2fcd3004450f0f69779c8bc984dda3e64627",
       "bytes": 9688
     },
     "instrument_glass_shader": {
