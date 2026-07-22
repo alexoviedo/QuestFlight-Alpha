@@ -243,7 +243,7 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void BroadPanelInstrumentCoverConsumesTheOnlyTransparentInstrumentDraw()
+        public void AuthoritativeMiInstrumentCoverConsumesTheOnlyTransparentInstrumentDraw()
         {
             GameObject aircraft = AssetDatabase.LoadAssetAtPath<GameObject>(
                 PhotorealAerialReflectionAuthoring.AircraftPrefabPath);
@@ -253,19 +253,18 @@ namespace QuestFlightLab.Tests.EditMode
             Renderer[] covers = aircraft.GetComponentsInChildren<Renderer>(true)
                 .Where(renderer => renderer.sharedMaterials.Contains(instrument)).ToArray();
             Assert.That(covers, Has.Length.EqualTo(1));
-            Renderer broad = covers.Single(renderer => string.Equals(renderer.name,
+            Renderer authoritative = covers.Single(renderer => string.Equals(renderer.name,
                 PhotorealAerialReflectionAuthoring.InstrumentCoverRendererName,
                 StringComparison.Ordinal));
-            Assert.That(broad.enabled, Is.True);
-            Mesh broadMesh = broad.GetComponent<MeshFilter>().sharedMesh;
-            Assert.That(broadMesh.bounds.size.x, Is.GreaterThan(0.5f));
-            Assert.That(broadMesh.bounds.size.y, Is.GreaterThan(0.1f));
-            Renderer singleLens = aircraft.GetComponentsInChildren<Renderer>(true).Single(renderer =>
+            Assert.That(authoritative.enabled, Is.True);
+            Mesh authoritativeMesh = authoritative.GetComponent<MeshFilter>().sharedMesh;
+            Assert.That(authoritativeMesh.bounds.size.x, Is.LessThan(0.15f));
+            Renderer decorative = aircraft.GetComponentsInChildren<Renderer>(true).Single(renderer =>
                 string.Equals(renderer.name,
-                    PhotorealAerialReflectionAuthoring.SingleInstrumentLensRendererName,
+                    PhotorealAerialReflectionAuthoring.DecorativeInstrumentCoverRendererName,
                     StringComparison.Ordinal));
-            Assert.That(singleLens.enabled, Is.False);
-            Assert.That(singleLens.sharedMaterials, Has.None.SameAs(instrument));
+            Assert.That(decorative.enabled, Is.False);
+            Assert.That(decorative.sharedMaterials, Has.Some.SameAs(instrument));
         }
 
         [Test]

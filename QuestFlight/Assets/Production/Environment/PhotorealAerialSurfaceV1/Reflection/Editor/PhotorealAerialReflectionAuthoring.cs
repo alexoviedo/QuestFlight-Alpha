@@ -86,9 +86,9 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
         public const string ExteriorWindowRendererName =
             "Cessna_Exterior_Glass_MAT_0_Glass_MAT_0";
         public const string InstrumentCoverRendererName =
-            "GlassPartNew_GlassMat_New_0_GlassMat_New_0";
-        public const string SingleInstrumentLensRendererName =
             "Cessna_Interior_MI_Glass1_0_MI_Glass1_0";
+        public const string DecorativeInstrumentCoverRendererName =
+            "GlassPartNew_GlassMat_New_0_GlassMat_New_0";
         public const string RejectedCockpitSunOcclusionObjectName =
             "ProductionCockpitBakedSunOcclusion";
 
@@ -1038,8 +1038,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                         StringComparison.Ordinal);
                     bool instrumentCover = string.Equals(renderer.name, InstrumentCoverRendererName,
                         StringComparison.Ordinal);
-                    bool singleInstrumentLens = string.Equals(renderer.name,
-                        SingleInstrumentLensRendererName, StringComparison.Ordinal);
+                    bool decorativeInstrumentCover = string.Equals(renderer.name,
+                        DecorativeInstrumentCoverRendererName, StringComparison.Ordinal);
                     for (int index = 0; index < materials.Length; index++)
                     {
                         if (exteriorWindow)
@@ -1052,8 +1052,14 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                             materials[index] = instrument;
                             instrumentSlots++;
                         }
-                        else if (singleInstrumentLens)
-                            materials[index] = sourceInstrument;
+                        else if (decorativeInstrumentCover)
+                        {
+                            // Preserve the imported shell's deterministic material binding
+                            // for traceability, but never render it. Worn testing proved that
+                            // this shell does not cover the visible gauge apertures.
+                            materials[index] = instrument;
+                            instrumentSlots++;
+                        }
                         else if (materials[index] == window)
                         {
                             windowSlots++;
@@ -1062,25 +1068,25 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                             materials[index] = sourceInstrument;
                     }
                     renderer.sharedMaterials = materials;
-                    // The broad authored glass shell spans the instrument panel and is the
-                    // sole reflective cover. The prior active MI mesh was only a single
-                    // ~8 cm lens, which is why worn review could not see panel reflections.
+                    // Restore the imported MI renderer that previously produced the visible
+                    // gauge-lens response. Promoting GlassPartNew caused the regression: it
+                    // is a decorative duplicate outside the seated view's usable apertures.
                     if (instrumentCover)
                     {
                         renderer.enabled = true;
                         Mesh coverMesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
-                        if (coverMesh == null || coverMesh.bounds.size.x < 0.5f ||
-                            coverMesh.bounds.size.y < 0.1f)
+                        if (coverMesh == null || coverMesh.bounds.size.x > 0.15f)
                             throw new InvalidOperationException(
-                                "The authoritative broad instrument cover has implausible bounds.");
+                                "The authoritative MI instrument cover has implausible bounds.");
                     }
-                    if (singleInstrumentLens)
+                    if (decorativeInstrumentCover)
                     {
                         renderer.enabled = false;
-                        Mesh lensMesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
-                        if (lensMesh == null || lensMesh.bounds.size.x > 0.15f)
+                        Mesh decorativeMesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
+                        if (decorativeMesh == null || decorativeMesh.bounds.size.x < 0.5f ||
+                            decorativeMesh.bounds.size.y < 0.1f)
                             throw new InvalidOperationException(
-                                "The rejected single-instrument lens no longer has bounded dimensions.");
+                                "The disabled decorative instrument shell has implausible bounds.");
                     }
                     if (exteriorWindow)
                     {
@@ -1120,11 +1126,11 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     renderer => true, null);
                 visibilitySettings.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(visibility);
-                if (windowSlots != 1 || instrumentSlots != 1 || activeInstrumentSlots != 1 ||
+                if (windowSlots != 1 || instrumentSlots != 2 || activeInstrumentSlots != 1 ||
                     exteriorWindowRenderers != 1)
                     throw new InvalidOperationException(
-                        "Expected one full-cabin exterior window slot, one active broad " +
-                        "instrument-glass slot, " +
+                        "Expected one full-cabin exterior window slot, two serialized/one active " +
+                        "instrument-glass slots, " +
                         $"and one enabled exterior glazing renderer; found {windowSlots}/" +
                         $"{instrumentSlots}/{activeInstrumentSlots}/{exteriorWindowRenderers}.");
                 PrefabUtility.SaveAsPrefabAsset(root, AircraftPrefabPath);
@@ -1318,25 +1324,26 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             if (aircraftRenderers.SelectMany(renderer => renderer.sharedMaterials).Count(material =>
                     material == LoadRequired<Material>(WindowMaterialPath)) != 1 ||
                 aircraftRenderers.SelectMany(renderer => renderer.sharedMaterials).Count(material =>
-                    material == LoadRequired<Material>(InstrumentGlassMaterialPath)) != 1)
+                    material == LoadRequired<Material>(InstrumentGlassMaterialPath)) != 2)
                 throw new InvalidOperationException("Dedicated cockpit glass bindings are incomplete.");
             Renderer[] activeInstrumentCovers = aircraftRenderers.Where(renderer => renderer.enabled &&
                 renderer.sharedMaterials.Any(material =>
                     material == LoadRequired<Material>(InstrumentGlassMaterialPath))).ToArray();
-            Renderer broadInstrumentCover = aircraftRenderers.Single(renderer =>
+            Renderer authoritativeInstrumentCover = aircraftRenderers.Single(renderer =>
                 string.Equals(renderer.name, InstrumentCoverRendererName,
                     StringComparison.Ordinal));
-            Renderer singleInstrumentLens = aircraftRenderers.Single(renderer =>
-                string.Equals(renderer.name, SingleInstrumentLensRendererName,
+            Renderer decorativeInstrumentCover = aircraftRenderers.Single(renderer =>
+                string.Equals(renderer.name, DecorativeInstrumentCoverRendererName,
                     StringComparison.Ordinal));
-            Mesh broadMesh = broadInstrumentCover.GetComponent<MeshFilter>()?.sharedMesh;
-            Mesh lensMesh = singleInstrumentLens.GetComponent<MeshFilter>()?.sharedMesh;
-            if (activeInstrumentCovers.Length != 1 || !broadInstrumentCover.enabled ||
-                activeInstrumentCovers[0] != broadInstrumentCover || singleInstrumentLens.enabled ||
-                broadMesh == null || broadMesh.bounds.size.x < 0.5f || broadMesh.bounds.size.y < 0.1f ||
-                lensMesh == null || lensMesh.bounds.size.x > 0.15f)
+            Mesh authoritativeMesh = authoritativeInstrumentCover.GetComponent<MeshFilter>()?.sharedMesh;
+            Mesh decorativeMesh = decorativeInstrumentCover.GetComponent<MeshFilter>()?.sharedMesh;
+            if (activeInstrumentCovers.Length != 1 || !authoritativeInstrumentCover.enabled ||
+                activeInstrumentCovers[0] != authoritativeInstrumentCover || decorativeInstrumentCover.enabled ||
+                authoritativeMesh == null || authoritativeMesh.bounds.size.x > 0.15f ||
+                decorativeMesh == null || decorativeMesh.bounds.size.x < 0.5f ||
+                decorativeMesh.bounds.size.y < 0.1f)
                 throw new InvalidOperationException(
-                    "Only the broad panel instrument cover may consume a transparent draw.");
+                    "Only the authoritative MI instrument cover may consume a transparent draw.");
             Renderer[] exteriorWindowRenderers = aircraftRenderers.Where(renderer =>
                 string.Equals(renderer.name, ExteriorWindowRendererName,
                     StringComparison.Ordinal)).ToArray();
