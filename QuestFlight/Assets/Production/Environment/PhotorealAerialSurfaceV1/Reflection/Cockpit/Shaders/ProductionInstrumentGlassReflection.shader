@@ -6,9 +6,9 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
         [NoScaleOffset] _AuthoredReflectionCube ("Offline Cockpit Interior Reflection", Cube) = "black" {}
         _Opacity ("Base Opacity", Range(0, 0.12)) = 0.036
         _FresnelOpacity ("Edge Fresnel Opacity", Range(0, 0.12)) = 0.072
-        _ReflectionStrength ("Reflection Strength", Range(0, 0.85)) = 0.68
+        _ReflectionStrength ("Reflection Strength", Range(0, 0.85)) = 0.78
         _DirectGlintStrength ("Directional Glint Strength", Range(0, 0.16)) = 0.10
-        _PerceptualRoughness ("Perceptual Roughness", Range(0.1, 1)) = 0.34
+        _PerceptualRoughness ("Perceptual Roughness", Range(0.1, 1)) = 0.22
         [HideInInspector] _InstrumentToAircraftRow0 ("Instrument To Aircraft Row 0", Vector) = (1,0,0,0)
         [HideInInspector] _InstrumentToAircraftRow1 ("Instrument To Aircraft Row 1", Vector) = (0,1,0,0)
         [HideInInspector] _InstrumentToAircraftRow2 ("Instrument To Aircraft Row 2", Vector) = (0,0,1,0)
@@ -93,16 +93,19 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
                     half4(localReflectionDirection, _PerceptualRoughness * 4.0h)).rgb;
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half glint = pow(saturate(dot(
-                    reflect(-lightDirection, normal), viewDirection)), 72.0h);
-                // Real glass keeps roughly four-percent normal-incidence reflectance. Do not
-                // multiply that optical signal by the very low coverage alpha: doing so erased
-                // the instrument reflections in worn review. Alpha still controls occlusion;
-                // the bounded RGB term represents reflected radiance in premultiplied blending.
-                half opticalFresnel = 0.105h + 0.895h * fresnel;
-                half headlinerCue = smoothstep(0.18h, 0.82h, localReflectionDirection.y);
-                reflection += half3(0.20h, 0.19h, 0.175h) * headlinerCue * 0.055h;
+                    reflect(-lightDirection, normal), viewDirection)), 36.0h);
+                // Preserve a visible normal-incidence signal on the forward-facing gauge
+                // cover. The previous dark cubemap sample plus a narrow headliner ramp was
+                // structurally correct but perceptually absent in the worn Quest view.
+                half opticalFresnel = 0.075h + 0.925h * fresnel;
+                half headlinerCue = smoothstep(-0.28h, 0.58h, localReflectionDirection.y);
+                half3 liftedReflection = lerp(
+                    reflection, sqrt(saturate(reflection)), 0.44h);
+                half3 cabinHighlight = half3(0.31h, 0.30h, 0.285h) *
+                    (0.018h + headlinerCue * 0.035h);
                 half3 premultiplied = _Tint.rgb * opacity * 0.018h +
-                                      reflection * _ReflectionStrength * opticalFresnel;
+                                      liftedReflection * _ReflectionStrength * opticalFresnel +
+                                      cabinHighlight;
                 premultiplied += _LightColor0.rgb * glint * _DirectGlintStrength *
                                  (0.25h + opticalFresnel * 0.75h);
                 return fixed4(premultiplied, opacity);

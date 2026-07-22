@@ -32,8 +32,8 @@ Material:
     - _DirectGlintStrength: 0.12
     - _FresnelOpacity: 0.072
     - _Opacity: 0.036
-    - _PerceptualRoughness: 0.28
-    - _ReflectionStrength: 0.68
+    - _PerceptualRoughness: 0.22
+    - _ReflectionStrength: 0.78
     m_Colors:
     - _InstrumentToAircraftRow0: {r: 1.135048, g: 0, b: 0, a: -0.15695015}
     - _InstrumentToAircraftRow1: {r: 0, g: -1.130729, b: -0.09892651, a: 0.64247394}

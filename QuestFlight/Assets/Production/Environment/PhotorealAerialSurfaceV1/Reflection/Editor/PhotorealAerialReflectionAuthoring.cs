@@ -796,9 +796,9 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             instrument.SetColor("_Tint", new Color(0.90f, 0.94f, 0.98f, 1f));
             instrument.SetFloat("_Opacity", 0.036f);
             instrument.SetFloat("_FresnelOpacity", 0.072f);
-            instrument.SetFloat("_ReflectionStrength", 0.68f);
+            instrument.SetFloat("_ReflectionStrength", 0.78f);
             instrument.SetFloat("_DirectGlintStrength", 0.12f);
-            instrument.SetFloat("_PerceptualRoughness", 0.28f);
+            instrument.SetFloat("_PerceptualRoughness", 0.22f);
             SetSerializedTransformRows(instrument, "_InstrumentToAircraft", instrumentLocalToAircraft);
             instrument.renderQueue = (int)RenderQueue.Transparent + 16;
             instrument.enableInstancing = false;
