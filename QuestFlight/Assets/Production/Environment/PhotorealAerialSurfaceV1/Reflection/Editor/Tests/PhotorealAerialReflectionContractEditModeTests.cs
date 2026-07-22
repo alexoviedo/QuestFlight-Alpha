@@ -243,7 +243,7 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void AuthoritativeMiInstrumentCoverConsumesTheOnlyTransparentInstrumentDraw()
+        public void DerivedPilotFacingInstrumentCoverConsumesTheOnlyTransparentInstrumentDraw()
         {
             GameObject aircraft = AssetDatabase.LoadAssetAtPath<GameObject>(
                 PhotorealAerialReflectionAuthoring.AircraftPrefabPath);
@@ -258,13 +258,21 @@ namespace QuestFlightLab.Tests.EditMode
                 StringComparison.Ordinal));
             Assert.That(authoritative.enabled, Is.True);
             Mesh authoritativeMesh = authoritative.GetComponent<MeshFilter>().sharedMesh;
-            Assert.That(authoritativeMesh.bounds.size.x, Is.LessThan(0.15f));
+            Assert.That(authoritativeMesh.vertexCount, Is.GreaterThan(100));
+            Assert.That(authoritativeMesh.bounds.size.x, Is.GreaterThan(0.5f));
+            Assert.That(authoritativeMesh.bounds.size.y, Is.GreaterThan(0.1f));
             Renderer decorative = aircraft.GetComponentsInChildren<Renderer>(true).Single(renderer =>
                 string.Equals(renderer.name,
                     PhotorealAerialReflectionAuthoring.DecorativeInstrumentCoverRendererName,
                     StringComparison.Ordinal));
             Assert.That(decorative.enabled, Is.False);
-            Assert.That(decorative.sharedMaterials, Has.Some.SameAs(instrument));
+            Assert.That(decorative.sharedMaterials, Has.None.SameAs(instrument));
+            Renderer legacyMi = aircraft.GetComponentsInChildren<Renderer>(true).Single(renderer =>
+                string.Equals(renderer.name,
+                    PhotorealAerialReflectionAuthoring.LegacyMiGlassRendererName,
+                    StringComparison.Ordinal));
+            Assert.That(legacyMi.enabled, Is.False);
+            Assert.That(legacyMi.sharedMaterials, Has.None.SameAs(instrument));
         }
 
         [Test]
