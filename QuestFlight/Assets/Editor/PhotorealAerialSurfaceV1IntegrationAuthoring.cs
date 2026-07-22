@@ -688,8 +688,8 @@ namespace QuestFlight.Editor
             RequireContains(buildings, "0-2km", "near building coverage band");
             RequireContains(buildings, "2-4km", "mid building coverage band");
             RequireContains(canopy,
-                "semantic_connected_groves_0_2040m_over_continuous_terrain_canopy",
-                "semantic connected-grove canopy representation");
+                "semantic_perforated_groves_0_2040m_over_continuous_terrain_canopy",
+                "semantic perforated near/mid grove canopy representation");
             RequireContains(canopy, "\"mesh_batch_count\": 4",
                 "four bounded raised-canopy mesh batches");
             RequireContains(canopy, "REJECTED_BLOCK_AND_CLIFF_SILHOUETTES",

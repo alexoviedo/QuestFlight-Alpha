@@ -130,7 +130,7 @@ GROVE_TRIANGLES_PER_GROVE = (
     GROVE_CROWN_TRIANGLES + GROVE_TRUNKS_PER_GROVE * GROVE_TRUNK_SIDES * 2
 )
 NEAR_GROVE_RADIUS_METERS = 650.0
-MID_GROVE_RADIUS_METERS = 1400.0
+MID_GROVE_RADIUS_METERS = 1600.0
 NEAR_GROVE_SEGMENTS = 10
 MID_GROVE_SEGMENTS = 7
 FAR_GROVE_SEGMENTS = 5
@@ -145,6 +145,11 @@ NEAR_TREE_TRIANGLES = (
     + NEAR_TREE_BRANCHES * GROVE_TRUNK_SIDES * 2
     + NEAR_TREE_FOLIAGE_CARDS * 2
 )
+MID_TREE_COUNT = 2
+MID_TREE_FOLIAGE_CARDS = 4
+MID_TREE_TRIANGLES_PER_GROVE = MID_TREE_COUNT * (
+    GROVE_TRUNK_SIDES * 2 + MID_TREE_FOLIAGE_CARDS * 2
+)
 GROVE_HEIGHT_SCALE = 1.18
 GROVE_HEIGHT_BIAS_METERS = 2.3
 GROVE_MINIMUM_HEIGHT_METERS = 7.0
@@ -152,7 +157,9 @@ GROVE_MAXIMUM_HEIGHT_METERS = 24.0
 MAXIMUM_GROVE_COUNT = MAXIMUM_MESH_TRIANGLES // (
     FAR_GROVE_SEGMENTS * 4 + FAR_GROVE_TRUNKS * GROVE_TRUNK_SIDES * 2
 )
-PRODUCT_CANOPY_POLICY = "semantic_connected_groves_0_2040m_over_continuous_terrain_canopy"
+PRODUCT_CANOPY_POLICY = (
+    "semantic_perforated_groves_0_2040m_over_continuous_terrain_canopy"
+)
 
 
 def load_near_ground_imagery() -> tuple[np.ndarray, tuple[float, float, float, float], dict[str, Any]]:
@@ -1039,14 +1046,20 @@ class ObjBatch:
         for tree_index in range(tree_count):
             identity = (seed * 97.0 + tree_index * 0.61803398875) % 1.0
             angle = rotation + tree_index * golden_angle + identity * 0.45
-            radial = 0.10 if tree_count == 1 else math.sqrt((tree_index + 0.35) / tree_count) * 0.58
+            # Enlarged crowns overlap into one plausible grove silhouette instead
+            # of leaving the photographed canopy footprint as sparse props.
+            radial = 0.08 if tree_count == 1 else math.sqrt((tree_index + 0.35) / tree_count) * 0.44
             tree_x = x + math.cos(angle) * radius_x * radial
             tree_z = z + math.sin(angle) * radius_z * radial
             tree_height = height * (0.78 + 0.22 * ((identity * 7.31) % 1.0))
+            minimum_grove_radius = min(radius_x, radius_z)
             crown_radius = float(np.clip(
-                min(radius_x, radius_z) * (0.34 + 0.05 * ((identity * 11.7) % 1.0)),
-                2.2,
-                4.4,
+                max(
+                    tree_height * (0.34 + 0.045 * ((identity * 11.7) % 1.0)),
+                    minimum_grove_radius * (0.40 + 0.04 * ((identity * 5.3) % 1.0)),
+                ),
+                2.8,
+                min(7.2, minimum_grove_radius * 0.62),
             ))
             trunk_radius = float(np.clip(tree_height * 0.030, 0.30, 0.52))
             trunk_top = (
@@ -1137,9 +1150,103 @@ class ObjBatch:
                 )
         self.crown_count += 1
 
+    def add_mid_grove(self, grove: dict[str, float]) -> None:
+        """Author a perforated, near-family grove proxy for pattern-altitude views.
+
+        Two overlapping broadleaf crowns preserve the semantic footprint and
+        tree-height scale using the same atlas as the accepted airport trees.
+        This replaces the opaque connected shell without spending geometry on
+        near-only branch detail or ordinary camera-facing billboards.
+        """
+        x = float(grove["x"])
+        z = float(grove["z"])
+        ground = float(grove["ground"])
+        height = float(grove["height"])
+        radius_x = float(grove["radius_x"])
+        radius_z = float(grove["radius_z"])
+        rotation = float(grove["rotation"])
+        seed = float(grove["seed"])
+        ground_color = (
+            float(grove["ground_color_r"]),
+            float(grove["ground_color_g"]),
+            float(grove["ground_color_b"]),
+        )
+        foliage_color = (0.0, *ground_color)
+        trunk_color = (1.0, *ground_color)
+        minimum_grove_radius = min(radius_x, radius_z)
+
+        for tree_index in range(MID_TREE_COUNT):
+            side = -1.0 if tree_index == 0 else 1.0
+            identity = (seed * 83.0 + tree_index * 0.61803398875) % 1.0
+            along = side * minimum_grove_radius * (0.18 + identity * 0.035)
+            tree_x = x + math.cos(rotation) * along
+            tree_z = z + math.sin(rotation) * along
+            tree_height = height * (0.90 + identity * 0.10)
+            crown_radius = float(np.clip(
+                max(tree_height * (0.36 + identity * 0.055), minimum_grove_radius * 0.48),
+                2.8,
+                min(7.6, minimum_grove_radius * 0.68),
+            ))
+            trunk_radius = float(np.clip(tree_height * 0.025, 0.26, 0.48))
+            trunk_top = (
+                tree_x + math.cos(rotation + side * 0.42) * tree_height * 0.012,
+                ground + tree_height * 0.68,
+                tree_z + math.sin(rotation + side * 0.42) * tree_height * 0.012,
+            )
+            self.add_tapered_prism(
+                (tree_x, ground + 0.04, tree_z),
+                trunk_top,
+                trunk_radius,
+                trunk_radius * 0.52,
+                trunk_color,
+            )
+            self.trunk_count += 1
+            crown_center = (
+                tree_x,
+                ground + tree_height * 0.77,
+                tree_z,
+            )
+            atlas_base = int((identity * 991.0 + tree_index * 7.0)) % 16
+            for card_index in range(MID_TREE_FOLIAGE_CARDS):
+                card_angle = rotation + card_index * math.pi * 0.25 + identity * 0.55
+                right = (math.cos(card_angle), 0.0, math.sin(card_angle))
+                if card_index < 2:
+                    up = (0.0, 1.0, 0.0)
+                    card_center = (
+                        crown_center[0] + math.cos(card_angle) * crown_radius * 0.10,
+                        crown_center[1] + (card_index - 0.5) * crown_radius * 0.06,
+                        crown_center[2] + math.sin(card_angle) * crown_radius * 0.10,
+                    )
+                    half_height = crown_radius * 0.93
+                else:
+                    up = (
+                        -math.cos(card_angle) * 0.50,
+                        0.866,
+                        -math.sin(card_angle) * 0.50,
+                    )
+                    card_center = (
+                        crown_center[0] + math.cos(card_angle) * crown_radius * 0.16,
+                        crown_center[1] + crown_radius * 0.12,
+                        crown_center[2] + math.sin(card_angle) * crown_radius * 0.16,
+                    )
+                    half_height = crown_radius * 0.86
+                self.add_foliage_card(
+                    card_center,
+                    right,
+                    up,
+                    crown_radius * (1.04 + card_index * 0.018),
+                    half_height,
+                    (atlas_base + card_index * 5) % 16,
+                    foliage_color,
+                )
+            self.crown_count += 1
+
     def add_grove(self, grove: dict[str, float]) -> None:
         if float(grove.get("near_detail", 0.0)) > 0.5:
             self.add_near_grove(grove)
+            return
+        if float(grove.get("mid_detail", 0.0)) > 0.5:
+            self.add_mid_grove(grove)
             return
         x = float(grove["x"])
         z = float(grove["z"])
@@ -1449,6 +1556,10 @@ def compile_semantic_groves(
         )
         distance_from_origin = float(radius[center_row, center_column])
         near_detail = distance_from_origin <= NEAR_GROVE_RADIUS_METERS
+        mid_detail = (
+            distance_from_origin > NEAR_GROVE_RADIUS_METERS
+            and distance_from_origin <= MID_GROVE_RADIUS_METERS
+        )
         near_tree_count = int(np.clip(
             round(3.0 + density_mean * 2.0 + len(global_rows) / 20.0),
             NEAR_TREE_MINIMUM,
@@ -1475,6 +1586,7 @@ def compile_semantic_groves(
             "source_pixel_count": float(len(global_rows)),
             "distance_from_origin": distance_from_origin,
             "near_detail": 1.0 if near_detail else 0.0,
+            "mid_detail": 1.0 if mid_detail else 0.0,
             "near_tree_count": near_tree_count if near_detail else 0,
             "source_rows": global_rows,
             "source_columns": global_columns,
@@ -1499,6 +1611,7 @@ def compile_semantic_groves(
         })
     candidates.sort(key=lambda item: (
         -float(item["near_detail"]),
+        -float(item["mid_detail"]),
         -float(item["priority"]),
         float(item["x"]),
         float(item["z"]),
@@ -1509,6 +1622,8 @@ def compile_semantic_groves(
         item_triangles = (
             int(item["near_tree_count"]) * NEAR_TREE_TRIANGLES
             if float(item["near_detail"]) > 0.5
+            else MID_TREE_TRIANGLES_PER_GROVE
+            if float(item["mid_detail"]) > 0.5
             else (
                 int(item["crown_segments"]) * 4
                 + (int(item["peak_count"]) - 1) * 2
@@ -1545,6 +1660,11 @@ def compile_semantic_groves(
         "near_detailed_grove_count": sum(
             1 for item in groves if float(item["near_detail"]) > 0.5
         ),
+        "mid_perforated_grove_count": sum(
+            1 for item in groves if float(item["mid_detail"]) > 0.5
+        ),
+        "mid_tree_count_per_grove": MID_TREE_COUNT,
+        "mid_foliage_card_count_per_tree": MID_TREE_FOLIAGE_CARDS,
         "near_tree_range_per_grove": [NEAR_TREE_MINIMUM, NEAR_TREE_MAXIMUM],
         "near_branch_count_per_tree": NEAR_TREE_BRANCHES,
         "near_foliage_card_count_per_tree": NEAR_TREE_FOLIAGE_CARDS,
@@ -2225,14 +2345,29 @@ def build(
             "minimum_grove_span_meters": MINIMUM_GROVE_SPAN_METERS,
         },
         "topology": {
-            "connected_crown_count": len(groves) * GROVE_CROWN_LOBES,
+            "connected_crown_count": sum(
+                GROVE_CROWN_LOBES
+                for item in groves
+                if float(item["near_detail"]) <= 0.5
+                and float(item["mid_detail"]) <= 0.5
+            ),
             "near_detailed_grove_count": sum(
                 1 for item in groves if float(item["near_detail"]) > 0.5
+            ),
+            "mid_detailed_grove_count": sum(
+                1 for item in groves if float(item["mid_detail"]) > 0.5
+            ),
+            "mid_perforated_crown_count": sum(
+                MID_TREE_COUNT
+                for item in groves
+                if float(item["mid_detail"]) > 0.5
             ),
             "near_tree_count": sum(int(item["near_tree_count"]) for item in groves),
             "grounded_trunk_count": sum(
                 int(item["near_tree_count"])
                 if float(item["near_detail"]) > 0.5
+                else MID_TREE_COUNT
+                if float(item["mid_detail"]) > 0.5
                 else int(item["trunk_count"])
                 for item in groves
             ),
@@ -2241,11 +2376,14 @@ def build(
                 + (int(item["peak_count"]) - 1) * 2
                 for item in groves
                 if float(item["near_detail"]) <= 0.5
+                and float(item["mid_detail"]) <= 0.5
             ),
             "grounded_trunk_triangle_count": (
                 sum(
                     int(item["near_tree_count"])
                     if float(item["near_detail"]) > 0.5
+                    else MID_TREE_COUNT
+                    if float(item["mid_detail"]) > 0.5
                     else int(item["trunk_count"])
                     for item in groves
                 )
@@ -2258,6 +2396,15 @@ def build(
             "near_foliage_card_triangle_count": (
                 sum(int(item["near_tree_count"]) for item in groves)
                 * NEAR_TREE_FOLIAGE_CARDS * 2
+            ),
+            "mid_foliage_card_triangle_count": (
+                sum(
+                    MID_TREE_COUNT
+                    for item in groves
+                    if float(item["mid_detail"]) > 0.5
+                )
+                * MID_TREE_FOLIAGE_CARDS
+                * 2
             ),
             "coarse_tapered_boundary_quad_count": 0,
             "coarse_top_quad_count": 0,

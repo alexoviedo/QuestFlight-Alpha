@@ -24,8 +24,8 @@ MonoBehaviour:
   vegetationSourceManifest: {fileID: 4900000, guid: 482d1e01085d6223959c00f8d636a202, type: 3}
   buildingSourceManifest: {fileID: 4900000, guid: 726e93e7a23d9ba2581a647625de2449, type: 3}
   lidarPipelineSha256: 6fc3ae5091fb35599a5f8614be96a67e57b6b1f8e60924fc0aef0c939ff7fb2c
-  vegetationPipelineSha256: c33091d7dbc0d3f5c54d1046f6869c9915cd1524ea85d7c332d8837cb9b7d32e
-  buildingPipelineSha256: e7c76fa54c17a122c8cf7291eb148ad3905b8224d7d77903e938a6e5e1921493
+  vegetationPipelineSha256: c067d255301e6b8d1ad1bdddff519cc0099b889e8dd951e8aceae44da06bed9d
+  buildingPipelineSha256: ae984715315c2c86e89285233cfb8632390f082fcc00b86234fefba5db4d40fe
   worldMinimumMeters: {x: -2048, y: -2048}
   worldSizeMeters: {x: 4096, y: 4096}
   surfaceFeatures: {fileID: 2800000, guid: 694a8d7153f9db1f8ecd5293972f6d2b, type: 3}
@@ -37,9 +37,9 @@ MonoBehaviour:
   nearTerrainMesh: {fileID: 4300000, guid: 69fcc93902cb4fc4383fcb2da6701274, type: 2}
   midTerrainMesh: {fileID: 4300000, guid: 4f672962bf8d5274ab31831c906c0bb3, type: 2}
   boundedSourcePointCount: 18834395
-  canopyComponentCount: 515
+  canopyComponentCount: 682
   nearTreeInstanceCount: 22
-  midGroveClusterCount: 515
+  midGroveClusterCount: 682
   representedBuildingCount: 9692
   orthophotoOnlyBuildingCount: 17987
   buildingFootprintInflationMaximum: 1.05

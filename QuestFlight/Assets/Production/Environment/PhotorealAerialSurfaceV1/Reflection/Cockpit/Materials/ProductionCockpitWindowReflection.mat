@@ -29,14 +29,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _DirectGlintStrength: 0.11
-    - _FresnelOpacity: 0.24
-    - _PerceptualRoughness: 0.14
-    - _ReflectionStrength: 0.62
+    - _DirectGlintStrength: 0.08
+    - _FresnelOpacity: 0.14
+    - _PerceptualRoughness: 0.18
+    - _ReflectionStrength: 0.46
     - _SideAxisEnd: 0.82
     - _SideAxisStart: 0.52
-    - _SideWindowOpacity: 0.21
-    - _WindshieldOpacity: 0.18
+    - _SideWindowOpacity: 0.12
+    - _WindshieldOpacity: 0.1
     m_Colors:
     - _SideWindowTint: {r: 0.7, g: 0.82, b: 0.92, a: 1}
     - _WindshieldTint: {r: 0.77, g: 0.86, b: 0.95, a: 1}

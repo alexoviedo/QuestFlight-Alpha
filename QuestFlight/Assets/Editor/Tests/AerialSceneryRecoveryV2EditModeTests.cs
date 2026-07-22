@@ -66,7 +66,7 @@ namespace QuestFlight.Editor.Tests
                 .GetComponentsInChildren<AerialVegetationBatchRenderer>(true), Is.Empty,
                 "The product canopy must be serialized semantic geometry, not callback-only draws.");
             Assert.That(surface.canopySurfaceManifest.text,
-                Does.Contain("semantic_connected_groves_0_2040m_over_continuous_terrain_canopy"));
+                Does.Contain("semantic_perforated_groves_0_2040m_over_continuous_terrain_canopy"));
         }
 
         [Test]

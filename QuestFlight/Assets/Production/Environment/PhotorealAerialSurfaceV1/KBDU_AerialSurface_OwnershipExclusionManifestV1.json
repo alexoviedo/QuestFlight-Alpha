@@ -1,14 +1,14 @@
 {
   "asset_manifests": {
     "building": {
-      "bytes": 30910,
+      "bytes": 31325,
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/ProductionBuildingSurfaceLayer_Manifest.json",
-      "sha256": "e7c76fa54c17a122c8cf7291eb148ad3905b8224d7d77903e938a6e5e1921493"
+      "sha256": "ae984715315c2c86e89285233cfb8632390f082fcc00b86234fefba5db4d40fe"
     },
     "canopy": {
-      "bytes": 37369,
+      "bytes": 37620,
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer_Manifest.json",
-      "sha256": "c33091d7dbc0d3f5c54d1046f6869c9915cd1524ea85d7c332d8837cb9b7d32e"
+      "sha256": "c067d255301e6b8d1ad1bdddff519cc0099b889e8dd951e8aceae44da06bed9d"
     },
     "classification": {
       "bytes": 9341,
@@ -59,18 +59,18 @@
     "geometry_0_1500m": {
       "active": true,
       "mask": {
-        "bytes": 14706,
+        "bytes": 14579,
         "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer_GeometryOwnership_R8.png",
-        "sha256": "19a03766be8c0b773987c5518c319028d7f0d715e8524804de920724616332f3"
+        "sha256": "36fbbdc43ce11e7de7dc71e8e11d2c58fd2636e4aeb108fa4c3bec7068fdcdd1"
       },
       "owner": "ProductionCanopySurfaceLayer rounded opaque grove volumes",
-      "source_eligible_owned_pixel_count": 29329
+      "source_eligible_owned_pixel_count": 25437
     },
     "hero_0_250m": {
       "eligible_source_pixel_count": 144,
       "owner": "ProductionCanopySurfaceLayer; airport operational exclusions remain clear"
     },
-    "product_policy": "semantic_connected_groves_0_2040m_over_continuous_terrain_canopy",
+    "product_policy": "semantic_perforated_groves_0_2040m_over_continuous_terrain_canopy",
     "reviewed_noncanopy_exclusions": {
       "component_count": 2,
       "components": [

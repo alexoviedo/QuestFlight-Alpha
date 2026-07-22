@@ -121,10 +121,10 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(window.renderQueue, Is.EqualTo((int)RenderQueue.Transparent + 12));
             Assert.That(instrument.renderQueue, Is.EqualTo((int)RenderQueue.Transparent + 16));
             Assert.That(window.GetTexture("_AuthoredReflectionCube"), Is.Not.Null);
-            Assert.That(window.GetFloat("_WindshieldOpacity"), Is.InRange(0.17f, 0.19f));
-            Assert.That(window.GetFloat("_SideWindowOpacity"), Is.InRange(0.20f, 0.22f));
-            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.61f, 0.63f));
-            Assert.That(window.GetFloat("_DirectGlintStrength"), Is.InRange(0.10f, 0.12f));
+            Assert.That(window.GetFloat("_WindshieldOpacity"), Is.InRange(0.09f, 0.11f));
+            Assert.That(window.GetFloat("_SideWindowOpacity"), Is.InRange(0.11f, 0.13f));
+            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.45f, 0.47f));
+            Assert.That(window.GetFloat("_DirectGlintStrength"), Is.InRange(0.07f, 0.09f));
             Assert.That(instrument.GetFloat("_Opacity"), Is.LessThanOrEqualTo(0.02f));
             Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.LessThanOrEqualTo(0.10f));
 
@@ -161,11 +161,15 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(instrumentSource, Does.Contain("Blend One OneMinusSrcAlpha"));
             string interiorSource = File.ReadAllText(CockpitStableInteriorShaderPath);
             Assert.That(interiorSource, Does.Contain("_CabinDepthStrength"));
+            Assert.That(interiorSource, Does.Contain("_DirectionalCabinShadowStrength"));
+            Assert.That(interiorSource, Does.Contain("_WorldToAircraft"));
+            Assert.That(interiorSource, Does.Contain("frameShade"));
             Assert.That(interiorSource, Does.Contain("bakedOcclusion"));
             Assert.That(interiorSource, Does.Contain("Blend Off"));
             Assert.That(interiorSource, Does.Contain("ZWrite On"));
             Assert.That(interiorSource, Does.Contain("\"RenderType\"=\"Opaque\""));
-            Assert.That(interiorSource, Does.Not.Contain("SHADOW"));
+            Assert.That(interiorSource, Does.Not.Contain("SHADOWS_SCREEN"));
+            Assert.That(interiorSource, Does.Not.Contain("AutoLight.cginc"));
             Assert.That(interiorSource, Does.Not.Contain("AlphaToMask"));
         }
 
@@ -189,6 +193,9 @@ namespace QuestFlightLab.Tests.EditMode
             SerializedObject lightingSettings = new SerializedObject(lighting);
             Assert.That(lightingSettings.FindProperty("stableCockpitShader").objectReferenceValue,
                 Is.EqualTo(AssetDatabase.LoadAssetAtPath<Shader>(CockpitStableInteriorShaderPath)));
+            Assert.That(lightingSettings.FindProperty("directionalCabinShadowStrength").floatValue,
+                Is.EqualTo(QuestFlightLab.Aircraft.ProductionAircraftLightingController
+                    .DefaultDirectionalCabinShadowStrength).Within(0.0001f));
             QuestFlightLab.Aircraft.AircraftVisibilityProfileController visibility =
                 aircraft.GetComponentInChildren<QuestFlightLab.Aircraft.AircraftVisibilityProfileController>(true);
             Assert.That(visibility, Is.Not.Null);

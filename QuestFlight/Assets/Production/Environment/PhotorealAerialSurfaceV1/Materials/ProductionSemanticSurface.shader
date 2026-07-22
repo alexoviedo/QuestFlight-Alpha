@@ -245,7 +245,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 float2 atlasUv = (cell + 0.02 + frac(localUv) * 0.96) * 0.25;
                 float3 albedo = tex2D(_FacadeAtlas, atlasUv).rgb;
                 float encodedUsage = floor(semanticData.a * 255.0 + 0.5);
-                float usageCode = floor(encodedUsage * 0.5) * 2.0;
+                float usageCode = floor(encodedUsage / 32.0) * 32.0;
                 float residential = step(16.0, usageCode) * (1.0 - step(48.0, usageCode));
                 float civic = step(48.0, usageCode) * (1.0 - step(80.0, usageCode));
                 float commercial = step(80.0, usageCode) * (1.0 - step(112.0, usageCode));
@@ -300,8 +300,13 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 out float bakedGlint)
             {
                 float encodedUsage = floor(semanticData.a * 255.0 + 0.5);
-                float usageCode = floor(encodedUsage * 0.5) * 2.0;
-                float entranceWall = saturate(encodedUsage - usageCode);
+                float usageCode = floor(encodedUsage / 32.0) * 32.0;
+                float semanticDetail = encodedUsage - usageCode;
+                float wallRole = fmod(semanticDetail, 4.0);
+                float facadePattern = floor(semanticDetail / 4.0);
+                float entranceWall = 1.0 - step(0.5, abs(wallRole - 1.0));
+                float rearWall = 1.0 - step(0.5, abs(wallRole - 2.0));
+                float serviceWall = 1.0 - step(0.5, abs(wallRole - 3.0));
                 float residential = step(16.0, usageCode) * (1.0 - step(48.0, usageCode));
                 float civic = step(48.0, usageCode) * (1.0 - step(80.0, usageCode));
                 float commercial = step(80.0, usageCode) * (1.0 - step(112.0, usageCode));
@@ -310,16 +315,24 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 float wallLength = max(0.5, semanticData.b * 64.0);
                 float horizontal = wallUv.x;
                 float heightAboveBase = max(0.0, wallUv.y);
-                float moduleWidth = residential * 3.0 + civic * 3.6 +
-                    commercial * 3.2 + industrial * 6.8 +
+                float patternOffset = (facadePattern - 3.5) / 3.5;
+                float moduleWidth = residential * 3.0 + civic * 3.65 +
+                    commercial * 3.35 + industrial * 7.2 +
                     (1.0 - saturate(residential + civic + commercial + industrial)) * 3.6;
-                float floorHeight = residential * 2.9 + civic * 3.5 +
-                    commercial * 3.35 + industrial * 4.2 +
+                moduleWidth *= 1.0 + patternOffset * 0.075;
+                float floorHeight = residential * 2.85 + civic * 3.45 +
+                    commercial * 3.30 + industrial * 4.4 +
                     (1.0 - saturate(residential + civic + commercial + industrial)) * 3.2;
+                floorHeight *= 1.0 + patternOffset * 0.035;
                 float cornerClearance = lerp(0.75, 1.2, industrial);
                 float usableWall = step(cornerClearance, horizontal) *
                     step(horizontal, wallLength - cornerClearance);
-                float module = frac((horizontal - cornerClearance) / moduleWidth + stableSeed * 0.17);
+                float availableWidth = max(moduleWidth, wallLength - cornerClearance * 2.0);
+                float bayCount = max(1.0, floor(availableWidth / moduleWidth + 0.5));
+                float bayWidth = availableWidth / bayCount;
+                float bayCoordinate = (horizontal - cornerClearance) / bayWidth;
+                float module = frac(bayCoordinate);
+                float bayIndex = floor(bayCoordinate);
                 float storey = frac(heightAboveBase / floorHeight);
                 float pixelFootprint = max(fwidth(horizontal), fwidth(heightAboveBase));
                 float featureFade = 1.0 - smoothstep(0.22, 0.65, pixelFootprint);
@@ -331,9 +344,11 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     SoftInterval(storey, 0.24, 0.78, edge);
                 float commercialWindow = SoftInterval(module, 0.20, 0.80, edge) *
                     SoftInterval(storey, 0.22, 0.80, edge);
+                float industrialBayEnabled = step(0.48,
+                    frac((bayIndex + facadePattern * 1.37) * 0.6180339));
                 float industrialWindow = SoftInterval(module, 0.36, 0.64, edge) *
                     SoftInterval(storey, 0.64, 0.83, edge) *
-                    step(0.58, frac(stableSeed * 19.17 + floor(horizontal / moduleWidth)));
+                    industrialBayEnabled;
                 float otherWindow = SoftInterval(module, 0.31, 0.69, edge) *
                     SoftInterval(storey, 0.31, 0.74, edge);
                 float residentialOuter = SoftInterval(module, 0.25, 0.75, edge) *
@@ -344,28 +359,35 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     SoftInterval(storey, 0.17, 0.85, edge);
                 float industrialOuter = SoftInterval(module, 0.31, 0.69, edge) *
                     SoftInterval(storey, 0.59, 0.88, edge) *
-                    step(0.58, frac(stableSeed * 19.17 + floor(horizontal / moduleWidth)));
+                    industrialBayEnabled;
                 float otherOuter = SoftInterval(module, 0.26, 0.74, edge) *
                     SoftInterval(storey, 0.26, 0.79, edge);
+                float roleWindowWeight = lerp(1.0, 0.72, rearWall) *
+                    lerp(1.0, 0.48, serviceWall);
                 windowMask = (residentialWindow * residential + civicWindow * civic +
                     commercialWindow * commercial + industrialWindow * industrial +
                     otherWindow * (1.0h - saturate(residential + civic + commercial + industrial))) *
-                    featureFade * usableWall;
+                    featureFade * usableWall * roleWindowWeight;
                 float windowOuter = (residentialOuter * residential + civicOuter * civic +
                     commercialOuter * commercial + industrialOuter * industrial +
                     otherOuter * (1.0 - saturate(residential + civic + commercial + industrial))) *
-                    featureFade * usableWall;
+                    featureFade * usableWall * roleWindowWeight;
 
                 float groundStorey = 1.0 - smoothstep(floorHeight, floorHeight + 0.25,
                     heightAboveBase);
                 float doorWidth = lerp(1.05, 3.4, industrial);
                 float doorHeight = lerp(2.25, 3.8, industrial);
-                float doorCenter = lerp(cornerClearance + doorWidth * 0.6,
-                    wallLength - cornerClearance - doorWidth * 0.6, stableSeed);
+                float doorCenter = wallLength * 0.5;
                 float doorMask = (1.0 - smoothstep(doorWidth * 0.48,
                     doorWidth * 0.55 + pixelFootprint, abs(horizontal - doorCenter))) *
                     SoftInterval(heightAboveBase, 0.06, doorHeight, edge) *
                     groundStorey * featureFade * entranceWall * usableWall;
+                float serviceDoorWidth = max(3.2, min(5.4, bayWidth * 0.76));
+                float serviceDoor = (1.0 - smoothstep(serviceDoorWidth * 0.48,
+                    serviceDoorWidth * 0.54 + pixelFootprint, abs(horizontal - doorCenter))) *
+                    SoftInterval(heightAboveBase, 0.04, min(4.2, floorHeight * 0.92), edge) *
+                    featureFade * serviceWall * industrial * usableWall;
+                doorMask = saturate(doorMask + serviceDoor);
                 windowMask *= 1.0 - doorMask;
                 windowOuter *= 1.0 - doorMask;
                 float windowFrame = saturate(windowOuter - windowMask);
@@ -389,6 +411,9 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 facade = lerp(facade, frameColor, windowFrame * 0.88);
                 facade = lerp(facade, bakedWindow, windowMask * 0.98);
                 facade = lerp(facade, doorColor, doorMask * 0.90);
+                // A soft foundation darkening visually seats the simplified shell in
+                // the photographed ground without another decal, skirt, or draw.
+                facade *= lerp(0.76, 1.0, smoothstep(0.02, 0.55, heightAboveBase));
                 bakedGlint = windowMask * featureFade;
                 return facade;
             }
@@ -487,7 +512,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     // time on raised geometry, while retaining the sampled hue.
                     // This keeps the crown registered to the ground tile instead
                     // of lifting every cell toward the same pale olive.
-                    half crownLuminance = clamp(localLuminance * 0.74h, 0.025h, 0.18h);
+                    half crownLuminance = clamp(localLuminance * 0.68h, 0.025h, 0.17h);
                     fixed3 foliageReference = lerp(
                         fixed3(0.19h, 0.30h, 0.105h),
                         fixed3(0.12h, 0.25h, 0.070h), densityProxy);
@@ -516,7 +541,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                             dot(nearFoliage.rgb, fixed3(0.2126h, 0.7152h, 0.0722h)));
                         fixed3 registeredAtlas = nearFoliage.rgb *
                             (crownLuminance / atlasLuminance);
-                        crownColor = lerp(registeredLocalCanopy, registeredAtlas, 0.86h);
+                        crownColor = lerp(registeredLocalCanopy, registeredAtlas, 0.78h);
                         surfaceAo = lerp(surfaceAo, 0.82h, 0.72h);
                         roughness = 0.86h;
                     }

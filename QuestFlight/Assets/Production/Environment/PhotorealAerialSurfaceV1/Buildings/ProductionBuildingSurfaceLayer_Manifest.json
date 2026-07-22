@@ -44,7 +44,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "46c00a69d4f9279b7fb357404ad4cdb44cf5c1c201b51672557bd0f7e45aa224",
+      "sha256": "ddff59f7c7727e936b3a279a93c316abe61e0f1d230e629405fc83e0867ed397",
       "triangle_count": 3888,
       "vertex_count": 7548
     },
@@ -59,7 +59,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "9cb061e7bd2539d9a6b18f5eb3b5e90efd9eb6da72068289382a029ea58853d8",
+      "sha256": "6918646ec6403313c3608371816bb1d7b1c1735def67c89783762ce4550b1cb1",
       "triangle_count": 31852,
       "vertex_count": 62232
     },
@@ -74,7 +74,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "726753d132c466857e72222eedb1f135ff9cac91fcf3115ba17a4f3893ebe4d6",
+      "sha256": "2ab949ba75fbe7b9ac403026613fb7f4b442c4b49fed4558b6cca6277f1d694b",
       "triangle_count": 21960,
       "vertex_count": 43008
     },
@@ -89,7 +89,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "6e0693fcc5fc65f342aac50c1a7078a5422d228608c014fbb2ca91df5193d15d",
+      "sha256": "38469c54e8b550de9ca56c8c611a12f3a885c4ae9076240d130ecbc2466c81d5",
       "triangle_count": 192,
       "vertex_count": 366
     },
@@ -104,7 +104,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "783b43dad02cb8182c0e0e62b819f8131e8135b0646be7adaa419836aeef36bd",
+      "sha256": "6bdb11929da39d8ed1789b09bcc7872bfad686d4fc1a39a55bf708c42e89a7a0",
       "triangle_count": 16060,
       "vertex_count": 31110
     },
@@ -119,7 +119,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "687a23cb60767d12e1d955b9f77d3d51d8825cc3a358b13cfe6cd85be2c4e9ec",
+      "sha256": "1f933a6de7ef2d9d9dcc2821bb33c24dfd6f92c24d473a6d2b6ee140fc5b8c01",
       "triangle_count": 16120,
       "vertex_count": 31686
     },
@@ -134,7 +134,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "91b0fa8ad057199ce8006a0fa8d7b52190ed113fc4651ec843438db84136ec90",
+      "sha256": "bdba99d70ba2802494fab91c565d3b14d1be89311f04a209bc580ac536c60326",
       "triangle_count": 5052,
       "vertex_count": 9960
     },
@@ -149,7 +149,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "7a894a7fa9c78408cfffc10d41d5cb2e7dc673f044f45f56ef7449682cb60e53",
+      "sha256": "58a281c84def6d27545ff4a111fdb344042f7e70dc0d1252783159c09a2e4637",
       "triangle_count": 1964,
       "vertex_count": 3798
     },
@@ -164,7 +164,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "279d83b1fa885776122db7765a200ab2b9cd2f803634646a0eb652ef54d8fd11",
+      "sha256": "bbbec94a78cc65ee6f171d5f92e991ec491c419f4294c74af5548205a32bc279",
       "triangle_count": 7892,
       "vertex_count": 15348
     },
@@ -179,7 +179,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "ff7d3fb3ef812a85ea9a701165e0d9695f5ab97a321bbc43772db619a323494d",
+      "sha256": "16f9a8b20153fda754983978f9038ebafdd1aec780099a7bb06a3a83328d1653",
       "triangle_count": 4588,
       "vertex_count": 8910
     },
@@ -194,7 +194,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "5a82c96f9a5842b6006e00492519aed99332d6af4fa0dc4082d506a4f6a4b8c0",
+      "sha256": "43387cbb1a121bce0a76af5e6d6d8817fcd71f361fc51ab4c7b37b17d9199432",
       "triangle_count": 5400,
       "vertex_count": 10644
     },
@@ -209,7 +209,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "92690b645acde8e139636dd89a215801c1bc589d5800fef5e6c363c9f110ee6e",
+      "sha256": "7bfb66fc7ddf58843dfc9f7d9c3986c15bbfb034b55d54b5e18eb5e8dff50c7a",
       "triangle_count": 3904,
       "vertex_count": 7566
     },
@@ -224,7 +224,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "e42e2ac5a40fc9854ca5f9aad0873965132772111a3aee90cc79cd631a238372",
+      "sha256": "b01b053c9fd0505ffcc52eb89c98d22f5d143c14174844b805441dad318d68b4",
       "triangle_count": 776,
       "vertex_count": 1506
     },
@@ -239,7 +239,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "4bca4f5218656d47b8d1cf80a4594df5cb5b1e605c4aaad71c2131fad0a60598",
+      "sha256": "a02e292f1deb6fe68e64032545c79572503c84646d8d2de96941b68fb846a5db",
       "triangle_count": 12,
       "vertex_count": 24
     },
@@ -254,7 +254,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "1d5e0b27a283529ce6ea281b1d1787cb799dfdd202bc74fe3e739e849f3189ff",
+      "sha256": "88aa17614a3426694ab0bb17f63878057fbb262dea68b2cbf7bedd771931d0f9",
       "triangle_count": 3904,
       "vertex_count": 7614
     },
@@ -269,7 +269,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "2f89db946a83228e2ab940f7154d0fd8c70df3cdf6439d940f7ff19a0b509ebf",
+      "sha256": "5250d2c0400daf56494b4d75476386ed07e031614ffe0a0f9badffdc04573213",
       "triangle_count": 4528,
       "vertex_count": 8970
     }
@@ -350,13 +350,23 @@
       "weathered_metal": 10
     },
     "encoding": {
-      "vertex_color_a": "semantic usage code plus entrance-wall bit, divided by 255",
+      "vertex_color_a": "semantic usage code plus 3-bit facade pattern and 2-bit wall role, divided by 255",
       "vertex_color_b": "wall length in metres mapped from [0,64] to [0,1]",
       "vertex_color_g": "stable per-building variation seed / 255",
       "vertex_color_r": "AirportCore shared atlas tile index / 255"
     },
     "material_policy": "one coherent usage-derived facade family per OSM footprint; stable category-bounded tint variation",
-    "opening_contract": "physical-size opaque windows and one eligible entrance wall per footprint",
+    "opening_contract": "physical-size opaque windows centered into complete wall bays; one road-facing entrance wall and semantic side/rear/service roles per footprint",
+    "road_orientation_contract": {
+      "front_wall_distance_meters": {
+        "maximum": 119.90845987669094,
+        "p50": 13.130700175056894,
+        "p95": 91.3921369885788
+      },
+      "index_cell_meters": 256.0,
+      "maximum_accepted_front_road_distance_meters": 120.0,
+      "road_segment_count": 3989
+    },
     "semantic_counts": {
       "128": 993,
       "32": 7857,
@@ -500,7 +510,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "46c00a69d4f9279b7fb357404ad4cdb44cf5c1c201b51672557bd0f7e45aa224",
+      "sha256": "ddff59f7c7727e936b3a279a93c316abe61e0f1d230e629405fc83e0867ed397",
       "triangle_count": 3888,
       "vertex_count": 7548
     },
@@ -515,7 +525,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "9cb061e7bd2539d9a6b18f5eb3b5e90efd9eb6da72068289382a029ea58853d8",
+      "sha256": "6918646ec6403313c3608371816bb1d7b1c1735def67c89783762ce4550b1cb1",
       "triangle_count": 31852,
       "vertex_count": 62232
     },
@@ -530,7 +540,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "726753d132c466857e72222eedb1f135ff9cac91fcf3115ba17a4f3893ebe4d6",
+      "sha256": "2ab949ba75fbe7b9ac403026613fb7f4b442c4b49fed4558b6cca6277f1d694b",
       "triangle_count": 21960,
       "vertex_count": 43008
     },
@@ -545,7 +555,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "6e0693fcc5fc65f342aac50c1a7078a5422d228608c014fbb2ca91df5193d15d",
+      "sha256": "38469c54e8b550de9ca56c8c611a12f3a885c4ae9076240d130ecbc2466c81d5",
       "triangle_count": 192,
       "vertex_count": 366
     },
@@ -560,7 +570,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "783b43dad02cb8182c0e0e62b819f8131e8135b0646be7adaa419836aeef36bd",
+      "sha256": "6bdb11929da39d8ed1789b09bcc7872bfad686d4fc1a39a55bf708c42e89a7a0",
       "triangle_count": 16060,
       "vertex_count": 31110
     },
@@ -575,7 +585,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "687a23cb60767d12e1d955b9f77d3d51d8825cc3a358b13cfe6cd85be2c4e9ec",
+      "sha256": "1f933a6de7ef2d9d9dcc2821bb33c24dfd6f92c24d473a6d2b6ee140fc5b8c01",
       "triangle_count": 16120,
       "vertex_count": 31686
     },
@@ -590,7 +600,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "91b0fa8ad057199ce8006a0fa8d7b52190ed113fc4651ec843438db84136ec90",
+      "sha256": "bdba99d70ba2802494fab91c565d3b14d1be89311f04a209bc580ac536c60326",
       "triangle_count": 5052,
       "vertex_count": 9960
     },
@@ -605,7 +615,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "7a894a7fa9c78408cfffc10d41d5cb2e7dc673f044f45f56ef7449682cb60e53",
+      "sha256": "58a281c84def6d27545ff4a111fdb344042f7e70dc0d1252783159c09a2e4637",
       "triangle_count": 1964,
       "vertex_count": 3798
     },
@@ -620,7 +630,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "279d83b1fa885776122db7765a200ab2b9cd2f803634646a0eb652ef54d8fd11",
+      "sha256": "bbbec94a78cc65ee6f171d5f92e991ec491c419f4294c74af5548205a32bc279",
       "triangle_count": 7892,
       "vertex_count": 15348
     },
@@ -635,7 +645,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "ff7d3fb3ef812a85ea9a701165e0d9695f5ab97a321bbc43772db619a323494d",
+      "sha256": "16f9a8b20153fda754983978f9038ebafdd1aec780099a7bb06a3a83328d1653",
       "triangle_count": 4588,
       "vertex_count": 8910
     },
@@ -650,7 +660,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "5a82c96f9a5842b6006e00492519aed99332d6af4fa0dc4082d506a4f6a4b8c0",
+      "sha256": "43387cbb1a121bce0a76af5e6d6d8817fcd71f361fc51ab4c7b37b17d9199432",
       "triangle_count": 5400,
       "vertex_count": 10644
     },
@@ -665,7 +675,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "92690b645acde8e139636dd89a215801c1bc589d5800fef5e6c363c9f110ee6e",
+      "sha256": "7bfb66fc7ddf58843dfc9f7d9c3986c15bbfb034b55d54b5e18eb5e8dff50c7a",
       "triangle_count": 3904,
       "vertex_count": 7566
     },
@@ -680,7 +690,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "e42e2ac5a40fc9854ca5f9aad0873965132772111a3aee90cc79cd631a238372",
+      "sha256": "b01b053c9fd0505ffcc52eb89c98d22f5d143c14174844b805441dad318d68b4",
       "triangle_count": 776,
       "vertex_count": 1506
     },
@@ -695,7 +705,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "4bca4f5218656d47b8d1cf80a4594df5cb5b1e605c4aaad71c2131fad0a60598",
+      "sha256": "a02e292f1deb6fe68e64032545c79572503c84646d8d2de96941b68fb846a5db",
       "triangle_count": 12,
       "vertex_count": 24
     },
@@ -710,7 +720,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "1d5e0b27a283529ce6ea281b1d1787cb799dfdd202bc74fe3e739e849f3189ff",
+      "sha256": "88aa17614a3426694ab0bb17f63878057fbb262dea68b2cbf7bedd771931d0f9",
       "triangle_count": 3904,
       "vertex_count": 7614
     },
@@ -725,7 +735,7 @@
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "2f89db946a83228e2ab940f7154d0fd8c70df3cdf6439d940f7ff19a0b509ebf",
+      "sha256": "5250d2c0400daf56494b4d75476386ed07e031614ffe0a0f9badffdc04573213",
       "triangle_count": 4528,
       "vertex_count": 8970
     }

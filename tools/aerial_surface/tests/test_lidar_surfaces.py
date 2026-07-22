@@ -21,6 +21,8 @@ from build_building_surfaces import (
     FACADE_TILE_CORRUGATED,
     FACADE_TILE_LIGHT_METAL,
     FACADE_TILE_WEATHERED_METAL,
+    FACADE_ROLE_FRONT,
+    build_road_segment_index,
     closed_surface_indices,
     edge_multiplicity,
     facade_semantics,
@@ -238,6 +240,26 @@ class SurfaceTopologyTests(unittest.TestCase):
             ),
         )
         self.assertTrue(0 <= industrial["facade_entrance_edge"] < len(footprint))
+
+    def test_facade_front_wall_faces_nearest_road_and_encodes_roles(self) -> None:
+        # CCW ten-metre square with a road immediately below its south wall.
+        footprint = [(0, 0), (20, 0), (20, 20), (0, 20)]
+        road_index = build_road_segment_index([
+            {"category": "road", "points_q": [-20, -4, 40, -4]},
+        ])
+        semantics = facade_semantics(
+            {"tags": {"building": "house"}},
+            404,
+            0.0,
+            footprint,
+            8.0,
+            road_index,
+        )
+        self.assertEqual(semantics["facade_entrance_edge"], 0)
+        self.assertEqual(semantics["facade_edge_roles"][0], FACADE_ROLE_FRONT)
+        self.assertEqual(len(semantics["facade_edge_roles"]), len(footprint))
+        self.assertTrue(0 <= semantics["facade_edge_patterns"][0] < 8)
+        self.assertLess(semantics["facade_front_road_distance_meters"], 3.0)
 
     def test_closed_building_surface_has_two_incident_faces_per_edge(self) -> None:
         points = [(0, 0), (0, 20), (20, 20), (20, 0)]
@@ -608,7 +630,8 @@ class CommittedAssetContractTests(unittest.TestCase):
             topology["connected_crown_triangle_count"]
             + topology["grounded_trunk_triangle_count"]
             + topology["near_branch_triangle_count"]
-            + topology["near_foliage_card_triangle_count"],
+            + topology["near_foliage_card_triangle_count"]
+            + topology["mid_foliage_card_triangle_count"],
             manifest["budgets"]["mesh_batch_total_triangles"],
         )
         self.assertTrue(CANOPY_GENERATED_DIR.exists())

@@ -171,7 +171,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root.midBuildingCoveragePercent, Is.GreaterThanOrEqualTo(98f));
             Assert.That(root.maximumBuildingFootprintInflationPercent, Is.LessThanOrEqualTo(5f));
             Assert.That(root.canopySurfaceManifest.text,
-                Does.Contain("semantic_connected_groves_0_2040m_over_continuous_terrain_canopy"));
+                Does.Contain("semantic_perforated_groves_0_2040m_over_continuous_terrain_canopy"));
             Assert.That(root.canopySurfaceManifest.text, Does.Contain("\"mesh_batch_count\": 4"));
             Assert.That(root.canopySurfaceManifest.text,
                 Does.Contain("REJECTED_BLOCK_AND_CLIFF_SILHOUETTES"));

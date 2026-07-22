@@ -5,10 +5,10 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
         _WindshieldTint ("Windshield Tint", Color) = (0.77, 0.86, 0.95, 1)
         _SideWindowTint ("Side Window Tint", Color) = (0.70, 0.82, 0.92, 1)
         [NoScaleOffset] _AuthoredReflectionCube ("Authored Ground/Sky Reflection", Cube) = "black" {}
-        _WindshieldOpacity ("Windshield Opacity", Range(0, 0.3)) = 0.13
-        _SideWindowOpacity ("Side Window Opacity", Range(0, 0.3)) = 0.16
-        _FresnelOpacity ("Edge Fresnel Opacity", Range(0, 0.3)) = 0.18
-        _ReflectionStrength ("Reflection Strength", Range(0, 0.5)) = 0.24
+        _WindshieldOpacity ("Windshield Opacity", Range(0, 0.3)) = 0.10
+        _SideWindowOpacity ("Side Window Opacity", Range(0, 0.3)) = 0.12
+        _FresnelOpacity ("Edge Fresnel Opacity", Range(0, 0.3)) = 0.14
+        _ReflectionStrength ("Reflection Strength", Range(0, 0.5)) = 0.46
         _DirectGlintStrength ("Directional Glint Strength", Range(0, 0.12)) = 0.055
         _PerceptualRoughness ("Perceptual Roughness", Range(0.05, 1)) = 0.24
         _SideAxisStart ("Side Axis Start", Range(0, 1)) = 0.52
@@ -87,7 +87,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
                 half sideWeight = smoothstep(_SideAxisStart, _SideAxisEnd, abs(localNormal.x));
                 half opacity = lerp(_WindshieldOpacity, _SideWindowOpacity, sideWeight) +
                                fresnel * _FresnelOpacity;
-                opacity = min(opacity, 0.26h);
+                opacity = min(opacity, 0.20h);
 
                 half3 tint = lerp(_WindshieldTint.rgb, _SideWindowTint.rgb, sideWeight);
                 half3 reflectionDirection = reflect(-viewDirection, normal);

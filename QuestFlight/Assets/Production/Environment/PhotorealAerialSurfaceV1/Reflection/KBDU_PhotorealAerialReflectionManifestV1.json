@@ -63,8 +63,8 @@
     },
     "window_material": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionCockpitWindowReflection.mat",
-      "sha256": "b4c81156bcf5f5772bd80d5c999d8bdba68769e5fd5687b262d1c801b74cf11f",
-      "bytes": 1302
+      "sha256": "973cb5f462ef9049536d3c1b9209cdf948d60c016b8030366ea96cdd1ccc5647",
+      "bytes": 1301
     },
     "instrument_glass_material": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentGlassReflection.mat",
@@ -73,7 +73,7 @@
     },
     "window_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitWindowReflection.shader",
-      "sha256": "455ab133128ca72b9f839780a496b3bade24ae5097e0a24ce2c551483b143d19",
+      "sha256": "a5203958e6cde7edecbb84cd71b4aa81459e303e9b1a9e4e0ea5629470562022",
       "bytes": 5001
     },
     "instrument_glass_shader": {
@@ -83,8 +83,8 @@
     },
     "cockpit_stable_interior_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitStableInterior.shader",
-      "sha256": "70ce9252477089eaab0016ae447b3049ba0b895ee9bb15ed8ea5d24d7beb79f1",
-      "bytes": 7022
+      "sha256": "f9df9cf1067bf2a1cd67704f760e56c2e4f07c0d0046105e49226ba974a91f7e",
+      "bytes": 8523
     }
   },
   "integration_contract": {
@@ -109,6 +109,15 @@
     "disabled_duplicate_exterior_glass_renderers": 1,
     "static_cubemap_count": 2,
     "estimated_combined_cubemap_bytes": 126144
+  },
+  "cockpit_directional_shading": {
+    "enabled_by_default": true,
+    "representation": "single-pass analytic aircraft-local windshield-frame shade",
+    "strength": 0.18,
+    "additional_draw_calls": 0,
+    "shadow_map": false,
+    "projector_geometry": false,
+    "physical_acceptance_pending": true
   },
   "cockpit_shadow_candidate": {
     "enabled_by_default": false,

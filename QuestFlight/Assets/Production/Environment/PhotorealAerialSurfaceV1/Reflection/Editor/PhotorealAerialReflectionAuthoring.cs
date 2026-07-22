@@ -493,6 +493,16 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             json.AppendLine("    \"static_cubemap_count\": 2,");
             json.AppendLine("    \"estimated_combined_cubemap_bytes\": 126144");
             json.AppendLine("  },");
+            json.AppendLine("  \"cockpit_directional_shading\": {");
+            json.AppendLine("    \"enabled_by_default\": true,");
+            AppendJsonString(json, "representation",
+                "single-pass analytic aircraft-local windshield-frame shade", true, 4);
+            json.AppendLine("    \"strength\": 0.18,");
+            json.AppendLine("    \"additional_draw_calls\": 0,");
+            json.AppendLine("    \"shadow_map\": false,");
+            json.AppendLine("    \"projector_geometry\": false,");
+            json.AppendLine("    \"physical_acceptance_pending\": true");
+            json.AppendLine("  },");
             json.AppendLine("  \"cockpit_shadow_candidate\": {");
             json.AppendLine("    \"enabled_by_default\": false,");
             json.AppendLine("    \"accepted_on_quest_hardware\": false,");
@@ -600,12 +610,12 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             window.SetTexture("_AuthoredReflectionCube", LoadRequired<Cubemap>(GlobalReflectionPath));
             window.SetColor("_WindshieldTint", new Color(0.77f, 0.86f, 0.95f, 1f));
             window.SetColor("_SideWindowTint", new Color(0.70f, 0.82f, 0.92f, 1f));
-            window.SetFloat("_WindshieldOpacity", 0.18f);
-            window.SetFloat("_SideWindowOpacity", 0.21f);
-            window.SetFloat("_FresnelOpacity", 0.24f);
-            window.SetFloat("_ReflectionStrength", 0.62f);
-            window.SetFloat("_DirectGlintStrength", 0.11f);
-            window.SetFloat("_PerceptualRoughness", 0.14f);
+            window.SetFloat("_WindshieldOpacity", 0.10f);
+            window.SetFloat("_SideWindowOpacity", 0.12f);
+            window.SetFloat("_FresnelOpacity", 0.14f);
+            window.SetFloat("_ReflectionStrength", 0.46f);
+            window.SetFloat("_DirectGlintStrength", 0.08f);
+            window.SetFloat("_PerceptualRoughness", 0.18f);
             window.SetFloat("_SideAxisStart", 0.52f);
             window.SetFloat("_SideAxisEnd", 0.82f);
             window.renderQueue = (int)RenderQueue.Transparent + 12;
@@ -754,6 +764,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     LoadRequired<Shader>(CockpitStableInteriorShaderPath));
                 SetFloat(lightingSettings, "staticDepthStrength",
                     QuestFlightLab.Aircraft.ProductionAircraftLightingController.DefaultStaticDepthStrength);
+                SetFloat(lightingSettings, "directionalCabinShadowStrength",
+                    QuestFlightLab.Aircraft.ProductionAircraftLightingController.DefaultDirectionalCabinShadowStrength);
                 lightingSettings.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(lighting);
                 if (rig.CenterOfGravityReference.parent != rig.transform ||
@@ -1086,6 +1098,12 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             if (lightingSettings.FindProperty("stableCockpitShader")?.objectReferenceValue !=
                 LoadRequired<Shader>(CockpitStableInteriorShaderPath))
                 throw new InvalidOperationException("Geometry-bound cockpit depth shader is not serialized.");
+            SerializedProperty directionalShade = lightingSettings.FindProperty(
+                "directionalCabinShadowStrength");
+            if (directionalShade == null || Mathf.Abs(directionalShade.floatValue -
+                    QuestFlightLab.Aircraft.ProductionAircraftLightingController
+                        .DefaultDirectionalCabinShadowStrength) > 0.0001f)
+                throw new InvalidOperationException("Directional cockpit shade is not serialized.");
             QuestFlightLab.Aircraft.AircraftVisibilityProfileController visibility =
                 aircraftAsset.GetComponentInChildren<QuestFlightLab.Aircraft.AircraftVisibilityProfileController>(true);
             SerializedObject visibilitySettings = new SerializedObject(visibility);

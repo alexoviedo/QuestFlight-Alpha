@@ -91,6 +91,13 @@ SEMANTIC_CIVIC = 64
 SEMANTIC_COMMERCIAL = 96
 SEMANTIC_INDUSTRIAL = 128
 SEMANTIC_OTHER = 160
+FACADE_ROLE_SIDE = 0
+FACADE_ROLE_FRONT = 1
+FACADE_ROLE_REAR = 2
+FACADE_ROLE_SERVICE = 3
+FACADE_PATTERN_COUNT = 8
+ROAD_INDEX_CELL_QUANTIZED = 512  # 256 metres at 0.5 m source quantization.
+ROAD_FRONT_MAXIMUM_DISTANCE_METERS = 120.0
 
 
 def signed_area2(points: Sequence[tuple[int, int]]) -> int:
@@ -503,13 +510,112 @@ def mesh_batch_name(key: tuple[int, int]) -> str:
     )
 
 
+def build_road_segment_index(
+    features: Sequence[dict[str, Any]],
+) -> dict[str, Any]:
+    """Build a deterministic spatial index for facade-to-road orientation."""
+
+    segments: list[tuple[float, float, float, float]] = []
+    cells: dict[tuple[int, int], list[int]] = defaultdict(list)
+    for feature in features:
+        if feature.get("category") != "road":
+            continue
+        values = feature.get("points_q") or []
+        points = [
+            (float(values[index]), float(values[index + 1]))
+            for index in range(0, len(values) - 1, 2)
+        ]
+        for start, end in zip(points, points[1:]):
+            if start == end:
+                continue
+            segment_index = len(segments)
+            segments.append((start[0], start[1], end[0], end[1]))
+            minimum_x = math.floor(min(start[0], end[0]) / ROAD_INDEX_CELL_QUANTIZED)
+            maximum_x = math.floor(max(start[0], end[0]) / ROAD_INDEX_CELL_QUANTIZED)
+            minimum_z = math.floor(min(start[1], end[1]) / ROAD_INDEX_CELL_QUANTIZED)
+            maximum_z = math.floor(max(start[1], end[1]) / ROAD_INDEX_CELL_QUANTIZED)
+            for cell_x in range(minimum_x, maximum_x + 1):
+                for cell_z in range(minimum_z, maximum_z + 1):
+                    cells[(cell_x, cell_z)].append(segment_index)
+    return {"segments": segments, "cells": cells}
+
+
+def point_segment_distance_squared(
+    x: float,
+    z: float,
+    segment: tuple[float, float, float, float],
+) -> float:
+    ax, az, bx, bz = segment
+    dx = bx - ax
+    dz = bz - az
+    length_squared = dx * dx + dz * dz
+    if length_squared <= 1e-12:
+        return (x - ax) ** 2 + (z - az) ** 2
+    interpolation = max(0.0, min(1.0, ((x - ax) * dx + (z - az) * dz) / length_squared))
+    closest_x = ax + interpolation * dx
+    closest_z = az + interpolation * dz
+    return (x - closest_x) ** 2 + (z - closest_z) ** 2
+
+
+def road_facing_edge(
+    points: Sequence[tuple[int, int]],
+    identity: int,
+    road_index: dict[str, Any] | None,
+) -> tuple[int, float | None]:
+    edge_lengths = [
+        math.hypot(
+            points[(index + 1) % len(points)][0] - points[index][0],
+            points[(index + 1) % len(points)][1] - points[index][1],
+        ) * HORIZONTAL_QUANTIZATION_METERS
+        for index in range(len(points))
+    ]
+    ranked_edges = sorted(range(len(points)), key=lambda index: (-edge_lengths[index], index))
+    if not road_index or not road_index.get("segments"):
+        return ranked_edges[identity % min(2, len(ranked_edges))], None
+
+    centroid = polygon_centroid(points)
+    cell_x = math.floor(centroid[0] / ROAD_INDEX_CELL_QUANTIZED)
+    cell_z = math.floor(centroid[1] / ROAD_INDEX_CELL_QUANTIZED)
+    candidates: set[int] = set()
+    for radius in (1, 2, 4):
+        for offset_x in range(-radius, radius + 1):
+            for offset_z in range(-radius, radius + 1):
+                candidates.update(road_index["cells"].get((cell_x + offset_x, cell_z + offset_z), ()))
+        if candidates:
+            break
+    if not candidates:
+        return ranked_edges[identity % min(2, len(ranked_edges))], None
+
+    segments = road_index["segments"]
+    best_edge = ranked_edges[0]
+    best_distance_squared = float("inf")
+    for edge_index in range(len(points)):
+        following = (edge_index + 1) % len(points)
+        midpoint_x = (points[edge_index][0] + points[following][0]) * 0.5
+        midpoint_z = (points[edge_index][1] + points[following][1]) * 0.5
+        distance_squared = min(
+            point_segment_distance_squared(midpoint_x, midpoint_z, segments[index])
+            for index in candidates
+        )
+        # Prefer longer walls only when road proximity is effectively tied.
+        distance_squared -= min(edge_lengths[edge_index], 40.0) * 0.01
+        if distance_squared < best_distance_squared:
+            best_distance_squared = distance_squared
+            best_edge = edge_index
+    distance_meters = math.sqrt(max(0.0, best_distance_squared)) * HORIZONTAL_QUANTIZATION_METERS
+    if distance_meters > ROAD_FRONT_MAXIMUM_DISTANCE_METERS:
+        return ranked_edges[identity % min(2, len(ranked_edges))], None
+    return best_edge, distance_meters
+
+
 def facade_semantics(
     feature: dict[str, Any],
     osm_id: int,
     base_y: float,
     points: Sequence[tuple[int, int]],
     selected_height: float,
-) -> dict[str, int]:
+    road_index: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Map OSM usage to a coherent, compact facade contract.
 
     The selector is authored once per source footprint and copied to every
@@ -590,13 +696,46 @@ def facade_semantics(
         ) * HORIZONTAL_QUANTIZATION_METERS
         for index in range(len(points))
     ]
-    ranked_edges = sorted(range(len(points)), key=lambda index: (-edge_lengths[index], index))
-    entrance_edge = ranked_edges[identity % min(2, len(ranked_edges))]
+    entrance_edge, road_distance_meters = road_facing_edge(points, identity, road_index)
+    entrance_midpoint = (
+        (points[entrance_edge][0] + points[(entrance_edge + 1) % len(points)][0]) * 0.5,
+        (points[entrance_edge][1] + points[(entrance_edge + 1) % len(points)][1]) * 0.5,
+    )
+    rear_edge = max(
+        (index for index in range(len(points)) if index != entrance_edge),
+        key=lambda index: (
+            (points[index][0] + points[(index + 1) % len(points)][0]) * 0.5 - entrance_midpoint[0]
+        ) ** 2 + (
+            (points[index][1] + points[(index + 1) % len(points)][1]) * 0.5 - entrance_midpoint[1]
+        ) ** 2,
+    ) if len(points) > 1 else entrance_edge
+    roles = [FACADE_ROLE_SIDE for _ in points]
+    roles[entrance_edge] = FACADE_ROLE_FRONT
+    if rear_edge != entrance_edge:
+        roles[rear_edge] = FACADE_ROLE_REAR
+    if semantic == SEMANTIC_INDUSTRIAL and len(points) > 3:
+        service_candidates = [
+            index for index in range(len(points))
+            if index not in (entrance_edge, rear_edge)
+        ]
+        if service_candidates:
+            roles[max(service_candidates, key=lambda index: edge_lengths[index])] = FACADE_ROLE_SERVICE
+
+    family_pattern = {
+        SEMANTIC_RESIDENTIAL: 0,
+        SEMANTIC_CIVIC: 2,
+        SEMANTIC_COMMERCIAL: 4,
+        SEMANTIC_INDUSTRIAL: 6,
+    }.get(semantic, 0)
+    pattern = (family_pattern + ((identity >> 16) & 1)) % FACADE_PATTERN_COUNT
     return {
         "facade_tile": tile,
         "facade_semantic_code": semantic,
         "facade_seed_code": (identity >> 8) & 0xFF,
         "facade_entrance_edge": entrance_edge,
+        "facade_edge_roles": roles,
+        "facade_edge_patterns": [pattern for _ in points],
+        "facade_front_road_distance_meters": road_distance_meters,
     }
 
 
@@ -760,8 +899,9 @@ def write_obj_batches(
                 bx = points[following][0] * HORIZONTAL_QUANTIZATION_METERS
                 bz = points[following][1] * HORIZONTAL_QUANTIZATION_METERS
                 wall_length = math.hypot(bx - ax, bz - az)
-                entrance = 1 if edge_index == record["facade_entrance_edge"] else 0
-                semantic_code = record["facade_semantic_code"] + entrance
+                role = int(record["facade_edge_roles"][edge_index])
+                pattern = int(record["facade_edge_patterns"][edge_index])
+                semantic_code = record["facade_semantic_code"] + role + pattern * 4
                 wall_color = (
                     record["facade_tile"] / 255.0,
                     record["facade_seed_code"] / 255.0,
@@ -851,6 +991,7 @@ def build(
         zone_by_feature.update({feature_index: zone for feature_index in records_for_zone})
 
     features = context["openstreetmap"]["features"]
+    road_index = build_road_segment_index(features)
     hero_feature_indices = {
         feature_index
         for feature_index in owned_recipe
@@ -1017,7 +1158,9 @@ def build(
         if zone == "2-4km":
             flags |= FLAG_ZONE_2_TO_4_KM
         part = str(source_identity.get("part", "geometry:0"))
-        semantics = facade_semantics(feature, osm_id, base_y, points, selected_height)
+        semantics = facade_semantics(
+            feature, osm_id, base_y, points, selected_height, road_index
+        )
         records.append(
             {
                 "base_code": quantize_signed(base_y),
@@ -1190,14 +1333,24 @@ def build(
                 "vertex_color_r": "AirportCore shared atlas tile index / 255",
                 "vertex_color_g": "stable per-building variation seed / 255",
                 "vertex_color_b": "wall length in metres mapped from [0,64] to [0,1]",
-                "vertex_color_a": "semantic usage code plus entrance-wall bit, divided by 255",
+                "vertex_color_a": "semantic usage code plus 3-bit facade pattern and 2-bit wall role, divided by 255",
             },
             "wall_local_uv_contract": {
                 "u": "metres along one duplicated wall edge",
                 "v": "metres above that building foundation",
                 "roof_and_floor": "zero; top-facing orthophoto path ignores facade UV",
             },
-            "opening_contract": "physical-size opaque windows and one eligible entrance wall per footprint",
+            "opening_contract": "physical-size opaque windows centered into complete wall bays; one road-facing entrance wall and semantic side/rear/service roles per footprint",
+            "road_orientation_contract": {
+                "index_cell_meters": ROAD_INDEX_CELL_QUANTIZED * HORIZONTAL_QUANTIZATION_METERS,
+                "maximum_accepted_front_road_distance_meters": ROAD_FRONT_MAXIMUM_DISTANCE_METERS,
+                "road_segment_count": len(road_index["segments"]),
+                "front_wall_distance_meters": _percentiles([
+                    float(record["facade_front_road_distance_meters"])
+                    for record in records
+                    if record["facade_front_road_distance_meters"] is not None
+                ]),
+            },
             "material_policy": "one coherent usage-derived facade family per OSM footprint; stable category-bounded tint variation",
             "atlas_tiles": {
                 "brick_masonry": FACADE_TILE_BRICK,

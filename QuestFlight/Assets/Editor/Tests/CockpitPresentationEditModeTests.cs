@@ -36,6 +36,9 @@ namespace QuestFlightLab.Tests.EditMode
                     Is.Not.Null);
                 Assert.That(lightingObject.FindProperty("cockpitOcclusionStrength").floatValue,
                     Is.EqualTo(1.0f).Within(0.0001f));
+                Assert.That(lightingObject.FindProperty("directionalCabinShadowStrength").floatValue,
+                    Is.EqualTo(QuestFlightLab.Aircraft.ProductionAircraftLightingController
+                        .DefaultDirectionalCabinShadowStrength).Within(0.0001f));
                 Assert.That(FindDescendant(root.transform, "ProductionCockpitBakedSunOcclusion"),
                     Is.Null, "Rejected free-floating cockpit overlay must not return");
 

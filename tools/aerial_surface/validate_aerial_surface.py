@@ -699,7 +699,8 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
         "Canopy vertical boundary skirts remain",
     )
     topology = canopy_manifest["topology"]
-    require(int(topology["connected_crown_count"]) == len(groves), "Connected grove count changed")
+    require(int(topology["mid_detailed_grove_count"]) > 0, "Mid perforated groves are missing")
+    require(int(topology["mid_perforated_crown_count"]) > 0, "Mid perforated crowns are missing")
     require(int(topology["grounded_trunk_count"]) > 0, "Grounded canopy trunks are missing")
     require(int(topology["near_branch_triangle_count"]) > 0, "Near canopy branches are missing")
     require(int(topology["near_foliage_card_triangle_count"]) > 0, "Near foliage cards are missing")
@@ -711,6 +712,7 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
                 "grounded_trunk_triangle_count",
                 "near_branch_triangle_count",
                 "near_foliage_card_triangle_count",
+                "mid_foliage_card_triangle_count",
             )
         ) == int(canopy_obj["triangle_count"]),
         "Canopy topology categories do not equal the OBJ triangle inventory",

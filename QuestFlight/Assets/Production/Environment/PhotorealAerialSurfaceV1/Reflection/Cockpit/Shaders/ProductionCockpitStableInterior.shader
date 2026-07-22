@@ -14,6 +14,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
         emissiveTexture ("Emission", 2D) = "black" {}
         emissiveFactor ("Emission Factor", Color) = (0,0,0,1)
         _CabinDepthStrength ("Cabin Depth Strength", Range(0,0.42)) = 0.38
+        _DirectionalCabinShadowStrength ("Directional Cabin Shade", Range(0,0.28)) = 0.18
     }
 
     SubShader
@@ -49,6 +50,10 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
             sampler2D emissiveTexture;
             fixed4 emissiveFactor;
             half _CabinDepthStrength;
+            half _DirectionalCabinShadowStrength;
+            float4x4 _WorldToAircraft;
+            float4 _CabinBoundsCenter;
+            float4 _CabinBoundsExtent;
 
             struct appdata
             {
@@ -123,7 +128,23 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half nDotL = saturate(dot(normalWS, lightDirection));
                 half aperture = lerp(0.28h, 0.82h, skyExposure);
-                half3 direct = _LightColor0.rgb * nDotL * aperture;
+                // One broad analytic windshield-frame shade follows the authored sun in
+                // aircraft-local space. It has no projector geometry, depth overlap,
+                // shadow map, or per-eye state, avoiding the worn-test triangle flicker.
+                float3 aircraftPosition = mul(
+                    _WorldToAircraft, float4(input.worldPosition, 1.0)).xyz;
+                float3 cabinPosition = (aircraftPosition - _CabinBoundsCenter.xyz) /
+                    max(_CabinBoundsExtent.xyz, float3(0.25, 0.25, 0.25));
+                half3 localLight = normalize(mul((half3x3)_WorldToAircraft, lightDirection));
+                half projectedFrame = cabinPosition.x -
+                    localLight.x / (abs(localLight.y) + 0.35h) *
+                    max(0.0h, 0.62h - cabinPosition.y) * 0.42h;
+                half frameShade = 1.0h - smoothstep(0.10h, 0.30h, abs(projectedFrame));
+                half sunlightAbove = smoothstep(-0.08h, 0.32h, localLight.y);
+                half interiorReceiver = lerp(0.96h, 0.58h, skyExposure);
+                half directionalVisibility = 1.0h -
+                    _DirectionalCabinShadowStrength * frameShade * sunlightAbove * interiorReceiver;
+                half3 direct = _LightColor0.rgb * nDotL * aperture * directionalVisibility;
 
                 half4 packedSurface = tex2D(metallicRoughnessTexture, input.uv);
                 half metallic = saturate(packedSurface.b * metallicFactor);
