@@ -9,13 +9,19 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
         _WindshieldOpacity ("Windshield Opacity", Range(0, 0.3)) = 0.075
         _SideWindowOpacity ("Side Window Opacity", Range(0, 0.3)) = 0.09
         _FresnelOpacity ("Edge Fresnel Opacity", Range(0, 0.3)) = 0.11
-        _ReflectionStrength ("Reflection Strength", Range(0, 0.7)) = 0.55
-        _InteriorReflectionStrength ("Interior Reflection Weight", Range(0, 1)) = 0.78
-        _InteriorSkyLeak ("Interior Sky Leak", Range(0, 0.5)) = 0.18
+        _ReflectionStrength ("Reflection Strength", Range(0, 0.7)) = 0.46
+        _InteriorReflectionStrength ("Interior Reflection Weight", Range(0, 1)) = 0.90
+        _InteriorSkyLeak ("Interior Sky Leak", Range(0, 0.5)) = 0.08
         _DirectGlintStrength ("Directional Glint Strength", Range(0, 0.12)) = 0.055
         _PerceptualRoughness ("Perceptual Roughness", Range(0.05, 1)) = 0.24
         _SideAxisStart ("Side Axis Start", Range(0, 1)) = 0.52
         _SideAxisEnd ("Side Axis End", Range(0, 1)) = 0.82
+        [HideInInspector] _WindowToAircraftRow0 ("Window To Aircraft Row 0", Vector) = (1,0,0,0)
+        [HideInInspector] _WindowToAircraftRow1 ("Window To Aircraft Row 1", Vector) = (0,1,0,0)
+        [HideInInspector] _WindowToAircraftRow2 ("Window To Aircraft Row 2", Vector) = (0,0,1,0)
+        [HideInInspector] _CockpitReflectionCapturePosition ("Capture Position", Vector) = (0,0,0,0)
+        [HideInInspector] _CockpitReflectionBoxMin ("Cabin Box Min", Vector) = (-1,-1,-1,0)
+        [HideInInspector] _CockpitReflectionBoxMax ("Cabin Box Max", Vector) = (1,1,1,0)
     }
 
     SubShader
@@ -51,6 +57,12 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
             half _PerceptualRoughness;
             half _SideAxisStart;
             half _SideAxisEnd;
+            float4 _WindowToAircraftRow0;
+            float4 _WindowToAircraftRow1;
+            float4 _WindowToAircraftRow2;
+            float4 _CockpitReflectionCapturePosition;
+            float4 _CockpitReflectionBoxMin;
+            float4 _CockpitReflectionBoxMax;
 
             struct appdata
             {
@@ -65,6 +77,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
                 float3 worldPosition : TEXCOORD0;
                 half3 worldNormal : TEXCOORD1;
                 half3 objectNormal : TEXCOORD2;
+                float3 objectPosition : TEXCOORD3;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -78,6 +91,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
                 output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
                 output.worldNormal = UnityObjectToWorldNormal(input.normal);
                 output.objectNormal = input.normal;
+                output.objectPosition = input.vertex.xyz;
                 return output;
             }
 
@@ -99,17 +113,52 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
                 half3 reflectionDirection = reflect(-viewDirection, normal);
                 half3 authoredReflection = texCUBE(
                     _AuthoredReflectionCube, reflectionDirection).rgb;
-                half3 localReflectionDirection = normalize(mul(
+                half3 windowLocalReflectionDirection = normalize(mul(
                     (half3x3)unity_WorldToObject, reflectionDirection));
-                half3 cockpitReflection = texCUBE(
-                    _CockpitInteriorReflectionCube, localReflectionDirection).rgb;
+                half3 aircraftReflectionDirection = normalize(half3(
+                    dot(_WindowToAircraftRow0.xyz, windowLocalReflectionDirection),
+                    dot(_WindowToAircraftRow1.xyz, windowLocalReflectionDirection),
+                    dot(_WindowToAircraftRow2.xyz, windowLocalReflectionDirection)));
+                float4 homogeneousPosition = float4(input.objectPosition, 1.0);
+                float3 aircraftPosition = float3(
+                    dot(_WindowToAircraftRow0, homogeneousPosition),
+                    dot(_WindowToAircraftRow1, homogeneousPosition),
+                    dot(_WindowToAircraftRow2, homogeneousPosition));
+                // Finite box projection anchors the geometry-baked panel, doors, seats and
+                // headliner to the actual cabin volume. Unlike the previous painted gradient,
+                // reflected content now changes plausibly across the windshield and side glass.
+                float3 safeDirection = aircraftReflectionDirection +
+                    (1.0 - step(0.0001, abs(aircraftReflectionDirection))) * 0.0001;
+                float3 rbMin = (_CockpitReflectionBoxMin.xyz - aircraftPosition) / safeDirection;
+                float3 rbMax = (_CockpitReflectionBoxMax.xyz - aircraftPosition) / safeDirection;
+                float3 rbExit = lerp(rbMin, rbMax, step(0.0, safeDirection));
+                float intersectionDistance = min(min(rbExit.x, rbExit.y), rbExit.z);
+                half3 cabinSampleDirection = normalize(
+                    aircraftPosition - _CockpitReflectionCapturePosition.xyz +
+                    aircraftReflectionDirection * intersectionDistance);
+                half3 cockpitReflection = texCUBElod(
+                    _CockpitInteriorReflectionCube,
+                    half4(cabinSampleDirection, _PerceptualRoughness * 4.0h)).rgb;
                 half skyWeight = smoothstep(-0.08h, 0.20h, reflectionDirection.y);
                 half3 proceduralGround = half3(0.13h, 0.15h, 0.10h);
                 half3 proceduralSky = half3(0.34h, 0.48h, 0.62h);
                 half3 proceduralReflection = lerp(proceduralGround, proceduralSky, skyWeight);
-                half3 exteriorReflection = max(authoredReflection * 0.82h, proceduralReflection);
-                half interiorFace = facing < 0.0h ? 1.0h : 0.0h;
-                half interiorMix = saturate(_InteriorReflectionStrength * interiorFace);
+                half3 exteriorReflection = lerp(authoredReflection, proceduralReflection, 0.16h);
+                float3 cameraWindowPosition = mul(
+                    unity_WorldToObject, float4(_WorldSpaceCameraPos, 1.0)).xyz;
+                float4 cameraWindowHomogeneous = float4(cameraWindowPosition, 1.0);
+                float3 cameraAircraftPosition = float3(
+                    dot(_WindowToAircraftRow0, cameraWindowHomogeneous),
+                    dot(_WindowToAircraftRow1, cameraWindowHomogeneous),
+                    dot(_WindowToAircraftRow2, cameraWindowHomogeneous));
+                half3 insideMinimum = step(
+                    _CockpitReflectionBoxMin.xyz - 0.08, cameraAircraftPosition);
+                half3 insideMaximum = step(
+                    cameraAircraftPosition, _CockpitReflectionBoxMax.xyz + 0.08);
+                half cameraInsideCabin = insideMinimum.x * insideMinimum.y * insideMinimum.z *
+                    insideMaximum.x * insideMaximum.y * insideMaximum.z;
+                half interiorMix = saturate(
+                    _InteriorReflectionStrength * cameraInsideCabin);
                 half3 interiorReflection = lerp(
                     cockpitReflection,
                     exteriorReflection,

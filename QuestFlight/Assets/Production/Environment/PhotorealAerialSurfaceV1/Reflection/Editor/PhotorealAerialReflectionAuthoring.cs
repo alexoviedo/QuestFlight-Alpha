@@ -87,6 +87,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             "Cessna_Exterior_Glass_MAT_0_Glass_MAT_0";
         public const string InstrumentCoverRendererName =
             "GlassPartNew_GlassMat_New_0_GlassMat_New_0";
+        public const string SingleInstrumentLensRendererName =
+            "Cessna_Interior_MI_Glass1_0_MI_Glass1_0";
         public const string RejectedCockpitSunOcclusionObjectName =
             "ProductionCockpitBakedSunOcclusion";
 
@@ -140,6 +142,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             PhotorealAerialReflectionProfile profile = LoadRequired<PhotorealAerialReflectionProfile>(ProfilePath);
             IntegrateEnvironmentPrefab(profile);
             IntegrateAircraftPrefab();
+            CockpitDirectionalVisibilityAuthoring.AuthorAndIntegrate();
             RemoveRejectedCockpitShadowSun();
             IntegrateSceneReflection(profile);
             AssetDatabase.SaveAssets();
@@ -262,44 +265,135 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
 
         private static Color[] BuildCockpitInteriorReflectionPixels()
         {
+            GameObject aircraftAsset = LoadRequired<GameObject>(AircraftPrefabPath);
+            Scene scene = SceneManager.GetActiveScene();
+            if (!scene.IsValid() || !scene.isLoaded)
+                throw new InvalidOperationException("A loaded editor scene is required for cockpit reflection baking.");
+            GameObject instance = null;
+            Camera bakeCamera = null;
+            Light bakeSun = null;
+            Cubemap capture = null;
+            try
+            {
+                instance = PrefabUtility.InstantiatePrefab(aircraftAsset, scene) as GameObject;
+                if (instance == null)
+                    throw new InvalidOperationException("Aircraft prefab could not be instantiated for reflection baking.");
+                AircraftReferenceFrameRig rig = instance.GetComponent<AircraftReferenceFrameRig>();
+                if (rig == null || rig.AircraftVisualRoot == null)
+                    throw new InvalidOperationException("Aircraft visual root is missing during reflection baking.");
+                Transform cockpit = FindDescendant(rig.AircraftVisualRoot, CockpitRootName);
+                Transform viewpoint = FindDescendant(instance.transform, "Main Camera");
+                if (cockpit == null || viewpoint == null)
+                    throw new InvalidOperationException("Cockpit or authored viewpoint is missing during reflection baking.");
+
+                // Render only the actual opaque cabin geometry. Openings receive a restrained
+                // sky clear color, giving the glazing the same panel, seats, doors, roof and
+                // window apertures that exist in the product without any runtime capture.
+                foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>(true))
+                {
+                    bool cockpitOwned = renderer.transform == cockpit || renderer.transform.IsChildOf(cockpit);
+                    bool transparentGlass = renderer.name.IndexOf("Glass", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        renderer.sharedMaterials.Any(material => material != null && material.shader != null &&
+                            (material.shader.name.IndexOf("Window Reflection", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                             material.shader.name.IndexOf("Instrument Glass", StringComparison.OrdinalIgnoreCase) >= 0));
+                    renderer.enabled = cockpitOwned && !transparentGlass;
+                    renderer.shadowCastingMode = ShadowCastingMode.Off;
+                    renderer.receiveShadows = false;
+                }
+
+                var cameraObject = new GameObject("CockpitReflectionBakeCamera_EditorOnly");
+                SceneManager.MoveGameObjectToScene(cameraObject, scene);
+                bakeCamera = cameraObject.AddComponent<Camera>();
+                cameraObject.transform.SetPositionAndRotation(viewpoint.position, Quaternion.identity);
+                bakeCamera.enabled = false;
+                bakeCamera.clearFlags = CameraClearFlags.SolidColor;
+                bakeCamera.backgroundColor = new Color(0.085f, 0.125f, 0.17f, 1f);
+                bakeCamera.nearClipPlane = 0.015f;
+                bakeCamera.farClipPlane = 12f;
+                bakeCamera.allowHDR = true;
+                bakeCamera.allowMSAA = false;
+                bakeCamera.useOcclusionCulling = false;
+
+                var lightObject = new GameObject("CockpitReflectionBakeSun_EditorOnly");
+                SceneManager.MoveGameObjectToScene(lightObject, scene);
+                bakeSun = lightObject.AddComponent<Light>();
+                bakeSun.type = LightType.Directional;
+                bakeSun.color = new Color(1.0f, 0.93f, 0.84f, 1f);
+                bakeSun.intensity = 0.82f;
+                bakeSun.shadows = LightShadows.None;
+                lightObject.transform.rotation = Quaternion.Euler(43f, -128f, 0f);
+
+                capture = new Cubemap(128, TextureFormat.RGBAHalf, false)
+                {
+                    name = "C172_CockpitInterior_GeometryBake_TEMP",
+                    wrapMode = TextureWrapMode.Clamp,
+                    filterMode = FilterMode.Bilinear
+                };
+                if (!bakeCamera.RenderToCubemap(capture))
+                    throw new InvalidOperationException("Unity failed to render the offline cockpit cubemap.");
+                return ConvertCubemapToEquirectangular(capture);
+            }
+            finally
+            {
+                if (capture != null) UnityEngine.Object.DestroyImmediate(capture);
+                if (bakeSun != null) UnityEngine.Object.DestroyImmediate(bakeSun.gameObject);
+                if (bakeCamera != null) UnityEngine.Object.DestroyImmediate(bakeCamera.gameObject);
+                if (instance != null) UnityEngine.Object.DestroyImmediate(instance);
+            }
+        }
+
+        private static Color[] ConvertCubemapToEquirectangular(Cubemap cubemap)
+        {
+            Color[][] faces = Enum.GetValues(typeof(CubemapFace)).Cast<CubemapFace>()
+                .Where(face => face != CubemapFace.Unknown)
+                .Select(face => cubemap.GetPixels(face, 0)).ToArray();
             Color[] pixels = new Color[ReflectionEquirectangularWidth * ReflectionEquirectangularHeight];
-            Color panel = new Color(0.020f, 0.022f, 0.025f, 1f);
-            Color door = new Color(0.105f, 0.088f, 0.073f, 1f);
-            Color headliner = new Color(0.31f, 0.29f, 0.26f, 1f);
-            Color mutedSky = new Color(0.16f, 0.23f, 0.30f, 1f);
             for (int y = 0; y < ReflectionEquirectangularHeight; y++)
             {
-                float v = (y + 0.5f) / ReflectionEquirectangularHeight;
-                float elevation = (v - 0.5f) * Mathf.PI;
-                float vertical = Mathf.Sin(elevation);
-                float horizontal = Mathf.Cos(elevation);
+                float latitude = (((y + 0.5f) / ReflectionEquirectangularHeight) - 0.5f) * Mathf.PI;
+                float cosLatitude = Mathf.Cos(latitude);
                 for (int x = 0; x < ReflectionEquirectangularWidth; x++)
                 {
-                    float u = (x + 0.5f) / ReflectionEquirectangularWidth;
-                    float azimuth = (u - 0.5f) * Mathf.PI * 2f;
-                    float localX = Mathf.Sin(azimuth) * horizontal;
-                    float localZ = Mathf.Cos(azimuth) * horizontal;
-                    float upper = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-0.10f, 0.62f, vertical));
-                    float side = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.42f, 0.90f, Mathf.Abs(localX)));
-                    Color color = Color.Lerp(panel, headliner, upper);
-                    color = Color.Lerp(color, door, side * (1f - upper * 0.58f));
-                    float windowBand = Mathf.SmoothStep(0f, 1f,
-                        Mathf.InverseLerp(0.52f, 0.84f, Mathf.Abs(localX))) *
-                        (1f - Mathf.SmoothStep(0f, 1f,
-                            Mathf.InverseLerp(0.22f, 0.52f, Mathf.Abs(vertical))));
-                    float windshieldBand = Mathf.SmoothStep(0f, 1f,
-                        Mathf.InverseLerp(0.48f, 0.88f, localZ)) *
-                        (1f - Mathf.SmoothStep(0f, 1f,
-                            Mathf.InverseLerp(0.30f, 0.58f, Mathf.Abs(vertical))));
-                    color = Color.Lerp(color, mutedSky, Mathf.Max(windowBand, windshieldBand) * 0.22f);
-                    float bezelGlint = Mathf.Pow(Mathf.Abs(Mathf.Sin(azimuth * 7f + elevation * 3f)), 24f) *
-                        Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-0.75f, -0.08f, vertical));
-                    color += new Color(0.12f, 0.13f, 0.14f, 0f) * bezelGlint;
-                    color.a = 1f;
-                    pixels[y * ReflectionEquirectangularWidth + x] = color;
+                    float longitude = (((x + 0.5f) / ReflectionEquirectangularWidth) - 0.5f) * Mathf.PI * 2f;
+                    Vector3 direction = new Vector3(
+                        Mathf.Sin(longitude) * cosLatitude,
+                        Mathf.Sin(latitude),
+                        Mathf.Cos(longitude) * cosLatitude);
+                    pixels[y * ReflectionEquirectangularWidth + x] =
+                        SampleCubemapFaces(faces, cubemap.width, direction);
                 }
             }
             return pixels;
+        }
+
+        private static Color SampleCubemapFaces(Color[][] faces, int size, Vector3 direction)
+        {
+            float ax = Mathf.Abs(direction.x);
+            float ay = Mathf.Abs(direction.y);
+            float az = Mathf.Abs(direction.z);
+            CubemapFace face;
+            float sc;
+            float tc;
+            if (ax >= ay && ax >= az)
+            {
+                if (direction.x >= 0f) { face = CubemapFace.PositiveX; sc = -direction.z / ax; tc = -direction.y / ax; }
+                else { face = CubemapFace.NegativeX; sc = direction.z / ax; tc = -direction.y / ax; }
+            }
+            else if (ay >= ax && ay >= az)
+            {
+                if (direction.y >= 0f) { face = CubemapFace.PositiveY; sc = direction.x / ay; tc = direction.z / ay; }
+                else { face = CubemapFace.NegativeY; sc = direction.x / ay; tc = -direction.z / ay; }
+            }
+            else
+            {
+                if (direction.z >= 0f) { face = CubemapFace.PositiveZ; sc = direction.x / az; tc = -direction.y / az; }
+                else { face = CubemapFace.NegativeZ; sc = -direction.x / az; tc = -direction.y / az; }
+            }
+            float u = Mathf.Clamp01(sc * 0.5f + 0.5f);
+            float v = Mathf.Clamp01(0.5f - tc * 0.5f);
+            int px = Mathf.Clamp(Mathf.RoundToInt(u * (size - 1)), 0, size - 1);
+            int py = Mathf.Clamp(Mathf.RoundToInt(v * (size - 1)), 0, size - 1);
+            return faces[(int)face][py * size + px];
         }
 
         private static Texture2D ImportReadableTemporaryCopy(
@@ -551,8 +645,11 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             json.AppendLine("  \"cockpit_directional_shading\": {");
             json.AppendLine("    \"enabled_by_default\": true,");
             AppendJsonString(json, "representation",
-                "single-pass analytic aircraft-local windshield-frame shade", true, 4);
-            json.AppendLine("    \"strength\": 0.18,");
+                "geometry-derived four-cardinal soft visibility in additional vertex streams", true, 4);
+            AppendJsonString(json, "visibility_manifest",
+                RepoPath(CockpitDirectionalVisibilityAuthoring.ManifestPath), true, 4);
+            json.AppendLine("    \"strength\": 0.58,");
+            json.AppendLine("    \"additional_texture_lookups\": 0,");
             json.AppendLine("    \"additional_draw_calls\": 0,");
             json.AppendLine("    \"shadow_map\": false,");
             json.AppendLine("    \"projector_geometry\": false,");
@@ -670,13 +767,23 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             window.SetFloat("_WindshieldOpacity", 0.075f);
             window.SetFloat("_SideWindowOpacity", 0.09f);
             window.SetFloat("_FresnelOpacity", 0.11f);
-            window.SetFloat("_ReflectionStrength", 0.55f);
-            window.SetFloat("_InteriorReflectionStrength", 0.78f);
-            window.SetFloat("_InteriorSkyLeak", 0.18f);
-            window.SetFloat("_DirectGlintStrength", 0.08f);
-            window.SetFloat("_PerceptualRoughness", 0.18f);
+            window.SetFloat("_ReflectionStrength", 0.46f);
+            window.SetFloat("_InteriorReflectionStrength", 0.90f);
+            window.SetFloat("_InteriorSkyLeak", 0.08f);
+            window.SetFloat("_DirectGlintStrength", 0.065f);
+            window.SetFloat("_PerceptualRoughness", 0.22f);
             window.SetFloat("_SideAxisStart", 0.52f);
             window.SetFloat("_SideAxisEnd", 0.82f);
+            ComputeCockpitReflectionContract(
+                out Matrix4x4 windowLocalToAircraft,
+                out Matrix4x4 instrumentLocalToAircraft,
+                out Vector3 capturePosition,
+                out Vector3 boxMinimum,
+                out Vector3 boxMaximum);
+            SetSerializedTransformRows(window, "_WindowToAircraft", windowLocalToAircraft);
+            window.SetVector("_CockpitReflectionCapturePosition", capturePosition);
+            window.SetVector("_CockpitReflectionBoxMin", boxMinimum);
+            window.SetVector("_CockpitReflectionBoxMax", boxMaximum);
             window.renderQueue = (int)RenderQueue.Transparent + 12;
             window.enableInstancing = false;
             window.doubleSidedGI = false;
@@ -687,16 +794,89 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             instrument.SetTexture("_AuthoredReflectionCube",
                 LoadRequired<Cubemap>(CockpitInteriorReflectionPath));
             instrument.SetColor("_Tint", new Color(0.90f, 0.94f, 0.98f, 1f));
-            instrument.SetFloat("_Opacity", 0.032f);
-            instrument.SetFloat("_FresnelOpacity", 0.065f);
-            instrument.SetFloat("_ReflectionStrength", 0.24f);
-            instrument.SetFloat("_DirectGlintStrength", 0.10f);
-            instrument.SetFloat("_PerceptualRoughness", 0.34f);
+            instrument.SetFloat("_Opacity", 0.036f);
+            instrument.SetFloat("_FresnelOpacity", 0.072f);
+            instrument.SetFloat("_ReflectionStrength", 0.68f);
+            instrument.SetFloat("_DirectGlintStrength", 0.12f);
+            instrument.SetFloat("_PerceptualRoughness", 0.28f);
+            SetSerializedTransformRows(instrument, "_InstrumentToAircraft", instrumentLocalToAircraft);
             instrument.renderQueue = (int)RenderQueue.Transparent + 16;
             instrument.enableInstancing = false;
             instrument.doubleSidedGI = false;
             EditorUtility.SetDirty(instrument);
 
+        }
+
+        private static void SetSerializedTransformRows(
+            Material material, string propertyPrefix, Matrix4x4 matrix)
+        {
+            material.SetVector(propertyPrefix + "Row0", matrix.GetRow(0));
+            material.SetVector(propertyPrefix + "Row1", matrix.GetRow(1));
+            material.SetVector(propertyPrefix + "Row2", matrix.GetRow(2));
+        }
+
+        private static void ComputeCockpitReflectionContract(
+            out Matrix4x4 windowLocalToAircraft,
+            out Matrix4x4 instrumentLocalToAircraft,
+            out Vector3 capturePosition,
+            out Vector3 boxMinimum,
+            out Vector3 boxMaximum)
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(AircraftPrefabPath);
+            try
+            {
+                AircraftReferenceFrameRig rig = root.GetComponent<AircraftReferenceFrameRig>();
+                if (rig == null || rig.AircraftVisualRoot == null)
+                    throw new InvalidOperationException("Aircraft visual root is missing from reflection contract.");
+                Transform visual = rig.AircraftVisualRoot;
+                Transform cockpit = FindDescendant(visual, CockpitRootName);
+                Transform viewpoint = FindDescendant(root.transform, "Main Camera");
+                Renderer window = visual.GetComponentsInChildren<Renderer>(true).Single(renderer =>
+                    string.Equals(renderer.name, ExteriorWindowRendererName, StringComparison.Ordinal));
+                Renderer instrument = visual.GetComponentsInChildren<Renderer>(true).Single(renderer =>
+                    string.Equals(renderer.name, InstrumentCoverRendererName, StringComparison.Ordinal));
+                if (cockpit == null || viewpoint == null)
+                    throw new InvalidOperationException("Cockpit or authored viewpoint is missing from reflection contract.");
+
+                windowLocalToAircraft = visual.worldToLocalMatrix * window.transform.localToWorldMatrix;
+                instrumentLocalToAircraft = visual.worldToLocalMatrix * instrument.transform.localToWorldMatrix;
+                capturePosition = visual.InverseTransformPoint(viewpoint.position);
+                bool initialized = false;
+                boxMinimum = Vector3.zero;
+                boxMaximum = Vector3.zero;
+                foreach (Renderer renderer in cockpit.GetComponentsInChildren<Renderer>(true))
+                {
+                    if (renderer.name.IndexOf("Glass", StringComparison.OrdinalIgnoreCase) >= 0) continue;
+                    Bounds bounds = renderer.bounds;
+                    for (int corner = 0; corner < 8; corner++)
+                    {
+                        Vector3 world = bounds.center + new Vector3(
+                            (corner & 1) == 0 ? -bounds.extents.x : bounds.extents.x,
+                            (corner & 2) == 0 ? -bounds.extents.y : bounds.extents.y,
+                            (corner & 4) == 0 ? -bounds.extents.z : bounds.extents.z);
+                        Vector3 local = visual.InverseTransformPoint(world);
+                        if (!initialized)
+                        {
+                            boxMinimum = boxMaximum = local;
+                            initialized = true;
+                        }
+                        else
+                        {
+                            boxMinimum = Vector3.Min(boxMinimum, local);
+                            boxMaximum = Vector3.Max(boxMaximum, local);
+                        }
+                    }
+                }
+                if (!initialized)
+                    throw new InvalidOperationException("No opaque cockpit bounds exist for reflection projection.");
+                Vector3 padding = Vector3.one * 0.06f;
+                boxMinimum -= padding;
+                boxMaximum += padding;
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
         }
 
         private static void EnsureProfile(Cubemap globalCubemap, Cubemap airportLocalCubemap)
@@ -807,7 +987,6 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
 
         private static void IntegrateAircraftPrefab()
         {
-            Material sourceWindow = LoadRequired<Material>(SourceWindowMaterialPath);
             Material sourceInstrument = LoadRequired<Material>(SourceInstrumentGlassMaterialPath);
             Material window = LoadRequired<Material>(WindowMaterialPath);
             Material instrument = LoadRequired<Material>(InstrumentGlassMaterialPath);
@@ -859,6 +1038,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                         StringComparison.Ordinal);
                     bool instrumentCover = string.Equals(renderer.name, InstrumentCoverRendererName,
                         StringComparison.Ordinal);
+                    bool singleInstrumentLens = string.Equals(renderer.name,
+                        SingleInstrumentLensRendererName, StringComparison.Ordinal);
                     for (int index = 0; index < materials.Length; index++)
                     {
                         if (exteriorWindow)
@@ -871,32 +1052,36 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                             materials[index] = instrument;
                             instrumentSlots++;
                         }
-                        else if (materials[index] == sourceWindow)
-                        {
-                            materials[index] = instrument;
-                            instrumentSlots++;
-                        }
+                        else if (singleInstrumentLens)
+                            materials[index] = sourceInstrument;
                         else if (materials[index] == window)
                         {
                             windowSlots++;
                         }
-                        else if (materials[index] == sourceInstrument)
-                        {
-                            materials[index] = instrument;
-                            instrumentSlots++;
-                        }
                         else if (materials[index] == instrument)
-                        {
-                            instrumentSlots++;
-                        }
+                            materials[index] = sourceInstrument;
                     }
                     renderer.sharedMaterials = materials;
-                    // The imported GlassPartNew shell duplicates the actual MI
-                    // instrument cover. Keep its deterministic binding for source
-                    // traceability, but do not spend a second transparent draw on it.
-                    // The authoritative MI cover remains enabled and reflective.
+                    // The broad authored glass shell spans the instrument panel and is the
+                    // sole reflective cover. The prior active MI mesh was only a single
+                    // ~8 cm lens, which is why worn review could not see panel reflections.
                     if (instrumentCover)
+                    {
+                        renderer.enabled = true;
+                        Mesh coverMesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
+                        if (coverMesh == null || coverMesh.bounds.size.x < 0.5f ||
+                            coverMesh.bounds.size.y < 0.1f)
+                            throw new InvalidOperationException(
+                                "The authoritative broad instrument cover has implausible bounds.");
+                    }
+                    if (singleInstrumentLens)
+                    {
                         renderer.enabled = false;
+                        Mesh lensMesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
+                        if (lensMesh == null || lensMesh.bounds.size.x > 0.15f)
+                            throw new InvalidOperationException(
+                                "The rejected single-instrument lens no longer has bounded dimensions.");
+                    }
                     if (exteriorWindow)
                     {
                         renderer.enabled = true;
@@ -935,11 +1120,11 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     renderer => true, null);
                 visibilitySettings.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(visibility);
-                if (windowSlots != 1 || instrumentSlots != 2 || activeInstrumentSlots != 1 ||
+                if (windowSlots != 1 || instrumentSlots != 1 || activeInstrumentSlots != 1 ||
                     exteriorWindowRenderers != 1)
                     throw new InvalidOperationException(
-                        "Expected one full-cabin exterior window slot, two serialized/one active " +
-                        "instrument-glass slots, " +
+                        "Expected one full-cabin exterior window slot, one active broad " +
+                        "instrument-glass slot, " +
                         $"and one enabled exterior glazing renderer; found {windowSlots}/" +
                         $"{instrumentSlots}/{activeInstrumentSlots}/{exteriorWindowRenderers}.");
                 PrefabUtility.SaveAsPrefabAsset(root, AircraftPrefabPath);
@@ -1133,17 +1318,25 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             if (aircraftRenderers.SelectMany(renderer => renderer.sharedMaterials).Count(material =>
                     material == LoadRequired<Material>(WindowMaterialPath)) != 1 ||
                 aircraftRenderers.SelectMany(renderer => renderer.sharedMaterials).Count(material =>
-                    material == LoadRequired<Material>(InstrumentGlassMaterialPath)) != 2)
+                    material == LoadRequired<Material>(InstrumentGlassMaterialPath)) != 1)
                 throw new InvalidOperationException("Dedicated cockpit glass bindings are incomplete.");
             Renderer[] activeInstrumentCovers = aircraftRenderers.Where(renderer => renderer.enabled &&
                 renderer.sharedMaterials.Any(material =>
                     material == LoadRequired<Material>(InstrumentGlassMaterialPath))).ToArray();
-            Renderer decorativeInstrumentCover = aircraftRenderers.Single(renderer =>
+            Renderer broadInstrumentCover = aircraftRenderers.Single(renderer =>
                 string.Equals(renderer.name, InstrumentCoverRendererName,
                     StringComparison.Ordinal));
-            if (activeInstrumentCovers.Length != 1 || decorativeInstrumentCover.enabled)
+            Renderer singleInstrumentLens = aircraftRenderers.Single(renderer =>
+                string.Equals(renderer.name, SingleInstrumentLensRendererName,
+                    StringComparison.Ordinal));
+            Mesh broadMesh = broadInstrumentCover.GetComponent<MeshFilter>()?.sharedMesh;
+            Mesh lensMesh = singleInstrumentLens.GetComponent<MeshFilter>()?.sharedMesh;
+            if (activeInstrumentCovers.Length != 1 || !broadInstrumentCover.enabled ||
+                activeInstrumentCovers[0] != broadInstrumentCover || singleInstrumentLens.enabled ||
+                broadMesh == null || broadMesh.bounds.size.x < 0.5f || broadMesh.bounds.size.y < 0.1f ||
+                lensMesh == null || lensMesh.bounds.size.x > 0.15f)
                 throw new InvalidOperationException(
-                    "Only the authoritative MI instrument cover may consume a transparent draw.");
+                    "Only the broad panel instrument cover may consume a transparent draw.");
             Renderer[] exteriorWindowRenderers = aircraftRenderers.Where(renderer =>
                 string.Equals(renderer.name, ExteriorWindowRendererName,
                     StringComparison.Ordinal)).ToArray();
@@ -1192,6 +1385,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             if (mainSun == null || cockpitSun != null ||
                 (mainSun.cullingMask & (1 << CockpitShadowLayer)) == 0)
                 throw new InvalidOperationException("Rejected cockpit shadow sun remains active.");
+            CockpitDirectionalVisibilityAuthoring.ValidateIntegratedStreams();
 
             Scene scene = EditorSceneManager.OpenScene(ProductionScenePath, OpenSceneMode.Single);
             if (RenderSettings.defaultReflectionMode != DefaultReflectionMode.Custom ||

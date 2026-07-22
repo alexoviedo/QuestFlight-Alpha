@@ -131,13 +131,19 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(window.GetTexture("_CockpitInteriorReflectionCube"), Is.SameAs(cockpitInterior));
             Assert.That(window.GetFloat("_WindshieldOpacity"), Is.InRange(0.07f, 0.08f));
             Assert.That(window.GetFloat("_SideWindowOpacity"), Is.InRange(0.085f, 0.095f));
-            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.54f, 0.56f));
-            Assert.That(window.GetFloat("_DirectGlintStrength"), Is.InRange(0.07f, 0.09f));
+            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.45f, 0.47f));
+            Assert.That(window.GetFloat("_InteriorReflectionStrength"), Is.InRange(0.89f, 0.91f));
+            Assert.That(window.GetFloat("_InteriorSkyLeak"), Is.InRange(0.07f, 0.09f));
+            Assert.That(window.GetFloat("_DirectGlintStrength"), Is.InRange(0.06f, 0.07f));
+            Assert.That(window.GetVector("_CockpitReflectionBoxMax").x,
+                Is.GreaterThan(window.GetVector("_CockpitReflectionBoxMin").x));
+            Assert.That(window.GetVector("_CockpitReflectionBoxMax").y,
+                Is.GreaterThan(window.GetVector("_CockpitReflectionBoxMin").y));
             Assert.That(instrument.GetTexture("_AuthoredReflectionCube"), Is.SameAs(cockpitInterior));
-            Assert.That(instrument.GetFloat("_Opacity"), Is.InRange(0.031f, 0.033f));
-            Assert.That(instrument.GetFloat("_FresnelOpacity"), Is.InRange(0.064f, 0.066f));
-            Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.InRange(0.23f, 0.25f));
-            Assert.That(instrument.GetFloat("_DirectGlintStrength"), Is.InRange(0.09f, 0.11f));
+            Assert.That(instrument.GetFloat("_Opacity"), Is.InRange(0.035f, 0.037f));
+            Assert.That(instrument.GetFloat("_FresnelOpacity"), Is.InRange(0.071f, 0.073f));
+            Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.InRange(0.67f, 0.69f));
+            Assert.That(instrument.GetFloat("_DirectGlintStrength"), Is.InRange(0.11f, 0.13f));
 
             foreach (string path in new[]
                      {
@@ -168,16 +174,30 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(windowSource, Does.Contain("proceduralGround"));
             Assert.That(windowSource, Does.Contain("Blend One OneMinusSrcAlpha"));
             Assert.That(windowSource, Does.Contain("_CockpitInteriorReflectionCube"));
+            Assert.That(windowSource, Does.Contain("cabinSampleDirection"));
+            Assert.That(windowSource, Does.Contain("_WindowToAircraftRow0"));
+            Assert.That(windowSource, Does.Contain("_CockpitReflectionBoxMin"));
+            Assert.That(windowSource, Does.Contain("intersectionDistance"));
+            Assert.That(windowSource, Does.Contain("cameraInsideCabin"));
+            Assert.That(windowSource, Does.Not.Contain("interiorFace"));
             Assert.That(windowSource, Does.Not.Contain("UnityGI_IndirectSpecular"));
             string instrumentSource = File.ReadAllText(InstrumentShaderPath);
             Assert.That(instrumentSource, Does.Contain("Blend One OneMinusSrcAlpha"));
             Assert.That(instrumentSource, Does.Contain("_AuthoredReflectionCube"));
             Assert.That(instrumentSource, Does.Contain("_DirectGlintStrength"));
+            Assert.That(instrumentSource, Does.Contain("opticalFresnel"));
+            Assert.That(instrumentSource, Does.Contain("headlinerCue"));
+            Assert.That(instrumentSource, Does.Contain("_InstrumentToAircraftRow0"));
+            Assert.That(instrumentSource, Does.Contain("Offset -1, -1"));
+            Assert.That(instrumentSource, Does.Not.Contain("UnityGI_IndirectSpecular"));
             string interiorSource = File.ReadAllText(CockpitStableInteriorShaderPath);
             Assert.That(interiorSource, Does.Contain("_CabinDepthStrength"));
             Assert.That(interiorSource, Does.Contain("_DirectionalCabinShadowStrength"));
             Assert.That(interiorSource, Does.Contain("_WorldToAircraft"));
-            Assert.That(interiorSource, Does.Contain("frameShade"));
+            Assert.That(interiorSource, Does.Contain("directionalVisibility : COLOR"));
+            Assert.That(interiorSource, Does.Contain("bakedSunVisibility"));
+            Assert.That(interiorSource, Does.Not.Contain("broadDirectionalShade"));
+            Assert.That(interiorSource, Does.Not.Contain("centerPostShade"));
             Assert.That(interiorSource, Does.Contain("bakedOcclusion"));
             Assert.That(interiorSource, Does.Contain("Blend Off"));
             Assert.That(interiorSource, Does.Contain("ZWrite On"));
@@ -223,7 +243,7 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void OnlyAuthoritativeInstrumentCoverConsumesTransparentDraw()
+        public void BroadPanelInstrumentCoverConsumesTheOnlyTransparentInstrumentDraw()
         {
             GameObject aircraft = AssetDatabase.LoadAssetAtPath<GameObject>(
                 PhotorealAerialReflectionAuthoring.AircraftPrefabPath);
@@ -232,12 +252,41 @@ namespace QuestFlightLab.Tests.EditMode
                 PhotorealAerialReflectionAuthoring.InstrumentGlassMaterialPath);
             Renderer[] covers = aircraft.GetComponentsInChildren<Renderer>(true)
                 .Where(renderer => renderer.sharedMaterials.Contains(instrument)).ToArray();
-            Assert.That(covers, Has.Length.EqualTo(2));
-            Assert.That(covers.Count(renderer => renderer.enabled), Is.EqualTo(1));
-            Renderer decorative = covers.Single(renderer => string.Equals(renderer.name,
+            Assert.That(covers, Has.Length.EqualTo(1));
+            Renderer broad = covers.Single(renderer => string.Equals(renderer.name,
                 PhotorealAerialReflectionAuthoring.InstrumentCoverRendererName,
                 StringComparison.Ordinal));
-            Assert.That(decorative.enabled, Is.False);
+            Assert.That(broad.enabled, Is.True);
+            Mesh broadMesh = broad.GetComponent<MeshFilter>().sharedMesh;
+            Assert.That(broadMesh.bounds.size.x, Is.GreaterThan(0.5f));
+            Assert.That(broadMesh.bounds.size.y, Is.GreaterThan(0.1f));
+            Renderer singleLens = aircraft.GetComponentsInChildren<Renderer>(true).Single(renderer =>
+                string.Equals(renderer.name,
+                    PhotorealAerialReflectionAuthoring.SingleInstrumentLensRendererName,
+                    StringComparison.Ordinal));
+            Assert.That(singleLens.enabled, Is.False);
+            Assert.That(singleLens.sharedMaterials, Has.None.SameAs(instrument));
+        }
+
+        [Test]
+        public void OpaqueCockpitUsesGeometryDerivedDirectionalVisibilityStreams()
+        {
+            CockpitDirectionalVisibilityAuthoring.ValidateIntegratedStreams();
+            GameObject aircraft = AssetDatabase.LoadAssetAtPath<GameObject>(
+                PhotorealAerialReflectionAuthoring.AircraftPrefabPath);
+            Transform cockpit = aircraft.GetComponentsInChildren<Transform>(true).Single(transform =>
+                string.Equals(transform.name, PhotorealAerialReflectionAuthoring.CockpitRootName,
+                    StringComparison.Ordinal));
+            MeshRenderer[] streams = cockpit.GetComponentsInChildren<MeshRenderer>(true)
+                .Where(renderer => renderer.additionalVertexStreams != null).ToArray();
+            Assert.That(streams.Length, Is.GreaterThanOrEqualTo(6));
+            Assert.That(streams.All(renderer =>
+                renderer.additionalVertexStreams.vertexCount ==
+                renderer.GetComponent<MeshFilter>().sharedMesh.vertexCount), Is.True);
+            string manifest = File.ReadAllText(CockpitDirectionalVisibilityAuthoring.ManifestPath);
+            Assert.That(manifest, Does.Contain("geometry_raycast_four_cardinal_soft_visibility"));
+            Assert.That(manifest, Does.Contain("\"runtime_draw_calls_added\": 0"));
+            Assert.That(manifest, Does.Contain("\"runtime_texture_lookups_added\": 0"));
         }
 
         [Test]

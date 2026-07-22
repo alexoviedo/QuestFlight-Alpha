@@ -14,7 +14,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
         emissiveTexture ("Emission", 2D) = "black" {}
         emissiveFactor ("Emission Factor", Color) = (0,0,0,1)
         _CabinDepthStrength ("Cabin Depth Strength", Range(0,0.42)) = 0.38
-        _DirectionalCabinShadowStrength ("Directional Cabin Shade", Range(0,0.42)) = 0.36
+        _DirectionalCabinShadowStrength ("Directional Cabin Shade", Range(0,0.65)) = 0.58
     }
 
     SubShader
@@ -52,14 +52,13 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
             half _CabinDepthStrength;
             half _DirectionalCabinShadowStrength;
             float4x4 _WorldToAircraft;
-            float4 _CabinBoundsCenter;
-            float4 _CabinBoundsExtent;
 
             struct appdata
             {
                 float4 vertex : POSITION;
                 half3 normal : NORMAL;
                 half4 tangent : TANGENT;
+                fixed4 directionalVisibility : COLOR;
                 float2 uv : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -73,6 +72,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 half3 bitangentWS : TEXCOORD3;
                 float3 worldPosition : TEXCOORD4;
                 UNITY_FOG_COORDS(5)
+                fixed4 directionalVisibility : TEXCOORD6;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -88,6 +88,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 output.bitangentWS = normalize(cross(output.normalWS, output.tangentWS) *
                     (input.tangent.w * unity_WorldTransformParams.w));
                 output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
+                output.directionalVisibility = input.directionalVisibility;
                 UNITY_TRANSFER_FOG(output, output.position);
                 return output;
             }
@@ -128,39 +129,24 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half nDotL = saturate(dot(normalWS, lightDirection));
                 half aperture = lerp(0.28h, 0.82h, skyExposure);
-                // One broad analytic windshield-frame shade follows the authored sun in
-                // aircraft-local space. It has no projector geometry, depth overlap,
-                // shadow map, or per-eye state, avoiding the worn-test triangle flicker.
-                float3 aircraftPosition = mul(
-                    _WorldToAircraft, float4(input.worldPosition, 1.0)).xyz;
-                float3 cabinPosition = (aircraftPosition - _CabinBoundsCenter.xyz) /
-                    max(_CabinBoundsExtent.xyz, float3(0.25, 0.25, 0.25));
+                // RGBA stores soft geometry-ray visibility for sun arriving from aircraft
+                // +Z/+X/-Z/-X. Interpolation selects the current authored sun direction.
+                // This follows the real cabin shell/panel/seat geometry while remaining a
+                // single stable pass with no per-eye projection or realtime shadow map.
                 half3 localLight = normalize(mul((half3x3)_WorldToAircraft, lightDirection));
-                half projectedFrame = cabinPosition.x -
-                    localLight.x / (abs(localLight.y) + 0.35h) *
-                    max(0.0h, 0.64h - cabinPosition.y) * 0.54h;
-                half centerPostShade = 1.0h - smoothstep(0.075h, 0.22h, abs(projectedFrame));
-                half sidePostCoordinate = abs(projectedFrame) - 0.62h;
-                half sidePostShade = 1.0h - smoothstep(0.055h, 0.18h, abs(sidePostCoordinate));
-                half projectedHeader = cabinPosition.z -
-                    localLight.z / (abs(localLight.y) + 0.35h) *
-                    max(0.0h, 0.58h - cabinPosition.y) * 0.44h;
-                half headerShade = 1.0h - smoothstep(0.07h, 0.25h, abs(projectedHeader + 0.08h));
-                // A broad secondary sweep represents the combined windscreen header/post
-                // silhouette on the panel and seats. It is intentionally soft and computed
-                // from aircraft-local position, so it rotates with the aircraft and cannot
-                // produce the overlapping projected triangles rejected in worn QA.
-                half sweepCoordinate = cabinPosition.x + cabinPosition.z *
-                    (0.30h + localLight.x * 0.16h) - localLight.x * 0.24h;
-                half broadFrameSweep = 1.0h - smoothstep(0.13h, 0.40h, abs(sweepCoordinate));
-                half lowerCabinReceiver = 1.0h - smoothstep(0.30h, 0.90h, cabinPosition.y);
-                half frameShade = saturate(centerPostShade + sidePostShade * 0.74h +
-                    headerShade * 0.62h + broadFrameSweep * lowerCabinReceiver * 0.82h);
-                half sunlightAbove = smoothstep(-0.16h, 0.26h, localLight.y);
-                half interiorReceiver = lerp(0.98h, 0.72h, skyExposure);
-                half directionalVisibility = 1.0h -
-                    _DirectionalCabinShadowStrength * frameShade * sunlightAbove * interiorReceiver;
-                ambient *= lerp(1.0h, directionalVisibility, 0.56h);
+                half4 directionWeights = half4(
+                    max(localLight.z, 0.0h), max(localLight.x, 0.0h),
+                    max(-localLight.z, 0.0h), max(-localLight.x, 0.0h));
+                half weightSum = max(dot(directionWeights, half4(1, 1, 1, 1)), 0.001h);
+                directionWeights /= weightSum;
+                half bakedSunVisibility = saturate(dot(
+                    input.directionalVisibility, directionWeights));
+                half sunlightAbove = smoothstep(0.04h, 0.30h, localLight.y);
+                half directionalVisibility = lerp(
+                    1.0h,
+                    lerp(0.38h, 1.0h, bakedSunVisibility),
+                    _DirectionalCabinShadowStrength * sunlightAbove);
+                ambient *= lerp(1.0h, directionalVisibility, 0.58h);
                 warmCabinBounce *= lerp(1.0h, directionalVisibility, 0.42h);
                 half3 direct = _LightColor0.rgb * nDotL * aperture * directionalVisibility;
 

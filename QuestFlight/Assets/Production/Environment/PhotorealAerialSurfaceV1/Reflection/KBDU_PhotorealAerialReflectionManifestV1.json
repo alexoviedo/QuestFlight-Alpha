@@ -58,8 +58,8 @@
     },
     "cockpit_interior_reflection": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Textures/C172_CockpitInteriorReflection_256.exr",
-      "sha256": "52453858dad9eac9022820a6ae61a616cef2bfbbd2bb225f6a41cbde4022f33c",
-      "bytes": 43757
+      "sha256": "cef4433bab4a224d2fa02707aba62e964204c2b9693b5110bdf7c66b1fb78907",
+      "bytes": 63134
     },
     "profile": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Profiles/KBDU_PhotorealAerialReflectionProfile.asset",
@@ -68,28 +68,28 @@
     },
     "window_material": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionCockpitWindowReflection.mat",
-      "sha256": "915373639fb86b52bb66f2dbfd4d9d285310972cf2431e0da36d79a3d9697944",
-      "bytes": 1557
+      "sha256": "1baa070ad5ed5a4c94c3ba93e9421ff43558d719054f14477378d23d2c382c67",
+      "bytes": 2045
     },
     "instrument_glass_material": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentGlassReflection.mat",
-      "sha256": "fa779741c8672d373eef38622176f0a7178dc1df4aa37cadfa049cfb54e52f4d",
-      "bytes": 1145
+      "sha256": "781bc60ebe0c98792d4771ae80fcce03005d1d4b92bdb533ec4a192735e91685",
+      "bytes": 1389
     },
     "window_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitWindowReflection.shader",
-      "sha256": "71103c552673b9af961bb0d6cc4a080cf91ae478150dbfdce88046737ac127d8",
-      "bytes": 6136
+      "sha256": "c68543a4ee869bfa32c28bbc23ceac625ac3719ac054adda0888dcfd99e481c1",
+      "bytes": 9688
     },
     "instrument_glass_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader",
-      "sha256": "d9efcca2b7b7b82e01aa4760f73391a8715e6f8e6f1d25b752fdf518d21f5fcb",
-      "bytes": 5496
+      "sha256": "0780d1475e1878a88022d037a1fd9e3e17a427be4a39d3a28f4c45f74b40304a",
+      "bytes": 5401
     },
     "cockpit_stable_interior_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitStableInterior.shader",
-      "sha256": "37a69ed65854932cf8d7e3577d9955154bebd06f32b416ac862985042ae721dd",
-      "bytes": 9994
+      "sha256": "834ced2f90298375b76f6ee9b741f954950979d024db472256864ae7ee68bbf6",
+      "bytes": 8748
     }
   },
   "integration_contract": {
@@ -117,8 +117,10 @@
   },
   "cockpit_directional_shading": {
     "enabled_by_default": true,
-    "representation": "single-pass analytic aircraft-local windshield-frame shade",
-    "strength": 0.18,
+    "representation": "geometry-derived four-cardinal soft visibility in additional vertex streams",
+    "visibility_manifest": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/C172_CockpitDirectionalVisibility.json",
+    "strength": 0.58,
+    "additional_texture_lookups": 0,
     "additional_draw_calls": 0,
     "shadow_map": false,
     "projector_geometry": false,

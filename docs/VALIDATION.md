@@ -260,3 +260,19 @@ The machine pass establishes a test-ready merge candidate, not worn visual,
 comfort, frame-time, stale/tear, thermal, or release acceptance. Those claims
 remain withheld until the exact APK is inspected or measured on the physical
 Quest 3. See `docs/evidence/WORN_VISUAL_RUNTIME_V1_2026-07-21.md`.
+
+## Cockpit reflection and directional-visibility closure
+
+The final cockpit candidate closes its machine gate:
+
+- deterministic geometry-baked cabin reflection and 20 directional-visibility stream contracts: PASS;
+- Unity EditMode: PASS 117/117; PlayMode: PASS 9/9;
+- full `validate_product.ps1`: PASS, including product integrity, provenance, dependency closure, Visual QA, static budget, and Android build;
+- production Visual QA: PASS 81/81 with classification `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; cockpit glass, instrument cover, and stable-shading frames were inspected at full resolution;
+- static Quest planning: PASS at 55 maximum selected draws, 628,444 selected triangles, 793,823 serialized mesh triangles, 27 materials, 211,911,484 estimated texture bytes, three transparent slots, 12 shaders/17 keyword combinations, and 4x MSAA;
+- Meta XR Simulator 201.0 live Quest-3-profile stereo/HMD/both Touch: PASS for `cockpit_neutral`; aggregate status remains `BLOCKED_MISSING_RECORDED_REPLAYS` for the ten absent genuine `.vrs` sessions;
+- Android release-style build: PASS. Exact APK identity is recorded in `docs/evidence/COCKPIT_REFLECTION_DIRECTIONAL_VISIBILITY_V1_2026-07-22.md`.
+
+The visibility stream adds no renderer, draw call, material, texture lookup,
+runtime raycast, or shadow map. These checks establish a worn-test candidate,
+not physical Quest timing, comfort, or subjective optical acceptance.

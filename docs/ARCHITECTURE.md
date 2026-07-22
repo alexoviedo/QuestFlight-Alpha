@@ -139,15 +139,17 @@ and cubemap-backed window glint without adding a renderer, material, texture,
 transparent pass, or runtime update. These remain inferred context shells, not
 surveyed hero architecture.
 
-The full cabin-glass mesh owns one single-pass static ground/sky reflection
-material visible from the seated view. Cockpit depth is geometry-bound to the
-existing opaque interior surfaces: one stable single-pass shader preserves the
-imported base, normal, metallic/roughness, emission, and bounded AO maps while
-deriving directional sun/sky response and a restrained warm cabin bounce. The
-rejected free-floating two-triangle overlay is absent, so cockpit shading cannot
-cover the windshield or reveal screen-space triangle seams. Realtime cockpit
-shadow maps, extra renderers, transparent passes, cameras, and cascades remain
-absent. One redundant imported transparent instrument shell is disabled while
-the authoritative instrument cover remains. The architecture therefore
-preserves one XR Origin, one tracked Main Camera, one flight authority, and
-standalone Android/OpenXR ownership.
+The full cabin-glass mesh owns one single-pass finite-volume reflection material.
+For an eye inside the authored cabin bounds, it samples a static cubemap baked
+from the actual imported panel, gauges, yokes, seats, doors, headliner, and window
+openings; exterior views retain the existing environment cubemap. A broad
+instrument-cover mesh uses the same geometry-derived cabin reflection, while the
+redundant single-lens shell is disabled. Cockpit depth is geometry-bound to the
+existing opaque interior surfaces: twenty renderers carry four offline raycast
+visibility channels (+Z, +X, -Z, -X) in additional vertex streams. The stable
+single-pass shader interpolates those channels using aircraft-local sun direction
+while preserving imported base, normal, metallic/roughness, emission, and AO.
+There is no runtime raycast, shadow map, projector, extra renderer, additional
+draw, reflection camera, transparent pass, or cascade. The rejected free-floating
+two-triangle overlay remains absent. This preserves one XR Origin, one tracked
+Main Camera, one flight authority, and standalone Android/OpenXR ownership.

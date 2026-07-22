@@ -31,8 +31,8 @@ namespace QuestFlightLab.Aircraft
 
     /// <summary>
     /// Applies a deterministic Quest cockpit-lighting treatment to authored renderers.
-    /// Authored AO, bounded material darkening, softened coarse cabin normals, static sky
-    /// reflections, and base-texture instrument emission preserve stable depth/readability.
+    /// Authored AO, geometry-derived four-direction visibility, softened coarse cabin normals,
+    /// static reflections, and base-texture instrument emission preserve stable depth/readability.
     /// Realtime cockpit casters and receivers stay disabled because worn stereo review proved
     /// the former small shadow map flickered. No light, camera, mesh, or hierarchy is created.
     /// </summary>
@@ -46,13 +46,11 @@ namespace QuestFlightLab.Aircraft
         public const float DefaultCockpitOcclusionStrength = 1.0f;
         public const float DefaultCoarseNormalStrength = 0.42f;
         public const float DefaultInstrumentReadabilityEmission = 0.20f;
-        public const float DefaultDirectionalCabinShadowStrength = 0.36f;
-        public const float MaximumDirectionalCabinShadowStrength = 0.42f;
+        public const float DefaultDirectionalCabinShadowStrength = 0.58f;
+        public const float MaximumDirectionalCabinShadowStrength = 0.65f;
 
         private const string StableMaterialSuffix = " Quest Cockpit Stable";
         private static readonly int WorldToAircraftId = Shader.PropertyToID("_WorldToAircraft");
-        private static readonly int CabinBoundsCenterId = Shader.PropertyToID("_CabinBoundsCenter");
-        private static readonly int CabinBoundsExtentId = Shader.PropertyToID("_CabinBoundsExtent");
         private static readonly int DirectionalCabinShadowStrengthId =
             Shader.PropertyToID("_DirectionalCabinShadowStrength");
 
@@ -72,8 +70,6 @@ namespace QuestFlightLab.Aircraft
         public ProductionAircraftLightingReport Report { get; private set; }
 
         private readonly List<Material> _ownedRuntimeMaterials = new List<Material>();
-        private Vector3 _cabinBoundsCenter;
-        private Vector3 _cabinBoundsExtent = Vector3.one;
 
         public void ConfigureAuthoredRoot(GameObject root) => importedAircraftRoot = root;
 
@@ -105,7 +101,6 @@ namespace QuestFlightLab.Aircraft
                 _ownedRuntimeMaterials);
             Report.directionalCabinShadowStrength = Mathf.Clamp(
                 directionalCabinShadowStrength, 0f, MaximumDirectionalCabinShadowStrength);
-            MeasureCabinBounds();
             ApplyDirectionalCabinState();
             return Report;
         }
@@ -152,7 +147,7 @@ namespace QuestFlightLab.Aircraft
                 coarseNormalStrength = Mathf.Clamp01(normalStrength),
                 instrumentReadabilityEmission = Mathf.Clamp(instrumentEmission, 0f, 0.5f),
                 directionalCabinShadowStrength = DefaultDirectionalCabinShadowStrength,
-                strategy = "static_material_depth_plus_baked_ao_soft_normals_and_single_pass_directional_cabin_shade_no_realtime_shadow_map"
+                strategy = "static_material_depth_plus_baked_ao_soft_normals_and_geometry_derived_directional_visibility_no_realtime_shadow_map"
             };
             Dictionary<Material, Material> cockpitClones = new Dictionary<Material, Material>();
 
@@ -200,8 +195,6 @@ namespace QuestFlightLab.Aircraft
                         if (stable.HasProperty("_DirectionalCabinShadowStrength"))
                             stable.SetFloat(DirectionalCabinShadowStrengthId, DefaultDirectionalCabinShadowStrength);
                         stable.SetMatrix(WorldToAircraftId, root.transform.worldToLocalMatrix);
-                        stable.SetVector(CabinBoundsCenterId, Vector4.zero);
-                        stable.SetVector(CabinBoundsExtentId, Vector4.one);
                         cockpitClones.Add(source, stable);
                         ownedMaterials.Add(stable);
                         report.cockpitMaterialCloneCount++;
@@ -234,55 +227,9 @@ namespace QuestFlightLab.Aircraft
             return report;
         }
 
-        private void MeasureCabinBounds()
-        {
-            bool initialized = false;
-            Vector3 minimum = Vector3.zero;
-            Vector3 maximum = Vector3.zero;
-            Matrix4x4 worldToAircraft = importedAircraftRoot.transform.worldToLocalMatrix;
-            Renderer[] renderers = importedAircraftRoot.GetComponentsInChildren<Renderer>(true);
-            for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
-            {
-                Renderer renderer = renderers[rendererIndex];
-                if (renderer == null || !IsCockpitRenderer(RendererIdentity(renderer))) continue;
-                Bounds bounds = renderer.bounds;
-                Vector3 center = bounds.center;
-                Vector3 extent = bounds.extents;
-                for (int corner = 0; corner < 8; corner++)
-                {
-                    Vector3 world = center + new Vector3(
-                        (corner & 1) == 0 ? -extent.x : extent.x,
-                        (corner & 2) == 0 ? -extent.y : extent.y,
-                        (corner & 4) == 0 ? -extent.z : extent.z);
-                    Vector3 local = worldToAircraft.MultiplyPoint3x4(world);
-                    if (!initialized)
-                    {
-                        minimum = maximum = local;
-                        initialized = true;
-                    }
-                    else
-                    {
-                        minimum = Vector3.Min(minimum, local);
-                        maximum = Vector3.Max(maximum, local);
-                    }
-                }
-            }
-            if (!initialized) return;
-            _cabinBoundsCenter = (minimum + maximum) * 0.5f;
-            Vector3 measuredExtent = (maximum - minimum) * 0.5f;
-            _cabinBoundsExtent = new Vector3(
-                Mathf.Max(0.25f, measuredExtent.x),
-                Mathf.Max(0.25f, measuredExtent.y),
-                Mathf.Max(0.25f, measuredExtent.z));
-        }
-
         private void ApplyDirectionalCabinState()
         {
             Matrix4x4 worldToAircraft = importedAircraftRoot.transform.worldToLocalMatrix;
-            Vector4 center = new Vector4(
-                _cabinBoundsCenter.x, _cabinBoundsCenter.y, _cabinBoundsCenter.z, 0f);
-            Vector4 extent = new Vector4(
-                _cabinBoundsExtent.x, _cabinBoundsExtent.y, _cabinBoundsExtent.z, 0f);
             float strength = Mathf.Clamp(
                 directionalCabinShadowStrength, 0f, MaximumDirectionalCabinShadowStrength);
             for (int index = 0; index < _ownedRuntimeMaterials.Count; index++)
@@ -292,8 +239,6 @@ namespace QuestFlightLab.Aircraft
                     !string.Equals(material.shader.name, StableCockpitShaderName, StringComparison.Ordinal))
                     continue;
                 material.SetMatrix(WorldToAircraftId, worldToAircraft);
-                material.SetVector(CabinBoundsCenterId, center);
-                material.SetVector(CabinBoundsExtentId, extent);
                 material.SetFloat(DirectionalCabinShadowStrengthId, strength);
             }
         }
