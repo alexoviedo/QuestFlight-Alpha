@@ -577,7 +577,7 @@ class CommittedAssetContractTests(unittest.TestCase):
         report = validate(RUNTIME_ROOT)
         self.assertEqual(report["status"], "PASS")
         self.assertEqual(report["building"]["triangle_count"], 128_092)
-        self.assertTrue(58_000 <= report["canopy"]["triangle_count"] <= 59_000)
+        self.assertTrue(45_000 <= report["canopy"]["triangle_count"] <= 59_000)
         self.assertGreater(report["canopy"]["vertex_count"], 0)
         self.assertGreater(report["canopy"]["geometry_component_count"], 0)
         self.assertEqual(report["canopy"]["combined_source_assignment_percent"], 100.0)
@@ -623,15 +623,22 @@ class CommittedAssetContractTests(unittest.TestCase):
         self.assertEqual(manifest["coverage"]["source_assignment_coverage_fraction"], 1.0)
         self.assertEqual(manifest["budgets"]["mesh_batch_count"], 4)
         self.assertTrue(
-            58_000 <= manifest["budgets"]["mesh_batch_total_triangles"] <= 59_000
+            45_000 <= manifest["budgets"]["mesh_batch_total_triangles"] <= 59_000
         )
+        grove_metrics = manifest["coverage"]["semantic_grove_compilation"]
+        self.assertGreaterEqual(
+            grove_metrics["source_coverage_fraction_0_1500m"], 0.95
+        )
+        self.assertGreater(grove_metrics["selected_sparse_grove_count"], 0)
+        self.assertEqual(grove_metrics["target_source_coverage_fraction"], 0.96)
         topology = manifest["topology"]
         self.assertEqual(
             topology["connected_crown_triangle_count"]
             + topology["grounded_trunk_triangle_count"]
             + topology["near_branch_triangle_count"]
             + topology["near_foliage_card_triangle_count"]
-            + topology["mid_foliage_card_triangle_count"],
+            + topology["mid_foliage_card_triangle_count"]
+            + topology["sparse_foliage_card_triangle_count"],
             manifest["budgets"]["mesh_batch_total_triangles"],
         )
         self.assertTrue(CANOPY_GENERATED_DIR.exists())

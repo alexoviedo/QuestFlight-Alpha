@@ -1,7 +1,7 @@
 {
   "assets": [
     {
-      "bytes": 103402,
+      "bytes": 172970,
       "encoding": {
         "byte_order": "little_endian",
         "component_record_bytes": 28,
@@ -13,10 +13,10 @@
       },
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer.bytes",
       "semantic": "ProductionCanopySurfaceLayer",
-      "sha256": "51f8370c938f097f466406f776a4f7fc6b8528a4b58058f92aac4c4b44799e6a"
+      "sha256": "66c23f355bd56a34cd8262e356c604962afb32dac574d7b42b78c3ef008dbb0d"
     },
     {
-      "bytes": 19141,
+      "bytes": 26839,
       "dimensions": {
         "height_pixels": 1024,
         "width_pixels": 1024
@@ -29,7 +29,7 @@
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer_GeometryOwnership_R8.png",
       "raster_horizontal_frame": "origin-relative UTM13N deltas",
       "semantic": "production_canopy_surface_geometry_ownership",
-      "sha256": "f019b36e6e7479dd189914058e08979c10e3927e9f920779b29f94b1a4136018"
+      "sha256": "da4ce2b3487062cc9b8daf08ee0d356653f865fc0576425e141b910c9ad8eee8"
     },
     {
       "bytes": 36048,
@@ -53,29 +53,29 @@
         "z": -1
       },
       "branch_count": 56,
-      "bytes": 954780,
-      "crown_count": 403,
-      "foliage_card_count": 1730,
+      "bytes": 1017696,
+      "crown_count": 387,
+      "foliage_card_count": 1860,
       "horizontal_frame": "KBDU product-local WGS84 azimuthal equidistant",
       "material_slots": 1,
       "object_name": "ProductionCanopySurfaceLayer_xn001_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Generated/ProductionCanopySurfaceLayer_xn001_zn001.obj",
       "product_bounds_xz_meters": {
         "maximum": [
-          -0.411,
-          -13.691
+          4.636,
+          4.011
         ],
         "minimum": [
-          -1983.486,
-          -2041.357
+          -1998.956,
+          -2043.347
         ]
       },
       "semantic": "production_canopy_surface_mesh_batch",
-      "sha256": "e2f928d337acdf63bfae8084a09a237afbf187ada87fb2d3c78a8a78c231c83c",
+      "sha256": "c95df88ec8222ad2e6cd3c2d6eda21dfe46686f0d741c8d6226072e5c3955ad8",
       "skirt_quad_count": 0,
-      "triangle_count": 5692,
-      "trunk_count": 316,
-      "vertex_count": 9152
+      "triangle_count": 6048,
+      "trunk_count": 332,
+      "vertex_count": 9768
     },
     {
       "batch_key": {
@@ -83,29 +83,29 @@
         "z": 0
       },
       "branch_count": 372,
-      "bytes": 3500180,
-      "crown_count": 938,
-      "foliage_card_count": 6312,
+      "bytes": 3281306,
+      "crown_count": 694,
+      "foliage_card_count": 5936,
       "horizontal_frame": "KBDU product-local WGS84 azimuthal equidistant",
       "material_slots": 1,
       "object_name": "ProductionCanopySurfaceLayer_xn001_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Generated/ProductionCanopySurfaceLayer_xn001_zp000.obj",
       "product_bounds_xz_meters": {
         "maximum": [
-          0.166,
-          2018.701
+          7.786,
+          2035.229
         ],
         "minimum": [
-          -2029.959,
-          2.952
+          -2035.198,
+          -2.411
         ]
       },
       "semantic": "production_canopy_surface_mesh_batch",
-      "sha256": "ec19ae9a3970da16ccbaf9bc65010c05b4cc6d4b6c7e6a9c9565ab982ccce575",
+      "sha256": "1ee0fb7af990af175b97fd0685a2e4b5e6ed08fc4bb1f10d1df73fd6fcb809a7",
       "skirt_quad_count": 0,
-      "triangle_count": 20544,
-      "trunk_count": 948,
-      "vertex_count": 33168
+      "triangle_count": 19264,
+      "trunk_count": 860,
+      "vertex_count": 31136
     },
     {
       "batch_key": {
@@ -113,29 +113,29 @@
         "z": -1
       },
       "branch_count": 58,
-      "bytes": 2612337,
-      "crown_count": 1354,
-      "foliage_card_count": 4603,
+      "bytes": 2046848,
+      "crown_count": 856,
+      "foliage_card_count": 3624,
       "horizontal_frame": "KBDU product-local WGS84 azimuthal equidistant",
       "material_slots": 1,
       "object_name": "ProductionCanopySurfaceLayer_xp000_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Generated/ProductionCanopySurfaceLayer_xp000_zn001.obj",
       "product_bounds_xz_meters": {
         "maximum": [
-          1979.362,
-          6.991
+          2030.158,
+          12.756
         ],
         "minimum": [
-          10.866,
-          -1814.751
+          -0.975,
+          -1866.095
         ]
       },
       "semantic": "production_canopy_surface_mesh_batch",
-      "sha256": "57cf08285ec85fbc723f2b2297e7292b089953f4bf68b7628dd7ce97d8b448f2",
+      "sha256": "d5f96cb9c0a938bf996c27e1c3349424c0d67472b4e898b927baad7f096a2f7b",
       "skirt_quad_count": 0,
-      "triangle_count": 15266,
-      "trunk_count": 952,
-      "vertex_count": 24472
+      "triangle_count": 12018,
+      "trunk_count": 737,
+      "vertex_count": 19266
     },
     {
       "batch_key": {
@@ -143,41 +143,41 @@
         "z": 0
       },
       "branch_count": 210,
-      "bytes": 2797987,
-      "crown_count": 1021,
-      "foliage_card_count": 5034,
+      "bytes": 2602973,
+      "crown_count": 783,
+      "foliage_card_count": 4714,
       "horizontal_frame": "KBDU product-local WGS84 azimuthal equidistant",
       "material_slots": 1,
       "object_name": "ProductionCanopySurfaceLayer_xp000_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Generated/ProductionCanopySurfaceLayer_xp000_zp000.obj",
       "product_bounds_xz_meters": {
         "maximum": [
-          2039.365,
-          2012.986
+          2049.687,
+          2034.112
         ],
         "minimum": [
-          -7.522,
-          -4.082
+          -10.162,
+          -6.017
         ]
       },
       "semantic": "production_canopy_surface_mesh_batch",
-      "sha256": "0e4704eaae7fa8b19ce88fe457bde358b4e506494a20a2d12e7a14560e5b8c81",
+      "sha256": "2fd1695ea68f2cfb28cbea4d4428e113d6866558a996bc9eeff49ea0cd1ad951",
       "skirt_quad_count": 0,
-      "triangle_count": 16500,
-      "trunk_count": 862,
-      "vertex_count": 26568
+      "triangle_count": 15350,
+      "trunk_count": 777,
+      "vertex_count": 24778
     }
   ],
   "budgets": {
     "maximum_layer_bytes": 1500000,
     "maximum_mesh_triangles": 59000,
     "mesh_batch_count": 4,
-    "mesh_batch_total_bytes": 9865284,
-    "mesh_batch_total_triangles": 58002,
-    "mesh_batch_total_vertices": 93360,
+    "mesh_batch_total_bytes": 8948823,
+    "mesh_batch_total_triangles": 52680,
+    "mesh_batch_total_vertices": 84948,
     "runtime_sparse_tree_instances_authored": 0,
-    "serialized_layer_bytes": 103402,
-    "target_mesh_triangles": 58000
+    "serialized_layer_bytes": 172970,
+    "target_mesh_triangles": 45000
   },
   "combined_representation_area_agreement_percent": 100.0,
   "coordinate_mapping": {
@@ -234,7 +234,7 @@
   },
   "coverage": {
     "building_ownership_excluded_pixel_count": 27594,
-    "component_count": 876,
+    "component_count": 1907,
     "final_eligible_pixel_count": 63452,
     "geometry_component_filter": {
       "minimum_geometry_component_pixel_count": 128,
@@ -245,13 +245,13 @@
       "retained_component_count": 45,
       "retained_ownership_pixel_count": 15748
     },
-    "geometry_footprint_area_ratio_to_source_250_1500m": 0.7412610059710556,
-    "geometry_footprint_area_square_meters": 585952.0,
-    "geometry_ownership_pixel_count": 36622,
+    "geometry_footprint_area_ratio_to_source_250_1500m": 0.9601052525048072,
+    "geometry_footprint_area_square_meters": 758944.0,
+    "geometry_ownership_pixel_count": 47434,
     "geometry_semantic_source_support_fraction": 1.0,
-    "geometry_source_eligible_owned_pixel_count": 36622,
+    "geometry_source_eligible_owned_pixel_count": 47434,
     "hero_0_250m_source_eligible_pixel_count": 144,
-    "largest_component_pixel_count": 1958,
+    "largest_component_pixel_count": 2018,
     "operational_exclusion_rejected_by_class": {
       "apron": 142,
       "building": 41516,
@@ -293,7 +293,7 @@
       "visual_qa_decision": "REJECTED_BLOCK_AND_CLIFF_SILHOUETTES"
     },
     "reviewed_noncanopy_excluded_pixel_count": 1009,
-    "run_count": 7883,
+    "run_count": 11953,
     "screen_relevant_grove_selection": {
       "minimum_source_area_square_meters": 2048.0,
       "minimum_source_pixel_count": 128,
@@ -613,7 +613,7 @@
       "source_pixel_count": 49261
     },
     "semantic_grove_compilation": {
-      "candidate_grove_count": 2153,
+      "candidate_grove_count": 3689,
       "cell_meters": 32.0,
       "crown_peak_range": [
         1,
@@ -629,17 +629,17 @@
         2
       ],
       "grounded_trunks_per_grove": 2,
-      "grove_count": 1334,
+      "grove_count": 2720,
       "interlocking_crown_shells_per_grove": 1,
-      "maximum_bottom_transition_angle_degrees": 67.70223602308269,
-      "maximum_grove_count": 2269,
-      "maximum_top_transition_angle_degrees": 68.18981304767166,
+      "maximum_bottom_transition_angle_degrees": 72.0,
+      "maximum_grove_count": 14750,
+      "maximum_top_transition_angle_degrees": 72.0,
+      "mid_connected_crown_volumes_per_grove": 1,
+      "mid_connected_grove_count": 2010,
       "mid_detail_radius_meters": 2040.0,
-      "mid_foliage_card_count_per_tree": 3,
-      "mid_perforated_grove_count": 1191,
-      "mid_tree_count_per_grove": 3,
+      "mid_foliage_card_count_per_grove": 4,
       "minimum_bottom_transition_angle_degrees": 28.29931287448302,
-      "minimum_eligible_pixels_per_cell": 4,
+      "minimum_eligible_pixels_per_cell": 1,
       "minimum_top_transition_angle_degrees": 28.375598166093575,
       "near_branch_count_per_tree": 1,
       "near_detail_radius_meters": 650.0,
@@ -650,10 +650,12 @@
         3,
         8
       ],
-      "represented_source_pixel_count": 36622,
-      "source_coverage_fraction_0_1500m": 0.7412610059710556,
+      "represented_source_pixel_count": 47434,
+      "selected_sparse_grove_count": 567,
+      "source_coverage_fraction_0_1500m": 0.9601052525048072,
       "source_pixel_count_0_1500m": 49405,
-      "triangle_count": 58002
+      "target_source_coverage_fraction": 0.96,
+      "triangle_count": 52680
     },
     "source_0_1500m_area_square_meters": 790480.0,
     "source_0_1500m_eligible_pixel_count": 49405,
@@ -713,10 +715,10 @@
     "geometry_representation": {
       "active": true,
       "maximum": 24.0,
-      "median_authored_height_meters": 16.695999999999998,
-      "median_authored_to_lidar_height_ratio": 1.5531162790697672,
-      "median_lidar_source_height_meters": 10.75,
-      "p50": 16.695999999999998,
+      "median_authored_height_meters": 14.395,
+      "median_authored_to_lidar_height_ratio": 1.4395,
+      "median_lidar_source_height_meters": 10.0,
+      "p50": 14.395,
       "p95": 24.0
     },
     "source_250_1500m": {
@@ -806,7 +808,7 @@
     "Static topology and byte budgets are not physical Quest performance evidence.",
     "The lidar data textures remain on the UTM13N raster grid; runtime world-space sampling must apply the exact product-AEQD-to-UTM transform before deriving texture UVs."
   ],
-  "median_height_agreement_percent": 155.31162790697672,
+  "median_height_agreement_percent": 143.95,
   "ownership": {
     "0_to_2040_meters": "connected opaque semantic grove crowns and grounded trunks over continuous terrain canopy shading",
     "beyond_2040_meters": "orthophoto plus terrain canopy height, normal, density, and occlusion maps where source coverage exists",
@@ -846,14 +848,14 @@
     "refinement_requires_all_source_pixels_eligible": true,
     "runtime_hierarchy_construction": false,
     "semantic_grove_cell_meters": 32.0,
-    "semantic_grove_count": 1334,
+    "semantic_grove_count": 2720,
     "semantic_grove_crown_lobes": 1,
     "semantic_grove_crown_segment_range": [
       5,
       10
     ],
     "semantic_grove_crown_segments": 7,
-    "semantic_grove_minimum_eligible_pixels": 4,
+    "semantic_grove_minimum_eligible_pixels": 1,
     "semantic_grove_trunk_range": [
       1,
       2
@@ -909,9 +911,9 @@
       "sha256": "93f08234b5416ef721e40cbc7c38b5dd2d9c71185e998c5a2677069992d9ddbb"
     },
     "generator": {
-      "bytes": 116259,
+      "bytes": 120724,
       "path": "tools/aerial_surface/build_canopy_surfaces.py",
-      "sha256": "3516e9e5cc24f45c72cd28bb8db4ad57275f3dc5331d441f8624099cfd75ca0d"
+      "sha256": "dc09709832efd48e08032efe08024766b89611f1fe62228a910ec01198bd214c"
     },
     "lidar_manifest": {
       "bytes": 16973,
@@ -954,17 +956,19 @@
     "coarse_top_quad_count": 0,
     "connected_crown_count": 0,
     "connected_crown_triangle_count": 0,
-    "grounded_trunk_count": 3078,
-    "grounded_trunk_triangle_count": 18468,
-    "mid_detailed_grove_count": 1191,
-    "mid_foliage_card_triangle_count": 21438,
-    "mid_perforated_crown_count": 3573,
+    "grounded_trunk_count": 2706,
+    "grounded_trunk_triangle_count": 16236,
+    "mid_connected_grove_count": 2010,
+    "mid_foliage_card_triangle_count": 16080,
+    "mid_perforated_crown_count": 2010,
     "near_branch_triangle_count": 4176,
     "near_detailed_grove_count": 143,
     "near_foliage_card_triangle_count": 13920,
     "near_tree_count": 696,
     "refinement_tapered_boundary_quad_count": 0,
     "refinement_top_quad_count": 0,
-    "skirt_quad_count": 0
+    "skirt_quad_count": 0,
+    "sparse_fixed_crown_count": 567,
+    "sparse_foliage_card_triangle_count": 2268
   }
 }

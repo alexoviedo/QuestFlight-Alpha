@@ -57,7 +57,7 @@ namespace QuestFlight.Editor.Tests
                 renderer.GetComponent<MeshFilter>()?.sharedMesh != null), Is.True);
             Assert.That(surface.canopySurfaceRenderers.Sum(renderer =>
                 renderer.GetComponent<MeshFilter>().sharedMesh.triangles.Length / 3),
-                Is.InRange(58000, 59000));
+                Is.InRange(45000, 59000));
             Assert.That(surface.canopySurfaceRenderers.Select(renderer => renderer.sharedMaterial)
                 .Distinct().Count(), Is.EqualTo(1));
             Assert.That(surface.productionCanopySurfaceLayer
@@ -67,6 +67,9 @@ namespace QuestFlight.Editor.Tests
                 "The product canopy must be serialized semantic geometry, not callback-only draws.");
             Assert.That(surface.canopySurfaceManifest.text,
                 Does.Contain("semantic_perforated_groves_0_2040m_over_continuous_terrain_canopy"));
+            Assert.That(surface.canopySurfaceManifest.text,
+                Does.Contain("\"source_coverage_fraction_0_1500m\": 0.960"),
+                "Committed grove geometry must cover at least 95% of the high-confidence source footprint.");
         }
 
         [Test]

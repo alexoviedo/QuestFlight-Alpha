@@ -684,6 +684,15 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
         <= MAXIMUM_MESH_TRIANGLES,
         "Canopy triangle budget changed",
     )
+    grove_metrics = canopy_manifest["coverage"]["semantic_grove_compilation"]
+    require(
+        float(grove_metrics["source_coverage_fraction_0_1500m"]) >= 0.95,
+        "Semantic canopy geometry coverage fell below 95%",
+    )
+    require(
+        int(grove_metrics["selected_sparse_grove_count"]) > 0,
+        "Sparse fixed canopy proxies are missing",
+    )
     require(
         int(canopy_manifest["budgets"]["mesh_batch_total_triangles"])
         == int(canopy_obj["triangle_count"]),
@@ -699,7 +708,7 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
         "Canopy vertical boundary skirts remain",
     )
     topology = canopy_manifest["topology"]
-    require(int(topology["mid_detailed_grove_count"]) > 0, "Mid perforated groves are missing")
+    require(int(topology["mid_connected_grove_count"]) > 0, "Mid connected groves are missing")
     require(int(topology["mid_perforated_crown_count"]) > 0, "Mid perforated crowns are missing")
     require(int(topology["grounded_trunk_count"]) > 0, "Grounded canopy trunks are missing")
     require(int(topology["near_branch_triangle_count"]) > 0, "Near canopy branches are missing")
@@ -713,6 +722,7 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
                 "near_branch_triangle_count",
                 "near_foliage_card_triangle_count",
                 "mid_foliage_card_triangle_count",
+                "sparse_foliage_card_triangle_count",
             )
         ) == int(canopy_obj["triangle_count"]),
         "Canopy topology categories do not equal the OBJ triangle inventory",

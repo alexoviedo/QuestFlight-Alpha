@@ -507,12 +507,11 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     half densityProxy = saturate(canopy.a);
                     half localLuminance = max(0.04h,
                         dot(localCanopyColor, fixed3(0.2126h, 0.7152h, 0.0722h)));
-                    // The sampled orthophoto already contains the real canopy's
-                    // sun/ambient response. Compensate for lighting it a second
-                    // time on raised geometry, while retaining the sampled hue.
-                    // This keeps the crown registered to the ground tile instead
-                    // of lifting every cell toward the same pale olive.
-                    half crownLuminance = clamp(localLuminance * 0.68h, 0.025h, 0.17h);
+                    // The generator rejects deep photographed shadow pixels and
+                    // transports a sunlit local vegetation target. Preserve that
+                    // target through the production sun/ambient response instead
+                    // of pre-darkening it and then lighting it a second time.
+                    half crownLuminance = clamp(localLuminance * 0.92h, 0.042h, 0.27h);
                     fixed3 foliageReference = lerp(
                         fixed3(0.19h, 0.30h, 0.105h),
                         fixed3(0.12h, 0.25h, 0.070h), densityProxy);
@@ -531,7 +530,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     half detailLuminance = max(0.04h,
                         dot(foliageDetail, fixed3(0.2126h, 0.7152h, 0.0722h)));
                     half foliageDetailModulation = clamp(
-                        detailLuminance / 0.27h, 0.68h, 1.28h);
+                        detailLuminance / 0.27h, 0.84h, 1.18h);
                     fixed3 crownColor = lerp(registeredLocalCanopy,
                         foliageReference * (crownLuminance / foliageLuminance), 0.12h);
                     crownColor *= foliageDetailModulation;
@@ -545,8 +544,8 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                         surfaceAo = lerp(surfaceAo, 0.82h, 0.72h);
                         roughness = 0.86h;
                     }
-                    fixed3 crownSide = lerp(_CanopySideTint.rgb, crownColor, 0.88h) *
-                                       lerp(0.84h, 1.0h, canopy.a);
+                    fixed3 crownSide = lerp(_CanopySideTint.rgb, crownColor, 0.94h) *
+                                       lerp(0.92h, 1.0h, canopy.a);
                     fixed3 trunkColor = lerp(fixed3(0.16h, 0.105h, 0.058h),
                                              fixed3(0.27h, 0.19h, 0.10h),
                                              semanticSeed);
@@ -557,14 +556,14 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 }
 
                 fixed3 albedo = lerp(sideColor, topColor, topWeight);
-                albedo = lerp(albedo, sideColor * 0.42h, bottomWeight);
+                albedo = lerp(albedo, sideColor * 0.68h, bottomWeight);
                 roughness = lerp(roughness, _TopRoughness, topWeight);
 
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half ndotl = saturate(dot(geometricNormal, lightDirection));
                 half3 ambient = max(ShadeSH9(half4(geometricNormal, 1.0h)),
                     half3(_AmbientFloor, _AmbientFloor, _AmbientFloor));
-                ambient *= lerp(0.48h, 1.0h, surfaceAo);
+                ambient *= lerp(0.68h, 1.0h, surfaceAo);
                 half3 direct = _LightColor0.rgb * (0.07h + ndotl * 0.68h);
                 half3 color = albedo * (ambient + direct);
                 half3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - input.worldPosition);

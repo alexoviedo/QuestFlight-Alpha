@@ -6,9 +6,9 @@
       "sha256": "ae984715315c2c86e89285233cfb8632390f082fcc00b86234fefba5db4d40fe"
     },
     "canopy": {
-      "bytes": 37650,
+      "bytes": 37765,
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer_Manifest.json",
-      "sha256": "85d8feba116e73ca6fe09aabdf3c1ac9cfa198a3c078e22b67c85f5d7e29aee5"
+      "sha256": "9f2755e9f0f7a2da4da6bb7b265c5c7ff86a795cca6da3f63bab7f1fc3710651"
     },
     "classification": {
       "bytes": 9341,
@@ -59,12 +59,12 @@
     "geometry_0_1500m": {
       "active": true,
       "mask": {
-        "bytes": 19141,
+        "bytes": 26839,
         "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer_GeometryOwnership_R8.png",
-        "sha256": "f019b36e6e7479dd189914058e08979c10e3927e9f920779b29f94b1a4136018"
+        "sha256": "da4ce2b3487062cc9b8daf08ee0d356653f865fc0576425e141b910c9ad8eee8"
       },
       "owner": "ProductionCanopySurfaceLayer rounded opaque grove volumes",
-      "source_eligible_owned_pixel_count": 36622
+      "source_eligible_owned_pixel_count": 47434
     },
     "hero_0_250m": {
       "eligible_source_pixel_count": 144,
