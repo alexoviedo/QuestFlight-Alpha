@@ -6,7 +6,7 @@ ProductionWorldRoot
 │   ├── Product-AEQD near/mid/far terrain and aligned orthophoto pyramid
 │   ├── Fixed DTM-only bare-earth terrain and semantic ownership manifests
 │   ├── OSM-footprint building batches, authored hero objects, and parked-aircraft HLOD
-│   ├── Terrain-owned canopy shading, one fixed-world Tier-2 grove batch, and orthophoto-only water
+│   ├── Terrain-owned far canopy, four fixed semantic-grove batches, and orthophoto-only water
 │   └── Bounded aircraft/runway blob shadow
 ├── ProductionInputRoot
 ├── AircraftSimulationRoot (one Unity prototype authority, CG pivot)
@@ -119,15 +119,16 @@ The product Credits/About surface must expose the KOG_THORNS CC BY 4.0 attributi
 ## Worn Visual Runtime V1
 
 The candidate on `fix/worn-visual-runtime-v1` replaces the former 42 repeated
-Tier-2 grove cues with 946 deterministic semantic groves compiled offline from
-the aligned canopy evidence. Eligible source pixels are clipped against
-building, road, runway, and water ownership masks, grounded to the DTM, and
-represented by three asymmetric height-proportional rounded crowns plus one
-grounded trunk per authored cell. Four fixed native mesh batches contain 52,976
-triangles and use one opaque shared material. There are no camera-facing
-billboards, runtime callbacks, per-tree GameObjects, LOD crossfades, or per-eye
-selection. The terrain canopy map continues the response beyond the bounded
-raised-geometry zone.
+Tier-2 cues with 886 deterministic semantic groves compiled offline from the
+aligned canopy, orthophoto, DTM, and ownership masks. All 143 groves inside the
+650 m near-detail radius use 696 grounded trees. Each tree has one tapered
+three-sided trunk, three tapered branches, and twelve fixed-world foliage cards
+selected from a project-owned sixteen-cell leaf-and-twig atlas. The cards are
+not camera-facing and use one shared opaque-budget, alpha-tested material with
+4x-MSAA alpha-to-coverage. Medium groves retain inexpensive rounded aggregate
+shells, and the terrain canopy map owns the remaining far response. Four fixed
+native batches contain 58,018 triangles; there are no runtime callbacks,
+per-tree GameObjects, crossfades, camera-relative rotations, or per-eye choices.
 
 The 9,692 accepted OSM footprint shells remain 16 fixed batches and 128,092
 triangles. Offline authoring now emits per-wall vertices, physical metre-scale
@@ -138,12 +139,15 @@ and cubemap-backed window glint without adding a renderer, material, texture,
 transparent pass, or runtime update. These remain inferred context shells, not
 surveyed hero architecture.
 
-The full cabin-glass mesh owns one one-pass static ground/sky reflection
-material visible from the seated view. Cockpit depth is supplied by two opaque
-layer-30 casters and a single `CockpitShadowSun` that renders only layer 30 with
-hard 512-resolution shadows, no cascades, and no runtime construction. The
-main environment sun excludes layer 30, glass casts no shadow, and one redundant
-imported transparent instrument shell is disabled while the authoritative
-instrument cover remains. The architecture therefore preserves one XR Origin,
-one tracked Main Camera, one flight authority, and standalone Android/OpenXR
-ownership while keeping the transparent-slot ceiling unchanged.
+The full cabin-glass mesh owns one single-pass static ground/sky reflection
+material visible from the seated view. Cockpit depth is geometry-bound to the
+existing opaque interior surfaces: one stable single-pass shader preserves the
+imported base, normal, metallic/roughness, emission, and bounded AO maps while
+deriving directional sun/sky response and a restrained warm cabin bounce. The
+rejected free-floating two-triangle overlay is absent, so cockpit shading cannot
+cover the windshield or reveal screen-space triangle seams. Realtime cockpit
+shadow maps, extra renderers, transparent passes, cameras, and cascades remain
+absent. One redundant imported transparent instrument shell is disabled while
+the authoritative instrument cover remains. The architecture therefore
+preserves one XR Origin, one tracked Main Camera, one flight authority, and
+standalone Android/OpenXR ownership.

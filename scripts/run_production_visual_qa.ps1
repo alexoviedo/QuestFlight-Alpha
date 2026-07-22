@@ -57,6 +57,9 @@ if (Test-Path -LiteralPath $log) {
   if ($logText -match 'Application will terminate with return code ([1-9][0-9]*)') {
     $exitCode = [int]$Matches[1]
   }
+  if ($logText -match '(?im)^\s*Shader error in ') {
+    throw "Production Visual QA compiled a shader with errors. Log: $log"
+  }
 }
 if ($exitCode -ne 0) { throw "Production Visual QA failed with exit code $exitCode. Log: $log" }
 

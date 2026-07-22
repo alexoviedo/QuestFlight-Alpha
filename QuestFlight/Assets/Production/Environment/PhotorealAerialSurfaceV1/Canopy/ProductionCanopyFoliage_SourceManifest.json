@@ -1,0 +1,24 @@
+{
+  "schema": "questflight.project-authored-generated-texture.v1",
+  "asset": {
+    "path": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/ProductionCanopyFoliage_Albedo.png",
+    "sha256": "34b0291e20bff6c359be4fbddbc1e7a7ef61b751a599252a5c0f3d15b26def71",
+    "source_dimensions": [1254, 1254],
+    "source_bytes": 3596787,
+    "runtime_import": "maximum 1024, mipmapped, trilinear, repeat, Android ASTC 6x6"
+  },
+  "authorship": {
+    "classification": "project-owned generated derivative",
+    "generator": "OpenAI built-in image generation tool",
+    "generated_utc": "2026-07-21T22:00:00Z",
+    "external_image_inputs": [],
+    "license": "Project-owned output; no third-party reference image was supplied. Use remains subject to applicable OpenAI output terms."
+  },
+  "prompt": "Create a square, perfectly tileable, orthographic top-down foliage-cluster albedo texture for a Quest 3 grove material: dense mature Front Range Colorado cottonwood and riparian deciduous leaf masses, muted olive/sage/dusty green, soft neutral lighting, seamless edge-to-edge, no sky, ground, trunks, buildings, text, watermark, border, transparency, or empty gaps.",
+  "runtime_policy": {
+    "new_renderer": false,
+    "new_material": false,
+    "new_transparency": false,
+    "purpose": "World-space foliage breakup on existing opaque semantic grove geometry."
+  }
+}

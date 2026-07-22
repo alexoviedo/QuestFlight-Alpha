@@ -248,12 +248,13 @@ The earlier worn 8/10 smoke used a different 133,992,887-byte APK with SHA-256 `
 The exact source candidate closes its pre-worn machine gate:
 
 - canopy/building generators compile and emit deterministic manifests and hashes;
-- Unity EditMode: PASS 115/115; PlayMode: PASS 9/9;
+- aerial-surface Python tests: PASS 22/22; deterministic surface validator: PASS;
+- Unity EditMode: PASS 116/116; PlayMode: PASS 9/9;
 - full `validate_product.ps1`: PASS, including product integrity, provenance, dependency closure, source policy, allocation fixtures, and static performance checks;
-- production Visual QA: PASS 81/81 with classification `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; the affected canopy, facade, cockpit-glass, and cockpit-shadow frames were inspected at full resolution;
-- static Quest planning: PASS at 55 selected draws, 624,890 selected triangles, 793,677 serialized mesh triangles, 25 visible materials, 210,601,912 estimated texture bytes, three transparent slots, 12 shaders/17 variants, and 4x MSAA;
+- production Visual QA: PASS 81/81 with classification `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; the affected canopy, facade, cockpit-glass, and geometry-bound cockpit-depth frames were inspected at full resolution;
+- static Quest planning: PASS at 55 selected draws, 632,320 selected triangles, 798,719 serialized mesh triangles, 26 maximum visible / 27 active materials, 211,849,528 estimated texture bytes, three transparent slots, 12 shaders/17 keyword combinations, and 4x MSAA;
 - Meta XR Simulator 201.0 live Quest-3-profile stereo/HMD/both Touch: PASS for `cockpit_neutral`; aggregate status remains `BLOCKED_MISSING_RECORDED_REPLAYS` for the ten absent genuine `.vrs` sessions;
-- Android release-style build: PASS, 134,060,510-byte APK, SHA-256 `eb9499403126e4820ca0e42130ee1bddd84ff35c5b6909c9eb7184062ec431e8`.
+- Android release-style build: PASS, 135,905,162-byte APK, SHA-256 `36216609302a851d85db3255ea0f99dfadfaacb1cdc9324826416eb64d84e5d3`.
 
 The machine pass establishes a test-ready merge candidate, not worn visual,
 comfort, frame-time, stale/tear, thermal, or release acceptance. Those claims

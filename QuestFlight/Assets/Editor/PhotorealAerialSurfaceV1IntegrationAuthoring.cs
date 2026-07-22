@@ -41,6 +41,10 @@ namespace QuestFlight.Editor
             CanopyRoot + "/ProductionCanopySurfaceLayer_GeometryOwnership_R8.png";
         public const string CanopyMapHandoffPath =
             CanopyRoot + "/ProductionCanopySurfaceLayer_TerrainMapHandoff_R8.png";
+        public const string CanopyFoliageAlbedoPath =
+            CanopyRoot + "/Textures/ProductionCanopyFoliage_Albedo.png";
+        public const string NearFoliageAtlasPath =
+            CanopyRoot + "/Textures/ProductionNearFoliageAtlas_RGBA.png";
         public const string NormalizedHeightPath =
             SurfaceRoot + "/Lidar/KBDU_AerialSurface_nDSM_R16.png";
         public const string SurfaceClassPath =
@@ -247,6 +251,10 @@ namespace QuestFlight.Editor
             ConfigureTexture(BuildingMaskPath, 1024, TextureImporterFormat.R8, false, 0f, 1, false, false);
             ConfigureTexture(CanopyGeometryMaskPath, 1024, TextureImporterFormat.R8, false, 0f, 1, false, false);
             ConfigureTexture(CanopyMapHandoffPath, 1024, TextureImporterFormat.R8, false, 0f, 1, false, false);
+            ConfigureTexture(CanopyFoliageAlbedoPath, 1024, TextureImporterFormat.ASTC_6x6,
+                true, -0.1f, 4, false, true, false, null, TextureWrapMode.Repeat);
+            ConfigureTexture(NearFoliageAtlasPath, 1024, TextureImporterFormat.ASTC_6x6,
+                true, -0.05f, 4, false, true, false, null, TextureWrapMode.Clamp, true);
             ConfigureTexture(NormalizedHeightPath, 1024, TextureImporterFormat.R16, false, 0f, 1,
                 false, false, true, FilterMode.Point);
             ConfigureTexture(SurfaceClassPath, 1024, TextureImporterFormat.R8, false, 0f, 1,
@@ -263,7 +271,9 @@ namespace QuestFlight.Editor
             bool streamingMipmaps = false,
             bool sRgb = true,
             bool forceUncompressed = false,
-            FilterMode? filterModeOverride = null)
+            FilterMode? filterModeOverride = null,
+            TextureWrapMode wrapMode = TextureWrapMode.Clamp,
+            bool hasAlpha = false)
         {
             TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer == null) throw new InvalidOperationException("Texture importer is missing: " + path);
@@ -271,11 +281,14 @@ namespace QuestFlight.Editor
             FilterMode filterMode = filterModeOverride ?? (mipmaps ? FilterMode.Trilinear : FilterMode.Bilinear);
             bool changed = importer.textureType != TextureImporterType.Default ||
                            importer.sRGBTexture != sRgb ||
-                           importer.alphaSource != TextureImporterAlphaSource.None ||
+                           importer.alphaSource != (hasAlpha
+                               ? TextureImporterAlphaSource.FromInput
+                               : TextureImporterAlphaSource.None) ||
+                           importer.alphaIsTransparency != hasAlpha ||
                            importer.mipmapEnabled != mipmaps ||
                            importer.streamingMipmaps != (mipmaps && streamingMipmaps) ||
                            Mathf.Abs(importer.mipMapBias - mipBias) > 0.0001f ||
-                           importer.wrapMode != TextureWrapMode.Clamp ||
+                           importer.wrapMode != wrapMode ||
                            importer.filterMode != filterMode ||
                            importer.anisoLevel != anisotropy ||
                            importer.npotScale != TextureImporterNPOTScale.None ||
@@ -287,11 +300,14 @@ namespace QuestFlight.Editor
                              android.textureCompression != TextureImporterCompression.Uncompressed));
             importer.textureType = TextureImporterType.Default;
             importer.sRGBTexture = sRgb;
-            importer.alphaSource = TextureImporterAlphaSource.None;
+            importer.alphaSource = hasAlpha
+                ? TextureImporterAlphaSource.FromInput
+                : TextureImporterAlphaSource.None;
+            importer.alphaIsTransparency = hasAlpha;
             importer.mipmapEnabled = mipmaps;
             importer.streamingMipmaps = mipmaps && streamingMipmaps;
             importer.mipMapBias = mipBias;
-            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.wrapMode = wrapMode;
             importer.filterMode = filterMode;
             importer.anisoLevel = anisotropy;
             importer.npotScale = TextureImporterNPOTScale.None;
@@ -385,6 +401,8 @@ namespace QuestFlight.Editor
             material.SetTexture("_FacadeNormal", LoadRequired<Texture2D>(FacadeNormalPath));
             material.SetTexture("_FacadeReflectionCube", LoadRequired<Cubemap>(FacadeReflectionPath));
             material.SetTexture("_CanopyNormalOcclusion", canopyNormal);
+            material.SetTexture("_CanopyFoliageAlbedo", LoadRequired<Texture2D>(CanopyFoliageAlbedoPath));
+            material.SetTexture("_NearFoliageAtlas", LoadRequired<Texture2D>(NearFoliageAtlasPath));
             material.SetTexture("_NormalizedSurfaceHeight", normalizedHeight);
             material.SetVector("_NearWorldMinInvSize", new Vector4(-2000f, -2000f, 1f / 4000f, 1f / 4000f));
             material.SetVector("_RecoveryMidNWWorldMinInvSize", new Vector4(-4032f, -32f, 1f / 4064f, 1f / 4064f));
@@ -406,6 +424,8 @@ namespace QuestFlight.Editor
             material.SetFloat("_CanopyNormalStrength", 0.42f);
             material.SetColor("_CanopySideTint", new Color(0.22f, 0.30f, 0.14f, 1f));
             material.SetFloat("_AmbientFloor", 0.22f);
+            material.SetFloat("_FoliageCutoff", 0.30f);
+            material.SetFloat("_Cull", semanticMode < 0.5f ? 2f : 0f);
             material.SetFloat("_DiagnosticMode", 0f);
             EditorUtility.SetDirty(material);
             return material;
@@ -434,6 +454,9 @@ namespace QuestFlight.Editor
             material.SetVector("_AerialCanopyProductToSourceRow1", runtimeFrame.productToSourceRow1);
             material.SetVector("_AerialCanopySourceToProductRow0", runtimeFrame.sourceToProductNormalRow0);
             material.SetVector("_AerialCanopySourceToProductRow1", runtimeFrame.sourceToProductNormalRow1);
+            material.SetFloat("_AerialCanopyColorStrength", 0.44f);
+            material.SetFloat("_AerialCanopyNormalStrength", 0.36f);
+            material.SetColor("_AerialCanopyTint", new Color(0.28f, 0.37f, 0.18f, 1f));
             EditorUtility.SetDirty(material);
         }
 
@@ -665,8 +688,8 @@ namespace QuestFlight.Editor
             RequireContains(buildings, "0-2km", "near building coverage band");
             RequireContains(buildings, "2-4km", "mid building coverage band");
             RequireContains(canopy,
-                "semantic_rounded_groves_0_1500m_over_continuous_terrain_canopy",
-                "semantic rounded-grove canopy representation");
+                "semantic_connected_groves_0_2040m_over_continuous_terrain_canopy",
+                "semantic connected-grove canopy representation");
             RequireContains(canopy, "\"mesh_batch_count\": 4",
                 "four bounded raised-canopy mesh batches");
             RequireContains(canopy, "REJECTED_BLOCK_AND_CLIFF_SILHOUETTES",

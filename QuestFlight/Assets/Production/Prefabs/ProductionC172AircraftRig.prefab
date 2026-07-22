@@ -5741,7 +5741,6 @@ MonoBehaviour:
   - {fileID: 792151869367630763}
   cockpitOccludingExteriorRenderers:
   - {fileID: 984774629529791191}
-  - {fileID: 5793067980537313131}
   - {fileID: 3143062785080713121}
   showInteriorInExternalView: 0
   initialProfile: 0
@@ -5758,6 +5757,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.ProductionAircraftLightingController
   importedAircraftRoot: {fileID: 6466588389976723443}
+  stableCockpitShader: {fileID: 4800000, guid: c6b49b2297b64c74a0dd4eac81f826ea, type: 3}
   staticDepthStrength: 0.38
   cockpitOcclusionStrength: 1
   coarseNormalStrength: 0.42

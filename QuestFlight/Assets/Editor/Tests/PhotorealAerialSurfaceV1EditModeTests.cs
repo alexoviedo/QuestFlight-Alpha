@@ -151,6 +151,13 @@ namespace QuestFlight.Editor.Tests
             Assert.That(canopy.All(item => item.GetComponent<MeshFilter>().sharedMesh
                     .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color)), Is.True,
                 "Canopy batches require crown/trunk semantic colors.");
+            Assert.That(canopy.All(item => item.GetComponent<MeshFilter>().sharedMesh
+                    .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord0)), Is.True,
+                "Canopy batches require atlas UVs for static perforated near foliage.");
+            Material canopyMaterial = canopy.Select(item => item.sharedMaterial).Distinct().Single();
+            Assert.That(canopyMaterial.GetTexture("_NearFoliageAtlas"), Is.Not.Null);
+            Assert.That(canopyMaterial.GetFloat("_FoliageCutoff"), Is.InRange(0.25f, 0.45f));
+            Assert.That(canopyMaterial.GetFloat("_Cull"), Is.EqualTo(0f));
             Assert.That(buildings.Concat(canopy).All(item => item.shadowCastingMode ==
                 UnityEngine.Rendering.ShadowCastingMode.Off), Is.True);
             Assert.That(root.productionBuildingSurfaceLayer.GetComponentsInChildren<LODGroup>(true), Is.Empty);
@@ -164,7 +171,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root.midBuildingCoveragePercent, Is.GreaterThanOrEqualTo(98f));
             Assert.That(root.maximumBuildingFootprintInflationPercent, Is.LessThanOrEqualTo(5f));
             Assert.That(root.canopySurfaceManifest.text,
-                Does.Contain("semantic_rounded_groves_0_1500m_over_continuous_terrain_canopy"));
+                Does.Contain("semantic_connected_groves_0_2040m_over_continuous_terrain_canopy"));
             Assert.That(root.canopySurfaceManifest.text, Does.Contain("\"mesh_batch_count\": 4"));
             Assert.That(root.canopySurfaceManifest.text,
                 Does.Contain("REJECTED_BLOCK_AND_CLIFF_SILHOUETTES"));

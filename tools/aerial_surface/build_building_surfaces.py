@@ -560,9 +560,10 @@ def facade_semantics(
         semantic = SEMANTIC_CIVIC
     elif building in residential or use in residential:
         selector = identity % 20
-        tile = (FACADE_TILE_BRICK if selector < 9 else
-                FACADE_TILE_CONCRETE if selector < 17 else
-                FACADE_TILE_LIGHT_METAL)
+        # Ordinary homes remain in masonry/stucco families.  The previous
+        # metal fallback made isolated houses read like hangars and broke
+        # neighborhood-level material coherence.
+        tile = FACADE_TILE_BRICK if selector < 10 else FACADE_TILE_CONCRETE
         semantic = SEMANTIC_RESIDENTIAL
     else:
         # Untagged OSM buildings dominate the context set. Infer a bounded
@@ -576,9 +577,7 @@ def facade_semantics(
             semantic = SEMANTIC_INDUSTRIAL
         elif area_square_meters <= 450.0 and selected_height <= 12.5:
             selector = identity % 20
-            tile = (FACADE_TILE_BRICK if selector < 8 else
-                    FACADE_TILE_CONCRETE if selector < 16 else
-                    FACADE_TILE_LIGHT_METAL)
+            tile = FACADE_TILE_BRICK if selector < 9 else FACADE_TILE_CONCRETE
             semantic = SEMANTIC_RESIDENTIAL
         else:
             tile = FACADE_TILE_CONCRETE if identity % 3 else FACADE_TILE_LIGHT_METAL

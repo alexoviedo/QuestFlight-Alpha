@@ -17,6 +17,7 @@ namespace QuestFlightLab.Aircraft
         public int remainingRealtimeShadowCasterCount;
         public int remainingRealtimeShadowReceiverCount;
         public int cockpitMaterialCloneCount;
+        public int cockpitStableShaderMaterialCount;
         public int cockpitOcclusionMaterialCountTuned;
         public int cockpitNormalMaterialCountTuned;
         public int readableInstrumentMaterialCount;
@@ -37,6 +38,8 @@ namespace QuestFlightLab.Aircraft
     [DisallowMultipleComponent]
     public sealed class ProductionAircraftLightingController : MonoBehaviour
     {
+        public const string StableCockpitShaderName =
+            "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior";
         public const float DefaultStaticDepthStrength = 0.38f;
         public const float MaximumStaticDepthStrength = 0.42f;
         public const float DefaultCockpitOcclusionStrength = 1.0f;
@@ -46,6 +49,7 @@ namespace QuestFlightLab.Aircraft
         private const string StableMaterialSuffix = " Quest Cockpit Stable";
 
         [SerializeField] private GameObject importedAircraftRoot;
+        [SerializeField] private Shader stableCockpitShader;
         [SerializeField, Range(0f, MaximumStaticDepthStrength)]
         private float staticDepthStrength = DefaultStaticDepthStrength;
         [SerializeField, Range(0f, 1f)]
@@ -72,9 +76,16 @@ namespace QuestFlightLab.Aircraft
                 enabled = false;
                 return null;
             }
+            if (stableCockpitShader == null)
+            {
+                Debug.LogError("[QuestFlight][AircraftLighting] Authored stable cockpit shader is missing.", this);
+                enabled = false;
+                return null;
+            }
 
             Report = ApplyAuthoredLighting(
                 importedAircraftRoot,
+                stableCockpitShader,
                 staticDepthStrength,
                 cockpitOcclusionStrength,
                 coarseNormalStrength,
@@ -92,6 +103,7 @@ namespace QuestFlightLab.Aircraft
         {
             return ApplyAuthoredLighting(
                 root,
+                Shader.Find(StableCockpitShaderName),
                 depthStrength,
                 occlusionStrength,
                 normalStrength,
@@ -101,6 +113,7 @@ namespace QuestFlightLab.Aircraft
 
         private static ProductionAircraftLightingReport ApplyAuthoredLighting(
             GameObject root,
+            Shader stableShader,
             float depthStrength,
             float occlusionStrength,
             float normalStrength,
@@ -108,6 +121,8 @@ namespace QuestFlightLab.Aircraft
             ICollection<Material> ownedMaterials)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
+            if (stableShader == null)
+                throw new InvalidOperationException("Stable cockpit shader is unavailable.");
 
             ProductionAircraftLightingReport report = new ProductionAircraftLightingReport
             {
@@ -143,7 +158,10 @@ namespace QuestFlightLab.Aircraft
                     renderer.receiveShadows = false;
                 }
 
-                if (!cockpit) continue;
+                // The authored window and instrument-cover materials retain their dedicated
+                // reflection shaders. Only opaque cockpit geometry receives the stable
+                // material-depth shader, so no screen-space overlay can cover the sky.
+                if (!cockpit || IsTransparentGlass(renderer)) continue;
                 Material[] materials = renderer.sharedMaterials;
                 bool changed = false;
                 for (int index = 0; index < materials.Length; index++)
@@ -156,9 +174,11 @@ namespace QuestFlightLab.Aircraft
                         {
                             name = CleanMaterialName(source.name) + StableMaterialSuffix
                         };
+                        stable.shader = stableShader;
                         cockpitClones.Add(source, stable);
                         ownedMaterials.Add(stable);
                         report.cockpitMaterialCloneCount++;
+                        report.cockpitStableShaderMaterialCount++;
                     }
 
                     TuneCockpitMaterial(stable, identity, report);
@@ -179,7 +199,8 @@ namespace QuestFlightLab.Aircraft
 
             Debug.Log(
                 $"[QuestFlight][AircraftLighting] renderers={report.rendererCount} " +
-                $"cockpitClones={report.cockpitMaterialCloneCount} aoTuned={report.cockpitOcclusionMaterialCountTuned} " +
+                $"cockpitClones={report.cockpitMaterialCloneCount} stableShader={report.cockpitStableShaderMaterialCount} " +
+                $"aoTuned={report.cockpitOcclusionMaterialCountTuned} " +
                 $"normalsTuned={report.cockpitNormalMaterialCountTuned} readable={report.readableInstrumentMaterialCount} " +
                 $"remainingCasters={report.remainingRealtimeShadowCasterCount} " +
                 $"remainingReceivers={report.remainingRealtimeShadowReceiverCount} strategy={report.strategy}");

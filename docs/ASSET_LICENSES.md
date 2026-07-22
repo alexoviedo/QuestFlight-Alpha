@@ -404,3 +404,26 @@ Quest Visual Fidelity V1 introduces no new third-party asset or license boundary
 Building semantics continue to derive from bounded OpenStreetMap footprint/tag data under ODbL-1.0 with `© OpenStreetMap contributors`. Canopy placement continues to derive from the public-domain USGS 3DEP work unit `CO_DRCOG_1_2020`. Facade pixels use the existing documented project/CC0 building atlas; no new texture, photograph, archive, model, or external source was downloaded or committed.
 
 The regenerated Blender, FBX, OBJ, Unity-native mesh, prefab, configuration, shader, and manifest files retain their paired Unity metadata and established source/license records. Raw geospatial data, caches, screenshots, simulator evidence, build outputs, and APKs remain external to Git.
+
+## Worn Visual Runtime V1 near-foliage derivative
+
+The near-foliage runtime atlas is a project-owned generated output with no
+third-party reference image input. Its exact prompt, generation time, source
+and derivative hashes, dimensions, chroma-key processing, import contract, and
+raw-source exclusion are recorded in
+`PhotorealAerialSurfaceV1/Canopy/ProductionNearFoliageAtlas_SourceManifest.json`.
+The committed RGBA derivative is
+`Canopy/Textures/ProductionNearFoliageAtlas_RGBA.png`, SHA-256
+`aae5ad67afc5e63dc0ce762bcae1bac819ebd7403dcd5d922af2fc1e474c671c`.
+The unprocessed chroma source remains artifact-only and is not committed.
+
+Atlas use does not alter the public-domain status of the 3DEP/NAIP placement
+inputs or the ODbL boundary of the OSM building footprints. The project-owned
+static cards add no new renderer, material, transparent slot, runtime download,
+or camera-facing billboard. Rejected canopy iterations, captures, build output,
+and APKs remain outside Git.
+
+The cockpit stable-interior shader and its controller/authoring changes are
+project-authored source. They reuse only the already audited aircraft textures
+and existing CC0/project reflection inputs, add no downloaded texture or model,
+and remove the rejected overlay mesh/material/shader from the product closure.

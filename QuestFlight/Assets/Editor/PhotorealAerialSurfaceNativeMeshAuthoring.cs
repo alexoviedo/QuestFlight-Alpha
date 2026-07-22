@@ -40,7 +40,11 @@ namespace QuestFlight.Editor
         public const int ExpectedTerrainBatchCount = 1;
         public const int MaximumTerrainTriangleCount = 92000;
 
-        private const float CoordinateToleranceMeters = 0.0005f;
+        // Unity recomputes Bounds in single precision. At the product's roughly
+        // four-kilometre span, accumulation order can differ from the direct OBJ
+        // parser by several float ULPs; two millimetres is still far below any
+        // authored placement or seam tolerance and does not permit topology drift.
+        private const float CoordinateToleranceMeters = 0.002f;
         private const float NormalQuantization = 1_000_000f;
 
         [MenuItem("QuestFlight/Photoreal Aerial Surface V1/Compile Unity-Local Native Meshes")]
@@ -496,10 +500,11 @@ namespace QuestFlight.Editor
                 bool isCanopy = string.Equals(record.semanticRoot,
                     "ProductionCanopySurfaceLayer", StringComparison.Ordinal);
                 bool semanticColorsExpected = isBuilding || isCanopy;
+                bool semanticUvsExpected = isBuilding || isCanopy;
                 if (record.semanticVertexColors != semanticColorsExpected ||
                     mesh.HasVertexAttribute(VertexAttribute.Color) != semanticColorsExpected ||
-                    record.semanticWallLocalUvs != isBuilding ||
-                    mesh.HasVertexAttribute(VertexAttribute.TexCoord0) != isBuilding)
+                    record.semanticWallLocalUvs != semanticUvsExpected ||
+                    mesh.HasVertexAttribute(VertexAttribute.TexCoord0) != semanticUvsExpected)
                     throw new InvalidOperationException(
                         "Semantic vertex-stream contract failed: " + record.outputMeshAssetPath);
             }

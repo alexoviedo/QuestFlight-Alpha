@@ -339,9 +339,9 @@ namespace QuestFlight.Editor
             material.SetTexture("_AerialCanopyHandoffMask", canopyHandoff);
             material.SetVector("_AerialCanopyLocalBounds", new Vector4(-2048f, -2048f, 1f / 4096f, 1f / 4096f));
             material.SetFloat("_AerialCanopyHeightQuantumMeters", 0.25f);
-            material.SetFloat("_AerialCanopyColorStrength", 0.34f);
-            material.SetFloat("_AerialCanopyNormalStrength", 0.28f);
-            material.SetColor("_AerialCanopyTint", new Color(0.25f, 0.34f, 0.16f, 1f));
+            material.SetFloat("_AerialCanopyColorStrength", 0.44f);
+            material.SetFloat("_AerialCanopyNormalStrength", 0.36f);
+            material.SetColor("_AerialCanopyTint", new Color(0.28f, 0.37f, 0.18f, 1f));
             material.SetTexture("_NearSourceNormal", surfaceNormal);
             material.SetFloat("_NearSourceNormalStrength", 0.42f);
             material.SetVector("_NearSourceNormalFadeStartEnd", new Vector4(250f, 3500f, 0f, 0f));

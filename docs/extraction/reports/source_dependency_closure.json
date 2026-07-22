@@ -3,7 +3,7 @@
     "sourceCommit": "cd4131fa7732a6db2d7387921dfef33e2c206970",
     "scenePath": "Assets/Scenes/ProductionVerticalSlice.unity",
     "ready": true,
-    "approvedCount": 263,
+    "approvedCount": 266,
     "packageCount": 5,
     "conditionalLocalCount": 0,
     "rejectedCount": 0,
@@ -418,6 +418,14 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/ProductionCanopyFoliage_Albedo.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/ProductionNearFoliageAtlas_RGBA.png",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/KBDU_AerialSurface_OwnershipExclusionManifestV1.json",
             "classification": "approved_production"
         },
@@ -451,6 +459,10 @@
         },
         {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentGlassReflection.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitStableInterior.shader",
             "classification": "approved_production"
         },
         {

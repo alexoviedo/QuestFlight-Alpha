@@ -1,0 +1,34 @@
+{
+  "schema": "questflight.project-authored-generated-texture.v1",
+  "asset": {
+    "path": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/ProductionNearFoliageAtlas_RGBA.png",
+    "sha256": "aae5ad67afc5e63dc0ce762bcae1bac819ebd7403dcd5d922af2fc1e474c671c",
+    "source_dimensions": [1254, 1254],
+    "source_bytes": 1413140,
+    "runtime_import": "maximum 1024, mipmapped, trilinear, clamp, Android ASTC 6x6, alpha-to-coverage"
+  },
+  "authorship": {
+    "classification": "project-owned generated derivative",
+    "generator": "OpenAI built-in image generation tool",
+    "generated_utc": "2026-07-21T23:46:00Z",
+    "external_image_inputs": [],
+    "license": "Project-owned output; no third-party reference image was supplied. Use remains subject to applicable OpenAI output terms."
+  },
+  "prompt": "Create a square 4x4 atlas of sixteen distinct orthographic foliage cards for standalone Quest 3: Front Range Colorado cottonwood, willow and general deciduous leaf-and-twig clusters; perforated silhouettes, organic negative space, soft neutral overcast light, no ground, sky, buildings, text or watermark, on a flat #ff00ff chroma background.",
+  "processing": {
+    "artifact_only_chroma_source_sha256": "c433d450fc859a71fb3be9b19bb03ffcbf4a26adb8950ad984cfd18038e67d4d",
+    "artifact_only_chroma_source_bytes": 2046918,
+    "chroma_key": "#fb02f9",
+    "matte": "soft edge with magenta despill",
+    "transparent_pixel_count": 1189235,
+    "partially_transparent_pixel_count": 156919,
+    "raw_source_committed": false
+  },
+  "runtime_policy": {
+    "new_renderer": false,
+    "new_material": false,
+    "new_transparent_slot": false,
+    "camera_facing_billboard": false,
+    "purpose": "Static alpha-tested multiview foliage planes for the near semantic-tree representation."
+  }
+}

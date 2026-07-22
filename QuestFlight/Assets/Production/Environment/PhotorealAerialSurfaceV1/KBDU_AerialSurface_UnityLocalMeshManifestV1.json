@@ -10,9 +10,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn001.obj",
-            "sourceObjSha256": "75580324734690597dac17b2ecb86ecd6e27f2479ee3d50cbf04552a63213ee9",
+            "sourceObjSha256": "687a23cb60767d12e1d955b9f77d3d51d8825cc3a358b13cfe6cd85be2c4e9ec",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn001_zn001.asset",
-            "outputMeshAssetSha256": "310fc8dbf9c32074dbe7a96b61789d6dc9e6f289b09fe94d716b320ff9fcf957",
+            "outputMeshAssetSha256": "0bfbe64c912c5068e584c87af4df9817686b0480f60b86504e8faf4e0f7d7887",
             "sourceVertexCount": 31686,
             "nativeVertexCount": 31686,
             "triangleCount": 16120,
@@ -58,9 +58,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn002.obj",
-            "sourceObjSha256": "a837e9cb8984c64f052553c06e6f154bc9c1f9999e18a56cf37f0d06698accb5",
+            "sourceObjSha256": "783b43dad02cb8182c0e0e62b819f8131e8135b0646be7adaa419836aeef36bd",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn001_zn002.asset",
-            "outputMeshAssetSha256": "b8ede1660ac28eebcb92db8460c7785c0ec4cb82b5463f63d0da6cfb0a2fc03e",
+            "outputMeshAssetSha256": "227d9d762e49aacb814a8d6c76bfe945749a4afa9a56126893770ff00591f1ef",
             "sourceVertexCount": 31110,
             "nativeVertexCount": 31110,
             "triangleCount": 16060,
@@ -106,9 +106,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zp000.obj",
-            "sourceObjSha256": "3eb3ac646cec794dfd9748d6f0edb392ba4075738e475fd2e644c190e9d20f27",
+            "sourceObjSha256": "91b0fa8ad057199ce8006a0fa8d7b52190ed113fc4651ec843438db84136ec90",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn001_zp000.asset",
-            "outputMeshAssetSha256": "544056c750e61acff466582e2327096107a26e0fa0b13841dbb3b8426c88f6bf",
+            "outputMeshAssetSha256": "5893f360cdec6757c82daa246124926dc08e72831fa5e3408470243948d5d995",
             "sourceVertexCount": 9960,
             "nativeVertexCount": 9960,
             "triangleCount": 5052,
@@ -154,9 +154,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zp001.obj",
-            "sourceObjSha256": "f50f54e861c805d960469d22fb67b45a2cc7b4e686356d2dcea21a7632abf949",
+            "sourceObjSha256": "7a894a7fa9c78408cfffc10d41d5cb2e7dc673f044f45f56ef7449682cb60e53",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn001_zp001.asset",
-            "outputMeshAssetSha256": "433de6d678e958b6a3c07584dd0d6caffe3067e6ff28a67ff4fc3fd47ec0fa04",
+            "outputMeshAssetSha256": "c844d73503b24bb5022882b1f46af3900e89317ab9e8661299b0e4e8e363f02c",
             "sourceVertexCount": 3798,
             "nativeVertexCount": 3798,
             "triangleCount": 1964,
@@ -202,9 +202,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn001.obj",
-            "sourceObjSha256": "9fc697712b4ed8562c65048f888d604a78b26aac5c4f9434a6b354c101df29cf",
+            "sourceObjSha256": "9cb061e7bd2539d9a6b18f5eb3b5e90efd9eb6da72068289382a029ea58853d8",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn002_zn001.asset",
-            "outputMeshAssetSha256": "53d7e1f18f01cb22e9eece452d0ed6d4edd89b3ac35ca5806284b2e767cd6df4",
+            "outputMeshAssetSha256": "22656646c567971b8b21bb0b38bf74596e037d9453d89f6431ced533f16dcca6",
             "sourceVertexCount": 62232,
             "nativeVertexCount": 62232,
             "triangleCount": 31852,
@@ -250,9 +250,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn002.obj",
-            "sourceObjSha256": "3a10993db72994913f79e47b8d6f1d650b1ea037e661fea8bd2a54b0b705ba7c",
+            "sourceObjSha256": "46c00a69d4f9279b7fb357404ad4cdb44cf5c1c201b51672557bd0f7e45aa224",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn002_zn002.asset",
-            "outputMeshAssetSha256": "e9e4fc53413851c199b85ad0314ea9be3b4b1e1fc244fe92dc472b597536b0cf",
+            "outputMeshAssetSha256": "4f27a5188a4ffeeb95053cf3e53aab192bffe6bfa86f40be35fc520439e09c89",
             "sourceVertexCount": 7548,
             "nativeVertexCount": 7548,
             "triangleCount": 3888,
@@ -298,9 +298,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp000.obj",
-            "sourceObjSha256": "a6083747b9a050f23c0378b07925c27e39c0aba78d9ffe8ac6aa3c3cae63c5fa",
+            "sourceObjSha256": "726753d132c466857e72222eedb1f135ff9cac91fcf3115ba17a4f3893ebe4d6",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn002_zp000.asset",
-            "outputMeshAssetSha256": "307992cd48fdba43adda3d978c77b518f76e4e4d51f52d8c11d60ad470641af3",
+            "outputMeshAssetSha256": "a46b613bbecc0448edc50c6ebf84dfffb7714ea6554513e5e10a688dc4baa2bb",
             "sourceVertexCount": 43008,
             "nativeVertexCount": 43008,
             "triangleCount": 21960,
@@ -346,9 +346,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp001.obj",
-            "sourceObjSha256": "0dc4d898b6190e2e567731c0b8150eb8630ebeca8d04d30d1a1c51366a1da3ea",
+            "sourceObjSha256": "6e0693fcc5fc65f342aac50c1a7078a5422d228608c014fbb2ca91df5193d15d",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xn002_zp001.asset",
-            "outputMeshAssetSha256": "146b1825ad509030fbe65516566b1d041ca79d25c70be38a26206d82ce824738",
+            "outputMeshAssetSha256": "175e7a9955bbe0c6a944984d83638ae9cb120f3540015b9a3363db18c2838570",
             "sourceVertexCount": 366,
             "nativeVertexCount": 366,
             "triangleCount": 192,
@@ -394,9 +394,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zn001.obj",
-            "sourceObjSha256": "22197ac6e1f1e1d23d81144494ecbb3146d40bc444718f5e41f10bffedbd524f",
+            "sourceObjSha256": "ff7d3fb3ef812a85ea9a701165e0d9695f5ab97a321bbc43772db619a323494d",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp000_zn001.asset",
-            "outputMeshAssetSha256": "26604bdbbb7afea2e80966af42e2c97bc53a6dd1d47e04d81e1b5f7a6385b731",
+            "outputMeshAssetSha256": "dd8c0ec42e46fb6dd669621ba1b40f85ee2e35b078910e2d2de989d1e89a8af0",
             "sourceVertexCount": 8910,
             "nativeVertexCount": 8910,
             "triangleCount": 4588,
@@ -442,9 +442,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zn002.obj",
-            "sourceObjSha256": "9812b93316193469054930d4ffaccbf3901b1dcde82af57767daaed85913e617",
+            "sourceObjSha256": "279d83b1fa885776122db7765a200ab2b9cd2f803634646a0eb652ef54d8fd11",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp000_zn002.asset",
-            "outputMeshAssetSha256": "3b9cd8caeb43a71062f7d5be79f0cd412a0b9a25dbb0305c74bae195602a676f",
+            "outputMeshAssetSha256": "11590751b9510a77b3e9546e4fd3302581d4d85344c31142f75841eca38ec230",
             "sourceVertexCount": 15348,
             "nativeVertexCount": 15348,
             "triangleCount": 7892,
@@ -490,9 +490,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp000.obj",
-            "sourceObjSha256": "731e1c04d8a3a18bcea56044b3941ae1cb6e504b5d3bacafbe82bdfc33f7abb3",
+            "sourceObjSha256": "5a82c96f9a5842b6006e00492519aed99332d6af4fa0dc4082d506a4f6a4b8c0",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp000_zp000.asset",
-            "outputMeshAssetSha256": "dde71de74d10f5cd420e6a36bdd89530fcdc31b10f9be074cfe198e14f918b48",
+            "outputMeshAssetSha256": "cf00484285ef3d9065aa5334673a8094757ab101f00d81edac60d7af98e94d7e",
             "sourceVertexCount": 10644,
             "nativeVertexCount": 10644,
             "triangleCount": 5400,
@@ -538,9 +538,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp001.obj",
-            "sourceObjSha256": "342e9e94f48c1ec202bb357e83e9f927a9ad230af0b44ad8676ea2be5e696a5b",
+            "sourceObjSha256": "92690b645acde8e139636dd89a215801c1bc589d5800fef5e6c363c9f110ee6e",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp000_zp001.asset",
-            "outputMeshAssetSha256": "03342d76e1d232c2c3afec0f34a7145abd6d18fe9b887a5f1fca63e9f2f851cd",
+            "outputMeshAssetSha256": "f6e71266b9be9742fc3d2f252c9097f5203453fe28af31db83a5a63ac0aef5bc",
             "sourceVertexCount": 7566,
             "nativeVertexCount": 7566,
             "triangleCount": 3904,
@@ -634,9 +634,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zn002.obj",
-            "sourceObjSha256": "7747527782181ea113fb30334cef83c2f73c8b3db271acfb1ba8a11d4916c608",
+            "sourceObjSha256": "e42e2ac5a40fc9854ca5f9aad0873965132772111a3aee90cc79cd631a238372",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp001_zn002.asset",
-            "outputMeshAssetSha256": "6b034f38e31909444e1b80c3e7358c7e356287d22c46eaa85b2a610281e9cbc7",
+            "outputMeshAssetSha256": "5d8e05eb89f87f4356e8ae0eb528ae9821e129e185b3d56d09907b07afc4a273",
             "sourceVertexCount": 1506,
             "nativeVertexCount": 1506,
             "triangleCount": 776,
@@ -682,9 +682,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zp000.obj",
-            "sourceObjSha256": "77ea187c093c384680da344a4757bfca8b60f832e56336e3d0311e5971b922e2",
+            "sourceObjSha256": "1d5e0b27a283529ce6ea281b1d1787cb799dfdd202bc74fe3e739e849f3189ff",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp001_zp000.asset",
-            "outputMeshAssetSha256": "80b267aa49d4dbd81af62f35b667dfd83766974485ad4b22d03116b58f8ffb6b",
+            "outputMeshAssetSha256": "ea8e5bf4c62fdc476f1f90bd9a9801b59b5472c11fac04101c491202e31c970c",
             "sourceVertexCount": 7614,
             "nativeVertexCount": 7614,
             "triangleCount": 3904,
@@ -730,9 +730,9 @@
         {
             "semanticRoot": "ProductionBuildingSurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zp001.obj",
-            "sourceObjSha256": "1f82a41df2cce637884a4a767dc1029dfc6f6652d1024b6ae334f25b71858ec4",
+            "sourceObjSha256": "2f89db946a83228e2ab940f7154d0fd8c70df3cdf6439d940f7ff19a0b509ebf",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Native/ProductionBuildingSurfaceLayer_xp001_zp001.asset",
-            "outputMeshAssetSha256": "db14ec048d2401411faac7f9106f53587fa3e32f25ec65065f6474cb19983f84",
+            "outputMeshAssetSha256": "cfd1dfd0a26cf98537cb2f8d7736684ded7485aa3dff2f9046d1f679d05774a4",
             "sourceVertexCount": 8970,
             "nativeVertexCount": 8970,
             "triangleCount": 4528,
@@ -780,194 +780,194 @@
         {
             "semanticRoot": "ProductionCanopySurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Generated/ProductionCanopySurfaceLayer_xn001_zn001.obj",
-            "sourceObjSha256": "8726f04b372a37a9a2f9608016d1ba6d3f36bf4aa99961cf18f07fb9c2a8ec43",
+            "sourceObjSha256": "383149ad1868770c0a6427acd519d0505fc9a15551bc9a6a19852409bf828c77",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Native/ProductionCanopySurfaceLayer_xn001_zn001.asset",
-            "outputMeshAssetSha256": "7f6eaa6133308438c45a2ad5f903f625a04f08e540712faab404939323f2521a",
-            "sourceVertexCount": 2660,
-            "nativeVertexCount": 2660,
-            "triangleCount": 3920,
+            "outputMeshAssetSha256": "603f64b9b32c6ad1c806677bbbb3e9737897adbdd9388c6eaae386034e6cdece",
+            "sourceVertexCount": 5522,
+            "nativeVertexCount": 5522,
+            "triangleCount": 4834,
             "hardNormalSplit": false,
             "sourceIndexTopologyPreserved": false,
             "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
             "indexFormat": "UInt16",
             "sourceBoundsMinimum": {
-                "x": -1495.614013671875,
-                "y": -26.892000198364259,
-                "z": -1463.8179931640625
+                "x": -1980.126953125,
+                "y": -26.841999053955079,
+                "z": -2038.050048828125
             },
             "sourceBoundsMaximum": {
-                "x": -3.925048828125,
-                "y": 25.156003952026368,
-                "z": -11.322021484375
+                "x": -0.6190185546875,
+                "y": 24.187999725341798,
+                "z": -43.704833984375
             },
             "sourceBoundsCentroid": {
-                "x": -749.76953125,
-                "y": -0.8679981231689453,
-                "z": -737.5700073242188
+                "x": -990.3729858398438,
+                "y": -1.3269996643066407,
+                "z": -1040.87744140625
             },
             "nativeBoundsMinimum": {
-                "x": -1495.614013671875,
-                "y": -26.892000198364259,
-                "z": -1463.8179931640625
+                "x": -1980.126953125,
+                "y": -26.841999053955079,
+                "z": -2038.050048828125
             },
             "nativeBoundsMaximum": {
-                "x": -3.925048828125,
-                "y": 25.1560001373291,
-                "z": -11.322021484375
+                "x": -0.6190185546875,
+                "y": 24.187999725341798,
+                "z": -43.70501708984375
             },
             "nativeBoundsCentroid": {
-                "x": -749.76953125,
-                "y": -0.8680000305175781,
-                "z": -737.5700073242188
+                "x": -990.3729858398438,
+                "y": -1.3269996643066407,
+                "z": -1040.8775634765625
             },
             "sourceCoordinatesPreserved": true,
             "genericObjImporterBypassed": true,
             "semanticVertexColors": true,
-            "semanticWallLocalUvs": false
+            "semanticWallLocalUvs": true
         },
         {
             "semanticRoot": "ProductionCanopySurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Generated/ProductionCanopySurfaceLayer_xn001_zp000.obj",
-            "sourceObjSha256": "1f4f1b6ce9db231450bc97de2521e528e80679127fcf18f22954287399bcda09",
+            "sourceObjSha256": "d8df26c76d8449ca9288d92adbb59beed530c0bd41cd1e65bf1d89e16c19d0fb",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Native/ProductionCanopySurfaceLayer_xn001_zp000.asset",
-            "outputMeshAssetSha256": "7621a9a257297c6ce4306c076fdad3f935ad3e4ec7bcea6436c3a063711d9919",
-            "sourceVertexCount": 10032,
-            "nativeVertexCount": 10032,
-            "triangleCount": 14784,
+            "outputMeshAssetSha256": "e3a5909a749648f79cf5287b21ed9a1bef80242fa28ec422e179977c065ff8a0",
+            "sourceVertexCount": 31218,
+            "nativeVertexCount": 31218,
+            "triangleCount": 24210,
             "hardNormalSplit": false,
             "sourceIndexTopologyPreserved": false,
             "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
             "indexFormat": "UInt16",
             "sourceBoundsMinimum": {
-                "x": -1270.7860107421875,
-                "y": -18.04199981689453,
-                "z": 41.9429931640625
+                "x": -1920.656982421875,
+                "y": -18.055999755859376,
+                "z": 3.85699462890625
             },
             "sourceBoundsMaximum": {
-                "x": 1.7320556640625,
-                "y": 27.37000274658203,
-                "z": 1463.864990234375
+                "x": 0.8690185546875,
+                "y": 33.2140007019043,
+                "z": 2015.233154296875
             },
             "sourceBoundsCentroid": {
-                "x": -634.5269775390625,
-                "y": 4.66400146484375,
-                "z": 752.9039916992188
+                "x": -959.8939819335938,
+                "y": 7.579000473022461,
+                "z": 1009.5451049804688
             },
             "nativeBoundsMinimum": {
-                "x": -1270.7860107421875,
-                "y": -18.04199981689453,
-                "z": 41.9429931640625
+                "x": -1920.656982421875,
+                "y": -18.055999755859376,
+                "z": 3.8570556640625
             },
             "nativeBoundsMaximum": {
-                "x": 1.7320556640625,
-                "y": 27.37000274658203,
-                "z": 1463.864990234375
+                "x": 0.8690185546875,
+                "y": 33.2140007019043,
+                "z": 2015.2330322265625
             },
             "nativeBoundsCentroid": {
-                "x": -634.5269775390625,
-                "y": 4.664000511169434,
-                "z": 752.9039916992188
+                "x": -959.8939819335938,
+                "y": 7.579000473022461,
+                "z": 1009.5450439453125
             },
             "sourceCoordinatesPreserved": true,
             "genericObjImporterBypassed": true,
             "semanticVertexColors": true,
-            "semanticWallLocalUvs": false
+            "semanticWallLocalUvs": true
         },
         {
             "semanticRoot": "ProductionCanopySurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Generated/ProductionCanopySurfaceLayer_xp000_zn001.obj",
-            "sourceObjSha256": "d4622faf87577978f9390832696bbf26aeea5c68b8aebe77b0db1d4a7e5e6400",
+            "sourceObjSha256": "3636ac0be76748a2a133e3b8ac826678b9131af16110620bd8b26be585c787c7",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Native/ProductionCanopySurfaceLayer_xp000_zn001.asset",
-            "outputMeshAssetSha256": "b21634183fc6854a9d3cf2413a8f89030378f5516711012958d5b9e225d7d148",
-            "sourceVertexCount": 11970,
-            "nativeVertexCount": 11970,
-            "triangleCount": 17640,
+            "outputMeshAssetSha256": "ce673fa380beea16d3ebfd6e3a8a4ecaed16f4cef100aa5bf3c5adfb9e43eef9",
+            "sourceVertexCount": 10710,
+            "nativeVertexCount": 10710,
+            "triangleCount": 12162,
             "hardNormalSplit": false,
             "sourceIndexTopologyPreserved": false,
             "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
             "indexFormat": "UInt16",
             "sourceBoundsMinimum": {
-                "x": 45.09100341796875,
-                "y": -41.242000579833987,
-                "z": -1467.39697265625
+                "x": 10.833984375,
+                "y": -43.04199981689453,
+                "z": -1814.947021484375
             },
             "sourceBoundsMaximum": {
-                "x": 1497.947021484375,
-                "y": 25.278995513916017,
-                "z": -4.467041015625
+                "x": 1980.2640380859375,
+                "y": 32.633995056152347,
+                "z": 7.0679931640625
             },
             "sourceBoundsCentroid": {
-                "x": 771.5189819335938,
-                "y": -7.981502532958984,
-                "z": -735.9320068359375
+                "x": 995.5490112304688,
+                "y": -5.204002380371094,
+                "z": -903.9395141601563
             },
             "nativeBoundsMinimum": {
-                "x": 45.0909423828125,
-                "y": -41.24199676513672,
-                "z": -1467.39697265625
+                "x": 10.833984375,
+                "y": -43.04199981689453,
+                "z": -1814.947021484375
             },
             "nativeBoundsMaximum": {
-                "x": 1497.947021484375,
-                "y": 25.27899742126465,
-                "z": -4.467041015625
+                "x": 1980.2640380859375,
+                "y": 32.633995056152347,
+                "z": 7.0679931640625
             },
             "nativeBoundsCentroid": {
-                "x": 771.5189819335938,
-                "y": -7.981500625610352,
-                "z": -735.9320068359375
+                "x": 995.5490112304688,
+                "y": -5.204000473022461,
+                "z": -903.9395141601563
             },
             "sourceCoordinatesPreserved": true,
             "genericObjImporterBypassed": true,
             "semanticVertexColors": true,
-            "semanticWallLocalUvs": false
+            "semanticWallLocalUvs": true
         },
         {
             "semanticRoot": "ProductionCanopySurfaceLayer",
             "sourceObjAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Generated/ProductionCanopySurfaceLayer_xp000_zp000.obj",
-            "sourceObjSha256": "a0340ab0e7f10abcf06d1c3178459a4fee5fa5711a0153dfeb70ccdf980bfb9e",
+            "sourceObjSha256": "1cf12d95daa42cf2e0529cfb7709e58f75db65353f7b61eae4e7d8a93fa27ef2",
             "outputMeshAssetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Native/ProductionCanopySurfaceLayer_xp000_zp000.asset",
-            "outputMeshAssetSha256": "a1bed70db27389acad9064e0ead50f4348ac745c22087bdb4ac78b622157d86b",
-            "sourceVertexCount": 11286,
-            "nativeVertexCount": 11286,
-            "triangleCount": 16632,
+            "outputMeshAssetSha256": "daaac9f153a99b3e6b5c5448936ee7982efdcb3420f40ee4f61ea10179364727",
+            "sourceVertexCount": 19816,
+            "nativeVertexCount": 19816,
+            "triangleCount": 16812,
             "hardNormalSplit": false,
             "sourceIndexTopologyPreserved": false,
             "normalPolicy": "obj_smoothing_groups_with_hard_face_splits",
             "indexFormat": "UInt16",
             "sourceBoundsMinimum": {
-                "x": -3.2139892578125,
-                "y": -37.04199981689453,
-                "z": 6.34600830078125
+                "x": -5.030029296875,
+                "y": -43.09199905395508,
+                "z": 0.8170166015625
             },
             "sourceBoundsMaximum": {
-                "x": 1405.5159912109375,
-                "y": 18.166000366210939,
-                "z": 1482.945068359375
+                "x": 1950.9599609375,
+                "y": 15.571998596191407,
+                "z": 2011.06005859375
             },
             "sourceBoundsCentroid": {
-                "x": 701.1510009765625,
-                "y": -9.437999725341797,
-                "z": 744.6455688476563
+                "x": 972.9649658203125,
+                "y": -13.760000228881836,
+                "z": 1005.9385375976563
             },
             "nativeBoundsMinimum": {
-                "x": -3.2139892578125,
-                "y": -37.04199981689453,
-                "z": 6.345947265625
+                "x": -5.030029296875,
+                "y": -43.09199905395508,
+                "z": 0.8170166015625
             },
             "nativeBoundsMaximum": {
-                "x": 1405.5159912109375,
-                "y": 18.166000366210939,
-                "z": 1482.9449462890625
+                "x": 1950.9599609375,
+                "y": 15.571998596191407,
+                "z": 2011.06005859375
             },
             "nativeBoundsCentroid": {
-                "x": 701.1510009765625,
-                "y": -9.437999725341797,
-                "z": 744.6454467773438
+                "x": 972.9649658203125,
+                "y": -13.760000228881836,
+                "z": 1005.9385375976563
             },
             "sourceCoordinatesPreserved": true,
             "genericObjImporterBypassed": true,
             "semanticVertexColors": true,
-            "semanticWallLocalUvs": false
+            "semanticWallLocalUvs": true
         }
     ],
     "terrainBatches": [

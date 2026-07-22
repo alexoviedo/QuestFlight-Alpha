@@ -18,6 +18,8 @@ namespace QuestFlightLab.Tests.EditMode
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitWindowReflection.shader";
         private const string InstrumentShaderPath =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader";
+        private const string CockpitStableInteriorShaderPath =
+            "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitStableInterior.shader";
         private const string RuntimeProfileSourcePath =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Runtime/PhotorealAerialReflectionProfile.cs";
 
@@ -104,7 +106,7 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void CockpitGlazingUsesTwoRestrainedSinglePassShaders()
+        public void CockpitGlazingAndInteriorUseRestrainedSinglePassShaders()
         {
             Material window = AssetDatabase.LoadAssetAtPath<Material>(
                 PhotorealAerialReflectionAuthoring.WindowMaterialPath);
@@ -119,14 +121,17 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(window.renderQueue, Is.EqualTo((int)RenderQueue.Transparent + 12));
             Assert.That(instrument.renderQueue, Is.EqualTo((int)RenderQueue.Transparent + 16));
             Assert.That(window.GetTexture("_AuthoredReflectionCube"), Is.Not.Null);
-            Assert.That(window.GetFloat("_WindshieldOpacity"), Is.InRange(0.12f, 0.14f));
-            Assert.That(window.GetFloat("_SideWindowOpacity"), Is.InRange(0.15f, 0.17f));
-            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.49f, 0.50f));
-            Assert.That(window.GetFloat("_DirectGlintStrength"), Is.InRange(0.08f, 0.10f));
+            Assert.That(window.GetFloat("_WindshieldOpacity"), Is.InRange(0.17f, 0.19f));
+            Assert.That(window.GetFloat("_SideWindowOpacity"), Is.InRange(0.20f, 0.22f));
+            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.61f, 0.63f));
+            Assert.That(window.GetFloat("_DirectGlintStrength"), Is.InRange(0.10f, 0.12f));
             Assert.That(instrument.GetFloat("_Opacity"), Is.LessThanOrEqualTo(0.02f));
             Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.LessThanOrEqualTo(0.10f));
 
-            foreach (string path in new[] { WindowShaderPath, InstrumentShaderPath })
+            foreach (string path in new[]
+                     {
+                         WindowShaderPath, InstrumentShaderPath, CockpitStableInteriorShaderPath
+                     })
             {
                 Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(path);
                 Assert.That(shader, Is.Not.Null, path);
@@ -136,7 +141,8 @@ namespace QuestFlightLab.Tests.EditMode
                     path);
                 string source = File.ReadAllText(path);
                 Assert.That(source, Does.Contain("UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX"), path);
-                Assert.That(source, Does.Contain("ZWrite Off"), path);
+                if (!string.Equals(path, CockpitStableInteriorShaderPath, StringComparison.Ordinal))
+                    Assert.That(source, Does.Contain("ZWrite Off"), path);
                 Assert.That(source, Does.Not.Contain("GrabPass"), path);
                 Assert.That(source, Does.Not.Contain("_CameraOpaqueTexture"), path);
                 Assert.That(source, Does.Not.Contain("_CameraDepthTexture"), path);
@@ -153,6 +159,46 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(windowSource, Does.Not.Contain("UnityGI_IndirectSpecular"));
             string instrumentSource = File.ReadAllText(InstrumentShaderPath);
             Assert.That(instrumentSource, Does.Contain("Blend One OneMinusSrcAlpha"));
+            string interiorSource = File.ReadAllText(CockpitStableInteriorShaderPath);
+            Assert.That(interiorSource, Does.Contain("_CabinDepthStrength"));
+            Assert.That(interiorSource, Does.Contain("bakedOcclusion"));
+            Assert.That(interiorSource, Does.Contain("Blend Off"));
+            Assert.That(interiorSource, Does.Contain("ZWrite On"));
+            Assert.That(interiorSource, Does.Contain("\"RenderType\"=\"Opaque\""));
+            Assert.That(interiorSource, Does.Not.Contain("SHADOW"));
+            Assert.That(interiorSource, Does.Not.Contain("AlphaToMask"));
+        }
+
+        [Test]
+        public void CockpitViewKeepsExteriorGlazingAndRejectsScreenSpaceOcclusionOverlay()
+        {
+            GameObject aircraft = AssetDatabase.LoadAssetAtPath<GameObject>(
+                PhotorealAerialReflectionAuthoring.AircraftPrefabPath);
+            Assert.That(aircraft, Is.Not.Null);
+            Renderer window = aircraft.GetComponentsInChildren<Renderer>(true).Single(renderer =>
+                string.Equals(renderer.name,
+                    PhotorealAerialReflectionAuthoring.ExteriorWindowRendererName,
+                    StringComparison.Ordinal));
+            Assert.That(aircraft.GetComponentsInChildren<Renderer>(true).Any(renderer =>
+                string.Equals(renderer.name,
+                    PhotorealAerialReflectionAuthoring.RejectedCockpitSunOcclusionObjectName,
+                    StringComparison.Ordinal)), Is.False);
+            QuestFlightLab.Aircraft.ProductionAircraftLightingController lighting =
+                aircraft.GetComponentInChildren<QuestFlightLab.Aircraft.ProductionAircraftLightingController>(true);
+            Assert.That(lighting, Is.Not.Null);
+            SerializedObject lightingSettings = new SerializedObject(lighting);
+            Assert.That(lightingSettings.FindProperty("stableCockpitShader").objectReferenceValue,
+                Is.EqualTo(AssetDatabase.LoadAssetAtPath<Shader>(CockpitStableInteriorShaderPath)));
+            QuestFlightLab.Aircraft.AircraftVisibilityProfileController visibility =
+                aircraft.GetComponentInChildren<QuestFlightLab.Aircraft.AircraftVisibilityProfileController>(true);
+            Assert.That(visibility, Is.Not.Null);
+            SerializedObject serialized = new SerializedObject(visibility);
+            SerializedProperty occluders = serialized.FindProperty("cockpitOccludingExteriorRenderers");
+            SerializedProperty interiors = serialized.FindProperty("interiorRenderers");
+            Assert.That(Enumerable.Range(0, occluders.arraySize).Any(index =>
+                ReferenceEquals(occluders.GetArrayElementAtIndex(index).objectReferenceValue, window)), Is.False);
+            Assert.That(Enumerable.Range(0, interiors.arraySize).All(index =>
+                interiors.GetArrayElementAtIndex(index).objectReferenceValue != null), Is.True);
         }
 
         [Test]

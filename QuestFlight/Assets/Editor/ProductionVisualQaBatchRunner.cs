@@ -710,7 +710,7 @@ namespace QuestFlightLab.Editor
                 context.originalAircraftRotation * Quaternion.Euler(9f, 0f, 0f), 56f,
                 ViewProfile.Cockpit));
             Capture(context, report, outputDir, width, height, new ShotDefinition(
-                "pasv1_24_cockpit_ao_only", "Stable cockpit AO and bounded sun-shadow profile",
+                "pasv1_24_cockpit_ao_only", "Stable cockpit AO without analytic sun occlusion",
                 "photoreal_cockpit", pilotEye,
                 context.originalAircraftRotation * Quaternion.Euler(6f, 0f, 0f), 62f,
                 ViewProfile.Cockpit));
@@ -1191,12 +1191,26 @@ namespace QuestFlightLab.Editor
         {
             Renderer[] environmentHiddenRenderers = Array.Empty<Renderer>();
             bool[] environmentHiddenStates = Array.Empty<bool>();
+            Renderer qaDisabledSunOcclusion = null;
+            bool qaDisabledSunOcclusionState = false;
             string path = Path.Combine(outputDir, "screenshots", shot.id + ".png");
             Texture2D texture = null;
             try
             {
                 if (shot.profile == ViewProfile.Cockpit) context.visibility?.SetCockpitView();
                 else context.visibility?.SetExternalView();
+                if (shot.id == "pasv1_24_cockpit_ao_only")
+                {
+                    qaDisabledSunOcclusion = context.rig.AircraftVisualRoot
+                        .GetComponentsInChildren<Renderer>(true)
+                        .FirstOrDefault(renderer =>
+                            renderer.name == "ProductionCockpitBakedSunOcclusion");
+                    if (qaDisabledSunOcclusion != null)
+                    {
+                        qaDisabledSunOcclusionState = qaDisabledSunOcclusion.enabled;
+                        qaDisabledSunOcclusion.enabled = false;
+                    }
+                }
                 context.groundShadow?.UpdateShadowPoseNow();
                 bool shadowRequired = shot.id == "11_external_aircraft_static" ||
                                       shot.id == "12_external_control_sweep" ||
@@ -1282,6 +1296,8 @@ namespace QuestFlightLab.Editor
             {
                 for (int index = 0; index < environmentHiddenRenderers.Length; index++)
                     environmentHiddenRenderers[index].enabled = environmentHiddenStates[index];
+                if (qaDisabledSunOcclusion != null)
+                    qaDisabledSunOcclusion.enabled = qaDisabledSunOcclusionState;
                 if (texture != null) Object.DestroyImmediate(texture);
             }
         }

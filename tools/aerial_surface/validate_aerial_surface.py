@@ -29,17 +29,21 @@ from build_building_surfaces import (
 from build_canopy_surfaces import (
     GENERATED_DIR as CANOPY_GENERATED_DIR,
     GEOMETRY_MASK_NAME,
+    GEOMETRY_OUTER_RADIUS_METERS,
     LAYER_NAME as CANOPY_LAYER_NAME,
     MANIFEST_NAME as CANOPY_MANIFEST_NAME,
     MAXIMUM_MESH_TRIANGLES,
     OUTPUT_DIR as CANOPY_OUTPUT_DIR,
+    PRODUCT_CANOPY_POLICY,
     REVIEW_MATCH_COARSE_MINIMUM_ELIGIBLE_PIXELS,
     REVIEW_MATCH_REFINEMENT_REQUIRED_ELIGIBLE_PIXELS,
     TARGET_MESH_TRIANGLES,
     TERRAIN_HANDOFF_MASK_NAME,
     canopy_geometry_cells,
+    compile_semantic_groves,
     eligible_canopy_mask,
     filter_small_geometry_components,
+    load_near_ground_imagery,
     parse_canopy_layer,
     rasterize_runs,
     load_reviewed_exclusion_contract,
@@ -301,7 +305,11 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
     require(manifests["building"].get("semantic_root") == "ProductionBuildingSurfaceLayer", "Building semantic root changed")
     require(manifests["canopy"].get("semantic_root") == "ProductionCanopySurfaceLayer", "Canopy semantic root changed")
     semantic_roots = manifests["ownership"].get("semantic_roots", {})
-    require(semantic_roots.get("hero_exclusions") == "ProductionHeroObjectLayer", "Hero exclusion owner changed")
+    require(
+        semantic_roots.get("hero_exclusions")
+        == "airport operational and building semantic masks",
+        "Hero exclusion owner changed",
+    )
 
     record_count, recorded_paths = verify_manifest_records(manifests.values())
     source = load_json(SOURCE_MANIFEST)
@@ -458,7 +466,10 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
     terrain_handoff = load_image(root / "Canopy" / TERRAIN_HANDOFF_MASK_NAME, shape, np.dtype(np.uint8)) != 0
     canopy_layer = parse_canopy_layer(root / "Canopy" / CANOPY_LAYER_NAME)
     require(np.array_equal(rasterize_runs(canopy_layer), geometry_mask), "Canopy binary does not reproduce geometry mask")
-    require(not np.any(geometry_mask & terrain_handoff), "Canopy geometry and terrain handoff overlap")
+    require(
+        np.all(geometry_mask <= terrain_handoff),
+        "Canopy geometry leaves the continuous terrain handoff",
+    )
     require(not np.any(geometry_mask & building_mask), "Canopy geometry overlaps building/hero mask")
 
     affine = mapping["pixel_center_affine_local_meters"]
@@ -496,7 +507,9 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
     )
     product_x, product_z = lidar_pixel_centers_product_aeqd(mapping, shape)
     radius = np.hypot(product_x, product_z)
-    preliminary_geometry_band = eligible & (radius >= 250.0) & (radius <= 1500.0)
+    preliminary_geometry_band = eligible & (radius >= 250.0) & (
+        radius <= GEOMETRY_OUTER_RADIUS_METERS
+    )
     operational_geometry_exclusion = building_mask | (operational_exclusion != 0)
     _pre_coarse, _pre_refinement, preliminary_geometry = canopy_geometry_cells(
         preliminary_geometry_band,
@@ -529,7 +542,9 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
     require(not np.any(terrain_handoff & reviewed_exclusion), "Canopy handoff overlaps a reviewed exclusion")
     eligible &= ~reviewed_exclusion
     hero_source = eligible & (radius < 250.0)
-    geometry_band = eligible & (radius >= 250.0) & (radius <= 1500.0)
+    geometry_band = eligible & (radius >= 250.0) & (
+        radius <= GEOMETRY_OUTER_RADIUS_METERS
+    )
     screen_relevant_source, expected_grove_metrics = screen_relevant_grove_source_mask(
         geometry_band, abs(float(affine["x_per_column"]))
     )
@@ -549,15 +564,54 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
             candidate_coarse, candidate_refinement, candidate_geometry
         )
     )
-    require(not np.any(geometry_mask), "Raised canopy geometry ownership is active")
-    require(int(canopy_layer["pixel_count"]) == 0, "Raised canopy binary owns source pixels")
-    require(not canopy_layer["components"], "Raised canopy binary contains components")
-    require(not canopy_layer["runs"], "Raised canopy binary contains ownership runs")
-    expected_handoff = eligible & ~hero_source
-    require(np.array_equal(expected_handoff, terrain_handoff), "Canopy terrain-map handoff is not deterministic")
-    assigned = hero_source | terrain_handoff
+    dtm_record = asset_by_semantic(source, "digital_terrain_model")
+    dtm_encoding = dtm_record["encoding"]["decoded_source_z_meters"]
+    dtm_local = (
+        dtm.astype(np.float64) * float(dtm_encoding["scale"])
+        + float(dtm_encoding["offset"])
+        - float(mapping["origin"]["source_elevation_msl_meters"])
+    )
+    canopy_height = features[:, :, 0].astype(np.float64) * 0.25
+    canopy_density = features[:, :, 1].astype(np.float64) / 255.0
+    building_height = features[:, :, 2].astype(np.float64) * 0.25
+    ground_image, ground_bounds, _ground_record = load_near_ground_imagery()
+    groves, expected_geometry, compiled_grove_metrics = compile_semantic_groves(
+        eligible,
+        operational_geometry_exclusion | reviewed_exclusion,
+        radius,
+        product_x,
+        product_z,
+        dtm_local,
+        canopy_height,
+        canopy_density,
+        building_height,
+        ground_image,
+        ground_bounds,
+    )
+    del ground_image
+    require(np.array_equal(expected_geometry, geometry_mask), "Canopy geometry ownership is not deterministic")
+    require(
+        int(canopy_layer["pixel_count"]) == int(np.count_nonzero(geometry_mask)),
+        "Canopy binary ownership count changed",
+    )
+    require(canopy_layer["components"], "Canopy binary contains no connected components")
+    require(canopy_layer["runs"], "Canopy binary contains no ownership runs")
+    expected_handoff = eligible
+    require(
+        np.array_equal(expected_handoff, terrain_handoff),
+        "Continuous canopy terrain-map handoff is not deterministic",
+    )
+    require(
+        np.all(geometry_mask <= terrain_handoff),
+        "Canopy geometry is not layered over the continuous terrain handoff",
+    )
+    assigned = terrain_handoff
     require(np.array_equal(assigned, eligible), "Canopy source ownership is incomplete")
-    area_ratio = 0.0
+    source_in_geometry_radius = eligible & (radius <= GEOMETRY_OUTER_RADIUS_METERS)
+    area_ratio = float(
+        np.count_nonzero(geometry_mask)
+        / max(1, np.count_nonzero(source_in_geometry_radius))
+    )
     require(
         canopy_manifest["coverage"]["screen_relevant_grove_selection"]
         == expected_grove_metrics,
@@ -565,18 +619,13 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
     )
     active_filter = canopy_manifest["coverage"]["geometry_component_filter"]
     require(
-        all(
-            int(active_filter[key]) == 0
-            for key in (
-                "pre_filter_component_count",
-                "pre_filter_ownership_pixel_count",
-                "removed_component_count",
-                "removed_ownership_pixel_count",
-                "retained_component_count",
-                "retained_ownership_pixel_count",
-            )
-        ),
-        "Active canopy geometry component metrics are nonzero",
+        active_filter == expected_filter_metrics,
+        "Canopy geometry component filter is not deterministic",
+    )
+    require(
+        canopy_manifest["coverage"]["semantic_grove_compilation"]
+        == compiled_grove_metrics,
+        "Semantic grove compilation metrics are not deterministic",
     )
     rejected_candidate = canopy_manifest["coverage"]["rejected_raised_geometry_candidate"]
     require(rejected_candidate["active"] is False, "Rejected raised canopy candidate became active")
@@ -607,30 +656,69 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
         "Canopy geometry semantic support metric changed",
     )
     require(float(canopy_manifest["combined_representation_area_agreement_percent"]) == 100.0, "Combined canopy assignment agreement changed")
-    require(float(canopy_manifest["median_height_agreement_percent"]) == 100.0, "Terrain-map canopy assignment is not exact")
+    source_geometry_heights = canopy_height[expected_geometry]
+    expected_median_source_height = float(np.median(source_geometry_heights))
+    expected_median_authored_height = float(np.median([
+        float(item["height"]) for item in groves
+    ]))
+    expected_height_agreement = 100.0 * (
+        expected_median_authored_height / max(0.001, expected_median_source_height)
+    )
+    require(
+        math.isclose(
+            float(canopy_manifest["median_height_agreement_percent"]),
+            expected_height_agreement,
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ),
+        "Semantic grove height calibration changed",
+    )
     canopy_records = [item for item in canopy_manifest["assets"] if item.get("semantic") == "production_canopy_surface_mesh_batch"]
-    require(not canopy_records, "Raised canopy OBJ records remain in the manifest")
-    require(int(canopy_manifest["budgets"]["mesh_batch_count"]) == 0, "Raised canopy mesh batches remain")
-    require(int(canopy_manifest["budgets"]["mesh_batch_total_triangles"]) == 0, "Raised canopy triangles remain")
-    require(int(canopy_manifest["budgets"]["mesh_batch_total_vertices"]) == 0, "Raised canopy vertices remain")
-    canopy_obj = {
-        "maximum_vertex_radius_meters": 0.0,
-        "minimum_vertex_radius_meters": 0.0,
-        "triangle_count": 0,
-        "vertex_count": 0,
-    }
+    canopy_obj = validate_obj_records(
+        canopy_records, "ProductionCanopySurfaceLayer_", 4
+    )
+    require(int(canopy_manifest["budgets"]["mesh_batch_count"]) == 4, "Canopy mesh batch count changed")
+    require(
+        TARGET_MESH_TRIANGLES
+        <= int(canopy_manifest["budgets"]["mesh_batch_total_triangles"])
+        <= MAXIMUM_MESH_TRIANGLES,
+        "Canopy triangle budget changed",
+    )
+    require(
+        int(canopy_manifest["budgets"]["mesh_batch_total_triangles"])
+        == int(canopy_obj["triangle_count"]),
+        "Canopy OBJ triangle inventory changed",
+    )
+    require(
+        int(canopy_manifest["budgets"]["mesh_batch_total_vertices"])
+        == int(canopy_obj["vertex_count"]),
+        "Canopy OBJ vertex inventory changed",
+    )
     require(
         int(canopy_manifest["topology"]["skirt_quad_count"]) == 0,
         "Canopy vertical boundary skirts remain",
     )
+    topology = canopy_manifest["topology"]
+    require(int(topology["connected_crown_count"]) == len(groves), "Connected grove count changed")
+    require(int(topology["grounded_trunk_count"]) > 0, "Grounded canopy trunks are missing")
+    require(int(topology["near_branch_triangle_count"]) > 0, "Near canopy branches are missing")
+    require(int(topology["near_foliage_card_triangle_count"]) > 0, "Near foliage cards are missing")
     require(
-        all(int(value) == 0 for value in canopy_manifest["topology"].values()),
-        "Canopy topology metrics are nonzero",
+        sum(
+            int(topology[key])
+            for key in (
+                "connected_crown_triangle_count",
+                "grounded_trunk_triangle_count",
+                "near_branch_triangle_count",
+                "near_foliage_card_triangle_count",
+            )
+        ) == int(canopy_obj["triangle_count"]),
+        "Canopy topology categories do not equal the OBJ triangle inventory",
     )
     require(
         canopy_manifest["representation"]["type"]
-        == "terrain_canopy_map_only_outside_hero_radius",
-        "Terrain-map-only canopy product policy changed",
+        == PRODUCT_CANOPY_POLICY,
+        "Canopy product policy changed",
     )
 
     terrain_manifest = manifests["terrain"]
@@ -708,13 +796,19 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
     root_meta = Path(str(root) + ".meta")
     require(root_meta.is_file(), "PhotorealAerialSurfaceV1 folder meta is missing")
     require(f"guid: {ROOT_META_GUID}" in root_meta.read_text(encoding="utf-8"), "PhotorealAerialSurfaceV1 root GUID changed")
-    for directory in (root / "Lidar", root / "Buildings", BUILDING_GENERATED_DIR, root / "Canopy", root / "Terrain"):
+    for directory in (
+        root / "Lidar",
+        root / "Buildings",
+        BUILDING_GENERATED_DIR,
+        root / "Canopy",
+        CANOPY_GENERATED_DIR,
+        root / "Terrain",
+    ):
         require(Path(str(directory) + ".meta").is_file(), f"Folder meta is missing: {directory}")
-    require(not CANOPY_GENERATED_DIR.exists(), "Rejected canopy OBJ directory remains")
-    require(not Path(str(CANOPY_GENERATED_DIR) + ".meta").exists(), "Rejected canopy OBJ folder meta remains")
+    require(CANOPY_GENERATED_DIR.is_dir(), "Canopy OBJ batch directory is missing")
     require(
-        not any((root / "Canopy").rglob("*.obj")),
-        "Raised canopy OBJ asset remains",
+        len(tuple(CANOPY_GENERATED_DIR.glob("ProductionCanopySurfaceLayer_*.obj"))) == 4,
+        "Canopy OBJ batch inventory changed",
     )
     for directory in (root / "Lidar", root / "Buildings", root / "Canopy", root / "Terrain"):
         for path in directory.rglob("*"):
@@ -727,10 +821,14 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
     ownership = manifests["ownership"]
     require(ownership["exclusions"]["runtime_hierarchy_construction_allowed"] is False, "Ownership contract permits runtime hierarchy construction")
     require(ownership["exclusions"]["sparse_tree_scatter_allowed"] is False, "Ownership contract permits sparse scatter")
-    require(ownership["exclusions"]["canopy_geometry_is_disabled"] is True, "Ownership contract enables canopy geometry")
+    require(ownership["exclusions"]["canopy_geometry_is_disabled"] is False, "Ownership contract disables canopy geometry")
+    require(
+        ownership["exclusions"]["canopy_geometry_overlays_continuous_terrain_handoff"] is True,
+        "Ownership contract removed continuous canopy terrain shading",
+    )
     require(
         ownership["canopy_ownership"]["product_policy"]
-        == "terrain_map_only_outside_hero_radius",
+        == PRODUCT_CANOPY_POLICY,
         "Ownership contract changed canopy product policy",
     )
     return {

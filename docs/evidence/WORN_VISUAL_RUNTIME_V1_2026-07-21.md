@@ -1,127 +1,130 @@
 # Worn Visual Runtime V1 evidence — 2026-07-21
 
-## Purpose and source
+## Scope and evidence boundary
 
-`fix/worn-visual-runtime-v1` is a bounded response to the last worn review. It
-addresses four reported defects together: sparse/flat and semantically
-misaligned canopy, implausible procedural facades, cabin glass absent from the
-seated view, and missing cockpit interior depth. The starting commit is
-`f26cb45c743a2d019d8e57a262f3550c1c8a63fe`. Runway, water, terrain geometry,
-mountains, sky, aircraft geometry, instruments, physics, input, and product
-scope were intentionally left unchanged.
+`fix/worn-visual-runtime-v1` starts from standalone Quest baseline
+`f26cb45c743a2d019d8e57a262f3550c1c8a63fe`. It addresses four worn-review
+defects: close canopy quality and grounding, semantically incoherent context
+facades, cabin glass absent from the seated view, and missing cockpit lighting
+depth. Runway, water, terrain geometry, mountains, sky, instruments, physics,
+input, and standalone Android/OpenXR ownership remain unchanged.
 
-## Implemented representation
+The preceding worn smoke scored 8/10 but used a different APK. It accepted
+scale and placement while reporting molded-looking crowns, sparse/thin trunks,
+weak branch/leaf perforation, and poor close-grove realism. That review guided
+this iteration; no worn score is transferred to the final APK below.
 
-### Canopy
+## Final canopy representation
 
-- 946 deterministic groves are derived offline from the aligned canopy,
-  orthophoto, DTM, and semantic ownership masks.
-- Building, road, runway, and water ownership is excluded before geometry is
-  compiled.
-- Represented source coverage inside the 0–1,500 m authoring zone is 82.576% of
-  eligible canopy pixels.
-- Median authored height is 16.0875 m versus a 10.75 m median source height
-  (149.65%), a bounded visual calibration informed by photographed shadow
-  length rather than a survey claim.
-- Each cell uses three asymmetric rounded crown lobes and one grounded trunk.
-  The result is 52,976 triangles in four fixed native batches, four draws, one
-  opaque material, and no runtime callback, billboard, LOD crossfade, or
-  per-tree GameObject.
-- The broad terrain canopy map remains active beyond the raised-geometry zone.
+- The offline compiler clips public-domain canopy evidence against building,
+  road, runway, airport, and water ownership, then grounds it to the DTM.
+- All 143 semantic groves inside 650 m use 696 detailed trees. Each tree has a
+  tapered triangular-prism trunk, three branches, and twelve fixed-world
+  foliage cards arranged in vertical, diagonal, and horizontal crown layers.
+- The sixteen-cell RGBA atlas contains perforated Front Range deciduous
+  leaf-and-twig clusters. Local crown color/luminance is registered to the
+  exact orthophoto canopy sample instead of applying a single plastic tint.
+- Cards are static multiview planes, not camera-facing or per-eye billboards.
+  The shared shader uses clipping and alpha-to-coverage with required 4x MSAA.
+- Medium-distance cells retain low-cost rounded aggregate shells. Remaining
+  source coverage uses the existing terrain canopy map, with no per-tree
+  GameObject, `Update`, crossfade, dither, or runtime construction.
+- Final canopy inventory: 886 compiled semantic groves, 58,018 triangles,
+  67,266 vertices, four native batches/draws, one material, 59.364% raised
+  geometry coverage in 0–1,500 m, and 100% geometry-or-terrain assignment.
 
-### Buildings
+The committed atlas is
+`QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/ProductionNearFoliageAtlas_RGBA.png`,
+SHA-256 `aae5ad67afc5e63dc0ce762bcae1bac819ebd7403dcd5d922af2fc1e474c671c`.
+Its source/provenance record is the adjacent
+`ProductionNearFoliageAtlas_SourceManifest.json`. The artifact-only chroma
+source has SHA-256
+`c433d450fc859a71fb3be9b19bb03ffcbf4a26adb8950ad984cfd18038e67d4d`;
+it is not committed. No third-party reference image was supplied.
 
-- All 9,692 accepted OSM footprint shells remain represented in 16 fixed
-  batches / 128,092 triangles.
-- Per-wall vertices and physical metre-scale UVs prevent world/cell-scale
-  material distortion.
-- Stable semantic classification selects coherent residential, commercial,
-  industrial, or civic palettes and module/floor scales.
-- Windows keep plausible corner margins, doors occur only on a stable entrance
-  wall, and both are opaque shader features with bounded static cubemap glint.
-- No new renderer, draw, texture, material, transparent slot, or runtime update
-  was introduced.
+## Buildings and cockpit
 
-### Cockpit glass and depth
+All 9,692 accepted OSM footprint shells remain represented in sixteen fixed
+batches / 128,092 triangles. Per-wall metre-scale coordinates and stable OSM
+semantic families drive coherent residential, commercial, industrial, and
+civic palettes, floor/module scale, corner margins, entrance-only doors, and
+opaque cubemap-backed window glint. These are inferred context shells, not
+surveyed hero architecture.
 
-- The authoritative full cabin-glass mesh uses the one-pass
-  `ProductionCockpitWindowReflection` material and is enabled for the seated
-  interior view.
-- A redundant imported transparent instrument shell is disabled; the
-  authoritative instrument cover remains enabled.
-- Two opaque cockpit casters use a dedicated layer-30 hard-shadow sun at 512
-  resolution. The main sun excludes that layer, the bounded sun renders only
-  that layer, glass casts no shadow, cascades are disabled, and nothing is
-  constructed at runtime.
-- Static AO/roughness tuning supplies additional interior depth without SSAO,
-  a realtime reflection probe, or another camera.
+The authoritative cabin-glass mesh uses a bounded single-pass ground/sky
+reflection response visible from the seated interior. One redundant imported
+instrument cover is disabled while the authoritative cover remains. Cockpit
+depth is bound to the existing opaque cabin geometry. The stable single-pass
+interior shader preserves the imported base/normal/MRAO/emission inputs, bounds
+legacy near-zero AO texels, and adds coherent directional sun/sky response plus
+a restrained warm cabin bounce. The first machine candidate used a projected
+two-triangle overlay; full-resolution review exposed visible triangle seams
+across the sky and panel, so that renderer, mesh, material, and shader were
+rejected and removed before delivery. The final product has no cockpit overlay,
+realtime cockpit shadow map, additional transparent pass, reflection camera,
+shadow camera, or cascade.
 
-## Data rights and generated assets
-
-No external asset was downloaded for this milestone. Geometry, masks,
-materials, and manifests are project-authored derivatives of the already
-recorded public-domain USGS/USDA NAIP and terrain/canopy inputs plus existing
-OpenStreetMap-derived footprint data. Raw source imagery and caches remain
-outside Git. Each committed generated binary is paired with its Unity `.meta`
-file and covered by the existing source manifests or the new deterministic
-canopy/building manifest hashes.
-
-## Validation results
+## Validation
 
 | Gate | Result |
 |---|---|
-| Unity EditMode | PASS 115/115 |
+| Aerial-surface Python tests | PASS 22/22 |
+| Deterministic aerial-surface validator | PASS |
+| Unity EditMode | PASS 116/116 |
 | Unity PlayMode | PASS 9/9 |
-| Product validation | PASS |
-| Production Visual QA | PASS 81/81; human headset still required |
-| Live Meta XR stereo | PASS for nonblank, consistent Quest-3-profile left/right eyes |
-| Recorded simulator replay aggregate | BLOCKED_MISSING_RECORDED_REPLAYS (10 genuine `.vrs` files absent) |
+| Full `validate_product.ps1` | PASS |
+| Product dependency closure | PASS; 266 approved, 0 blockers |
+| Production Visual QA | PASS 81/81; `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED` |
+| Full-resolution lead inspection | PASS for final canopy/facade/cockpit and regression frames |
+| Meta XR Simulator 201.0 live stereo | PASS; Quest 3 profile, HMD, both Touch, consistent nonblank eyes |
+| Recorded simulator aggregate | `BLOCKED_MISSING_RECORDED_REPLAYS` for ten genuine `.vrs` sessions |
+| Static Quest planning | PASS; physical measurement still required |
 | Android release-style build | PASS |
 
-The reviewed Visual QA contact sheet is stored outside Git at
-`C:\Users\ovied\Dev\T2\T2-QuestFlight-product-artifacts\worn_visual_rework_20260721_105016\visual_qa_release_candidate\visual_qa_contact_sheet.png`.
-The live stereo contact sheet is at
-`C:\Users\ovied\Dev\T2\T2-QuestFlight-product-artifacts\worn_visual_rework_20260721_105016\simulator_final\meta_xr_simulator\visual_gate\simulator_stereo_contact_sheet.png`.
+Primary external evidence root:
+`C:\Users\ovied\Dev\T2\T2-QuestFlight-product-artifacts\worn_visual_rework_20260721_105016\near_foliage`.
+The final full-resolution contact sheet is under
+`product_validation_cockpit_stable_final\visual_qa\visual_qa_contact_sheet.png`;
+the dedicated surface sheet is
+`product_validation_cockpit_stable_final\visual_qa\photoreal_aerial_surface_contact_sheet.png`.
+Live stereo is under
+`simulator_cockpit_stable_final\meta_xr_simulator\visual_gate\simulator_stereo_contact_sheet.png`.
 
 ## Static Quest planning budget
 
-| Metric | Candidate | Ceiling |
-|---|---:|---:|
-| Selected draws | 55 | 75 |
-| Selected triangles | 624,890 | 650,000 |
-| Serialized mesh triangles | 793,677 | 800,000 |
-| Visible materials | 25 | 25 |
-| Estimated texture bytes | 210,601,912 (200.85 MiB) | 210 MiB |
-| Transparent slots | 3 | 3 |
-| Shaders / variants | 12 / 17 | current bounded contract |
-| MSAA | 4x | 4x |
+| Metric | Final | Ceiling | Result |
+|---|---:|---:|---|
+| Maximum selected draws | 55 | 75 | PASS |
+| Active renderers | 95 | bounded current contract | PASS |
+| Maximum selected triangles | 632,320 | 650,000 | PASS |
+| Serialized scene triangles | 798,719 | 800,000 | PASS |
+| Maximum visible / active materials | 26 / 27 | 28 | PASS |
+| Estimated texture bytes | 211,849,528 (202.04 MiB) | 220,200,960 (210 MiB) | PASS |
+| Transparent material slots | 3 | 3 | PASS |
+| Shaders / keyword combinations | 12 / 17 | bounded current contract | PASS |
+| MSAA | 4x | 4x | PASS |
 
-These Editor-derived planning values do not establish Quest CPU/GPU timing,
-thermals, stale/tear behavior, comfort, or steady-state physical acceptance.
+These are Editor planning estimates. They do not establish Quest GPU/CPU
+timing, thermals, stale/tear rate, allocation behavior, comfort, or worn image
+quality.
 
-## Immutable APK candidate
+## APK identity and decision
 
-- Path (ignored build output):
-  `QuestFlight/Builds/Android/QuestFlight-production.apk`
-- Size: 134,060,510 bytes
-- SHA-256:
-  `eb9499403126e4820ca0e42130ee1bddd84ff35c5b6909c9eb7184062ec431e8`
+The final immutable APK was rebuilt after the reflection/source manifests were
+refreshed:
 
-No prior worn score is attributed to this APK. The required final worn review
-must inspect canopy height/density/grounding, close facade scale and semantic
-coherence, cabin-glass visibility/reflection, and cockpit shadow stability.
+- ignored path: `QuestFlight/Builds/Android/QuestFlight-production.apk`;
+- size: 135,905,162 bytes;
+- SHA-256: `36216609302a851d85db3255ea0f99dfadfaacb1cdc9324826416eb64d84e5d3`;
+- build evidence: `near_foliage\product_validation_cockpit_stable_final\build`
+  under the artifact root.
 
-## Candid limitations and merge gate
+The APK and build directory are not committed.
 
-The candidate is materially more coherent at flight-simulator viewing ranges,
-but it is not literal photorealism. Grove crowns are deliberately low-cost
-aggregate shapes and can look stylized/faceted close up. Context buildings are
-still inferred shells, not reference-authored assets, and their procedural
-openings are not surveyed. The cabin reflection is static and bounded.
-Instruments remain mostly static or blank because functional data binding was
-out of scope.
-
-The branch is machine-ready for its exact-APK worn smoke. It must not merge to
-`main` until that smoke confirms that the four user-visible corrections are
-actually present and free of a critical stereo, flicker, comfort, or scale
-regression.
+The branch is a machine-validated merge candidate, not public-release or
+literal-photorealism acceptance. Near crown detail is materially improved in
+the inspected captures, while medium aggregate groves remain deliberately
+simplified. Context buildings remain inferred shells. Cabin reflection and the
+geometry-bound cockpit depth still require the exact-APK worn smoke. Long-duration
+Quest performance remains unmeasured. The branch must remain unmerged until
+that worn review confirms the visible canopy, glass, facade, and cockpit result.

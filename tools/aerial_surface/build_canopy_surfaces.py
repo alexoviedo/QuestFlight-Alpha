@@ -79,6 +79,11 @@ REVIEWED_EXCLUSION_CONTRACT = REPOSITORY_ROOT / (
 REVIEWED_EXCLUSION_SCHEMA = (
     "questflight.photoreal-aerial-surface-v1.canopy-reviewed-exclusions.v1"
 )
+GROUND_IMAGERY_MANIFEST = REPOSITORY_ROOT / (
+    "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/"
+    "KBDU_AerialSurfaceV1_SourceManifest.json"
+)
+GROUND_IMAGERY_NEAR_ID = "near_4km"
 
 CANOPY_MAGIC = b"QFCSL1\x00\x00"
 CANOPY_VERSION = 1
@@ -90,7 +95,7 @@ MINIMUM_CANOPY_HEIGHT_METERS = 2.0
 MINIMUM_CANOPY_DENSITY = 0.16
 MAXIMUM_BUILDING_HEIGHT_METERS = 0.25
 HERO_RADIUS_METERS = 250.0
-GEOMETRY_OUTER_RADIUS_METERS = 1500.0
+GEOMETRY_OUTER_RADIUS_METERS = 2040.0
 COARSE_CELL_PIXELS = 4
 REFINEMENT_CELL_PIXELS = 2
 REVIEW_MATCH_COARSE_MINIMUM_ELIGIBLE_PIXELS = 8
@@ -103,16 +108,116 @@ MINIMUM_GEOMETRY_COMPONENT_PIXELS = 128
 TAPER_TERRAIN_CLEARANCE_METERS = 0.04
 MESH_BATCH_CELL_METERS = 2048.0
 MAXIMUM_LAYER_BYTES = 1_500_000
-TARGET_MESH_TRIANGLES = 53_000
-MAXIMUM_MESH_TRIANGLES = 54_000
+# Preserve the complete near-airport perforated tree set, then spend the
+# remaining topology on the highest-value middle/far groves.  The continuous
+# terrain canopy map remains authoritative outside those selected volumes.
+# This bound keeps the complete authored product scene below its established
+# 800k serialized-triangle ceiling without weakening that gate.
+TARGET_MESH_TRIANGLES = 58_000
+MAXIMUM_MESH_TRIANGLES = 59_000
 GROVE_CELL_PIXELS = 8
-GROVE_MINIMUM_ELIGIBLE_PIXELS = 9
-GROVE_CROWN_SEGMENTS = 4
-GROVE_HEIGHT_SCALE = 1.15
-GROVE_HEIGHT_BIAS_METERS = 2.0
-GROVE_MINIMUM_HEIGHT_METERS = 8.0
-GROVE_MAXIMUM_HEIGHT_METERS = 28.0
-PRODUCT_CANOPY_POLICY = "semantic_rounded_groves_0_1500m_over_continuous_terrain_canopy"
+GROVE_MINIMUM_ELIGIBLE_PIXELS = 4
+GROVE_CROWN_LOBES = 1
+GROVE_CROWN_SEGMENTS = 7
+GROVE_TRUNKS_PER_GROVE = 2
+# One connected, irregular grove shell uses separate upper and lower contour
+# rings.  The lower ring contracts toward a raised pole, so the underside reads
+# as a rounded crown mass instead of a flat umbrella or a ground-connected
+# boulder.  Two triangular-prism trunks ground the aggregate representation.
+GROVE_CROWN_TRIANGLES = GROVE_CROWN_SEGMENTS * 4
+GROVE_TRUNK_SIDES = 3
+GROVE_TRIANGLES_PER_GROVE = (
+    GROVE_CROWN_TRIANGLES + GROVE_TRUNKS_PER_GROVE * GROVE_TRUNK_SIDES * 2
+)
+NEAR_GROVE_RADIUS_METERS = 650.0
+MID_GROVE_RADIUS_METERS = 1400.0
+NEAR_GROVE_SEGMENTS = 10
+MID_GROVE_SEGMENTS = 7
+FAR_GROVE_SEGMENTS = 5
+NEAR_MID_GROVE_TRUNKS = 2
+FAR_GROVE_TRUNKS = 1
+NEAR_TREE_MINIMUM = 3
+NEAR_TREE_MAXIMUM = 8
+NEAR_TREE_BRANCHES = 3
+NEAR_TREE_FOLIAGE_CARDS = 12
+NEAR_TREE_TRIANGLES = (
+    GROVE_TRUNK_SIDES * 2
+    + NEAR_TREE_BRANCHES * GROVE_TRUNK_SIDES * 2
+    + NEAR_TREE_FOLIAGE_CARDS * 2
+)
+GROVE_HEIGHT_SCALE = 1.18
+GROVE_HEIGHT_BIAS_METERS = 2.3
+GROVE_MINIMUM_HEIGHT_METERS = 7.0
+GROVE_MAXIMUM_HEIGHT_METERS = 24.0
+MAXIMUM_GROVE_COUNT = MAXIMUM_MESH_TRIANGLES // (
+    FAR_GROVE_SEGMENTS * 4 + FAR_GROVE_TRUNKS * GROVE_TRUNK_SIDES * 2
+)
+PRODUCT_CANOPY_POLICY = "semantic_connected_groves_0_2040m_over_continuous_terrain_canopy"
+
+
+def load_near_ground_imagery() -> tuple[np.ndarray, tuple[float, float, float, float], dict[str, Any]]:
+    manifest = load_json(GROUND_IMAGERY_MANIFEST)
+    records = [
+        item for item in manifest["derived_assets"]
+        if item.get("id") == GROUND_IMAGERY_NEAR_ID
+    ]
+    if len(records) != 1:
+        raise ValueError("Ground imagery manifest must contain exactly one near_4km asset")
+    record = records[0]
+    path = verify_source_asset(record)
+    image = np.asarray(Image.open(path).convert("RGB"), dtype=np.uint8)
+    expected = tuple(int(value) for value in record["dimensions_pixels"])
+    if image.shape[:2] != (expected[1], expected[0]):
+        raise ValueError("Near ground imagery dimensions do not match its source manifest")
+    bounds = tuple(float(value) for value in record["local_bounds_meters"])
+    return image, bounds, record
+
+
+def robust_canopy_ground_color(
+    image: np.ndarray,
+    bounds: tuple[float, float, float, float],
+    sample_x: np.ndarray,
+    sample_z: np.ndarray,
+) -> tuple[float, float, float]:
+    """Sample only lidar-supported canopy pixels from the exact ground tile.
+
+    Exact lidar-supported pixels are augmented with a bounded 12 m local search
+    in the same orthophoto. This compensates for acquisition-date canopy drift
+    without changing semantic placement. Only vegetation-chromatic candidates
+    are admitted from that search, then the darker half rejects pale soil and
+    roof edges. Values remain sRGB for vertex-color transport.
+    """
+
+    minimum_x, minimum_z, maximum_x, maximum_z = bounds
+    u = np.clip((sample_x - minimum_x) / (maximum_x - minimum_x), 0.0, 1.0)
+    v = np.clip((sample_z - minimum_z) / (maximum_z - minimum_z), 0.0, 1.0)
+    columns = np.rint(u * (image.shape[1] - 1)).astype(np.int64)
+    rows = np.rint((1.0 - v) * (image.shape[0] - 1)).astype(np.int64)
+    samples = image[rows, columns].astype(np.float64) / 255.0
+    meters_per_column = (maximum_x - minimum_x) / max(1, image.shape[1] - 1)
+    meters_per_row = (maximum_z - minimum_z) / max(1, image.shape[0] - 1)
+    column_pad = int(math.ceil(12.0 / meters_per_column))
+    row_pad = int(math.ceil(12.0 / meters_per_row))
+    row_min = max(0, int(np.min(rows)) - row_pad)
+    row_max = min(image.shape[0], int(np.max(rows)) + row_pad + 1)
+    column_min = max(0, int(np.min(columns)) - column_pad)
+    column_max = min(image.shape[1], int(np.max(columns)) + column_pad + 1)
+    neighborhood = image[row_min:row_max, column_min:column_max].reshape(-1, 3)
+    neighborhood = neighborhood.astype(np.float64) / 255.0
+    red, green, blue = neighborhood.T
+    vegetation_score = green - red * 0.72 - blue * 0.28
+    vegetation = neighborhood[
+        (vegetation_score >= 0.035)
+        & (green >= red * 0.94)
+        & (green >= blue * 1.12)
+    ]
+    candidates = vegetation if len(vegetation) >= 16 else samples
+    luminance = candidates @ np.asarray([0.2126, 0.7152, 0.0722], dtype=np.float64)
+    retained = candidates[luminance <= np.percentile(luminance, 55.0)]
+    if not retained.size:
+        retained = candidates
+    color = np.median(retained, axis=0)
+    return tuple(float(np.clip(value, 0.0, 1.0)) for value in color)
 
 
 class UnionFind:
@@ -773,19 +878,24 @@ class ObjBatch:
         self.name = mesh_batch_name(key)
         self.vertices: list[tuple[float, float, float]] = []
         self.colors: list[tuple[float, float, float, float]] = []
+        self.uvs: list[tuple[float, float]] = []
         self.vertex_lookup: dict[tuple[float, ...], int] = {}
         self.faces: list[tuple[int, int, int]] = []
         self.crown_count = 0
         self.trunk_count = 0
+        self.branch_count = 0
+        self.foliage_card_count = 0
 
     def vertex(
         self,
         value: tuple[float, float, float],
         color: tuple[float, float, float, float],
+        uv: tuple[float, float] = (-1.0, -1.0),
     ) -> int:
         normalized = tuple(round(float(component), 3) for component in value)
         normalized_color = tuple(round(float(component), 6) for component in color)
-        key = (*normalized, *normalized_color)
+        normalized_uv = tuple(round(float(component), 6) for component in uv)
+        key = (*normalized, *normalized_color, *normalized_uv)
         found = self.vertex_lookup.get(key)
         if found is not None:
             return found
@@ -793,6 +903,7 @@ class ObjBatch:
         self.vertex_lookup[key] = index
         self.vertices.append(normalized)
         self.colors.append(normalized_color)
+        self.uvs.append(normalized_uv)
         return index
 
     def outward_triangle(
@@ -802,6 +913,7 @@ class ObjBatch:
         c: tuple[float, float, float],
         color: tuple[float, float, float, float],
         center: tuple[float, float, float],
+        uvs: tuple[tuple[float, float], tuple[float, float], tuple[float, float]] | None = None,
     ) -> None:
         av = np.asarray(a, dtype=np.float64)
         bv = np.asarray(b, dtype=np.float64)
@@ -810,9 +922,225 @@ class ObjBatch:
         outward = (av + bv + cv) / 3.0 - np.asarray(center, dtype=np.float64)
         if float(np.dot(normal, outward)) < 0.0:
             b, c = c, b
-        self.faces.append((self.vertex(a, color), self.vertex(b, color), self.vertex(c, color)))
+            if uvs is not None:
+                uvs = (uvs[0], uvs[2], uvs[1])
+        if uvs is None:
+            uvs = ((-1.0, -1.0),) * 3
+        self.faces.append((
+            self.vertex(a, color, uvs[0]),
+            self.vertex(b, color, uvs[1]),
+            self.vertex(c, color, uvs[2]),
+        ))
+
+    def add_tapered_prism(
+        self,
+        start: tuple[float, float, float],
+        end: tuple[float, float, float],
+        start_radius: float,
+        end_radius: float,
+        color: tuple[float, float, float, float],
+    ) -> None:
+        start_value = np.asarray(start, dtype=np.float64)
+        end_value = np.asarray(end, dtype=np.float64)
+        direction = end_value - start_value
+        length = float(np.linalg.norm(direction))
+        if length <= 0.01:
+            raise ValueError("Near-grove branch length is degenerate")
+        direction /= length
+        reference = np.asarray((0.0, 1.0, 0.0), dtype=np.float64)
+        if abs(float(np.dot(direction, reference))) > 0.92:
+            reference = np.asarray((1.0, 0.0, 0.0), dtype=np.float64)
+        first_axis = np.cross(direction, reference)
+        first_axis /= np.linalg.norm(first_axis)
+        second_axis = np.cross(direction, first_axis)
+        center = tuple(((start_value + end_value) * 0.5).tolist())
+        start_ring: list[tuple[float, float, float]] = []
+        end_ring: list[tuple[float, float, float]] = []
+        for index in range(GROVE_TRUNK_SIDES):
+            angle = math.tau * index / GROVE_TRUNK_SIDES
+            radial = first_axis * math.cos(angle) + second_axis * math.sin(angle)
+            start_ring.append(tuple((start_value + radial * start_radius).tolist()))
+            end_ring.append(tuple((end_value + radial * end_radius).tolist()))
+        for index in range(GROVE_TRUNK_SIDES):
+            following = (index + 1) % GROVE_TRUNK_SIDES
+            self.outward_triangle(
+                start_ring[index], end_ring[index], end_ring[following], color, center
+            )
+            self.outward_triangle(
+                start_ring[index], end_ring[following], start_ring[following], color, center
+            )
+
+    def add_foliage_card(
+        self,
+        center: tuple[float, float, float],
+        right: tuple[float, float, float],
+        up: tuple[float, float, float],
+        half_width: float,
+        half_height: float,
+        atlas_index: int,
+        color: tuple[float, float, float, float],
+    ) -> None:
+        center_value = np.asarray(center, dtype=np.float64)
+        right_value = np.asarray(right, dtype=np.float64)
+        right_value /= np.linalg.norm(right_value)
+        up_value = np.asarray(up, dtype=np.float64)
+        up_value /= np.linalg.norm(up_value)
+        points = (
+            tuple((center_value - right_value * half_width - up_value * half_height).tolist()),
+            tuple((center_value + right_value * half_width - up_value * half_height).tolist()),
+            tuple((center_value + right_value * half_width + up_value * half_height).tolist()),
+            tuple((center_value - right_value * half_width + up_value * half_height).tolist()),
+        )
+        cell = 0.25
+        padding = 0.010
+        column = atlas_index % 4
+        row = atlas_index // 4
+        minimum_u = column * cell + padding
+        maximum_u = (column + 1) * cell - padding
+        minimum_v = 1.0 - (row + 1) * cell + padding
+        maximum_v = 1.0 - row * cell - padding
+        uvs = (
+            (minimum_u, minimum_v),
+            (maximum_u, minimum_v),
+            (maximum_u, maximum_v),
+            (minimum_u, maximum_v),
+        )
+        normal = np.cross(right_value, up_value)
+        face_center = tuple((center_value + normal * 0.01).tolist())
+        self.outward_triangle(
+            points[0], points[1], points[2], color, face_center,
+            (uvs[0], uvs[1], uvs[2]),
+        )
+        self.outward_triangle(
+            points[0], points[2], points[3], color, face_center,
+            (uvs[0], uvs[2], uvs[3]),
+        )
+        self.foliage_card_count += 1
+
+    def add_near_grove(self, grove: dict[str, float]) -> None:
+        x = float(grove["x"])
+        z = float(grove["z"])
+        ground = float(grove["ground"])
+        height = float(grove["height"])
+        radius_x = float(grove["radius_x"])
+        radius_z = float(grove["radius_z"])
+        rotation = float(grove["rotation"])
+        seed = float(grove["seed"])
+        tree_count = int(grove["near_tree_count"])
+        ground_color = (
+            float(grove["ground_color_r"]),
+            float(grove["ground_color_g"]),
+            float(grove["ground_color_b"]),
+        )
+        foliage_color = (0.0, *ground_color)
+        trunk_color = (1.0, *ground_color)
+
+        golden_angle = math.pi * (3.0 - math.sqrt(5.0))
+        for tree_index in range(tree_count):
+            identity = (seed * 97.0 + tree_index * 0.61803398875) % 1.0
+            angle = rotation + tree_index * golden_angle + identity * 0.45
+            radial = 0.10 if tree_count == 1 else math.sqrt((tree_index + 0.35) / tree_count) * 0.58
+            tree_x = x + math.cos(angle) * radius_x * radial
+            tree_z = z + math.sin(angle) * radius_z * radial
+            tree_height = height * (0.78 + 0.22 * ((identity * 7.31) % 1.0))
+            crown_radius = float(np.clip(
+                min(radius_x, radius_z) * (0.34 + 0.05 * ((identity * 11.7) % 1.0)),
+                2.2,
+                4.4,
+            ))
+            trunk_radius = float(np.clip(tree_height * 0.030, 0.30, 0.52))
+            trunk_top = (
+                tree_x + math.cos(angle + 0.7) * tree_height * 0.018,
+                ground + tree_height * 0.70,
+                tree_z + math.sin(angle + 0.7) * tree_height * 0.018,
+            )
+            self.add_tapered_prism(
+                (tree_x, ground + 0.04, tree_z),
+                trunk_top,
+                trunk_radius,
+                trunk_radius * 0.55,
+                trunk_color,
+            )
+            self.trunk_count += 1
+            for branch_index in range(NEAR_TREE_BRANCHES):
+                branch_angle = angle + branch_index * math.pi + 0.55 + identity
+                branch_start = (
+                    tree_x,
+                    ground + tree_height * (0.47 + branch_index * 0.055),
+                    tree_z,
+                )
+                branch_end = (
+                    tree_x + math.cos(branch_angle) * crown_radius * 0.72,
+                    ground + tree_height * (0.71 + branch_index * 0.045),
+                    tree_z + math.sin(branch_angle) * crown_radius * 0.72,
+                )
+                self.add_tapered_prism(
+                    branch_start,
+                    branch_end,
+                    trunk_radius * 0.50,
+                    trunk_radius * 0.16,
+                    trunk_color,
+                )
+                self.branch_count += 1
+            crown_center = (
+                tree_x,
+                ground + tree_height * 0.77,
+                tree_z,
+            )
+            atlas_base = int((identity * 997.0 + tree_index * 5.0)) % 16
+            for card_index in range(NEAR_TREE_FOLIAGE_CARDS):
+                layer = card_index // 4
+                radial_index = card_index % 4
+                card_angle = (
+                    angle
+                    + radial_index * math.pi * 0.25
+                    + layer * math.pi * 0.13
+                    + identity * 0.8
+                )
+                right = (math.cos(card_angle), 0.0, math.sin(card_angle))
+                if layer == 0:
+                    up = (0.0, 1.0, 0.0)
+                    card_center = (
+                        crown_center[0] + math.cos(card_angle) * crown_radius * 0.16,
+                        crown_center[1] + (radial_index - 1.5) * crown_radius * 0.055,
+                        crown_center[2] + math.sin(card_angle) * crown_radius * 0.16,
+                    )
+                    half_height = crown_radius * (0.92 - radial_index * 0.025)
+                elif layer == 1:
+                    up = (
+                        -math.cos(card_angle) * 0.52,
+                        0.854,
+                        -math.sin(card_angle) * 0.52,
+                    )
+                    card_center = (
+                        crown_center[0] + math.cos(card_angle) * crown_radius * 0.24,
+                        crown_center[1] + (radial_index - 1.5) * crown_radius * 0.05,
+                        crown_center[2] + math.sin(card_angle) * crown_radius * 0.24,
+                    )
+                    half_height = crown_radius * 0.88
+                else:
+                    up = (-math.sin(card_angle), 0.0, math.cos(card_angle))
+                    card_center = (
+                        crown_center[0] + math.cos(card_angle) * crown_radius * 0.12,
+                        crown_center[1] + crown_radius * (0.18 + radial_index * 0.035),
+                        crown_center[2] + math.sin(card_angle) * crown_radius * 0.12,
+                    )
+                    half_height = crown_radius * (0.90 - radial_index * 0.025)
+                self.add_foliage_card(
+                    card_center,
+                    right,
+                    up,
+                    crown_radius * (1.04 + layer * 0.035),
+                    half_height,
+                    (atlas_base + card_index * 5) % 16,
+                    foliage_color,
+                )
+        self.crown_count += 1
 
     def add_grove(self, grove: dict[str, float]) -> None:
+        if float(grove.get("near_detail", 0.0)) > 0.5:
+            self.add_near_grove(grove)
+            return
         x = float(grove["x"])
         z = float(grove["z"])
         ground = float(grove["ground"])
@@ -822,108 +1150,155 @@ class ObjBatch:
         rotation = float(grove["rotation"])
         seed = float(grove["seed"])
         density = float(grove["density"])
-        crown_color = (0.0, density, seed, 1.0)
-        trunk_color = (1.0, density, seed, 1.0)
+        crown_segments = int(grove["crown_segments"])
+        peak_count = int(grove["peak_count"])
+        trunk_count = int(grove["trunk_count"])
+        ground_color = (
+            float(grove["ground_color_r"]),
+            float(grove["ground_color_g"]),
+            float(grove["ground_color_b"]),
+        )
+        crown_color = (0.0, *ground_color)
+        trunk_color = (1.0, *ground_color)
 
-        crown_bottom = ground + max(2.4, height * 0.29)
-        # Three smaller, asymmetrical crowns preserve the measured semantic
-        # footprint while reading as a grove rather than one extruded ground
-        # patch. They remain one static mesh/material draw per spatial batch.
-        mean_radius = (radius_x + radius_z) * 0.5
-        for lobe_index in range(3):
-            lobe_seed = (seed * 17.0 + lobe_index * 0.371) % 1.0
-            offset_angle = rotation + math.tau * lobe_index / 3.0 + (lobe_seed - 0.5) * 0.26
-            offset_radius = mean_radius * (0.22 + lobe_seed * 0.05)
-            lobe_x = (
-                x
-                + math.cos(offset_angle) * offset_radius
+        # Keep the underside high enough to expose grounded trunks, but low
+        # enough that the crown reads as a volume from taxi and pattern views.
+        # The previous 30%-of-height floor compressed the lower hemisphere and
+        # produced the reported pancake silhouette.
+        crown_bottom = ground + max(1.4, height * 0.14)
+        # A single connected shell represents the photographed grove boundary.
+        # Harmonic radius variation suggests several overlapping crowns without
+        # spending geometry on sparse, visibly repeated individual trees.
+        top = (
+            x + math.cos(rotation) * radius_x * 0.035,
+            ground + height * (0.99 + 0.015 * math.sin(seed * 8.3)),
+            z + math.sin(rotation) * radius_z * 0.035,
+        )
+        bottom = (
+            x - math.cos(rotation) * radius_x * 0.025,
+            crown_bottom + height * 0.01,
+            z - math.sin(rotation) * radius_z * 0.025,
+        )
+        upper_ring: list[tuple[float, float, float]] = []
+        lower_ring: list[tuple[float, float, float]] = []
+        for index in range(crown_segments):
+            angle = rotation + math.tau * index / crown_segments
+            harmonic = (
+                1.0
+                + 0.08 * math.sin(angle * 3.0 + seed * math.tau)
+                + 0.03 * math.sin(angle * 5.0 + seed * 11.3)
             )
-            lobe_z = (
-                z
-                + math.sin(offset_angle) * offset_radius
+            upper_ring.append((
+                x + math.cos(angle) * radius_x * 0.86 * harmonic,
+                ground + height * (0.62 + 0.025 * math.sin(
+                    index * 1.71 + seed * 7.1
+                )),
+                z + math.sin(angle) * radius_z * 0.86 * harmonic,
+            ))
+            lower_harmonic = 0.70 + 0.04 * math.sin(
+                angle * 3.0 + seed * math.tau + 0.85
             )
-            lobe_height = height * (0.96 + lobe_seed * 0.17)
-            # Wide lidar/imagery components often describe several adjacent
-            # crowns. Capping each lobe radius by its height prevents those
-            # components from becoming low, rock-like slabs while the three
-            # lobe union still follows the measured grove boundary.
-            lobe_radius_x = min(
-                radius_x * (0.52 + lobe_seed * 0.055),
-                lobe_height * (0.56 + lobe_seed * 0.05),
+            lower_ring.append((
+                x + math.cos(angle) * radius_x * lower_harmonic,
+                ground + height * (0.48 + 0.015 * math.sin(
+                    index * 1.37 + seed * 5.9
+                )),
+                z + math.sin(angle) * radius_z * lower_harmonic,
+            ))
+        crown_center = (x, ground + height * 0.57, z)
+        if peak_count == 2:
+            # Two close peaks share one outer crown and one underside. This is a
+            # compound grove mass, not a scatter of independent toy trees. The
+            # two closure triangles keep the ridge watertight for only two extra
+            # triangles in the near-view representation.
+            peak_offset = 0.20
+            peak_a = (
+                x + math.cos(rotation) * radius_x * peak_offset,
+                ground + height * (0.99 + 0.012 * math.sin(seed * 8.3)),
+                z + math.sin(rotation) * radius_z * peak_offset,
             )
-            lobe_radius_z = min(
-                radius_z * (0.53 + (1.0 - lobe_seed) * 0.05),
-                lobe_height * (0.58 + (1.0 - lobe_seed) * 0.04),
+            peak_b = (
+                x - math.cos(rotation) * radius_x * peak_offset,
+                ground + height * (0.92 + 0.018 * math.sin(seed * 10.7 + 0.8)),
+                z - math.sin(rotation) * radius_z * peak_offset,
             )
-            lobe_rotation = rotation + lobe_index * 0.41 + (lobe_seed - 0.5) * 0.19
-            crown_center = (lobe_x, ground + lobe_height * 0.59, lobe_z)
-            top = (lobe_x, ground + lobe_height, lobe_z)
-            bottom = (lobe_x, crown_bottom, lobe_z)
-            upper: list[tuple[float, float, float]] = []
-            lower: list[tuple[float, float, float]] = []
-            for index in range(GROVE_CROWN_SEGMENTS):
-                angle = lobe_rotation + math.tau * index / GROVE_CROWN_SEGMENTS
-                cosine = math.cos(angle)
-                sine = math.sin(angle)
-                radial_variation = 0.94 + 0.09 * math.sin(
-                    (index + 1) * 2.17 + lobe_seed * math.tau
-                )
-                upper.append((
-                    lobe_x + cosine * lobe_radius_x * 0.58 * radial_variation,
-                    ground + lobe_height * (0.87 + 0.025 * ((index + lobe_index) % 2)),
-                    lobe_z + sine * lobe_radius_z * 0.58 * radial_variation,
-                ))
-                lower.append((
-                    lobe_x + cosine * lobe_radius_x * radial_variation,
-                    ground + lobe_height * (0.56 + 0.025 * ((index + 1) % 2)),
-                    lobe_z + sine * lobe_radius_z * radial_variation,
-                ))
-            for index in range(GROVE_CROWN_SEGMENTS):
-                following = (index + 1) % GROVE_CROWN_SEGMENTS
+            split = crown_segments // 2
+            for index in range(split):
                 self.outward_triangle(
-                    top, upper[index], upper[following], crown_color, crown_center
+                    peak_a, upper_ring[index], upper_ring[index + 1],
+                    crown_color, crown_center,
                 )
+            for index in range(split, crown_segments):
+                following = (index + 1) % crown_segments
                 self.outward_triangle(
-                    upper[index], lower[index], lower[following], crown_color, crown_center
+                    peak_b, upper_ring[index], upper_ring[following],
+                    crown_color, crown_center,
                 )
+            self.outward_triangle(
+                peak_a, peak_b, upper_ring[split], crown_color, crown_center
+            )
+            self.outward_triangle(
+                peak_b, peak_a, upper_ring[0], crown_color, crown_center
+            )
+        else:
+            for index in range(crown_segments):
+                following = (index + 1) % crown_segments
                 self.outward_triangle(
-                    upper[index], lower[following], upper[following], crown_color, crown_center
+                    top, upper_ring[index], upper_ring[following], crown_color, crown_center
                 )
-                self.outward_triangle(
-                    lower[index], bottom, lower[following], crown_color, crown_center
-                )
+        for index in range(crown_segments):
+            following = (index + 1) % crown_segments
+            self.outward_triangle(
+                upper_ring[index], lower_ring[index], lower_ring[following],
+                crown_color, crown_center
+            )
+            self.outward_triangle(
+                upper_ring[index], lower_ring[following], upper_ring[following],
+                crown_color, crown_center
+            )
+            self.outward_triangle(
+                lower_ring[index], bottom, lower_ring[following], crown_color, crown_center
+            )
         self.crown_count += 1
 
-        trunk_radius = min(0.72, max(0.28, height * 0.025))
+        trunk_radius = min(0.58, max(0.22, height * 0.022))
         trunk_top = crown_bottom + min(1.2, height * 0.06)
-        trunk_center = (x, (ground + trunk_top) * 0.5, z)
-        trunk_bottom_points: list[tuple[float, float, float]] = []
-        trunk_top_points: list[tuple[float, float, float]] = []
-        for index in range(4):
-            angle = rotation + math.pi * 0.25 + math.tau * index / 4.0
-            cosine = math.cos(angle)
-            sine = math.sin(angle)
-            trunk_bottom_points.append((
-                x + cosine * trunk_radius,
-                ground + 0.04,
-                z + sine * trunk_radius,
-            ))
-            trunk_top_points.append((
-                x + cosine * trunk_radius * 0.78,
-                trunk_top,
-                z + sine * trunk_radius * 0.78,
-            ))
-        for index in range(4):
-            following = (index + 1) % 4
-            self.outward_triangle(
-                trunk_bottom_points[index], trunk_top_points[index],
-                trunk_top_points[following], trunk_color, trunk_center
-            )
-            self.outward_triangle(
-                trunk_bottom_points[index], trunk_top_points[following],
-                trunk_bottom_points[following], trunk_color, trunk_center
-            )
-        self.trunk_count += 1
+        for trunk_index in range(trunk_count):
+            trunk_angle = rotation + math.pi * (0.25 + trunk_index)
+            trunk_offset_angle = rotation + math.pi * (0.18 + trunk_index)
+            trunk_x = x + math.cos(trunk_offset_angle) * radius_x * 0.19
+            trunk_z = z + math.sin(trunk_offset_angle) * radius_z * 0.19
+            trunk_scale = 0.84 + 0.20 * ((seed * 13.0 + trunk_index * 0.37) % 1.0)
+            local_radius = trunk_radius * trunk_scale
+            local_top = crown_bottom + min(1.2, height * 0.06) * trunk_scale
+            trunk_center = (trunk_x, (ground + local_top) * 0.5, trunk_z)
+            trunk_bottom_points: list[tuple[float, float, float]] = []
+            trunk_top_points: list[tuple[float, float, float]] = []
+            for index in range(GROVE_TRUNK_SIDES):
+                angle = trunk_angle + math.pi / 6.0 + math.tau * index / GROVE_TRUNK_SIDES
+                cosine = math.cos(angle)
+                sine = math.sin(angle)
+                trunk_bottom_points.append((
+                    trunk_x + cosine * local_radius,
+                    ground + 0.04,
+                    trunk_z + sine * local_radius,
+                ))
+                trunk_top_points.append((
+                    trunk_x + cosine * local_radius * 0.76,
+                    local_top,
+                    trunk_z + sine * local_radius * 0.76,
+                ))
+            for index in range(GROVE_TRUNK_SIDES):
+                following = (index + 1) % GROVE_TRUNK_SIDES
+                self.outward_triangle(
+                    trunk_bottom_points[index], trunk_top_points[index],
+                    trunk_top_points[following], trunk_color, trunk_center
+                )
+                self.outward_triangle(
+                    trunk_bottom_points[index], trunk_top_points[following],
+                    trunk_bottom_points[following], trunk_color, trunk_center
+                )
+            self.trunk_count += 1
 
 
 def compile_semantic_groves(
@@ -935,8 +1310,11 @@ def compile_semantic_groves(
     dtm_local: np.ndarray,
     canopy_height: np.ndarray,
     density: np.ndarray,
+    building_height: np.ndarray,
+    ground_image: np.ndarray,
+    ground_bounds: tuple[float, float, float, float],
 ) -> tuple[list[dict[str, float]], np.ndarray, dict[str, Any]]:
-    """Compile one three-crown rounded grove per significant 32 m semantic canopy cell."""
+    """Compile connected crown shells and grounded trunks from semantic canopy cells."""
 
     source = eligible & (radius <= GEOMETRY_OUTER_RADIUS_METERS)
     rows, columns = source.shape
@@ -945,7 +1323,7 @@ def compile_semantic_groves(
     source_blocks = block_counts(source, GROVE_CELL_PIXELS)
     selected_blocks = source_blocks >= GROVE_MINIMUM_ELIGIBLE_PIXELS
     represented = np.zeros_like(source)
-    groves: list[dict[str, float]] = []
+    candidates: list[dict[str, Any]] = []
     for block_row, block_column in np.argwhere(selected_blocks):
         row0 = int(block_row) * GROVE_CELL_PIXELS
         column0 = int(block_column) * GROVE_CELL_PIXELS
@@ -964,26 +1342,41 @@ def compile_semantic_groves(
         center_row = int(round(float(np.average(global_rows, weights=weights))))
         center_column = int(round(float(np.average(global_columns, weights=weights))))
         center_ground = float(np.median(dtm_local[global_rows, global_columns]))
+        density_mean = float(np.mean(local_density))
         calibrated_height = float(np.clip(
-            np.percentile(local_height, 75.0) * GROVE_HEIGHT_SCALE +
+            np.percentile(local_height, 80.0) * GROVE_HEIGHT_SCALE +
             GROVE_HEIGHT_BIAS_METERS,
             GROVE_MINIMUM_HEIGHT_METERS,
             GROVE_MAXIMUM_HEIGHT_METERS,
         ))
+        # Nearby building height supplies a stable scene-scale sanity bound.
+        # Mature riparian crowns may exceed a house, but cannot become the
+        # giant props reported in worn review.  Sparse returns receive the
+        # tighter cap; dense grove evidence retains mature cottonwood height.
+        neighborhood = building_height[
+            max(0, row0 - GROVE_CELL_PIXELS) : min(rows, row0 + GROVE_CELL_PIXELS * 2),
+            max(0, column0 - GROVE_CELL_PIXELS) : min(columns, column0 + GROVE_CELL_PIXELS * 2),
+        ]
+        nearby_buildings = neighborhood[neighborhood > 1.0]
+        density_cap = 14.0 + min(1.0, max(0.0, (density_mean - 0.25) / 0.50)) * 10.0
+        if nearby_buildings.size:
+            scale_cap = float(np.clip(np.percentile(nearby_buildings, 75.0) * 1.85, 10.0, 22.0))
+            calibrated_height = min(calibrated_height, scale_cap)
+        calibrated_height = min(calibrated_height, density_cap)
         span_x = float(np.ptp(x[global_rows, global_columns]) + 4.0)
         span_z = float(np.ptp(z[global_rows, global_columns]) + 4.0)
         identity = zlib.crc32(f"{int(block_row)}:{int(block_column)}".encode("ascii"))
         seed = ((identity >> 8) & 0xFF) / 255.0
         variation = 0.90 + (identity & 0xFF) / 255.0 * 0.20
         radius_x = float(np.clip(
-            max(5.0, span_x * 0.56, calibrated_height * 0.36) * variation,
-            5.0,
-            17.0,
+            max(8.0, span_x * 0.58, calibrated_height * 0.45) * variation,
+            8.0,
+            24.0,
         ))
         radius_z = float(np.clip(
-            max(5.0, span_z * 0.56, calibrated_height * 0.36) / variation,
-            5.0,
-            17.0,
+            max(8.0, span_z * 0.58, calibrated_height * 0.45) / variation,
+            8.0,
+            24.0,
         ))
 
         # Explicit roads/buildings/operational surfaces are hard exclusions. A
@@ -1007,11 +1400,62 @@ def compile_semantic_groves(
                 break
             radius_x *= 0.86
             radius_z *= 0.86
-        if radius_x < 4.0 or radius_z < 4.0:
+        if radius_x < 5.0 or radius_z < 5.0:
             continue
 
-        represented[global_rows, global_columns] = True
-        groves.append({
+        # Never inflate height merely to cover a wide semantic cell: that made
+        # the median authored crown 2.29x the lidar estimate.  Preserve the
+        # bounded lidar/building calibration and shrink horizontal extent
+        # instead.  The continuous terrain canopy map retains the full source
+        # footprint beneath these screen-relevant volumes.
+        maximum_plausible_radius = calibrated_height * 0.64
+        radius_x = min(radius_x, maximum_plausible_radius)
+        radius_z = min(radius_z, maximum_plausible_radius)
+
+        # Conservative transition-angle bounds include every authored vertical
+        # and radial harmonic. They prevent both flat pancakes and needle-like
+        # crowns while retaining low-frequency organic variation.
+        maximum_radius = max(radius_x, radius_z)
+        minimum_radius = min(radius_x, radius_z)
+        crown_bottom_ratio = max(1.4 / calibrated_height, 0.14) + 0.01
+        top_transition_angle = math.degrees(math.atan2(
+            calibrated_height * (0.975 - 0.645),
+            maximum_radius * 0.86 * 1.11,
+        ))
+        bottom_transition_angle = math.degrees(math.atan2(
+            calibrated_height * (0.465 - crown_bottom_ratio),
+            maximum_radius * 0.74,
+        ))
+        maximum_top_transition_angle = math.degrees(math.atan2(
+            calibrated_height * (1.005 - 0.595),
+            minimum_radius * 0.86 * 0.89,
+        ))
+        maximum_bottom_transition_angle = math.degrees(math.atan2(
+            calibrated_height * (0.495 - crown_bottom_ratio),
+            minimum_radius * 0.66,
+        ))
+        if (
+            top_transition_angle < 24.0
+            or bottom_transition_angle < 24.0
+            or maximum_top_transition_angle > 72.0
+            or maximum_bottom_transition_angle > 72.0
+        ):
+            raise ValueError("Semantic grove crown angle contract failed")
+        ground_color = robust_canopy_ground_color(
+            ground_image,
+            ground_bounds,
+            x[global_rows, global_columns],
+            z[global_rows, global_columns],
+        )
+        distance_from_origin = float(radius[center_row, center_column])
+        near_detail = distance_from_origin <= NEAR_GROVE_RADIUS_METERS
+        near_tree_count = int(np.clip(
+            round(3.0 + density_mean * 2.0 + len(global_rows) / 20.0),
+            NEAR_TREE_MINIMUM,
+            NEAR_TREE_MAXIMUM,
+        ))
+
+        candidates.append({
             "x": center_x,
             "z": center_z,
             "ground": center_ground,
@@ -1020,10 +1464,68 @@ def compile_semantic_groves(
             "radius_z": radius_z,
             "rotation": (identity % 3600) / 3600.0 * math.tau,
             "seed": seed,
-            "density": float(np.mean(local_density)),
+            "density": density_mean,
+            "ground_color_r": ground_color[0],
+            "ground_color_g": ground_color[1],
+            "ground_color_b": ground_color[2],
+            "top_transition_angle_degrees": top_transition_angle,
+            "bottom_transition_angle_degrees": bottom_transition_angle,
+            "maximum_top_transition_angle_degrees": maximum_top_transition_angle,
+            "maximum_bottom_transition_angle_degrees": maximum_bottom_transition_angle,
             "source_pixel_count": float(len(global_rows)),
+            "distance_from_origin": distance_from_origin,
+            "near_detail": 1.0 if near_detail else 0.0,
+            "near_tree_count": near_tree_count if near_detail else 0,
+            "source_rows": global_rows,
+            "source_columns": global_columns,
+            "crown_segments": (
+                NEAR_GROVE_SEGMENTS
+                if float(radius[center_row, center_column]) <= NEAR_GROVE_RADIUS_METERS
+                else MID_GROVE_SEGMENTS
+                if float(radius[center_row, center_column]) <= MID_GROVE_RADIUS_METERS
+                else FAR_GROVE_SEGMENTS
+            ),
+            "peak_count": 1,
+            "trunk_count": (
+                NEAR_MID_GROVE_TRUNKS
+                if float(radius[center_row, center_column]) <= MID_GROVE_RADIUS_METERS
+                else FAR_GROVE_TRUNKS
+            ),
+            "priority": float(
+                len(global_rows) * 2.0 + density_mean * 12.0 +
+                calibrated_height * 0.18 + max(0.0, 1.0 - float(radius[center_row, center_column]) /
+                                                GEOMETRY_OUTER_RADIUS_METERS) * 2.0
+            ),
         })
-    triangle_count = len(groves) * (GROVE_CROWN_SEGMENTS * 12 + 8)
+    candidates.sort(key=lambda item: (
+        -float(item["near_detail"]),
+        -float(item["priority"]),
+        float(item["x"]),
+        float(item["z"]),
+    ))
+    selected: list[dict[str, Any]] = []
+    triangle_count = 0
+    for item in candidates:
+        item_triangles = (
+            int(item["near_tree_count"]) * NEAR_TREE_TRIANGLES
+            if float(item["near_detail"]) > 0.5
+            else (
+                int(item["crown_segments"]) * 4
+                + (int(item["peak_count"]) - 1) * 2
+                + int(item["trunk_count"]) * GROVE_TRUNK_SIDES * 2
+            )
+        )
+        if triangle_count + item_triangles > MAXIMUM_MESH_TRIANGLES:
+            continue
+        selected.append(item)
+        triangle_count += item_triangles
+        if triangle_count >= TARGET_MESH_TRIANGLES:
+            break
+    groves: list[dict[str, float]] = []
+    for item in selected:
+        represented[item.pop("source_rows"), item.pop("source_columns")] = True
+        item.pop("priority")
+        groves.append(item)
     if triangle_count > MAXIMUM_MESH_TRIANGLES:
         raise ValueError(
             f"Semantic grove topology exceeds {MAXIMUM_MESH_TRIANGLES:,} triangles: "
@@ -1033,8 +1535,35 @@ def compile_semantic_groves(
         "cell_meters": GROVE_CELL_PIXELS * 4.0,
         "minimum_eligible_pixels_per_cell": GROVE_MINIMUM_ELIGIBLE_PIXELS,
         "grove_count": len(groves),
-        "crown_lobes_per_grove": 3,
-        "grounded_trunks_per_grove": 1,
+        "candidate_grove_count": len(candidates),
+        "maximum_grove_count": MAXIMUM_GROVE_COUNT,
+        "interlocking_crown_shells_per_grove": GROVE_CROWN_LOBES,
+        "crown_undulations_per_grove": GROVE_CROWN_SEGMENTS,
+        "crown_segment_range": [FAR_GROVE_SEGMENTS, NEAR_GROVE_SEGMENTS],
+        "crown_peak_range": [1, 1],
+        "near_tree_count": sum(int(item["near_tree_count"]) for item in groves),
+        "near_detailed_grove_count": sum(
+            1 for item in groves if float(item["near_detail"]) > 0.5
+        ),
+        "near_tree_range_per_grove": [NEAR_TREE_MINIMUM, NEAR_TREE_MAXIMUM],
+        "near_branch_count_per_tree": NEAR_TREE_BRANCHES,
+        "near_foliage_card_count_per_tree": NEAR_TREE_FOLIAGE_CARDS,
+        "grounded_trunks_per_grove": GROVE_TRUNKS_PER_GROVE,
+        "grounded_trunk_range": [FAR_GROVE_TRUNKS, NEAR_MID_GROVE_TRUNKS],
+        "near_detail_radius_meters": NEAR_GROVE_RADIUS_METERS,
+        "mid_detail_radius_meters": MID_GROVE_RADIUS_METERS,
+        "minimum_top_transition_angle_degrees": min(
+            float(item["top_transition_angle_degrees"]) for item in groves
+        ),
+        "maximum_top_transition_angle_degrees": max(
+            float(item["maximum_top_transition_angle_degrees"]) for item in groves
+        ),
+        "minimum_bottom_transition_angle_degrees": min(
+            float(item["bottom_transition_angle_degrees"]) for item in groves
+        ),
+        "maximum_bottom_transition_angle_degrees": max(
+            float(item["maximum_bottom_transition_angle_degrees"]) for item in groves
+        ),
         "represented_source_pixel_count": int(np.count_nonzero(represented)),
         "source_pixel_count_0_1500m": int(np.count_nonzero(source)),
         "source_coverage_fraction_0_1500m": float(
@@ -1062,7 +1591,7 @@ def write_obj_batches(
         product_vertices = np.asarray(batch.vertices, dtype=np.float64)
         lines = [
             "# QuestFlight Photoreal Aerial Surface V1",
-            "# Three-lobe semantic grove crowns and grounded trunks; product AEQD +X east, +Y up, +Z north; metres",
+            "# Connected semantic grove crowns and grounded trunks; product AEQD +X east, +Y up, +Z north; metres",
             f"o {batch.name}",
             f"g {batch.name}",
             "s 1",
@@ -1071,14 +1600,17 @@ def write_obj_batches(
             f"v {x:.3f} {y:.3f} {z:.3f} " + " ".join(f"{value:.6f}" for value in color)
             for (x, y, z), color in zip(product_vertices, batch.colors)
         )
-        lines.extend(f"f {a} {b} {c}" for a, b, c in batch.faces)
+        lines.extend(f"vt {u:.6f} {v:.6f}" for u, v in batch.uvs)
+        lines.extend(f"f {a}/{a} {b}/{b} {c}/{c}" for a, b, c in batch.faces)
         path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
-        write_model_meta(path, "Rounded semantic canopy grove source; compiled offline")
+        write_model_meta(path, "Connected semantic canopy grove source; compiled offline")
         results.append(
             {
                 **file_record(path, "production_canopy_surface_mesh_batch"),
                 "batch_key": {"x": key[0], "z": key[1]},
                 "crown_count": batch.crown_count,
+                "branch_count": batch.branch_count,
+                "foliage_card_count": batch.foliage_card_count,
                 "material_slots": 1,
                 "object_name": batch.name,
                 "horizontal_frame": "KBDU product-local WGS84 azimuthal equidistant",
@@ -1403,6 +1935,8 @@ def build(
     )
     canopy_height = surface[:, :, 0].astype(np.float64) * 0.25
     canopy_density = surface[:, :, 1].astype(np.float64) / 255.0
+    building_height = surface[:, :, 2].astype(np.float64) * 0.25
+    ground_image, ground_bounds, ground_image_record = load_near_ground_imagery()
     groves, geometry_source_owned, grove_metrics = compile_semantic_groves(
         eligible,
         geometry_exclusion,
@@ -1412,7 +1946,11 @@ def build(
         dtm_local,
         canopy_height,
         canopy_density,
+        building_height,
+        ground_image,
+        ground_bounds,
     )
+    del ground_image
     geometry_ownership = geometry_source_owned
     # Terrain shading remains continuous under the opaque crown volumes. This
     # is an intentional layered representation, not duplicate raised geometry.
@@ -1593,7 +2131,7 @@ def build(
             "Not for navigation and not surveyed vegetation geometry.",
             "Canopy fields are return-structure heuristics because the bounded source has no LAS vegetation classes.",
             "Existing OSM-derived building, road, water, apron, taxiway, runway-safety, and parking masks reject lidar return-structure false positives before geometry ownership is assigned.",
-            "Rounded grove volumes are a deterministic visual compilation of canopy evidence, not surveyed individual-tree geometry.",
+            "Connected grove crown shells are a deterministic visual compilation of canopy evidence, not surveyed individual-tree geometry.",
             "Authored crown height applies a documented bounded calibration above the heuristic lidar HAG to match mature Front Range grove silhouettes observed in the orthophoto shadow context.",
             "The prior block-grid raised-grove candidate remains recorded as rejected evidence; it does not enter runtime dependency closure.",
             "Two exact, signature-pinned pre-exclusion components are removed after direct review against the licensed 2020 City orthophoto; no global imagery-likelihood threshold is applied.",
@@ -1601,8 +2139,8 @@ def build(
             "The lidar data textures remain on the UTM13N raster grid; runtime world-space sampling must apply the exact product-AEQD-to-UTM transform before deriving texture UVs.",
         ],
         "ownership": {
-            "0_to_1500_meters": "rounded opaque semantic grove crowns and grounded trunks over continuous terrain canopy shading",
-            "beyond_1500_meters": "terrain canopy height, normal, density, and occlusion maps only",
+            "0_to_2040_meters": "connected opaque semantic grove crowns and grounded trunks over continuous terrain canopy shading",
+            "beyond_2040_meters": "orthophoto plus terrain canopy height, normal, density, and occlusion maps where source coverage exists",
             "building_and_hero_volume_exclusion": file_record(building_mask_path),
             "geometry_overlays_continuous_terrain_handoff": True,
             "reviewed_noncanopy_components_are_excluded_from_geometry_and_handoff": True,
@@ -1614,7 +2152,15 @@ def build(
             "match_mode": "exact_pre_exclusion_geometry_component",
         },
         "representation": {
-            "boundary_closure": "rounded crown lower pole with grounded four-sided trunk; no vertical skirts",
+            "boundary_closure": "rounded multi-ring crown lower pole with grounded triangular-prism trunks; no vertical skirts",
+            "canopy_color_registration": {
+                "source": "near_4km orthophoto",
+                "semantic_samples": "lidar-supported canopy pixels",
+                "bounded_local_search_meters": 12.0,
+                "local_search_filter": "vegetation chromaticity only",
+                "luminance_percentile_ceiling": 55.0,
+                "runtime_double_lighting_compensation": 0.74,
+            },
             "coarse_cell_meters": pixel_size * COARSE_CELL_PIXELS,
             "coarse_minimum_eligible_pixels": COARSE_MINIMUM_ELIGIBLE_PIXELS,
             "hlod_rectangles": False,
@@ -1630,6 +2176,17 @@ def build(
             "semantic_grove_cell_meters": GROVE_CELL_PIXELS * pixel_size,
             "semantic_grove_minimum_eligible_pixels": GROVE_MINIMUM_ELIGIBLE_PIXELS,
             "semantic_grove_crown_segments": GROVE_CROWN_SEGMENTS,
+            "semantic_grove_crown_segment_range": [
+                FAR_GROVE_SEGMENTS,
+                NEAR_GROVE_SEGMENTS,
+            ],
+            "semantic_grove_crown_lobes": GROVE_CROWN_LOBES,
+            "semantic_grove_trunks_per_grove": GROVE_TRUNKS_PER_GROVE,
+            "semantic_grove_trunk_range": [
+                FAR_GROVE_TRUNKS,
+                NEAR_MID_GROVE_TRUNKS,
+            ],
+            "semantic_grove_trunk_sides": GROVE_TRUNK_SIDES,
             "semantic_grove_count": len(groves),
             "height_calibration": {
                 "lidar_multiplier": GROVE_HEIGHT_SCALE,
@@ -1648,6 +2205,9 @@ def build(
             "building_ownership_mask": file_record(building_mask_path),
             "generator": file_record(Path(__file__).resolve()),
             "lidar_manifest": file_record(source_manifest_path),
+            "near_ground_imagery": file_record(
+                verify_source_asset(ground_image_record)
+            ),
             "operational_exclusion_contract": file_record(operational_exclusion_contract_path),
             "operational_exclusion_mask": file_record(operational_exclusion_mask_path),
             "reviewed_noncanopy_exclusion_contract": file_record(
@@ -1665,10 +2225,40 @@ def build(
             "minimum_grove_span_meters": MINIMUM_GROVE_SPAN_METERS,
         },
         "topology": {
-            "rounded_crown_count": len(groves),
-            "grounded_trunk_count": len(groves),
-            "rounded_crown_triangle_count": len(groves) * GROVE_CROWN_SEGMENTS * 4,
-            "grounded_trunk_triangle_count": len(groves) * 8,
+            "connected_crown_count": len(groves) * GROVE_CROWN_LOBES,
+            "near_detailed_grove_count": sum(
+                1 for item in groves if float(item["near_detail"]) > 0.5
+            ),
+            "near_tree_count": sum(int(item["near_tree_count"]) for item in groves),
+            "grounded_trunk_count": sum(
+                int(item["near_tree_count"])
+                if float(item["near_detail"]) > 0.5
+                else int(item["trunk_count"])
+                for item in groves
+            ),
+            "connected_crown_triangle_count": sum(
+                int(item["crown_segments"]) * 4
+                + (int(item["peak_count"]) - 1) * 2
+                for item in groves
+                if float(item["near_detail"]) <= 0.5
+            ),
+            "grounded_trunk_triangle_count": (
+                sum(
+                    int(item["near_tree_count"])
+                    if float(item["near_detail"]) > 0.5
+                    else int(item["trunk_count"])
+                    for item in groves
+                )
+                * GROVE_TRUNK_SIDES * 2
+            ),
+            "near_branch_triangle_count": (
+                sum(int(item["near_tree_count"]) for item in groves)
+                * NEAR_TREE_BRANCHES * GROVE_TRUNK_SIDES * 2
+            ),
+            "near_foliage_card_triangle_count": (
+                sum(int(item["near_tree_count"]) for item in groves)
+                * NEAR_TREE_FOLIAGE_CARDS * 2
+            ),
             "coarse_tapered_boundary_quad_count": 0,
             "coarse_top_quad_count": 0,
             "refinement_tapered_boundary_quad_count": 0,

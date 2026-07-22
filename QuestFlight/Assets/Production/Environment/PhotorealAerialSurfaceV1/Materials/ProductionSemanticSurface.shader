@@ -13,6 +13,8 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
         _FacadeNormal ("Shared facade normal", 2D) = "bump" {}
         _FacadeReflectionCube ("Static ground/sky facade reflection", Cube) = "black" {}
         _CanopyNormalOcclusion ("Canopy normal and occlusion", 2D) = "gray" {}
+        _CanopyFoliageAlbedo ("Project-owned canopy foliage detail", 2D) = "gray" {}
+        _NearFoliageAtlas ("Project-owned perforated near foliage atlas", 2D) = "white" {}
         _NormalizedSurfaceHeight ("Normalized surface height", 2D) = "black" {}
         _NearWorldMinInvSize ("Near min XZ / inverse size", Vector) = (-2000,-2000,0.00025,0.00025)
         _RecoveryMidNWWorldMinInvSize ("Mid NW min XZ / inverse size", Vector) = (-4032,-32,0.000246063,0.000246063)
@@ -32,6 +34,8 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
         _SideRoughness ("Side roughness", Range(0,1)) = 0.82
         _CanopyNormalStrength ("Canopy normal strength", Range(0,1)) = 0.42
         _AmbientFloor ("Linear ambient floor", Range(0,0.4)) = 0.22
+        _FoliageCutoff ("Near foliage alpha cutoff", Range(0,1)) = 0.30
+        [Enum(UnityEngine.Rendering.CullMode)] _Cull ("Cull", Float) = 2
         _DiagnosticMode ("Editor diagnostic", Float) = 0
     }
 
@@ -39,9 +43,10 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
     {
         Tags { "RenderType"="Opaque" "Queue"="Geometry" }
         LOD 110
-        Cull Back
+        Cull [_Cull]
         ZWrite On
         ZTest LEqual
+        AlphaToMask On
 
         Pass
         {
@@ -65,6 +70,8 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
             sampler2D _FacadeNormal;
             samplerCUBE _FacadeReflectionCube;
             sampler2D _CanopyNormalOcclusion;
+            sampler2D _CanopyFoliageAlbedo;
+            sampler2D _NearFoliageAtlas;
             sampler2D _NormalizedSurfaceHeight;
             float4 _NearWorldMinInvSize;
             float4 _RecoveryMidNWWorldMinInvSize;
@@ -85,6 +92,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
             half _SideRoughness;
             half _CanopyNormalStrength;
             half _AmbientFloor;
+            half _FoliageCutoff;
             half _DiagnosticMode;
 
             struct appdata
@@ -230,9 +238,9 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 // Atlas scale is expressed in repeats per metre. The previous
                 // values enlarged brick courses, panels, and corrugation enough
                 // to read as a toy skin in-headset.
-                float physicalScale = tileIndex < 0.5 ? 0.68 :
-                    (tileIndex < 1.5 ? 0.34 :
-                    (tileIndex < 6.0 ? 0.22 : 0.38));
+                float physicalScale = tileIndex < 0.5 ? 0.90 :
+                    (tileIndex < 1.5 ? 0.48 :
+                    (tileIndex < 6.0 ? 0.34 : 0.56));
                 float2 localUv = wallUv * physicalScale;
                 float2 atlasUv = (cell + 0.02 + frac(localUv) * 0.96) * 0.25;
                 float3 albedo = tex2D(_FacadeAtlas, atlasUv).rgb;
@@ -243,14 +251,18 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 float commercial = step(80.0, usageCode) * (1.0 - step(112.0, usageCode));
                 float industrial = step(112.0, usageCode) * (1.0 - step(144.0, usageCode));
                 float seed = semanticData.g;
-                float3 residentialTint = lerp(float3(0.82, 0.78, 0.70),
-                                               float3(1.05, 1.02, 0.94), seed);
-                float3 civicTint = lerp(float3(0.86, 0.89, 0.92),
-                                        float3(1.04, 0.98, 0.88), seed);
-                float3 commercialTint = lerp(float3(0.82, 0.88, 0.94),
-                                             float3(1.02, 1.03, 1.0), seed);
-                float3 industrialTint = lerp(float3(0.76, 0.79, 0.80),
-                                             float3(1.03, 0.98, 0.90), seed);
+                float palette = floor(seed * 4.0);
+                float3 residentialTint = palette < 1.0 ? float3(0.91, 0.83, 0.72) :
+                    (palette < 2.0 ? float3(1.02, 0.98, 0.90) :
+                    (palette < 3.0 ? float3(0.80, 0.88, 0.91) : float3(0.94, 0.90, 0.82)));
+                float3 civicTint = palette < 2.0 ? float3(0.90, 0.92, 0.94) :
+                    float3(1.02, 0.96, 0.84);
+                float3 commercialTint = palette < 1.0 ? float3(0.78, 0.86, 0.94) :
+                    (palette < 2.0 ? float3(0.93, 0.95, 0.96) :
+                    (palette < 3.0 ? float3(0.82, 0.90, 0.86) : float3(0.94, 0.88, 0.78)));
+                float3 industrialTint = palette < 1.0 ? float3(0.72, 0.76, 0.78) :
+                    (palette < 2.0 ? float3(0.88, 0.89, 0.86) :
+                    (palette < 3.0 ? float3(0.80, 0.85, 0.88) : float3(0.94, 0.88, 0.74)));
                 float3 familyTint = residentialTint * residential + civicTint * civic +
                     commercialTint * commercial + industrialTint * industrial +
                     float3(0.93, 0.94, 0.92) *
@@ -310,8 +322,8 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 float module = frac((horizontal - cornerClearance) / moduleWidth + stableSeed * 0.17);
                 float storey = frac(heightAboveBase / floorHeight);
                 float pixelFootprint = max(fwidth(horizontal), fwidth(heightAboveBase));
-                float featureFade = 1.0 - smoothstep(0.10, 0.30, pixelFootprint);
-                float edge = saturate(pixelFootprint * 0.35 + 0.012);
+                float featureFade = 1.0 - smoothstep(0.22, 0.65, pixelFootprint);
+                float edge = saturate(pixelFootprint * 0.18 + 0.007);
 
                 float residentialWindow = SoftInterval(module, 0.30, 0.70, edge) *
                     SoftInterval(storey, 0.30, 0.75, edge);
@@ -324,9 +336,24 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     step(0.58, frac(stableSeed * 19.17 + floor(horizontal / moduleWidth)));
                 float otherWindow = SoftInterval(module, 0.31, 0.69, edge) *
                     SoftInterval(storey, 0.31, 0.74, edge);
+                float residentialOuter = SoftInterval(module, 0.25, 0.75, edge) *
+                    SoftInterval(storey, 0.25, 0.80, edge);
+                float civicOuter = SoftInterval(module, 0.19, 0.81, edge) *
+                    SoftInterval(storey, 0.18, 0.83, edge);
+                float commercialOuter = SoftInterval(module, 0.15, 0.85, edge) *
+                    SoftInterval(storey, 0.17, 0.85, edge);
+                float industrialOuter = SoftInterval(module, 0.31, 0.69, edge) *
+                    SoftInterval(storey, 0.59, 0.88, edge) *
+                    step(0.58, frac(stableSeed * 19.17 + floor(horizontal / moduleWidth)));
+                float otherOuter = SoftInterval(module, 0.26, 0.74, edge) *
+                    SoftInterval(storey, 0.26, 0.79, edge);
                 windowMask = (residentialWindow * residential + civicWindow * civic +
                     commercialWindow * commercial + industrialWindow * industrial +
                     otherWindow * (1.0h - saturate(residential + civic + commercial + industrial))) *
+                    featureFade * usableWall;
+                float windowOuter = (residentialOuter * residential + civicOuter * civic +
+                    commercialOuter * commercial + industrialOuter * industrial +
+                    otherOuter * (1.0 - saturate(residential + civic + commercial + industrial))) *
                     featureFade * usableWall;
 
                 float groundStorey = 1.0 - smoothstep(floorHeight, floorHeight + 0.25,
@@ -340,6 +367,8 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     SoftInterval(heightAboveBase, 0.06, doorHeight, edge) *
                     groundStorey * featureFade * entranceWall * usableWall;
                 windowMask *= 1.0 - doorMask;
+                windowOuter *= 1.0 - doorMask;
+                float windowFrame = saturate(windowOuter - windowMask);
 
                 // Static, opaque sky/ground colors provide reflection cues without an
                 // additional transparent pass or realtime probe.  A restrained sunward
@@ -355,16 +384,27 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 float3 doorColor = industrial > 0.5
                     ? float3(0.19, 0.21, 0.22)
                     : float3(0.15, 0.11, 0.085);
-                facade = lerp(facade, bakedWindow, windowMask * 0.92);
+                float3 frameColor = lerp(float3(0.82, 0.84, 0.82),
+                    float3(0.17, 0.18, 0.18), industrial + commercial * 0.65);
+                facade = lerp(facade, frameColor, windowFrame * 0.88);
+                facade = lerp(facade, bakedWindow, windowMask * 0.98);
                 facade = lerp(facade, doorColor, doorMask * 0.90);
                 bakedGlint = windowMask * featureFade;
                 return facade;
             }
 
-            fixed4 frag(v2f input) : SV_Target
+            fixed4 frag(v2f input, fixed facing : VFACE) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 geometricNormal = normalize(input.worldNormal);
+                half nearFoliageCard = step(0.0h, input.wallUv.x) * step(0.5h, _SemanticMode);
+                fixed4 nearFoliage = fixed4(1.0h, 1.0h, 1.0h, 1.0h);
+                UNITY_BRANCH if (nearFoliageCard > 0.5h)
+                {
+                    nearFoliage = tex2D(_NearFoliageAtlas, input.wallUv);
+                    clip(nearFoliage.a - _FoliageCutoff);
+                    if (facing < 0.0h) geometricNormal = -geometricNormal;
+                }
                 half topWeight = smoothstep(0.54h, 0.78h, geometricNormal.y);
                 half bottomWeight = smoothstep(0.54h, 0.88h, -geometricNormal.y);
                 float2 world = input.worldPosition.xz;
@@ -409,6 +449,9 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 {
                     roughness = _SideRoughness;
                     half trunkMask = step(0.5h, input.semanticData.r);
+                    half semanticSeed = frac(sin(dot(
+                        floor(input.worldPosition.xz / 16.0h),
+                        half2(12.9898h, 78.233h))) * 43758.5453h);
                     float2 canopySource = ProductToCanopySource(world);
                     float2 canopySourceDx = ProductDerivativeToCanopySource(worldDx);
                     float2 canopySourceDy = ProductDerivativeToCanopySource(worldDy);
@@ -421,33 +464,67 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                                      _CanopyNormalStrength;
                     half3 sampledNormal = normalize(half3(normalXZ.x, 1.0h, normalXZ.y));
                     geometricNormal = normalize(lerp(geometricNormal, sampledNormal, topWeight));
+                    half microX = sin(input.worldPosition.x * 0.83h +
+                        sin(input.worldPosition.y * 1.37h +
+                        input.worldPosition.z * 0.61h + semanticSeed * 9.7h));
+                    half microZ = sin(input.worldPosition.z * 0.91h +
+                        sin(input.worldPosition.x * 0.57h -
+                        input.worldPosition.y * 1.21h + semanticSeed * 11.3h));
+                    geometricNormal = normalize(geometricNormal +
+                        half3(microX, 0.0h, microZ) * (0.075h + 0.035h * topWeight));
                     topColor *= lerp(0.72h, 1.0h, canopy.a);
                     surfaceAo = canopy.a;
-                    // Crown color is anchored to the exact orthophoto below it. This keeps
-                    // raised volume visually continuous with every photographed grove
-                    // instead of imposing a disconnected generic green. Vertex R=1 marks
-                    // the sparse grounded trunks compiled into the same opaque draw.
-                    fixed3 localCanopyColor = topColor *
-                        lerp(fixed3(0.92h, 0.95h, 0.89h), fixed3(1.0h, 1.0h, 0.96h),
-                            input.semanticData.g);
-                    // Retain the local photographic luminance while gently restoring
-                    // foliage chroma.  This keeps crowns registered to the imagery
-                    // without projecting beige soil/roof pixels onto their sides.
+                    // GBA carries the offline robust median of lidar-supported
+                    // canopy pixels in the exact ground tile. Sampling it once per
+                    // semantic cell prevents pale soil at a broad crown edge from
+                    // washing out the complete grove while retaining local hue.
+                    fixed3 localCanopyColor = GammaToLinearSpace(input.semanticData.gba);
+                    half densityProxy = saturate(canopy.a);
                     half localLuminance = max(0.04h,
                         dot(localCanopyColor, fixed3(0.2126h, 0.7152h, 0.0722h)));
+                    // The sampled orthophoto already contains the real canopy's
+                    // sun/ambient response. Compensate for lighting it a second
+                    // time on raised geometry, while retaining the sampled hue.
+                    // This keeps the crown registered to the ground tile instead
+                    // of lifting every cell toward the same pale olive.
+                    half crownLuminance = clamp(localLuminance * 0.74h, 0.025h, 0.18h);
                     fixed3 foliageReference = lerp(
-                        fixed3(0.46h, 0.56h, 0.30h),
-                        fixed3(0.32h, 0.52h, 0.19h), input.semanticData.g);
-                    foliageReference *= lerp(0.94h, 1.06h, input.semanticData.b);
+                        fixed3(0.19h, 0.30h, 0.105h),
+                        fixed3(0.12h, 0.25h, 0.070h), densityProxy);
+                    foliageReference *= lerp(0.94h, 1.06h, semanticSeed);
                     half foliageLuminance = max(0.04h,
                         dot(foliageReference, fixed3(0.2126h, 0.7152h, 0.0722h)));
-                    fixed3 crownColor = lerp(localCanopyColor,
-                        foliageReference * (localLuminance / foliageLuminance), 0.46h);
-                    fixed3 crownSide = lerp(_CanopySideTint.rgb, crownColor, 0.74h) *
+                    fixed3 registeredLocalCanopy = localCanopyColor *
+                        (crownLuminance / localLuminance);
+                    float2 foliageTopUv = input.worldPosition.xz * 0.082h +
+                        semanticSeed * 13.7h;
+                    float2 foliageSideUv = lerp(input.worldPosition.zy, input.worldPosition.xy,
+                        step(abs(geometricNormal.z), abs(geometricNormal.x))) * 0.095h +
+                        semanticSeed * 9.3h;
+                    fixed3 foliageDetail = tex2D(_CanopyFoliageAlbedo,
+                        lerp(foliageSideUv, foliageTopUv, topWeight)).rgb;
+                    half detailLuminance = max(0.04h,
+                        dot(foliageDetail, fixed3(0.2126h, 0.7152h, 0.0722h)));
+                    half foliageDetailModulation = clamp(
+                        detailLuminance / 0.27h, 0.68h, 1.28h);
+                    fixed3 crownColor = lerp(registeredLocalCanopy,
+                        foliageReference * (crownLuminance / foliageLuminance), 0.12h);
+                    crownColor *= foliageDetailModulation;
+                    UNITY_BRANCH if (nearFoliageCard > 0.5h)
+                    {
+                        half atlasLuminance = max(0.035h,
+                            dot(nearFoliage.rgb, fixed3(0.2126h, 0.7152h, 0.0722h)));
+                        fixed3 registeredAtlas = nearFoliage.rgb *
+                            (crownLuminance / atlasLuminance);
+                        crownColor = lerp(registeredLocalCanopy, registeredAtlas, 0.86h);
+                        surfaceAo = lerp(surfaceAo, 0.82h, 0.72h);
+                        roughness = 0.86h;
+                    }
+                    fixed3 crownSide = lerp(_CanopySideTint.rgb, crownColor, 0.88h) *
                                        lerp(0.84h, 1.0h, canopy.a);
                     fixed3 trunkColor = lerp(fixed3(0.16h, 0.105h, 0.058h),
                                              fixed3(0.27h, 0.19h, 0.10h),
-                                             input.semanticData.b);
+                                             semanticSeed);
                     sideColor = lerp(crownSide, trunkColor, trunkMask);
                     topColor = lerp(crownColor, trunkColor, trunkMask);
                     roughness = lerp(roughness, 0.94h, trunkMask);
@@ -471,6 +548,13 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     lerp(52.0h, 6.0h, roughness)) * (1.0h - roughness) *
                     lerp(0.08h, 0.24h, metallic);
                 color += _LightColor0.rgb * specular;
+                if (_SemanticMode < 0.5h && topWeight > 0.001h)
+                {
+                    half3 roofReflectionDirection = reflect(-viewDirection, geometricNormal);
+                    half3 roofReflection = texCUBE(_FacadeReflectionCube,
+                        roofReflectionDirection).rgb;
+                    color += roofReflection * topWeight * (0.035h + (1.0h - roughness) * 0.055h);
+                }
                 if (_SemanticMode < 0.5h && facadeGlintMask > 0.001h)
                 {
                     half facadeSun = pow(saturate(dot(geometricNormal, halfDirection)), 28.0h);

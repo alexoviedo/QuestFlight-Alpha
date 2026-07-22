@@ -170,7 +170,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(surface.canopySurfaceRenderers, Has.Length.EqualTo(4));
             Assert.That(surface.canopySurfaceRenderers.Sum(item =>
                 (long)item.GetComponent<MeshFilter>().sharedMesh.GetIndexCount(0) / 3L),
-                Is.LessThanOrEqualTo(54000));
+                Is.LessThanOrEqualTo(59000));
             Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<LODGroup>(true), Is.Empty);
             Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
 

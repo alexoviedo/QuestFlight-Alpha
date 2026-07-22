@@ -41,11 +41,15 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             CockpitMaterialFolder + "/ProductionCockpitWindowReflection.mat";
         public const string InstrumentGlassMaterialPath =
             CockpitMaterialFolder + "/ProductionInstrumentGlassReflection.mat";
+        public const string CockpitStableInteriorShaderPath =
+            Root + "/Cockpit/Shaders/ProductionCockpitStableInterior.shader";
 
         public const string WindowShaderName =
             "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection";
         public const string InstrumentGlassShaderName =
             "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection";
+        public const string CockpitStableInteriorShaderName =
+            QuestFlightLab.Aircraft.ProductionAircraftLightingController.StableCockpitShaderName;
 
         public const string SourceSkyPath =
             "Assets/Production/Environment/Sky/Kloppenheim03_PureSky_2K.hdr";
@@ -81,6 +85,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             "Cessna_Exterior_Glass_MAT_0_Glass_MAT_0";
         public const string InstrumentCoverRendererName =
             "GlassPartNew_GlassMat_New_0_GlassMat_New_0";
+        public const string RejectedCockpitSunOcclusionObjectName =
+            "ProductionCockpitBakedSunOcclusion";
 
         private const int ReflectionEquirectangularWidth = 256;
         private const int ReflectionEquirectangularHeight = 128;
@@ -105,8 +111,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             ValidateRuntimeAssets();
             Debug.Log(
                 "[QuestFlight][PhotorealAerialReflection] Authored assets only: distinct 128-face static " +
-                "global and airport-local imagery-aware ground-sky cubemaps, two single-pass cockpit materials, " +
-                "and one default-off shadow profile. " +
+                "global and airport-local imagery-aware ground-sky cubemaps, two single-pass reflection materials, " +
+                "one geometry-bound cockpit depth shader, and one default-off shadow profile. " +
                 "No prefab, scene, camera, probe hierarchy, or project quality setting was changed.");
         }
 
@@ -456,7 +462,9 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             AppendFileManifestAsset(json, "window_shader",
                 Root + "/Cockpit/Shaders/ProductionCockpitWindowReflection.shader", true);
             AppendFileManifestAsset(json, "instrument_glass_shader",
-                Root + "/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader", false);
+                Root + "/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader", true);
+            AppendFileManifestAsset(json, "cockpit_stable_interior_shader",
+                CockpitStableInteriorShaderPath, false);
             json.AppendLine("  },");
             json.AppendLine("  \"integration_contract\": {");
             AppendJsonString(json, "global_reflection_mode",
@@ -583,7 +591,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
         {
             Shader windowShader = Shader.Find(WindowShaderName);
             Shader instrumentShader = Shader.Find(InstrumentGlassShaderName);
-            if (windowShader == null || instrumentShader == null)
+            Shader stableInteriorShader = Shader.Find(CockpitStableInteriorShaderName);
+            if (windowShader == null || instrumentShader == null || stableInteriorShader == null)
                 throw new InvalidOperationException("Reflection shaders did not import before material authoring.");
 
             Material window = LoadOrCreateMaterial(WindowMaterialPath, windowShader,
@@ -591,11 +600,11 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             window.SetTexture("_AuthoredReflectionCube", LoadRequired<Cubemap>(GlobalReflectionPath));
             window.SetColor("_WindshieldTint", new Color(0.77f, 0.86f, 0.95f, 1f));
             window.SetColor("_SideWindowTint", new Color(0.70f, 0.82f, 0.92f, 1f));
-            window.SetFloat("_WindshieldOpacity", 0.13f);
-            window.SetFloat("_SideWindowOpacity", 0.16f);
-            window.SetFloat("_FresnelOpacity", 0.18f);
-            window.SetFloat("_ReflectionStrength", 0.50f);
-            window.SetFloat("_DirectGlintStrength", 0.085f);
+            window.SetFloat("_WindshieldOpacity", 0.18f);
+            window.SetFloat("_SideWindowOpacity", 0.21f);
+            window.SetFloat("_FresnelOpacity", 0.24f);
+            window.SetFloat("_ReflectionStrength", 0.62f);
+            window.SetFloat("_DirectGlintStrength", 0.11f);
             window.SetFloat("_PerceptualRoughness", 0.14f);
             window.SetFloat("_SideAxisStart", 0.52f);
             window.SetFloat("_SideAxisEnd", 0.82f);
@@ -615,6 +624,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             instrument.enableInstancing = false;
             instrument.doubleSidedGI = false;
             EditorUtility.SetDirty(instrument);
+
         }
 
         private static void EnsureProfile(Cubemap globalCubemap, Cubemap airportLocalCubemap)
@@ -740,6 +750,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 if (lighting == null)
                     throw new InvalidOperationException("Authored aircraft lighting controller is missing.");
                 SerializedObject lightingSettings = new SerializedObject(lighting);
+                SetObject(lightingSettings, "stableCockpitShader",
+                    LoadRequired<Shader>(CockpitStableInteriorShaderPath));
                 SetFloat(lightingSettings, "staticDepthStrength",
                     QuestFlightLab.Aircraft.ProductionAircraftLightingController.DefaultStaticDepthStrength);
                 lightingSettings.ApplyModifiedPropertiesWithoutUndo();
@@ -752,6 +764,11 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     throw new InvalidOperationException("Authored cockpit root is missing.");
                 foreach (Transform item in cockpit.GetComponentsInChildren<Transform>(true))
                     item.gameObject.layer = 0;
+
+                Transform rejectedShadow = FindDescendant(
+                    rig.AircraftVisualRoot, RejectedCockpitSunOcclusionObjectName);
+                if (rejectedShadow != null)
+                    UnityEngine.Object.DestroyImmediate(rejectedShadow.gameObject);
 
                 int windowSlots = 0;
                 int instrumentSlots = 0;
@@ -830,6 +847,20 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     renderer.receiveShadows = false;
                     EditorUtility.SetDirty(renderer);
                 }
+
+                QuestFlightLab.Aircraft.AircraftVisibilityProfileController visibility =
+                    root.GetComponentInChildren<QuestFlightLab.Aircraft.AircraftVisibilityProfileController>(true);
+                if (visibility == null)
+                    throw new InvalidOperationException("Authored aircraft visibility profile is missing.");
+                SerializedObject visibilitySettings = new SerializedObject(visibility);
+                Renderer exteriorWindowRenderer = renderers.Single(renderer =>
+                    string.Equals(renderer.name, ExteriorWindowRendererName, StringComparison.Ordinal));
+                RewriteRendererArray(visibilitySettings, "cockpitOccludingExteriorRenderers",
+                    renderer => renderer != exteriorWindowRenderer, null);
+                RewriteRendererArray(visibilitySettings, "interiorRenderers",
+                    renderer => true, null);
+                visibilitySettings.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(visibility);
                 if (windowSlots != 1 || instrumentSlots != 2 || activeInstrumentSlots != 1 ||
                     exteriorWindowRenderers != 1)
                     throw new InvalidOperationException(
@@ -843,6 +874,25 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             {
                 PrefabUtility.UnloadPrefabContents(root);
             }
+        }
+
+        private static void RewriteRendererArray(
+            SerializedObject serialized,
+            string propertyName,
+            Func<Renderer, bool> keep,
+            Renderer append)
+        {
+            SerializedProperty property = RequiredProperty(serialized, propertyName);
+            List<Renderer> values = new List<Renderer>();
+            for (int index = 0; index < property.arraySize; index++)
+            {
+                Renderer renderer = property.GetArrayElementAtIndex(index).objectReferenceValue as Renderer;
+                if (renderer != null && keep(renderer) && !values.Contains(renderer)) values.Add(renderer);
+            }
+            if (append != null && !values.Contains(append)) values.Add(append);
+            property.arraySize = values.Count;
+            for (int index = 0; index < values.Count; index++)
+                property.GetArrayElementAtIndex(index).objectReferenceValue = values[index];
         }
 
         private static void RemoveRejectedCockpitShadowSun()
@@ -939,12 +989,16 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             }
             Material window = LoadRequired<Material>(WindowMaterialPath);
             Material instrument = LoadRequired<Material>(InstrumentGlassMaterialPath);
+            Shader stableInterior = LoadRequired<Shader>(CockpitStableInteriorShaderPath);
             if (window.shader == null || window.shader.name != WindowShaderName || window.passCount != 1 ||
                 window.renderQueue != (int)RenderQueue.Transparent + 12)
                 throw new InvalidOperationException("Window material is not the bounded single-pass shader.");
             if (instrument.shader == null || instrument.shader.name != InstrumentGlassShaderName ||
                 instrument.passCount != 1 || instrument.renderQueue != (int)RenderQueue.Transparent + 16)
                 throw new InvalidOperationException("Instrument glass is not the restrained single-pass shader.");
+            if (stableInterior.name != CockpitStableInteriorShaderName ||
+                stableInterior.passCount != 1)
+                throw new InvalidOperationException("Cockpit stable-interior shader is not bounded and single-pass.");
         }
 
         private static Cubemap ValidateReflectionImport(string path)
@@ -1021,6 +1075,26 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 cockpit.GetComponentsInChildren<Renderer>(true).Any(renderer =>
                     renderer.shadowCastingMode != ShadowCastingMode.Off || renderer.receiveShadows))
                 throw new InvalidOperationException("Static-only cockpit depth contract is incomplete.");
+            Renderer exteriorWindow = aircraftRenderers.Single(renderer =>
+                string.Equals(renderer.name, ExteriorWindowRendererName, StringComparison.Ordinal));
+            if (FindDescendant(rig.AircraftVisualRoot,
+                    RejectedCockpitSunOcclusionObjectName) != null)
+                throw new InvalidOperationException("Rejected cockpit sun-occlusion overlay remains active.");
+            QuestFlightLab.Aircraft.ProductionAircraftLightingController lighting =
+                aircraftAsset.GetComponentInChildren<QuestFlightLab.Aircraft.ProductionAircraftLightingController>(true);
+            SerializedObject lightingSettings = new SerializedObject(lighting);
+            if (lightingSettings.FindProperty("stableCockpitShader")?.objectReferenceValue !=
+                LoadRequired<Shader>(CockpitStableInteriorShaderPath))
+                throw new InvalidOperationException("Geometry-bound cockpit depth shader is not serialized.");
+            QuestFlightLab.Aircraft.AircraftVisibilityProfileController visibility =
+                aircraftAsset.GetComponentInChildren<QuestFlightLab.Aircraft.AircraftVisibilityProfileController>(true);
+            SerializedObject visibilitySettings = new SerializedObject(visibility);
+            Renderer[] cockpitOccluders = ReadRendererArray(visibilitySettings,
+                "cockpitOccludingExteriorRenderers");
+            Renderer[] interiorRenderers = ReadRendererArray(visibilitySettings, "interiorRenderers");
+            if (cockpitOccluders.Contains(exteriorWindow) || interiorRenderers.Any(renderer => renderer == null))
+                throw new InvalidOperationException(
+                    "Cockpit view would hide glazing or retains a stale renderer reference.");
             GameObject worldAsset = LoadRequired<GameObject>(ProductionWorldPrefabPath);
             Light mainSun = FindDescendant(worldAsset.transform, MainSunName)?.GetComponent<Light>();
             Light cockpitSun = FindDescendant(worldAsset.transform,
@@ -1038,6 +1112,15 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             if (scene.GetRootGameObjects().SelectMany(item => item.GetComponentsInChildren<ReflectionProbe>(true))
                 .Any(item => item.mode == ReflectionProbeMode.Realtime))
                 throw new InvalidOperationException("Integrated scene contains a realtime reflection probe.");
+        }
+
+        private static Renderer[] ReadRendererArray(SerializedObject serialized, string propertyName)
+        {
+            SerializedProperty property = RequiredProperty(serialized, propertyName);
+            Renderer[] result = new Renderer[property.arraySize];
+            for (int index = 0; index < property.arraySize; index++)
+                result[index] = property.GetArrayElementAtIndex(index).objectReferenceValue as Renderer;
+            return result;
         }
 
         private readonly struct ReflectionAssetPair

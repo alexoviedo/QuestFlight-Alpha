@@ -32,8 +32,12 @@ namespace QuestFlightLab.Tests.EditMode
                     root.GetComponentInChildren<QuestFlightLab.Aircraft.ProductionAircraftLightingController>(true);
                 Assert.That(lighting, Is.Not.Null);
                 SerializedObject lightingObject = new SerializedObject(lighting);
+                Assert.That(lightingObject.FindProperty("stableCockpitShader").objectReferenceValue,
+                    Is.Not.Null);
                 Assert.That(lightingObject.FindProperty("cockpitOcclusionStrength").floatValue,
                     Is.EqualTo(1.0f).Within(0.0001f));
+                Assert.That(FindDescendant(root.transform, "ProductionCockpitBakedSunOcclusion"),
+                    Is.Null, "Rejected free-floating cockpit overlay must not return");
 
                 HashSet<Material> materials = new HashSet<Material>();
                 int bakedAoMaterials = 0;

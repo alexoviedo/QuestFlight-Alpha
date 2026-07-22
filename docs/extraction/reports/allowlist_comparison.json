@@ -412,6 +412,14 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/ProductionCanopyFoliage_Albedo.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/ProductionNearFoliageAtlas_RGBA.png",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/KBDU_AerialSurface_OwnershipExclusionManifestV1.json",
             "classification": "approved_production"
         },
@@ -445,6 +453,10 @@
         },
         {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentGlassReflection.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitStableInterior.shader",
             "classification": "approved_production"
         },
         {

@@ -23,6 +23,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _CanopyFoliageAlbedo:
+        m_Texture: {fileID: 2800000, guid: 9e988173c5a7b234997abe6ebf16613b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _CanopyNormalOcclusion:
         m_Texture: {fileID: 2800000, guid: 8712b0de0c676fe0840fb2bc72cfa359, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -45,6 +49,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _NearAlbedo:
         m_Texture: {fileID: 2800000, guid: 0021365d50509d2abe127a826626ee6e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NearFoliageAtlas:
+        m_Texture: {fileID: 2800000, guid: 20acc115e3da2c945b96ad78ee96fe51, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalizedSurfaceHeight:
@@ -71,7 +79,9 @@ Material:
     m_Floats:
     - _AmbientFloor: 0.22
     - _CanopyNormalStrength: 0.42
+    - _Cull: 0
     - _DiagnosticMode: 0
+    - _FoliageCutoff: 0.3
     - _SemanticMode: 1
     - _SideRoughness: 0.92
     - _TopRoughness: 0.88
