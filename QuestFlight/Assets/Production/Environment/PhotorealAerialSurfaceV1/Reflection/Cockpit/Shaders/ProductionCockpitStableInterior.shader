@@ -14,7 +14,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
         emissiveTexture ("Emission", 2D) = "black" {}
         emissiveFactor ("Emission Factor", Color) = (0,0,0,1)
         _CabinDepthStrength ("Cabin Depth Strength", Range(0,0.42)) = 0.38
-        _DirectionalCabinShadowStrength ("Directional Cabin Shade", Range(0,0.28)) = 0.18
+        _DirectionalCabinShadowStrength ("Directional Cabin Shade", Range(0,0.42)) = 0.36
     }
 
     SubShader
@@ -138,12 +138,30 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 half3 localLight = normalize(mul((half3x3)_WorldToAircraft, lightDirection));
                 half projectedFrame = cabinPosition.x -
                     localLight.x / (abs(localLight.y) + 0.35h) *
-                    max(0.0h, 0.62h - cabinPosition.y) * 0.42h;
-                half frameShade = 1.0h - smoothstep(0.10h, 0.30h, abs(projectedFrame));
-                half sunlightAbove = smoothstep(-0.08h, 0.32h, localLight.y);
-                half interiorReceiver = lerp(0.96h, 0.58h, skyExposure);
+                    max(0.0h, 0.64h - cabinPosition.y) * 0.54h;
+                half centerPostShade = 1.0h - smoothstep(0.075h, 0.22h, abs(projectedFrame));
+                half sidePostCoordinate = abs(projectedFrame) - 0.62h;
+                half sidePostShade = 1.0h - smoothstep(0.055h, 0.18h, abs(sidePostCoordinate));
+                half projectedHeader = cabinPosition.z -
+                    localLight.z / (abs(localLight.y) + 0.35h) *
+                    max(0.0h, 0.58h - cabinPosition.y) * 0.44h;
+                half headerShade = 1.0h - smoothstep(0.07h, 0.25h, abs(projectedHeader + 0.08h));
+                // A broad secondary sweep represents the combined windscreen header/post
+                // silhouette on the panel and seats. It is intentionally soft and computed
+                // from aircraft-local position, so it rotates with the aircraft and cannot
+                // produce the overlapping projected triangles rejected in worn QA.
+                half sweepCoordinate = cabinPosition.x + cabinPosition.z *
+                    (0.30h + localLight.x * 0.16h) - localLight.x * 0.24h;
+                half broadFrameSweep = 1.0h - smoothstep(0.13h, 0.40h, abs(sweepCoordinate));
+                half lowerCabinReceiver = 1.0h - smoothstep(0.30h, 0.90h, cabinPosition.y);
+                half frameShade = saturate(centerPostShade + sidePostShade * 0.74h +
+                    headerShade * 0.62h + broadFrameSweep * lowerCabinReceiver * 0.82h);
+                half sunlightAbove = smoothstep(-0.16h, 0.26h, localLight.y);
+                half interiorReceiver = lerp(0.98h, 0.72h, skyExposure);
                 half directionalVisibility = 1.0h -
                     _DirectionalCabinShadowStrength * frameShade * sunlightAbove * interiorReceiver;
+                ambient *= lerp(1.0h, directionalVisibility, 0.56h);
+                warmCabinBounce *= lerp(1.0h, directionalVisibility, 0.42h);
                 half3 direct = _LightColor0.rgb * nDotL * aperture * directionalVisibility;
 
                 half4 packedSurface = tex2D(metallicRoughnessTexture, input.uv);

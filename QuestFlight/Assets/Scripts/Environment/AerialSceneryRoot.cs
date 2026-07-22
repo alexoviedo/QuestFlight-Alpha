@@ -133,7 +133,8 @@ namespace QuestFlightLab.Environment
             Require(bakedVegetationRendererCount == vegetationDrawCount,
                 "baked vegetation draw count is stale", failures);
             Require(bakedVegetationTriangleCount == vegetationTriangles,
-                "baked vegetation triangle count is stale", failures);
+                $"baked vegetation triangle count is stale " +
+                $"(baked={bakedVegetationTriangleCount:N0}, authored={vegetationTriangles:N0})", failures);
             Require(bakedVegetationMaterialCount == vegetationMaterialCount,
                 "baked vegetation material count is stale", failures);
             Require(!string.IsNullOrWhiteSpace(bakeToolVersion) && !string.IsNullOrWhiteSpace(bakeUtc),
@@ -171,7 +172,23 @@ namespace QuestFlightLab.Environment
                     ? skinned.sharedMesh
                     : renderer.GetComponent<MeshFilter>()?.sharedMesh;
                 if (mesh == null) continue;
-                for (int index = 0; index < mesh.subMeshCount; index++)
+
+                // In a Player build Unity replaces each statically batched MeshFilter mesh
+                // with the shared combined mesh. Counting every submesh for every renderer
+                // therefore multiplies the authored inventory. MeshRenderer exposes the
+                // first submesh owned by that renderer; its material-slot count bounds the
+                // contiguous slice. Editor/source validation still takes the ordinary full-
+                // mesh path and pins the exact authored triangle hashes.
+                int firstSubMesh = renderer is MeshRenderer meshRenderer &&
+                                   meshRenderer.isPartOfStaticBatch
+                    ? meshRenderer.subMeshStartIndex
+                    : 0;
+                int subMeshCount = renderer is MeshRenderer staticMeshRenderer &&
+                                   staticMeshRenderer.isPartOfStaticBatch
+                    ? Mathf.Max(1, staticMeshRenderer.sharedMaterials.Length)
+                    : mesh.subMeshCount;
+                int endSubMesh = Mathf.Min(mesh.subMeshCount, firstSubMesh + subMeshCount);
+                for (int index = firstSubMesh; index < endSubMesh; index++)
                     if (mesh.GetTopology(index) == MeshTopology.Triangles)
                         triangles += (long)mesh.GetIndexCount(index) / 3L;
             }

@@ -3,10 +3,12 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
     Properties
     {
         _Tint ("Neutral Glass Tint", Color) = (0.90, 0.94, 0.98, 1)
-        _Opacity ("Base Opacity", Range(0, 0.12)) = 0.018
-        _FresnelOpacity ("Edge Fresnel Opacity", Range(0, 0.12)) = 0.035
-        _ReflectionStrength ("Reflection Strength", Range(0, 0.25)) = 0.10
-        _PerceptualRoughness ("Perceptual Roughness", Range(0.1, 1)) = 0.42
+        [NoScaleOffset] _AuthoredReflectionCube ("Offline Cockpit Interior Reflection", Cube) = "black" {}
+        _Opacity ("Base Opacity", Range(0, 0.12)) = 0.032
+        _FresnelOpacity ("Edge Fresnel Opacity", Range(0, 0.12)) = 0.065
+        _ReflectionStrength ("Reflection Strength", Range(0, 0.32)) = 0.24
+        _DirectGlintStrength ("Directional Glint Strength", Range(0, 0.16)) = 0.10
+        _PerceptualRoughness ("Perceptual Roughness", Range(0.1, 1)) = 0.34
     }
 
     SubShader
@@ -28,12 +30,15 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
             #pragma multi_compile __ UNITY_SPECCUBE_BLENDING
             #pragma multi_compile __ UNITY_SPECCUBE_BOX_PROJECTION
             #include "UnityCG.cginc"
+            #include "Lighting.cginc"
             #include "UnityGlobalIllumination.cginc"
 
             fixed4 _Tint;
+            samplerCUBE _AuthoredReflectionCube;
             half _Opacity;
             half _FresnelOpacity;
             half _ReflectionStrength;
+            half _DirectGlintStrength;
             half _PerceptualRoughness;
 
             struct appdata
@@ -98,9 +103,18 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
                 half opacity = min(_Opacity + fresnel * _FresnelOpacity, 0.10h);
                 half3 reflection = SampleAuthoredReflection(
                     input.worldPosition, viewDirection, reflect(-viewDirection, normal));
+                half3 localReflectionDirection = normalize(mul(
+                    (half3x3)unity_WorldToObject, reflect(-viewDirection, normal)));
+                half3 cockpitReflection = texCUBE(
+                    _AuthoredReflectionCube, localReflectionDirection).rgb;
+                reflection = lerp(reflection, cockpitReflection, 0.82h);
+                half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
+                half glint = pow(saturate(dot(
+                    reflect(-lightDirection, normal), viewDirection)), 72.0h);
                 half3 premultiplied = _Tint.rgb * opacity * 0.035h +
                                       reflection * _ReflectionStrength *
                                       (0.25h + fresnel * 0.75h) * opacity;
+                premultiplied += _LightColor0.rgb * glint * _DirectGlintStrength * opacity;
                 return fixed4(premultiplied, opacity);
             }
             ENDCG

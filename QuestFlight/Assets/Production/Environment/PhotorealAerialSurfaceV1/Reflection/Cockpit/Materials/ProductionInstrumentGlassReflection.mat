@@ -22,13 +22,18 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _AuthoredReflectionCube:
+        m_Texture: {fileID: 8900000, guid: c01217539a4b6e2498c40fdef3dc926d, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _FresnelOpacity: 0.035
-    - _Opacity: 0.018
-    - _PerceptualRoughness: 0.42
-    - _ReflectionStrength: 0.1
+    - _DirectGlintStrength: 0.1
+    - _FresnelOpacity: 0.065
+    - _Opacity: 0.032
+    - _PerceptualRoughness: 0.34
+    - _ReflectionStrength: 0.24
     m_Colors:
     - _Tint: {r: 0.9, g: 0.94, b: 0.98, a: 1}
   m_BuildTextureStacks: []

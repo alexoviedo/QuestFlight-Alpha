@@ -55,7 +55,8 @@ namespace QuestFlightLab.Tests.EditMode
             foreach (string path in new[]
                      {
                          PhotorealAerialReflectionAuthoring.GlobalReflectionPath,
-                         PhotorealAerialReflectionAuthoring.AirportLocalReflectionPath
+                         PhotorealAerialReflectionAuthoring.AirportLocalReflectionPath,
+                         PhotorealAerialReflectionAuthoring.CockpitInteriorReflectionPath
                      })
             {
                 Cubemap cubemap = AssetDatabase.LoadAssetAtPath<Cubemap>(path);
@@ -85,7 +86,10 @@ namespace QuestFlightLab.Tests.EditMode
         {
             string globalPath = PhotorealAerialReflectionAuthoring.GlobalReflectionPath;
             string localPath = PhotorealAerialReflectionAuthoring.AirportLocalReflectionPath;
+            string cockpitPath = PhotorealAerialReflectionAuthoring.CockpitInteriorReflectionPath;
             Assert.That(File.ReadAllBytes(globalPath), Is.Not.EqualTo(File.ReadAllBytes(localPath)));
+            Assert.That(File.ReadAllBytes(cockpitPath), Is.Not.EqualTo(File.ReadAllBytes(globalPath)));
+            Assert.That(File.ReadAllBytes(cockpitPath), Is.Not.EqualTo(File.ReadAllBytes(localPath)));
 
             Color[] global = ReadLowerHemisphere(globalPath, "Global");
             Color[] local = ReadLowerHemisphere(localPath, "Local");
@@ -96,6 +100,7 @@ namespace QuestFlightLab.Tests.EditMode
             string manifest = File.ReadAllText(PhotorealAerialReflectionAuthoring.ManifestPath);
             Assert.That(manifest, Does.Contain(Sha256(globalPath)));
             Assert.That(manifest, Does.Contain(Sha256(localPath)));
+            Assert.That(manifest, Does.Contain(Sha256(cockpitPath)));
             Assert.That(manifest, Does.Contain(Sha256(
                 PhotorealAerialReflectionAuthoring.SourceNearOrthophotoPath)));
             Assert.That(manifest, Does.Contain(Sha256(
@@ -121,12 +126,18 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(window.renderQueue, Is.EqualTo((int)RenderQueue.Transparent + 12));
             Assert.That(instrument.renderQueue, Is.EqualTo((int)RenderQueue.Transparent + 16));
             Assert.That(window.GetTexture("_AuthoredReflectionCube"), Is.Not.Null);
-            Assert.That(window.GetFloat("_WindshieldOpacity"), Is.InRange(0.09f, 0.11f));
-            Assert.That(window.GetFloat("_SideWindowOpacity"), Is.InRange(0.11f, 0.13f));
-            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.45f, 0.47f));
+            Cubemap cockpitInterior = AssetDatabase.LoadAssetAtPath<Cubemap>(
+                PhotorealAerialReflectionAuthoring.CockpitInteriorReflectionPath);
+            Assert.That(window.GetTexture("_CockpitInteriorReflectionCube"), Is.SameAs(cockpitInterior));
+            Assert.That(window.GetFloat("_WindshieldOpacity"), Is.InRange(0.07f, 0.08f));
+            Assert.That(window.GetFloat("_SideWindowOpacity"), Is.InRange(0.085f, 0.095f));
+            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.54f, 0.56f));
             Assert.That(window.GetFloat("_DirectGlintStrength"), Is.InRange(0.07f, 0.09f));
-            Assert.That(instrument.GetFloat("_Opacity"), Is.LessThanOrEqualTo(0.02f));
-            Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.LessThanOrEqualTo(0.10f));
+            Assert.That(instrument.GetTexture("_AuthoredReflectionCube"), Is.SameAs(cockpitInterior));
+            Assert.That(instrument.GetFloat("_Opacity"), Is.InRange(0.031f, 0.033f));
+            Assert.That(instrument.GetFloat("_FresnelOpacity"), Is.InRange(0.064f, 0.066f));
+            Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.InRange(0.23f, 0.25f));
+            Assert.That(instrument.GetFloat("_DirectGlintStrength"), Is.InRange(0.09f, 0.11f));
 
             foreach (string path in new[]
                      {
@@ -155,10 +166,13 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(windowSource, Does.Contain("_AuthoredReflectionCube"));
             Assert.That(windowSource, Does.Contain("texCUBE"));
             Assert.That(windowSource, Does.Contain("proceduralGround"));
-            Assert.That(windowSource, Does.Contain("Blend SrcAlpha OneMinusSrcAlpha"));
+            Assert.That(windowSource, Does.Contain("Blend One OneMinusSrcAlpha"));
+            Assert.That(windowSource, Does.Contain("_CockpitInteriorReflectionCube"));
             Assert.That(windowSource, Does.Not.Contain("UnityGI_IndirectSpecular"));
             string instrumentSource = File.ReadAllText(InstrumentShaderPath);
             Assert.That(instrumentSource, Does.Contain("Blend One OneMinusSrcAlpha"));
+            Assert.That(instrumentSource, Does.Contain("_AuthoredReflectionCube"));
+            Assert.That(instrumentSource, Does.Contain("_DirectGlintStrength"));
             string interiorSource = File.ReadAllText(CockpitStableInteriorShaderPath);
             Assert.That(interiorSource, Does.Contain("_CabinDepthStrength"));
             Assert.That(interiorSource, Does.Contain("_DirectionalCabinShadowStrength"));

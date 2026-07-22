@@ -1193,6 +1193,8 @@ namespace QuestFlightLab.Editor
             bool[] environmentHiddenStates = Array.Empty<bool>();
             Renderer qaDisabledSunOcclusion = null;
             bool qaDisabledSunOcclusionState = false;
+            var qaDirectionalMaterials = new List<Material>();
+            var qaDirectionalStrengths = new List<float>();
             string path = Path.Combine(outputDir, "screenshots", shot.id + ".png");
             Texture2D texture = null;
             try
@@ -1209,6 +1211,20 @@ namespace QuestFlightLab.Editor
                     {
                         qaDisabledSunOcclusionState = qaDisabledSunOcclusion.enabled;
                         qaDisabledSunOcclusion.enabled = false;
+                    }
+                    foreach (Renderer renderer in context.rig.AircraftVisualRoot
+                                 .GetComponentsInChildren<Renderer>(true))
+                    {
+                        foreach (Material material in renderer.sharedMaterials)
+                        {
+                            if (material == null ||
+                                !material.HasProperty("_DirectionalCabinShadowStrength") ||
+                                qaDirectionalMaterials.Contains(material)) continue;
+                            qaDirectionalMaterials.Add(material);
+                            qaDirectionalStrengths.Add(
+                                material.GetFloat("_DirectionalCabinShadowStrength"));
+                            material.SetFloat("_DirectionalCabinShadowStrength", 0f);
+                        }
                     }
                 }
                 context.groundShadow?.UpdateShadowPoseNow();
@@ -1294,6 +1310,14 @@ namespace QuestFlightLab.Editor
             }
             finally
             {
+                for (int index = 0; index < qaDirectionalMaterials.Count; index++)
+                {
+                    if (qaDirectionalMaterials[index] != null)
+                    {
+                        qaDirectionalMaterials[index].SetFloat(
+                            "_DirectionalCabinShadowStrength", qaDirectionalStrengths[index]);
+                    }
+                }
                 for (int index = 0; index < environmentHiddenRenderers.Length; index++)
                     environmentHiddenRenderers[index].enabled = environmentHiddenStates[index];
                 if (qaDisabledSunOcclusion != null)

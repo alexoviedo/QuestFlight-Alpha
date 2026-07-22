@@ -130,7 +130,7 @@ GROVE_TRIANGLES_PER_GROVE = (
     GROVE_CROWN_TRIANGLES + GROVE_TRUNKS_PER_GROVE * GROVE_TRUNK_SIDES * 2
 )
 NEAR_GROVE_RADIUS_METERS = 650.0
-MID_GROVE_RADIUS_METERS = 1600.0
+MID_GROVE_RADIUS_METERS = GEOMETRY_OUTER_RADIUS_METERS
 NEAR_GROVE_SEGMENTS = 10
 MID_GROVE_SEGMENTS = 7
 FAR_GROVE_SEGMENTS = 5
@@ -138,17 +138,19 @@ NEAR_MID_GROVE_TRUNKS = 2
 FAR_GROVE_TRUNKS = 1
 NEAR_TREE_MINIMUM = 3
 NEAR_TREE_MAXIMUM = 8
-NEAR_TREE_BRANCHES = 3
-NEAR_TREE_FOLIAGE_CARDS = 12
+NEAR_TREE_BRANCHES = 1
+NEAR_TREE_FOLIAGE_CARDS = 10
 NEAR_TREE_TRIANGLES = (
     GROVE_TRUNK_SIDES * 2
     + NEAR_TREE_BRANCHES * GROVE_TRUNK_SIDES * 2
     + NEAR_TREE_FOLIAGE_CARDS * 2
 )
-MID_TREE_COUNT = 2
-MID_TREE_FOLIAGE_CARDS = 4
-MID_TREE_TRIANGLES_PER_GROVE = MID_TREE_COUNT * (
-    GROVE_TRUNK_SIDES * 2 + MID_TREE_FOLIAGE_CARDS * 2
+MID_TREE_COUNT = 3
+MID_TREE_FOLIAGE_CARDS = 3
+MID_GROVE_TRUNK_COUNT = 2
+MID_TREE_TRIANGLES_PER_GROVE = (
+    MID_TREE_COUNT * MID_TREE_FOLIAGE_CARDS * 2
+    + MID_GROVE_TRUNK_COUNT * GROVE_TRUNK_SIDES * 2
 )
 GROVE_HEIGHT_SCALE = 1.18
 GROVE_HEIGHT_BIAS_METERS = 2.3
@@ -1048,18 +1050,18 @@ class ObjBatch:
             angle = rotation + tree_index * golden_angle + identity * 0.45
             # Enlarged crowns overlap into one plausible grove silhouette instead
             # of leaving the photographed canopy footprint as sparse props.
-            radial = 0.08 if tree_count == 1 else math.sqrt((tree_index + 0.35) / tree_count) * 0.44
+            radial = 0.08 if tree_count == 1 else math.sqrt((tree_index + 0.35) / tree_count) * 0.37
             tree_x = x + math.cos(angle) * radius_x * radial
             tree_z = z + math.sin(angle) * radius_z * radial
             tree_height = height * (0.78 + 0.22 * ((identity * 7.31) % 1.0))
             minimum_grove_radius = min(radius_x, radius_z)
             crown_radius = float(np.clip(
                 max(
-                    tree_height * (0.34 + 0.045 * ((identity * 11.7) % 1.0)),
-                    minimum_grove_radius * (0.40 + 0.04 * ((identity * 5.3) % 1.0)),
+                    tree_height * (0.37 + 0.045 * ((identity * 11.7) % 1.0)),
+                    minimum_grove_radius * (0.47 + 0.04 * ((identity * 5.3) % 1.0)),
                 ),
                 2.8,
-                min(7.2, minimum_grove_radius * 0.62),
+                min(7.8, minimum_grove_radius * 0.70),
             ))
             trunk_radius = float(np.clip(tree_height * 0.030, 0.30, 0.52))
             trunk_top = (
@@ -1153,10 +1155,10 @@ class ObjBatch:
     def add_mid_grove(self, grove: dict[str, float]) -> None:
         """Author a perforated, near-family grove proxy for pattern-altitude views.
 
-        Two overlapping broadleaf crowns preserve the semantic footprint and
+        Three overlapping broadleaf crowns preserve the semantic footprint and
         tree-height scale using the same atlas as the accepted airport trees.
-        This replaces the opaque connected shell without spending geometry on
-        near-only branch detail or ordinary camera-facing billboards.
+        Only two thick trunks are required to ground the cluster at this range;
+        the third crown closes the aerial silhouette at no extra draw/material.
         """
         x = float(grove["x"])
         z = float(grove["z"])
@@ -1176,16 +1178,17 @@ class ObjBatch:
         minimum_grove_radius = min(radius_x, radius_z)
 
         for tree_index in range(MID_TREE_COUNT):
-            side = -1.0 if tree_index == 0 else 1.0
+            side = (-1.0, 1.0, 0.0)[tree_index]
             identity = (seed * 83.0 + tree_index * 0.61803398875) % 1.0
-            along = side * minimum_grove_radius * (0.18 + identity * 0.035)
-            tree_x = x + math.cos(rotation) * along
-            tree_z = z + math.sin(rotation) * along
+            along = side * minimum_grove_radius * (0.20 + identity * 0.035)
+            across = (0.0 if tree_index < 2 else minimum_grove_radius * 0.18)
+            tree_x = x + math.cos(rotation) * along - math.sin(rotation) * across
+            tree_z = z + math.sin(rotation) * along + math.cos(rotation) * across
             tree_height = height * (0.90 + identity * 0.10)
             crown_radius = float(np.clip(
-                max(tree_height * (0.36 + identity * 0.055), minimum_grove_radius * 0.48),
+                max(tree_height * (0.39 + identity * 0.055), minimum_grove_radius * 0.52),
                 2.8,
-                min(7.6, minimum_grove_radius * 0.68),
+                min(8.2, minimum_grove_radius * 0.74),
             ))
             trunk_radius = float(np.clip(tree_height * 0.025, 0.26, 0.48))
             trunk_top = (
@@ -1193,14 +1196,15 @@ class ObjBatch:
                 ground + tree_height * 0.68,
                 tree_z + math.sin(rotation + side * 0.42) * tree_height * 0.012,
             )
-            self.add_tapered_prism(
-                (tree_x, ground + 0.04, tree_z),
-                trunk_top,
-                trunk_radius,
-                trunk_radius * 0.52,
-                trunk_color,
-            )
-            self.trunk_count += 1
+            if tree_index < MID_GROVE_TRUNK_COUNT:
+                self.add_tapered_prism(
+                    (tree_x, ground + 0.04, tree_z),
+                    trunk_top,
+                    trunk_radius,
+                    trunk_radius * 0.52,
+                    trunk_color,
+                )
+                self.trunk_count += 1
             crown_center = (
                 tree_x,
                 ground + tree_height * 0.77,
@@ -1208,16 +1212,16 @@ class ObjBatch:
             )
             atlas_base = int((identity * 991.0 + tree_index * 7.0)) % 16
             for card_index in range(MID_TREE_FOLIAGE_CARDS):
-                card_angle = rotation + card_index * math.pi * 0.25 + identity * 0.55
+                card_angle = rotation + card_index * math.pi / 3.0 + identity * 0.55
                 right = (math.cos(card_angle), 0.0, math.sin(card_angle))
                 if card_index < 2:
                     up = (0.0, 1.0, 0.0)
                     card_center = (
                         crown_center[0] + math.cos(card_angle) * crown_radius * 0.10,
-                        crown_center[1] + (card_index - 0.5) * crown_radius * 0.06,
+                        crown_center[1] + (card_index - 0.5) * crown_radius * 0.07,
                         crown_center[2] + math.sin(card_angle) * crown_radius * 0.10,
                     )
-                    half_height = crown_radius * 0.93
+                    half_height = crown_radius * 0.95
                 else:
                     up = (
                         -math.cos(card_angle) * 0.50,
@@ -1226,10 +1230,10 @@ class ObjBatch:
                     )
                     card_center = (
                         crown_center[0] + math.cos(card_angle) * crown_radius * 0.16,
-                        crown_center[1] + crown_radius * 0.12,
+                        crown_center[1] + crown_radius * 0.15,
                         crown_center[2] + math.sin(card_angle) * crown_radius * 0.16,
                     )
-                    half_height = crown_radius * 0.86
+                    half_height = crown_radius * 0.88
                 self.add_foliage_card(
                     card_center,
                     right,
@@ -2366,7 +2370,7 @@ def build(
             "grounded_trunk_count": sum(
                 int(item["near_tree_count"])
                 if float(item["near_detail"]) > 0.5
-                else MID_TREE_COUNT
+                else MID_GROVE_TRUNK_COUNT
                 if float(item["mid_detail"]) > 0.5
                 else int(item["trunk_count"])
                 for item in groves
@@ -2382,7 +2386,7 @@ def build(
                 sum(
                     int(item["near_tree_count"])
                     if float(item["near_detail"]) > 0.5
-                    else MID_TREE_COUNT
+                    else MID_GROVE_TRUNK_COUNT
                     if float(item["mid_detail"]) > 0.5
                     else int(item["trunk_count"])
                     for item in groves

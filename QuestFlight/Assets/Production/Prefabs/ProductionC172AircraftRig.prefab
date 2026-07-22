@@ -5762,7 +5762,7 @@ MonoBehaviour:
   cockpitOcclusionStrength: 1
   coarseNormalStrength: 0.42
   instrumentReadabilityEmission: 0.2
-  directionalCabinShadowStrength: 0.18
+  directionalCabinShadowStrength: 0.36
 --- !u!114 &1221598877841403682
 MonoBehaviour:
   m_ObjectHideFlags: 0

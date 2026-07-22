@@ -33,6 +33,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             TextureFolder + "/KBDU_GlobalGroundSkyReflection_256.exr";
         public const string AirportLocalReflectionPath =
             TextureFolder + "/KBDU_AirportLocalReflection_256.exr";
+        public const string CockpitInteriorReflectionPath =
+            TextureFolder + "/C172_CockpitInteriorReflection_256.exr";
         public const string ManifestPath =
             Root + "/KBDU_PhotorealAerialReflectionManifestV1.json";
         public const string ProfilePath =
@@ -205,6 +207,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             Texture2D far = null;
             Texture2D globalOutput = null;
             Texture2D localOutput = null;
+            Texture2D cockpitOutput = null;
             ReflectionStatistics globalStatistics;
             ReflectionStatistics localStatistics;
             try
@@ -216,6 +219,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
 
                 Color[] globalPixels = BuildReflectionPixels(sky, near, mid, far, false);
                 Color[] localPixels = BuildReflectionPixels(sky, near, mid, far, true);
+                Color[] cockpitPixels = BuildCockpitInteriorReflectionPixels();
                 globalStatistics = ReflectionStatistics.FromLowerHemisphere(globalPixels);
                 localStatistics = ReflectionStatistics.FromLowerHemisphere(localPixels);
                 if (globalStatistics.LuminanceStandardDeviation < 0.005f ||
@@ -228,10 +232,14 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     "KBDU_GlobalGroundSkyReflection_256", globalPixels);
                 localOutput = CreateReflectionTexture(
                     "KBDU_AirportLocalReflection_256", localPixels);
+                cockpitOutput = CreateReflectionTexture(
+                    "C172_CockpitInteriorReflection_256", cockpitPixels);
                 WriteIfChanged(GlobalReflectionPath,
                     globalOutput.EncodeToEXR(Texture2D.EXRFlags.CompressZIP));
                 WriteIfChanged(AirportLocalReflectionPath,
                     localOutput.EncodeToEXR(Texture2D.EXRFlags.CompressZIP));
+                WriteIfChanged(CockpitInteriorReflectionPath,
+                    cockpitOutput.EncodeToEXR(Texture2D.EXRFlags.CompressZIP));
             }
             finally
             {
@@ -239,14 +247,59 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     if (texture != null) Resources.UnloadAsset(texture);
                 if (globalOutput != null) UnityEngine.Object.DestroyImmediate(globalOutput);
                 if (localOutput != null) UnityEngine.Object.DestroyImmediate(localOutput);
+                if (cockpitOutput != null) UnityEngine.Object.DestroyImmediate(cockpitOutput);
                 foreach (string path in temporaryPaths) AssetDatabase.DeleteAsset(path);
             }
 
             Cubemap global = ConfigureReflectionImport(GlobalReflectionPath);
             Cubemap airportLocal = ConfigureReflectionImport(AirportLocalReflectionPath);
+            Cubemap cockpitInterior = ConfigureReflectionImport(CockpitInteriorReflectionPath);
             if (global == airportLocal)
                 throw new InvalidOperationException("Global and airport-local cubemaps resolved to the same asset.");
-            return new ReflectionAssetPair(global, airportLocal, globalStatistics, localStatistics);
+            return new ReflectionAssetPair(
+                global, airportLocal, cockpitInterior, globalStatistics, localStatistics);
+        }
+
+        private static Color[] BuildCockpitInteriorReflectionPixels()
+        {
+            Color[] pixels = new Color[ReflectionEquirectangularWidth * ReflectionEquirectangularHeight];
+            Color panel = new Color(0.020f, 0.022f, 0.025f, 1f);
+            Color door = new Color(0.105f, 0.088f, 0.073f, 1f);
+            Color headliner = new Color(0.31f, 0.29f, 0.26f, 1f);
+            Color mutedSky = new Color(0.16f, 0.23f, 0.30f, 1f);
+            for (int y = 0; y < ReflectionEquirectangularHeight; y++)
+            {
+                float v = (y + 0.5f) / ReflectionEquirectangularHeight;
+                float elevation = (v - 0.5f) * Mathf.PI;
+                float vertical = Mathf.Sin(elevation);
+                float horizontal = Mathf.Cos(elevation);
+                for (int x = 0; x < ReflectionEquirectangularWidth; x++)
+                {
+                    float u = (x + 0.5f) / ReflectionEquirectangularWidth;
+                    float azimuth = (u - 0.5f) * Mathf.PI * 2f;
+                    float localX = Mathf.Sin(azimuth) * horizontal;
+                    float localZ = Mathf.Cos(azimuth) * horizontal;
+                    float upper = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-0.10f, 0.62f, vertical));
+                    float side = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.42f, 0.90f, Mathf.Abs(localX)));
+                    Color color = Color.Lerp(panel, headliner, upper);
+                    color = Color.Lerp(color, door, side * (1f - upper * 0.58f));
+                    float windowBand = Mathf.SmoothStep(0f, 1f,
+                        Mathf.InverseLerp(0.52f, 0.84f, Mathf.Abs(localX))) *
+                        (1f - Mathf.SmoothStep(0f, 1f,
+                            Mathf.InverseLerp(0.22f, 0.52f, Mathf.Abs(vertical))));
+                    float windshieldBand = Mathf.SmoothStep(0f, 1f,
+                        Mathf.InverseLerp(0.48f, 0.88f, localZ)) *
+                        (1f - Mathf.SmoothStep(0f, 1f,
+                            Mathf.InverseLerp(0.30f, 0.58f, Mathf.Abs(vertical))));
+                    color = Color.Lerp(color, mutedSky, Mathf.Max(windowBand, windshieldBand) * 0.22f);
+                    float bezelGlint = Mathf.Pow(Mathf.Abs(Mathf.Sin(azimuth * 7f + elevation * 3f)), 24f) *
+                        Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-0.75f, -0.08f, vertical));
+                    color += new Color(0.12f, 0.13f, 0.14f, 0f) * bezelGlint;
+                    color.a = 1f;
+                    pixels[y * ReflectionEquirectangularWidth + x] = color;
+                }
+            }
+            return pixels;
         }
 
         private static Texture2D ImportReadableTemporaryCopy(
@@ -456,6 +509,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             AppendReflectionManifestAsset(json, "airport_local_reflection", AirportLocalReflectionPath,
                 localHash, reflections.LocalStatistics, "near", AirportReflectionCenter,
                 LocalProxyHeightMeters, LocalProxyMaximumRadiusMeters, true);
+            AppendFileManifestAsset(json, "cockpit_interior_reflection",
+                CockpitInteriorReflectionPath, true);
             AppendFileManifestAsset(json, "profile", ProfilePath, true);
             AppendFileManifestAsset(json, "window_material", WindowMaterialPath, true);
             AppendFileManifestAsset(json, "instrument_glass_material", InstrumentGlassMaterialPath, true);
@@ -608,12 +663,16 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             Material window = LoadOrCreateMaterial(WindowMaterialPath, windowShader,
                 "ProductionCockpitWindowReflection");
             window.SetTexture("_AuthoredReflectionCube", LoadRequired<Cubemap>(GlobalReflectionPath));
+            window.SetTexture("_CockpitInteriorReflectionCube",
+                LoadRequired<Cubemap>(CockpitInteriorReflectionPath));
             window.SetColor("_WindshieldTint", new Color(0.77f, 0.86f, 0.95f, 1f));
             window.SetColor("_SideWindowTint", new Color(0.70f, 0.82f, 0.92f, 1f));
-            window.SetFloat("_WindshieldOpacity", 0.10f);
-            window.SetFloat("_SideWindowOpacity", 0.12f);
-            window.SetFloat("_FresnelOpacity", 0.14f);
-            window.SetFloat("_ReflectionStrength", 0.46f);
+            window.SetFloat("_WindshieldOpacity", 0.075f);
+            window.SetFloat("_SideWindowOpacity", 0.09f);
+            window.SetFloat("_FresnelOpacity", 0.11f);
+            window.SetFloat("_ReflectionStrength", 0.55f);
+            window.SetFloat("_InteriorReflectionStrength", 0.78f);
+            window.SetFloat("_InteriorSkyLeak", 0.18f);
             window.SetFloat("_DirectGlintStrength", 0.08f);
             window.SetFloat("_PerceptualRoughness", 0.18f);
             window.SetFloat("_SideAxisStart", 0.52f);
@@ -625,11 +684,14 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
 
             Material instrument = LoadOrCreateMaterial(InstrumentGlassMaterialPath, instrumentShader,
                 "ProductionInstrumentGlassReflection");
+            instrument.SetTexture("_AuthoredReflectionCube",
+                LoadRequired<Cubemap>(CockpitInteriorReflectionPath));
             instrument.SetColor("_Tint", new Color(0.90f, 0.94f, 0.98f, 1f));
-            instrument.SetFloat("_Opacity", 0.018f);
-            instrument.SetFloat("_FresnelOpacity", 0.035f);
-            instrument.SetFloat("_ReflectionStrength", 0.10f);
-            instrument.SetFloat("_PerceptualRoughness", 0.42f);
+            instrument.SetFloat("_Opacity", 0.032f);
+            instrument.SetFloat("_FresnelOpacity", 0.065f);
+            instrument.SetFloat("_ReflectionStrength", 0.24f);
+            instrument.SetFloat("_DirectGlintStrength", 0.10f);
+            instrument.SetFloat("_PerceptualRoughness", 0.34f);
             instrument.renderQueue = (int)RenderQueue.Transparent + 16;
             instrument.enableInstancing = false;
             instrument.doubleSidedGI = false;
@@ -979,9 +1041,14 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
         {
             Cubemap global = ValidateReflectionImport(GlobalReflectionPath);
             Cubemap airportLocal = ValidateReflectionImport(AirportLocalReflectionPath);
+            Cubemap cockpitInterior = ValidateReflectionImport(CockpitInteriorReflectionPath);
             if (global == airportLocal || File.ReadAllBytes(GlobalReflectionPath)
                     .SequenceEqual(File.ReadAllBytes(AirportLocalReflectionPath)))
                 throw new InvalidOperationException("Global and airport-local reflections must be distinct.");
+            if (cockpitInterior == global || cockpitInterior == airportLocal ||
+                File.ReadAllBytes(CockpitInteriorReflectionPath)
+                    .SequenceEqual(File.ReadAllBytes(GlobalReflectionPath)))
+                throw new InvalidOperationException("Cockpit interior reflection must be a distinct offline asset.");
 
             PhotorealAerialReflectionProfile profile = LoadRequired<PhotorealAerialReflectionProfile>(ProfilePath);
             if (!profile.TryValidate(out string report))
@@ -992,6 +1059,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             foreach (string required in new[]
                      {
                          Sha256(GlobalReflectionPath), Sha256(AirportLocalReflectionPath),
+                         Sha256(CockpitInteriorReflectionPath),
                          Sha256(SourceNearOrthophotoPath), Sha256(SourceMidOrthophotoPath),
                          Sha256(SourceFarOrthophotoPath), "bilinear_direction_to_ground_proxy"
                      })
@@ -1008,6 +1076,10 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             if (instrument.shader == null || instrument.shader.name != InstrumentGlassShaderName ||
                 instrument.passCount != 1 || instrument.renderQueue != (int)RenderQueue.Transparent + 16)
                 throw new InvalidOperationException("Instrument glass is not the restrained single-pass shader.");
+            if (window.GetTexture("_CockpitInteriorReflectionCube") != cockpitInterior ||
+                instrument.GetTexture("_AuthoredReflectionCube") != cockpitInterior)
+                throw new InvalidOperationException(
+                    "Cockpit and instrument glass do not share the authored interior reflection.");
             if (stableInterior.name != CockpitStableInteriorShaderName ||
                 stableInterior.passCount != 1)
                 throw new InvalidOperationException("Cockpit stable-interior shader is not bounded and single-pass.");
@@ -1146,17 +1218,20 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             public ReflectionAssetPair(
                 Cubemap global,
                 Cubemap airportLocal,
+                Cubemap cockpitInterior,
                 ReflectionStatistics globalStatistics,
                 ReflectionStatistics localStatistics)
             {
                 Global = global;
                 AirportLocal = airportLocal;
+                CockpitInterior = cockpitInterior;
                 GlobalStatistics = globalStatistics;
                 LocalStatistics = localStatistics;
             }
 
             public Cubemap Global { get; }
             public Cubemap AirportLocal { get; }
+            public Cubemap CockpitInterior { get; }
             public ReflectionStatistics GlobalStatistics { get; }
             public ReflectionStatistics LocalStatistics { get; }
         }

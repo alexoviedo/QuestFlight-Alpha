@@ -46,7 +46,8 @@ namespace QuestFlightLab.Aircraft
         public const float DefaultCockpitOcclusionStrength = 1.0f;
         public const float DefaultCoarseNormalStrength = 0.42f;
         public const float DefaultInstrumentReadabilityEmission = 0.20f;
-        public const float DefaultDirectionalCabinShadowStrength = 0.18f;
+        public const float DefaultDirectionalCabinShadowStrength = 0.36f;
+        public const float MaximumDirectionalCabinShadowStrength = 0.42f;
 
         private const string StableMaterialSuffix = " Quest Cockpit Stable";
         private static readonly int WorldToAircraftId = Shader.PropertyToID("_WorldToAircraft");
@@ -65,7 +66,7 @@ namespace QuestFlightLab.Aircraft
         private float coarseNormalStrength = DefaultCoarseNormalStrength;
         [SerializeField, Range(0f, 0.5f)]
         private float instrumentReadabilityEmission = DefaultInstrumentReadabilityEmission;
-        [SerializeField, Range(0f, 0.28f)]
+        [SerializeField, Range(0f, MaximumDirectionalCabinShadowStrength)]
         private float directionalCabinShadowStrength = DefaultDirectionalCabinShadowStrength;
 
         public ProductionAircraftLightingReport Report { get; private set; }
@@ -103,7 +104,7 @@ namespace QuestFlightLab.Aircraft
                 instrumentReadabilityEmission,
                 _ownedRuntimeMaterials);
             Report.directionalCabinShadowStrength = Mathf.Clamp(
-                directionalCabinShadowStrength, 0f, 0.28f);
+                directionalCabinShadowStrength, 0f, MaximumDirectionalCabinShadowStrength);
             MeasureCabinBounds();
             ApplyDirectionalCabinState();
             return Report;
@@ -282,7 +283,8 @@ namespace QuestFlightLab.Aircraft
                 _cabinBoundsCenter.x, _cabinBoundsCenter.y, _cabinBoundsCenter.z, 0f);
             Vector4 extent = new Vector4(
                 _cabinBoundsExtent.x, _cabinBoundsExtent.y, _cabinBoundsExtent.z, 0f);
-            float strength = Mathf.Clamp(directionalCabinShadowStrength, 0f, 0.28f);
+            float strength = Mathf.Clamp(
+                directionalCabinShadowStrength, 0f, MaximumDirectionalCabinShadowStrength);
             for (int index = 0; index < _ownedRuntimeMaterials.Count; index++)
             {
                 Material material = _ownedRuntimeMaterials[index];
