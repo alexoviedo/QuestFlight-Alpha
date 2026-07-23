@@ -111,7 +111,7 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void CockpitGlazingAndInteriorUseRestrainedSinglePassShaders()
+        public void CockpitGlazingAndGaugeLensShadersCompile()
         {
             Material window = AssetDatabase.LoadAssetAtPath<Material>(
                 PhotorealAerialReflectionAuthoring.WindowMaterialPath);
@@ -140,9 +140,7 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(window.GetVector("_CockpitReflectionBoxMax").y,
                 Is.GreaterThan(window.GetVector("_CockpitReflectionBoxMin").y));
             Assert.That(instrument.GetTexture("_AuthoredReflectionCube"), Is.SameAs(cockpitInterior));
-            Assert.That(instrument.GetFloat("_Opacity"), Is.InRange(0.035f, 0.037f));
-            Assert.That(instrument.GetFloat("_FresnelOpacity"), Is.InRange(0.071f, 0.073f));
-            Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.InRange(0.67f, 0.69f));
+            Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.InRange(0.45f, 0.47f));
             Assert.That(instrument.GetFloat("_DirectGlintStrength"), Is.InRange(0.11f, 0.13f));
 
             foreach (string path in new[]
@@ -182,10 +180,10 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(windowSource, Does.Not.Contain("interiorFace"));
             Assert.That(windowSource, Does.Not.Contain("UnityGI_IndirectSpecular"));
             string instrumentSource = File.ReadAllText(InstrumentShaderPath);
-            Assert.That(instrumentSource, Does.Contain("Blend One OneMinusSrcAlpha"));
+            Assert.That(instrumentSource, Does.Contain("Blend One One"));
             Assert.That(instrumentSource, Does.Contain("_AuthoredReflectionCube"));
             Assert.That(instrumentSource, Does.Contain("_DirectGlintStrength"));
-            Assert.That(instrumentSource, Does.Contain("opticalFresnel"));
+            Assert.That(instrumentSource, Does.Contain("reflectedRadiance"));
             Assert.That(instrumentSource, Does.Contain("headlinerCue"));
             Assert.That(instrumentSource, Does.Contain("_InstrumentToAircraftRow0"));
             Assert.That(instrumentSource, Does.Contain("Offset -1, -1"));
@@ -227,6 +225,12 @@ namespace QuestFlightLab.Tests.EditMode
             SerializedObject lightingSettings = new SerializedObject(lighting);
             Assert.That(lightingSettings.FindProperty("stableCockpitShader").objectReferenceValue,
                 Is.EqualTo(AssetDatabase.LoadAssetAtPath<Shader>(CockpitStableInteriorShaderPath)));
+            Assert.That(lightingSettings.FindProperty("instrumentDisplayBaseColor").objectReferenceValue,
+                Is.EqualTo(AssetDatabase.LoadAssetAtPath<Texture2D>(
+                    PhotorealAerialReflectionAuthoring.InstrumentDisplayBaseColorPath)));
+            Assert.That(lightingSettings.FindProperty("instrumentDisplayEmission").objectReferenceValue,
+                Is.EqualTo(AssetDatabase.LoadAssetAtPath<Texture2D>(
+                    PhotorealAerialReflectionAuthoring.InstrumentDisplayEmissionPath)));
             Assert.That(lightingSettings.FindProperty("directionalCabinShadowStrength").floatValue,
                 Is.EqualTo(QuestFlightLab.Aircraft.ProductionAircraftLightingController
                     .DefaultDirectionalCabinShadowStrength).Within(0.0001f));
@@ -243,36 +247,107 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void DerivedPilotFacingInstrumentCoverConsumesTheOnlyTransparentInstrumentDraw()
+        public void AuthoritativeInstrumentSourcesRemainPbrAndUseOneGaugeOnlyLensArray()
         {
             GameObject aircraft = AssetDatabase.LoadAssetAtPath<GameObject>(
                 PhotorealAerialReflectionAuthoring.AircraftPrefabPath);
             Assert.That(aircraft, Is.Not.Null);
-            Material instrument = AssetDatabase.LoadAssetAtPath<Material>(
+            Material lensMaterial = AssetDatabase.LoadAssetAtPath<Material>(
                 PhotorealAerialReflectionAuthoring.InstrumentGlassMaterialPath);
-            Renderer[] covers = aircraft.GetComponentsInChildren<Renderer>(true)
-                .Where(renderer => renderer.sharedMaterials.Contains(instrument)).ToArray();
-            Assert.That(covers, Has.Length.EqualTo(1));
-            Renderer authoritative = covers.Single(renderer => string.Equals(renderer.name,
-                PhotorealAerialReflectionAuthoring.InstrumentCoverRendererName,
+            Renderer[] authoredRenderers = aircraft.GetComponentsInChildren<Renderer>(true);
+            Renderer lens = authoredRenderers.Single(renderer => renderer.enabled && string.Equals(
+                renderer.name, PhotorealAerialReflectionAuthoring.InstrumentLensArrayName,
                 StringComparison.Ordinal));
-            Assert.That(authoritative.enabled, Is.True);
-            Mesh authoritativeMesh = authoritative.GetComponent<MeshFilter>().sharedMesh;
-            Assert.That(authoritativeMesh.vertexCount, Is.GreaterThan(100));
-            Assert.That(authoritativeMesh.bounds.size.x, Is.GreaterThan(0.5f));
-            Assert.That(authoritativeMesh.bounds.size.y, Is.GreaterThan(0.1f));
-            Renderer decorative = aircraft.GetComponentsInChildren<Renderer>(true).Single(renderer =>
+            Assert.That(lens.sharedMaterials, Has.Exactly(1).SameAs(lensMaterial));
+            Mesh lensMesh = lens.GetComponent<MeshFilter>().sharedMesh;
+            Assert.That(lensMesh.vertexCount, Is.EqualTo(325));
+            Assert.That(lensMesh.triangles.Length, Is.EqualTo(936));
+            Renderer displayReadout = authoredRenderers.Single(renderer => renderer.enabled &&
                 string.Equals(renderer.name,
-                    PhotorealAerialReflectionAuthoring.DecorativeInstrumentCoverRendererName,
+                    PhotorealAerialReflectionAuthoring.InstrumentDisplayReadoutName,
                     StringComparison.Ordinal));
-            Assert.That(decorative.enabled, Is.False);
-            Assert.That(decorative.sharedMaterials, Has.None.SameAs(instrument));
-            Renderer legacyMi = aircraft.GetComponentsInChildren<Renderer>(true).Single(renderer =>
-                string.Equals(renderer.name,
-                    PhotorealAerialReflectionAuthoring.LegacyMiGlassRendererName,
-                    StringComparison.Ordinal));
-            Assert.That(legacyMi.enabled, Is.False);
-            Assert.That(legacyMi.sharedMaterials, Has.None.SameAs(instrument));
+            Assert.That(displayReadout.sharedMaterials, Has.Exactly(1).SameAs(
+                AssetDatabase.LoadAssetAtPath<Material>(
+                    PhotorealAerialReflectionAuthoring.InstrumentDisplayReadoutMaterialPath)));
+            Assert.That(displayReadout.sharedMaterial.shader.name, Is.EqualTo(
+                PhotorealAerialReflectionAuthoring.InstrumentDisplayReadoutShaderName));
+            Mesh displayReadoutMesh = displayReadout.GetComponent<MeshFilter>().sharedMesh;
+            Assert.That(displayReadoutMesh.vertexCount, Is.EqualTo(36));
+            Assert.That(displayReadoutMesh.triangles.Length, Is.EqualTo(36));
+            Assert.That(aircraft.GetComponentsInChildren<Transform>(true).Any(transform =>
+                string.Equals(transform.name,
+                    PhotorealAerialReflectionAuthoring.RejectedGeneratedInstrumentCoverName,
+                    StringComparison.Ordinal)), Is.False);
+            foreach (string disabledName in new[]
+                     {
+                         PhotorealAerialReflectionAuthoring.DecorativeInstrumentCoverRendererName,
+                         PhotorealAerialReflectionAuthoring.MisidentifiedInstrumentGlassRendererName
+                     })
+            {
+                Renderer rejected = aircraft.GetComponentsInChildren<Renderer>(true).Single(renderer =>
+                    string.Equals(renderer.name, disabledName, StringComparison.Ordinal));
+                Assert.That(rejected.enabled, Is.False, disabledName);
+                Assert.That(rejected.sharedMaterials, Has.None.SameAs(lensMaterial), disabledName);
+            }
+
+            GameObject instance = UnityEngine.Object.Instantiate(aircraft);
+            try
+            {
+                QuestFlightLab.Aircraft.ProductionAircraftLightingController lighting =
+                    instance.GetComponentInChildren<
+                        QuestFlightLab.Aircraft.ProductionAircraftLightingController>(true);
+                Assert.That(lighting, Is.Not.Null);
+                Assert.That(lighting.ApplyAuthoredLightingNow(), Is.Not.Null);
+                Renderer[] runtimeRenderers = instance.GetComponentsInChildren<Renderer>(true);
+                foreach (string authoritativeName in new[]
+                         {
+                             PhotorealAerialReflectionAuthoring.InstrumentMeterRendererName,
+                             "Static_Display_New_Mat_01_0_New_Mat_01_0",
+                             "Static_TXT_White_New_Static_0_White_New_Static_0"
+                         })
+                {
+                    Renderer authoritative = runtimeRenderers.Single(renderer => string.Equals(
+                        renderer.name, authoritativeName, StringComparison.Ordinal));
+                    Assert.That(authoritative.enabled, Is.True, authoritativeName);
+                    Assert.That(authoritative.sharedMaterials, Is.Not.Empty, authoritativeName);
+                    foreach (Material material in authoritative.sharedMaterials)
+                    {
+                        Assert.That(material, Is.Not.Null, authoritativeName);
+                        Assert.That(material.shader, Is.Not.Null, authoritativeName);
+                        Assert.That(material.shader.name,
+                            Is.Not.EqualTo(PhotorealAerialReflectionAuthoring
+                                .CockpitStableInteriorShaderName), authoritativeName);
+                        if (string.Equals(authoritativeName,
+                                PhotorealAerialReflectionAuthoring.InstrumentMeterRendererName,
+                                StringComparison.Ordinal))
+                        {
+                            Assert.That(material.shader.name,
+                                Does.Contain("glTF"));
+                            Assert.That(material.HasProperty("_AuthoredReflectionCube"), Is.False);
+                            Assert.That(material.HasProperty("emissiveFactor"), Is.True);
+                            Assert.That(material.GetColor("emissiveFactor").maxColorComponent,
+                                Is.GreaterThanOrEqualTo(0.24f));
+                            Assert.That(material.GetTexture("emissiveTexture"),
+                                Is.SameAs(material.GetTexture("baseColorTexture")));
+                        }
+                        else if (authoritativeName.Contains("Static_Display", StringComparison.Ordinal))
+                        {
+                            Assert.That(material, Is.SameAs(AssetDatabase.LoadAssetAtPath<Material>(
+                                PhotorealAerialReflectionAuthoring.SourceInstrumentDisplayMaterialPath)));
+                        }
+                        else
+                        {
+                            Assert.That(material.HasProperty("emissiveFactor"), Is.True);
+                            Assert.That(material.GetColor("emissiveFactor").maxColorComponent,
+                                Is.GreaterThan(0.6f));
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(instance);
+            }
         }
 
         [Test]

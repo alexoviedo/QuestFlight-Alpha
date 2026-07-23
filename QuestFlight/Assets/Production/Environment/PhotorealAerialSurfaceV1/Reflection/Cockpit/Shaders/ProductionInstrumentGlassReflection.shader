@@ -4,9 +4,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
     {
         _Tint ("Neutral Glass Tint", Color) = (0.90, 0.94, 0.98, 1)
         [NoScaleOffset] _AuthoredReflectionCube ("Offline Cockpit Interior Reflection", Cube) = "black" {}
-        _Opacity ("Base Opacity", Range(0, 0.12)) = 0.036
-        _FresnelOpacity ("Edge Fresnel Opacity", Range(0, 0.12)) = 0.072
-        _ReflectionStrength ("Reflection Strength", Range(0, 0.85)) = 0.78
+        _ReflectionStrength ("Reflection Strength", Range(0, 0.85)) = 0.46
         _DirectGlintStrength ("Directional Glint Strength", Range(0, 0.16)) = 0.10
         _PerceptualRoughness ("Perceptual Roughness", Range(0.1, 1)) = 0.22
         [HideInInspector] _InstrumentToAircraftRow0 ("Instrument To Aircraft Row 0", Vector) = (1,0,0,0)
@@ -22,7 +20,9 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
         ZWrite Off
         ZTest LEqual
         Offset -1, -1
-        Blend One OneMinusSrcAlpha
+        // Reflected radiance is additive and bounded. It can never turn the underlying
+        // gauge artwork or switch panel into a gray/black transparency overlay.
+        Blend One One
 
         Pass
         {
@@ -36,8 +36,6 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
 
             fixed4 _Tint;
             samplerCUBE _AuthoredReflectionCube;
-            half _Opacity;
-            half _FresnelOpacity;
             half _ReflectionStrength;
             half _DirectGlintStrength;
             half _PerceptualRoughness;
@@ -82,7 +80,6 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
                 half3 viewDirection = normalize(_WorldSpaceCameraPos - input.worldPosition);
                 half ndotv = saturate(abs(dot(normal, viewDirection)));
                 half fresnel = pow(1.0h - ndotv, 5.0h);
-                half opacity = min(_Opacity + fresnel * _FresnelOpacity, 0.10h);
                 half3 instrumentLocalReflectionDirection = normalize(mul(
                     (half3x3)unity_WorldToObject, reflect(-viewDirection, normal)));
                 half3 localReflectionDirection = normalize(half3(
@@ -94,21 +91,21 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half glint = pow(saturate(dot(
                     reflect(-lightDirection, normal), viewDirection)), 36.0h);
-                // Preserve a visible normal-incidence signal on the forward-facing gauge
-                // cover. The previous dark cubemap sample plus a narrow headliner ramp was
-                // structurally correct but perceptually absent in the worn Quest view.
-                half opticalFresnel = 0.075h + 0.925h * fresnel;
+                // A real instrument lens retains a low, visible normal-incidence reflection.
+                // The 0.20 floor yields a measurable 4-8% signal from the authored dark cabin
+                // cube instead of disappearing beneath the Quest display/tonemapping floor.
+                half opticalFresnel = 0.20h + 0.80h * fresnel;
                 half headlinerCue = smoothstep(-0.28h, 0.58h, localReflectionDirection.y);
                 half3 liftedReflection = lerp(
-                    reflection, sqrt(saturate(reflection)), 0.44h);
+                    reflection, sqrt(saturate(reflection)), 0.72h);
                 half3 cabinHighlight = half3(0.31h, 0.30h, 0.285h) *
-                    (0.018h + headlinerCue * 0.035h);
-                half3 premultiplied = _Tint.rgb * opacity * 0.018h +
-                                      liftedReflection * _ReflectionStrength * opticalFresnel +
-                                      cabinHighlight;
-                premultiplied += _LightColor0.rgb * glint * _DirectGlintStrength *
-                                 (0.25h + opticalFresnel * 0.75h);
-                return fixed4(premultiplied, opacity);
+                    (0.006h + headlinerCue * 0.020h);
+                half3 reflectedRadiance =
+                    liftedReflection * _Tint.rgb * _ReflectionStrength * opticalFresnel +
+                    cabinHighlight;
+                reflectedRadiance += _LightColor0.rgb * glint * _DirectGlintStrength *
+                                     (0.20h + opticalFresnel * 0.55h);
+                return fixed4(reflectedRadiance, 0.0h);
             }
             ENDCG
         }

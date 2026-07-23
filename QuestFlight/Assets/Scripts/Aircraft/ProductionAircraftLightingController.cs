@@ -56,6 +56,8 @@ namespace QuestFlightLab.Aircraft
 
         [SerializeField] private GameObject importedAircraftRoot;
         [SerializeField] private Shader stableCockpitShader;
+        [SerializeField] private Texture2D instrumentDisplayBaseColor;
+        [SerializeField] private Texture2D instrumentDisplayEmission;
         [SerializeField, Range(0f, MaximumStaticDepthStrength)]
         private float staticDepthStrength = DefaultStaticDepthStrength;
         [SerializeField, Range(0f, 1f)]
@@ -90,10 +92,18 @@ namespace QuestFlightLab.Aircraft
                 enabled = false;
                 return null;
             }
+            if (instrumentDisplayBaseColor == null || instrumentDisplayEmission == null)
+            {
+                Debug.LogError("[QuestFlight][AircraftLighting] Authored instrument display contract is missing.", this);
+                enabled = false;
+                return null;
+            }
 
             Report = ApplyAuthoredLighting(
                 importedAircraftRoot,
                 stableCockpitShader,
+                instrumentDisplayBaseColor,
+                instrumentDisplayEmission,
                 staticDepthStrength,
                 cockpitOcclusionStrength,
                 coarseNormalStrength,
@@ -120,6 +130,8 @@ namespace QuestFlightLab.Aircraft
             return ApplyAuthoredLighting(
                 root,
                 Shader.Find(StableCockpitShaderName),
+                null,
+                null,
                 depthStrength,
                 occlusionStrength,
                 normalStrength,
@@ -130,6 +142,8 @@ namespace QuestFlightLab.Aircraft
         private static ProductionAircraftLightingReport ApplyAuthoredLighting(
             GameObject root,
             Shader stableShader,
+            Texture2D displayBaseColor,
+            Texture2D displayEmission,
             float depthStrength,
             float occlusionStrength,
             float normalStrength,
@@ -150,6 +164,7 @@ namespace QuestFlightLab.Aircraft
                 strategy = "static_material_depth_plus_baked_ao_soft_normals_and_geometry_derived_directional_visibility_no_realtime_shadow_map"
             };
             Dictionary<Material, Material> cockpitClones = new Dictionary<Material, Material>();
+            Dictionary<Material, Material> instrumentClones = new Dictionary<Material, Material>();
 
             Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
             foreach (Renderer renderer in renderers)
@@ -175,10 +190,42 @@ namespace QuestFlightLab.Aircraft
                     renderer.receiveShadows = false;
                 }
 
-                // The authored window and instrument-cover materials retain their dedicated
-                // reflection shaders. Only opaque cockpit geometry receives the stable
-                // material-depth shader, so no screen-space overlay can cover the sky.
+                // Cabin glazing and the authored gauge-only lens array keep their dedicated
+                // reflection shaders. Meter_01 must retain its imported glTF PBR shader:
+                // that renderer also owns lower-panel artwork, so replacing its shader changes
+                // switch-panel channel semantics. Instrument surfaces are cloned only to tune
+                // their existing PBR/emissive inputs without altering that shader contract.
                 if (!cockpit || IsTransparentGlass(renderer)) continue;
+                if (IsAuthoritativeInstrumentDisplaySurface(identity))
+                {
+                    Material[] instrumentMaterials = renderer.sharedMaterials;
+                    bool instrumentChanged = false;
+                    for (int index = 0; index < instrumentMaterials.Length; index++)
+                    {
+                        Material source = instrumentMaterials[index];
+                        if (source == null) continue;
+                        if (!instrumentClones.TryGetValue(source, out Material tuned))
+                        {
+                            tuned = new Material(source)
+                            {
+                                name = CleanMaterialName(source.name) + " Quest Instrument Tuned"
+                            };
+                            instrumentClones.Add(source, tuned);
+                            ownedMaterials.Add(tuned);
+                            report.cockpitMaterialCloneCount++;
+                        }
+                        TuneAuthoritativeInstrumentDisplayMaterial(
+                            tuned, identity, displayBaseColor, displayEmission, report);
+                        instrumentMaterials[index] = tuned;
+                        instrumentChanged = true;
+                    }
+                    if (instrumentChanged) renderer.sharedMaterials = instrumentMaterials;
+                    continue;
+                }
+                // The blank imported display substrate supplies the physical bezel/screen PBR.
+                // Keep it intact beneath the dedicated opaque readout apertures.
+                if (identity.IndexOf("Static_Display", StringComparison.OrdinalIgnoreCase) >= 0)
+                    continue;
                 Material[] materials = renderer.sharedMaterials;
                 bool changed = false;
                 for (int index = 0; index < materials.Length; index++)
@@ -243,6 +290,49 @@ namespace QuestFlightLab.Aircraft
             }
         }
 
+        private static void TuneAuthoritativeInstrumentDisplayMaterial(
+            Material material,
+            string rendererIdentity,
+            Texture2D displayBaseColor,
+            Texture2D displayEmission,
+            ProductionAircraftLightingReport report)
+        {
+            bool display = rendererIdentity.IndexOf("Static_Display", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool text = rendererIdentity.IndexOf("Static_TXT", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool meter = rendererIdentity.IndexOf("Meter_01", StringComparison.OrdinalIgnoreCase) >= 0;
+
+            if (display && displayBaseColor != null && displayEmission != null)
+            {
+                if (material.HasProperty("baseColorTexture"))
+                    material.SetTexture("baseColorTexture", displayBaseColor);
+                if (material.HasProperty("emissiveTexture"))
+                    material.SetTexture("emissiveTexture", displayEmission);
+            }
+            else if ((text || meter) && material.HasProperty("baseColorTexture") &&
+                     material.HasProperty("emissiveTexture"))
+            {
+                Texture baseColor = material.GetTexture("baseColorTexture");
+                Texture emission = material.GetTexture("emissiveTexture");
+                if (emission == null && baseColor != null)
+                    material.SetTexture("emissiveTexture", baseColor);
+            }
+            if (material.HasProperty("emissiveFactor"))
+            {
+                Color existing = material.GetColor("emissiveFactor");
+                // Meter_01 contains the authentic dial markings and lower switch-panel art.
+                // A modest emission floor makes those markings readable beneath the separate
+                // additive lens pass while preserving the imported PBR material and artwork.
+                float target = display ? 0.82f : text ? 0.62f : meter ? 0.24f : 0.17f;
+                material.SetColor("emissiveFactor", new Color(
+                    Mathf.Max(existing.r, target * 0.96f),
+                    Mathf.Max(existing.g, target),
+                    Mathf.Max(existing.b, target * 1.04f),
+                    1f));
+                material.EnableKeyword("_EMISSION");
+            }
+            report.readableInstrumentMaterialCount++;
+        }
+
         private static void TuneCockpitMaterial(
             Material material,
             string rendererIdentity,
@@ -304,10 +394,18 @@ namespace QuestFlightLab.Aircraft
 
         private static bool IsReadableInstrumentMaterial(string identity)
         {
-            return identity.IndexOf("Meter_01", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                   identity.IndexOf("Static_TXT", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            return identity.IndexOf("Static_TXT", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    identity.IndexOf("ButtonPlate", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    identity.IndexOf("Buttons_MAT", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static bool IsAuthoritativeInstrumentDisplaySurface(string identity)
+        {
+            // Static_Display keeps its imported PBR material. Readable avionics content is
+            // authored on one separate serialized readout mesh so glTF atlas transforms cannot
+            // spill display pixels onto knobs or the surrounding lower panel.
+            return identity.IndexOf("Static_TXT", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   identity.IndexOf("Meter_01", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private static bool IsTransparentGlass(Renderer renderer)

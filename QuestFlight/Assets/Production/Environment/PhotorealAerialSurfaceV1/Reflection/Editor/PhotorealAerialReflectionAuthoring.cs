@@ -29,6 +29,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
         public const string TextureFolder = Root + "/Textures";
         public const string ProfileFolder = Root + "/Profiles";
         public const string CockpitMaterialFolder = Root + "/Cockpit/Materials";
+        public const string CockpitMeshFolder = Root + "/Cockpit/Meshes";
+        public const string CockpitTextureFolder = Root + "/Cockpit/Textures";
         public const string GlobalReflectionPath =
             TextureFolder + "/KBDU_GlobalGroundSkyReflection_256.exr";
         public const string AirportLocalReflectionPath =
@@ -43,13 +45,23 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             CockpitMaterialFolder + "/ProductionCockpitWindowReflection.mat";
         public const string InstrumentGlassMaterialPath =
             CockpitMaterialFolder + "/ProductionInstrumentGlassReflection.mat";
+        public const string InstrumentDisplayReadoutMaterialPath =
+            CockpitMaterialFolder + "/ProductionInstrumentDisplayReadout.mat";
+        public const string InstrumentDisplayReadoutShaderPath =
+            Root + "/Cockpit/Shaders/ProductionInstrumentDisplayReadout.shader";
         public const string CockpitStableInteriorShaderPath =
             Root + "/Cockpit/Shaders/ProductionCockpitStableInterior.shader";
+        public const string InstrumentDisplayBaseColorPath =
+            CockpitTextureFolder + "/C172_StaticDisplayReadable_BaseColor.png";
+        public const string InstrumentDisplayEmissionPath =
+            CockpitTextureFolder + "/C172_StaticDisplayReadable_Emission.png";
 
         public const string WindowShaderName =
             "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection";
         public const string InstrumentGlassShaderName =
             "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection";
+        public const string InstrumentDisplayReadoutShaderName =
+            "QuestFlight/Photoreal Aerial Surface V1/Instrument Display Readout";
         public const string CockpitStableInteriorShaderName =
             QuestFlightLab.Aircraft.ProductionAircraftLightingController.StableCockpitShaderName;
 
@@ -79,20 +91,32 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             "Assets/Production/Materials/Cockpit/Cockpit_GlassMat_New_-8047257934222504514.mat";
         public const string SourceInstrumentGlassMaterialPath =
             "Assets/Production/Materials/Cockpit/Cockpit_MI_Glass1_-7336442739054310687.mat";
-        public const string PrincipalInstrumentCoverMeshPath =
-            Root + "/Cockpit/Meshes/C172_PrincipalInstrumentGlassCover.asset";
+        public const string SourceInstrumentDisplayMaterialPath =
+            "Assets/Production/Materials/Cockpit/Cockpit_New_Mat_01_8844457045159653726.mat";
 
         public const string FoundationObjectName = "PhotorealAerialReflectionFoundation";
         public const string AirportProbeObjectName = "KBDU_AirportReflectionProbe";
         public const string CockpitRootName = "ImportedCockpitInterior";
         public const string ExteriorWindowRendererName =
             "Cessna_Exterior_Glass_MAT_0_Glass_MAT_0";
-        public const string InstrumentCoverRendererName =
-            "ProductionPrincipalInstrumentGlassCover";
+        public const string InstrumentLensArrayName =
+            "ProductionPrincipalInstrumentLensArray";
+        public const string InstrumentLensArrayMeshPath =
+            Root + "/Cockpit/Meshes/C172_PrincipalInstrumentLensArray.asset";
+        public const string InstrumentDisplayReadoutName =
+            "ProductionInstrumentDisplayReadouts";
+        public const string InstrumentDisplayReadoutMeshPath =
+            Root + "/Cockpit/Meshes/C172_InstrumentDisplayReadouts.asset";
         public const string DecorativeInstrumentCoverRendererName =
             "GlassPartNew_GlassMat_New_0_GlassMat_New_0";
-        public const string LegacyMiGlassRendererName =
+        public const string MisidentifiedInstrumentGlassRendererName =
             "Cessna_Interior_MI_Glass1_0_MI_Glass1_0";
+        public const string InstrumentMeterRendererName =
+            "Cessna_Interior_Meter_01_MAT_0_Meter_01_MAT_0";
+        public const string InstrumentDisplayRendererName =
+            "Static_Display_New_Mat_01_0_New_Mat_01_0";
+        public const string RejectedGeneratedInstrumentCoverName =
+            "ProductionPrincipalInstrumentGlassCover";
         public const string RejectedCockpitSunOcclusionObjectName =
             "ProductionCockpitBakedSunOcclusion";
 
@@ -111,7 +135,10 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             EnsureFolders();
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             ReflectionAssetPair reflections = GenerateGroundSkyReflections();
+            EnsureInstrumentDisplayTextures();
             EnsureMaterials();
+            EnsureInstrumentLensMeshAsset();
+            EnsureInstrumentDisplayReadoutMeshAsset();
             EnsureProfile(reflections.Global, reflections.AirportLocal);
             AssetDatabase.SaveAssets();
             WriteManifest(reflections);
@@ -139,6 +166,243 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             }
         }
 
+        public static void IntegrateInstrumentMaterialRestorationBatch()
+        {
+            try
+            {
+                EnsureFolders();
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                EnsureInstrumentDisplayTextures();
+                EnsureMaterials();
+                EnsureInstrumentLensMeshAsset();
+                EnsureInstrumentDisplayReadoutMeshAsset();
+                IntegrateAircraftPrefab();
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                Debug.Log("[QuestFlight][InstrumentGlass] INSTRUMENT_MATERIAL_RESTORATION_SUCCESS");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorApplication.Exit(1);
+            }
+        }
+
+        public static void DiagnoseInstrumentCubemapCardinalsBatch()
+        {
+            const string temporaryPath =
+                "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Textures/__InstrumentCardinalDiagnostic.exr";
+            try
+            {
+                EnsureFolders();
+                Color[] pixels = new Color[ReflectionEquirectangularWidth * ReflectionEquirectangularHeight];
+                for (int y = 0; y < ReflectionEquirectangularHeight; y++)
+                {
+                    float latitude = (((y + 0.5f) / ReflectionEquirectangularHeight) - 0.5f) * Mathf.PI;
+                    float cosLatitude = Mathf.Cos(latitude);
+                    for (int x = 0; x < ReflectionEquirectangularWidth; x++)
+                    {
+                        float longitude = (((x + 0.5f) / ReflectionEquirectangularWidth) - 0.5f) *
+                                          Mathf.PI * 2f;
+                        Vector3 direction = new Vector3(
+                            Mathf.Sin(longitude) * cosLatitude,
+                            Mathf.Sin(latitude),
+                            Mathf.Cos(longitude) * cosLatitude);
+                        pixels[y * ReflectionEquirectangularWidth + x] = CardinalColor(direction);
+                    }
+                }
+
+                Texture2D equirectangular = CreateReflectionTexture("InstrumentCardinalDiagnostic", pixels);
+                try
+                {
+                    WriteIfChanged(temporaryPath,
+                        equirectangular.EncodeToEXR(Texture2D.EXRFlags.CompressZIP));
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(equirectangular);
+                }
+
+                AssetDatabase.ImportAsset(temporaryPath, ImportAssetOptions.ForceSynchronousImport);
+                TextureImporter importer = AssetImporter.GetAtPath(temporaryPath) as TextureImporter;
+                if (importer == null) throw new InvalidOperationException("Cardinal diagnostic importer is missing.");
+                importer.textureShape = TextureImporterShape.TextureCube;
+                importer.generateCubemap = TextureImporterGenerateCubemap.Cylindrical;
+                TextureImporterSettings settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
+                settings.cubemapConvolution = TextureImporterCubemapConvolution.None;
+                importer.SetTextureSettings(settings);
+                importer.sRGBTexture = false;
+                importer.isReadable = true;
+                importer.mipmapEnabled = false;
+                importer.maxTextureSize = 128;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.SaveAndReimport();
+                Cubemap cubemap = LoadRequired<Cubemap>(temporaryPath);
+                string report = string.Join(", ", new[]
+                {
+                    "+X=" + CardinalName(cubemap.GetPixel(CubemapFace.PositiveX, 64, 64)),
+                    "-X=" + CardinalName(cubemap.GetPixel(CubemapFace.NegativeX, 64, 64)),
+                    "+Z=" + CardinalName(cubemap.GetPixel(CubemapFace.PositiveZ, 64, 64)),
+                    "-Z=" + CardinalName(cubemap.GetPixel(CubemapFace.NegativeZ, 64, 64)),
+                    "+Y=" + CardinalName(cubemap.GetPixel(CubemapFace.PositiveY, 64, 64)),
+                    "-Y=" + CardinalName(cubemap.GetPixel(CubemapFace.NegativeY, 64, 64))
+                });
+                Debug.Log("[QuestFlight][InstrumentGlass] CARDINAL_ROUND_TRIP " + report);
+                AssetDatabase.DeleteAsset(temporaryPath);
+                EditorApplication.Exit(0);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorApplication.Exit(1);
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(temporaryPath);
+            }
+        }
+
+        public static void DiagnoseInstrumentDisplayUvBatch()
+        {
+            GameObject root = null;
+            try
+            {
+                root = PrefabUtility.LoadPrefabContents(AircraftPrefabPath);
+                Renderer renderer = root.GetComponentsInChildren<Renderer>(true).Single(item =>
+                    string.Equals(item.name, "Static_Display_New_Mat_01_0_New_Mat_01_0",
+                        StringComparison.Ordinal));
+                Mesh mesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
+                if (mesh == null) throw new InvalidOperationException("Static display mesh is missing.");
+                Vector2[] uvs = mesh.uv;
+                Vector3[] vertices = mesh.vertices;
+                int[] triangles = mesh.triangles;
+                // Imported glTF meshes frequently duplicate vertices at UV seams. Group by
+                // quantized position so the report describes physical display surfaces rather
+                // than thousands of disconnected individual triangles.
+                var trianglesByPosition = new Dictionary<Vector3Int, List<int>>();
+                for (int triangle = 0; triangle < triangles.Length / 3; triangle++)
+                for (int corner = 0; corner < 3; corner++)
+                {
+                    int vertex = triangles[triangle * 3 + corner];
+                    Vector3 position = vertices[vertex];
+                    var key = new Vector3Int(
+                        Mathf.RoundToInt(position.x * 100000f),
+                        Mathf.RoundToInt(position.y * 100000f),
+                        Mathf.RoundToInt(position.z * 100000f));
+                    if (!trianglesByPosition.TryGetValue(key, out List<int> adjacent))
+                        trianglesByPosition.Add(key, adjacent = new List<int>());
+                    adjacent.Add(triangle);
+                }
+                var queue = new Queue<int>();
+                bool[] visited = new bool[triangles.Length / 3];
+                int componentIndex = 0;
+                for (int triangle = 0; triangle < visited.Length; triangle++)
+                {
+                    if (visited[triangle]) continue;
+                    visited[triangle] = true;
+                    queue.Enqueue(triangle);
+                    var componentVertices = new HashSet<int>();
+                    int triangleCount = 0;
+                    while (queue.Count > 0)
+                    {
+                        int current = queue.Dequeue();
+                        triangleCount++;
+                        for (int corner = 0; corner < 3; corner++)
+                        {
+                            int vertex = triangles[current * 3 + corner];
+                            componentVertices.Add(vertex);
+                            Vector3 position = vertices[vertex];
+                            var key = new Vector3Int(
+                                Mathf.RoundToInt(position.x * 100000f),
+                                Mathf.RoundToInt(position.y * 100000f),
+                                Mathf.RoundToInt(position.z * 100000f));
+                            foreach (int neighbor in trianglesByPosition[key])
+                            {
+                                if (visited[neighbor]) continue;
+                                visited[neighbor] = true;
+                                queue.Enqueue(neighbor);
+                            }
+                        }
+                    }
+                    Vector2 uvMin = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+                    Vector2 uvMax = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+                    bool initialized = false;
+                    Bounds bounds = default;
+                    foreach (int vertex in componentVertices)
+                    {
+                        uvMin = Vector2.Min(uvMin, uvs[vertex]);
+                        uvMax = Vector2.Max(uvMax, uvs[vertex]);
+                        if (!initialized) { bounds = new Bounds(vertices[vertex], Vector3.zero); initialized = true; }
+                        else bounds.Encapsulate(vertices[vertex]);
+                    }
+                    if (bounds.size.x >= 0.012f && bounds.size.y >= 0.006f)
+                        Debug.Log($"[QuestFlight][InstrumentDisplay] component={componentIndex} " +
+                                  $"triangles={triangleCount} uvMin={uvMin} uvMax={uvMax} " +
+                                  $"size={bounds.size} center={bounds.center}");
+                    componentIndex++;
+                }
+                var frontFaces = new List<(float area, int triangle, Vector3 center, Vector3 normal,
+                    Vector2 uvMin, Vector2 uvMax)>();
+                for (int triangle = 0; triangle < triangles.Length / 3; triangle++)
+                {
+                    int a = triangles[triangle * 3];
+                    int b = triangles[triangle * 3 + 1];
+                    int c = triangles[triangle * 3 + 2];
+                    Vector3 edgeA = vertices[b] - vertices[a];
+                    Vector3 edgeB = vertices[c] - vertices[a];
+                    Vector3 cross = Vector3.Cross(edgeA, edgeB);
+                    float area = cross.magnitude * 0.5f;
+                    if (area < 0.00015f || Mathf.Abs(cross.normalized.z) < 0.80f) continue;
+                    frontFaces.Add((area, triangle,
+                        (vertices[a] + vertices[b] + vertices[c]) / 3f,
+                        cross.normalized,
+                        Vector2.Min(uvs[a], Vector2.Min(uvs[b], uvs[c])),
+                        Vector2.Max(uvs[a], Vector2.Max(uvs[b], uvs[c]))));
+                }
+                foreach (var face in frontFaces.OrderByDescending(item => item.area).Take(48))
+                    Debug.Log($"[QuestFlight][InstrumentDisplayFace] triangle={face.triangle} " +
+                              $"area={face.area:F6} center={face.center} normal={face.normal} " +
+                              $"uvMin={face.uvMin} uvMax={face.uvMax}");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorApplication.Exit(1);
+            }
+            finally
+            {
+                if (root != null) PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        private static Color CardinalColor(Vector3 direction)
+        {
+            Vector3 absolute = new Vector3(
+                Mathf.Abs(direction.x), Mathf.Abs(direction.y), Mathf.Abs(direction.z));
+            if (absolute.x >= absolute.y && absolute.x >= absolute.z)
+                return direction.x >= 0f ? Color.red : Color.cyan;
+            if (absolute.y >= absolute.x && absolute.y >= absolute.z)
+                return direction.y >= 0f ? Color.blue : Color.yellow;
+            return direction.z >= 0f ? Color.green : Color.magenta;
+        }
+
+        private static string CardinalName(Color color)
+        {
+            var candidates = new[]
+            {
+                ("+X", Color.red), ("-X", Color.cyan),
+                ("+Z", Color.green), ("-Z", Color.magenta),
+                ("+Y", Color.blue), ("-Y", Color.yellow)
+            };
+            return candidates.OrderBy(item =>
+                Mathf.Abs(color.r - item.Item2.r) +
+                Mathf.Abs(color.g - item.Item2.g) +
+                Mathf.Abs(color.b - item.Item2.b)).First().Item1;
+        }
+
         [MenuItem("QuestFlight/Photoreal Aerial Surface V1/Integrate Reflection And Cockpit Foundation")]
         public static void IntegrateForLead()
         {
@@ -162,24 +426,6 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             try
             {
                 IntegrateForLead();
-                EditorApplication.Exit(0);
-            }
-            catch (Exception exception)
-            {
-                Debug.LogException(exception);
-                EditorApplication.Exit(1);
-            }
-        }
-
-        public static void IntegrateInstrumentCoverBatch()
-        {
-            try
-            {
-                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-                IntegrateAircraftPrefab();
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-                Debug.Log("[QuestFlight][PhotorealAerialReflection] INSTRUMENT_COVER_INTEGRATION_SUCCESS");
                 EditorApplication.Exit(0);
             }
             catch (Exception exception)
@@ -629,13 +875,24 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 CockpitInteriorReflectionPath, true);
             AppendFileManifestAsset(json, "profile", ProfilePath, true);
             AppendFileManifestAsset(json, "window_material", WindowMaterialPath, true);
-            AppendFileManifestAsset(json, "instrument_glass_material", InstrumentGlassMaterialPath, true);
             AppendFileManifestAsset(json, "window_shader",
                 Root + "/Cockpit/Shaders/ProductionCockpitWindowReflection.shader", true);
-            AppendFileManifestAsset(json, "instrument_glass_shader",
-                Root + "/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader", true);
             AppendFileManifestAsset(json, "cockpit_stable_interior_shader",
                 CockpitStableInteriorShaderPath, false);
+            AppendFileManifestAsset(json, "instrument_glass_material", InstrumentGlassMaterialPath, true);
+            AppendFileManifestAsset(json, "instrument_glass_shader",
+                Root + "/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader", true);
+            AppendFileManifestAsset(json, "instrument_lens_mesh", InstrumentLensArrayMeshPath, true);
+            AppendFileManifestAsset(json, "instrument_display_readout_mesh",
+                InstrumentDisplayReadoutMeshPath, true);
+            AppendFileManifestAsset(json, "instrument_display_readout_material",
+                InstrumentDisplayReadoutMaterialPath, true);
+            AppendFileManifestAsset(json, "instrument_display_readout_shader",
+                InstrumentDisplayReadoutShaderPath, true);
+            AppendFileManifestAsset(json, "instrument_display_base_color",
+                InstrumentDisplayBaseColorPath, true);
+            AppendFileManifestAsset(json, "instrument_display_emission",
+                InstrumentDisplayEmissionPath, true);
             json.AppendLine("  },");
             json.AppendLine("  \"integration_contract\": {");
             AppendJsonString(json, "global_reflection_mode",
@@ -652,13 +909,16 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             AppendJsonString(json, "aircraft_probe_anchor",
                 "AircraftSimulationRoot/CenterOfGravityReference", true, 4);
             AppendJsonString(json, "aircraft_probe_usage", "BlendProbesAndSkybox", false, 4);
+            AppendJsonString(json, "instrument_surface_mode",
+                "Imported Meter_01 PBR plus one 13-aperture additive lens mesh; one opaque 12-triangle avionics readout mesh; source display/text retain imported PBR",
+                false, 4);
             json.AppendLine("  },");
             json.AppendLine("  \"android_budget\": {");
             json.AppendLine("    \"new_reflection_probes\": 1,");
             json.AppendLine("    \"new_runtime_probe_cameras\": 0,");
             json.AppendLine("    \"new_runtime_probe_updates\": 0,");
-            json.AppendLine("    \"new_renderers\": 0,");
-            json.AppendLine("    \"new_draw_calls\": 0,");
+            json.AppendLine("    \"new_renderers\": 2,");
+            json.AppendLine("    \"new_draw_calls\": 2,");
             json.AppendLine("    \"new_materials\": 2,");
             json.AppendLine("    \"disabled_duplicate_exterior_glass_renderers\": 1,");
             json.AppendLine("    \"static_cubemap_count\": 2,");
@@ -816,9 +1076,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             instrument.SetTexture("_AuthoredReflectionCube",
                 LoadRequired<Cubemap>(CockpitInteriorReflectionPath));
             instrument.SetColor("_Tint", new Color(0.90f, 0.94f, 0.98f, 1f));
-            instrument.SetFloat("_Opacity", 0.036f);
-            instrument.SetFloat("_FresnelOpacity", 0.072f);
-            instrument.SetFloat("_ReflectionStrength", 0.78f);
+            instrument.SetFloat("_ReflectionStrength", 0.46f);
             instrument.SetFloat("_DirectGlintStrength", 0.12f);
             instrument.SetFloat("_PerceptualRoughness", 0.22f);
             SetSerializedTransformRows(instrument, "_InstrumentToAircraft", instrumentLocalToAircraft);
@@ -827,6 +1085,195 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             instrument.doubleSidedGI = false;
             EditorUtility.SetDirty(instrument);
 
+            Shader displayShader = Shader.Find(InstrumentDisplayReadoutShaderName);
+            if (displayShader == null)
+                throw new InvalidOperationException("Instrument display readout shader is missing.");
+            Material displayReadout = LoadOrCreateMaterial(
+                InstrumentDisplayReadoutMaterialPath, displayShader,
+                "ProductionInstrumentDisplayReadout");
+            displayReadout.SetTexture("_MainTex",
+                LoadRequired<Texture2D>(InstrumentDisplayBaseColorPath));
+            if (displayReadout.HasProperty("_Color"))
+                displayReadout.SetColor("_Color", Color.white);
+            displayReadout.renderQueue = (int)RenderQueue.Geometry + 4;
+            displayReadout.enableInstancing = false;
+            displayReadout.doubleSidedGI = false;
+            EditorUtility.SetDirty(displayReadout);
+
+        }
+
+        private static void EnsureInstrumentDisplayTextures()
+        {
+            const int width = 512;
+            const int height = 512;
+            var baseOutput = new Texture2D(width, height, TextureFormat.RGBA32, false, false);
+            var emissionOutput = new Texture2D(width, height, TextureFormat.RGBA32, false, false);
+            try
+            {
+                Color32[] basePixels = Enumerable.Repeat(
+                    new Color32(3, 7, 5, 255), width * height).ToArray();
+                Color32[] emissionPixels = Enumerable.Repeat(
+                    new Color32(0, 0, 0, 255), width * height).ToArray();
+                Color32 readableGreen = new Color32(133, 207, 113, 255);
+                Color32 emissiveGreen = new Color32(76, 210, 72, 255);
+                Color32 readableAmber = new Color32(228, 164, 76, 255);
+                Color32 emissiveAmber = new Color32(235, 118, 28, 255);
+
+                // A dedicated, normalized atlas removes the imported glTF atlas/transform
+                // ambiguity. GPS occupies V 0-.5, radios .5-.75, and transponder .75-1.
+                // Only the twelve physical screen triangles sample this texture.
+                DrawDisplayText(basePixels, emissionPixels, width, height,
+                    84, 174, 5, "KBDU RWY 08", readableGreen, emissiveGreen);
+                DrawDisplayText(basePixels, emissionPixels, width, height,
+                    132, 108, 5, "ALT 5430", readableGreen, emissiveGreen);
+                DrawDisplayText(basePixels, emissionPixels, width, height,
+                    144, 42, 5, "HDG 090", readableAmber, emissiveAmber);
+                DrawDisplayText(basePixels, emissionPixels, width, height,
+                    112, 298, 8, "122.80", readableGreen, emissiveGreen);
+                DrawDisplayText(basePixels, emissionPixels, width, height,
+                    94, 426, 6, "XPDR 1200", readableAmber, emissiveAmber);
+
+                baseOutput.SetPixels32(basePixels);
+                emissionOutput.SetPixels32(emissionPixels);
+                baseOutput.Apply(false, false);
+                emissionOutput.Apply(false, false);
+                WriteIfChanged(InstrumentDisplayBaseColorPath, baseOutput.EncodeToPNG());
+                WriteIfChanged(InstrumentDisplayEmissionPath, emissionOutput.EncodeToPNG());
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(baseOutput);
+                UnityEngine.Object.DestroyImmediate(emissionOutput);
+            }
+
+            ConfigureInstrumentDisplayTexture(InstrumentDisplayBaseColorPath);
+            ConfigureInstrumentDisplayTexture(InstrumentDisplayEmissionPath);
+        }
+
+        private static Texture2D ReadTexturePixels(Texture source)
+        {
+            RenderTexture temporary = RenderTexture.GetTemporary(
+                source.width, source.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+            RenderTexture previous = RenderTexture.active;
+            try
+            {
+                Graphics.Blit(source, temporary);
+                RenderTexture.active = temporary;
+                var readable = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false, false);
+                readable.ReadPixels(new Rect(0, 0, source.width, source.height), 0, 0, false);
+                readable.Apply(false, false);
+                return readable;
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                RenderTexture.ReleaseTemporary(temporary);
+            }
+        }
+
+        private static void ConfigureInstrumentDisplayTexture(string path)
+        {
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null)
+                throw new InvalidOperationException("Generated display texture did not import: " + path);
+            importer.textureType = TextureImporterType.Default;
+            importer.textureShape = TextureImporterShape.Texture2D;
+            importer.sRGBTexture = true;
+            importer.alphaSource = TextureImporterAlphaSource.None;
+            importer.isReadable = false;
+            importer.mipmapEnabled = true;
+            importer.streamingMipmaps = false;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.filterMode = FilterMode.Trilinear;
+            importer.anisoLevel = 1;
+            importer.maxTextureSize = 1024;
+            importer.textureCompression = TextureImporterCompression.CompressedHQ;
+            TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
+            android.name = "Android";
+            android.overridden = true;
+            android.maxTextureSize = 1024;
+            android.format = TextureImporterFormat.ASTC_6x6;
+            android.textureCompression = TextureImporterCompression.CompressedHQ;
+            android.compressionQuality = 100;
+            importer.SetPlatformTextureSettings(android);
+            importer.SaveAndReimport();
+        }
+
+        private static void DrawDisplayText(
+            Color32[] basePixels,
+            Color32[] emissionPixels,
+            int width,
+            int height,
+            int originX,
+            int originY,
+            int scale,
+            string text,
+            Color32 baseColor,
+            Color32 emissionColor)
+        {
+            int cursor = originX;
+            foreach (char character in text)
+            {
+                byte[] rows = GlyphRows(character);
+                for (int row = 0; row < 7; row++)
+                {
+                    for (int column = 0; column < 5; column++)
+                    {
+                        if ((rows[row] & (1 << (4 - column))) == 0) continue;
+                        for (int py = 0; py < scale; py++)
+                        for (int px = 0; px < scale; px++)
+                        {
+                            int x = cursor + column * scale + px;
+                            int y = originY + (6 - row) * scale + py;
+                            if (x < 0 || x >= width || y < 0 || y >= height) continue;
+                            int index = y * width + x;
+                            basePixels[index] = baseColor;
+                            emissionPixels[index] = emissionColor;
+                        }
+                    }
+                }
+                cursor += 6 * scale;
+            }
+        }
+
+        private static byte[] GlyphRows(char character)
+        {
+            switch (char.ToUpperInvariant(character))
+            {
+                case '0': return new byte[] { 14, 17, 19, 21, 25, 17, 14 };
+                case '1': return new byte[] { 4, 12, 4, 4, 4, 4, 14 };
+                case '2': return new byte[] { 14, 17, 1, 2, 4, 8, 31 };
+                case '3': return new byte[] { 30, 1, 1, 14, 1, 1, 30 };
+                case '4': return new byte[] { 2, 6, 10, 18, 31, 2, 2 };
+                case '5': return new byte[] { 31, 16, 16, 30, 1, 1, 30 };
+                case '6': return new byte[] { 14, 16, 16, 30, 17, 17, 14 };
+                case '7': return new byte[] { 31, 1, 2, 4, 8, 8, 8 };
+                case '8': return new byte[] { 14, 17, 17, 14, 17, 17, 14 };
+                case '9': return new byte[] { 14, 17, 17, 15, 1, 1, 14 };
+                case 'A': return new byte[] { 14, 17, 17, 31, 17, 17, 17 };
+                case 'B': return new byte[] { 30, 17, 17, 30, 17, 17, 30 };
+                case 'C': return new byte[] { 14, 17, 16, 16, 16, 17, 14 };
+                case 'D': return new byte[] { 30, 17, 17, 17, 17, 17, 30 };
+                case 'E': return new byte[] { 31, 16, 16, 30, 16, 16, 31 };
+                case 'G': return new byte[] { 14, 17, 16, 23, 17, 17, 15 };
+                case 'H': return new byte[] { 17, 17, 17, 31, 17, 17, 17 };
+                case 'K': return new byte[] { 17, 18, 20, 24, 20, 18, 17 };
+                case 'L': return new byte[] { 16, 16, 16, 16, 16, 16, 31 };
+                case 'M': return new byte[] { 17, 27, 21, 21, 17, 17, 17 };
+                case 'N': return new byte[] { 17, 25, 21, 19, 17, 17, 17 };
+                case 'O': return new byte[] { 14, 17, 17, 17, 17, 17, 14 };
+                case 'P': return new byte[] { 30, 17, 17, 30, 16, 16, 16 };
+                case 'R': return new byte[] { 30, 17, 17, 30, 20, 18, 17 };
+                case 'T': return new byte[] { 31, 4, 4, 4, 4, 4, 4 };
+                case 'U': return new byte[] { 17, 17, 17, 17, 17, 17, 14 };
+                case 'V': return new byte[] { 17, 17, 17, 17, 17, 10, 4 };
+                case 'W': return new byte[] { 17, 17, 17, 21, 21, 21, 10 };
+                case 'X': return new byte[] { 17, 17, 10, 4, 10, 17, 17 };
+                case 'Y': return new byte[] { 17, 17, 10, 4, 4, 4, 4 };
+                case '.': return new byte[] { 0, 0, 0, 0, 0, 12, 12 };
+                default: return new byte[] { 0, 0, 0, 0, 0, 0, 0 };
+            }
         }
 
         private static void SetSerializedTransformRows(
@@ -855,13 +1302,13 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 Transform viewpoint = FindDescendant(root.transform, "Main Camera");
                 Renderer window = visual.GetComponentsInChildren<Renderer>(true).Single(renderer =>
                     string.Equals(renderer.name, ExteriorWindowRendererName, StringComparison.Ordinal));
-                Renderer instrument = visual.GetComponentsInChildren<Renderer>(true).Single(renderer =>
-                    string.Equals(renderer.name, InstrumentCoverRendererName, StringComparison.Ordinal));
                 if (cockpit == null || viewpoint == null)
                     throw new InvalidOperationException("Cockpit or authored viewpoint is missing from reflection contract.");
 
                 windowLocalToAircraft = visual.worldToLocalMatrix * window.transform.localToWorldMatrix;
-                instrumentLocalToAircraft = visual.worldToLocalMatrix * instrument.transform.localToWorldMatrix;
+                // The generated lens array is serialized directly under the aircraft visual
+                // root with an identity transform, so its object space is aircraft space.
+                instrumentLocalToAircraft = Matrix4x4.identity;
                 capturePosition = visual.InverseTransformPoint(viewpoint.position);
                 bool initialized = false;
                 boxMinimum = Vector3.zero;
@@ -1009,10 +1456,11 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
 
         private static void IntegrateAircraftPrefab()
         {
-            Material sourceWindow = LoadRequired<Material>(SourceWindowMaterialPath);
+            Material sourceDisplayCover = LoadRequired<Material>(SourceWindowMaterialPath);
             Material sourceInstrument = LoadRequired<Material>(SourceInstrumentGlassMaterialPath);
             Material window = LoadRequired<Material>(WindowMaterialPath);
             Material instrument = LoadRequired<Material>(InstrumentGlassMaterialPath);
+            Material displayReadout = LoadRequired<Material>(InstrumentDisplayReadoutMaterialPath);
             GameObject root = PrefabUtility.LoadPrefabContents(AircraftPrefabPath);
             try
             {
@@ -1026,6 +1474,10 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 SerializedObject lightingSettings = new SerializedObject(lighting);
                 SetObject(lightingSettings, "stableCockpitShader",
                     LoadRequired<Shader>(CockpitStableInteriorShaderPath));
+                SetObject(lightingSettings, "instrumentDisplayBaseColor",
+                    LoadRequired<Texture2D>(InstrumentDisplayBaseColorPath));
+                SetObject(lightingSettings, "instrumentDisplayEmission",
+                    LoadRequired<Texture2D>(InstrumentDisplayEmissionPath));
                 SetFloat(lightingSettings, "staticDepthStrength",
                     QuestFlightLab.Aircraft.ProductionAircraftLightingController.DefaultStaticDepthStrength);
                 SetFloat(lightingSettings, "directionalCabinShadowStrength",
@@ -1036,20 +1488,9 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     rig.CenterOfGravityReference.localPosition.sqrMagnitude > 0.000001f)
                     throw new InvalidOperationException("Reflection anchor must be the existing aircraft CG reference.");
                 Transform cockpit = FindDescendant(rig.AircraftVisualRoot, CockpitRootName);
-                if (cockpit == null)
-                    throw new InvalidOperationException("Authored cockpit root is missing.");
                 Transform viewpoint = FindDescendant(root.transform, "Main Camera");
-                if (viewpoint == null)
-                    throw new InvalidOperationException("Authored cockpit viewpoint is missing.");
-                Renderer decorativeSource = rig.AircraftVisualRoot
-                    .GetComponentsInChildren<Renderer>(true).Single(renderer => string.Equals(
-                        renderer.name, DecorativeInstrumentCoverRendererName, StringComparison.Ordinal));
-                Renderer instrumentCover = EnsurePrincipalInstrumentCover(
-                    decorativeSource, viewpoint, instrument);
-                Matrix4x4 instrumentToAircraft = rig.AircraftVisualRoot.worldToLocalMatrix *
-                                                instrumentCover.transform.localToWorldMatrix;
-                SetSerializedTransformRows(instrument, "_InstrumentToAircraft", instrumentToAircraft);
-                EditorUtility.SetDirty(instrument);
+                if (cockpit == null || viewpoint == null)
+                    throw new InvalidOperationException("Authored cockpit or viewpoint is missing.");
                 foreach (Transform item in cockpit.GetComponentsInChildren<Transform>(true))
                     item.gameObject.layer = 0;
 
@@ -1058,10 +1499,30 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 if (rejectedShadow != null)
                     UnityEngine.Object.DestroyImmediate(rejectedShadow.gameObject);
 
+                Transform rejectedGeneratedCover = FindDescendant(
+                    rig.AircraftVisualRoot, RejectedGeneratedInstrumentCoverName);
+                if (rejectedGeneratedCover != null)
+                    UnityEngine.Object.DestroyImmediate(rejectedGeneratedCover.gameObject);
+
+                Renderer meterRenderer = rig.AircraftVisualRoot
+                    .GetComponentsInChildren<Renderer>(true).Single(renderer => string.Equals(
+                        renderer.name, InstrumentMeterRendererName, StringComparison.Ordinal));
+                Renderer sourceDisplayRenderer = rig.AircraftVisualRoot
+                    .GetComponentsInChildren<Renderer>(true).Single(renderer => string.Equals(
+                        renderer.name, InstrumentDisplayRendererName, StringComparison.Ordinal));
+                Renderer instrumentLensArray = BuildInstrumentLensArray(
+                    rig.AircraftVisualRoot, meterRenderer, viewpoint, instrument);
+                Renderer instrumentDisplayReadouts = BuildInstrumentDisplayReadouts(
+                    rig.AircraftVisualRoot, sourceDisplayRenderer, viewpoint,
+                    LoadRequired<Material>(InstrumentDisplayReadoutMaterialPath));
+                Matrix4x4 instrumentToAircraft = rig.AircraftVisualRoot.worldToLocalMatrix *
+                                                instrumentLensArray.transform.localToWorldMatrix;
+                SetSerializedTransformRows(instrument, "_InstrumentToAircraft", instrumentToAircraft);
+                EditorUtility.SetDirty(instrument);
+
                 int windowSlots = 0;
-                int instrumentSlots = 0;
-                int activeInstrumentSlots = 0;
                 int exteriorWindowRenderers = 0;
+                int instrumentLensSlots = 0;
                 Renderer[] renderers = rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true);
                 foreach (Renderer renderer in renderers)
                 {
@@ -1071,12 +1532,12 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     Material[] materials = renderer.sharedMaterials;
                     bool exteriorWindow = string.Equals(renderer.name, ExteriorWindowRendererName,
                         StringComparison.Ordinal);
-                    bool authoritativeInstrumentCover = string.Equals(renderer.name, InstrumentCoverRendererName,
-                        StringComparison.Ordinal);
+                    bool authoritativeInstrumentLens = string.Equals(renderer.name,
+                        InstrumentLensArrayName, StringComparison.Ordinal);
                     bool decorativeInstrumentCover = string.Equals(renderer.name,
                         DecorativeInstrumentCoverRendererName, StringComparison.Ordinal);
-                    bool legacyMiGlass = string.Equals(renderer.name,
-                        LegacyMiGlassRendererName, StringComparison.Ordinal);
+                    bool misidentifiedInstrumentGlass = string.Equals(renderer.name,
+                        MisidentifiedInstrumentGlassRendererName, StringComparison.Ordinal);
                     for (int index = 0; index < materials.Length; index++)
                     {
                         if (exteriorWindow)
@@ -1084,16 +1545,14 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                             materials[index] = window;
                             windowSlots++;
                         }
-                        else if (authoritativeInstrumentCover)
+                        else if (authoritativeInstrumentLens)
                         {
                             materials[index] = instrument;
-                            instrumentSlots++;
+                            instrumentLensSlots++;
                         }
                         else if (decorativeInstrumentCover)
-                        {
-                            materials[index] = sourceWindow;
-                        }
-                        else if (legacyMiGlass)
+                            materials[index] = sourceDisplayCover;
+                        else if (misidentifiedInstrumentGlass)
                             materials[index] = sourceInstrument;
                         else if (materials[index] == window)
                         {
@@ -1103,29 +1562,12 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                             materials[index] = sourceInstrument;
                     }
                     renderer.sharedMaterials = materials;
-                    // One derived aperture mesh is the only active instrument-glass draw.
-                    // It uses the imported gauge-cover topology but sits 4 mm toward the
-                    // authored pilot viewpoint so opaque gauge faces cannot depth-reject it.
-                    if (authoritativeInstrumentCover)
+                    if (decorativeInstrumentCover || misidentifiedInstrumentGlass)
                     {
+                        renderer.enabled = false;
+                    }
+                    if (authoritativeInstrumentLens)
                         renderer.enabled = true;
-                        Mesh coverMesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
-                        if (coverMesh == null || coverMesh.vertexCount < 100 ||
-                            coverMesh.bounds.size.x < 0.5f || coverMesh.bounds.size.y < 0.1f)
-                            throw new InvalidOperationException(
-                                "The derived principal-instrument cover has implausible bounds.");
-                    }
-                    if (decorativeInstrumentCover)
-                    {
-                        renderer.enabled = false;
-                        Mesh decorativeMesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
-                        if (decorativeMesh == null || decorativeMesh.bounds.size.x < 0.5f ||
-                            decorativeMesh.bounds.size.y < 0.1f)
-                            throw new InvalidOperationException(
-                                "The source instrument-aperture shell has implausible bounds.");
-                    }
-                    if (legacyMiGlass)
-                        renderer.enabled = false;
                     if (exteriorWindow)
                     {
                         renderer.enabled = true;
@@ -1136,12 +1578,6 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                                 "The authoritative exterior cockpit glazing mesh has implausible bounds.");
                         exteriorWindowRenderers++;
                     }
-                    if (renderer.enabled)
-                        activeInstrumentSlots += materials.Count(material => material == instrument);
-                    bool cockpitOwned = renderer.transform == cockpit ||
-                                        renderer.transform.IsChildOf(cockpit);
-                    bool transparentGlass = renderer.sharedMaterials.Any(material =>
-                        material == window || material == instrument);
                     // The worn candidate proved that a tiny cockpit-only realtime
                     // shadow map creates unstable overlapping triangle silhouettes in
                     // stereo. Cockpit depth is therefore static/material-authored; no
@@ -1161,16 +1597,17 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 RewriteRendererArray(visibilitySettings, "cockpitOccludingExteriorRenderers",
                     renderer => renderer != exteriorWindowRenderer, null);
                 RewriteRendererArray(visibilitySettings, "interiorRenderers",
-                    renderer => true, instrumentCover);
+                    renderer => true, instrumentLensArray);
+                RewriteRendererArray(visibilitySettings, "interiorRenderers",
+                    renderer => true, instrumentDisplayReadouts);
                 visibilitySettings.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(visibility);
-                if (windowSlots != 1 || instrumentSlots != 1 || activeInstrumentSlots != 1 ||
-                    exteriorWindowRenderers != 1)
+                if (windowSlots != 1 || exteriorWindowRenderers != 1 || instrumentLensSlots != 1 ||
+                    instrumentLensArray.sharedMaterial != instrument || !instrumentDisplayReadouts.enabled)
                     throw new InvalidOperationException(
-                        "Expected one full-cabin exterior window slot, one active derived " +
-                        "instrument-glass slots, " +
-                        $"and one enabled exterior glazing renderer; found {windowSlots}/" +
-                        $"{instrumentSlots}/{activeInstrumentSlots}/{exteriorWindowRenderers}.");
+                        "Expected one full-cabin exterior window slot, one gauge-only lens slot, and " +
+                        "one authored display-readout renderer; " +
+                        $"found {windowSlots}/{instrumentLensSlots}/{exteriorWindowRenderers}.");
                 PrefabUtility.SaveAsPrefabAsset(root, AircraftPrefabPath);
             }
             finally
@@ -1179,73 +1616,418 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             }
         }
 
-        private static Renderer EnsurePrincipalInstrumentCover(
-            Renderer sourceRenderer, Transform viewpoint, Material material)
+        private static void EnsureInstrumentLensMeshAsset()
         {
-            Mesh sourceMesh = sourceRenderer.GetComponent<MeshFilter>()?.sharedMesh;
-            if (sourceMesh == null || !sourceMesh.isReadable)
-                throw new InvalidOperationException("Instrument aperture source mesh is not readable.");
-
-            Vector3[] vertices = sourceMesh.vertices;
-            Vector3 cameraLocal = sourceRenderer.transform.InverseTransformPoint(viewpoint.position);
-            const float PilotFacingOffsetMeters = 0.004f;
-            float localScale = Mathf.Max(0.0001f,
-                sourceRenderer.transform.TransformVector(Vector3.right).magnitude);
-            float localOffset = PilotFacingOffsetMeters / localScale;
-            for (int index = 0; index < vertices.Length; index++)
+            GameObject root = PrefabUtility.LoadPrefabContents(AircraftPrefabPath);
+            try
             {
-                Vector3 towardPilot = (cameraLocal - vertices[index]).normalized;
-                vertices[index] += towardPilot * localOffset;
+                AircraftReferenceFrameRig rig = root.GetComponent<AircraftReferenceFrameRig>();
+                Transform viewpoint = FindDescendant(root.transform, "Main Camera");
+                if (rig == null || rig.AircraftVisualRoot == null || viewpoint == null)
+                    throw new InvalidOperationException(
+                        "Aircraft references are missing while authoring the gauge lens mesh.");
+                Renderer meter = rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true)
+                    .Single(renderer => string.Equals(
+                        renderer.name, InstrumentMeterRendererName, StringComparison.Ordinal));
+                BuildInstrumentLensArray(rig.AircraftVisualRoot, meter, viewpoint,
+                    LoadRequired<Material>(InstrumentGlassMaterialPath));
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        private static void EnsureInstrumentDisplayReadoutMeshAsset()
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(AircraftPrefabPath);
+            try
+            {
+                AircraftReferenceFrameRig rig = root.GetComponent<AircraftReferenceFrameRig>();
+                Transform viewpoint = FindDescendant(root.transform, "Main Camera");
+                if (rig == null || rig.AircraftVisualRoot == null || viewpoint == null)
+                    throw new InvalidOperationException(
+                        "Aircraft references are missing while authoring instrument readouts.");
+                Renderer display = rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true)
+                    .Single(renderer => string.Equals(
+                        renderer.name, InstrumentDisplayRendererName, StringComparison.Ordinal));
+                BuildInstrumentDisplayReadouts(rig.AircraftVisualRoot, display, viewpoint,
+                    LoadRequired<Material>(InstrumentDisplayReadoutMaterialPath));
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        // Derives one bounded lens disc for each round gauge directly from the imported meter
+        // topology. The result cannot cover rectangular displays or the lower switch panel.
+        private static Renderer BuildInstrumentLensArray(
+            Transform aircraftVisual,
+            Renderer meterRenderer,
+            Transform viewpoint,
+            Material material)
+        {
+            Mesh sourceMesh = meterRenderer.GetComponent<MeshFilter>()?.sharedMesh;
+            if (sourceMesh == null)
+                throw new InvalidOperationException("Instrument meter source mesh is missing.");
+
+            Vector3[] sourceVertices = sourceMesh.vertices;
+            int[] sourceTriangles = sourceMesh.triangles;
+            var trianglesByVertex = new Dictionary<int, List<int>>();
+            for (int triangle = 0; triangle < sourceTriangles.Length / 3; triangle++)
+            {
+                for (int corner = 0; corner < 3; corner++)
+                {
+                    int vertex = sourceTriangles[triangle * 3 + corner];
+                    if (!trianglesByVertex.TryGetValue(vertex, out List<int> adjacent))
+                    {
+                        adjacent = new List<int>();
+                        trianglesByVertex.Add(vertex, adjacent);
+                    }
+                    adjacent.Add(triangle);
+                }
+            }
+
+            bool[] visited = new bool[sourceTriangles.Length / 3];
+            var apertures = new List<GaugeAperture>();
+            var queue = new Queue<int>();
+            Vector3 eye = aircraftVisual.InverseTransformPoint(viewpoint.position);
+            for (int triangle = 0; triangle < visited.Length; triangle++)
+            {
+                if (visited[triangle]) continue;
+                visited[triangle] = true;
+                queue.Enqueue(triangle);
+                var componentTriangles = new List<int>();
+                var componentVertices = new HashSet<int>();
+                while (queue.Count > 0)
+                {
+                    int current = queue.Dequeue();
+                    componentTriangles.Add(current);
+                    for (int corner = 0; corner < 3; corner++)
+                    {
+                        int vertex = sourceTriangles[current * 3 + corner];
+                        componentVertices.Add(vertex);
+                        foreach (int neighbor in trianglesByVertex[vertex])
+                        {
+                            if (visited[neighbor]) continue;
+                            visited[neighbor] = true;
+                            queue.Enqueue(neighbor);
+                        }
+                    }
+                }
+
+                bool initialized = false;
+                Bounds bounds = default;
+                var componentPoints = new List<Vector3>(componentVertices.Count);
+                foreach (int vertex in componentVertices)
+                {
+                    Vector3 point = aircraftVisual.InverseTransformPoint(
+                        meterRenderer.transform.TransformPoint(sourceVertices[vertex]));
+                    componentPoints.Add(point);
+                    if (!initialized)
+                    {
+                        bounds = new Bounds(point, Vector3.zero);
+                        initialized = true;
+                    }
+                    else
+                    {
+                        bounds.Encapsulate(point);
+                    }
+                }
+
+                Vector3 size = bounds.size;
+                if (size.x < 0.045f || size.x > 0.11f ||
+                    size.y < 0.045f || size.y > 0.11f || size.z > 0.012f)
+                    continue;
+
+                // All round gauges are installed in the same panel plane. Pointing every
+                // synthetic lens at the eye made the array fan toward the pilot and detach
+                // visibly from the bezels. The imported meter topology is XY-planar in
+                // AircraftVisualRoot space, so use its physical panel normal and only choose
+                // the sign that faces the cockpit.
+                Vector3 normal = Vector3.forward;
+                if (Vector3.Dot(normal, eye - bounds.center) < 0f)
+                    normal = -normal;
+                float front = componentPoints.Max(point => Vector3.Dot(point, normal));
+                Vector3 center = bounds.center + normal *
+                    (front - Vector3.Dot(bounds.center, normal) + 0.00025f);
+                apertures.Add(new GaugeAperture(
+                    center, normal, Mathf.Min(size.x, size.y) * 0.405f));
+            }
+
+            apertures = apertures.OrderByDescending(item => item.Center.y)
+                .ThenBy(item => item.Center.x).ToList();
+            if (apertures.Count != 13)
+                throw new InvalidOperationException(
+                    $"Expected 13 geometry-derived gauge apertures; found {apertures.Count}.");
+
+            const int segments = 24;
+            var vertices = new List<Vector3>(apertures.Count * (segments + 1));
+            var normals = new List<Vector3>(vertices.Capacity);
+            var uvs = new List<Vector2>(vertices.Capacity);
+            var triangles = new List<int>(apertures.Count * segments * 3);
+            foreach (GaugeAperture aperture in apertures)
+            {
+                int first = vertices.Count;
+                Vector3 right = Vector3.ProjectOnPlane(Vector3.right, aperture.Normal).normalized;
+                if (right.sqrMagnitude < 0.5f)
+                    right = Vector3.ProjectOnPlane(Vector3.forward, aperture.Normal).normalized;
+                Vector3 up = Vector3.Cross(aperture.Normal, right).normalized;
+                if (Vector3.Dot(up, Vector3.up) < 0f) up = -up;
+                vertices.Add(aperture.Center);
+                normals.Add(aperture.Normal);
+                uvs.Add(new Vector2(0.5f, 0.5f));
+                for (int segment = 0; segment < segments; segment++)
+                {
+                    float angle = segment * Mathf.PI * 2f / segments;
+                    float cosine = Mathf.Cos(angle);
+                    float sine = Mathf.Sin(angle);
+                    vertices.Add(aperture.Center +
+                        (right * cosine + up * sine) * aperture.Radius);
+                    normals.Add(aperture.Normal);
+                    uvs.Add(new Vector2(0.5f + cosine * 0.5f, 0.5f + sine * 0.5f));
+                }
+                for (int segment = 0; segment < segments; segment++)
+                {
+                    triangles.Add(first);
+                    triangles.Add(first + 1 + segment);
+                    triangles.Add(first + 1 + (segment + 1) % segments);
+                }
             }
 
             var generated = new Mesh
             {
-                name = "C172_PrincipalInstrumentGlassCover",
-                indexFormat = sourceMesh.indexFormat,
-                vertices = vertices,
-                normals = sourceMesh.normals,
-                tangents = sourceMesh.tangents,
-                uv = sourceMesh.uv,
-                triangles = sourceMesh.triangles
+                name = "C172_PrincipalInstrumentLensArray",
+                indexFormat = IndexFormat.UInt16
             };
-            generated.RecalculateBounds();
-            Directory.CreateDirectory(Path.GetDirectoryName(PrincipalInstrumentCoverMeshPath) ?? Root);
-            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-            Mesh meshAsset = AssetDatabase.LoadAssetAtPath<Mesh>(PrincipalInstrumentCoverMeshPath);
+            generated.SetVertices(vertices);
+            generated.SetNormals(normals);
+            generated.SetUVs(0, uvs);
+            generated.SetTriangles(triangles, 0, true);
+            generated.UploadMeshData(false);
+
+            Mesh meshAsset = AssetDatabase.LoadAssetAtPath<Mesh>(InstrumentLensArrayMeshPath);
             if (meshAsset == null)
             {
-                AssetDatabase.CreateAsset(generated, PrincipalInstrumentCoverMeshPath);
+                AssetDatabase.CreateAsset(generated, InstrumentLensArrayMeshPath);
                 meshAsset = generated;
             }
             else
             {
                 EditorUtility.CopySerialized(generated, meshAsset);
                 UnityEngine.Object.DestroyImmediate(generated);
-                EditorUtility.SetDirty(meshAsset);
             }
+            EditorUtility.SetDirty(meshAsset);
 
-            Transform existing = sourceRenderer.transform.parent.Find(InstrumentCoverRendererName);
-            GameObject coverObject;
+            Transform existing = aircraftVisual.Find(InstrumentLensArrayName);
+            GameObject lensObject;
             if (existing == null)
             {
-                coverObject = new GameObject(InstrumentCoverRendererName);
-                coverObject.transform.SetParent(sourceRenderer.transform.parent, false);
+                lensObject = new GameObject(InstrumentLensArrayName);
+                lensObject.transform.SetParent(aircraftVisual, false);
             }
             else
-                coverObject = existing.gameObject;
-            coverObject.transform.localPosition = sourceRenderer.transform.localPosition;
-            coverObject.transform.localRotation = sourceRenderer.transform.localRotation;
-            coverObject.transform.localScale = sourceRenderer.transform.localScale;
-            MeshFilter filter = coverObject.GetComponent<MeshFilter>();
-            if (filter == null) filter = coverObject.AddComponent<MeshFilter>();
-            MeshRenderer renderer = coverObject.GetComponent<MeshRenderer>();
-            if (renderer == null) renderer = coverObject.AddComponent<MeshRenderer>();
+            {
+                lensObject = existing.gameObject;
+            }
+            lensObject.layer = 0;
+            lensObject.transform.localPosition = Vector3.zero;
+            lensObject.transform.localRotation = Quaternion.identity;
+            lensObject.transform.localScale = Vector3.one;
+            // Unity can return a native "fake null" component from an unpacked prefab object;
+            // null-coalescing does not invoke UnityEngine.Object's overloaded null check.
+            MeshFilter filter = lensObject.GetComponent<MeshFilter>();
+            if (filter == null) filter = lensObject.AddComponent<MeshFilter>();
+            MeshRenderer renderer = lensObject.GetComponent<MeshRenderer>();
+            if (renderer == null) renderer = lensObject.AddComponent<MeshRenderer>();
             filter.sharedMesh = meshAsset;
             renderer.sharedMaterial = material;
             renderer.enabled = true;
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
+            renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
             return renderer;
+        }
+
+        // Copies only the physical GPS/radio/transponder aperture faces from the imported
+        // avionics mesh. Their source glTF material deliberately remains untouched; this one
+        // serialized opaque mesh gives the readouts an unambiguous UV path, one material and
+        // one draw without covering knobs, bezels, switches or the lower panel.
+        private static Renderer BuildInstrumentDisplayReadouts(
+            Transform aircraftVisual,
+            Renderer displayRenderer,
+            Transform viewpoint,
+            Material material)
+        {
+            Mesh sourceMesh = displayRenderer.GetComponent<MeshFilter>()?.sharedMesh;
+            if (sourceMesh == null)
+                throw new InvalidOperationException("Instrument display source mesh is missing.");
+            Vector3[] sourceVertices = sourceMesh.vertices;
+            Vector3[] sourceNormals = sourceMesh.normals;
+            Vector2[] sourceUvs = sourceMesh.uv;
+            int[] sourceTriangles = sourceMesh.triangles;
+            if (sourceNormals.Length != sourceVertices.Length || sourceUvs.Length != sourceVertices.Length)
+                throw new InvalidOperationException("Instrument display source vertex channels are incomplete.");
+
+            var vertices = new List<Vector3>(36);
+            var normals = new List<Vector3>(36);
+            var uvs = new List<Vector2>(36);
+            var triangles = new List<int>(36);
+            Matrix4x4 sourceToAircraft = aircraftVisual.worldToLocalMatrix *
+                                        displayRenderer.transform.localToWorldMatrix;
+            Vector3 eye = aircraftVisual.InverseTransformPoint(viewpoint.position);
+            int selectedFaces = 0;
+            for (int triangle = 0; triangle < sourceTriangles.Length / 3; triangle++)
+            {
+                int a = sourceTriangles[triangle * 3];
+                int b = sourceTriangles[triangle * 3 + 1];
+                int c = sourceTriangles[triangle * 3 + 2];
+                Vector2 uvMin = Vector2.Min(sourceUvs[a], Vector2.Min(sourceUvs[b], sourceUvs[c]));
+                Vector2 uvMax = Vector2.Max(sourceUvs[a], Vector2.Max(sourceUvs[b], sourceUvs[c]));
+                float area = Vector3.Cross(sourceVertices[b] - sourceVertices[a],
+                    sourceVertices[c] - sourceVertices[a]).magnitude * 0.5f;
+                bool mainGps = area > 0.0017f &&
+                               uvMin.x >= 0.63f && uvMin.x <= 0.65f &&
+                               uvMin.y <= 0.02f && uvMax.x >= 0.98f &&
+                               uvMax.y >= 0.23f && uvMax.y <= 0.25f;
+                bool radio = area > 0.00070f &&
+                             uvMin.x >= 0.61f && uvMin.x <= 0.63f &&
+                             uvMin.y >= 0.31f && uvMin.y <= 0.33f &&
+                             uvMax.x >= 0.98f && uvMax.y >= 0.41f && uvMax.y <= 0.43f;
+                bool transponder = area > 0.00065f &&
+                                   uvMin.x >= 0.61f && uvMin.x <= 0.63f &&
+                                   uvMin.y >= 0.43f && uvMin.y <= 0.45f &&
+                                   uvMax.x >= 0.97f && uvMax.y >= 0.45f && uvMax.y <= 0.47f;
+                if (!mainGps && !radio && !transponder) continue;
+
+                int[] sourceIndices = { a, b, c };
+                var facePoints = new Vector3[3];
+                var faceUvs = new Vector2[3];
+                for (int corner = 0; corner < 3; corner++)
+                {
+                    int sourceIndex = sourceIndices[corner];
+                    facePoints[corner] =
+                        sourceToAircraft.MultiplyPoint3x4(sourceVertices[sourceIndex]);
+                    Vector2 atlasMin;
+                    Vector2 atlasMax;
+                    if (mainGps)
+                    {
+                        atlasMin = new Vector2(0f, 0f);
+                        atlasMax = new Vector2(1f, 0.5f);
+                    }
+                    else if (radio)
+                    {
+                        atlasMin = new Vector2(0f, 0.5f);
+                        atlasMax = new Vector2(1f, 0.75f);
+                    }
+                    else
+                    {
+                        atlasMin = new Vector2(0f, 0.75f);
+                        atlasMax = Vector2.one;
+                    }
+
+                    // Normalize each physical screen's proven source UV range, correct its
+                    // vertical frame, and place it in the dedicated readout atlas.
+                    Vector2 sourceUv = sourceUvs[sourceIndex];
+                    float localU = Mathf.InverseLerp(uvMin.x, uvMax.x, sourceUv.x);
+                    float localV = 1f - Mathf.InverseLerp(uvMin.y, uvMax.y, sourceUv.y);
+                    faceUvs[corner] = new Vector2(
+                        Mathf.Lerp(atlasMin.x, atlasMax.x, localU),
+                        Mathf.Lerp(atlasMin.y, atlasMax.y, localV));
+                }
+                Vector3 faceCenter = (facePoints[0] + facePoints[1] + facePoints[2]) / 3f;
+                Vector3 faceNormal = Vector3.Cross(
+                    facePoints[1] - facePoints[0], facePoints[2] - facePoints[0]).normalized;
+                if (Vector3.Dot(faceNormal, eye - faceCenter) < 0f)
+                {
+                    (facePoints[1], facePoints[2]) = (facePoints[2], facePoints[1]);
+                    (faceUvs[1], faceUvs[2]) = (faceUvs[2], faceUvs[1]);
+                    faceNormal = -faceNormal;
+                }
+
+                // Offset the complete face along its physical normal. The previous
+                // per-vertex eye vector skewed the overlay toward the pilot instead of
+                // leaving it seated on the source display surface.
+                int first = vertices.Count;
+                for (int corner = 0; corner < 3; corner++)
+                {
+                    vertices.Add(facePoints[corner] + faceNormal * 0.0008f);
+                    normals.Add(faceNormal);
+                    uvs.Add(faceUvs[corner]);
+                }
+                triangles.Add(first);
+                triangles.Add(first + 1);
+                triangles.Add(first + 2);
+                selectedFaces++;
+            }
+            if (selectedFaces != 12)
+                throw new InvalidOperationException(
+                    $"Expected 12 authored display aperture triangles; found {selectedFaces}.");
+
+            var generated = new Mesh
+            {
+                name = "C172_InstrumentDisplayReadouts",
+                indexFormat = IndexFormat.UInt16
+            };
+            generated.SetVertices(vertices);
+            generated.SetNormals(normals);
+            generated.SetUVs(0, uvs);
+            generated.SetTriangles(triangles, 0, true);
+            generated.UploadMeshData(false);
+            Mesh meshAsset = AssetDatabase.LoadAssetAtPath<Mesh>(InstrumentDisplayReadoutMeshPath);
+            if (meshAsset == null)
+            {
+                AssetDatabase.CreateAsset(generated, InstrumentDisplayReadoutMeshPath);
+                meshAsset = generated;
+            }
+            else
+            {
+                EditorUtility.CopySerialized(generated, meshAsset);
+                UnityEngine.Object.DestroyImmediate(generated);
+            }
+            EditorUtility.SetDirty(meshAsset);
+
+            Transform existing = aircraftVisual.Find(InstrumentDisplayReadoutName);
+            GameObject readoutObject;
+            if (existing == null)
+            {
+                readoutObject = new GameObject(InstrumentDisplayReadoutName);
+                readoutObject.transform.SetParent(aircraftVisual, false);
+            }
+            else
+            {
+                readoutObject = existing.gameObject;
+            }
+            readoutObject.layer = 0;
+            readoutObject.transform.localPosition = Vector3.zero;
+            readoutObject.transform.localRotation = Quaternion.identity;
+            readoutObject.transform.localScale = Vector3.one;
+            MeshFilter filter = readoutObject.GetComponent<MeshFilter>();
+            if (filter == null) filter = readoutObject.AddComponent<MeshFilter>();
+            MeshRenderer renderer = readoutObject.GetComponent<MeshRenderer>();
+            if (renderer == null) renderer = readoutObject.AddComponent<MeshRenderer>();
+            filter.sharedMesh = meshAsset;
+            renderer.sharedMaterial = material;
+            renderer.enabled = true;
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+            return renderer;
+        }
+
+        private readonly struct GaugeAperture
+        {
+            public GaugeAperture(Vector3 center, Vector3 normal, float radius)
+            {
+                Center = center;
+                Normal = normal;
+                Radius = radius;
+            }
+
+            public Vector3 Center { get; }
+            public Vector3 Normal { get; }
+            public float Radius { get; }
         }
 
         private static void RewriteRendererArray(
@@ -1367,6 +2149,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             }
             Material window = LoadRequired<Material>(WindowMaterialPath);
             Material instrument = LoadRequired<Material>(InstrumentGlassMaterialPath);
+            Material displayReadout = LoadRequired<Material>(InstrumentDisplayReadoutMaterialPath);
             Shader stableInterior = LoadRequired<Shader>(CockpitStableInteriorShaderPath);
             if (window.shader == null || window.shader.name != WindowShaderName || window.passCount != 1 ||
                 window.renderQueue != (int)RenderQueue.Transparent + 12)
@@ -1374,6 +2157,11 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             if (instrument.shader == null || instrument.shader.name != InstrumentGlassShaderName ||
                 instrument.passCount != 1 || instrument.renderQueue != (int)RenderQueue.Transparent + 16)
                 throw new InvalidOperationException("Instrument glass is not the restrained single-pass shader.");
+            if (displayReadout.shader == null || displayReadout.shader.name != "Unlit/Texture" ||
+                displayReadout.passCount != 1 ||
+                displayReadout.GetTexture("_MainTex") !=
+                LoadRequired<Texture2D>(InstrumentDisplayBaseColorPath))
+                throw new InvalidOperationException("Instrument display readout material is invalid.");
             if (window.GetTexture("_CockpitInteriorReflectionCube") != cockpitInterior ||
                 instrument.GetTexture("_AuthoredReflectionCube") != cockpitInterior)
                 throw new InvalidOperationException(
@@ -1429,32 +2217,55 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     renderer.reflectionProbeUsage != ReflectionProbeUsage.BlendProbesAndSkybox))
                 throw new InvalidOperationException("Aircraft reflection anchor/blending contract is incomplete.");
             if (aircraftRenderers.SelectMany(renderer => renderer.sharedMaterials).Count(material =>
-                    material == LoadRequired<Material>(WindowMaterialPath)) != 1 ||
-                aircraftRenderers.SelectMany(renderer => renderer.sharedMaterials).Count(material =>
-                    material == LoadRequired<Material>(InstrumentGlassMaterialPath)) != 1)
+                    material == LoadRequired<Material>(WindowMaterialPath)) != 1)
                 throw new InvalidOperationException("Dedicated cockpit glass bindings are incomplete.");
-            Renderer[] activeInstrumentCovers = aircraftRenderers.Where(renderer => renderer.enabled &&
-                renderer.sharedMaterials.Any(material =>
-                    material == LoadRequired<Material>(InstrumentGlassMaterialPath))).ToArray();
-            Renderer authoritativeInstrumentCover = aircraftRenderers.Single(renderer =>
-                string.Equals(renderer.name, InstrumentCoverRendererName,
-                    StringComparison.Ordinal));
+            Material instrumentLensMaterial = LoadRequired<Material>(InstrumentGlassMaterialPath);
+            Renderer[] instrumentLensRenderers = aircraftRenderers.Where(renderer => renderer.enabled &&
+                string.Equals(renderer.name, InstrumentLensArrayName, StringComparison.Ordinal) &&
+                renderer.sharedMaterials.Length == 1 &&
+                renderer.sharedMaterial == instrumentLensMaterial).ToArray();
+            Mesh instrumentLensMesh = instrumentLensRenderers.FirstOrDefault()
+                ?.GetComponent<MeshFilter>()?.sharedMesh;
+            if (instrumentLensRenderers.Length != 1 || instrumentLensMesh == null ||
+                instrumentLensMesh.vertexCount != 325 || instrumentLensMesh.triangles.Length != 936 ||
+                FindDescendant(rig.AircraftVisualRoot, RejectedGeneratedInstrumentCoverName) != null)
+                throw new InvalidOperationException(
+                    "The single 13-aperture gauge-only instrument lens contract is incomplete.");
+            Renderer instrumentDisplayReadout = aircraftRenderers.Single(renderer =>
+                string.Equals(renderer.name, InstrumentDisplayReadoutName, StringComparison.Ordinal));
+            Mesh instrumentDisplayReadoutMesh = instrumentDisplayReadout.GetComponent<MeshFilter>()?.sharedMesh;
+            if (!instrumentDisplayReadout.enabled || instrumentDisplayReadoutMesh == null ||
+                instrumentDisplayReadoutMesh.vertexCount != 36 ||
+                instrumentDisplayReadoutMesh.triangles.Length != 36 ||
+                instrumentDisplayReadout.sharedMaterial !=
+                LoadRequired<Material>(InstrumentDisplayReadoutMaterialPath))
+                throw new InvalidOperationException(
+                    "The single opaque instrument display-readout contract is incomplete.");
             Renderer decorativeInstrumentCover = aircraftRenderers.Single(renderer =>
                 string.Equals(renderer.name, DecorativeInstrumentCoverRendererName,
                     StringComparison.Ordinal));
-            Renderer legacyMiGlass = aircraftRenderers.Single(renderer =>
-                string.Equals(renderer.name, LegacyMiGlassRendererName,
+            Renderer misidentifiedInstrumentGlass = aircraftRenderers.Single(renderer =>
+                string.Equals(renderer.name, MisidentifiedInstrumentGlassRendererName,
                     StringComparison.Ordinal));
-            Mesh authoritativeMesh = authoritativeInstrumentCover.GetComponent<MeshFilter>()?.sharedMesh;
-            Mesh decorativeMesh = decorativeInstrumentCover.GetComponent<MeshFilter>()?.sharedMesh;
-            if (activeInstrumentCovers.Length != 1 || !authoritativeInstrumentCover.enabled ||
-                activeInstrumentCovers[0] != authoritativeInstrumentCover || decorativeInstrumentCover.enabled ||
-                legacyMiGlass.enabled || authoritativeMesh == null || authoritativeMesh.vertexCount < 100 ||
-                authoritativeMesh.bounds.size.x < 0.5f || authoritativeMesh.bounds.size.y < 0.1f ||
-                decorativeMesh == null || decorativeMesh.bounds.size.x < 0.5f ||
-                decorativeMesh.bounds.size.y < 0.1f)
+            if (decorativeInstrumentCover.enabled || misidentifiedInstrumentGlass.enabled)
                 throw new InvalidOperationException(
-                    "Only the derived pilot-facing instrument cover may consume a transparent draw.");
+                    "Imported non-gauge glass renderers must remain disabled.");
+            foreach (string authoritativeName in new[]
+                     {
+                         InstrumentMeterRendererName,
+                         "Static_Display_New_Mat_01_0_New_Mat_01_0",
+                         "Static_TXT_White_New_Static_0_White_New_Static_0"
+                     })
+            {
+                Renderer authoritative = aircraftRenderers.Single(renderer =>
+                    string.Equals(renderer.name, authoritativeName, StringComparison.Ordinal));
+                if (!authoritative.enabled || authoritative.sharedMaterials.Any(material =>
+                        material == null || material.shader == null ||
+                        string.Equals(material.shader.name, CockpitStableInteriorShaderName,
+                            StringComparison.Ordinal)))
+                    throw new InvalidOperationException(
+                        "Authoritative instrument source material was replaced: " + authoritativeName);
+            }
             Renderer[] exteriorWindowRenderers = aircraftRenderers.Where(renderer =>
                 string.Equals(renderer.name, ExteriorWindowRendererName,
                     StringComparison.Ordinal)).ToArray();
@@ -1481,6 +2292,12 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             if (lightingSettings.FindProperty("stableCockpitShader")?.objectReferenceValue !=
                 LoadRequired<Shader>(CockpitStableInteriorShaderPath))
                 throw new InvalidOperationException("Geometry-bound cockpit depth shader is not serialized.");
+            if (lightingSettings.FindProperty("instrumentDisplayBaseColor")?.objectReferenceValue !=
+                    LoadRequired<Texture2D>(InstrumentDisplayBaseColorPath) ||
+                lightingSettings.FindProperty("instrumentDisplayEmission")?.objectReferenceValue !=
+                    LoadRequired<Texture2D>(InstrumentDisplayEmissionPath))
+                throw new InvalidOperationException(
+                    "Readable instrument display textures are not serialized.");
             SerializedProperty directionalShade = lightingSettings.FindProperty(
                 "directionalCabinShadowStrength");
             if (directionalShade == null || Mathf.Abs(directionalShade.floatValue -
@@ -1493,9 +2310,11 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             Renderer[] cockpitOccluders = ReadRendererArray(visibilitySettings,
                 "cockpitOccludingExteriorRenderers");
             Renderer[] interiorRenderers = ReadRendererArray(visibilitySettings, "interiorRenderers");
-            if (cockpitOccluders.Contains(exteriorWindow) || interiorRenderers.Any(renderer => renderer == null))
+            if (cockpitOccluders.Contains(exteriorWindow) || interiorRenderers.Any(renderer => renderer == null) ||
+                !interiorRenderers.Contains(instrumentLensRenderers[0]) ||
+                !interiorRenderers.Contains(instrumentDisplayReadout))
                 throw new InvalidOperationException(
-                    "Cockpit view would hide glazing or retains a stale renderer reference.");
+                    "Cockpit view would hide glazing/lenses or retains a stale renderer reference.");
             GameObject worldAsset = LoadRequired<GameObject>(ProductionWorldPrefabPath);
             Light mainSun = FindDescendant(worldAsset.transform, MainSunName)?.GetComponent<Light>();
             Light cockpitSun = FindDescendant(worldAsset.transform,
@@ -1786,6 +2605,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             EnsureFolder(TextureFolder);
             EnsureFolder(ProfileFolder);
             EnsureFolder(CockpitMaterialFolder);
+            EnsureFolder(CockpitMeshFolder);
+            EnsureFolder(CockpitTextureFolder);
         }
 
         private static void EnsureFolder(string path)

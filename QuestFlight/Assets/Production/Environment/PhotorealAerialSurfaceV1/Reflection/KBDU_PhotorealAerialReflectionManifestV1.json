@@ -71,26 +71,51 @@
       "sha256": "1baa070ad5ed5a4c94c3ba93e9421ff43558d719054f14477378d23d2c382c67",
       "bytes": 2045
     },
-    "instrument_glass_material": {
-      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentGlassReflection.mat",
-      "sha256": "3756f928eb97156a5b5576aba0b8cb42c03a5bae58d6ed61244254bf9ab18366",
-      "bytes": 1389
-    },
     "window_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitWindowReflection.shader",
       "sha256": "bd227043e177ca8d6a7d582f183c2fcd3004450f0f69779c8bc984dda3e64627",
-      "bytes": 9688
-    },
-    "instrument_glass_shader": {
-      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader",
-      "sha256": "dddd3efcbec27ec0f8496529e114839c8facc6158f6687476ba3da58066b6790",
-      "bytes": 5401
+      "bytes": 10349
     },
     "cockpit_stable_interior_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitStableInterior.shader",
       "sha256": "834ced2f90298375b76f6ee9b741f954950979d024db472256864ae7ee68bbf6",
       "bytes": 8748
     }
+    "instrument_glass_material": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentGlassReflection.mat",
+      "sha256": "ba9f9b71affb669ea3d4aceafb4521834f33dba39dda5030cdea540905222d95",
+      "bytes": 1320
+    },
+    "instrument_glass_shader": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader",
+      "sha256": "19330b6c27a633e1007c5c4d09f1e32b79494237e2288e0c6f81b741c1362a01",
+      "bytes": 5358
+    },
+    "instrument_lens_mesh": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_PrincipalInstrumentLensArray.asset",
+      "sha256": "b2eda64f4e1ff88533bfed45e84c8cd680fa584a6b92abb48880ebf61707f102",
+      "bytes": 28076
+    },
+    "instrument_display_readout_mesh": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_InstrumentDisplayReadouts.asset",
+      "sha256": "1a6eeb29a0f504e76ca0cc2316de04379b1e95a8ae5086ec109530666f19b0a1",
+      "bytes": 5979
+    },
+    "instrument_display_readout_material": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentDisplayReadout.mat",
+      "sha256": "92d98bd72198d0d431b58ce3dddf500a265acc7e243a12d47dd6dd6964b0640c",
+      "bytes": 939
+    },
+    "instrument_display_base_color": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Textures/C172_StaticDisplayReadable_BaseColor.png",
+      "sha256": "b2b8e816a986c91997e35bffc477ac1a10a526a06449b6de9fd143801ac32c5f",
+      "bytes": 329275
+    },
+    "instrument_display_emission": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Textures/C172_StaticDisplayReadable_Emission.png",
+      "sha256": "52f96bb91fca67dbfaf9bcd7d067faaa36b4e9900170bcdeccf44e6e2c43ec70",
+      "bytes": 22970
+    },
   },
   "integration_contract": {
     "global_reflection_mode": "Custom static imagery-aware global cubemap",
@@ -103,13 +128,14 @@
     "refraction_camera": false,
     "aircraft_probe_anchor": "AircraftSimulationRoot/CenterOfGravityReference",
     "aircraft_probe_usage": "BlendProbesAndSkybox"
+    "instrument_surface_mode": "Imported Meter_01 PBR plus one 13-aperture additive lens mesh; one opaque 12-triangle avionics readout mesh; source display/text retain imported PBR"
   },
   "android_budget": {
     "new_reflection_probes": 1,
     "new_runtime_probe_cameras": 0,
     "new_runtime_probe_updates": 0,
-    "new_renderers": 0,
-    "new_draw_calls": 0,
+    "new_renderers": 2,
+    "new_draw_calls": 2,
     "new_materials": 2,
     "disabled_duplicate_exterior_glass_renderers": 1,
     "static_cubemap_count": 2,
