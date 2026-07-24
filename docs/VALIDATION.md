@@ -15,6 +15,32 @@ Run from the repository root:
 
 `validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current feature candidate captures 81 Visual-QA views; every full-resolution image requires inspection. Historical milestones below retain their original capture counts. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. The accepted-baseline hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. Historical and feature-scoped values below are evidence only.
 
+## Airport Parked Aircraft V1
+
+- focused parked-aircraft authoring: PASS for 17 placements, seven powered
+  aircraft, ten sailplanes, exact source hashes, minimum-bound grounding, and
+  one shared opaque material;
+- EditMode: PASS 125/125;
+- PlayMode: PASS 9/9;
+- product integrity and dependency closure: PASS;
+- production Visual QA: PASS 92/92 with
+  `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; the three new full-resolution
+  aircraft views and contact sheet were inspected;
+- camera-aware geometry/draw/material gate: PASS at 56/75 draws,
+  638,407/650,000 visible triangles, 29/29 visible materials, and three/three
+  transparent slots;
+- aggregate static performance classification:
+  `FAIL_STATIC_QUEST_BUDGET` only at 211.25/210 MiB conservative texture
+  residency. The two new texture-free derivatives add no texture residency; the
+  excess belongs to the accepted airport hero-corridor source and is retained
+  without weakening the gate;
+- Android release-style build: PASS, 135,844,488 bytes, SHA-256
+  `23894176073b694e63fedb1f244fdedb24faee8bd6eb592824d369d3d8584c59`;
+- physical Quest worn/timing gate: NOT RUN for this APK.
+
+Full evidence is in
+`docs/evidence/AIRPORT_PARKED_AIRCRAFT_V1_2026-07-24.md`.
+
 ## Rounded Canopy Volume V1 closure
 
 The bounded candidate on `feature/rounded-canopy-volume-v1` starts from tagged

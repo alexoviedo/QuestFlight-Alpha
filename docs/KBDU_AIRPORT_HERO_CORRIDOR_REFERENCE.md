@@ -17,3 +17,16 @@ Runtime authority:
 - matching generic footprint geometry is excluded from the aerial-surface dependency;
 - no runtime construction or repair path exists.
 
+## Parked-aircraft corridor
+
+The powered-aircraft row on the south apron and sailplane line north of the
+runway use the pinned 2019 NAIP image as a bounded visual-placement reference.
+The authored set contains seven powered aircraft and ten sailplanes. Positions
+and headings align to visible parking rows; vertical placement is derived from
+the production terrain and each source mesh's minimum bound rather than a shared
+object origin.
+
+The set is one combined, fixed-world LOD batch with one opaque material. Full
+exterior detail is retained for takeoff/landing proximity, while distant LODs
+collapse to aggregate silhouettes. This is a visual approximation, not a
+surveyed stand plan or current-aircraft inventory.

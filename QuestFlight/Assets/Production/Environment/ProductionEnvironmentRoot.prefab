@@ -5973,7 +5973,7 @@ MonoBehaviour:
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
   bakedRendererCount: 45
-  bakedTriangleCount: 488560
+  bakedTriangleCount: 488415
   bakedMaterialCount: 9
   bakedTextureCount: 28
   bakeUtc: 2026-07-24T19:15:00Z

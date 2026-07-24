@@ -3,7 +3,7 @@
     "sourceCommit": "cd4131fa7732a6db2d7387921dfef33e2c206970",
     "scenePath": "Assets/Scenes/ProductionVerticalSlice.unity",
     "ready": true,
-    "approvedCount": 298,
+    "approvedCount": 301,
     "packageCount": 5,
     "conditionalLocalCount": 0,
     "rejectedCount": 0,
@@ -259,6 +259,14 @@
         },
         {
             "assetPath": "Assets/Production/Environment/AirportCoreV4/Water/Reports/AirportCoreWaterVegetation_SourceManifest.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportHeroCorridorV1/Data/AirportHeroCorridorGenerationReportV1.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportHeroCorridorV1/Generated/AirportHeroCorridor_LOD0.asset",
             "classification": "approved_production"
         },
         {
@@ -1111,6 +1119,10 @@
         },
         {
             "assetPath": "Assets/Scripts/Environment/AirportCoreBenchmarkRoot.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/AirportHeroCorridorRoot.cs",
             "classification": "approved_product_authored"
         },
         {

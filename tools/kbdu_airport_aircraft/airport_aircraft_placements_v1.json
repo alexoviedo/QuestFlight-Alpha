@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Z=north",
+  "orthophoto": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
+  "placement_method": "Manually aligned to visible 2019 NAIP parking silhouettes and authored tie-down rows; terrain heights are sampled from the pinned KBDU terrain rings.",
+  "cull_screen_relative_height": 0.002,
+  "groups": [
+    {
+      "id": "south_powered_apron",
+      "family": "powered_c172",
+      "model_forward_axis": "+Z after Unity import calibration",
+      "placements": [
+        {"id": "powered-01", "x": -680.0, "z": -159.0, "yaw": 92.0, "color": [224, 228, 229, 255]},
+        {"id": "powered-02", "x": -612.0, "z": -160.0, "yaw": 88.0, "color": [205, 218, 229, 255]},
+        {"id": "powered-03", "x": -548.0, "z": -166.0, "yaw": 91.0, "color": [230, 221, 205, 255]},
+        {"id": "powered-04", "x": -474.0, "z": -169.0, "yaw": 88.5, "color": [219, 225, 226, 255]},
+        {"id": "powered-05", "x": -401.0, "z": -173.0, "yaw": 91.5, "color": [210, 221, 216, 255]},
+        {"id": "powered-06", "x": -332.0, "z": -177.0, "yaw": 88.0, "color": [226, 217, 211, 255]},
+        {"id": "powered-07", "x": -270.0, "z": -179.0, "yaw": 91.0, "color": [211, 220, 230, 255]}
+      ]
+    },
+    {
+      "id": "north_sailplane_line",
+      "family": "sailplane",
+      "model_forward_axis": "+Z after Unity import calibration",
+      "placements": [
+        {"id": "sailplane-01", "x": -650.0, "z": 65.0, "yaw": 178.0, "color": [230, 232, 232, 255]},
+        {"id": "sailplane-02", "x": -594.0, "z": 63.0, "yaw": 2.0, "color": [216, 225, 231, 255]},
+        {"id": "sailplane-03", "x": -538.0, "z": 61.0, "yaw": 179.0, "color": [231, 224, 215, 255]},
+        {"id": "sailplane-04", "x": -482.0, "z": 59.0, "yaw": 1.0, "color": [224, 229, 228, 255]},
+        {"id": "sailplane-05", "x": -426.0, "z": 57.0, "yaw": 177.5, "color": [213, 225, 232, 255]},
+        {"id": "sailplane-06", "x": -370.0, "z": 55.0, "yaw": 2.5, "color": [232, 226, 218, 255]},
+        {"id": "sailplane-07", "x": -314.0, "z": 53.0, "yaw": 178.5, "color": [222, 228, 229, 255]},
+        {"id": "sailplane-08", "x": -258.0, "z": 51.0, "yaw": 1.5, "color": [217, 226, 233, 255]},
+        {"id": "sailplane-09", "x": -202.0, "z": 49.0, "yaw": 179.0, "color": [231, 225, 218, 255]},
+        {"id": "sailplane-10", "x": -146.0, "z": 47.0, "yaw": 2.0, "color": [223, 229, 229, 255]}
+      ]
+    }
+  ]
+}

@@ -433,3 +433,24 @@ and remove the rejected overlay mesh/material/shader from the product closure.
 - Footprints: OpenStreetMap contributors, ODbL-1.0, through the pinned KBDU reference context.
 - City of Boulder hangar pages: factual/reference use only; no City photographs are committed.
 - Source Blender SHA-256: `15e2223ad29d71332e8b994203ec403ff527a12cf957012917135f8db1c52549`.
+
+## Airport Parked Aircraft V1
+
+The powered-aircraft scenery derivative continues to use the audited
+KOG_THORNS `Cessna172` under CC BY 4.0. The new sailplane source is
+`Glider Flying` by app4soft / EGPJET from
+[OpenGameArt](https://opengameart.org/content/glider-flying), published under
+CC0 1.0. Raw sailplane sources remain external.
+
+| Asset | Source / terms | SHA-256 |
+| --- | --- | --- |
+| `KBDU_ParkedC172_FixedDetail.glb` | Exterior-only static derivative of KOG_THORNS `Cessna172`; CC BY 4.0 | `2c2c8154343d24dd093c878c1f94b33ba7a71445eb886fbf93d119452df7e391` |
+| `KBDU_ParkedSailplane_FixedDetail.glb` | Exterior-only static derivative of app4soft / EGPJET `Glider Flying`; CC0 1.0 | `cb69e85643cdefc3a90f4376f98f4e6d19319117a94268ad09ada9382a9bb50b` |
+| External `FFGL.blend` | app4soft / EGPJET; CC0 1.0; not committed | `c367729605b0d67d1d989d18be1ca92b0279037006110858f1e7fc00909cd077` |
+
+The deterministic conversion removes interiors, animation, source materials,
+source textures, and interaction; joins, triangulates, decimates, ground-pivots,
+and vertex-colors the retained exterior geometry. Exact byte counts, source
+URLs, Blender version, LOD inventory, and change notice are recorded in
+`AirportParkedAircraftSourceManifestV1.json`. CC BY 4.0 does not grant
+Cessna/Textron trademark rights or imply endorsement.

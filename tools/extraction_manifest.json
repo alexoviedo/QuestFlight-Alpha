@@ -524,6 +524,11 @@
       "path": "Assets/Scripts/Environment/PhotorealAerialSurfaceRoot.cs",
       "classification": "approved_product_authored",
       "reason": "Product-authored fail-closed contract for the explicitly serialized semantic terrain, footprint-building, and map-only canopy hierarchy; it performs no runtime construction or repair."
+    },
+    {
+      "path": "Assets/Scripts/Environment/AirportHeroCorridorRoot.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored fail-closed contract for the explicitly serialized airport hero-building corridor; it performs no runtime construction or repair."
     }
   ],
   "product_replacements": [

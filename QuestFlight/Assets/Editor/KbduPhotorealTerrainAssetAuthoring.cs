@@ -33,7 +33,10 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/Textures/KBDU_NAIP_2019_Far24km_2048.jpg";
         private const string DetailPath =
             "Assets/Resources/QuestFlightLab/Environment/GroundMaterials/withered_grass_diff_1k.jpg";
-        private const string ParkedAircraftModelPath = Root + "/KBDU_ParkedAircraft_LODs.glb";
+        private const string ParkedC172ModelPath =
+            "Assets/Production/Environment/AirportParkedAircraftV1/Models/KBDU_ParkedC172_FixedDetail.glb";
+        private const string ParkedSailplaneModelPath =
+            "Assets/Production/Environment/AirportParkedAircraftV1/Models/KBDU_ParkedSailplane_FixedDetail.glb";
         private const int NonContextDrawSlots = 99;
         private const long NonContextTriangles = 551958;
         private const int MaximumVisibleDrawSlots = 130;
@@ -97,6 +100,31 @@ namespace QuestFlight.Editor
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 Debug.Log("[QuestFlight][KBDUPhotorealTerrainVisualRepair] SUCCESS");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorApplication.Exit(1);
+            }
+        }
+
+        /// <summary>
+        /// Regenerates and rebinds only the parked-aircraft batch. This preserves the
+        /// already-filtered V4 building context and stable prefab object identities.
+        /// </summary>
+        public static void RepairParkedAircraftVisualAssetsBatch()
+        {
+            try
+            {
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                RuntimeInputs inputs = ValidateRuntimeSourcePlan();
+                CreateParkedAircraftMeshes(inputs);
+                AssetDatabase.SaveAssets();
+                UpdateParkedAircraftPrefab(inputs);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                Debug.Log("[QuestFlight][KBDUParkedAircraftVisualRepair] SUCCESS");
                 EditorApplication.Exit(0);
             }
             catch (Exception exception)
@@ -520,12 +548,19 @@ namespace QuestFlight.Editor
                         AddPending(pending, runtimeBatch.id, lod, runtimeBatch.lod_policy[lod], BuildVegetationBatch(batch, lod));
                     vegetationCount += batch.placements.Length;
                 }
-                GameObject parkedAircraftSource = LoadRequired<GameObject>(ParkedAircraftModelPath);
+                Dictionary<string, GameObject> parkedAircraftSources =
+                    new Dictionary<string, GameObject>(StringComparer.Ordinal)
+                    {
+                        { "powered_c172", LoadRequired<GameObject>(ParkedC172ModelPath) },
+                        { "sailplane", LoadRequired<GameObject>(ParkedSailplaneModelPath) }
+                    };
                 foreach (RuntimeSimpleBatch runtimeBatch in inputs.Runtime.parked_aircraft_runtime_batches)
                 {
                     ParkedAircraftBatch batch = aircraftById[runtimeBatch.logical_batch_ids.Single()];
                     for (int lod = 0; lod < 3; lod++)
-                        AddPending(pending, runtimeBatch.id, lod, runtimeBatch.lod_policy[lod], BuildParkedAircraftBatch(batch, parkedAircraftSource, lod));
+                        AddPending(
+                            pending, runtimeBatch.id, lod, runtimeBatch.lod_policy[lod],
+                            BuildParkedAircraftBatch(batch, parkedAircraftSources, lod));
                     parkedAircraftCount += batch.placements.Length;
                 }
 
@@ -579,12 +614,13 @@ namespace QuestFlight.Editor
             Mesh mesh)
         {
             long triangles = (long)mesh.GetIndexCount(0) / 3L;
-            if (triangles != policy.estimated_triangles || mesh.vertexCount != policy.estimated_vertices)
+            int vertexCount = mesh.vertexCount;
+            if (triangles != policy.estimated_triangles || vertexCount != policy.estimated_vertices)
             {
                 UnityEngine.Object.DestroyImmediate(mesh);
                 throw new InvalidOperationException(
                     "Runtime HLOD estimate mismatch for " + batchId + " LOD" + lod +
-                    ": actual=" + triangles + "/" + mesh.vertexCount +
+                    ": actual=" + triangles + "/" + vertexCount +
                     ", expected=" + policy.estimated_triangles + "/" + policy.estimated_vertices);
             }
             if (mesh.vertexCount > MaximumSingleMeshVertices)
@@ -592,6 +628,11 @@ namespace QuestFlight.Editor
                 UnityEngine.Object.DestroyImmediate(mesh);
                 throw new InvalidOperationException("Runtime HLOD mesh exceeds the vertex cap: " + batchId + " LOD" + lod);
             }
+            // Mid/far context and simple batches historically use their asset-level LOD
+            // names. Near building meshes retain the algorithm name used by the V4
+            // filtering evidence and must not be renamed during focused regeneration.
+            if (!batchId.StartsWith("buildings_0-2km_", StringComparison.Ordinal))
+                mesh.name = batchId + "_LOD" + lod;
             pending.Add(new PendingMesh
             {
                 BatchId = batchId,
@@ -600,6 +641,89 @@ namespace QuestFlight.Editor
                 Path = Generated + "/" + batchId + "_LOD" + lod + ".asset",
                 Triangles = triangles
             });
+        }
+
+        private static void CreateParkedAircraftMeshes(RuntimeInputs inputs)
+        {
+            Dictionary<string, ParkedAircraftBatch> aircraftById = inputs.Logical.parked_aircraft_batches
+                .ToDictionary(batch => batch.id, StringComparer.Ordinal);
+            Dictionary<string, GameObject> sources = new Dictionary<string, GameObject>(StringComparer.Ordinal)
+            {
+                { "powered_c172", LoadRequired<GameObject>(ParkedC172ModelPath) },
+                { "sailplane", LoadRequired<GameObject>(ParkedSailplaneModelPath) }
+            };
+            List<PendingMesh> pending = new List<PendingMesh>();
+            try
+            {
+                foreach (RuntimeSimpleBatch runtimeBatch in inputs.Runtime.parked_aircraft_runtime_batches)
+                {
+                    ParkedAircraftBatch batch = aircraftById[runtimeBatch.logical_batch_ids.Single()];
+                    for (int lod = 0; lod < 3; lod++)
+                        AddPending(
+                            pending,
+                            runtimeBatch.id,
+                            lod,
+                            runtimeBatch.lod_policy[lod],
+                            BuildParkedAircraftBatch(batch, sources, lod));
+                }
+                foreach (PendingMesh item in pending)
+                {
+                    SaveMesh(item.Mesh, item.Path);
+                    item.Mesh = null;
+                }
+            }
+            finally
+            {
+                foreach (PendingMesh item in pending)
+                    if (item.Mesh != null) UnityEngine.Object.DestroyImmediate(item.Mesh);
+            }
+        }
+
+        private static void UpdateParkedAircraftPrefab(RuntimeInputs inputs)
+        {
+            const string contextPath = Root + "/KBDU_BatchedContext.prefab";
+            GameObject root = PrefabUtility.LoadPrefabContents(contextPath);
+            try
+            {
+                Material material = LoadRequired<Material>(Root + "/KBDU_ParkedAircraft.mat");
+                foreach (RuntimeSimpleBatch runtimeBatch in inputs.Runtime.parked_aircraft_runtime_batches)
+                {
+                    Transform batch = root.transform.Find(runtimeBatch.id);
+                    if (batch == null)
+                        throw new InvalidOperationException(
+                            "Serialized parked-aircraft batch is missing: " + runtimeBatch.id);
+                    LODGroup group = batch.GetComponent<LODGroup>();
+                    if (group == null || group.GetLODs().Length != 3)
+                        throw new InvalidOperationException(
+                            "Serialized parked-aircraft LOD contract is invalid: " + runtimeBatch.id);
+
+                    LOD[] lods = new LOD[3];
+                    for (int lod = 0; lod < 3; lod++)
+                    {
+                        Transform child = batch.Find("LOD" + lod);
+                        MeshFilter filter = child == null ? null : child.GetComponent<MeshFilter>();
+                        MeshRenderer renderer = child == null ? null : child.GetComponent<MeshRenderer>();
+                        if (filter == null || renderer == null)
+                            throw new InvalidOperationException(
+                                "Serialized parked-aircraft renderer is missing: " + runtimeBatch.id + " LOD" + lod);
+                        filter.sharedMesh = LoadRequired<Mesh>(
+                            Generated + "/" + runtimeBatch.id + "_LOD" + lod + ".asset");
+                        renderer.sharedMaterial = material;
+                        lods[lod] = new LOD(
+                            runtimeBatch.lod_policy[lod].screen_relative_height,
+                            new Renderer[] { renderer });
+                    }
+                    group.fadeMode = LODFadeMode.None;
+                    group.animateCrossFading = false;
+                    group.SetLODs(lods);
+                    group.RecalculateBounds();
+                }
+                PrefabUtility.SaveAsPrefabAsset(root, contextPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
         }
 
         private static void CreateContextPrefab()
@@ -813,42 +937,32 @@ namespace QuestFlight.Editor
 
         private static Mesh BuildParkedAircraftBatch(
             ParkedAircraftBatch batch,
-            GameObject sourceModel,
+            IReadOnlyDictionary<string, GameObject> sourceModels,
             int lod)
         {
-            string lodName = lod == 0 ? "ParkedAircraft_LOD0" : "ParkedAircraft_LOD1";
-            MeshFilter sourceFilter = sourceModel.GetComponentsInChildren<MeshFilter>(true)
-                .SingleOrDefault(filter => filter.name.StartsWith(lodName, StringComparison.Ordinal));
-            if (sourceFilter == null || sourceFilter.sharedMesh == null)
-                throw new InvalidOperationException("Parked-aircraft source LOD is missing: " + lodName);
-
-            Mesh source = sourceFilter.sharedMesh;
-            Vector3[] sourceVertices = source.vertices;
-            Vector3[] sourceNormals = source.normals;
-            int[] sourceTriangles = source.triangles;
-            if (sourceNormals.Length != sourceVertices.Length)
-                throw new InvalidOperationException("Parked-aircraft source normals are incomplete: " + lodName);
-
-            List<Vector3> vertices = new List<Vector3>(sourceVertices.Length * batch.placements.Length);
-            List<Vector3> normals = new List<Vector3>(sourceVertices.Length * batch.placements.Length);
-            List<Color32> colors = new List<Color32>(sourceVertices.Length * batch.placements.Length);
-            List<int> indices = new List<int>(sourceTriangles.Length * batch.placements.Length);
-            Matrix4x4 sourceToRoot = sourceModel.transform.worldToLocalMatrix * sourceFilter.transform.localToWorldMatrix;
-            if (lod == 2)
+            List<Vector3> vertices = new List<Vector3>();
+            List<Vector3> normals = new List<Vector3>();
+            List<Color32> colors = new List<Color32>();
+            List<int> indices = new List<int>();
+            if (lod >= 1)
             {
                 List<Vector3> boxVertices = new List<Vector3>();
                 List<Color32> boxColors = new List<Color32>();
                 List<int> boxIndices = new List<int>();
-                Bounds sourceBounds = TransformBounds(source.bounds, sourceToRoot);
                 foreach (ParkedAircraftPlacement placement in batch.placements)
                 {
+                    SourceAircraft sourceAircraft = ResolveAircraftSource(sourceModels, placement, 1);
                     Color32 color = PlacementColor(placement, batch.id);
                     Quaternion rotation = Quaternion.Euler(0f, placement.yaw_degrees, 0f);
-                    Vector3 center = new Vector3(placement.x_meters, placement.base_y_meters, placement.z_meters) +
-                                     rotation * sourceBounds.center;
-                    AddColoredBox(center, sourceBounds.size, color, boxVertices, boxColors, boxIndices);
+                    Bounds bounds = sourceAircraft.Bounds;
+                    Vector3 groundedCenter = new Vector3(
+                        bounds.center.x, bounds.center.y - bounds.min.y + 0.025f, bounds.center.z);
+                    Vector3 center = new Vector3(
+                        placement.x_meters, placement.base_y_meters, placement.z_meters) +
+                        rotation * groundedCenter;
+                    AddColoredBox(center, bounds.size, color, boxVertices, boxColors, boxIndices);
                 }
-                Mesh boxMesh = new Mesh { name = batch.id + "_LOD2" };
+                Mesh boxMesh = new Mesh { name = batch.id + "_LOD" + lod };
                 boxMesh.indexFormat = boxVertices.Count > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
                 boxMesh.SetVertices(boxVertices);
                 boxMesh.SetColors(boxColors);
@@ -859,18 +973,31 @@ namespace QuestFlight.Editor
             }
             foreach (ParkedAircraftPlacement placement in batch.placements)
             {
+                SourceAircraft sourceAircraft = ResolveAircraftSource(sourceModels, placement, lod);
+                Mesh source = sourceAircraft.Mesh;
+                Vector3[] sourceVertices = source.vertices;
+                Vector3[] sourceNormals = source.normals;
+                Color32[] sourceColors = source.colors32;
+                int[] sourceTriangles = source.triangles;
+                if (sourceNormals.Length != sourceVertices.Length)
+                    throw new InvalidOperationException(
+                        "Parked-aircraft source normals are incomplete: " + sourceAircraft.Name);
                 Color32 color = PlacementColor(placement, batch.id);
+                float groundingOffset = -sourceAircraft.Bounds.min.y + 0.025f;
                 Matrix4x4 placementMatrix = Matrix4x4.TRS(
-                    new Vector3(placement.x_meters, placement.base_y_meters, placement.z_meters),
+                    new Vector3(
+                        placement.x_meters, placement.base_y_meters + groundingOffset, placement.z_meters),
                     Quaternion.Euler(0f, placement.yaw_degrees, 0f),
-                    Vector3.one) * sourceToRoot;
+                    Vector3.one) * sourceAircraft.SourceToRoot;
                 Matrix4x4 normalMatrix = placementMatrix.inverse.transpose;
                 int start = vertices.Count;
                 for (int index = 0; index < sourceVertices.Length; index++)
                 {
                     vertices.Add(placementMatrix.MultiplyPoint3x4(sourceVertices[index]));
                     normals.Add(normalMatrix.MultiplyVector(sourceNormals[index]).normalized);
-                    colors.Add(color);
+                    colors.Add(sourceColors.Length == sourceVertices.Length
+                        ? MultiplyColor(sourceColors[index], color)
+                        : color);
                 }
                 foreach (int sourceIndex in sourceTriangles) indices.Add(start + sourceIndex);
             }
@@ -883,6 +1010,42 @@ namespace QuestFlight.Editor
             mesh.SetTriangles(indices, 0, true);
             mesh.RecalculateBounds();
             return mesh;
+        }
+
+        private static SourceAircraft ResolveAircraftSource(
+            IReadOnlyDictionary<string, GameObject> sourceModels,
+            ParkedAircraftPlacement placement,
+            int lod)
+        {
+            string family = string.IsNullOrWhiteSpace(placement.model_family)
+                ? "powered_c172"
+                : placement.model_family;
+            if (!sourceModels.TryGetValue(family, out GameObject sourceModel))
+                throw new InvalidOperationException("Unknown parked-aircraft family: " + family);
+            string prefix = family == "sailplane" ? "ParkedSailplane_LOD" : "ParkedC172_LOD";
+            string lodName = prefix + Math.Min(lod, 1);
+            MeshFilter sourceFilter = sourceModel.GetComponentsInChildren<MeshFilter>(true)
+                .SingleOrDefault(filter => filter.name.StartsWith(lodName, StringComparison.Ordinal));
+            if (sourceFilter == null || sourceFilter.sharedMesh == null)
+                throw new InvalidOperationException("Parked-aircraft source LOD is missing: " + lodName);
+            Matrix4x4 sourceToRoot =
+                sourceModel.transform.worldToLocalMatrix * sourceFilter.transform.localToWorldMatrix;
+            return new SourceAircraft
+            {
+                Name = lodName,
+                Mesh = sourceFilter.sharedMesh,
+                SourceToRoot = sourceToRoot,
+                Bounds = TransformBounds(sourceFilter.sharedMesh.bounds, sourceToRoot)
+            };
+        }
+
+        private static Color32 MultiplyColor(Color32 source, Color32 placement)
+        {
+            return new Color32(
+                (byte)((source.r * placement.r + 127) / 255),
+                (byte)((source.g * placement.g + 127) / 255),
+                (byte)((source.b * placement.b + 127) / 255),
+                255);
         }
 
         private static Color32 PlacementColor(ParkedAircraftPlacement placement, string batchId)
@@ -1625,11 +1788,20 @@ namespace QuestFlight.Editor
         [Serializable]
         private sealed class ParkedAircraftPlacement
         {
+            public string model_family;
             public float x_meters;
             public float base_y_meters;
             public float z_meters;
             public float yaw_degrees;
             public int[] color_rgba;
+        }
+
+        private sealed class SourceAircraft
+        {
+            public string Name;
+            public Mesh Mesh;
+            public Matrix4x4 SourceToRoot;
+            public Bounds Bounds;
         }
     }
 }

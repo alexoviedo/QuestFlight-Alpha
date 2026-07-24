@@ -1,5 +1,17 @@
 # Known limitations
 
+- **Airport Parked Aircraft V1 is machine-validated and awaits worn review.**
+  Seventeen static aircraft now occupy the takeoff/landing corridor: seven
+  powered aircraft on the south apron and ten sailplanes on the north glider
+  line. They are terrain-grounded and orientation-aligned to the pinned 2019
+  NAIP image, but that image is historical evidence rather than current ramp
+  occupancy. Some photographed aircraft remain beneath or near the authored
+  models because a new clean plate was outside scope. Static draw, triangle,
+  material, transparency, EditMode, PlayMode, dependency, Visual QA, and Android
+  build checks pass. The aggregate performance report remains 1.25 MiB over its
+  conservative 210 MiB texture ceiling due to the accepted hero-corridor source;
+  the new texture-free aircraft derivatives add zero texture residency. No
+  physical timing or worn acceptance is claimed for this exact APK.
 - **Cockpit Local Shadow V1 passed its exact-APK worn visual gate.** One authored
   120-triangle cabin-frame proxy produces one 512-square filtered two-moment map;
   both eyes sample the same world-locked result. The final worn check found a

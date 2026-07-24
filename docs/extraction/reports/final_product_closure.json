@@ -256,6 +256,14 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/AirportHeroCorridorV1/Data/AirportHeroCorridorGenerationReportV1.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportHeroCorridorV1/Generated/AirportHeroCorridor_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/AirportKit/KBDU_RunwaySurface_Albedo.jpg",
             "classification": "approved_production"
         },
@@ -1105,6 +1113,10 @@
         },
         {
             "assetPath": "Assets/Scripts/Environment/AirportCoreBenchmarkRoot.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/AirportHeroCorridorRoot.cs",
             "classification": "approved_product_authored"
         },
         {

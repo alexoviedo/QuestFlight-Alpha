@@ -27,7 +27,7 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 89;
+        private const int RequiredShotCount = 92;
         private const int DrawCallTarget = 75;
         private const long VisibleTriangleTarget = 650000L;
         // The headset-accepted readout/lens baseline is 29 materials (artifact
@@ -575,6 +575,27 @@ namespace QuestFlightLab.Editor
                 "28_hero_corridor_takeoff_view", "Hero airport corridor takeoff and landing view",
                 "airport_hero_corridor", corridorOverviewCamera,
                 LookAt(corridorOverviewCamera, corridorOverviewTarget), 50f, ViewProfile.Environment));
+
+            Vector3 poweredAircraftTarget = new Vector3(-485f, 2.8f, -168f);
+            Vector3 poweredAircraftCamera = new Vector3(-485f, 7.5f, -38f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "29_south_powered_aircraft", "Grounded powered-aircraft apron from the runway",
+                "parked_aircraft", poweredAircraftCamera,
+                LookAt(poweredAircraftCamera, poweredAircraftTarget), 44f, ViewProfile.Environment));
+
+            Vector3 sailplaneTarget = new Vector3(-420f, 2.8f, 57f);
+            Vector3 sailplaneCamera = new Vector3(-420f, 7.2f, -20f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "30_north_sailplane_line", "North-side sailplane line from the runway",
+                "parked_aircraft", sailplaneCamera,
+                LookAt(sailplaneCamera, sailplaneTarget), 48f, ViewProfile.Environment));
+
+            Vector3 aircraftOverviewTarget = new Vector3(-415f, 0f, -57f);
+            Vector3 aircraftOverviewCamera = new Vector3(-415f, 300f, -57f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "31_aircraft_orthophoto_alignment", "Powered-aircraft and sailplane stand alignment",
+                "parked_aircraft", aircraftOverviewCamera,
+                LookAt(aircraftOverviewCamera, aircraftOverviewTarget), 58f, ViewProfile.Environment));
 
             SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
             context.animator?.ClearControlStateForTest();

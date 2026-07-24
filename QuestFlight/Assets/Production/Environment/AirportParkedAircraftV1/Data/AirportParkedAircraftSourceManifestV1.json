@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "coordinate_contract": "Blender +Z up; output pivot centered in plan and minimum up=0; Unity imports +Y up.",
+  "sources": [
+    {
+      "family": "powered_c172",
+      "path": "QuestFlight/Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
+      "bytes": 26962216,
+      "sha256": "a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872",
+      "creator": "KOG_THORNS",
+      "url": "https://sketchfab.com/3d-models/cessna172-d1b15841c29c43d0862667300bad55a4",
+      "license_spdx": "CC-BY-4.0"
+    },
+    {
+      "family": "sailplane",
+      "external_filename": "FFGL.blend",
+      "bytes": 3966104,
+      "sha256": "c367729605b0d67d1d989d18be1ca92b0279037006110858f1e7fc00909cd077",
+      "creator": "app4soft / EGPJET",
+      "url": "https://opengameart.org/content/glider-flying",
+      "license_spdx": "CC0-1.0",
+      "raw_source_committed": false
+    }
+  ],
+  "change_notice": "Static scenery derivatives retain exterior shell, gear, and canopy only; interiors, pilot, animation, source materials, textures, and interaction were removed. Geometry was joined, ground-pivoted, vertex-colored, triangulated, and deterministically decimated.",
+  "generator": {
+    "path": "tools/kbdu_airport_aircraft/build_airport_aircraft_sources.py",
+    "blender_version": "5.1.2"
+  },
+  "outputs": [
+    {
+      "family": "powered_c172",
+      "path": "QuestFlight/Assets/Production/Environment/AirportParkedAircraftV1/Models/KBDU_ParkedC172_FixedDetail.glb",
+      "bytes": 101168,
+      "sha256": "2c2c8154343d24dd093c878c1f94b33ba7a71445eb886fbf93d119452df7e391",
+      "lods": [
+        {
+          "name": "ParkedC172_LOD0",
+          "vertices": 2047,
+          "triangles": 899,
+          "bounds_meters": {
+            "minimum": [
+              -6.298952102661133,
+              -4.629201412200928,
+              0.0
+            ],
+            "maximum": [
+              6.298952102661133,
+              4.675409317016602,
+              3.6169044971466064
+            ]
+          },
+          "grounded_local_z": true,
+          "vertex_color_attribute": true
+        },
+        {
+          "name": "ParkedC172_LOD1",
+          "vertices": 1561,
+          "triangles": 350,
+          "bounds_meters": {
+            "minimum": [
+              -6.321620941162109,
+              -4.629201412200928,
+              0.0
+            ],
+            "maximum": [
+              6.321620464324951,
+              4.675409317016602,
+              3.5513265132904053
+            ]
+          },
+          "grounded_local_z": true,
+          "vertex_color_attribute": true
+        }
+      ]
+    },
+    {
+      "family": "sailplane",
+      "path": "QuestFlight/Assets/Production/Environment/AirportParkedAircraftV1/Models/KBDU_ParkedSailplane_FixedDetail.glb",
+      "bytes": 36668,
+      "sha256": "cb69e85643cdefc3a90f4376f98f4e6d19319117a94268ad09ada9382a9bb50b",
+      "lods": [
+        {
+          "name": "ParkedSailplane_LOD0",
+          "vertices": 312,
+          "triangles": 549,
+          "bounds_meters": {
+            "minimum": [
+              -7.58468770980835,
+              -2.9688000679016113,
+              0.0
+            ],
+            "maximum": [
+              7.584990978240967,
+              2.9664788246154785,
+              1.6837223768234253
+            ]
+          },
+          "grounded_local_z": true,
+          "vertex_color_attribute": true
+        },
+        {
+          "name": "ParkedSailplane_LOD1",
+          "vertices": 152,
+          "triangles": 239,
+          "bounds_meters": {
+            "minimum": [
+              -7.582210540771484,
+              -2.9704437255859375,
+              0.0
+            ],
+            "maximum": [
+              7.582719802856445,
+              2.9664788246154785,
+              1.6567329168319702
+            ]
+          },
+          "grounded_local_z": true,
+          "vertex_color_attribute": true
+        }
+      ]
+    }
+  ],
+  "runtime_contract": {
+    "shared_material_count": 1,
+    "transparent_materials": 0,
+    "animation": false,
+    "collision": false,
+    "interaction": false
+  }
+}
