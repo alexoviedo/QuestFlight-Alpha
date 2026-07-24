@@ -276,3 +276,29 @@ The final cockpit candidate closes its machine gate:
 The visibility stream adds no renderer, draw call, material, texture lookup,
 runtime raycast, or shadow map. These checks establish a worn-test candidate,
 not physical Quest timing, comfort, or subjective optical acceptance.
+
+## Cockpit local-shadow closure
+
+Cockpit Local Shadow V1 replaces the rejected flickering realtime-shadow attempt
+and the visibly jagged sparse-PCF prototype with one authored aircraft-local
+filtered two-moment shadow map:
+
+- Unity EditMode: PASS 118/118; PlayMode: PASS 9/9;
+- production Visual QA: PASS 85/85, with full-resolution cockpit and directional
+  shadow views inspected;
+- static Quest planning: PASS at 55 maximum draws, 628,768 selected triangles,
+  29 visible materials, 212,069,266 estimated texture bytes, three transparent
+  slots, 13 shaders/18 keyword combinations, and 4x MSAA;
+- Meta XR Simulator 201.0 live stereo/HMD/both Touch: the
+  `cockpit_neutral` session passes with both eyes nonblank, scene-consistent,
+  and one authored product hierarchy; aggregate replay status remains
+  `BLOCKED_MISSING_RECORDINGS`;
+- Android release-style build: PASS, 136,203,589-byte APK, SHA-256
+  `4dc479af8b961909ddbac0249b863c040ebf95e04796437aa26bcc2ac9cf6057`;
+- exact-APK worn visual gate: PASS for continuous edge, no sawtooth boundary,
+  plausible direction/strength, no flicker or stereo mismatch, and readable
+  instruments.
+
+These checks establish visual acceptance of the bounded shadow implementation.
+They do not establish long-duration Quest timing, thermal, or allocation
+acceptance.

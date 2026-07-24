@@ -27,7 +27,10 @@ namespace QuestFlight.Editor
         // hard development-baseline ceilings, not measured Quest performance claims.
         private const int DrawCallTarget = 75;
         private const long VisibleTriangleTarget = 650000L;
-        private const int MaterialTarget = 28;
+        // The headset-accepted cockpit/readout baseline contains 29 visible materials while
+        // retaining 28 active distinct scene materials. The authored local-shadow path reuses
+        // an existing cockpit material and must not raise either count.
+        private const int MaterialTarget = 29;
         private const long TextureMemoryTargetBytes = 210L * 1024L * 1024L;
         private const int TransparentMaterialSlotTarget = 3;
         private const string OutputEnvironmentVariable = "QFL_PERFORMANCE_BUDGET_DIR";

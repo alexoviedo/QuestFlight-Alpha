@@ -26,17 +26,25 @@ namespace QuestFlightLab.Aircraft
         public float coarseNormalStrength;
         public float instrumentReadabilityEmission;
         public float directionalCabinShadowStrength;
+        public bool cockpitLocalShadowEnabled;
+        public int cockpitLocalShadowDrawCount;
+        public int cockpitLocalShadowProxyTriangleCount;
+        public int cockpitLocalShadowMapResolution;
+        public float cockpitLocalShadowStrength;
         public string strategy;
     }
 
     /// <summary>
     /// Applies a deterministic Quest cockpit-lighting treatment to authored renderers.
-    /// Authored AO, geometry-derived four-direction visibility, softened coarse cabin normals,
-    /// static reflections, and base-texture instrument emission preserve stable depth/readability.
-    /// Realtime cockpit casters and receivers stay disabled because worn stereo review proved
-    /// the former small shadow map flickered. No light, camera, mesh, or hierarchy is created.
+    /// Authored AO, softened coarse cabin normals, static reflections, and base-texture
+    /// instrument emission preserve stable depth/readability. One explicitly authored,
+    /// aircraft-local orthographic camera renders one low-poly cabin-frame proxy into a fixed
+    /// shadow map. Both XR eyes sample that same world-locked map; the OpenXR camera is never
+    /// read, written, or used to orient the shadow. No light, mesh, camera, or hierarchy is
+    /// constructed at runtime.
     /// </summary>
     [DisallowMultipleComponent]
+    [DefaultExecutionOrder(21000)]
     public sealed class ProductionAircraftLightingController : MonoBehaviour
     {
         public const string StableCockpitShaderName =
@@ -48,16 +56,42 @@ namespace QuestFlightLab.Aircraft
         public const float DefaultInstrumentReadabilityEmission = 0.20f;
         public const float DefaultDirectionalCabinShadowStrength = 0.58f;
         public const float MaximumDirectionalCabinShadowStrength = 0.65f;
+        public const float DefaultCockpitLocalShadowStrength = 0.62f;
+        public const float MaximumCockpitLocalShadowStrength = 0.72f;
+        public const float DefaultCockpitLocalShadowBias = 0.0018f;
 
         private const string StableMaterialSuffix = " Quest Cockpit Stable";
         private static readonly int WorldToAircraftId = Shader.PropertyToID("_WorldToAircraft");
         private static readonly int DirectionalCabinShadowStrengthId =
             Shader.PropertyToID("_DirectionalCabinShadowStrength");
+        private static readonly int CockpitLocalShadowMapId =
+            Shader.PropertyToID("_CockpitLocalShadowMap");
+        private static readonly int CockpitLocalShadowWorldToCameraId =
+            Shader.PropertyToID("_CockpitLocalShadowWorldToCamera");
+        private static readonly int CockpitLocalShadowWorldToClipId =
+            Shader.PropertyToID("_CockpitLocalShadowWorldToClip");
+        private static readonly int CockpitLocalShadowDepthParamsId =
+            Shader.PropertyToID("_CockpitLocalShadowDepthParams");
+        private static readonly int CockpitLocalShadowStrengthId =
+            Shader.PropertyToID("_CockpitLocalShadowStrength");
+        private static readonly int CockpitLocalShadowEnabledId =
+            Shader.PropertyToID("_CockpitLocalShadowEnabled");
 
         [SerializeField] private GameObject importedAircraftRoot;
         [SerializeField] private Shader stableCockpitShader;
         [SerializeField] private Texture2D instrumentDisplayBaseColor;
         [SerializeField] private Texture2D instrumentDisplayEmission;
+        [Header("Authored cockpit-local shadow")]
+        [SerializeField] private Camera cockpitLocalShadowCamera;
+        [SerializeField] private MeshRenderer cockpitLocalShadowCasterProxy;
+        [SerializeField] private RenderTexture cockpitLocalShadowMap;
+        [SerializeField] private Shader cockpitLocalShadowDepthShader;
+        [SerializeField] private Vector3 cockpitLocalShadowCenter = new Vector3(0f, 0.92f, 0.04f);
+        [SerializeField, Min(0.5f)] private float cockpitLocalShadowCameraDistance = 2.65f;
+        [SerializeField, Range(0f, MaximumCockpitLocalShadowStrength)]
+        private float cockpitLocalShadowStrength = DefaultCockpitLocalShadowStrength;
+        [SerializeField, Range(0.0001f, 0.008f)]
+        private float cockpitLocalShadowBias = DefaultCockpitLocalShadowBias;
         [SerializeField, Range(0f, MaximumStaticDepthStrength)]
         private float staticDepthStrength = DefaultStaticDepthStrength;
         [SerializeField, Range(0f, 1f)]
@@ -70,12 +104,19 @@ namespace QuestFlightLab.Aircraft
         private float directionalCabinShadowStrength = DefaultDirectionalCabinShadowStrength;
 
         public ProductionAircraftLightingReport Report { get; private set; }
+        public RenderTexture CockpitLocalShadowMap => cockpitLocalShadowMap;
 
         private readonly List<Material> _ownedRuntimeMaterials = new List<Material>();
+        private bool _cockpitLocalShadowReady;
+        private bool _cockpitLocalShadowErrorReported;
 
         public void ConfigureAuthoredRoot(GameObject root) => importedAircraftRoot = root;
 
-        private void Awake() => ApplyAuthoredLightingNow();
+        private void Awake()
+        {
+            ApplyAuthoredLightingNow();
+            InitializeCockpitLocalShadow();
+        }
 
         public ProductionAircraftLightingReport ApplyAuthoredLightingNow()
         {
@@ -111,14 +152,32 @@ namespace QuestFlightLab.Aircraft
                 _ownedRuntimeMaterials);
             Report.directionalCabinShadowStrength = Mathf.Clamp(
                 directionalCabinShadowStrength, 0f, MaximumDirectionalCabinShadowStrength);
+            PopulateCockpitLocalShadowReport();
             ApplyDirectionalCabinState();
             return Report;
         }
 
         private void LateUpdate()
         {
-            if (Report != null) ApplyDirectionalCabinState();
+            if (Report == null) return;
+            ApplyDirectionalCabinState();
+            RenderCockpitLocalShadow();
         }
+
+        /// <summary>
+        /// Renders the same authored map used at runtime for deterministic Editor Visual QA.
+        /// This never moves or reads the product Main Camera.
+        /// </summary>
+        public bool RenderCockpitLocalShadowNow()
+        {
+            if (Report == null) ApplyAuthoredLightingNow();
+            if (!_cockpitLocalShadowReady) InitializeCockpitLocalShadow();
+            if (!_cockpitLocalShadowReady) return false;
+            RenderCockpitLocalShadow();
+            return Shader.GetGlobalFloat(CockpitLocalShadowEnabledId) > 0.5f;
+        }
+
+        public void ClearCockpitLocalShadowNow() => ResetCockpitLocalShadowGlobals();
 
         public static ProductionAircraftLightingReport ApplyAuthoredLighting(
             GameObject root,
@@ -161,7 +220,7 @@ namespace QuestFlightLab.Aircraft
                 coarseNormalStrength = Mathf.Clamp01(normalStrength),
                 instrumentReadabilityEmission = Mathf.Clamp(instrumentEmission, 0f, 0.5f),
                 directionalCabinShadowStrength = DefaultDirectionalCabinShadowStrength,
-                strategy = "static_material_depth_plus_baked_ao_soft_normals_and_geometry_derived_directional_visibility_no_realtime_shadow_map"
+                strategy = "stable_cockpit_materials_plus_authored_aircraft_local_shadow_map"
             };
             Dictionary<Material, Material> cockpitClones = new Dictionary<Material, Material>();
             Dictionary<Material, Material> instrumentClones = new Dictionary<Material, Material>();
@@ -288,6 +347,162 @@ namespace QuestFlightLab.Aircraft
                 material.SetMatrix(WorldToAircraftId, worldToAircraft);
                 material.SetFloat(DirectionalCabinShadowStrengthId, strength);
             }
+        }
+
+        private void InitializeCockpitLocalShadow()
+        {
+            _cockpitLocalShadowReady = false;
+            if (cockpitLocalShadowCamera == null ||
+                cockpitLocalShadowCasterProxy == null ||
+                cockpitLocalShadowMap == null ||
+                cockpitLocalShadowDepthShader == null ||
+                importedAircraftRoot == null)
+            {
+                ReportCockpitLocalShadowError(
+                    "Authored camera, caster proxy, depth shader, render texture, or aircraft root is missing.");
+                ResetCockpitLocalShadowGlobals();
+                return;
+            }
+
+            MeshFilter meshFilter = cockpitLocalShadowCasterProxy.GetComponent<MeshFilter>();
+            if (meshFilter == null || meshFilter.sharedMesh == null ||
+                meshFilter.sharedMesh.subMeshCount != 1)
+            {
+                ReportCockpitLocalShadowError(
+                    "The authored caster proxy must contain exactly one mesh and one submesh.");
+                ResetCockpitLocalShadowGlobals();
+                return;
+            }
+            if (meshFilter.sharedMesh.triangles.Length / 3 > 1000)
+            {
+                ReportCockpitLocalShadowError(
+                    "The authored caster proxy exceeds the 1,000-triangle Quest ceiling.");
+                ResetCockpitLocalShadowGlobals();
+                return;
+            }
+            if (cockpitLocalShadowMap.width != cockpitLocalShadowMap.height ||
+                cockpitLocalShadowMap.width > 1024)
+            {
+                ReportCockpitLocalShadowError(
+                    "The cockpit-local shadow map must be square and no larger than 1024.");
+                ResetCockpitLocalShadowGlobals();
+                return;
+            }
+
+            cockpitLocalShadowCamera.enabled = false;
+            cockpitLocalShadowCamera.targetTexture = cockpitLocalShadowMap;
+            cockpitLocalShadowCamera.stereoTargetEye = StereoTargetEyeMask.None;
+            cockpitLocalShadowCamera.allowHDR = false;
+            cockpitLocalShadowCamera.allowMSAA = false;
+            cockpitLocalShadowCamera.useOcclusionCulling = false;
+            cockpitLocalShadowCasterProxy.enabled = false;
+            cockpitLocalShadowCasterProxy.shadowCastingMode = ShadowCastingMode.Off;
+            cockpitLocalShadowCasterProxy.receiveShadows = false;
+
+            if (!cockpitLocalShadowMap.IsCreated() && !cockpitLocalShadowMap.Create())
+            {
+                ReportCockpitLocalShadowError("The authored shadow render texture could not be created.");
+                ResetCockpitLocalShadowGlobals();
+                return;
+            }
+
+            _cockpitLocalShadowReady = true;
+            PopulateCockpitLocalShadowReport();
+        }
+
+        private void PopulateCockpitLocalShadowReport()
+        {
+            if (Report == null) return;
+            MeshFilter meshFilter = cockpitLocalShadowCasterProxy != null
+                ? cockpitLocalShadowCasterProxy.GetComponent<MeshFilter>()
+                : null;
+            Report.cockpitLocalShadowEnabled = _cockpitLocalShadowReady;
+            Report.cockpitLocalShadowDrawCount = _cockpitLocalShadowReady ? 1 : 0;
+            Report.cockpitLocalShadowProxyTriangleCount =
+                meshFilter != null && meshFilter.sharedMesh != null
+                    ? meshFilter.sharedMesh.triangles.Length / 3
+                    : 0;
+            Report.cockpitLocalShadowMapResolution =
+                cockpitLocalShadowMap != null ? cockpitLocalShadowMap.width : 0;
+            Report.cockpitLocalShadowStrength = Mathf.Clamp(
+                cockpitLocalShadowStrength, 0f, MaximumCockpitLocalShadowStrength);
+        }
+
+        private void RenderCockpitLocalShadow()
+        {
+            if (!_cockpitLocalShadowReady)
+            {
+                InitializeCockpitLocalShadow();
+                if (!_cockpitLocalShadowReady) return;
+            }
+
+            Light sun = RenderSettings.sun;
+            if (sun == null || !sun.isActiveAndEnabled || sun.type != LightType.Directional)
+            {
+                Shader.SetGlobalFloat(CockpitLocalShadowEnabledId, 0f);
+                return;
+            }
+
+            Vector3 lightDirectionToSun = -sun.transform.forward;
+            if (Vector3.Dot(lightDirectionToSun, Vector3.up) <= 0.015f)
+            {
+                Shader.SetGlobalFloat(CockpitLocalShadowEnabledId, 0f);
+                return;
+            }
+
+            Transform aircraftTransform = importedAircraftRoot.transform;
+            Vector3 centerWorld = aircraftTransform.TransformPoint(cockpitLocalShadowCenter);
+            Vector3 cameraPosition =
+                centerWorld + lightDirectionToSun * cockpitLocalShadowCameraDistance;
+            Vector3 cameraForward = -lightDirectionToSun;
+            Vector3 stableUp = aircraftTransform.up;
+            if (Mathf.Abs(Vector3.Dot(cameraForward, stableUp)) > 0.94f)
+                stableUp = aircraftTransform.forward;
+            cockpitLocalShadowCamera.transform.SetPositionAndRotation(
+                cameraPosition, Quaternion.LookRotation(cameraForward, stableUp));
+
+            float near = cockpitLocalShadowCamera.nearClipPlane;
+            float far = cockpitLocalShadowCamera.farClipPlane;
+            Vector4 depthParams = new Vector4(
+                near, far, 1f / Mathf.Max(far - near, 0.001f), cockpitLocalShadowBias);
+            Matrix4x4 worldToCamera = cockpitLocalShadowCamera.worldToCameraMatrix;
+            Matrix4x4 gpuProjection = GL.GetGPUProjectionMatrix(
+                cockpitLocalShadowCamera.projectionMatrix, true);
+
+            Shader.SetGlobalVector(CockpitLocalShadowDepthParamsId, depthParams);
+            cockpitLocalShadowCasterProxy.enabled = true;
+            try
+            {
+                cockpitLocalShadowCamera.RenderWithShader(
+                    cockpitLocalShadowDepthShader, string.Empty);
+                cockpitLocalShadowMap.GenerateMips();
+            }
+            finally
+            {
+                cockpitLocalShadowCasterProxy.enabled = false;
+            }
+
+            Shader.SetGlobalTexture(CockpitLocalShadowMapId, cockpitLocalShadowMap);
+            Shader.SetGlobalMatrix(CockpitLocalShadowWorldToCameraId, worldToCamera);
+            Shader.SetGlobalMatrix(
+                CockpitLocalShadowWorldToClipId, gpuProjection * worldToCamera);
+            Shader.SetGlobalFloat(
+                CockpitLocalShadowStrengthId,
+                Mathf.Clamp(cockpitLocalShadowStrength, 0f, MaximumCockpitLocalShadowStrength));
+            Shader.SetGlobalFloat(CockpitLocalShadowEnabledId, 1f);
+        }
+
+        private void ReportCockpitLocalShadowError(string message)
+        {
+            if (_cockpitLocalShadowErrorReported) return;
+            _cockpitLocalShadowErrorReported = true;
+            Debug.LogError("[QuestFlight][AircraftLighting] Cockpit-local shadow disabled: " + message, this);
+        }
+
+        private static void ResetCockpitLocalShadowGlobals()
+        {
+            Shader.SetGlobalFloat(CockpitLocalShadowEnabledId, 0f);
+            Shader.SetGlobalFloat(CockpitLocalShadowStrengthId, 0f);
         }
 
         private static void TuneAuthoritativeInstrumentDisplayMaterial(
@@ -434,8 +649,22 @@ namespace QuestFlightLab.Aircraft
         private static string CleanMaterialName(string materialName) =>
             (materialName ?? string.Empty).Replace(" (Instance)", string.Empty);
 
+        private void OnDisable()
+        {
+            ResetCockpitLocalShadowGlobals();
+            if (cockpitLocalShadowCasterProxy != null)
+                cockpitLocalShadowCasterProxy.enabled = false;
+            if (cockpitLocalShadowCamera != null)
+                cockpitLocalShadowCamera.enabled = false;
+        }
+
         private void OnDestroy()
         {
+            ResetCockpitLocalShadowGlobals();
+            if (cockpitLocalShadowCasterProxy != null)
+                cockpitLocalShadowCasterProxy.enabled = false;
+            if (cockpitLocalShadowCamera != null)
+                cockpitLocalShadowCamera.enabled = false;
             foreach (Material material in _ownedRuntimeMaterials)
             {
                 if (material == null) continue;

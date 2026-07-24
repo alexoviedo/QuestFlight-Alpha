@@ -78,9 +78,9 @@
     },
     "cockpit_stable_interior_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitStableInterior.shader",
-      "sha256": "834ced2f90298375b76f6ee9b741f954950979d024db472256864ae7ee68bbf6",
-      "bytes": 8748
-    }
+      "sha256": "2e8b0d60731b44564abdbae76eda0e27074d819b17a7df71b7fcdf664de4d83f",
+      "bytes": 12318
+    },
     "instrument_glass_material": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentGlassReflection.mat",
       "sha256": "ba9f9b71affb669ea3d4aceafb4521834f33dba39dda5030cdea540905222d95",
@@ -106,6 +106,11 @@
       "sha256": "92d98bd72198d0d431b58ce3dddf500a265acc7e243a12d47dd6dd6964b0640c",
       "bytes": 939
     },
+    "instrument_display_readout_shader": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionInstrumentDisplayReadout.shader",
+      "sha256": "45e667d086b17cb5e429f18649156f293a5e1c9df4b05d5af541d72c80d4efee",
+      "bytes": 1594
+    },
     "instrument_display_base_color": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Textures/C172_StaticDisplayReadable_BaseColor.png",
       "sha256": "b2b8e816a986c91997e35bffc477ac1a10a526a06449b6de9fd143801ac32c5f",
@@ -116,6 +121,21 @@
       "sha256": "52f96bb91fca67dbfaf9bcd7d067faaa36b4e9900170bcdeccf44e6e2c43ec70",
       "bytes": 22970
     },
+    "cockpit_local_shadow_depth_shader": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitLocalShadowDepth.shader",
+      "sha256": "ff1920652ef87747b50205d4a90e52cf6c82cd0535ecf27b245b4079f22d7d90",
+      "bytes": 1438
+    },
+    "cockpit_local_shadow_proxy": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_CockpitShadowCasterProxy.asset",
+      "sha256": "ab702318b2f06f17163e4138f995d5abc4b2f03f9df93ac0a981e2f8fc6f49ee",
+      "bytes": 8760
+    },
+    "cockpit_local_shadow_map": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Textures/C172_CockpitLocalShadow_512.renderTexture",
+      "sha256": "3b9d20d8ba64ca98ac3d85410cdba968512d10d8fbb4f8377f519e1f67a3c5a3",
+      "bytes": 873
+    }
   },
   "integration_contract": {
     "global_reflection_mode": "Custom static imagery-aware global cubemap",
@@ -127,29 +147,46 @@
     "reflection_camera": false,
     "refraction_camera": false,
     "aircraft_probe_anchor": "AircraftSimulationRoot/CenterOfGravityReference",
-    "aircraft_probe_usage": "BlendProbesAndSkybox"
+    "aircraft_probe_usage": "BlendProbesAndSkybox",
     "instrument_surface_mode": "Imported Meter_01 PBR plus one 13-aperture additive lens mesh; one opaque 12-triangle avionics readout mesh; source display/text retain imported PBR"
   },
   "android_budget": {
     "new_reflection_probes": 1,
     "new_runtime_probe_cameras": 0,
     "new_runtime_probe_updates": 0,
-    "new_renderers": 2,
-    "new_draw_calls": 2,
+    "new_renderers": 3,
+    "new_draw_calls": 3,
     "new_materials": 2,
     "disabled_duplicate_exterior_glass_renderers": 1,
     "static_cubemap_count": 2,
-    "estimated_combined_cubemap_bytes": 126144
+    "estimated_combined_cubemap_bytes": 126144,
+    "cockpit_local_shadow_offscreen_draw_calls": 1,
+    "estimated_cockpit_local_shadow_color_and_depth_bytes": 2097152
   },
   "cockpit_directional_shading": {
     "enabled_by_default": true,
-    "representation": "geometry-derived four-cardinal soft visibility in additional vertex streams",
+    "representation": "low-frequency four-cardinal ambient-depth fallback in additional vertex streams",
     "visibility_manifest": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/C172_CockpitDirectionalVisibility.json",
     "strength": 0.58,
     "additional_texture_lookups": 0,
     "additional_draw_calls": 0,
     "shadow_map": false,
     "projector_geometry": false,
+    "physical_acceptance_pending": true
+  },
+  "cockpit_local_shadow": {
+    "enabled_by_default": true,
+    "representation": "one authored aircraft-local orthographic filtered two-moment depth map and one low-poly cabin-frame proxy",
+    "map_resolution": 512,
+    "map_format": "R16G16_SFloat",
+    "proxy_triangles": 120,
+    "proxy_triangle_ceiling": 1000,
+    "offscreen_draw_calls": 1,
+    "unity_realtime_shadow_cascades": 0,
+    "additional_lights": 0,
+    "transparent_overlays": 0,
+    "source": "project-authored deterministic geometry and shaders",
+    "license": "Project-owned",
     "physical_acceptance_pending": true
   },
   "cockpit_shadow_candidate": {
@@ -160,5 +197,5 @@
     "cascade_count": 0,
     "distance_meters": 14.0
   },
-  "acceptance_boundary": "Assets-only authoring modifies no product scene or prefab. Lead integration, inspected stereo Visual QA, Android build validation, and physical Quest frame/thermal evidence remain required."
+  "acceptance_boundary": "The authored aircraft prefab contains the bounded local shadow camera/proxy. Inspected stereo Visual QA, Android build validation, and physical Quest frame/thermal evidence remain required."
 }

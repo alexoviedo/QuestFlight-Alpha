@@ -27,10 +27,13 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 81;
+        private const int RequiredShotCount = 85;
         private const int DrawCallTarget = 75;
         private const long VisibleTriangleTarget = 650000L;
-        private const int SceneMaterialTarget = 28;
+        // The headset-accepted readout/lens baseline is 29 materials (artifact
+        // instrument_glass_repair_20260722/visual_qa_readouts). The local shadow reuses one
+        // of those materials and may not raise this ceiling.
+        private const int SceneMaterialTarget = 29;
         private const string ProductionScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
         private static readonly Vector3 RepresentativeCalibrationOffset = new Vector3(0.015f, 0.020f, -0.025f);
 
@@ -173,6 +176,10 @@ namespace QuestFlightLab.Editor
             else context.visibility?.SetExternalView();
             context.camera.transform.SetPositionAndRotation(cameraPosition, cameraRotation);
             context.camera.fieldOfView = fov;
+            if (profile == ViewProfile.Cockpit &&
+                !context.cockpitLighting.RenderCockpitLocalShadowNow())
+                throw new InvalidOperationException(
+                    "Cockpit-local shadow did not render for the artifact trace.");
             Texture2D baselineTexture = Render(context.camera, 320, 180, out _);
             Color32[] baseline = baselineTexture.GetPixels32();
             File.WriteAllBytes(Path.Combine(outputDir, id + "_reference.png"), baselineTexture.EncodeToPNG());
@@ -288,7 +295,8 @@ namespace QuestFlightLab.Editor
                 lightingReport.boundedCockpitShadowReceiverCount != 0 ||
                 lightingReport.remainingRealtimeShadowCasterCount != 0 ||
                 lightingReport.remainingRealtimeShadowReceiverCount != 0)
-                throw new InvalidOperationException("Static-only cockpit depth policy did not apply.");
+                throw new InvalidOperationException(
+                    "Cockpit materials unexpectedly entered Unity realtime-shadow participation.");
 
             foreach (Camera existing in scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Camera>(true)))
                 existing.enabled = false;
@@ -333,6 +341,7 @@ namespace QuestFlightLab.Editor
                 benchmark = benchmark,
                 groundShadow = groundShadow,
                 rig = rig,
+                cockpitLighting = cockpitLighting,
                 visibility = marker.VisibilityProfiles,
                 animator = marker.ControlAnimator,
                 camera = camera,
@@ -729,10 +738,37 @@ namespace QuestFlightLab.Editor
                 ViewProfile.External));
 
             Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "pasv1_26_cockpit_local_shadow_off", "Cockpit local-shadow control",
+                "photoreal_cockpit", pilotEye,
+                context.originalAircraftRotation * Quaternion.Euler(6f, 0f, 0f), 62f,
+                ViewProfile.Cockpit));
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "pasv1_20_cockpit_shadow_candidate", "Serialized bounded cockpit sun shadow",
                 "photoreal_cockpit", pilotEye,
                 context.originalAircraftRotation * Quaternion.Euler(6f, 0f, 0f), 62f,
                 ViewProfile.Cockpit));
+            foreach ((string suffix, float heading) in new[]
+                     {
+                         ("090", 90f),
+                         ("180", 180f),
+                         ("270", 270f)
+                     })
+            {
+                Quaternion headingRotation =
+                    context.originalAircraftRotation * Quaternion.Euler(0f, heading, 0f);
+                SetAircraftPose(context, context.originalAircraftPosition, headingRotation);
+                Vector3 headingEye = context.rig.PilotSeatAnchor.position;
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "pasv1_27_cockpit_shadow_heading_" + suffix,
+                    "Cockpit-local shadow at aircraft heading " + suffix,
+                    "photoreal_cockpit",
+                    headingEye,
+                    headingRotation * Quaternion.Euler(6f, 0f, 0f),
+                    62f,
+                    ViewProfile.Cockpit));
+            }
+            SetAircraftPose(
+                context, context.originalAircraftPosition, context.originalAircraftRotation);
         }
 
         private static void CaptureSemanticDistanceShot(
@@ -1256,6 +1292,17 @@ namespace QuestFlightLab.Editor
 
                 context.camera.transform.SetPositionAndRotation(shot.cameraPosition, shot.cameraRotation);
                 context.camera.fieldOfView = shot.fov;
+                if (shot.profile == ViewProfile.Cockpit)
+                {
+                    if (shot.id == "pasv1_24_cockpit_ao_only" ||
+                        shot.id == "pasv1_26_cockpit_local_shadow_off")
+                        context.cockpitLighting.ClearCockpitLocalShadowNow();
+                    else if (!context.cockpitLighting.RenderCockpitLocalShadowNow())
+                        throw new InvalidOperationException(
+                            "Cockpit-local shadow did not render for " + shot.id + ".");
+                    if (shot.id == "pasv1_20_cockpit_shadow_candidate")
+                        SaveCockpitLocalShadowDebug(context, outputDir);
+                }
                 texture = Render(context.camera, width, height, out EditorFrameRenderStats editorStats);
                 File.WriteAllBytes(path, texture.EncodeToPNG());
                 ImageStats image = Analyze(texture);
@@ -1444,6 +1491,46 @@ namespace QuestFlightLab.Editor
                 RenderTexture.active = previousActive;
                 target.Release();
                 Object.DestroyImmediate(target);
+            }
+        }
+
+        private static void SaveCockpitLocalShadowDebug(
+            VisualContext context,
+            string outputDir)
+        {
+            RenderTexture source = context.cockpitLighting.CockpitLocalShadowMap;
+            if (source == null || !source.IsCreated()) return;
+            RenderTexture previous = RenderTexture.active;
+            Texture2D readback = null;
+            Texture2D preview = null;
+            try
+            {
+                RenderTexture.active = source;
+                readback = new Texture2D(
+                    source.width, source.height, TextureFormat.RGBAFloat, false, true);
+                readback.ReadPixels(new Rect(0, 0, source.width, source.height), 0, 0);
+                readback.Apply(false, false);
+                Color[] depth = readback.GetPixels();
+                Color32[] visualization = new Color32[depth.Length];
+                for (int index = 0; index < depth.Length; index++)
+                {
+                    byte caster = (byte)Mathf.RoundToInt(
+                        Mathf.Clamp01(1f - depth[index].r) * 255f);
+                    visualization[index] = new Color32(caster, caster, caster, 255);
+                }
+                preview = new Texture2D(
+                    source.width, source.height, TextureFormat.RGBA32, false, true);
+                preview.SetPixels32(visualization);
+                preview.Apply(false, false);
+                File.WriteAllBytes(
+                    Path.Combine(outputDir, "cockpit_local_shadow_depth_preview.png"),
+                    preview.EncodeToPNG());
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                if (readback != null) Object.DestroyImmediate(readback);
+                if (preview != null) Object.DestroyImmediate(preview);
             }
         }
 
@@ -1656,6 +1743,7 @@ namespace QuestFlightLab.Editor
             public AirportCoreBenchmarkRoot benchmark;
             public AircraftRunwayBlobShadow groundShadow;
             public AircraftReferenceFrameRig rig;
+            public ProductionAircraftLightingController cockpitLighting;
             public AircraftVisibilityProfileController visibility;
             public ProductionAircraftControlAnimator animator;
             public Camera camera;

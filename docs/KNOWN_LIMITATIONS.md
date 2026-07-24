@@ -1,5 +1,14 @@
 # Known limitations
 
+- **Cockpit Local Shadow V1 passed its exact-APK worn visual gate.** One authored
+  120-triangle cabin-frame proxy produces one 512-square filtered two-moment map;
+  both eyes sample the same world-locked result. The final worn check found a
+  continuous blurred edge, no remaining sawtooth boundary, mostly realistic
+  direction/strength, no flicker or stereo mismatch, and preserved instrument
+  readability. The effect was described as slightly underwhelming, so strength
+  remains a future polish choice rather than being increased without another
+  comfort/readability gate. No long-duration frame-time, thermal, or allocation
+  acceptance is claimed for this APK.
 - **The cockpit reflection/directional-visibility candidate is machine-validated and awaits exact-APK worn review.** Cabin glass now uses the actual imported cockpit interior baked into a finite-volume static reflection, the broad instrument cover is restored, and twenty opaque cockpit renderers use offline four-direction visibility streams instead of a realtime shadow map. Product validation, 117/117 EditMode, 9/9 PlayMode, 81-view Visual QA, static budgeting, live simulator stereo, and Android build pass. The exact final APK identity is recorded in `docs/evidence/COCKPIT_REFLECTION_DIRECTIONAL_VISIBILITY_V1_2026-07-22.md`; no prior worn score or physical timing is attributed to it.
 - **Worn Visual Runtime V1 canopy/facade work remains the accepted source beneath this candidate.** Its near representation contains 143 detailed groves / 696 grounded trees with perforated leaf-and-twig cards, branches, and trunks; medium/far coverage uses bounded aggregate groves plus the existing terrain canopy handoff. The canopy is 58,018 triangles in four fixed draws and one shared material.
 - The groves are deterministic visual scenery derived from aligned public-domain imagery/canopy/DTM evidence, not a surveyed botanical inventory. Near foliage uses a project-owned generated sixteen-cell atlas, while medium aggregates remain visibly simplified at close range. Species, season, branches, and individual crown form are approximate. Raised geometry covers 59.364% of eligible represented canopy pixels inside 0–1,500 m; the deterministic terrain handoff preserves 100% source assignment without adding far tree geometry.

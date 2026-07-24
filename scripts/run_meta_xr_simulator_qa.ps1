@@ -62,7 +62,9 @@ $sessionCatalog = @(
 )
 if ($SessionId.Count -gt 0) {
     $unknown = $SessionId | Where-Object { $_ -notin $sessionCatalog.id }
-    if ($unknown.Count -gt 0) { throw "Unknown simulator session id(s): $($unknown -join ', ')" }
+    if (@($unknown).Count -gt 0) {
+        throw "Unknown simulator session id(s): $($unknown -join ', ')"
+    }
     $sessionCatalog = @($sessionCatalog | Where-Object { $_.id -in $SessionId })
 }
 if (-not [string]::IsNullOrWhiteSpace($RecordSession)) {

@@ -2,7 +2,9 @@
 // Keep this fixture under Assets/Editor so Unity's implicit Editor test assembly discovers it.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
+using QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -78,6 +80,63 @@ namespace QuestFlightLab.Tests.EditMode
             {
                 PrefabUtility.UnloadPrefabContents(root);
             }
+        }
+
+        [Test]
+        public void CockpitLocalShadowUsesOneAuthoredWorldLockedProxy()
+        {
+            CockpitLocalShadowAuthoring.ValidateIntegratedFoundation();
+            GameObject root = AssetDatabase.LoadAssetAtPath<GameObject>(AircraftPrefabPath);
+            Assert.That(root, Is.Not.Null);
+            Transform shadowRoot = FindDescendant(
+                root.transform, CockpitLocalShadowAuthoring.ShadowRootName);
+            Assert.That(shadowRoot, Is.Not.Null);
+            Assert.That(shadowRoot.GetComponentsInChildren<Light>(true), Is.Empty);
+
+            Camera camera = shadowRoot.GetComponentsInChildren<Camera>(true).Single();
+            MeshRenderer renderer =
+                shadowRoot.GetComponentsInChildren<MeshRenderer>(true).Single();
+            Mesh mesh = renderer.GetComponent<MeshFilter>().sharedMesh;
+            Assert.That(camera.enabled, Is.False);
+            Assert.That(camera.stereoTargetEye, Is.EqualTo(StereoTargetEyeMask.None));
+            Assert.That(camera.orthographic, Is.True);
+            Assert.That(camera.allowHDR, Is.False);
+            Assert.That(camera.allowMSAA, Is.False);
+            Assert.That(camera.useOcclusionCulling, Is.False);
+            Assert.That(camera.cullingMask,
+                Is.EqualTo(1 << CockpitLocalShadowAuthoring.ShadowLayer));
+            Assert.That(renderer.enabled, Is.False);
+            Assert.That(renderer.gameObject.layer,
+                Is.EqualTo(CockpitLocalShadowAuthoring.ShadowLayer));
+            Assert.That(mesh.subMeshCount, Is.EqualTo(1));
+            Assert.That(mesh.triangles.Length / 3,
+                Is.InRange(1, CockpitLocalShadowAuthoring.MaximumProxyTriangles));
+            Assert.That(renderer.sharedMaterials.Length, Is.EqualTo(1));
+            Assert.That(renderer.shadowCastingMode, Is.EqualTo(ShadowCastingMode.Off));
+            Assert.That(renderer.receiveShadows, Is.False);
+
+            QuestFlightLab.Aircraft.ProductionAircraftLightingController lighting =
+                root.GetComponentInChildren<
+                    QuestFlightLab.Aircraft.ProductionAircraftLightingController>(true);
+            SerializedObject serialized = new SerializedObject(lighting);
+            Assert.That(
+                serialized.FindProperty("cockpitLocalShadowCamera").objectReferenceValue,
+                Is.SameAs(camera));
+            Assert.That(
+                serialized.FindProperty("cockpitLocalShadowCasterProxy").objectReferenceValue,
+                Is.SameAs(renderer));
+            RenderTexture map = serialized.FindProperty(
+                "cockpitLocalShadowMap").objectReferenceValue as RenderTexture;
+            Assert.That(map, Is.Not.Null);
+            Assert.That(map.width,
+                Is.EqualTo(CockpitLocalShadowAuthoring.ShadowMapResolution));
+            Assert.That(map.height,
+                Is.EqualTo(CockpitLocalShadowAuthoring.ShadowMapResolution));
+            Assert.That(map.graphicsFormat,
+                Is.EqualTo(UnityEngine.Experimental.Rendering.GraphicsFormat.R16G16_SFloat));
+            Assert.That(map.useMipMap, Is.True);
+            Assert.That(map.autoGenerateMips, Is.False);
+            Assert.That(map.filterMode, Is.EqualTo(FilterMode.Bilinear));
         }
 
         private static bool HasBakedOcclusion(Material material)

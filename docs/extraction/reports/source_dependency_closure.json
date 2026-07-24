@@ -3,7 +3,7 @@
     "sourceCommit": "cd4131fa7732a6db2d7387921dfef33e2c206970",
     "scenePath": "Assets/Scenes/ProductionVerticalSlice.unity",
     "ready": true,
-    "approvedCount": 288,
+    "approvedCount": 298,
     "packageCount": 5,
     "conditionalLocalCount": 0,
     "rejectedCount": 0,
@@ -538,7 +538,27 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentDisplayReadout.mat",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentGlassReflection.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_CockpitShadowCasterProxy.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_InstrumentDisplayReadouts.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_PrincipalInstrumentLensArray.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitLocalShadowDepth.shader",
             "classification": "approved_production"
         },
         {
@@ -550,7 +570,23 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionInstrumentDisplayReadout.shader",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Textures/C172_CockpitLocalShadow_512.renderTexture",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Textures/C172_StaticDisplayReadable_BaseColor.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Textures/C172_StaticDisplayReadable_Emission.png",
             "classification": "approved_production"
         },
         {
@@ -939,6 +975,10 @@
         },
         {
             "assetPath": "Assets/Production/Materials/Cockpit/Cockpit_Buttons_MAT_5848668965762625865.mat",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Production/Materials/Cockpit/Cockpit_GlassMat_New_-8047257934222504514.mat",
             "classification": "approved_product_authored"
         },
         {

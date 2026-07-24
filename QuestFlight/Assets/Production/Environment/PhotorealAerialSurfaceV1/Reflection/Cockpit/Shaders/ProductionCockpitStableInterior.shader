@@ -52,6 +52,12 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
             half _CabinDepthStrength;
             half _DirectionalCabinShadowStrength;
             float4x4 _WorldToAircraft;
+            sampler2D _CockpitLocalShadowMap;
+            float4x4 _CockpitLocalShadowWorldToCamera;
+            float4x4 _CockpitLocalShadowWorldToClip;
+            float4 _CockpitLocalShadowDepthParams;
+            half _CockpitLocalShadowStrength;
+            half _CockpitLocalShadowEnabled;
 
             struct appdata
             {
@@ -93,6 +99,44 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 return output;
             }
 
+            half CockpitLocalShadowOcclusion(float3 worldPosition)
+            {
+                float4 shadowClip = mul(
+                    _CockpitLocalShadowWorldToClip, float4(worldPosition, 1.0));
+                float2 shadowUv = shadowClip.xy / max(abs(shadowClip.w), 0.00001);
+                shadowUv = shadowUv * 0.5 + 0.5;
+
+                float3 shadowView = mul(
+                    _CockpitLocalShadowWorldToCamera, float4(worldPosition, 1.0)).xyz;
+                float viewDepth = -shadowView.z;
+                half inside =
+                    step(0.0, shadowUv.x) * step(shadowUv.x, 1.0) *
+                    step(0.0, shadowUv.y) * step(shadowUv.y, 1.0) *
+                    step(_CockpitLocalShadowDepthParams.x, viewDepth) *
+                    step(viewDepth, _CockpitLocalShadowDepthParams.y);
+                half receiverDepth = saturate(
+                    (viewDepth - _CockpitLocalShadowDepthParams.x) *
+                    _CockpitLocalShadowDepthParams.z);
+                // The map stores depth and depth-squared moments. Sampling mip four averages
+                // a broad physical footprint before the comparison, producing one continuous
+                // penumbra instead of a collection of offset hard PCF edges. The fixed mip and
+                // world-space UV are identical in both eyes and contain no temporal jitter.
+                float2 moments = tex2Dlod(
+                    _CockpitLocalShadowMap, float4(shadowUv, 0.0, 4.0)).rg;
+                float meanDepth = moments.x;
+                float variance = max(moments.y - meanDepth * meanDepth, 0.00002);
+                float depthDelta = receiverDepth - meanDepth -
+                    _CockpitLocalShadowDepthParams.w;
+                float probability = variance /
+                    (variance + max(depthDelta * depthDelta, 0.000001));
+                probability = saturate((probability - 0.16) / 0.84);
+                half visibility = max(
+                    step(receiverDepth, meanDepth + _CockpitLocalShadowDepthParams.w),
+                    (half)probability);
+                half occluded = 1.0h - visibility;
+                return occluded * inside * saturate(_CockpitLocalShadowEnabled);
+            }
+
             fixed4 frag(v2f input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
@@ -129,10 +173,10 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half nDotL = saturate(dot(normalWS, lightDirection));
                 half aperture = lerp(0.28h, 0.82h, skyExposure);
-                // RGBA stores soft geometry-ray visibility for sun arriving from aircraft
-                // +Z/+X/-Z/-X. Interpolation selects the current authored sun direction.
-                // This follows the real cabin shell/panel/seat geometry while remaining a
-                // single stable pass with no per-eye projection or realtime shadow map.
+                // RGBA stores low-frequency geometry-ray visibility for sun arriving from
+                // aircraft +Z/+X/-Z/-X. It remains only a restrained ambient-depth fallback.
+                // Recognizable cabin-frame silhouettes come from the one aircraft-local map
+                // sampled identically by both eyes below.
                 half3 localLight = normalize(mul((half3x3)_WorldToAircraft, lightDirection));
                 half4 directionWeights = half4(
                     max(localLight.z, 0.0h), max(localLight.x, 0.0h),
@@ -142,13 +186,27 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 half bakedSunVisibility = saturate(dot(
                     input.directionalVisibility, directionWeights));
                 half sunlightAbove = smoothstep(0.04h, 0.30h, localLight.y);
-                half directionalVisibility = lerp(
+                half lowFrequencyVisibility = lerp(
                     1.0h,
-                    lerp(0.38h, 1.0h, bakedSunVisibility),
-                    _DirectionalCabinShadowStrength * sunlightAbove);
-                ambient *= lerp(1.0h, directionalVisibility, 0.58h);
-                warmCabinBounce *= lerp(1.0h, directionalVisibility, 0.42h);
-                half3 direct = _LightColor0.rgb * nDotL * aperture * directionalVisibility;
+                    lerp(0.72h, 1.0h, bakedSunVisibility),
+                    _DirectionalCabinShadowStrength * 0.24h * sunlightAbove);
+                ambient *= lerp(1.0h, lowFrequencyVisibility, 0.18h);
+                warmCabinBounce *= lerp(1.0h, lowFrequencyVisibility, 0.10h);
+
+                half localShadow = CockpitLocalShadowOcclusion(input.worldPosition);
+                half localShadowAmount =
+                    localShadow * saturate(_CockpitLocalShadowStrength) * sunlightAbove;
+                // Direct sunlight is removed strongly while indirect cabin light remains.
+                // A small ambient attenuation keeps the silhouette readable without turning
+                // the instrument panel, labels, or upholstery into a black cutout.
+                half directShadowVisibility = 1.0h - localShadowAmount;
+                // Vertical cockpit faces receive little direct sun, so a bounded portion of
+                // skylight must also follow the cabin-frame silhouette for the shadow to read.
+                // At the authored 0.62 strength this bottoms near 0.83 rather than black; the
+                // emissive avionics path below remains completely unattenuated.
+                ambient *= lerp(1.0h, 0.72h, localShadowAmount);
+                half3 direct =
+                    _LightColor0.rgb * nDotL * aperture * directShadowVisibility;
 
                 half4 packedSurface = tex2D(metallicRoughnessTexture, input.uv);
                 half metallic = saturate(packedSurface.b * metallicFactor);
@@ -163,7 +221,8 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 half3 readableAlbedo = lerp(baseSample.rgb, sqrt(saturate(baseSample.rgb)), 0.24h);
                 half3 color = readableAlbedo * bakedOcclusion * enclosure *
                     (ambient + warmCabinBounce + direct);
-                color += specularColor * specular * _LightColor0.rgb * aperture;
+                color += specularColor * specular * _LightColor0.rgb * aperture *
+                    directShadowVisibility;
                 color += emission;
                 fixed4 result = fixed4(color, 1.0h);
                 UNITY_APPLY_FOG(input.fogCoord, result);

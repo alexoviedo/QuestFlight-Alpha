@@ -878,7 +878,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             AppendFileManifestAsset(json, "window_shader",
                 Root + "/Cockpit/Shaders/ProductionCockpitWindowReflection.shader", true);
             AppendFileManifestAsset(json, "cockpit_stable_interior_shader",
-                CockpitStableInteriorShaderPath, false);
+                CockpitStableInteriorShaderPath, true);
             AppendFileManifestAsset(json, "instrument_glass_material", InstrumentGlassMaterialPath, true);
             AppendFileManifestAsset(json, "instrument_glass_shader",
                 Root + "/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader", true);
@@ -893,6 +893,12 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 InstrumentDisplayBaseColorPath, true);
             AppendFileManifestAsset(json, "instrument_display_emission",
                 InstrumentDisplayEmissionPath, true);
+            AppendFileManifestAsset(json, "cockpit_local_shadow_depth_shader",
+                CockpitLocalShadowAuthoring.ShadowDepthShaderPath, true);
+            AppendFileManifestAsset(json, "cockpit_local_shadow_proxy",
+                CockpitLocalShadowAuthoring.ShadowCasterMeshPath, true);
+            AppendFileManifestAsset(json, "cockpit_local_shadow_map",
+                CockpitLocalShadowAuthoring.ShadowMapPath, false);
             json.AppendLine("  },");
             json.AppendLine("  \"integration_contract\": {");
             AppendJsonString(json, "global_reflection_mode",
@@ -908,7 +914,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             json.AppendLine("    \"refraction_camera\": false,");
             AppendJsonString(json, "aircraft_probe_anchor",
                 "AircraftSimulationRoot/CenterOfGravityReference", true, 4);
-            AppendJsonString(json, "aircraft_probe_usage", "BlendProbesAndSkybox", false, 4);
+            AppendJsonString(json, "aircraft_probe_usage", "BlendProbesAndSkybox", true, 4);
             AppendJsonString(json, "instrument_surface_mode",
                 "Imported Meter_01 PBR plus one 13-aperture additive lens mesh; one opaque 12-triangle avionics readout mesh; source display/text retain imported PBR",
                 false, 4);
@@ -922,7 +928,9 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             json.AppendLine("    \"new_materials\": 2,");
             json.AppendLine("    \"disabled_duplicate_exterior_glass_renderers\": 1,");
             json.AppendLine("    \"static_cubemap_count\": 2,");
-            json.AppendLine("    \"estimated_combined_cubemap_bytes\": 126144");
+            json.AppendLine("    \"estimated_combined_cubemap_bytes\": 126144,");
+            json.AppendLine("    \"cockpit_local_shadow_offscreen_draw_calls\": 1,");
+            json.AppendLine("    \"estimated_cockpit_local_shadow_color_and_depth_bytes\": 2097152");
             json.AppendLine("  },");
             json.AppendLine("  \"cockpit_directional_shading\": {");
             json.AppendLine("    \"enabled_by_default\": true,");
@@ -935,6 +943,23 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             json.AppendLine("    \"additional_draw_calls\": 0,");
             json.AppendLine("    \"shadow_map\": false,");
             json.AppendLine("    \"projector_geometry\": false,");
+            json.AppendLine("    \"physical_acceptance_pending\": true");
+            json.AppendLine("  },");
+            json.AppendLine("  \"cockpit_local_shadow\": {");
+            json.AppendLine("    \"enabled_by_default\": true,");
+            AppendJsonString(json, "representation",
+                "one authored aircraft-local orthographic filtered two-moment depth map and one low-poly cabin-frame proxy",
+                true, 4);
+            json.AppendLine($"    \"map_resolution\": {CockpitLocalShadowAuthoring.ShadowMapResolution},");
+            json.AppendLine("    \"map_format\": \"R16G16_SFloat\",");
+            json.AppendLine("    \"proxy_triangles\": 120,");
+            json.AppendLine("    \"proxy_triangle_ceiling\": 1000,");
+            json.AppendLine("    \"offscreen_draw_calls\": 1,");
+            json.AppendLine("    \"unity_realtime_shadow_cascades\": 0,");
+            json.AppendLine("    \"additional_lights\": 0,");
+            json.AppendLine("    \"transparent_overlays\": 0,");
+            json.AppendLine("    \"source\": \"project-authored deterministic geometry and shaders\",");
+            json.AppendLine("    \"license\": \"Project-owned\",");
             json.AppendLine("    \"physical_acceptance_pending\": true");
             json.AppendLine("  },");
             json.AppendLine("  \"cockpit_shadow_candidate\": {");

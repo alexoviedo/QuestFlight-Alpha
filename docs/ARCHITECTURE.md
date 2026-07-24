@@ -149,7 +149,16 @@ existing opaque interior surfaces: twenty renderers carry four offline raycast
 visibility channels (+Z, +X, -Z, -X) in additional vertex streams. The stable
 single-pass shader interpolates those channels using aircraft-local sun direction
 while preserving imported base, normal, metallic/roughness, emission, and AO.
-There is no runtime raycast, shadow map, projector, extra renderer, additional
-draw, reflection camera, transparent pass, or cascade. The rejected free-floating
-two-triangle overlay remains absent. This preserves one XR Origin, one tracked
-Main Camera, one flight authority, and standalone Android/OpenXR ownership.
+
+The accepted local-shadow layer uses one explicitly authored, disabled
+orthographic camera and one disabled 120-triangle cabin-frame proxy. During the
+aircraft lighting controller's late update, the proxy is enabled for one
+offscreen draw into a 512-square `R16G16_SFloat` depth/depth-squared target and
+immediately disabled. Hardware-filtered mip moments create a continuous
+world-locked penumbra in one receiver lookup; the same map and transform are
+sampled by both eyes. There is no Main Camera dependency, runtime hierarchy
+construction, additional light, Unity shadow cascade, projector, transparent
+overlay, or per-eye orientation. Instrument emission remains outside shadow
+attenuation. The rejected free-floating overlay and the earlier sparse-PCF edge
+remain absent. This preserves one XR Origin, one tracked Main Camera, one flight
+authority, and standalone Android/OpenXR ownership.
