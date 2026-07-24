@@ -1,7 +1,7 @@
 {
   "assets": [
     {
-      "bytes": 1303748,
+      "bytes": 1278646,
       "encoding": {
         "byte_order": "little_endian",
         "container": "QuestFlight Building Surface Layer v1",
@@ -11,7 +11,7 @@
       },
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/ProductionBuildingSurfaceLayer.bytes",
       "semantic": "ProductionBuildingSurfaceLayer",
-      "sha256": "0a2b66f59a238a934292ebe6f4688759486d5774a7d47c359711a1b9d8bd0537"
+      "sha256": "51ceb373dccc5cdd3b523f70b3c150b086dfca34b95274f9585d5da56b824080"
     },
     {
       "bytes": 23513,
@@ -38,30 +38,30 @@
         "x": -2,
         "z": -2
       },
-      "building_count": 286,
-      "bytes": 737319,
+      "building_count": 287,
+      "bytes": 699057,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "ddff59f7c7727e936b3a279a93c316abe61e0f1d230e629405fc83e0867ed397",
-      "triangle_count": 3888,
-      "vertex_count": 7548
+      "sha256": "849a2e128c557f45e5cc13500996d079c11dad2b96dc7125c91046544a2cd47f",
+      "triangle_count": 3636,
+      "vertex_count": 7176
     },
     {
       "batch_key": {
         "x": -2,
         "z": -1
       },
-      "building_count": 2409,
-      "bytes": 6236567,
+      "building_count": 2408,
+      "bytes": 6201741,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "6918646ec6403313c3608371816bb1d7b1c1735def67c89783762ce4550b1cb1",
-      "triangle_count": 31852,
-      "vertex_count": 62232
+      "sha256": "f7b730b9e14f2ce8c61e43a683c3bc996c5695c01bd671d233aa22308d7366e4",
+      "triangle_count": 31636,
+      "vertex_count": 61902
     },
     {
       "batch_key": {
@@ -69,14 +69,14 @@
         "z": 0
       },
       "building_count": 1678,
-      "bytes": 4265104,
+      "bytes": 4236830,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "2ab949ba75fbe7b9ac403026613fb7f4b442c4b49fed4558b6cca6277f1d694b",
-      "triangle_count": 21960,
-      "vertex_count": 43008
+      "sha256": "7c548c2f7c9c74322744199410542b614f28d39d2cedae316645b43e9eaa4b3a",
+      "triangle_count": 21780,
+      "vertex_count": 42738
     },
     {
       "batch_key": {
@@ -84,14 +84,14 @@
         "z": 1
       },
       "building_count": 13,
-      "bytes": 34602,
+      "bytes": 31052,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "38469c54e8b550de9ca56c8c611a12f3a885c4ae9076240d130ecbc2466c81d5",
-      "triangle_count": 192,
-      "vertex_count": 366
+      "sha256": "66dca7ab84a7c85fd22b80fd3b856c388bc0d00e344de17d43175badd7daf418",
+      "triangle_count": 168,
+      "vertex_count": 330
     },
     {
       "batch_key": {
@@ -99,44 +99,44 @@
         "z": -2
       },
       "building_count": 1170,
-      "bytes": 3110778,
+      "bytes": 3005741,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "6bdb11929da39d8ed1789b09bcc7872bfad686d4fc1a39a55bf708c42e89a7a0",
-      "triangle_count": 16060,
-      "vertex_count": 31110
+      "sha256": "614a2c5e4c09adbc3e6314b4eabfb65d5ff4e4a3ce62e652ebd38c1f77442c26",
+      "triangle_count": 15404,
+      "vertex_count": 30126
     },
     {
       "batch_key": {
         "x": -1,
         "z": -1
       },
-      "building_count": 1251,
-      "bytes": 3141889,
+      "building_count": 1233,
+      "bytes": 3075561,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "1f933a6de7ef2d9d9dcc2821bb33c24dfd6f92c24d473a6d2b6ee140fc5b8c01",
-      "triangle_count": 16120,
-      "vertex_count": 31686
+      "sha256": "be022bdeea8ec3b055b1c57203833e26e45f9797e18bba9c033f1be29636b85f",
+      "triangle_count": 15756,
+      "vertex_count": 31032
     },
     {
       "batch_key": {
         "x": -1,
         "z": 0
       },
-      "building_count": 397,
-      "bytes": 961009,
+      "building_count": 377,
+      "bytes": 911385,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "bdba99d70ba2802494fab91c565d3b14d1be89311f04a209bc580ac536c60326",
-      "triangle_count": 5052,
-      "vertex_count": 9960
+      "sha256": "d145aefe0101039895c0e10394714f196d7c3f3393151e1f17fbbfa8659586cf",
+      "triangle_count": 4784,
+      "vertex_count": 9438
     },
     {
       "batch_key": {
@@ -159,14 +159,14 @@
         "z": -2
       },
       "building_count": 585,
-      "bytes": 1506448,
+      "bytes": 1476097,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "bbbec94a78cc65ee6f171d5f92e991ec491c419f4294c74af5548205a32bc279",
-      "triangle_count": 7892,
-      "vertex_count": 15348
+      "sha256": "c5e30d4abc6b707223862bbbd296db49ebac1ae06f95490f3acf8e1b647ce78c",
+      "triangle_count": 7700,
+      "vertex_count": 15060
     },
     {
       "batch_key": {
@@ -188,15 +188,15 @@
         "x": 0,
         "z": 0
       },
-      "building_count": 424,
-      "bytes": 1028327,
+      "building_count": 381,
+      "bytes": 914946,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "43387cbb1a121bce0a76af5e6d6d8817fcd71f361fc51ab4c7b37b17d9199432",
-      "triangle_count": 5400,
-      "vertex_count": 10644
+      "sha256": "8cf5ba458160155b843036cefad9a99240cd5fc027f950d6ad61028fd6a29267",
+      "triangle_count": 4796,
+      "vertex_count": 9480
     },
     {
       "batch_key": {
@@ -204,14 +204,14 @@
         "z": 1
       },
       "building_count": 285,
-      "bytes": 734100,
+      "bytes": 707728,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "7bfb66fc7ddf58843dfc9f7d9c3986c15bbfb034b55d54b5e18eb5e8dff50c7a",
-      "triangle_count": 3904,
-      "vertex_count": 7566
+      "sha256": "6cfd92c0a3154905ec3ece70cae164d8f9c9d0bc37a531e0d008daebe40e87c4",
+      "triangle_count": 3732,
+      "vertex_count": 7308
     },
     {
       "batch_key": {
@@ -219,14 +219,14 @@
         "z": -2
       },
       "building_count": 57,
-      "bytes": 143720,
+      "bytes": 134615,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "b01b053c9fd0505ffcc52eb89c98d22f5d143c14174844b805441dad318d68b4",
-      "triangle_count": 776,
-      "vertex_count": 1506
+      "sha256": "e16bc4f91d2adfc6eecf2709541bac2856522cc1d9a69356a309df26c3003cb3",
+      "triangle_count": 716,
+      "vertex_count": 1416
     },
     {
       "batch_key": {
@@ -249,14 +249,14 @@
         "z": 0
       },
       "building_count": 293,
-      "bytes": 739416,
+      "bytes": 722446,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "88aa17614a3426694ab0bb17f63878057fbb262dea68b2cbf7bedd771931d0f9",
-      "triangle_count": 3904,
-      "vertex_count": 7614
+      "sha256": "90c6140b2523388d46ef0074a9790886c3148136ed3c7813ee81a93978e3ac84",
+      "triangle_count": 3792,
+      "vertex_count": 7446
     },
     {
       "batch_key": {
@@ -278,11 +278,11 @@
     "maximum_layer_bytes": 3000000,
     "maximum_layer_triangles": 130000,
     "mesh_batch_count": 16,
-    "mesh_batch_total_bytes": 24740274,
-    "mesh_batch_total_triangles": 128092,
-    "mesh_batch_total_vertices": 250290,
-    "serialized_layer_bytes": 1303748,
-    "total_closed_surface_triangles": 128092
+    "mesh_batch_total_bytes": 24218194,
+    "mesh_batch_total_triangles": 124992,
+    "mesh_batch_total_vertices": 245154,
+    "serialized_layer_bytes": 1278646,
+    "total_closed_surface_triangles": 124992
   },
   "coordinate_mapping": {
     "geometry_horizontal_frame": "KBDU product-local WGS84 azimuthal equidistant",
@@ -294,8 +294,8 @@
   },
   "coverage": {
     "coverage_fraction_of_owned_source_footprints": 1.0,
-    "hero_exclusion_area_square_meters": 1953.75,
-    "hero_exclusion_count": 2,
+    "hero_exclusion_area_square_meters": 35400.625,
+    "hero_exclusion_count": 83,
     "hero_exclusions": [
       {
         "area_square_meters": 929.875,
@@ -305,14 +305,581 @@
         "zone": "0-2km"
       },
       {
+        "area_square_meters": 1065.0,
+        "feature_index": 3122,
+        "osm_id": 77499385,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 511.0,
+        "feature_index": 3123,
+        "osm_id": 77499386,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 612.875,
+        "feature_index": 3124,
+        "osm_id": 77499387,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 119.375,
+        "feature_index": 3125,
+        "osm_id": 77499388,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 1759.0,
+        "feature_index": 3126,
+        "osm_id": 77499394,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 185.0,
+        "feature_index": 3128,
+        "osm_id": 78054436,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 1092.0,
+        "feature_index": 3129,
+        "osm_id": 78054447,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 454.25,
+        "feature_index": 3130,
+        "osm_id": 78054451,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 186.375,
+        "feature_index": 3131,
+        "osm_id": 78054452,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 302.5,
+        "feature_index": 3132,
+        "osm_id": 78054454,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 358.375,
+        "feature_index": 3133,
+        "osm_id": 78054456,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 1042.5,
+        "feature_index": 3134,
+        "osm_id": 78054458,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 1099.875,
+        "feature_index": 3135,
+        "osm_id": 78054459,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 931.5,
+        "feature_index": 3136,
+        "osm_id": 78054461,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
         "area_square_meters": 1023.875,
         "feature_index": 3137,
         "osm_id": 78054463,
         "owner": "ProductionHeroObjectLayer",
         "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 966.0,
+        "feature_index": 3138,
+        "osm_id": 78054465,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 1039.875,
+        "feature_index": 3139,
+        "osm_id": 78054470,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 1020.875,
+        "feature_index": 3140,
+        "osm_id": 78054473,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 1588.375,
+        "feature_index": 3141,
+        "osm_id": 78060787,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 342.0,
+        "feature_index": 10424,
+        "osm_id": 313639258,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 441.0,
+        "feature_index": 10425,
+        "osm_id": 313639259,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 53.125,
+        "feature_index": 13395,
+        "osm_id": 563214886,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 19.125,
+        "feature_index": 13396,
+        "osm_id": 563214887,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 1710.875,
+        "feature_index": 18379,
+        "osm_id": 864206020,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 359.0,
+        "feature_index": 18380,
+        "osm_id": 864206021,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 143.75,
+        "feature_index": 18381,
+        "osm_id": 864206022,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 324.875,
+        "feature_index": 18382,
+        "osm_id": 864206023,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 233.625,
+        "feature_index": 18452,
+        "osm_id": 874817736,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 94.875,
+        "feature_index": 18453,
+        "osm_id": 874817737,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 82.5,
+        "feature_index": 18454,
+        "osm_id": 874817738,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 179.5,
+        "feature_index": 18456,
+        "osm_id": 874817740,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 276.75,
+        "feature_index": 18935,
+        "osm_id": 875193557,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 455.875,
+        "feature_index": 18936,
+        "osm_id": 875193558,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 320.875,
+        "feature_index": 18937,
+        "osm_id": 875193559,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 268.375,
+        "feature_index": 18938,
+        "osm_id": 875193560,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 94.0,
+        "feature_index": 18939,
+        "osm_id": 875193561,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 180.25,
+        "feature_index": 18940,
+        "osm_id": 875193562,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 100.0,
+        "feature_index": 19504,
+        "osm_id": 886075169,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 211.5,
+        "feature_index": 19505,
+        "osm_id": 886075170,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 418.375,
+        "feature_index": 19506,
+        "osm_id": 886075171,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 18.75,
+        "feature_index": 21210,
+        "osm_id": 916029512,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 6.25,
+        "feature_index": 21211,
+        "osm_id": 916029513,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 414.875,
+        "feature_index": 27076,
+        "osm_id": 1287920189,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 287.25,
+        "feature_index": 27077,
+        "osm_id": 1287920190,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 178.625,
+        "feature_index": 27078,
+        "osm_id": 1287920191,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 248.125,
+        "feature_index": 27079,
+        "osm_id": 1287920192,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 305.75,
+        "feature_index": 27080,
+        "osm_id": 1287920193,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 410.25,
+        "feature_index": 27081,
+        "osm_id": 1287920194,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 523.75,
+        "feature_index": 27082,
+        "osm_id": 1287920195,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 451.5,
+        "feature_index": 27083,
+        "osm_id": 1287920196,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 302.125,
+        "feature_index": 27084,
+        "osm_id": 1287920197,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 260.125,
+        "feature_index": 27085,
+        "osm_id": 1287920198,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 389.625,
+        "feature_index": 27086,
+        "osm_id": 1287920199,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 162.375,
+        "feature_index": 27087,
+        "osm_id": 1287920200,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 266.5,
+        "feature_index": 27088,
+        "osm_id": 1287920201,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 330.0,
+        "feature_index": 27089,
+        "osm_id": 1287920202,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 278.375,
+        "feature_index": 27090,
+        "osm_id": 1287920203,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 256.625,
+        "feature_index": 27091,
+        "osm_id": 1287920204,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 253.0,
+        "feature_index": 27092,
+        "osm_id": 1287920205,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 253.25,
+        "feature_index": 27093,
+        "osm_id": 1287920206,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 248.875,
+        "feature_index": 27094,
+        "osm_id": 1287920207,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 557.125,
+        "feature_index": 27095,
+        "osm_id": 1287920208,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 388.5,
+        "feature_index": 27096,
+        "osm_id": 1287920209,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 419.375,
+        "feature_index": 27097,
+        "osm_id": 1287920210,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 348.125,
+        "feature_index": 27098,
+        "osm_id": 1287920211,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 192.5,
+        "feature_index": 27099,
+        "osm_id": 1287920212,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 471.25,
+        "feature_index": 27100,
+        "osm_id": 1287920213,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 559.5,
+        "feature_index": 27101,
+        "osm_id": 1287920214,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 330.5,
+        "feature_index": 27102,
+        "osm_id": 1287920215,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 760.375,
+        "feature_index": 27112,
+        "osm_id": 1287920225,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 105.0,
+        "feature_index": 27113,
+        "osm_id": 1287920226,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 322.5,
+        "feature_index": 27114,
+        "osm_id": 1287920227,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 300.0,
+        "feature_index": 27115,
+        "osm_id": 1287920228,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 303.75,
+        "feature_index": 27116,
+        "osm_id": 1287920229,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 201.375,
+        "feature_index": 27117,
+        "osm_id": 1287920230,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 189.875,
+        "feature_index": 27118,
+        "osm_id": 1287920231,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 142.625,
+        "feature_index": 27119,
+        "osm_id": 1287920232,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 261.125,
+        "feature_index": 27120,
+        "osm_id": 1287920233,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 455.25,
+        "feature_index": 27121,
+        "osm_id": 1287920234,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 267.125,
+        "feature_index": 27122,
+        "osm_id": 1287920235,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 195.5,
+        "feature_index": 27123,
+        "osm_id": 1287920236,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
+      },
+      {
+        "area_square_meters": 184.5,
+        "feature_index": 27124,
+        "osm_id": 1287920237,
+        "owner": "ProductionHeroObjectLayer",
+        "zone": "0-2km"
       }
     ],
-    "owned_source_footprint_count": 9692,
+    "owned_source_footprint_count": 9611,
     "owned_zones": [
       "0-2km",
       "2-4km"
@@ -320,10 +887,10 @@
     "per_band": {
       "0-2km": {
         "coverage_fraction": 1.0,
-        "hero_exclusion_count": 2,
+        "hero_exclusion_count": 83,
         "original_source_footprint_count": 1831,
-        "represented_footprint_count": 1829,
-        "source_footprint_count": 1829,
+        "represented_footprint_count": 1748,
+        "source_footprint_count": 1748,
         "status": "PASS"
       },
       "2-4km": {
@@ -336,9 +903,9 @@
       }
     },
     "raster_ownership_pixel_count": 52342,
-    "simplified_geometry_point_count": 41715,
-    "source_footprint_count": 9692,
-    "source_geometry_point_count": 67156,
+    "simplified_geometry_point_count": 40859,
+    "source_footprint_count": 9611,
+    "source_geometry_point_count": 66635,
     "subpixel_centroid_mask_fallback_count": 66
   },
   "facade_semantics": {
@@ -360,18 +927,18 @@
     "road_orientation_contract": {
       "front_wall_distance_meters": {
         "maximum": 119.90845987669094,
-        "p50": 13.130700175056894,
-        "p95": 91.3921369885788
+        "p50": 13.05956921090732,
+        "p95": 91.94935420727533
       },
       "index_cell_meters": 256.0,
       "maximum_accepted_front_road_distance_meters": 120.0,
       "road_segment_count": 3989
     },
     "semantic_counts": {
-      "128": 993,
-      "32": 7857,
+      "128": 982,
+      "32": 7792,
       "64": 40,
-      "96": 802
+      "96": 797
     },
     "wall_local_uv_contract": {
       "roof_and_floor": "zero; top-facing orthophoto path ignores facade UV",
@@ -387,15 +954,15 @@
       "vertical_error_fraction_bound": null
     },
     "fallback_counts": {
-      "deterministic_osm_identity_fallback": 9423,
+      "deterministic_osm_identity_fallback": 9342,
       "osm_height_tag": 2,
       "osm_levels_derivative": 267
     },
-    "lidar_candidate_count": 614,
+    "lidar_candidate_count": 576,
     "lidar_height_selection": "75th percentile of positive footprint pixels",
-    "lidar_height_used_count": 28,
+    "lidar_height_used_count": 21,
     "lidar_height_used_count_by_band": {
-      "0-2km": 24,
+      "0-2km": 17,
       "2-4km": 4
     },
     "lidar_sampling_transform": "exact product AEQD to origin-relative UTM13N delta",
@@ -504,30 +1071,30 @@
         "x": -2,
         "z": -2
       },
-      "building_count": 286,
-      "bytes": 737319,
+      "building_count": 287,
+      "bytes": 699057,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "ddff59f7c7727e936b3a279a93c316abe61e0f1d230e629405fc83e0867ed397",
-      "triangle_count": 3888,
-      "vertex_count": 7548
+      "sha256": "849a2e128c557f45e5cc13500996d079c11dad2b96dc7125c91046544a2cd47f",
+      "triangle_count": 3636,
+      "vertex_count": 7176
     },
     {
       "batch_key": {
         "x": -2,
         "z": -1
       },
-      "building_count": 2409,
-      "bytes": 6236567,
+      "building_count": 2408,
+      "bytes": 6201741,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "6918646ec6403313c3608371816bb1d7b1c1735def67c89783762ce4550b1cb1",
-      "triangle_count": 31852,
-      "vertex_count": 62232
+      "sha256": "f7b730b9e14f2ce8c61e43a683c3bc996c5695c01bd671d233aa22308d7366e4",
+      "triangle_count": 31636,
+      "vertex_count": 61902
     },
     {
       "batch_key": {
@@ -535,14 +1102,14 @@
         "z": 0
       },
       "building_count": 1678,
-      "bytes": 4265104,
+      "bytes": 4236830,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "2ab949ba75fbe7b9ac403026613fb7f4b442c4b49fed4558b6cca6277f1d694b",
-      "triangle_count": 21960,
-      "vertex_count": 43008
+      "sha256": "7c548c2f7c9c74322744199410542b614f28d39d2cedae316645b43e9eaa4b3a",
+      "triangle_count": 21780,
+      "vertex_count": 42738
     },
     {
       "batch_key": {
@@ -550,14 +1117,14 @@
         "z": 1
       },
       "building_count": 13,
-      "bytes": 34602,
+      "bytes": 31052,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn002_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn002_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "38469c54e8b550de9ca56c8c611a12f3a885c4ae9076240d130ecbc2466c81d5",
-      "triangle_count": 192,
-      "vertex_count": 366
+      "sha256": "66dca7ab84a7c85fd22b80fd3b856c388bc0d00e344de17d43175badd7daf418",
+      "triangle_count": 168,
+      "vertex_count": 330
     },
     {
       "batch_key": {
@@ -565,44 +1132,44 @@
         "z": -2
       },
       "building_count": 1170,
-      "bytes": 3110778,
+      "bytes": 3005741,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "6bdb11929da39d8ed1789b09bcc7872bfad686d4fc1a39a55bf708c42e89a7a0",
-      "triangle_count": 16060,
-      "vertex_count": 31110
+      "sha256": "614a2c5e4c09adbc3e6314b4eabfb65d5ff4e4a3ce62e652ebd38c1f77442c26",
+      "triangle_count": 15404,
+      "vertex_count": 30126
     },
     {
       "batch_key": {
         "x": -1,
         "z": -1
       },
-      "building_count": 1251,
-      "bytes": 3141889,
+      "building_count": 1233,
+      "bytes": 3075561,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zn001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zn001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "1f933a6de7ef2d9d9dcc2821bb33c24dfd6f92c24d473a6d2b6ee140fc5b8c01",
-      "triangle_count": 16120,
-      "vertex_count": 31686
+      "sha256": "be022bdeea8ec3b055b1c57203833e26e45f9797e18bba9c033f1be29636b85f",
+      "triangle_count": 15756,
+      "vertex_count": 31032
     },
     {
       "batch_key": {
         "x": -1,
         "z": 0
       },
-      "building_count": 397,
-      "bytes": 961009,
+      "building_count": 377,
+      "bytes": 911385,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xn001_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xn001_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "bdba99d70ba2802494fab91c565d3b14d1be89311f04a209bc580ac536c60326",
-      "triangle_count": 5052,
-      "vertex_count": 9960
+      "sha256": "d145aefe0101039895c0e10394714f196d7c3f3393151e1f17fbbfa8659586cf",
+      "triangle_count": 4784,
+      "vertex_count": 9438
     },
     {
       "batch_key": {
@@ -625,14 +1192,14 @@
         "z": -2
       },
       "building_count": 585,
-      "bytes": 1506448,
+      "bytes": 1476097,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "bbbec94a78cc65ee6f171d5f92e991ec491c419f4294c74af5548205a32bc279",
-      "triangle_count": 7892,
-      "vertex_count": 15348
+      "sha256": "c5e30d4abc6b707223862bbbd296db49ebac1ae06f95490f3acf8e1b647ce78c",
+      "triangle_count": 7700,
+      "vertex_count": 15060
     },
     {
       "batch_key": {
@@ -654,15 +1221,15 @@
         "x": 0,
         "z": 0
       },
-      "building_count": 424,
-      "bytes": 1028327,
+      "building_count": 381,
+      "bytes": 914946,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "43387cbb1a121bce0a76af5e6d6d8817fcd71f361fc51ab4c7b37b17d9199432",
-      "triangle_count": 5400,
-      "vertex_count": 10644
+      "sha256": "8cf5ba458160155b843036cefad9a99240cd5fc027f950d6ad61028fd6a29267",
+      "triangle_count": 4796,
+      "vertex_count": 9480
     },
     {
       "batch_key": {
@@ -670,14 +1237,14 @@
         "z": 1
       },
       "building_count": 285,
-      "bytes": 734100,
+      "bytes": 707728,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xp000_zp001",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp000_zp001.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "7bfb66fc7ddf58843dfc9f7d9c3986c15bbfb034b55d54b5e18eb5e8dff50c7a",
-      "triangle_count": 3904,
-      "vertex_count": 7566
+      "sha256": "6cfd92c0a3154905ec3ece70cae164d8f9c9d0bc37a531e0d008daebe40e87c4",
+      "triangle_count": 3732,
+      "vertex_count": 7308
     },
     {
       "batch_key": {
@@ -685,14 +1252,14 @@
         "z": -2
       },
       "building_count": 57,
-      "bytes": 143720,
+      "bytes": 134615,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zn002",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zn002.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "b01b053c9fd0505ffcc52eb89c98d22f5d143c14174844b805441dad318d68b4",
-      "triangle_count": 776,
-      "vertex_count": 1506
+      "sha256": "e16bc4f91d2adfc6eecf2709541bac2856522cc1d9a69356a309df26c3003cb3",
+      "triangle_count": 716,
+      "vertex_count": 1416
     },
     {
       "batch_key": {
@@ -715,14 +1282,14 @@
         "z": 0
       },
       "building_count": 293,
-      "bytes": 739416,
+      "bytes": 722446,
       "material_slots": 1,
       "object_name": "ProductionBuildingSurfaceLayer_xp001_zp000",
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/Generated/ProductionBuildingSurfaceLayer_xp001_zp000.obj",
       "semantic": "production_building_surface_mesh_batch",
-      "sha256": "88aa17614a3426694ab0bb17f63878057fbb262dea68b2cbf7bedd771931d0f9",
-      "triangle_count": 3904,
-      "vertex_count": 7614
+      "sha256": "90c6140b2523388d46ef0074a9790886c3148136ed3c7813ee81a93978e3ac84",
+      "triangle_count": 3792,
+      "vertex_count": 7446
     },
     {
       "batch_key": {
@@ -743,12 +1310,12 @@
   "placement_comparison": {
     "absolute_dtm_base_minus_legacy_recipe_meters": {
       "maximum": 4.090400000000052,
-      "p50": 0.18299999999999983,
-      "p95": 1.0191999999999468
+      "p50": 0.1846000000001311,
+      "p95": 1.0285999999999476
     },
     "comparison_is_not_survey_error": true,
     "dtm_base_count_by_band": {
-      "0-2km": 1829,
+      "0-2km": 1748,
       "2-4km": 779
     },
     "fallback_recipe_base_count": 7084
@@ -756,6 +1323,11 @@
   "schema": "questflight.photoreal-aerial-surface-v1.production-building-surface-layer.v1",
   "semantic_root": "ProductionBuildingSurfaceLayer",
   "sources": {
+    "airport_hero_corridor_replacements": {
+      "bytes": 64536,
+      "path": "tools/kbdu_airport_hero_corridor/airport_hero_corridor_manifest.json",
+      "sha256": "5f17f15ffe592e78f4eefa4e1b320dcdf408873c536e479dbe769e1fafc43779"
+    },
     "coverage_report": {
       "bytes": 1913,
       "path": "tools/kbdu_environment_reconstruction/building_coverage_report.json",
@@ -788,17 +1360,20 @@
       "area_ratio_maximum": 1.05,
       "area_ratio_minimum": 0.9,
       "area_ratio_p50": 1.0,
-      "area_ratio_p95": 1.0255706527256498,
+      "area_ratio_p95": 1.0252085710049235,
       "maximum_allowed_area_loss_ratio": 0.09999999999999998,
-      "maximum_allowed_hausdorff_meters": 10.0,
+      "maximum_allowed_hausdorff_meters": {
+        "0-2km": 10.0,
+        "2-4km": 30.0
+      },
       "maximum_allowed_inflation_ratio": 0.050000000000000044,
-      "sampled_hausdorff_maximum_meters": 10.0,
-      "sampled_hausdorff_p50_meters": 1.561440201693964,
-      "sampled_hausdorff_p95_meters": 5.576838570022915,
-      "vertex_reduction_fraction": 0.3788343558282209
+      "sampled_hausdorff_maximum_meters": 29.36718063707148,
+      "sampled_hausdorff_p50_meters": 1.5756771943165662,
+      "sampled_hausdorff_p95_meters": 5.828129175027414,
+      "vertex_reduction_fraction": 0.3868237412771066
     },
-    "record_count": 9692,
-    "total_surface_triangles": 128092,
-    "total_vertices_when_expanded": 83430
+    "record_count": 9611,
+    "total_surface_triangles": 124992,
+    "total_vertices_when_expanded": 81718
   }
 }

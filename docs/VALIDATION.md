@@ -302,3 +302,6 @@ filtered two-moment shadow map:
 These checks establish visual acceptance of the bounded shadow implementation.
 They do not establish long-duration Quest timing, thermal, or allocation
 acceptance.
+# Airport hero corridor validation
+
+Run `AirportHeroCorridorEditModeTests` and the standard production Visual QA. Dedicated shots `25_hero_east_hangar_rows` through `28_hero_corridor_takeoff_view` use fixed surveyed airport-local elevations; combined renderer bounds must not be treated as ground elevation.

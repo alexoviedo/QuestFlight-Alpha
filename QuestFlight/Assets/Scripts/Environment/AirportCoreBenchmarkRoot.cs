@@ -26,6 +26,7 @@ namespace QuestFlightLab.Environment
         public string[] v4ContextFilteredMeshPaths = Array.Empty<string>();
         public LODGroup executiveTerminal;
         public LODGroup type2HangarRow;
+        public LODGroup airportHeroCorridor;
         public Transform fuelServiceContext;
         public Transform authoredApronProps;
         public Transform vegetationHeroCluster;
@@ -80,6 +81,9 @@ namespace QuestFlightLab.Environment
                 "executive terminal LODGroup is missing", failures);
             Require(type2HangarRow != null && type2HangarRow.transform.IsChildOf(transform),
                 "Type 2 hangar-row LODGroup is missing", failures);
+            Require(airportHeroCorridor != null && airportHeroCorridor.transform.IsChildOf(transform) &&
+                    airportHeroCorridor.GetComponent<AirportHeroCorridorRoot>() != null,
+                "airport hero corridor is missing", failures);
             Require(benchmarkContent == null || executiveTerminal == null ||
                     executiveTerminal.transform.IsChildOf(benchmarkContent),
                 "executive terminal is outside the switchable benchmark content", failures);
@@ -90,6 +94,9 @@ namespace QuestFlightLab.Environment
                 "executive terminal must have three nonempty LODs", failures);
             Require(HasThreeValidLods(type2HangarRow),
                 "Type 2 hangar row must have three nonempty LODs", failures);
+            Require(airportHeroCorridor == null ||
+                    airportHeroCorridor.GetComponent<AirportHeroCorridorRoot>().TryValidate(out _),
+                "airport hero corridor contract is invalid", failures);
             Require(fuelServiceContext != null && fuelServiceContext.IsChildOf(transform),
                 "fuel/service context is missing", failures);
             Require(authoredApronProps != null && authoredApronProps.IsChildOf(transform),

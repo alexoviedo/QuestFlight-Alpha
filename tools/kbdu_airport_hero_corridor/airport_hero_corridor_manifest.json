@@ -1,0 +1,3509 @@
+{
+  "schema_version": 1,
+  "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Z=north; Blender +X=east, +Y=north, +Z=up",
+  "scope": "Airport-owned buildings immediately bordering the KBDU apron and visible during runway 08/26 takeoff and landing. The existing ExecutiveTerminal_3335 and Type2THangarRow_3354 remain separately authored. The bounded pilot-left runway-08 takeoff sightline is also represented with semantic footprint-faithful near buildings.",
+  "material_contract": "AirportCoreHangarKitAtlas",
+  "sources": [
+    {
+      "url": "https://bouldercolorado.gov/airport-hangar-addresses",
+      "use": "Official building-address arrangement and airport ownership",
+      "rights": "Facts only; City reference image remains outside Git"
+    },
+    {
+      "url": "https://bouldercolorado.gov/t-hangar-waiting-list-policy-and-procedures",
+      "use": "Official Type 1/2/3 address, width, door, and amenity distinctions",
+      "rights": "Facts only"
+    },
+    {
+      "path": "QuestFlight/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_reference_context.json",
+      "use": "Pinned OSM-derived footprint geometry and local ENU placement",
+      "rights": "OpenStreetMap contributors, ODbL-1.0"
+    }
+  ],
+  "buildings": [
+    {
+      "asset_id": "Hangar_3323",
+      "address": "3323 Airport Road",
+      "osm_id": 77499385,
+      "family": "corporate_hangar",
+      "height_m": 6.2,
+      "door_side": "+y",
+      "footprint_xz_m": [
+        [
+          -709.0,
+          -236.5
+        ],
+        [
+          -679.0,
+          -236.5
+        ],
+        [
+          -679.0,
+          -201.0
+        ],
+        [
+          -709.0,
+          -201.0
+        ],
+        [
+          -709.0,
+          -236.5
+        ]
+      ]
+    },
+    {
+      "asset_id": "Hangar_3324",
+      "address": "3324 Airport Road",
+      "osm_id": 77499386,
+      "family": "corporate_hangar",
+      "height_m": 6.6,
+      "door_side": "+y",
+      "footprint_xz_m": [
+        [
+          -668.5,
+          -201.5
+        ],
+        [
+          -668.0,
+          -229.5
+        ],
+        [
+          -650.0,
+          -229.5
+        ],
+        [
+          -650.0,
+          -201.5
+        ],
+        [
+          -668.5,
+          -201.5
+        ]
+      ]
+    },
+    {
+      "asset_id": "Hangar_3327_3330",
+      "address": "3327 and 3330 Airport Road",
+      "osm_id": 77499394,
+      "family": "corporate_hangar",
+      "height_m": 7.1,
+      "door_side": "+y",
+      "footprint_xz_m": [
+        [
+          -536.0,
+          -223.5
+        ],
+        [
+          -499.5,
+          -223.5
+        ],
+        [
+          -499.5,
+          -234.0
+        ],
+        [
+          -462.5,
+          -234.0
+        ],
+        [
+          -462.5,
+          -202.0
+        ],
+        [
+          -499.5,
+          -201.5
+        ],
+        [
+          -499.5,
+          -208.0
+        ],
+        [
+          -536.0,
+          -208.0
+        ],
+        [
+          -536.0,
+          -223.5
+        ]
+      ]
+    },
+    {
+      "asset_id": "Hangar_3394",
+      "address": "3394 Airport Road",
+      "osm_id": 77499387,
+      "family": "service_hangar",
+      "height_m": 6.8,
+      "door_side": "+y",
+      "footprint_xz_m": [
+        [
+          -189.0,
+          -236.5
+        ],
+        [
+          -174.5,
+          -217.0
+        ],
+        [
+          -154.0,
+          -231.0
+        ],
+        [
+          -168.0,
+          -251.0
+        ],
+        [
+          -189.0,
+          -236.5
+        ]
+      ]
+    },
+    {
+      "asset_id": "Hangar_3393",
+      "address": "3393 Airport Road",
+      "osm_id": 77499388,
+      "family": "service_hangar",
+      "height_m": 4.8,
+      "door_side": "+y",
+      "footprint_xz_m": [
+        [
+          -172.5,
+          -213.5
+        ],
+        [
+          -164.0,
+          -219.5
+        ],
+        [
+          -157.5,
+          -211.0
+        ],
+        [
+          -166.5,
+          -204.0
+        ],
+        [
+          -172.5,
+          -213.5
+        ]
+      ]
+    },
+    {
+      "asset_id": "Type1_3317",
+      "address": "3317 Airport Road",
+      "osm_id": 78054470,
+      "family": "type1_t_hangar",
+      "height_m": 6.5,
+      "door_side": "+y",
+      "footprint_xz_m": [
+        [
+          -710.5,
+          -325.0
+        ],
+        [
+          -613.5,
+          -324.5
+        ],
+        [
+          -613.5,
+          -313.5
+        ],
+        [
+          -710.0,
+          -314.5
+        ],
+        [
+          -710.5,
+          -325.0
+        ]
+      ]
+    },
+    {
+      "asset_id": "Type1_3316",
+      "address": "3316 Airport Road",
+      "osm_id": 78054473,
+      "family": "type1_t_hangar",
+      "height_m": 6.5,
+      "door_side": "+y",
+      "footprint_xz_m": [
+        [
+          -710.5,
+          -357.0
+        ],
+        [
+          -613.5,
+          -355.5
+        ],
+        [
+          -613.0,
+          -345.5
+        ],
+        [
+          -710.5,
+          -346.0
+        ],
+        [
+          -710.5,
+          -357.0
+        ]
+      ]
+    },
+    {
+      "asset_id": "Hangar_3309",
+      "address": "3309 Airport Road",
+      "osm_id": 78060787,
+      "family": "corporate_hangar",
+      "height_m": 7.4,
+      "door_side": "+y",
+      "footprint_xz_m": [
+        [
+          -655.0,
+          -452.0
+        ],
+        [
+          -655.0,
+          -420.0
+        ],
+        [
+          -606.0,
+          -419.5
+        ],
+        [
+          -605.5,
+          -452.0
+        ],
+        [
+          -655.0,
+          -452.0
+        ]
+      ]
+    },
+    {
+      "asset_id": "Hangar_3312",
+      "address": "3312 Airport Road",
+      "osm_id": 78054454,
+      "family": "box_hangar",
+      "height_m": 5.5,
+      "door_side": "+y",
+      "footprint_xz_m": [
+        [
+          -640.0,
+          -377.5
+        ],
+        [
+          -618.0,
+          -377.0
+        ],
+        [
+          -618.0,
+          -391.0
+        ],
+        [
+          -640.0,
+          -391.0
+        ],
+        [
+          -640.0,
+          -377.5
+        ]
+      ]
+    },
+    {
+      "asset_id": "Hangar_3313_3314",
+      "address": "3313 and 3314 Airport Road",
+      "osm_id": 78054456,
+      "family": "box_hangar",
+      "height_m": 5.3,
+      "door_side": "+y",
+      "footprint_xz_m": [
+        [
+          -612.5,
+          -392.0
+        ],
+        [
+          -612.5,
+          -377.0
+        ],
+        [
+          -589.0,
+          -377.0
+        ],
+        [
+          -589.0,
+          -392.5
+        ],
+        [
+          -612.5,
+          -392.0
+        ]
+      ]
+    },
+    {
+      "asset_id": "Hangar_3341",
+      "address": "3341 Airport Road",
+      "osm_id": 78054436,
+      "family": "box_hangar",
+      "height_m": 5.0,
+      "door_side": "+x",
+      "footprint_xz_m": [
+        [
+          -545.0,
+          -434.0
+        ],
+        [
+          -535.0,
+          -434.0
+        ],
+        [
+          -534.5,
+          -452.5
+        ],
+        [
+          -544.5,
+          -452.5
+        ],
+        [
+          -545.0,
+          -434.0
+        ]
+      ]
+    },
+    {
+      "asset_id": "Hangar_3344",
+      "address": "3344 Airport Road",
+      "osm_id": 78054452,
+      "family": "box_hangar",
+      "height_m": 5.0,
+      "door_side": "+x",
+      "footprint_xz_m": [
+        [
+          -544.5,
+          -393.0
+        ],
+        [
+          -544.5,
+          -375.5
+        ],
+        [
+          -534.0,
+          -375.5
+        ],
+        [
+          -534.0,
+          -393.5
+        ],
+        [
+          -544.5,
+          -393.0
+        ]
+      ]
+    },
+    {
+      "asset_id": "Hangar_3346",
+      "address": "3346 Airport Road",
+      "osm_id": 78054451,
+      "family": "box_hangar",
+      "height_m": 6.0,
+      "door_side": "+x",
+      "footprint_xz_m": [
+        [
+          -545.5,
+          -311.0
+        ],
+        [
+          -534.0,
+          -311.0
+        ],
+        [
+          -533.5,
+          -350.5
+        ],
+        [
+          -545.0,
+          -350.5
+        ],
+        [
+          -545.5,
+          -311.0
+        ]
+      ]
+    },
+    {
+      "asset_id": "Type2_3351",
+      "address": "3351 Airport Road",
+      "osm_id": 78054458,
+      "family": "type2_t_hangar",
+      "height_m": 7.1,
+      "door_side": "+x",
+      "footprint_xz_m": [
+        [
+          -506.0,
+          -311.0
+        ],
+        [
+          -505.0,
+          -380.0
+        ],
+        [
+          -490.0,
+          -380.5
+        ],
+        [
+          -491.0,
+          -310.5
+        ],
+        [
+          -506.0,
+          -311.0
+        ]
+      ]
+    },
+    {
+      "asset_id": "Type3_3352",
+      "address": "3352 Airport Road",
+      "osm_id": 78054459,
+      "family": "type3_t_hangar",
+      "height_m": 7.0,
+      "door_side": "+x",
+      "footprint_xz_m": [
+        [
+          -472.0,
+          -310.5
+        ],
+        [
+          -456.0,
+          -311.0
+        ],
+        [
+          -455.5,
+          -379.5
+        ],
+        [
+          -471.5,
+          -379.5
+        ],
+        [
+          -472.0,
+          -310.5
+        ]
+      ]
+    },
+    {
+      "asset_id": "Type2_3353",
+      "address": "3353 Airport Road",
+      "osm_id": 78054461,
+      "family": "type2_t_hangar",
+      "height_m": 7.1,
+      "door_side": "+x",
+      "footprint_xz_m": [
+        [
+          -437.0,
+          -310.5
+        ],
+        [
+          -423.0,
+          -310.5
+        ],
+        [
+          -423.0,
+          -379.5
+        ],
+        [
+          -436.0,
+          -379.5
+        ],
+        [
+          -437.0,
+          -310.5
+        ]
+      ]
+    },
+    {
+      "asset_id": "Type2_3355",
+      "address": "3355 Airport Road",
+      "osm_id": 78054465,
+      "family": "type2_t_hangar",
+      "height_m": 7.1,
+      "door_side": "+x",
+      "footprint_xz_m": [
+        [
+          -362.5,
+          -379.0
+        ],
+        [
+          -361.5,
+          -310.0
+        ],
+        [
+          -347.5,
+          -310.0
+        ],
+        [
+          -348.5,
+          -379.0
+        ],
+        [
+          -362.5,
+          -379.0
+        ]
+      ]
+    },
+    {
+      "asset_id": "Type3_3356",
+      "address": "3356 Airport Road",
+      "osm_id": 78054447,
+      "family": "type3_t_hangar",
+      "height_m": 7.0,
+      "door_side": "+x",
+      "footprint_xz_m": [
+        [
+          -329.5,
+          -378.5
+        ],
+        [
+          -329.0,
+          -310.0
+        ],
+        [
+          -313.5,
+          -310.5
+        ],
+        [
+          -313.0,
+          -378.5
+        ],
+        [
+          -329.5,
+          -378.5
+        ]
+      ]
+    },
+    {
+      "asset_id": "TakeoffLeft_563214886",
+      "address": "Mile High Gliding",
+      "osm_id": 563214886,
+      "family": "commercial",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -60.5,
+          62.0
+        ],
+        [
+          -60.0,
+          71.0
+        ],
+        [
+          -54.0,
+          70.5
+        ],
+        [
+          -54.0,
+          62.5
+        ],
+        [
+          -60.5,
+          62.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "commercial",
+        "name": "Mile High Gliding"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_563214887",
+      "address": "Soaring Society of Boulder",
+      "osm_id": 563214887,
+      "family": "commercial",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -340.0,
+          66.5
+        ],
+        [
+          -335.5,
+          66.5
+        ],
+        [
+          -335.5,
+          70.5
+        ],
+        [
+          -340.0,
+          71.0
+        ],
+        [
+          -340.0,
+          66.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "commercial",
+        "name": "Soaring Society of Boulder"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_916029512",
+      "address": "Near-airport OSM 916029512",
+      "osm_id": 916029512,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -346.5,
+          66.5
+        ],
+        [
+          -340.5,
+          66.5
+        ],
+        [
+          -340.0,
+          69.5
+        ],
+        [
+          -346.5,
+          69.5
+        ],
+        [
+          -346.5,
+          66.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_916029513",
+      "address": "Near-airport OSM 916029513",
+      "osm_id": 916029513,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -352.0,
+          68.0
+        ],
+        [
+          -352.0,
+          70.5
+        ],
+        [
+          -349.5,
+          70.5
+        ],
+        [
+          -349.5,
+          68.0
+        ],
+        [
+          -352.0,
+          68.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920199",
+      "address": "Near-airport OSM 1287920199",
+      "osm_id": 1287920199,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          781.5,
+          106.5
+        ],
+        [
+          782.0,
+          135.0
+        ],
+        [
+          799.0,
+          134.5
+        ],
+        [
+          798.5,
+          130.0
+        ],
+        [
+          796.5,
+          130.0
+        ],
+        [
+          796.0,
+          113.0
+        ],
+        [
+          791.5,
+          113.5
+        ],
+        [
+          791.5,
+          106.5
+        ],
+        [
+          781.5,
+          106.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920231",
+      "address": "Near-airport OSM 1287920231",
+      "osm_id": 1287920231,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -412.0,
+          109.5
+        ],
+        [
+          -411.5,
+          120.5
+        ],
+        [
+          -394.5,
+          120.0
+        ],
+        [
+          -394.5,
+          109.0
+        ],
+        [
+          -412.0,
+          109.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920200",
+      "address": "Near-airport OSM 1287920200",
+      "osm_id": 1287920200,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          725.5,
+          114.0
+        ],
+        [
+          729.0,
+          104.0
+        ],
+        [
+          734.0,
+          105.5
+        ],
+        [
+          735.0,
+          103.0
+        ],
+        [
+          744.0,
+          106.0
+        ],
+        [
+          741.5,
+          113.5
+        ],
+        [
+          737.5,
+          112.0
+        ],
+        [
+          735.5,
+          117.5
+        ],
+        [
+          725.5,
+          114.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_864206023",
+      "address": "Near-airport OSM 864206023",
+      "osm_id": 864206023,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -682.5,
+          115.5
+        ],
+        [
+          -660.0,
+          109.0
+        ],
+        [
+          -656.0,
+          120.5
+        ],
+        [
+          -672.0,
+          125.5
+        ],
+        [
+          -671.0,
+          131.5
+        ],
+        [
+          -676.5,
+          132.5
+        ],
+        [
+          -682.5,
+          115.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920232",
+      "address": "Near-airport OSM 1287920232",
+      "osm_id": 1287920232,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -337.5,
+          119.0
+        ],
+        [
+          -333.0,
+          119.0
+        ],
+        [
+          -333.5,
+          116.0
+        ],
+        [
+          -327.0,
+          116.0
+        ],
+        [
+          -327.0,
+          118.5
+        ],
+        [
+          -323.0,
+          118.5
+        ],
+        [
+          -322.5,
+          127.0
+        ],
+        [
+          -337.5,
+          127.5
+        ],
+        [
+          -337.5,
+          119.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_864206022",
+      "address": "Near-airport OSM 864206022",
+      "osm_id": 864206022,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -721.0,
+          120.0
+        ],
+        [
+          -720.5,
+          105.0
+        ],
+        [
+          -711.0,
+          105.0
+        ],
+        [
+          -711.0,
+          119.5
+        ],
+        [
+          -721.0,
+          120.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920235",
+      "address": "Near-airport OSM 1287920235",
+      "osm_id": 1287920235,
+      "family": "light_industrial",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -636.0,
+          122.5
+        ],
+        [
+          -632.5,
+          116.0
+        ],
+        [
+          -620.5,
+          122.5
+        ],
+        [
+          -606.5,
+          114.0
+        ],
+        [
+          -602.5,
+          121.0
+        ],
+        [
+          -620.5,
+          131.5
+        ],
+        [
+          -636.0,
+          122.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_886075169",
+      "address": "Near-airport OSM 886075169",
+      "osm_id": 886075169,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          820.5,
+          123.5
+        ],
+        [
+          829.0,
+          123.5
+        ],
+        [
+          829.5,
+          112.0
+        ],
+        [
+          821.0,
+          111.5
+        ],
+        [
+          820.5,
+          123.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920233",
+      "address": "Near-airport OSM 1287920233",
+      "osm_id": 1287920233,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -535.0,
+          132.0
+        ],
+        [
+          -531.0,
+          141.0
+        ],
+        [
+          -508.5,
+          132.0
+        ],
+        [
+          -513.0,
+          120.5
+        ],
+        [
+          -521.5,
+          124.0
+        ],
+        [
+          -520.5,
+          126.5
+        ],
+        [
+          -535.0,
+          132.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920234",
+      "address": "Near-airport OSM 1287920234",
+      "osm_id": 1287920234,
+      "family": "light_industrial",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -586.5,
+          139.5
+        ],
+        [
+          -586.0,
+          153.5
+        ],
+        [
+          -578.0,
+          153.5
+        ],
+        [
+          -578.0,
+          155.5
+        ],
+        [
+          -570.5,
+          155.0
+        ],
+        [
+          -570.5,
+          153.0
+        ],
+        [
+          -560.5,
+          153.0
+        ],
+        [
+          -560.5,
+          145.0
+        ],
+        [
+          -554.5,
+          145.0
+        ],
+        [
+          -554.5,
+          136.5
+        ],
+        [
+          -561.0,
+          136.5
+        ],
+        [
+          -561.0,
+          133.0
+        ],
+        [
+          -569.5,
+          133.5
+        ],
+        [
+          -569.0,
+          142.0
+        ],
+        [
+          -576.5,
+          142.5
+        ],
+        [
+          -576.5,
+          139.0
+        ],
+        [
+          -586.5,
+          139.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920202",
+      "address": "Near-airport OSM 1287920202",
+      "osm_id": 1287920202,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          604.0,
+          140.0
+        ],
+        [
+          630.0,
+          140.0
+        ],
+        [
+          630.0,
+          130.0
+        ],
+        [
+          618.0,
+          130.0
+        ],
+        [
+          618.0,
+          125.0
+        ],
+        [
+          604.0,
+          125.0
+        ],
+        [
+          604.0,
+          140.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_864206021",
+      "address": "Near-airport OSM 864206021",
+      "osm_id": 864206021,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -737.0,
+          146.0
+        ],
+        [
+          -722.5,
+          145.5
+        ],
+        [
+          -722.0,
+          170.5
+        ],
+        [
+          -736.5,
+          170.5
+        ],
+        [
+          -737.0,
+          146.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_313639259",
+      "address": "Near-airport OSM 313639259",
+      "osm_id": 313639259,
+      "family": "light_industrial",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -301.5,
+          149.5
+        ],
+        [
+          -285.0,
+          149.5
+        ],
+        [
+          -285.0,
+          187.0
+        ],
+        [
+          -296.0,
+          187.0
+        ],
+        [
+          -296.0,
+          158.5
+        ],
+        [
+          -291.0,
+          158.5
+        ],
+        [
+          -291.0,
+          156.5
+        ],
+        [
+          -301.5,
+          156.5
+        ],
+        [
+          -301.5,
+          149.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_313639258",
+      "address": "Near-airport OSM 313639258",
+      "osm_id": 313639258,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -269.5,
+          155.0
+        ],
+        [
+          -250.5,
+          155.0
+        ],
+        [
+          -250.5,
+          173.0
+        ],
+        [
+          -269.5,
+          173.0
+        ],
+        [
+          -269.5,
+          155.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920203",
+      "address": "Near-airport OSM 1287920203",
+      "osm_id": 1287920203,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          565.0,
+          161.0
+        ],
+        [
+          583.5,
+          165.0
+        ],
+        [
+          586.5,
+          154.0
+        ],
+        [
+          578.5,
+          152.5
+        ],
+        [
+          580.0,
+          147.0
+        ],
+        [
+          569.0,
+          144.5
+        ],
+        [
+          565.0,
+          161.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920201",
+      "address": "Near-airport OSM 1287920201",
+      "osm_id": 1287920201,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          700.0,
+          177.5
+        ],
+        [
+          706.5,
+          186.5
+        ],
+        [
+          716.5,
+          179.5
+        ],
+        [
+          714.5,
+          176.5
+        ],
+        [
+          722.5,
+          171.0
+        ],
+        [
+          716.5,
+          162.0
+        ],
+        [
+          703.0,
+          171.0
+        ],
+        [
+          705.0,
+          174.0
+        ],
+        [
+          700.0,
+          177.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920198",
+      "address": "Near-airport OSM 1287920198",
+      "osm_id": 1287920198,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          768.5,
+          178.5
+        ],
+        [
+          777.5,
+          182.0
+        ],
+        [
+          779.0,
+          179.0
+        ],
+        [
+          782.0,
+          180.0
+        ],
+        [
+          786.5,
+          169.0
+        ],
+        [
+          784.0,
+          168.0
+        ],
+        [
+          786.5,
+          162.5
+        ],
+        [
+          776.5,
+          158.0
+        ],
+        [
+          768.5,
+          178.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920206",
+      "address": "Near-airport OSM 1287920206",
+      "osm_id": 1287920206,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          473.0,
+          186.0
+        ],
+        [
+          493.5,
+          186.5
+        ],
+        [
+          494.0,
+          178.5
+        ],
+        [
+          489.5,
+          178.5
+        ],
+        [
+          490.0,
+          169.5
+        ],
+        [
+          480.5,
+          169.5
+        ],
+        [
+          480.0,
+          177.5
+        ],
+        [
+          473.5,
+          177.0
+        ],
+        [
+          473.0,
+          186.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920196",
+      "address": "Near-airport OSM 1287920196",
+      "osm_id": 1287920196,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          654.5,
+          192.5
+        ],
+        [
+          665.0,
+          210.0
+        ],
+        [
+          681.5,
+          200.0
+        ],
+        [
+          686.0,
+          208.0
+        ],
+        [
+          696.0,
+          202.5
+        ],
+        [
+          689.0,
+          191.0
+        ],
+        [
+          679.5,
+          196.5
+        ],
+        [
+          675.5,
+          190.0
+        ],
+        [
+          666.5,
+          195.5
+        ],
+        [
+          662.5,
+          188.0
+        ],
+        [
+          654.5,
+          192.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920193",
+      "address": "Near-airport OSM 1287920193",
+      "osm_id": 1287920193,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          740.0,
+          206.5
+        ],
+        [
+          756.5,
+          190.5
+        ],
+        [
+          767.0,
+          201.5
+        ],
+        [
+          757.0,
+          211.0
+        ],
+        [
+          753.5,
+          208.0
+        ],
+        [
+          747.0,
+          214.0
+        ],
+        [
+          740.0,
+          206.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_864206020",
+      "address": "Near-airport OSM 864206020",
+      "osm_id": 864206020,
+      "family": "light_industrial",
+      "height_m": 5.5,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -722.0,
+          207.0
+        ],
+        [
+          -661.5,
+          205.5
+        ],
+        [
+          -660.5,
+          233.5
+        ],
+        [
+          -721.0,
+          235.5
+        ],
+        [
+          -722.0,
+          207.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920197",
+      "address": "Near-airport OSM 1287920197",
+      "osm_id": 1287920197,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          602.0,
+          216.0
+        ],
+        [
+          603.0,
+          227.0
+        ],
+        [
+          629.5,
+          224.5
+        ],
+        [
+          628.5,
+          216.0
+        ],
+        [
+          622.5,
+          216.5
+        ],
+        [
+          622.5,
+          214.0
+        ],
+        [
+          619.5,
+          214.5
+        ],
+        [
+          619.0,
+          211.5
+        ],
+        [
+          610.5,
+          212.0
+        ],
+        [
+          611.0,
+          215.5
+        ],
+        [
+          602.0,
+          216.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_874817736",
+      "address": "Near-airport OSM 874817736",
+      "osm_id": 874817736,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          499.5,
+          219.0
+        ],
+        [
+          522.0,
+          219.0
+        ],
+        [
+          522.0,
+          208.5
+        ],
+        [
+          500.0,
+          208.5
+        ],
+        [
+          499.5,
+          219.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920204",
+      "address": "Near-airport OSM 1287920204",
+      "osm_id": 1287920204,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          538.0,
+          227.5
+        ],
+        [
+          556.0,
+          227.5
+        ],
+        [
+          556.0,
+          237.0
+        ],
+        [
+          547.0,
+          237.0
+        ],
+        [
+          547.5,
+          246.0
+        ],
+        [
+          538.0,
+          246.5
+        ],
+        [
+          538.0,
+          227.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_874817737",
+      "address": "Near-airport OSM 874817737",
+      "osm_id": 874817737,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          562.0,
+          231.5
+        ],
+        [
+          562.0,
+          243.0
+        ],
+        [
+          570.5,
+          243.0
+        ],
+        [
+          570.0,
+          231.5
+        ],
+        [
+          562.0,
+          231.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920192",
+      "address": "Near-airport OSM 1287920192",
+      "osm_id": 1287920192,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          692.0,
+          235.5
+        ],
+        [
+          700.5,
+          229.5
+        ],
+        [
+          702.5,
+          232.5
+        ],
+        [
+          710.0,
+          227.5
+        ],
+        [
+          715.0,
+          235.5
+        ],
+        [
+          706.5,
+          241.5
+        ],
+        [
+          708.0,
+          244.0
+        ],
+        [
+          701.0,
+          249.0
+        ],
+        [
+          692.0,
+          235.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920205",
+      "address": "Near-airport OSM 1287920205",
+      "osm_id": 1287920205,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          476.0,
+          252.5
+        ],
+        [
+          486.0,
+          252.5
+        ],
+        [
+          486.0,
+          245.0
+        ],
+        [
+          489.5,
+          245.0
+        ],
+        [
+          489.5,
+          237.0
+        ],
+        [
+          486.0,
+          237.0
+        ],
+        [
+          486.0,
+          230.0
+        ],
+        [
+          476.0,
+          230.0
+        ],
+        [
+          476.0,
+          252.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920190",
+      "address": "Near-airport OSM 1287920190",
+      "osm_id": 1287920190,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          641.5,
+          268.0
+        ],
+        [
+          646.0,
+          278.0
+        ],
+        [
+          670.0,
+          267.5
+        ],
+        [
+          665.5,
+          257.5
+        ],
+        [
+          641.5,
+          268.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920230",
+      "address": "Near-airport OSM 1287920230",
+      "osm_id": 1287920230,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -478.0,
+          271.5
+        ],
+        [
+          -464.0,
+          275.0
+        ],
+        [
+          -463.0,
+          271.5
+        ],
+        [
+          -460.0,
+          272.0
+        ],
+        [
+          -457.5,
+          264.5
+        ],
+        [
+          -474.5,
+          259.5
+        ],
+        [
+          -478.0,
+          271.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920191",
+      "address": "Near-airport OSM 1287920191",
+      "osm_id": 1287920191,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          598.5,
+          284.5
+        ],
+        [
+          602.0,
+          294.0
+        ],
+        [
+          618.5,
+          288.0
+        ],
+        [
+          615.5,
+          278.5
+        ],
+        [
+          598.5,
+          284.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920189",
+      "address": "Near-airport OSM 1287920189",
+      "osm_id": 1287920189,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          763.5,
+          287.0
+        ],
+        [
+          781.5,
+          276.5
+        ],
+        [
+          776.0,
+          267.5
+        ],
+        [
+          785.0,
+          262.5
+        ],
+        [
+          789.0,
+          269.5
+        ],
+        [
+          786.0,
+          271.5
+        ],
+        [
+          788.0,
+          274.5
+        ],
+        [
+          798.0,
+          268.5
+        ],
+        [
+          801.5,
+          274.5
+        ],
+        [
+          768.0,
+          294.5
+        ],
+        [
+          763.5,
+          287.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920194",
+      "address": "Near-airport OSM 1287920194",
+      "osm_id": 1287920194,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          473.5,
+          300.5
+        ],
+        [
+          479.0,
+          314.0
+        ],
+        [
+          505.5,
+          303.0
+        ],
+        [
+          500.0,
+          290.0
+        ],
+        [
+          473.5,
+          300.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920195",
+      "address": "Near-airport OSM 1287920195",
+      "osm_id": 1287920195,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          539.0,
+          314.5
+        ],
+        [
+          553.5,
+          302.0
+        ],
+        [
+          560.5,
+          309.5
+        ],
+        [
+          573.0,
+          298.5
+        ],
+        [
+          579.0,
+          305.0
+        ],
+        [
+          552.5,
+          329.0
+        ],
+        [
+          539.0,
+          314.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920229",
+      "address": "Near-airport OSM 1287920229",
+      "osm_id": 1287920229,
+      "family": "light_industrial",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -392.5,
+          341.0
+        ],
+        [
+          -389.0,
+          341.0
+        ],
+        [
+          -389.5,
+          335.5
+        ],
+        [
+          -383.5,
+          334.5
+        ],
+        [
+          -383.0,
+          339.5
+        ],
+        [
+          -375.0,
+          338.5
+        ],
+        [
+          -375.0,
+          341.5
+        ],
+        [
+          -362.0,
+          340.0
+        ],
+        [
+          -360.5,
+          349.5
+        ],
+        [
+          -371.5,
+          351.0
+        ],
+        [
+          -372.0,
+          348.0
+        ],
+        [
+          -384.0,
+          349.5
+        ],
+        [
+          -384.5,
+          347.5
+        ],
+        [
+          -391.5,
+          348.0
+        ],
+        [
+          -392.5,
+          341.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920237",
+      "address": "Near-airport OSM 1287920237",
+      "osm_id": 1287920237,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -684.0,
+          355.0
+        ],
+        [
+          -681.0,
+          373.0
+        ],
+        [
+          -671.0,
+          371.5
+        ],
+        [
+          -674.0,
+          353.5
+        ],
+        [
+          -684.0,
+          355.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_874817738",
+      "address": "Near-airport OSM 874817738",
+      "osm_id": 874817738,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          402.5,
+          357.0
+        ],
+        [
+          402.5,
+          365.0
+        ],
+        [
+          412.5,
+          365.0
+        ],
+        [
+          412.5,
+          356.5
+        ],
+        [
+          402.5,
+          357.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920207",
+      "address": "Near-airport OSM 1287920207",
+      "osm_id": 1287920207,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          473.5,
+          371.0
+        ],
+        [
+          489.0,
+          371.0
+        ],
+        [
+          489.0,
+          362.0
+        ],
+        [
+          485.5,
+          362.0
+        ],
+        [
+          485.5,
+          352.5
+        ],
+        [
+          474.0,
+          352.5
+        ],
+        [
+          473.5,
+          371.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920226",
+      "address": "Near-airport OSM 1287920226",
+      "osm_id": 1287920226,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          422.0,
+          373.0
+        ],
+        [
+          432.0,
+          373.0
+        ],
+        [
+          432.0,
+          362.5
+        ],
+        [
+          422.0,
+          362.5
+        ],
+        [
+          422.0,
+          373.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920236",
+      "address": "Near-airport OSM 1287920236",
+      "osm_id": 1287920236,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -553.0,
+          396.0
+        ],
+        [
+          -553.0,
+          413.0
+        ],
+        [
+          -541.5,
+          413.0
+        ],
+        [
+          -541.5,
+          396.0
+        ],
+        [
+          -553.0,
+          396.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_886075170",
+      "address": "Near-airport OSM 886075170",
+      "osm_id": 886075170,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          887.0,
+          434.0
+        ],
+        [
+          903.5,
+          434.5
+        ],
+        [
+          903.5,
+          427.0
+        ],
+        [
+          897.5,
+          427.0
+        ],
+        [
+          897.5,
+          418.5
+        ],
+        [
+          887.0,
+          418.0
+        ],
+        [
+          887.0,
+          434.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920210",
+      "address": "Near-airport OSM 1287920210",
+      "osm_id": 1287920210,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          726.5,
+          444.5
+        ],
+        [
+          729.0,
+          429.0
+        ],
+        [
+          750.5,
+          432.5
+        ],
+        [
+          746.5,
+          456.5
+        ],
+        [
+          737.5,
+          455.0
+        ],
+        [
+          739.0,
+          446.5
+        ],
+        [
+          726.5,
+          444.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920214",
+      "address": "Near-airport OSM 1287920214",
+      "osm_id": 1287920214,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          838.0,
+          453.5
+        ],
+        [
+          849.5,
+          453.5
+        ],
+        [
+          849.5,
+          456.5
+        ],
+        [
+          882.5,
+          456.5
+        ],
+        [
+          883.0,
+          446.0
+        ],
+        [
+          888.0,
+          446.0
+        ],
+        [
+          888.0,
+          442.0
+        ],
+        [
+          884.5,
+          442.0
+        ],
+        [
+          881.0,
+          438.5
+        ],
+        [
+          878.0,
+          438.0
+        ],
+        [
+          875.0,
+          441.0
+        ],
+        [
+          867.0,
+          441.0
+        ],
+        [
+          867.0,
+          446.0
+        ],
+        [
+          838.0,
+          445.5
+        ],
+        [
+          838.0,
+          453.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920208",
+      "address": "Near-airport OSM 1287920208",
+      "osm_id": 1287920208,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          483.5,
+          454.5
+        ],
+        [
+          506.0,
+          454.5
+        ],
+        [
+          506.0,
+          457.0
+        ],
+        [
+          522.0,
+          457.5
+        ],
+        [
+          522.0,
+          448.0
+        ],
+        [
+          516.0,
+          448.0
+        ],
+        [
+          516.5,
+          438.5
+        ],
+        [
+          508.5,
+          438.5
+        ],
+        [
+          508.5,
+          441.5
+        ],
+        [
+          498.0,
+          441.5
+        ],
+        [
+          498.0,
+          437.5
+        ],
+        [
+          488.5,
+          437.5
+        ],
+        [
+          488.5,
+          444.0
+        ],
+        [
+          483.5,
+          443.5
+        ],
+        [
+          483.5,
+          454.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920209",
+      "address": "Near-airport OSM 1287920209",
+      "osm_id": 1287920209,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          657.5,
+          476.0
+        ],
+        [
+          662.5,
+          480.0
+        ],
+        [
+          661.0,
+          482.0
+        ],
+        [
+          666.0,
+          485.5
+        ],
+        [
+          672.5,
+          476.5
+        ],
+        [
+          674.0,
+          478.0
+        ],
+        [
+          676.5,
+          475.0
+        ],
+        [
+          680.0,
+          477.0
+        ],
+        [
+          688.5,
+          465.0
+        ],
+        [
+          685.0,
+          463.0
+        ],
+        [
+          686.5,
+          460.5
+        ],
+        [
+          680.0,
+          455.5
+        ],
+        [
+          673.5,
+          465.0
+        ],
+        [
+          670.5,
+          463.0
+        ],
+        [
+          664.0,
+          472.0
+        ],
+        [
+          661.5,
+          470.5
+        ],
+        [
+          657.5,
+          476.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_874817740",
+      "address": "Near-airport OSM 874817740",
+      "osm_id": 874817740,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          -658.0,
+          531.5
+        ],
+        [
+          -648.5,
+          539.0
+        ],
+        [
+          -639.0,
+          527.5
+        ],
+        [
+          -648.0,
+          520.0
+        ],
+        [
+          -658.0,
+          531.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_875193560",
+      "address": "Near-airport OSM 875193560",
+      "osm_id": 875193560,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          394.5,
+          552.5
+        ],
+        [
+          397.5,
+          552.0
+        ],
+        [
+          397.0,
+          547.5
+        ],
+        [
+          409.0,
+          547.0
+        ],
+        [
+          409.5,
+          570.5
+        ],
+        [
+          401.5,
+          571.0
+        ],
+        [
+          401.0,
+          561.5
+        ],
+        [
+          395.0,
+          561.5
+        ],
+        [
+          394.5,
+          552.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_875193561",
+      "address": "Near-airport OSM 875193561",
+      "osm_id": 875193561,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          571.0,
+          574.5
+        ],
+        [
+          576.0,
+          568.5
+        ],
+        [
+          585.0,
+          576.5
+        ],
+        [
+          580.0,
+          582.5
+        ],
+        [
+          571.0,
+          574.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_875193562",
+      "address": "Near-airport OSM 875193562",
+      "osm_id": 875193562,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          707.5,
+          581.0
+        ],
+        [
+          728.0,
+          577.0
+        ],
+        [
+          729.5,
+          585.5
+        ],
+        [
+          709.0,
+          589.5
+        ],
+        [
+          707.5,
+          581.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920227",
+      "address": "Near-airport OSM 1287920227",
+      "osm_id": 1287920227,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          314.0,
+          585.5
+        ],
+        [
+          314.0,
+          573.5
+        ],
+        [
+          340.5,
+          574.0
+        ],
+        [
+          340.5,
+          588.0
+        ],
+        [
+          330.0,
+          587.5
+        ],
+        [
+          330.5,
+          584.0
+        ],
+        [
+          314.0,
+          585.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920213",
+      "address": "Near-airport OSM 1287920213",
+      "osm_id": 1287920213,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          472.0,
+          598.0
+        ],
+        [
+          472.0,
+          587.5
+        ],
+        [
+          475.0,
+          587.5
+        ],
+        [
+          475.0,
+          577.5
+        ],
+        [
+          479.0,
+          577.5
+        ],
+        [
+          479.5,
+          571.5
+        ],
+        [
+          484.5,
+          572.0
+        ],
+        [
+          484.5,
+          577.5
+        ],
+        [
+          496.0,
+          577.5
+        ],
+        [
+          496.0,
+          581.5
+        ],
+        [
+          502.5,
+          582.0
+        ],
+        [
+          502.5,
+          579.0
+        ],
+        [
+          513.0,
+          579.0
+        ],
+        [
+          513.0,
+          588.5
+        ],
+        [
+          502.5,
+          588.5
+        ],
+        [
+          502.5,
+          585.5
+        ],
+        [
+          496.0,
+          585.0
+        ],
+        [
+          496.0,
+          588.0
+        ],
+        [
+          482.0,
+          587.5
+        ],
+        [
+          482.0,
+          598.0
+        ],
+        [
+          472.0,
+          598.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920228",
+      "address": "Near-airport OSM 1287920228",
+      "osm_id": 1287920228,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          274.5,
+          598.5
+        ],
+        [
+          287.5,
+          603.5
+        ],
+        [
+          295.5,
+          583.5
+        ],
+        [
+          282.5,
+          578.5
+        ],
+        [
+          274.5,
+          598.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920211",
+      "address": "Near-airport OSM 1287920211",
+      "osm_id": 1287920211,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          628.5,
+          600.0
+        ],
+        [
+          655.0,
+          597.5
+        ],
+        [
+          656.0,
+          606.0
+        ],
+        [
+          651.0,
+          606.5
+        ],
+        [
+          652.0,
+          617.0
+        ],
+        [
+          643.5,
+          617.5
+        ],
+        [
+          643.0,
+          609.5
+        ],
+        [
+          629.5,
+          611.0
+        ],
+        [
+          628.5,
+          600.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920225",
+      "address": "Near-airport OSM 1287920225",
+      "osm_id": 1287920225,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          99.5,
+          621.5
+        ],
+        [
+          105.5,
+          618.5
+        ],
+        [
+          102.5,
+          612.0
+        ],
+        [
+          110.5,
+          608.5
+        ],
+        [
+          115.5,
+          594.5
+        ],
+        [
+          110.0,
+          583.5
+        ],
+        [
+          119.5,
+          579.0
+        ],
+        [
+          123.5,
+          587.0
+        ],
+        [
+          130.0,
+          584.0
+        ],
+        [
+          133.5,
+          591.5
+        ],
+        [
+          125.0,
+          595.5
+        ],
+        [
+          124.0,
+          598.0
+        ],
+        [
+          128.0,
+          599.5
+        ],
+        [
+          123.5,
+          612.0
+        ],
+        [
+          118.0,
+          614.5
+        ],
+        [
+          123.0,
+          625.0
+        ],
+        [
+          112.0,
+          631.0
+        ],
+        [
+          110.0,
+          627.5
+        ],
+        [
+          104.0,
+          630.0
+        ],
+        [
+          99.5,
+          621.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_875193558",
+      "address": "Near-airport OSM 875193558",
+      "osm_id": 875193558,
+      "family": "residential",
+      "height_m": 7.3,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          313.5,
+          628.5
+        ],
+        [
+          325.0,
+          628.5
+        ],
+        [
+          325.0,
+          632.0
+        ],
+        [
+          338.0,
+          632.0
+        ],
+        [
+          338.0,
+          628.5
+        ],
+        [
+          347.5,
+          628.5
+        ],
+        [
+          347.5,
+          644.0
+        ],
+        [
+          324.0,
+          644.5
+        ],
+        [
+          324.0,
+          641.0
+        ],
+        [
+          313.5,
+          641.0
+        ],
+        [
+          313.5,
+          628.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_875193559",
+      "address": "Near-airport OSM 875193559",
+      "osm_id": 875193559,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          378.0,
+          630.5
+        ],
+        [
+          385.0,
+          613.0
+        ],
+        [
+          393.5,
+          616.5
+        ],
+        [
+          391.0,
+          623.5
+        ],
+        [
+          403.0,
+          628.0
+        ],
+        [
+          399.0,
+          638.5
+        ],
+        [
+          378.0,
+          630.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_875193557",
+      "address": "Near-airport OSM 875193557",
+      "osm_id": 875193557,
+      "family": "residential",
+      "height_m": 5.9,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          285.0,
+          639.5
+        ],
+        [
+          285.0,
+          626.0
+        ],
+        [
+          305.5,
+          626.0
+        ],
+        [
+          305.5,
+          639.5
+        ],
+        [
+          285.0,
+          639.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "yes"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920215",
+      "address": "Near-airport OSM 1287920215",
+      "osm_id": 1287920215,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          857.5,
+          646.5
+        ],
+        [
+          862.0,
+          645.0
+        ],
+        [
+          860.5,
+          641.0
+        ],
+        [
+          872.0,
+          637.0
+        ],
+        [
+          871.0,
+          634.5
+        ],
+        [
+          878.0,
+          632.0
+        ],
+        [
+          883.0,
+          648.0
+        ],
+        [
+          860.5,
+          655.5
+        ],
+        [
+          857.5,
+          646.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_886075171",
+      "address": "Near-airport OSM 886075171",
+      "osm_id": 886075171,
+      "family": "residential",
+      "height_m": 8.7,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          494.5,
+          647.0
+        ],
+        [
+          503.0,
+          650.0
+        ],
+        [
+          507.5,
+          636.5
+        ],
+        [
+          513.0,
+          636.5
+        ],
+        [
+          516.5,
+          627.5
+        ],
+        [
+          511.0,
+          625.5
+        ],
+        [
+          514.0,
+          617.0
+        ],
+        [
+          505.0,
+          614.5
+        ],
+        [
+          503.0,
+          620.5
+        ],
+        [
+          499.5,
+          619.5
+        ],
+        [
+          495.5,
+          631.0
+        ],
+        [
+          499.5,
+          632.0
+        ],
+        [
+          494.5,
+          647.0
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    },
+    {
+      "asset_id": "TakeoffLeft_1287920212",
+      "address": "Near-airport OSM 1287920212",
+      "osm_id": 1287920212,
+      "family": "residential",
+      "height_m": 4.8,
+      "door_side": "-y",
+      "footprint_xz_m": [
+        [
+          492.5,
+          687.5
+        ],
+        [
+          492.5,
+          705.0
+        ],
+        [
+          503.5,
+          705.0
+        ],
+        [
+          503.5,
+          687.5
+        ],
+        [
+          492.5,
+          687.5
+        ]
+      ],
+      "scope_group": "pilot_left_runway08_takeoff",
+      "source_tags": {
+        "building": "house"
+      }
+    }
+  ],
+  "takeoff_sightline_contract": {
+    "source": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ReferenceContextV2.json",
+    "bounds_xz_m": [
+      -900.0,
+      50.0,
+      900.0,
+      700.0
+    ],
+    "building_count": 63,
+    "classification": "OSM tags plus deterministic footprint-size fallback",
+    "limitations": "Reference-faithful footprint and semantic class; not surveyed facade geometry."
+  }
+}

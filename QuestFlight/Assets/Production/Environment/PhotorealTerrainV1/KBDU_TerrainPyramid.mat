@@ -99,7 +99,7 @@ Material:
     - _AerialCanopyProductToSourceRow1: {r: -0.0025375225, g: 0.99960136, b: 4.110161e-10, a: 0}
     - _AerialCanopySourceToProductRow0: {r: 0.9999968, g: -0.0025385262, b: 0, a: 0}
     - _AerialCanopySourceToProductRow1: {r: 0.0025385262, g: 0.9999968, b: 0, a: 0}
-    - _AerialCanopyTint: {r: 0.27999994, g: 0.36999995, b: 0.17999995, a: 1}
+    - _AerialCanopyTint: {r: 0.2799997, g: 0.36999968, b: 0.17999971, a: 1}
     - _AirportCoreCleanPlateWorldMinInvSize: {r: -650, g: -575, b: 0.0014285714, a: 0.0014285714}
     - _DetailFadeStartEnd: {r: 250, g: 2600, b: 0, a: 0}
     - _DetailRadiusFadeStartEnd: {r: 4500, g: 6800, b: 0, a: 0}

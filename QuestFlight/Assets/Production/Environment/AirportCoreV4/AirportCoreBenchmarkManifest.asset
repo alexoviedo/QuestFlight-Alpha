@@ -66,8 +66,8 @@ MonoBehaviour:
   minorWaterUsesTerrainMask: 0
   rawSourcesExcluded: 1
   serializedReplacementCount: 2
-  serializedRendererCount: 15
-  serializedTriangleCount: 77282
+  serializedRendererCount: 16
+  serializedTriangleCount: 86530
   serializedMaterialCount: 3
   estimatedTextureBytes: 30408704
   integrationUtc: 2026-07-17T19:30:00Z

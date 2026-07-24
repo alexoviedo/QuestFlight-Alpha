@@ -427,3 +427,9 @@ The cockpit stable-interior shader and its controller/authoring changes are
 project-authored source. They reuse only the already audited aircraft textures
 and existing CC0/project reflection inputs, add no downloaded texture or model,
 and remove the rejected overlay mesh/material/shader from the product closure.
+# Airport hero corridor V1
+
+- Geometry and Blender source: project-authored.
+- Footprints: OpenStreetMap contributors, ODbL-1.0, through the pinned KBDU reference context.
+- City of Boulder hangar pages: factual/reference use only; no City photographs are committed.
+- Source Blender SHA-256: `15e2223ad29d71332e8b994203ec403ff527a12cf957012917135f8db1c52549`.

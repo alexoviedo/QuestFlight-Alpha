@@ -27,7 +27,7 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 85;
+        private const int RequiredShotCount = 89;
         private const int DrawCallTarget = 75;
         private const long VisibleTriangleTarget = 650000L;
         // The headset-accepted readout/lens baseline is 29 materials (artifact
@@ -546,6 +546,35 @@ namespace QuestFlightLab.Editor
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "24_vegetation_aircraft_scale", "Airport vegetation and parked-aircraft scale reference", "vegetation",
                 scaleCamera, LookAt(scaleCamera, scaleTarget), 42f, ViewProfile.Environment));
+
+            // The combined corridor bounds include imported mesh-local geometry below
+            // the authored foundation plane, so bounds.min.y is not a terrain sample.
+            // These deterministic poses use the surveyed airport-local ground band
+            // (roughly 1.3-2.1 m in the production ENU frame).
+            Vector3 eastRowsTarget = new Vector3(-430f, 5.3f, -345f);
+            Vector3 eastRowsCamera = eastRowsTarget + new Vector3(66f, 8f, 4f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "25_hero_east_hangar_rows", "Hero Type 2/3 hangar corridor close view", "airport_hero_corridor",
+                eastRowsCamera, LookAt(eastRowsCamera, eastRowsTarget), 46f, ViewProfile.Environment));
+
+            Vector3 westRowsTarget = new Vector3(-662f, 4.6f, -338f);
+            Vector3 westRowsCamera = westRowsTarget + new Vector3(8f, 10f, 78f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "26_hero_west_hangar_rows", "Hero Type 1 and west hangar corridor", "airport_hero_corridor",
+                westRowsCamera, LookAt(westRowsCamera, westRowsTarget), 48f, ViewProfile.Environment));
+
+            Vector3 northHangarsTarget = new Vector3(-505f, 5.5f, -218f);
+            Vector3 northHangarsCamera = northHangarsTarget + new Vector3(8f, 10f, 72f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "27_hero_north_apron_hangars", "Hero north-apron hangars and glazing", "airport_hero_corridor",
+                northHangarsCamera, LookAt(northHangarsCamera, northHangarsTarget), 47f, ViewProfile.Environment));
+
+            Vector3 corridorOverviewTarget = new Vector3(-475f, 5.0f, -325f);
+            Vector3 corridorOverviewCamera = corridorOverviewTarget + new Vector3(25f, 125f, 245f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "28_hero_corridor_takeoff_view", "Hero airport corridor takeoff and landing view",
+                "airport_hero_corridor", corridorOverviewCamera,
+                LookAt(corridorOverviewCamera, corridorOverviewTarget), 50f, ViewProfile.Environment));
 
             SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
             context.animator?.ClearControlStateForTest();

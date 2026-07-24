@@ -45,6 +45,9 @@ COVERAGE_REPORT_PATH = REPOSITORY_ROOT / (
 HERO_REPLACEMENTS_PATH = REPOSITORY_ROOT / (
     "tools/kbdu_airport_core_v4/buildings/airport_core_replacement_footprints.json"
 )
+HERO_CORRIDOR_MANIFEST_PATH = REPOSITORY_ROOT / (
+    "tools/kbdu_airport_hero_corridor/airport_hero_corridor_manifest.json"
+)
 OUTPUT_DIR = RUNTIME_ROOT / "Buildings"
 GENERATED_DIR = OUTPUT_DIR / "Generated"
 LAYER_NAME = "ProductionBuildingSurfaceLayer.bytes"
@@ -313,6 +316,7 @@ def sampled_hausdorff_meters(
 
 def simplify_footprint(
     source: Sequence[tuple[int, int]],
+    maximum_hausdorff_error_meters: float = MAXIMUM_HAUSDORFF_ERROR_METERS,
 ) -> tuple[list[tuple[int, int]], dict[str, float | int]]:
     source_points = list(source)
     source_area2 = abs(signed_area2(source_points))
@@ -344,7 +348,7 @@ def simplify_footprint(
         if not MINIMUM_FOOTPRINT_AREA_RATIO <= ratio <= MAXIMUM_FOOTPRINT_AREA_RATIO:
             continue
         hausdorff = sampled_hausdorff_meters(source_points, candidate)
-        if hausdorff <= MAXIMUM_HAUSDORFF_ERROR_METERS + 1e-9:
+        if hausdorff <= maximum_hausdorff_error_meters + 1e-9:
             qualified.append((len(candidate), ratio, hausdorff, candidate))
     if not qualified:
         raise ValueError("No error-bounded building footprint simplification exists")
@@ -971,6 +975,13 @@ def build(
     hero_osm_ids = {
         int(item["source_osm_id"]) for item in hero_replacements.get("replacements", [])
     }
+    hero_corridor_manifest_path: Path | None = None
+    if hero_replacements_path == HERO_REPLACEMENTS_PATH.resolve():
+        hero_corridor_manifest_path = HERO_CORRIDOR_MANIFEST_PATH.resolve()
+        hero_corridor = load_json(hero_corridor_manifest_path)
+        hero_osm_ids.update(
+            int(item["osm_id"]) for item in hero_corridor.get("buildings", [])
+        )
     source_by_zone = {
         zone: int(coverage["zones"][zone]["source_footprints"])
         for zone in OWNERSHIP_ZONES
@@ -1099,7 +1110,12 @@ def build(
             )
             continue
 
-        simplified, simplification = simplify_footprint(source_points)
+        # At 2-4 km, preserve footprint area but allow a more aggressive fixed
+        # boundary simplification. The orthophoto supplies the sub-pixel shape;
+        # recovered topology pays for the detailed near-airport sightline.
+        simplified, simplification = simplify_footprint(
+            source_points, 30.0 if zone == "2-4km" else MAXIMUM_HAUSDORFF_ERROR_METERS
+        )
         reversed_winding = signed_area2(simplified) < 0
         points = list(reversed(simplified)) if reversed_winding else list(simplified)
         roof = triangulate_polygon(points)
@@ -1396,6 +1412,11 @@ def build(
         "sources": {
             "coverage_report": file_record(coverage_report_path),
             "hero_replacements": file_record(hero_replacements_path),
+            "airport_hero_corridor_replacements": (
+                file_record(hero_corridor_manifest_path)
+                if hero_corridor_manifest_path is not None
+                else None
+            ),
             "lidar_manifest": file_record(source_manifest_path),
             "osm_context": file_record(context_path),
             "placement_recipe": file_record(recipe_path),
@@ -1407,7 +1428,10 @@ def build(
                 "area_ratio_minimum": float(np.min(area_ratios)),
                 "area_ratio_p50": float(np.percentile(area_ratios, 50.0)),
                 "area_ratio_p95": float(np.percentile(area_ratios, 95.0)),
-                "maximum_allowed_hausdorff_meters": MAXIMUM_HAUSDORFF_ERROR_METERS,
+                "maximum_allowed_hausdorff_meters": {
+                    "0-2km": MAXIMUM_HAUSDORFF_ERROR_METERS,
+                    "2-4km": 30.0,
+                },
                 "sampled_hausdorff_maximum_meters": float(np.max(hausdorff_errors)),
                 "sampled_hausdorff_p50_meters": float(np.percentile(hausdorff_errors, 50.0)),
                 "sampled_hausdorff_p95_meters": float(np.percentile(hausdorff_errors, 95.0)),

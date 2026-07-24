@@ -67,3 +67,6 @@
 - The application is not FAA approved, is not for navigation, and provides no legal training credit.
 
 Milestone evidence: `docs/evidence/PHOTOREAL_AERIAL_SURFACE_V1_2026-07-20.md`, `docs/evidence/STANDALONE_SCENERY_BASELINE_V1_2026-07-20.md`, `docs/evidence/AERIAL_SCENERY_RECOVERY_V2_2026-07-19.md`, `docs/evidence/AERIAL_SCENERY_REPRESENTATION_V1_2026-07-18.md`, `docs/evidence/PHOTOREAL_STANDALONE_ENVIRONMENT_V1_2026-07-16.md`, `docs/evidence/AIRPORT_CORE_PHOTOREAL_BENCHMARK_V4_2026-07-17.md`, `docs/evidence/AIRPORT_CORE_PHOTOREAL_BENCHMARK_V4_1_2026-07-18.md`, and `docs/evidence/AIRPORT_CORE_PHOTOREAL_BENCHMARK_V4_2_2026-07-18.md`.
+# Airport hero corridor
+
+The airport corridor is a reference-faithful procedural approximation rather than surveyed architecture. It has accepted footprint/roof coherence in the worn Quest review, but facade microdetail and exact historical building variants remain bounded by the shared Quest material and geometry budget.

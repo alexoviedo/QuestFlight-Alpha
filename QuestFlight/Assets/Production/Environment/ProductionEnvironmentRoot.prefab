@@ -862,6 +862,96 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &1116711738048089841
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7128186464967318400}
+  - component: {fileID: 5534488331929700030}
+  - component: {fileID: 2262478671537368042}
+  m_Layer: 0
+  m_Name: AirportHeroCorridor_Hero
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 84
+  m_IsActive: 1
+--- !u!4 &7128186464967318400
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1116711738048089841}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8736452670533867554}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &5534488331929700030
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1116711738048089841}
+  m_Mesh: {fileID: 4300000, guid: 9950490d14523cf439dd3d0a4e6ed285, type: 2}
+--- !u!23 &2262478671537368042
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1116711738048089841}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 2
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 480e5d209d593a03cdced17d71b4d007, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 0
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &1299285040879946149
 GameObject:
   m_ObjectHideFlags: 0
@@ -1168,6 +1258,161 @@ LODGroup:
     fadeTransitionWidth: 0
     renderers:
     - renderer: {fileID: 2130800662203384370}
+  m_Enabled: 1
+--- !u!1 &2360196357325104893
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8736452670533867554}
+  - component: {fileID: 2348251724120743713}
+  - component: {fileID: 7653528277623517191}
+  m_Layer: 0
+  m_Name: AirportHeroCorridorRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8736452670533867554
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2360196357325104893}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7128186464967318400}
+  m_Father: {fileID: 5657582724288419506}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2348251724120743713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2360196357325104893}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1d93d737b9c0f64c987041fd064b017, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.AirportHeroCorridorRoot
+  corridorLodGroup: {fileID: 7653528277623517191}
+  sourceManifest: {fileID: 4900000, guid: a8d9882114a56964a92bc5c49c3183f2, type: 3}
+  representedAddresses:
+  - 3323 Airport Road
+  - 3324 Airport Road
+  - 3327 and 3330 Airport Road
+  - 3394 Airport Road
+  - 3393 Airport Road
+  - 3317 Airport Road
+  - 3316 Airport Road
+  - 3309 Airport Road
+  - 3312 Airport Road
+  - 3313 and 3314 Airport Road
+  - 3341 Airport Road
+  - 3344 Airport Road
+  - 3346 Airport Road
+  - 3351 Airport Road
+  - 3352 Airport Road
+  - 3353 Airport Road
+  - 3355 Airport Road
+  - 3356 Airport Road
+  - Mile High Gliding
+  - Soaring Society of Boulder
+  - Near-airport OSM 916029512
+  - Near-airport OSM 916029513
+  - Near-airport OSM 1287920199
+  - Near-airport OSM 1287920231
+  - Near-airport OSM 1287920200
+  - Near-airport OSM 864206023
+  - Near-airport OSM 1287920232
+  - Near-airport OSM 864206022
+  - Near-airport OSM 1287920235
+  - Near-airport OSM 886075169
+  - Near-airport OSM 1287920233
+  - Near-airport OSM 1287920234
+  - Near-airport OSM 1287920202
+  - Near-airport OSM 864206021
+  - Near-airport OSM 313639259
+  - Near-airport OSM 313639258
+  - Near-airport OSM 1287920203
+  - Near-airport OSM 1287920201
+  - Near-airport OSM 1287920198
+  - Near-airport OSM 1287920206
+  - Near-airport OSM 1287920196
+  - Near-airport OSM 1287920193
+  - Near-airport OSM 864206020
+  - Near-airport OSM 1287920197
+  - Near-airport OSM 874817736
+  - Near-airport OSM 1287920204
+  - Near-airport OSM 874817737
+  - Near-airport OSM 1287920192
+  - Near-airport OSM 1287920205
+  - Near-airport OSM 1287920190
+  - Near-airport OSM 1287920230
+  - Near-airport OSM 1287920191
+  - Near-airport OSM 1287920189
+  - Near-airport OSM 1287920194
+  - Near-airport OSM 1287920195
+  - Near-airport OSM 1287920229
+  - Near-airport OSM 1287920237
+  - Near-airport OSM 874817738
+  - Near-airport OSM 1287920207
+  - Near-airport OSM 1287920226
+  - Near-airport OSM 1287920236
+  - Near-airport OSM 886075170
+  - Near-airport OSM 1287920210
+  - Near-airport OSM 1287920214
+  - Near-airport OSM 1287920208
+  - Near-airport OSM 1287920209
+  - Near-airport OSM 874817740
+  - Near-airport OSM 875193560
+  - Near-airport OSM 875193561
+  - Near-airport OSM 875193562
+  - Near-airport OSM 1287920227
+  - Near-airport OSM 1287920213
+  - Near-airport OSM 1287920228
+  - Near-airport OSM 1287920211
+  - Near-airport OSM 1287920225
+  - Near-airport OSM 875193558
+  - Near-airport OSM 875193559
+  - Near-airport OSM 875193557
+  - Near-airport OSM 1287920215
+  - Near-airport OSM 886075171
+  - Near-airport OSM 1287920212
+  representedOsmIds: f98b9e0400000000fa8b9e0400000000028c9e0400000000fb8b9e0400000000fc8b9e04000000004604a704000000004904a70400000000f31ca704000000003604a704000000003804a704000000002404a704000000003404a704000000003304a704000000003a04a704000000003b04a704000000003d04a704000000004104a704000000002f04a7040000000026fa91210000000027fa91210000000048809936000000004980993600000000471ac44c00000000671ac44c00000000481ac44c00000000c7bc823300000000681ac44c00000000c6bc8233000000006b1ac44c00000000216fd03400000000691ac44c000000006a1ac44c000000004a1ac44c00000000c5bc8233000000005bc1b112000000005ac1b112000000004b1ac44c00000000491ac44c00000000461ac44c000000004e1ac44c00000000441ac44c00000000411ac44c00000000c4bc823300000000451ac44c00000000c8a82434000000004c1ac44c00000000c9a8243400000000401ac44c000000004d1ac44c000000003e1ac44c00000000661ac44c000000003f1ac44c000000003d1ac44c00000000421ac44c00000000431ac44c00000000651ac44c000000006d1ac44c00000000caa82434000000004f1ac44c00000000621ac44c000000006c1ac44c00000000226fd03400000000521ac44c00000000561ac44c00000000501ac44c00000000511ac44c00000000cca8243400000000d8642a3400000000d9642a3400000000da642a3400000000631ac44c00000000551ac44c00000000641ac44c00000000531ac44c00000000611ac44c00000000d6642a3400000000d7642a3400000000d5642a3400000000571ac44c00000000236fd03400000000541ac44c00000000
+  lod0Triangles: 9248
+  lod1Triangles: 6800
+  lod2Triangles: 4328
+  usesExistingSharedAtlas: 1
+  genericRepresentationsExcluded: 1
+--- !u!205 &7653528277623517191
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2360196357325104893}
+  serializedVersion: 2
+  m_LocalReferencePoint: {x: 84, y: -9.042671, z: 126.162476}
+  m_Size: 1642
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0.008
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 2262478671537368042}
   m_Enabled: 1
 --- !u!1 &2489723655307429422
 GameObject:
@@ -1530,6 +1775,7 @@ MonoBehaviour:
   - Assets/Production/Environment/AirportCoreV4/Generated/buildings_0-2km_hlod_1500m_xn001_zn001_Filtered_LOD2.asset
   executiveTerminal: {fileID: 8689063345139236257}
   type2HangarRow: {fileID: 7171868817161224667}
+  airportHeroCorridor: {fileID: 7653528277623517191}
   fuelServiceContext: {fileID: 8746520495314837600}
   authoredApronProps: {fileID: 3520503014245530244}
   vegetationHeroCluster: {fileID: 862853864941942555}
@@ -5150,7 +5396,7 @@ MonoBehaviour:
   terrainMaximumErrorOutsideDeclaredOutliersMeters: 1.4611648
   operationalSurfaceFiveCentimeterToleranceEstablished: 0
   bakedBuildingDrawCount: 16
-  bakedBuildingTriangleCount: 128092
+  bakedBuildingTriangleCount: 124992
   bakedCanopyDrawCount: 4
   bakedCanopyTriangleCount: 52680
   bakedTextureResidentBytes: 210808066
@@ -5726,11 +5972,11 @@ MonoBehaviour:
     bounded derivatives
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
-  bakedRendererCount: 44
-  bakedTriangleCount: 482412
+  bakedRendererCount: 45
+  bakedTriangleCount: 488560
   bakedMaterialCount: 9
   bakedTextureCount: 28
-  bakeUtc: 2026-07-20T18:30:00Z
+  bakeUtc: 2026-07-24T19:15:00Z
   bakeToolVersion: photoreal_aerial_surface_v1
   validateOnAwake: 1
 --- !u!114 &3275182717276356067
@@ -7013,6 +7259,7 @@ Transform:
   - {fileID: 8746520495314837600}
   - {fileID: 3520503014245530244}
   - {fileID: 862853864941942555}
+  - {fileID: 8736452670533867554}
   m_Father: {fileID: 4417277368034730408}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8180695184810872828

@@ -901,9 +901,9 @@
   "semantic_root": "ProductionCanopySurfaceLayer",
   "sources": {
     "building_manifest": {
-      "bytes": 31325,
+      "bytes": 46708,
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/ProductionBuildingSurfaceLayer_Manifest.json",
-      "sha256": "ae984715315c2c86e89285233cfb8632390f082fcc00b86234fefba5db4d40fe"
+      "sha256": "cc75a28fe7b021333c0370ee776ff3a7e9338d04ab68b3d9f8177a1a8bf89933"
     },
     "building_ownership_mask": {
       "bytes": 23513,
