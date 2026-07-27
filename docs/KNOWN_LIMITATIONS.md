@@ -82,3 +82,25 @@ Milestone evidence: `docs/evidence/PHOTOREAL_AERIAL_SURFACE_V1_2026-07-20.md`, `
 # Airport hero corridor
 
 The airport corridor is a reference-faithful procedural approximation rather than surveyed architecture. It has accepted footprint/roof coherence in the worn Quest review, but facade microdetail and exact historical building variants remain bounded by the shared Quest material and geometry budget.
+
+## Bounded road traffic
+
+- Traffic V1 is a bounded life cue, not a traffic simulation. It contains 30
+  orthophoto-traced parked vehicles and 12 deterministic moving vehicles on five
+  named road corridors compiled from six OSM ways. It does not model every
+  parking lot, street, intersection, traffic signal, collision, or current
+  vehicle occupancy.
+- The vehicle meshes are intentionally inexpensive flight-distance silhouettes.
+  They provide sedan/SUV/pickup shape and color variation but are not hero car
+  models and have no transparent glass, interiors, lights, wheel animation, or
+  realtime shadows.
+- Visual QA proves grounding and road-lock at fixed cameras. Live Meta XR stereo
+  is nonblank and scene-consistent, but the ten recorded `.vrs` sessions remain
+  absent. The exact APK installed on the connected Quest 3, but Horizon blocked
+  unattended launch on its controller-required dialog. No worn traffic review
+  or physical Quest timing, thermal, stale/tear, or allocation acceptance is
+  claimed.
+- Traffic adds no textures or materials. The inherited airport-hero source was
+  already at 221,506,450 estimated texture bytes against the current 220,200,960
+  byte static ceiling; Traffic V1 remains at the same value and therefore does
+  not convert the aggregate static budget classification into a pass.

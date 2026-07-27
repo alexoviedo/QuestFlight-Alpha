@@ -162,3 +162,24 @@ overlay, or per-eye orientation. Instrument emission remains outside shadow
 attenuation. The rejected free-floating overlay and the earlier sparse-PCF edge
 remain absent. This preserves one XR Origin, one tracked Main Camera, one flight
 authority, and standalone Android/OpenXR ownership.
+
+## Bounded road traffic
+
+`KBDU_TrafficRoot` is one explicitly serialized child of
+`ProductionEnvironmentRoot`. Its manifest is compiled offline from six pinned
+OpenStreetMap road ways, the existing terrain surface, and thirty parked-car
+observations traced against the pinned 8192-square City 2020 orthophoto. Runtime
+code never creates traffic GameObjects, modifies the product hierarchy, invokes
+physics, or searches for a road.
+
+One `KbduTrafficRuntime` parses the compact manifest once and fills preallocated
+matrix arrays during camera pre-cull. It renders three project-authored
+single-submesh near archetypes (sedan, SUV, and pickup) and one shared midrange
+proxy through at most four opaque instanced draws. There are no per-car
+components, colliders, rigidbodies, transparent windows, realtime vehicle
+shadows, or per-car `Update` calls. Twelve moving cars follow twelve
+terrain-sampled lane centerlines deterministically; thirty parked cars retain
+their traced image position and axis. Near detail is capped at 24 instances,
+midrange detail at 48, and all traffic is culled beyond 1,500 m. The serialized
+maximum is 3,888 visible vehicle triangles, with no new material, shader,
+texture, or transparent slot.

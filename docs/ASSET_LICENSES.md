@@ -454,3 +454,21 @@ and vertex-colors the retained exterior geometry. Exact byte counts, source
 URLs, Blender version, LOD inventory, and change notice are recorded in
 `AirportParkedAircraftSourceManifestV1.json`. CC BY 4.0 does not grant
 Cessna/Textron trademark rights or imply endorsement.
+
+### Bounded road-traffic derivatives
+
+The traffic route compiler uses six selected ways from the already committed
+`KBDU_ReferenceContextV2.json` OpenStreetMap derivative. The route data remains
+under ODbL 1.0 and public display must retain `© OpenStreetMap contributors`
+with <https://www.openstreetmap.org/copyright>. Thirty parked-vehicle positions
+and axes are observations traced from the already licensed and committed
+`KBDU_City2020_Near4km_8192.jpg`; no new source image or external vehicle model
+is included.
+
+The sedan, SUV, pickup, and far proxy meshes are deterministic project-authored
+geometry and are project-owned. They reuse the existing project-authored opaque
+vertex-color material. Exact source pixels, selected OSM way IDs, orthophoto
+GUID/SHA-256, attribution, coordinate frame, and archetype ownership are pinned
+in `tools/kbdu_traffic/traffic_sources_v1.json`. The compiler and validator are
+`tools/kbdu_traffic/build_traffic_manifest.py` and
+`tools/kbdu_traffic/validate_traffic_manifest.py`.

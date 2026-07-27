@@ -27,7 +27,7 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 92;
+        private const int RequiredShotCount = 97;
         private const int DrawCallTarget = 75;
         private const long VisibleTriangleTarget = 650000L;
         // The headset-accepted readout/lens baseline is 29 materials (artifact
@@ -596,6 +596,41 @@ namespace QuestFlightLab.Editor
                 "31_aircraft_orthophoto_alignment", "Powered-aircraft and sailplane stand alignment",
                 "parked_aircraft", aircraftOverviewCamera,
                 LookAt(aircraftOverviewCamera, aircraftOverviewTarget), 58f, ViewProfile.Environment));
+
+            Vector3 reservoirParkingTarget = new Vector3(-1507f, 3.7f, 224f);
+            Vector3 reservoirParkingCamera = reservoirParkingTarget + new Vector3(24f, 12f, -30f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "32_traffic_reservoir_parking", "Orthophoto-aligned reservoir-area parked cars",
+                "traffic", reservoirParkingCamera,
+                LookAt(reservoirParkingCamera, reservoirParkingTarget), 38f, ViewProfile.Environment));
+
+            Vector3 airportParkingTarget = new Vector3(-38f, 0.5f, -128f);
+            Vector3 airportParkingCamera = airportParkingTarget + new Vector3(24f, 11f, 28f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "33_traffic_airport_parking", "Orthophoto-aligned airport office parking",
+                "traffic", airportParkingCamera,
+                LookAt(airportParkingCamera, airportParkingTarget), 38f, ViewProfile.Environment));
+
+            Vector3 valmontTrafficTarget = new Vector3(-657f, -14.8f, -1125f);
+            Vector3 valmontTrafficCamera = valmontTrafficTarget + new Vector3(24f, 13f, 38f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "34_traffic_valmont_moving", "Deterministic Valmont Road moving traffic",
+                "traffic", valmontTrafficCamera,
+                LookAt(valmontTrafficCamera, valmontTrafficTarget), 38f, ViewProfile.Environment));
+
+            Vector3 diagonalTrafficTarget = new Vector3(-346f, -9.8f, 1630f);
+            Vector3 diagonalTrafficCamera = diagonalTrafficTarget + new Vector3(34f, 18f, -52f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "35_traffic_diagonal_highway", "Diagonal Highway road-locked traffic",
+                "traffic", diagonalTrafficCamera,
+                LookAt(diagonalTrafficCamera, diagonalTrafficTarget), 40f, ViewProfile.Environment));
+
+            Vector3 trafficAerialTarget = new Vector3(-450f, 0f, -340f);
+            Vector3 trafficAerialCamera = trafficAerialTarget + new Vector3(0f, 520f, -80f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "36_traffic_pattern_altitude", "Traffic representation at pattern altitude",
+                "traffic", trafficAerialCamera,
+                LookAt(trafficAerialCamera, trafficAerialTarget), 58f, ViewProfile.Environment));
 
             SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
             context.animator?.ClearControlStateForTest();

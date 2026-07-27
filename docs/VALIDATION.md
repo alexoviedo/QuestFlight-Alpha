@@ -331,3 +331,37 @@ acceptance.
 # Airport hero corridor validation
 
 Run `AirportHeroCorridorEditModeTests` and the standard production Visual QA. Dedicated shots `25_hero_east_hangar_rows` through `28_hero_corridor_takeoff_view` use fixed surveyed airport-local elevations; combined renderer bounds must not be treated as ground elevation.
+
+## Bounded road-traffic validation
+
+Traffic V1 validation on Unity 6000.3.8f1:
+
+- `python tools/kbdu_traffic/validate_traffic_manifest.py`: PASS; 30 parked
+  vehicles, 12 lane routes, 12 moving vehicles, and 1,644 terrain-sampled route
+  points;
+- EditMode: PASS 130/130, including five traffic ownership, mesh, source,
+  lane-width, and hierarchy tests;
+- PlayMode: PASS 9/9;
+- production Visual QA: PASS 97/97 with
+  `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; full-resolution traffic views
+  32–36 were inspected and show parked cars over the traced parking evidence,
+  moving cars on Valmont Road and Diagonal Highway, and the pattern-altitude
+  representation;
+- Meta XR Simulator: live Quest 3 profile stereo/HMD/both Touch PASS with
+  consistent nonblank eyes; aggregate
+  `BLOCKED_MISSING_RECORDED_REPLAYS` for the ten absent genuine `.vrs` files;
+- Android ARM64/Vulkan/OpenXR build: PASS, 135,858,491 bytes, SHA-256
+  `aafde744d6cc1082b0cd2720f5477fcf622f5762311c7b5e5c0813a2a6a0d810`;
+- unattended Quest install: PASS; launch smoke
+  `BLOCKED_HUMAN_SYSTEM_DIALOG` because Horizon required awake Touch
+  controllers before starting the application, so no product PID or hardware
+  timing is claimed;
+- traffic contract: at most four opaque instanced draws, 3,888 maximum visible
+  vehicle triangles, no added material, texture, shader, transparent slot,
+  realtime shadow, collider, rigidbody, or per-vehicle GameObject;
+- aggregate static audit: draw calls 56/75, visible triangles 638,446/650,000,
+  materials 29/29, transparent slots 3/3, and 4x MSAA pass. Texture residency is
+  the inherited failure at 221,506,450/220,200,960 bytes; the pre-traffic
+  airport-hero report has the identical texture estimate.
+
+The APK and all captures remain external artifacts and are not committed.
