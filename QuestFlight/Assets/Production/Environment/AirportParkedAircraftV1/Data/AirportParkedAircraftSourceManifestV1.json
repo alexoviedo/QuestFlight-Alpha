@@ -31,23 +31,23 @@
     {
       "family": "powered_c172",
       "path": "QuestFlight/Assets/Production/Environment/AirportParkedAircraftV1/Models/KBDU_ParkedC172_FixedDetail.glb",
-      "bytes": 101168,
-      "sha256": "2c2c8154343d24dd093c878c1f94b33ba7a71445eb886fbf93d119452df7e391",
+      "bytes": 64436,
+      "sha256": "7c1ef27a21384b3877476ec3bf7c25483e8a05d970bda328d4200784fdd586c9",
       "lods": [
         {
           "name": "ParkedC172_LOD0",
-          "vertices": 2047,
-          "triangles": 899,
+          "vertices": 1599,
+          "triangles": 400,
           "bounds_meters": {
             "minimum": [
-              -6.298952102661133,
+              -6.321620941162109,
               -4.629201412200928,
               0.0
             ],
             "maximum": [
-              6.298952102661133,
+              6.321620464324951,
               4.675409317016602,
-              3.6169044971466064
+              3.5513265132904053
             ]
           },
           "grounded_local_z": true,
@@ -77,23 +77,23 @@
     {
       "family": "sailplane",
       "path": "QuestFlight/Assets/Production/Environment/AirportParkedAircraftV1/Models/KBDU_ParkedSailplane_FixedDetail.glb",
-      "bytes": 36668,
-      "sha256": "cb69e85643cdefc3a90f4376f98f4e6d19319117a94268ad09ada9382a9bb50b",
+      "bytes": 27048,
+      "sha256": "71a4e9b96f3cad4dff1e9bd7151813a6205ffe9eba1ec27f9a7f2e61e1930852",
       "lods": [
         {
           "name": "ParkedSailplane_LOD0",
-          "vertices": 312,
-          "triangles": 549,
+          "vertices": 172,
+          "triangles": 279,
           "bounds_meters": {
             "minimum": [
-              -7.58468770980835,
-              -2.9688000679016113,
+              -7.582210540771484,
+              -2.9704437255859375,
               0.0
             ],
             "maximum": [
-              7.584990978240967,
+              7.582719802856445,
               2.9664788246154785,
-              1.6837223768234253
+              1.6567329168319702
             ]
           },
           "grounded_local_z": true,
@@ -118,7 +118,28 @@
           "grounded_local_z": true,
           "vertex_color_attribute": true
         }
-      ]
+      ],
+      "ground_rest_contact": {
+        "method": "LOD0 centerline-lowest gear vertex plus outer-10-percent lowest wingtip vertex",
+        "gear_contact_blender_xyz_meters": [
+          0.040852997452020645,
+          -1.2218292951583862,
+          0.0
+        ],
+        "left_wingtip_contact_blender_xyz_meters": [
+          -7.318699836730957,
+          -0.9168442487716675,
+          0.971326470375061
+        ],
+        "right_wingtip_contact_blender_xyz_meters": [
+          7.29803991317749,
+          -0.9291858077049255,
+          0.9593186378479004
+        ],
+        "left_wing_down_roll_degrees": 7.5185411137426,
+        "right_wing_down_roll_degrees": -7.530200763395026,
+        "authored_symmetric_roll_degrees": 7.52
+      }
     }
   ],
   "runtime_contract": {

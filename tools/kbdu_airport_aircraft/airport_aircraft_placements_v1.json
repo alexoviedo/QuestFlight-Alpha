@@ -1,8 +1,20 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Z=north",
-  "orthophoto": "QuestFlight/Assets/Production/Environment/Textures/KBDU_NAIP_2019_Near4km_4096.jpg",
-  "placement_method": "Manually aligned to visible 2019 NAIP parking silhouettes and authored tie-down rows; terrain heights are sampled from the pinned KBDU terrain rings.",
+  "orthophoto": {
+    "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_Near4km_8192.jpg",
+    "guid": "0021365d50509d2abe127a826626ee6e",
+    "sha256": "143c4946c06464dbdea1567cd5fe284acc4c5ba7718a38900a2e83a8eccbfb53",
+    "dimensions_pixels": [8192, 8192],
+    "world_bounds_meters": [-2000.0, -2000.0, 2000.0, 2000.0],
+    "orientation": "image row 0=north; image column 0=west; Unity UV v increases toward local +Z/north"
+  },
+  "placement_method": "Centers and longitudinal axes traced from visible aircraft silhouettes in the active serialized 2020 City of Boulder 8192 near orthophoto. World positions and headings are derived, not hand-entered.",
+  "alignment_acceptance": {
+    "maximum_center_error_meters": 1.5,
+    "maximum_heading_error_degrees": 5.0,
+    "maximum_pixel_world_roundtrip_error_pixels": 0.51
+  },
   "cull_screen_relative_height": 0.002,
   "groups": [
     {
@@ -10,30 +22,53 @@
       "family": "powered_c172",
       "model_forward_axis": "+Z after Unity import calibration",
       "placements": [
-        {"id": "powered-01", "x": -680.0, "z": -159.0, "yaw": 92.0, "color": [224, 228, 229, 255]},
-        {"id": "powered-02", "x": -612.0, "z": -160.0, "yaw": 88.0, "color": [205, 218, 229, 255]},
-        {"id": "powered-03", "x": -548.0, "z": -166.0, "yaw": 91.0, "color": [230, 221, 205, 255]},
-        {"id": "powered-04", "x": -474.0, "z": -169.0, "yaw": 88.5, "color": [219, 225, 226, 255]},
-        {"id": "powered-05", "x": -401.0, "z": -173.0, "yaw": 91.5, "color": [210, 221, 216, 255]},
-        {"id": "powered-06", "x": -332.0, "z": -177.0, "yaw": 88.0, "color": [226, 217, 211, 255]},
-        {"id": "powered-07", "x": -270.0, "z": -179.0, "yaw": 91.0, "color": [211, 220, 230, 255]}
+        {"id":"powered-01","source_center_pixel":[2714,4396],"source_axis_pixels":[2722,4396,2706,4396],"color":[224,228,229,255]},
+        {"id":"powered-02","source_center_pixel":[2936,4358],"source_axis_pixels":[2936,4350,2936,4366],"color":[205,218,229,255]},
+        {"id":"powered-03","source_center_pixel":[2936,4410],"source_axis_pixels":[2936,4418,2936,4402],"color":[230,221,205,255]},
+        {"id":"powered-04","source_center_pixel":[3269,4386],"source_axis_pixels":[3269,4378,3269,4394],"color":[219,225,226,255]},
+        {"id":"powered-05","source_center_pixel":[3328,4413],"source_axis_pixels":[3328,4421,3328,4405],"color":[210,221,216,255]},
+        {"id":"powered-06","source_center_pixel":[3448,4386],"source_axis_pixels":[3448,4378,3448,4394],"color":[226,217,211,255]},
+        {"id":"powered-07","source_center_pixel":[3580,4404],"source_axis_pixels":[3580,4396,3580,4412],"color":[211,220,230,255]},
+        {"id":"powered-08","source_center_pixel":[3270,4438],"source_axis_pixels":[3270,4446,3270,4430],"color":[229,225,216,255]},
+        {"id":"powered-09","source_center_pixel":[3384,4435],"source_axis_pixels":[3384,4427,3384,4443],"color":[214,224,231,255]},
+        {"id":"powered-10","source_center_pixel":[3506,4438],"source_axis_pixels":[3506,4446,3506,4430],"color":[229,231,228,255]},
+        {"id":"powered-11","source_center_pixel":[3384,4461],"source_axis_pixels":[3384,4469,3384,4453],"color":[221,227,231,255]},
+        {"id":"powered-12","source_center_pixel":[3579,4456],"source_axis_pixels":[3579,4464,3579,4448],"color":[231,224,214,255]},
+        {"id":"powered-13","source_center_pixel":[3450,4491],"source_axis_pixels":[3450,4483,3450,4499],"color":[216,226,231,255]},
+        {"id":"powered-14","source_center_pixel":[3520,4479],"source_axis_pixels":[3520,4487,3520,4471],"color":[229,230,226,255]},
+        {"id":"powered-15","source_center_pixel":[3579,4480],"source_axis_pixels":[3579,4472,3579,4488],"color":[224,218,210,255]},
+        {"id":"powered-16","source_center_pixel":[3579,4509],"source_axis_pixels":[3579,4517,3579,4501],"color":[215,225,232,255]},
+        {"id":"powered-17","source_center_pixel":[2845,4490],"source_axis_pixels":[2845,4482,2845,4498],"color":[231,229,222,255]}
       ]
     },
     {
       "id": "north_sailplane_line",
       "family": "sailplane",
       "model_forward_axis": "+Z after Unity import calibration",
+      "resting_pose": {
+        "mode": "main-wheel-and-wingtip",
+        "derived_roll_degrees": 7.53,
+        "minimum_opposite_wing_clearance_meters": 1.8
+      },
       "placements": [
-        {"id": "sailplane-01", "x": -650.0, "z": 65.0, "yaw": 178.0, "color": [230, 232, 232, 255]},
-        {"id": "sailplane-02", "x": -594.0, "z": 63.0, "yaw": 2.0, "color": [216, 225, 231, 255]},
-        {"id": "sailplane-03", "x": -538.0, "z": 61.0, "yaw": 179.0, "color": [231, 224, 215, 255]},
-        {"id": "sailplane-04", "x": -482.0, "z": 59.0, "yaw": 1.0, "color": [224, 229, 228, 255]},
-        {"id": "sailplane-05", "x": -426.0, "z": 57.0, "yaw": 177.5, "color": [213, 225, 232, 255]},
-        {"id": "sailplane-06", "x": -370.0, "z": 55.0, "yaw": 2.5, "color": [232, 226, 218, 255]},
-        {"id": "sailplane-07", "x": -314.0, "z": 53.0, "yaw": 178.5, "color": [222, 228, 229, 255]},
-        {"id": "sailplane-08", "x": -258.0, "z": 51.0, "yaw": 1.5, "color": [217, 226, 233, 255]},
-        {"id": "sailplane-09", "x": -202.0, "z": 49.0, "yaw": 179.0, "color": [231, 225, 218, 255]},
-        {"id": "sailplane-10", "x": -146.0, "z": 47.0, "yaw": 2.0, "color": [223, 229, 229, 255]}
+        {"id":"sailplane-01","source_center_pixel":[2825,3943],"source_axis_pixels":[2830,3954,2820,3932],"wing_down_side":"left","color":[230,232,232,255]},
+        {"id":"sailplane-02","source_center_pixel":[2910,3943],"source_axis_pixels":[2915,3954,2905,3932],"wing_down_side":"right","color":[216,225,231,255]},
+        {"id":"sailplane-03","source_center_pixel":[2932,3965],"source_axis_pixels":[2932,3957,2932,3973],"wing_down_side":"left","color":[231,224,215,255]},
+        {"id":"sailplane-04","source_center_pixel":[3007,3950],"source_axis_pixels":[3007,3942,3007,3958],"wing_down_side":"right","color":[224,229,228,255]},
+        {"id":"sailplane-05","source_center_pixel":[3178,3965],"source_axis_pixels":[3184,3959,3172,3971],"wing_down_side":"left","color":[213,225,232,255]},
+        {"id":"sailplane-06","source_center_pixel":[3303,3965],"source_axis_pixels":[3303,3957,3303,3973],"wing_down_side":"right","color":[232,226,218,255]},
+        {"id":"sailplane-07","source_center_pixel":[3335,3966],"source_axis_pixels":[3335,3974,3335,3958],"wing_down_side":"left","color":[222,228,229,255]},
+        {"id":"sailplane-08","source_center_pixel":[3377,3965],"source_axis_pixels":[3377,3957,3377,3973],"wing_down_side":"right","color":[217,226,233,255]},
+        {"id":"sailplane-09","source_center_pixel":[3430,3966],"source_axis_pixels":[3430,3974,3430,3958],"wing_down_side":"left","color":[231,225,218,255]},
+        {"id":"sailplane-10","source_center_pixel":[3573,3967],"source_axis_pixels":[3573,3959,3573,3975],"wing_down_side":"right","color":[223,229,229,255]},
+        {"id":"sailplane-11","source_center_pixel":[3729,3966],"source_axis_pixels":[3735,3960,3723,3972],"wing_down_side":"left","color":[230,224,217,255]},
+        {"id":"sailplane-12","source_center_pixel":[3776,3966],"source_axis_pixels":[3776,3958,3776,3974],"wing_down_side":"right","color":[217,227,232,255]},
+        {"id":"sailplane-13","source_center_pixel":[3826,3967],"source_axis_pixels":[3826,3975,3826,3959],"wing_down_side":"left","color":[230,232,232,255]},
+        {"id":"sailplane-14","source_center_pixel":[3873,3967],"source_axis_pixels":[3873,3959,3873,3975],"wing_down_side":"right","color":[216,225,231,255]},
+        {"id":"sailplane-15","source_center_pixel":[3922,3967],"source_axis_pixels":[3922,3975,3922,3959],"wing_down_side":"left","color":[231,224,215,255]},
+        {"id":"sailplane-16","source_center_pixel":[4044,3968],"source_axis_pixels":[4050,3962,4038,3974],"wing_down_side":"right","color":[224,229,228,255]},
+        {"id":"sailplane-17","source_center_pixel":[4084,3968],"source_axis_pixels":[4084,3960,4084,3976],"wing_down_side":"left","color":[213,225,232,255]},
+        {"id":"sailplane-18","source_center_pixel":[4137,3968],"source_axis_pixels":[4137,3976,4137,3960],"wing_down_side":"right","color":[232,226,218,255]}
       ]
     }
   ]

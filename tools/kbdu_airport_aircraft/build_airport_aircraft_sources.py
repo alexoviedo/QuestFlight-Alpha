@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -31,9 +32,12 @@ MANIFEST_OUTPUT = DATA_DIR / "AirportParkedAircraftSourceManifestV1.json"
 C172_SHA256 = "a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872"
 SAILPLANE_BLEND_SHA256 = "c367729605b0d67d1d989d18be1ca92b0279037006110858f1e7fc00909cd077"
 TARGETS = {
-    "ParkedC172_LOD0": 900,
+    # Recover serialized-scene headroom without changing the close-view planform,
+    # materials, placement count, or orthophoto alignment. The removed triangles
+    # are sub-pixel exterior shell detail on a static background aircraft.
+    "ParkedC172_LOD0": 400,
     "ParkedC172_LOD1": 350,
-    "ParkedSailplane_LOD0": 550,
+    "ParkedSailplane_LOD0": 280,
     "ParkedSailplane_LOD1": 240,
 }
 
@@ -161,6 +165,49 @@ def mesh_record(obj: bpy.types.Object) -> dict:
     }
 
 
+def sailplane_contact_record(obj: bpy.types.Object) -> dict:
+    values = [vertex.co.copy() for vertex in obj.data.vertices]
+    half_span = max(abs(value.x) for value in values)
+    gear = min(
+        (value for value in values if abs(value.x) <= half_span * 0.25),
+        key=lambda value: value.z,
+    )
+    left = min(
+        (value for value in values if value.x <= -half_span * 0.90),
+        key=lambda value: value.z,
+    )
+    right = min(
+        (value for value in values if value.x >= half_span * 0.90),
+        key=lambda value: value.z,
+    )
+
+    def roll_to_contact(tip) -> float:
+        value = math.degrees(math.atan2(-(tip.z - gear.z), tip.x - gear.x))
+        if value > 90.0:
+            value -= 180.0
+        if value < -90.0:
+            value += 180.0
+        return value
+
+    left_roll = roll_to_contact(left)
+    right_roll = roll_to_contact(right)
+    if not 6.0 <= abs(left_roll) <= 10.0 or not 6.0 <= abs(right_roll) <= 10.0:
+        raise RuntimeError(
+            f"Sailplane wheel/wingtip resting solve is implausible: {left_roll}/{right_roll}"
+        )
+    return {
+        "method": "LOD0 centerline-lowest gear vertex plus outer-10-percent lowest wingtip vertex",
+        "gear_contact_blender_xyz_meters": list(gear),
+        "left_wingtip_contact_blender_xyz_meters": list(left),
+        "right_wingtip_contact_blender_xyz_meters": list(right),
+        "left_wing_down_roll_degrees": left_roll,
+        "right_wing_down_roll_degrees": right_roll,
+        "authored_symmetric_roll_degrees": round(
+            (abs(left_roll) + abs(right_roll)) * 0.5, 2
+        ),
+    }
+
+
 def build_c172() -> tuple[list[bpy.types.Object], list[dict]]:
     clear_scene()
     bpy.ops.import_scene.gltf(filepath=str(C172_SOURCE))
@@ -275,6 +322,7 @@ def main() -> None:
                 "bytes": SAILPLANE_OUTPUT.stat().st_size,
                 "sha256": sha256(SAILPLANE_OUTPUT),
                 "lods": sailplane_records,
+                "ground_rest_contact": sailplane_contact_record(_sailplane_lods[0]),
             },
         ],
         "runtime_contract": {

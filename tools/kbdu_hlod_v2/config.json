@@ -66,16 +66,16 @@
     },
     "parked_aircraft_estimates": {
       "LOD0": {
-        "triangles": 11783,
-        "vertices": 14166
+        "triangles": 11822,
+        "vertices": 15791
       },
       "LOD1": {
-        "triangles": 204,
-        "vertices": 408
+        "triangles": 210,
+        "vertices": 420
       },
       "LOD2": {
-        "triangles": 204,
-        "vertices": 408
+        "triangles": 210,
+        "vertices": 420
       }
     },
     "parked_aircraft_screen_relative_heights": [

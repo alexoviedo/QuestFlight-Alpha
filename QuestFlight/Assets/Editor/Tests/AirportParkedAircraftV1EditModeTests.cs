@@ -24,9 +24,9 @@ namespace QuestFlightLab.Editor.Tests
             ContextRecipe recipe = JsonUtility.FromJson<ContextRecipe>(source.text);
             Assert.That(recipe.parked_aircraft_batches, Has.Length.EqualTo(1));
             Placement[] placements = recipe.parked_aircraft_batches[0].placements;
-            Assert.That(placements, Has.Length.EqualTo(17));
-            Assert.That(placements.Count(value => value.model_family == "powered_c172"), Is.EqualTo(7));
-            Assert.That(placements.Count(value => value.model_family == "sailplane"), Is.EqualTo(10));
+            Assert.That(placements, Has.Length.EqualTo(35));
+            Assert.That(placements.Count(value => value.model_family == "powered_c172"), Is.EqualTo(17));
+            Assert.That(placements.Count(value => value.model_family == "sailplane"), Is.EqualTo(18));
             Assert.That(
                 placements.All(value =>
                     !float.IsNaN(value.base_y_meters) &&
@@ -36,6 +36,55 @@ namespace QuestFlightLab.Editor.Tests
                 Is.True,
                 "Aircraft base heights use the terrain's local elevation datum and may be negative north of the runway.");
             Assert.That(placements.All(value => value.color_rgba != null && value.color_rgba.Length == 4), Is.True);
+            Assert.That(
+                placements.All(value =>
+                    value.placement_v2 != null &&
+                    value.placement_v2.orthophoto_source_pixel != null &&
+                    value.placement_v2.orthophoto_source_pixel.Length == 2 &&
+                    value.placement_v2.orthophoto_source_axis_pixels != null &&
+                    value.placement_v2.orthophoto_source_axis_pixels.Length == 4),
+                Is.True);
+            foreach (Placement placement in placements)
+            {
+                float expectedX = placement.placement_v2.orthophoto_source_pixel[0] / 8192f * 4000f - 2000f;
+                float expectedZ = 2000f - placement.placement_v2.orthophoto_source_pixel[1] / 8192f * 4000f;
+                Assert.That(placement.x_meters, Is.EqualTo(expectedX).Within(0.001f));
+                Assert.That(placement.z_meters, Is.EqualTo(expectedZ).Within(0.001f));
+                Assert.That(
+                    placement.placement_v2.orthophoto_guid,
+                    Is.EqualTo("0021365d50509d2abe127a826626ee6e"));
+                Assert.That(
+                    placement.placement_v2.orthophoto_sha256,
+                    Is.EqualTo("143c4946c06464dbdea1567cd5fe284acc4c5ba7718a38900a2e83a8eccbfb53"));
+            }
+
+            Placement[] sailplanes = placements
+                .Where(value => value.model_family == "sailplane").ToArray();
+            Assert.That(
+                sailplanes.All(value =>
+                    value.wing_down_side == "left" || value.wing_down_side == "right"),
+                Is.True);
+            Assert.That(
+                sailplanes.All(value =>
+                    Mathf.Abs(value.roll_degrees) >= 7.4f &&
+                    Mathf.Abs(value.roll_degrees) <= 7.7f),
+                Is.True,
+                "Sailplanes must rest on their main wheel and one wingtip.");
+            Assert.That(
+                placements.Where(value => value.model_family == "powered_c172")
+                    .All(value => Mathf.Abs(value.roll_degrees) < 0.001f),
+                Is.True);
+            foreach (Placement placement in placements)
+            {
+                int[] axis = placement.placement_v2.orthophoto_source_axis_pixels;
+                float expectedHeading = Mathf.Atan2(
+                    axis[0] - axis[2],
+                    axis[3] - axis[1]) * Mathf.Rad2Deg;
+                if (expectedHeading < 0f) expectedHeading += 360f;
+                Assert.That(
+                    Mathf.DeltaAngle(placement.yaw_degrees, expectedHeading),
+                    Is.EqualTo(0f).Within(0.01f));
+            }
         }
 
         [Test]
@@ -58,8 +107,10 @@ namespace QuestFlightLab.Editor.Tests
 
             Mesh lod0 = renderers[0].GetComponent<MeshFilter>().sharedMesh;
             Mesh lod1 = renderers[1].GetComponent<MeshFilter>().sharedMesh;
-            Assert.That(lod0.triangles.Length / 3, Is.EqualTo(11783));
-            Assert.That(lod1.triangles.Length / 3, Is.EqualTo(204));
+            Mesh lod2 = renderers[2].GetComponent<MeshFilter>().sharedMesh;
+            Assert.That(lod0.triangles.Length / 3, Is.EqualTo(11822));
+            Assert.That(lod1.triangles.Length / 3, Is.EqualTo(210));
+            Assert.That(lod2.triangles.Length / 3, Is.EqualTo(210));
 
             TextAsset source = AssetDatabase.LoadAssetAtPath<TextAsset>(Recipe);
             ContextRecipe recipe = JsonUtility.FromJson<ContextRecipe>(source.text);
@@ -97,8 +148,24 @@ namespace QuestFlightLab.Editor.Tests
         private sealed class Placement
         {
             public string model_family;
+            public float x_meters;
             public float base_y_meters;
+            public float z_meters;
+            public float yaw_degrees;
+            public float pitch_degrees;
+            public float roll_degrees;
+            public string wing_down_side;
             public int[] color_rgba;
+            public PlacementEvidence placement_v2;
+        }
+
+        [Serializable]
+        private sealed class PlacementEvidence
+        {
+            public int[] orthophoto_source_pixel;
+            public int[] orthophoto_source_axis_pixels;
+            public string orthophoto_guid;
+            public string orthophoto_sha256;
         }
     }
 }

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import math
 import struct
@@ -21,6 +22,57 @@ RECIPES = (
     ROOT / "tools/kbdu_environment_reconstruction/KBDU_ContextBatchRecipeV2.json",
 )
 HLOD_CONFIG = ROOT / "tools/kbdu_hlod_v2/config.json"
+LOD0_SOURCE_STATS = {
+    "powered_c172": {"triangles": 400, "vertices": 625},
+    "sailplane": {"triangles": 279, "vertices": 287},
+}
+PROXY_TRIANGLES_PER_AIRCRAFT = 6
+PROXY_VERTICES_PER_AIRCRAFT = 12
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def validate_orthophoto(contract: dict) -> dict:
+    source = contract["orthophoto"]
+    path = ROOT / source["path"]
+    if not path.is_file():
+        raise ValueError(f"Active placement orthophoto is missing: {path}")
+    if sha256(path) != source["sha256"]:
+        raise ValueError("Active placement orthophoto hash changed; retrace before authoring")
+    meta = Path(str(path) + ".meta").read_text(encoding="utf-8")
+    if f"guid: {source['guid']}" not in meta:
+        raise ValueError("Active placement orthophoto GUID changed; retrace before authoring")
+    width, height = (int(value) for value in source["dimensions_pixels"])
+    if width != 8192 or height != 8192:
+        raise ValueError("Airport-aircraft placement contract requires the active 8192 near image")
+    if "row 0=north" not in source["orientation"]:
+        raise ValueError("Airport-aircraft image orientation is not explicit")
+    return source
+
+
+def pixel_to_world(pixel: list[int], orthophoto: dict) -> tuple[float, float]:
+    width, height = orthophoto["dimensions_pixels"]
+    min_x, min_z, max_x, max_z = orthophoto["world_bounds_meters"]
+    column, row = pixel
+    x = min_x + column / width * (max_x - min_x)
+    z = max_z - row / height * (max_z - min_z)
+    return x, z
+
+
+def heading_from_axis(axis: list[int]) -> float:
+    if len(axis) != 4:
+        raise ValueError("Aircraft source axis must contain nose x/y then tail x/y")
+    east = float(axis[0] - axis[2])
+    north = float(axis[3] - axis[1])
+    if abs(east) + abs(north) < 1.0:
+        raise ValueError("Aircraft source axis is degenerate")
+    return math.degrees(math.atan2(east, north)) % 360.0
 
 
 class TerrainSampler:
@@ -68,26 +120,45 @@ class TerrainSampler:
 
 def main() -> None:
     contract = json.loads(PLACEMENTS.read_text(encoding="utf-8"))
+    if int(contract.get("schema_version", 0)) != 2:
+        raise ValueError("Expected airport-aircraft placement schema v2")
+    orthophoto = validate_orthophoto(contract)
     sampler = TerrainSampler(json.loads(TERRAIN.read_text(encoding="utf-8")))
     rows = []
     for group in contract["groups"]:
         for source in group["placements"]:
-            x = float(source["x"])
-            z = float(source["z"])
+            x, z = pixel_to_world(source["source_center_pixel"], orthophoto)
+            yaw = heading_from_axis(source["source_axis_pixels"])
+            roll = 0.0
+            wing_down_side = source.get("wing_down_side", "none")
+            if group["family"] == "sailplane":
+                resting_pose = group["resting_pose"]
+                roll_magnitude = float(resting_pose["derived_roll_degrees"])
+                if wing_down_side not in ("left", "right"):
+                    raise ValueError(f"Sailplane {source['id']} has no valid wing-down side")
+                roll = roll_magnitude if wing_down_side == "left" else -roll_magnitude
             rows.append(
                 {
                     "model_family": group["family"],
-                    "x_meters": x,
+                    "x_meters": round(x, 4),
                     "base_y_meters": round(sampler.sample(x, z), 3),
-                    "z_meters": z,
-                    "yaw_degrees": float(source["yaw"]),
+                    "z_meters": round(z, 4),
+                    "yaw_degrees": round(yaw, 3),
+                    "pitch_degrees": 0.0,
+                    "roll_degrees": roll,
+                    "wing_down_side": wing_down_side,
                     "color_rgba": source["color"],
                     "placement_v2": {
                         "stable_id": source["id"],
                         "stand_group": group["id"],
                         "terrain_height_meters": round(sampler.sample(x, z), 3),
                         "ground_clearance_meters": 0.025,
-                        "orthophoto_alignment": "manual_2019_NAIP_aircraft_silhouette",
+                        "orthophoto_alignment": "active_2020_city_aircraft_silhouette",
+                        "orthophoto_path": orthophoto["path"],
+                        "orthophoto_guid": orthophoto["guid"],
+                        "orthophoto_sha256": orthophoto["sha256"],
+                        "orthophoto_source_pixel": source["source_center_pixel"],
+                        "orthophoto_source_axis_pixels": source["source_axis_pixels"],
                     },
                 }
             )
@@ -102,10 +173,24 @@ def main() -> None:
         )
 
     config = json.loads(HLOD_CONFIG.read_text(encoding="utf-8"))
+    family_counts = {
+        family: sum(row["model_family"] == family for row in rows)
+        for family in LOD0_SOURCE_STATS
+    }
+    lod0_triangles = sum(
+        family_counts[family] * stats["triangles"]
+        for family, stats in LOD0_SOURCE_STATS.items()
+    )
+    lod0_vertices = sum(
+        family_counts[family] * stats["vertices"]
+        for family, stats in LOD0_SOURCE_STATS.items()
+    )
+    proxy_triangles = len(rows) * PROXY_TRIANGLES_PER_AIRCRAFT
+    proxy_vertices = len(rows) * PROXY_VERTICES_PER_AIRCRAFT
     config["runtime_hlod"]["parked_aircraft_estimates"] = {
-        "LOD0": {"triangles": 11783, "vertices": 14166},
-        "LOD1": {"triangles": 204, "vertices": 408},
-        "LOD2": {"triangles": 204, "vertices": 408},
+        "LOD0": {"triangles": lod0_triangles, "vertices": lod0_vertices},
+        "LOD1": {"triangles": proxy_triangles, "vertices": proxy_vertices},
+        "LOD2": {"triangles": proxy_triangles, "vertices": proxy_vertices},
     }
     config["runtime_hlod"]["parked_aircraft_screen_relative_heights"] = [0.008, 0.005, 0.002]
     HLOD_CONFIG.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8", newline="\n")

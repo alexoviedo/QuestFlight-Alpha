@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using QuestFlightLab.Environment;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -11,8 +12,9 @@ using UnityEngine.Rendering;
 namespace QuestFlight.Editor
 {
     /// <summary>
-    /// Authors only reusable KBDU terrain-pyramid and context assets. It deliberately
-    /// does not open or mutate the product scene or environment prefab.
+    /// Authors reusable KBDU terrain-pyramid and context assets. Focused repair entry
+    /// points may refresh the product environment's serialized budget after replacing
+    /// a nested prefab, but never reconstruct or otherwise mutate the product hierarchy.
     /// </summary>
     public static class KbduPhotorealTerrainAssetAuthoring
     {
@@ -123,6 +125,8 @@ namespace QuestFlight.Editor
                 AssetDatabase.SaveAssets();
                 UpdateParkedAircraftPrefab(inputs);
                 AssetDatabase.SaveAssets();
+                RefreshSerializedEnvironmentBudget();
+                AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 Debug.Log("[QuestFlight][KBDUParkedAircraftVisualRepair] SUCCESS");
                 EditorApplication.Exit(0);
@@ -131,6 +135,33 @@ namespace QuestFlight.Editor
             {
                 Debug.LogException(exception);
                 EditorApplication.Exit(1);
+            }
+        }
+
+        private static void RefreshSerializedEnvironmentBudget()
+        {
+            GameObject environment = PrefabUtility.LoadPrefabContents(
+                ProductionEnvironmentRoot.PrefabAssetPath);
+            try
+            {
+                ProductionEnvironmentRoot contract =
+                    environment.GetComponent<ProductionEnvironmentRoot>();
+                if (contract == null)
+                    throw new InvalidOperationException(
+                        "Production environment contract is missing while refreshing the parked-aircraft budget.");
+                ProductionEnvironmentBudget budget = contract.CalculateBudget();
+                contract.bakedRendererCount = budget.rendererCount;
+                contract.bakedTriangleCount = budget.triangleCount;
+                contract.bakedMaterialCount = budget.materialCount;
+                if (!contract.TryValidateContract(out string report))
+                    throw new InvalidOperationException(
+                        "Parked-aircraft integration leaves the product environment invalid: " + report);
+                PrefabUtility.SaveAsPrefabAsset(
+                    environment, ProductionEnvironmentRoot.PrefabAssetPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(environment);
             }
         }
 
@@ -946,30 +977,31 @@ namespace QuestFlight.Editor
             List<int> indices = new List<int>();
             if (lod >= 1)
             {
-                List<Vector3> boxVertices = new List<Vector3>();
-                List<Color32> boxColors = new List<Color32>();
-                List<int> boxIndices = new List<int>();
                 foreach (ParkedAircraftPlacement placement in batch.placements)
                 {
                     SourceAircraft sourceAircraft = ResolveAircraftSource(sourceModels, placement, 1);
                     Color32 color = PlacementColor(placement, batch.id);
-                    Quaternion rotation = Quaternion.Euler(0f, placement.yaw_degrees, 0f);
-                    Bounds bounds = sourceAircraft.Bounds;
-                    Vector3 groundedCenter = new Vector3(
-                        bounds.center.x, bounds.center.y - bounds.min.y + 0.025f, bounds.center.z);
-                    Vector3 center = new Vector3(
-                        placement.x_meters, placement.base_y_meters, placement.z_meters) +
-                        rotation * groundedCenter;
-                    AddColoredBox(center, bounds.size, color, boxVertices, boxColors, boxIndices);
+                    Quaternion rotation = AircraftRotation(placement);
+                    float groundingOffset = AircraftGroundingOffset(sourceAircraft, rotation);
+                    Matrix4x4 placementMatrix = Matrix4x4.TRS(
+                        new Vector3(
+                            placement.x_meters,
+                            placement.base_y_meters + groundingOffset,
+                            placement.z_meters),
+                        rotation,
+                        Vector3.one);
+                    AddAircraftPlanformProxy(
+                        sourceAircraft.Bounds, placementMatrix, color,
+                        vertices, normals, colors, indices);
                 }
-                Mesh boxMesh = new Mesh { name = batch.id + "_LOD" + lod };
-                boxMesh.indexFormat = boxVertices.Count > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
-                boxMesh.SetVertices(boxVertices);
-                boxMesh.SetColors(boxColors);
-                boxMesh.SetTriangles(boxIndices, 0, true);
-                boxMesh.RecalculateNormals();
-                boxMesh.RecalculateBounds();
-                return boxMesh;
+                Mesh proxyMesh = new Mesh { name = batch.id + "_LOD" + lod };
+                proxyMesh.indexFormat = vertices.Count > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
+                proxyMesh.SetVertices(vertices);
+                proxyMesh.SetNormals(normals);
+                proxyMesh.SetColors(colors);
+                proxyMesh.SetTriangles(indices, 0, true);
+                proxyMesh.RecalculateBounds();
+                return proxyMesh;
             }
             foreach (ParkedAircraftPlacement placement in batch.placements)
             {
@@ -983,11 +1015,12 @@ namespace QuestFlight.Editor
                     throw new InvalidOperationException(
                         "Parked-aircraft source normals are incomplete: " + sourceAircraft.Name);
                 Color32 color = PlacementColor(placement, batch.id);
-                float groundingOffset = -sourceAircraft.Bounds.min.y + 0.025f;
+                Quaternion rotation = AircraftRotation(placement);
+                float groundingOffset = AircraftGroundingOffset(sourceAircraft, rotation);
                 Matrix4x4 placementMatrix = Matrix4x4.TRS(
                     new Vector3(
                         placement.x_meters, placement.base_y_meters + groundingOffset, placement.z_meters),
-                    Quaternion.Euler(0f, placement.yaw_degrees, 0f),
+                    rotation,
                     Vector3.one) * sourceAircraft.SourceToRoot;
                 Matrix4x4 normalMatrix = placementMatrix.inverse.transpose;
                 int start = vertices.Count;
@@ -1010,6 +1043,88 @@ namespace QuestFlight.Editor
             mesh.SetTriangles(indices, 0, true);
             mesh.RecalculateBounds();
             return mesh;
+        }
+
+        private static Quaternion AircraftRotation(ParkedAircraftPlacement placement)
+        {
+            Quaternion yaw = Quaternion.AngleAxis(placement.yaw_degrees, Vector3.up);
+            Quaternion pitch = Quaternion.AngleAxis(placement.pitch_degrees, Vector3.right);
+            Quaternion roll = Quaternion.AngleAxis(placement.roll_degrees, Vector3.forward);
+            return yaw * pitch * roll;
+        }
+
+        private static float AircraftGroundingOffset(SourceAircraft sourceAircraft, Quaternion rotation)
+        {
+            Matrix4x4 rotatedSource = Matrix4x4.Rotate(rotation) * sourceAircraft.SourceToRoot;
+            float minimumY = float.PositiveInfinity;
+            foreach (Vector3 vertex in sourceAircraft.Mesh.vertices)
+                minimumY = Mathf.Min(minimumY, rotatedSource.MultiplyPoint3x4(vertex).y);
+            if (!float.IsFinite(minimumY))
+                throw new InvalidOperationException(
+                    "Parked-aircraft rotated grounding calculation is nonfinite: " + sourceAircraft.Name);
+            return -minimumY + 0.025f;
+        }
+
+        private static void AddAircraftPlanformProxy(
+            Bounds bounds,
+            Matrix4x4 placement,
+            Color32 color,
+            ICollection<Vector3> vertices,
+            ICollection<Vector3> normals,
+            ICollection<Color32> colors,
+            ICollection<int> indices)
+        {
+            float span = bounds.size.x;
+            float length = bounds.size.z;
+            float surfaceY = bounds.min.y + bounds.size.y * 0.42f;
+            AddAircraftProxyQuad(
+                bounds.center.x, surfaceY, bounds.center.z + length * 0.06f,
+                span, Mathf.Max(0.45f, length * 0.14f),
+                placement, color, vertices, normals, colors, indices);
+            AddAircraftProxyQuad(
+                bounds.center.x, surfaceY + 0.04f, bounds.center.z,
+                Mathf.Max(0.65f, span * 0.085f), length,
+                placement, color, vertices, normals, colors, indices);
+            AddAircraftProxyQuad(
+                bounds.center.x, surfaceY + 0.02f, bounds.center.z - length * 0.38f,
+                span * 0.32f, Mathf.Max(0.35f, length * 0.09f),
+                placement, color, vertices, normals, colors, indices);
+        }
+
+        private static void AddAircraftProxyQuad(
+            float centerX,
+            float y,
+            float centerZ,
+            float width,
+            float depth,
+            Matrix4x4 placement,
+            Color32 color,
+            ICollection<Vector3> vertices,
+            ICollection<Vector3> normals,
+            ICollection<Color32> colors,
+            ICollection<int> indices)
+        {
+            int start = vertices.Count;
+            Vector3 normal = placement.MultiplyVector(Vector3.up).normalized;
+            Vector3[] local =
+            {
+                new Vector3(centerX - width * 0.5f, y, centerZ - depth * 0.5f),
+                new Vector3(centerX + width * 0.5f, y, centerZ - depth * 0.5f),
+                new Vector3(centerX + width * 0.5f, y, centerZ + depth * 0.5f),
+                new Vector3(centerX - width * 0.5f, y, centerZ + depth * 0.5f)
+            };
+            foreach (Vector3 point in local)
+            {
+                vertices.Add(placement.MultiplyPoint3x4(point));
+                normals.Add(normal);
+                colors.Add(color);
+            }
+            indices.Add(start);
+            indices.Add(start + 2);
+            indices.Add(start + 1);
+            indices.Add(start);
+            indices.Add(start + 3);
+            indices.Add(start + 2);
         }
 
         private static SourceAircraft ResolveAircraftSource(
@@ -1793,6 +1908,9 @@ namespace QuestFlight.Editor
             public float base_y_meters;
             public float z_meters;
             public float yaw_degrees;
+            public float pitch_degrees;
+            public float roll_degrees;
+            public string wing_down_side;
             public int[] color_rgba;
         }
 
