@@ -34,6 +34,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-width", type=float)
     parser.add_argument("--target-length", type=float)
     parser.add_argument("--target-height", type=float)
+    parser.add_argument(
+        "--source-length-axis",
+        choices=("x", "y"),
+        default="y",
+        help="Axis carrying source vehicle length; its negative direction becomes Unity +Z.",
+    )
     parser.add_argument("--decimate-ratio", type=float, default=0.58)
     return parser.parse_args(arguments)
 
@@ -59,7 +65,10 @@ def import_source(source: Path) -> None:
     elif suffix == ".obj":
         bpy.ops.wm.obj_import(filepath=str(source))
     elif suffix == ".blend":
-        raise ValueError("Use an interchange source (.fbx or .obj), not a .blend file.")
+        # CC0 sources are sometimes distributed only as compact Blender files.
+        # Opening the source is deterministic in background mode; the prepared
+        # derivative is still exported as FBX and raw .blend data stays external.
+        bpy.ops.wm.open_mainfile(filepath=str(source), load_ui=False)
     else:
         raise ValueError(f"Unsupported vehicle source: {source}")
 
@@ -139,12 +148,22 @@ def semantic_color(material_name: str) -> tuple[float, float, float, float]:
     """
 
     normalized = material_name.casefold()
-    if "window" in normalized or "glass" in normalized:
+    if (
+        "window" in normalized
+        or "windshield" in normalized
+        or "windscreen" in normalized
+        or "glass" in normalized
+    ):
         return (0.0, 1.0, 0.0, 1.0)
     if "tire" in normalized or "tyre" in normalized:
         return (0.0, 0.0, 1.0, 1.0)
     if "wheel" in normalized or "rim" in normalized:
         return (1.0, 1.0, 0.0, 1.0)
+    if "trailer" in normalized:
+        # RGB=111 is reserved for the dry-van trailer shell. Runtime supplies a
+        # separate neutral fleet tint so a red/blue tractor never paints the
+        # entire trailer the same saturated color.
+        return (1.0, 1.0, 1.0, 1.0)
     if "headlight" in normalized or "head light" in normalized:
         return (1.0, 0.0, 1.0, 1.0)
     if (
@@ -202,6 +221,7 @@ def merge_and_normalize(
     target_width: float,
     target_length: float,
     target_height: float,
+    source_length_axis: str,
 ) -> bpy.types.Object:
     bpy.ops.object.select_all(action="DESELECT")
     for obj in mesh_objects:
@@ -215,19 +235,18 @@ def merge_and_normalize(
 
     minimum, maximum = transformed_bounds([merged])
     source_size = maximum - minimum
-    scale = Vector(
-        (
-            target_width / source_size.x,
-            target_length / source_size.y,
-            target_height / source_size.z,
-        )
-    )
     center_x = (minimum.x + maximum.x) * 0.5
     center_y = (minimum.y + maximum.y) * 0.5
+    width_size = source_size.y if source_length_axis == "x" else source_size.x
+    length_size = source_size.x if source_length_axis == "x" else source_size.y
     for vertex in merged.data.vertices:
-        width = (vertex.co.x - center_x) * scale.x
-        length = (vertex.co.y - center_y) * scale.y
-        height = (vertex.co.z - minimum.z) * scale.z
+        if source_length_axis == "x":
+            width = (vertex.co.y - center_y) * (target_width / width_size)
+            length = (vertex.co.x - center_x) * (target_length / length_size)
+        else:
+            width = (vertex.co.x - center_x) * (target_width / width_size)
+            length = (vertex.co.y - center_y) * (target_length / length_size)
+        height = (vertex.co.z - minimum.z) * (target_height / source_size.z)
         # Unity product convention is +Y up and +Z vehicle-forward.  RGSDev
         # sources are +Z up with the vehicle nose along -Y.
         vertex.co.x = width
@@ -253,6 +272,7 @@ def prepare_source(
     target_length: float,
     target_height: float,
     ratio: float,
+    source_length_axis: str,
 ) -> dict:
     clear_scene()
     import_source(source)
@@ -268,6 +288,7 @@ def prepare_source(
         target_width,
         target_length,
         target_height,
+        source_length_axis,
     )
 
     bpy.ops.object.select_all(action="DESELECT")
@@ -298,6 +319,7 @@ def prepare_source(
             "output": str(output),
             "name": name,
             "decimate_ratio": ratio,
+            "source_length_axis": source_length_axis,
             "target_dimensions_meters": [
                 target_width,
                 target_length,
@@ -359,6 +381,7 @@ def main() -> None:
             args.target_length,
             args.target_height,
             args.decimate_ratio,
+            args.source_length_axis,
         )
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")

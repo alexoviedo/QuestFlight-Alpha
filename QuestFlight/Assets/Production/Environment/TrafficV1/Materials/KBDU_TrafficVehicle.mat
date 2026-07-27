@@ -31,5 +31,6 @@ Material:
     m_Floats: []
     m_Colors:
     - _BodyTint: {r: 0.35, g: 0.38, b: 0.42, a: 1}
+    - _TrailerTint: {r: 0.72, g: 0.73, b: 0.72, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

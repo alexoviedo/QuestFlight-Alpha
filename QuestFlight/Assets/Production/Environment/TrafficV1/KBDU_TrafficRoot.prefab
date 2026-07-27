@@ -52,11 +52,15 @@ MonoBehaviour:
   - {fileID: 4300000, guid: 472c946151217c540bd841d74fde8936, type: 2}
   - {fileID: 4300000, guid: 0865c71225ae3634c94c40b2414c7b8f, type: 2}
   - {fileID: 4300000, guid: 9e23c8b291a41ca478262c88778e052f, type: 2}
+  - {fileID: 4300000, guid: 55f22c2c122effd4a96b1d7014690bc9, type: 2}
+  farProxyMeshes:
+  - {fileID: 4300000, guid: 2e5b255fc319e29499517748be2a025e, type: 2}
+  - {fileID: 4300000, guid: e29d10ff7197a1e42a4ee3ca85cca31e, type: 2}
   deterministicMotion: 1
   realtimeVehicleShadows: 0
   perVehicleGameObjects: 0
   authoredParkedCount: 40
-  authoredDynamicCount: 924
-  authoredRouteCount: 402
-  authoredMaximumDrawCount: 5
-  authoredMaximumVisibleTriangles: 129024
+  authoredDynamicCount: 788
+  authoredRouteCount: 361
+  authoredMaximumDrawCount: 8
+  authoredMaximumVisibleTriangles: 129168

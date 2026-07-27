@@ -32,7 +32,8 @@ DEFAULT_SPEEDS_MPS = {
     "tertiary": 11.0,
     "residential": 8.0,
 }
-FLEET_STYLE_WEIGHTS = [0.24, 0.14, 0.34, 0.20, 0.08]
+PASSENGER_FLEET_STYLE_WEIGHTS = [0.24, 0.14, 0.34, 0.20, 0.08, 0.0]
+TRUNK_FLEET_STYLE_WEIGHTS = [0.20, 0.10, 0.28, 0.18, 0.08, 0.16]
 PAINT_COLOR_WEIGHTS = [0.26, 0.22, 0.19, 0.14, 0.09, 0.07, 0.02, 0.01]
 
 
@@ -64,6 +65,54 @@ def weighted_index(weights: list[float], unit: float) -> int:
         if threshold < cumulative:
             return index
     return len(weights) - 1
+
+
+def fleet_weights(highway_class: str | None) -> list[float]:
+    return (
+        TRUNK_FLEET_STYLE_WEIGHTS
+        if highway_class == "trunk"
+        else PASSENGER_FLEET_STYLE_WEIGHTS
+    )
+
+
+def choose_local_signature(
+    route_index: int,
+    vehicle_index: int,
+    highway_class: str | None,
+    recent: list[tuple[int, int]],
+) -> tuple[int, int]:
+    """Select a market-weighted signature without conspicuous local clones."""
+
+    weights = fleet_weights(highway_class)
+    for attempt in range(12):
+        archetype = weighted_index(
+            weights,
+            deterministic_unit(route_index, vehicle_index, 7 + attempt * 17),
+        )
+        paint_index = weighted_index(
+            PAINT_COLOR_WEIGHTS,
+            deterministic_unit(route_index, vehicle_index, 8 + attempt * 19),
+        )
+        signature = (archetype, paint_index)
+        if signature in recent[-3:]:
+            continue
+        if sum(1 for _, paint in recent[-4:] if paint == paint_index) >= 2:
+            continue
+        return signature
+
+    # Deterministic fallback guarantees that even an unusually unlucky hash
+    # sequence cannot place an exact model/color clone directly behind itself.
+    archetype = weighted_index(
+        weights,
+        deterministic_unit(route_index, vehicle_index, 211),
+    )
+    paint_index = weighted_index(
+        PAINT_COLOR_WEIGHTS,
+        deterministic_unit(route_index, vehicle_index, 223),
+    )
+    if recent and (archetype, paint_index) == recent[-1]:
+        paint_index = (paint_index + 1 + vehicle_index) % len(PAINT_COLOR_WEIGHTS)
+    return archetype, paint_index
 
 
 def sha256(path: Path) -> str:
@@ -220,6 +269,11 @@ def route_record(
         "osm_way_id": int(road["source"]["osm_id"]),
         "highway_class": road["tags"]["highway"],
         "direction": "forward" if direction > 0 else "reverse",
+        "direction_policy": (
+            "SOURCE_WAY_ONEWAY_TRUNK"
+            if highway_class == "trunk"
+            else "RIGHT_HAND_BIDIRECTIONAL"
+        ),
         "lane_offset_meters": round(lane_offset_meters, 3),
         "road_width_meters": float(road["render_width_meters"]),
         "speed_mps": SELECTED_SPEEDS_MPS.get(
@@ -228,6 +282,87 @@ def route_record(
         "length_meters": round(cumulative, 3),
         "samples": samples,
     }
+
+
+def build_diagonal_highway_truck_circuit(
+    routes: list[dict],
+    sampler: TerrainSampler,
+) -> dict:
+    """Build a closed loop from both photographed divided-highway carriageways.
+
+    Dynamic routes are normally open OSM way fragments. Modulo-wrapping those
+    fragments is visually tolerable for tiny distant cars but makes a 16 m
+    semi appear to teleport hundreds of meters. The three source ways below
+    overlap as opposing Diagonal Highway carriageways around the product
+    flight area, allowing a real-road closed circuit with only short median
+    turnarounds at its remote ends.
+    """
+
+    by_way = {route["osm_way_id"]: route for route in routes}
+    required = (398080519, 355298123, 398080554)
+    if any(way_id not in by_way for way_id in required):
+        raise ValueError("Required Diagonal Highway truck-circuit ways are missing")
+    outbound = by_way[398080519]
+    return_a = by_way[355298123]
+    return_b = by_way[398080554]
+
+    def points(route: dict) -> list[tuple[float, float]]:
+        return [(sample["x"], sample["z"]) for sample in route["samples"]]
+
+    outbound_points = points(outbound)
+    return_points_a = points(return_a)
+    return_points_b = points(return_b)
+    outbound_start_target = return_points_b[-1]
+    outbound_end_target = return_points_a[0]
+    start_index = min(
+        range(len(outbound_points)),
+        key=lambda index: math.dist(
+            outbound_points[index],
+            outbound_start_target,
+        ),
+    )
+    end_index = min(
+        range(len(outbound_points)),
+        key=lambda index: math.dist(
+            outbound_points[index],
+            outbound_end_target,
+        ),
+    )
+    if start_index >= end_index:
+        raise ValueError("Diagonal Highway truck-circuit overlap is reversed")
+    circuit = list(outbound_points[start_index : end_index + 1])
+
+    def append_connected(path: list[tuple[float, float]]) -> None:
+        connector = resample([circuit[-1], path[0]], SAMPLE_SPACING_METERS)
+        circuit.extend(connector[1:])
+        circuit.extend(path[1:])
+
+    append_connected(return_points_a)
+    append_connected(return_points_b)
+    closure = resample([circuit[-1], circuit[0]], SAMPLE_SPACING_METERS)
+    circuit.extend(closure[1:])
+    if math.dist(circuit[0], circuit[-1]) > 0.01:
+        raise ValueError("Diagonal Highway truck circuit did not close")
+
+    synthetic_road = {
+        "tags": {
+            "name": "Diagonal Highway",
+            "highway": "trunk",
+        },
+        "source": {"osm_id": 398080519},
+        "render_width_meters": outbound["road_width_meters"],
+    }
+    record = route_record(
+        "diagonal-highway-dedicated-truck-circuit",
+        synthetic_road,
+        1,
+        outbound["lane_offset_meters"],
+        circuit,
+        sampler,
+    )
+    record["direction_policy"] = "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"
+    record["closed_loop"] = True
+    return record
 
 
 def main() -> None:
@@ -301,7 +436,13 @@ def main() -> None:
         lane_offset_meters = lane_offset_for_road(
             road, lane_offset_contract
         )
-        for direction in (1, -1):
+        # The compact reconstruction context does not retain OSM's oneway tag.
+        # Its trunk highways are nevertheless encoded as separate physical
+        # carriageway ways, following OSM's divided-highway convention. Compile
+        # only the source-way direction for those carriageways; ordinary roads
+        # continue to receive right-hand forward and reverse lanes.
+        directions = (1,) if tags.get("highway") == "trunk" else (1, -1)
+        for direction in directions:
             # Colorado drives on the right: forward traffic occupies the right
             # side of the source polyline, reverse traffic the opposite side.
             lane = offset_polyline(
@@ -319,18 +460,20 @@ def main() -> None:
                     sampler,
                 )
             )
+    routes.append(build_diagonal_highway_truck_circuit(routes, sampler))
 
     parked = []
+    parked_signatures_by_lot: dict[str, list[tuple[int, int]]] = {}
     for index, vehicle in enumerate(source["parked_vehicles"]):
         x, z = pixel_to_world(vehicle["source_center_pixel"], orthophoto)
-        archetype = weighted_index(
-            FLEET_STYLE_WEIGHTS,
-            deterministic_unit(index, index, 30),
+        recent = parked_signatures_by_lot.setdefault(vehicle["lot"], [])
+        archetype, paint_index = choose_local_signature(
+            index,
+            index,
+            None,
+            recent,
         )
-        paint_index = weighted_index(
-            PAINT_COLOR_WEIGHTS,
-            deterministic_unit(index, index, 31),
-        )
+        recent.append((archetype, paint_index))
         parked.append(
             {
                 "id": vehicle["id"],
@@ -356,7 +499,11 @@ def main() -> None:
     platoons = network["initial_platoons"]
     vehicle_lengths = [float(value) for value in following["vehicle_length_meters"]]
     for route_index, route in enumerate(routes):
-        vehicle_count = max(
+        is_truck_circuit = (
+            route["direction_policy"]
+            == "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"
+        )
+        vehicle_count = 10 if is_truck_circuit else max(
             1,
             min(
                 maximum_per_route,
@@ -364,22 +511,27 @@ def main() -> None:
             ),
         )
         route_vehicles = []
+        route_signatures: list[tuple[int, int]] = []
         for vehicle_index in range(vehicle_count):
-            archetype = weighted_index(
-                FLEET_STYLE_WEIGHTS,
-                deterministic_unit(route_index, vehicle_index, 7),
+            archetype, paint_index = choose_local_signature(
+                route_index,
+                vehicle_index,
+                route["highway_class"],
+                route_signatures,
             )
-            if (
-                route["highway_class"] in {"trunk", "primary"}
-                and vehicle_index > 0
-                and vehicle_index % 11 == 0
-            ):
-                archetype = 4
-            paint_index = weighted_index(
-                PAINT_COLOR_WEIGHTS,
-                deterministic_unit(route_index, vehicle_index, 8),
-            )
-            is_truck = archetype in {3, 4}
+            if is_truck_circuit:
+                archetype = 5
+                paint_index = (route_index + vehicle_index * 3) % len(
+                    PAINT_COLOR_WEIGHTS
+                )
+            elif archetype == 5:
+                # Open OSM way fragments must never carry a long vehicle that
+                # makes their unavoidable cyclic recycle visually obvious.
+                archetype = (
+                    route_index + vehicle_index * 3
+                ) % (len(PASSENGER_FLEET_STYLE_WEIGHTS) - 1)
+            route_signatures.append((archetype, paint_index))
+            is_truck = archetype in {3, 4, 5}
             desired_speed_bounds = following[
                 "truck_desired_speed_scale" if is_truck else "desired_speed_scale"
             ]
@@ -449,6 +601,14 @@ def main() -> None:
                     "vehicle_length_meters": vehicle_lengths[archetype],
                 }
             )
+
+        if (
+            len(route_signatures) > 1
+            and route_signatures[-1] == route_signatures[0]
+        ):
+            route_vehicles[-1]["paint_index"] = (
+                route_vehicles[-1]["paint_index"] + 1
+            ) % len(PAINT_COLOR_WEIGHTS)
 
         if vehicle_count == 1:
             route_vehicles[0]["initial_distance_meters"] = round(
@@ -551,10 +711,14 @@ def main() -> None:
             "vehicle_assets": source["vehicle_assets"],
         },
         "runtime_contract": {
-            "maximum_near_instances": 128,
-            "maximum_draw_calls": 5,
+            "representation": "DETAIL_NEAR_FIXED_PROXY_FAR",
+            "maximum_near_instances": 96,
+            "maximum_far_instances": 900,
+            "near_enter_distance_meters": 800.0,
+            "near_exit_distance_meters": 1000.0,
+            "maximum_draw_calls": 8,
             "maximum_visible_triangles": 130000,
-            "maximum_distance_meters": 2500.0,
+            "visibility_distance_policy": "FULL_COMPILED_NETWORK",
             "steady_state_gc_allocations": 0,
             "per_vehicle_gameobjects": 0,
             "realtime_vehicle_shadows": 0,

@@ -8,20 +8,23 @@ namespace QuestFlightLab.Environment
     /// Allocation-free, road-constrained traffic presentation. Drivers use a fixed-step,
     /// deterministic, IDM-inspired longitudinal controller so following distance responds
     /// to speed and leaders instead of oscillating around a fixed spacing lattice.
-    /// Rendering remains limited to five opaque instanced draws.  Surface classes
-    /// are vertex encoded and paint is supplied per instance, so fleet variety
-    /// does not create extra materials or GameObjects.
+    /// Rendering uses six detailed near archetypes and two silhouette-preserving
+    /// far proxies. Surface classes are vertex encoded and paint is supplied per
+    /// instance, so fleet variety does not create material clones or GameObjects.
     /// </summary>
     [ExecuteAlways]
     [DisallowMultipleComponent]
     public sealed class KbduTrafficRuntime : MonoBehaviour
     {
-        public const int ArchetypeCount = 5;
-        public const int MaximumDrawCalls = 5;
-        public const int MaximumNearInstances = 128;
+        public const int ArchetypeCount = 6;
+        public const int ProxyArchetypeCount = 2;
+        public const int MaximumDrawCalls = 8;
+        public const int MaximumNearInstances = 96;
+        public const int MaximumFarInstances = 900;
         public const int PaintVariantCount = 8;
         public const int MaximumVisibleTriangles = 130000;
-        public const float MaximumDistanceMeters = 2500f;
+        public const float NearEnterDistanceMeters = 800f;
+        public const float NearExitDistanceMeters = 1000f;
         public const float SimulationStepSeconds = 0.1f;
         private const float MinimumNumericalGapMeters = 0.05f;
         private const float MaximumFrameCatchupSeconds = 0.5f;
@@ -100,6 +103,7 @@ namespace QuestFlightLab.Environment
         [SerializeField] private TextAsset trafficManifest;
         [SerializeField] private Material sharedOpaqueMaterial;
         [SerializeField] private Mesh[] nearArchetypeMeshes = Array.Empty<Mesh>();
+        [SerializeField] private Mesh[] farProxyMeshes = Array.Empty<Mesh>();
         [SerializeField] private bool deterministicMotion = true;
         [SerializeField] private bool realtimeVehicleShadows;
         [SerializeField] private bool perVehicleGameObjects;
@@ -115,6 +119,7 @@ namespace QuestFlightLab.Environment
             new Matrix4x4[MaximumNearInstances],
             new Matrix4x4[MaximumNearInstances],
             new Matrix4x4[MaximumNearInstances],
+            new Matrix4x4[MaximumNearInstances],
             new Matrix4x4[MaximumNearInstances]
         };
         private readonly Vector4[][] nearPaintTints =
@@ -123,16 +128,55 @@ namespace QuestFlightLab.Environment
             new Vector4[MaximumNearInstances],
             new Vector4[MaximumNearInstances],
             new Vector4[MaximumNearInstances],
+            new Vector4[MaximumNearInstances],
+            new Vector4[MaximumNearInstances]
+        };
+        private readonly Vector4[][] nearTrailerTints =
+        {
+            new Vector4[MaximumNearInstances],
+            new Vector4[MaximumNearInstances],
+            new Vector4[MaximumNearInstances],
+            new Vector4[MaximumNearInstances],
+            new Vector4[MaximumNearInstances],
             new Vector4[MaximumNearInstances]
         };
         private readonly int[] nearCounts = new int[ArchetypeCount];
+        private readonly Matrix4x4[][] farMatrices =
+        {
+            new Matrix4x4[MaximumFarInstances],
+            new Matrix4x4[MaximumFarInstances]
+        };
+        private readonly Vector4[][] farPaintTints =
+        {
+            new Vector4[MaximumFarInstances],
+            new Vector4[MaximumFarInstances]
+        };
+        private readonly Vector4[][] farTrailerTints =
+        {
+            new Vector4[MaximumFarInstances],
+            new Vector4[MaximumFarInstances]
+        };
+        private readonly int[] farCounts = new int[ProxyArchetypeCount];
         private readonly Matrix4x4[] selectedMatrices =
             new Matrix4x4[MaximumNearInstances];
         private readonly int[] selectedArchetypes = new int[MaximumNearInstances];
         private readonly int[] selectedPaintIndices = new int[MaximumNearInstances];
+        private readonly int[] selectedVehicleIds = new int[MaximumNearInstances];
         private readonly float[] selectedScores = new float[MaximumNearInstances];
+        private readonly Matrix4x4[] selectedFarMatrices =
+            new Matrix4x4[MaximumFarInstances];
+        private readonly int[] selectedFarArchetypes =
+            new int[MaximumFarInstances];
+        private readonly int[] selectedFarPaintIndices =
+            new int[MaximumFarInstances];
+        private readonly int[] selectedFarVehicleIds =
+            new int[MaximumFarInstances];
+        private readonly float[] selectedFarScores =
+            new float[MaximumFarInstances];
         private readonly MaterialPropertyBlock[] nearPropertyBlocks =
             new MaterialPropertyBlock[ArchetypeCount];
+        private readonly MaterialPropertyBlock[] farPropertyBlocks =
+            new MaterialPropertyBlock[ProxyArchetypeCount];
         private static readonly Vector4[] PaintPalette =
         {
             new Vector4(0.78f, 0.79f, 0.76f, 1f), // white
@@ -143,6 +187,17 @@ namespace QuestFlightLab.Environment
             new Vector4(0.38f, 0.045f, 0.035f, 1f), // red
             new Vector4(0.055f, 0.20f, 0.11f, 1f), // green
             new Vector4(0.18f, 0.10f, 0.055f, 1f) // brown
+        };
+        private static readonly Vector4[] TrailerPalette =
+        {
+            new Vector4(0.78f, 0.79f, 0.77f, 1f), // fleet white
+            new Vector4(0.58f, 0.60f, 0.61f, 1f), // aluminum
+            new Vector4(0.70f, 0.71f, 0.70f, 1f), // warm white
+            new Vector4(0.48f, 0.50f, 0.51f, 1f), // light gray
+            new Vector4(0.76f, 0.77f, 0.75f, 1f), // fleet white
+            new Vector4(0.62f, 0.64f, 0.64f, 1f), // galvanized silver
+            new Vector4(0.72f, 0.73f, 0.71f, 1f), // warm white
+            new Vector4(0.52f, 0.53f, 0.52f, 1f) // weathered gray
         };
         private Manifest parsedManifest;
         private float[] previousDistances = Array.Empty<float>();
@@ -158,11 +213,16 @@ namespace QuestFlightLab.Environment
         private float simulationAccumulator;
         private bool simulationInitialized;
         private int selectedCount;
+        private int selectedFarCount;
         private bool submissionLogged;
+        private byte[] previousLodTier = Array.Empty<byte>();
+        private int lastPreparedFrame = -1;
+        private Camera lastPreparedCamera;
 
         public TextAsset TrafficManifest => trafficManifest;
         public Material SharedOpaqueMaterial => sharedOpaqueMaterial;
         public Mesh[] NearArchetypeMeshes => nearArchetypeMeshes;
+        public Mesh[] FarProxyMeshes => farProxyMeshes;
         public int AuthoredParkedCount => authoredParkedCount;
         public int AuthoredDynamicCount => authoredDynamicCount;
         public int AuthoredRouteCount => authoredRouteCount;
@@ -175,11 +235,13 @@ namespace QuestFlightLab.Environment
         public void Configure(
             TextAsset manifest,
             Material material,
-            Mesh[] nearMeshes)
+            Mesh[] nearMeshes,
+            Mesh[] proxyMeshes)
         {
             trafficManifest = manifest;
             sharedOpaqueMaterial = material;
             nearArchetypeMeshes = nearMeshes ?? Array.Empty<Mesh>();
+            farProxyMeshes = proxyMeshes ?? Array.Empty<Mesh>();
             deterministicMotion = true;
             realtimeVehicleShadows = false;
             perVehicleGameObjects = false;
@@ -197,7 +259,9 @@ namespace QuestFlightLab.Environment
                 sharedOpaqueMaterial == null ||
                 sharedOpaqueMaterial.shader == null ||
                 nearArchetypeMeshes == null ||
-                nearArchetypeMeshes.Length != ArchetypeCount)
+                nearArchetypeMeshes.Length != ArchetypeCount ||
+                farProxyMeshes == null ||
+                farProxyMeshes.Length != ProxyArchetypeCount)
             {
                 report = "missing authored traffic asset";
                 return false;
@@ -207,6 +271,15 @@ namespace QuestFlightLab.Environment
                 if (nearArchetypeMeshes[index] == null || nearArchetypeMeshes[index].subMeshCount != 1)
                 {
                     report = "near vehicle archetype is missing or not single-submesh";
+                    return false;
+                }
+            }
+            for (int index = 0; index < farProxyMeshes.Length; index++)
+            {
+                if (farProxyMeshes[index] == null ||
+                    farProxyMeshes[index].subMeshCount != 1)
+                {
+                    report = "far vehicle proxy is missing or not single-submesh";
                     return false;
                 }
             }
@@ -245,7 +318,9 @@ namespace QuestFlightLab.Environment
             int triangleCount = ComputeMaximumVisibleTriangles();
             if (authoredMaximumDrawCount != MaximumDrawCalls ||
                 triangleCount > MaximumVisibleTriangles ||
-                authoredMaximumVisibleTriangles != triangleCount)
+                authoredMaximumVisibleTriangles != triangleCount ||
+                parsedManifest.parked.Length +
+                    parsedManifest.moving.Length > MaximumFarInstances)
             {
                 report = $"traffic render budget mismatch: draws={authoredMaximumDrawCount}, triangles={triangleCount}";
                 return false;
@@ -282,6 +357,8 @@ namespace QuestFlightLab.Environment
             Camera.onPreCull -= DrawForCamera;
             simulationInitialized = false;
             simulationAccumulator = 0f;
+            lastPreparedFrame = -1;
+            lastPreparedCamera = null;
         }
 
         private void Update()
@@ -309,6 +386,9 @@ namespace QuestFlightLab.Environment
             if (parsedManifest == null && trafficManifest != null)
             {
                 parsedManifest = JsonUtility.FromJson<Manifest>(trafficManifest.text);
+                int parkedCount = parsedManifest?.parked?.Length ?? 0;
+                int movingCount = parsedManifest?.moving?.Length ?? 0;
+                previousLodTier = new byte[parkedCount + movingCount];
             }
         }
 
@@ -578,6 +658,35 @@ namespace QuestFlightLab.Environment
                 Mathf.Max(0f, maximumAccelerationMetersPerSecondSquared));
         }
 
+        public static float CalculateSelectionScore(
+            float distanceSquared,
+            bool retainedFromPreviousFrame)
+        {
+            return Mathf.Max(0f, distanceSquared) *
+                (retainedFromPreviousFrame ? 0.72f : 1f);
+        }
+
+        public static byte SelectLodTier(
+            float distanceMeters,
+            byte previousTier)
+        {
+            if (previousTier == 1)
+            {
+                return distanceMeters <= NearExitDistanceMeters
+                    ? (byte)1
+                    : (byte)2;
+            }
+            if (previousTier == 2)
+            {
+                return distanceMeters < NearEnterDistanceMeters
+                    ? (byte)1
+                    : (byte)2;
+            }
+            return distanceMeters <= NearEnterDistanceMeters
+                ? (byte)1
+                : (byte)2;
+        }
+
         private static float CalculateFreeAcceleration(
             float speed,
             float desiredSpeed,
@@ -607,7 +716,22 @@ namespace QuestFlightLab.Environment
                     }
                 }
             }
-            return largestNear * MaximumNearInstances;
+            int largestFar = 0;
+            if (farProxyMeshes != null)
+            {
+                for (int index = 0; index < farProxyMeshes.Length; index++)
+                {
+                    Mesh mesh = farProxyMeshes[index];
+                    if (mesh != null && mesh.subMeshCount > 0)
+                    {
+                        largestFar = Mathf.Max(
+                            largestFar,
+                            (int)(mesh.GetIndexCount(0) / 3u));
+                    }
+                }
+            }
+            return largestNear * MaximumNearInstances +
+                largestFar * MaximumFarInstances;
         }
 
         private bool AllFleetIndicesAreValid()
@@ -653,7 +777,12 @@ namespace QuestFlightLab.Environment
             {
                 return;
             }
-            PrepareVisibleInstances(camera);
+            if (lastPreparedFrame != Time.frameCount || lastPreparedCamera != camera)
+            {
+                PrepareVisibleInstances(camera);
+                lastPreparedFrame = Time.frameCount;
+                lastPreparedCamera = camera;
+            }
 
             int layer = gameObject.layer;
             for (int archetype = 0; archetype < ArchetypeCount; archetype++)
@@ -670,11 +799,48 @@ namespace QuestFlightLab.Environment
                 propertyBlock.SetVectorArray(
                     "_BodyTint",
                     nearPaintTints[archetype]);
+                propertyBlock.SetVectorArray(
+                    "_TrailerTint",
+                    nearTrailerTints[archetype]);
                 Graphics.DrawMeshInstanced(
                     nearArchetypeMeshes[archetype],
                     0,
                     sharedOpaqueMaterial,
                     nearMatrices[archetype],
+                    count,
+                    propertyBlock,
+                    ShadowCastingMode.Off,
+                    false,
+                    layer,
+                    camera,
+                    LightProbeUsage.Off,
+                    null);
+            }
+            for (int archetype = 0;
+                archetype < ProxyArchetypeCount;
+                archetype++)
+            {
+                int count = farCounts[archetype];
+                if (count <= 0)
+                {
+                    continue;
+                }
+                MaterialPropertyBlock propertyBlock =
+                    farPropertyBlocks[archetype] ??
+                    (farPropertyBlocks[archetype] =
+                        new MaterialPropertyBlock());
+                propertyBlock.Clear();
+                propertyBlock.SetVectorArray(
+                    "_BodyTint",
+                    farPaintTints[archetype]);
+                propertyBlock.SetVectorArray(
+                    "_TrailerTint",
+                    farTrailerTints[archetype]);
+                Graphics.DrawMeshInstanced(
+                    farProxyMeshes[archetype],
+                    0,
+                    sharedOpaqueMaterial,
+                    farMatrices[archetype],
                     count,
                     propertyBlock,
                     ShadowCastingMode.Off,
@@ -692,9 +858,15 @@ namespace QuestFlightLab.Environment
                 {
                     nearTotal += nearCounts[index];
                 }
+                int farTotal = 0;
+                for (int index = 0; index < farCounts.Length; index++)
+                {
+                    farTotal += farCounts[index];
+                }
                 Debug.Log(
                     $"[QuestFlight][Traffic] Submitted moving traffic for camera '{camera.name}': " +
-                    $"visible={nearTotal}, stereo={camera.stereoEnabled}; " +
+                    $"near={nearTotal}, far={farTotal}, " +
+                    $"visible={nearTotal + farTotal}, stereo={camera.stereoEnabled}; " +
                     $"parked records={authoredParkedCount}.",
                     this);
             }
@@ -703,7 +875,9 @@ namespace QuestFlightLab.Environment
         private void PrepareVisibleInstances(Camera camera)
         {
             Array.Clear(nearCounts, 0, nearCounts.Length);
+            Array.Clear(farCounts, 0, farCounts.Length);
             selectedCount = 0;
+            selectedFarCount = 0;
 
             ParkedRecord[] parked = parsedManifest.parked;
             for (int index = 0; index < parked.Length; index++)
@@ -719,7 +893,8 @@ namespace QuestFlightLab.Environment
                     position,
                     vehicle.archetype,
                     vehicle.paint_index,
-                    matrix);
+                    matrix,
+                    index);
             }
 
             DynamicRecord[] dynamicVehicles = parsedManifest.moving;
@@ -750,7 +925,8 @@ namespace QuestFlightLab.Environment
                     position,
                     vehicle.archetype,
                     vehicle.paint_index,
-                    matrix);
+                    matrix,
+                    parked.Length + index);
             }
 
             for (int index = 0; index < selectedCount; index++)
@@ -764,7 +940,43 @@ namespace QuestFlightLab.Environment
                 nearMatrices[archetype][count] = selectedMatrices[index];
                 nearPaintTints[archetype][count] =
                     PaintPalette[selectedPaintIndices[index]];
+                nearTrailerTints[archetype][count] =
+                    TrailerPalette[selectedPaintIndices[index]];
                 nearCounts[archetype] = count + 1;
+            }
+
+            for (int index = 0; index < selectedFarCount; index++)
+            {
+                int archetype = selectedFarArchetypes[index];
+                int count = farCounts[archetype];
+                if (count >= farMatrices[archetype].Length)
+                {
+                    continue;
+                }
+                farMatrices[archetype][count] = selectedFarMatrices[index];
+                farPaintTints[archetype][count] =
+                    PaintPalette[selectedFarPaintIndices[index]];
+                farTrailerTints[archetype][count] =
+                    TrailerPalette[selectedFarPaintIndices[index]];
+                farCounts[archetype] = count + 1;
+            }
+
+            Array.Clear(previousLodTier, 0, previousLodTier.Length);
+            for (int index = 0; index < selectedCount; index++)
+            {
+                int vehicleId = selectedVehicleIds[index];
+                if (vehicleId >= 0 && vehicleId < previousLodTier.Length)
+                {
+                    previousLodTier[vehicleId] = 1;
+                }
+            }
+            for (int index = 0; index < selectedFarCount; index++)
+            {
+                int vehicleId = selectedFarVehicleIds[index];
+                if (vehicleId >= 0 && vehicleId < previousLodTier.Length)
+                {
+                    previousLodTier[vehicleId] = 2;
+                }
             }
         }
 
@@ -773,7 +985,8 @@ namespace QuestFlightLab.Environment
             Vector3 position,
             int archetype,
             int paintIndex,
-            Matrix4x4 matrix)
+            Matrix4x4 matrix,
+            int vehicleId)
         {
             if (archetype < 0 ||
                 archetype >= ArchetypeCount ||
@@ -784,24 +997,49 @@ namespace QuestFlightLab.Environment
             }
             Vector3 toVehicle = position - camera.transform.position;
             float distanceSquared = toVehicle.sqrMagnitude;
-            if (distanceSquared > MaximumDistanceMeters * MaximumDistanceMeters)
-            {
-                return;
-            }
-            float distance = Mathf.Sqrt(Mathf.Max(0.001f, distanceSquared));
-            float facing = Vector3.Dot(camera.transform.forward, toVehicle) / distance;
-            // The cutoff is well behind the edge of a typical Quest field of
-            // view, so cars are selected before either eye can see them.
-            if (distance > 250f && facing < -0.35f)
+            float distance = Mathf.Sqrt(distanceSquared);
+            byte previousTier =
+                vehicleId >= 0 && vehicleId < previousLodTier.Length
+                    ? previousLodTier[vehicleId]
+                    : (byte)0;
+            byte desiredTier = SelectLodTier(distance, previousTier);
+            if (desiredTier == 0)
             {
                 return;
             }
 
-            float viewPenalty = Mathf.Lerp(
-                1.35f,
-                1f,
-                Mathf.Clamp01((facing + 0.35f) / 1.35f));
-            float score = distanceSquared * viewPenalty;
+            // Vehicles that lose a detailed slot fall back to a cheap proxy
+            // instead of disappearing. World-distance selection means head
+            // turns cannot churn either eye's membership.
+            if (desiredTier == 1 &&
+                TryInsertNear(
+                    distanceSquared,
+                    previousTier == 1,
+                    archetype,
+                    paintIndex,
+                    matrix,
+                    vehicleId))
+            {
+                return;
+            }
+            TryInsertFar(
+                distanceSquared,
+                previousTier == 2,
+                archetype == ArchetypeCount - 1 ? 1 : 0,
+                paintIndex,
+                matrix,
+                vehicleId);
+        }
+
+        private bool TryInsertNear(
+            float distanceSquared,
+            bool retained,
+            int archetype,
+            int paintIndex,
+            Matrix4x4 matrix,
+            int vehicleId)
+        {
+            float score = CalculateSelectionScore(distanceSquared, retained);
             int insertion;
             if (selectedCount < MaximumNearInstances)
             {
@@ -813,7 +1051,7 @@ namespace QuestFlightLab.Environment
                 insertion = selectedCount - 1;
                 if (score >= selectedScores[insertion])
                 {
-                    return;
+                    return false;
                 }
             }
 
@@ -824,12 +1062,62 @@ namespace QuestFlightLab.Environment
                 selectedArchetypes[insertion] = selectedArchetypes[insertion - 1];
                 selectedPaintIndices[insertion] =
                     selectedPaintIndices[insertion - 1];
+                selectedVehicleIds[insertion] =
+                    selectedVehicleIds[insertion - 1];
                 insertion--;
             }
             selectedScores[insertion] = score;
             selectedMatrices[insertion] = matrix;
             selectedArchetypes[insertion] = archetype;
             selectedPaintIndices[insertion] = paintIndex;
+            selectedVehicleIds[insertion] = vehicleId;
+            return true;
+        }
+
+        private bool TryInsertFar(
+            float distanceSquared,
+            bool retained,
+            int archetype,
+            int paintIndex,
+            Matrix4x4 matrix,
+            int vehicleId)
+        {
+            float score = CalculateSelectionScore(distanceSquared, retained);
+            int insertion;
+            if (selectedFarCount < MaximumFarInstances)
+            {
+                insertion = selectedFarCount;
+                selectedFarCount++;
+            }
+            else
+            {
+                insertion = selectedFarCount - 1;
+                if (score >= selectedFarScores[insertion])
+                {
+                    return false;
+                }
+            }
+
+            while (insertion > 0 && score < selectedFarScores[insertion - 1])
+            {
+                selectedFarScores[insertion] =
+                    selectedFarScores[insertion - 1];
+                selectedFarMatrices[insertion] =
+                    selectedFarMatrices[insertion - 1];
+                selectedFarArchetypes[insertion] =
+                    selectedFarArchetypes[insertion - 1];
+                selectedFarPaintIndices[insertion] =
+                    selectedFarPaintIndices[insertion - 1];
+                selectedFarVehicleIds[insertion] =
+                    selectedFarVehicleIds[insertion - 1];
+                insertion--;
+            }
+            selectedFarScores[insertion] = score;
+            selectedFarMatrices[insertion] = matrix;
+            selectedFarArchetypes[insertion] = archetype;
+            selectedFarPaintIndices[insertion] = paintIndex;
+            selectedFarVehicleIds[insertion] = vehicleId;
+            return true;
         }
 
         private static void EvaluateRoute(

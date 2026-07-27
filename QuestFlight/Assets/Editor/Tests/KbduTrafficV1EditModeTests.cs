@@ -29,7 +29,7 @@ namespace QuestFlightLab.Environment.Editor.Tests
             Assert.That(runtime.AuthoredParkedCount, Is.EqualTo(40));
             Assert.That(runtime.AuthoredDynamicCount, Is.GreaterThanOrEqualTo(600));
             Assert.That(runtime.AuthoredRouteCount, Is.GreaterThanOrEqualTo(300));
-            Assert.That(runtime.AuthoredMaximumDrawCount, Is.EqualTo(5));
+            Assert.That(runtime.AuthoredMaximumDrawCount, Is.EqualTo(8));
             Assert.That(
                 runtime.AuthoredMaximumVisibleTriangles,
                 Is.LessThanOrEqualTo(KbduTrafficRuntime.MaximumVisibleTriangles));
@@ -52,22 +52,36 @@ namespace QuestFlightLab.Environment.Editor.Tests
             Assert.That(expected.enableInstancing, Is.True);
             Assert.That(expected.shader.name, Is.EqualTo("QuestFlight/KBDU Traffic Vehicle"));
             Assert.That(expected.GetTexture("_SurfaceDetail"), Is.Not.Null);
-            Assert.That(runtime.NearArchetypeMeshes, Has.Length.EqualTo(5));
-            Assert.That(runtime.NearArchetypeMeshes.Distinct().Count(), Is.EqualTo(5));
+            Assert.That(runtime.NearArchetypeMeshes, Has.Length.EqualTo(6));
+            Assert.That(runtime.NearArchetypeMeshes.Distinct().Count(), Is.EqualTo(6));
             Assert.That(runtime.NearArchetypeMeshes.All(mesh => mesh != null && mesh.subMeshCount == 1), Is.True);
-            Assert.That(runtime.NearArchetypeMeshes.All(mesh =>
+            Assert.That(runtime.NearArchetypeMeshes.Take(5).All(mesh =>
                 mesh.bounds.size.x >= 1.7f && mesh.bounds.size.x <= 2.05f), Is.True);
-            Assert.That(runtime.NearArchetypeMeshes.All(mesh =>
+            Assert.That(runtime.NearArchetypeMeshes.Take(5).All(mesh =>
                 mesh.bounds.size.y >= 1.4f && mesh.bounds.size.y <= 2.15f), Is.True);
-            Assert.That(runtime.NearArchetypeMeshes.All(mesh =>
+            Assert.That(runtime.NearArchetypeMeshes.Take(5).All(mesh =>
                 mesh.bounds.size.z >= 4.3f && mesh.bounds.size.z <= 5.4f), Is.True);
-            Assert.That(runtime.NearArchetypeMeshes.All(mesh =>
+            Mesh semi = runtime.NearArchetypeMeshes[5];
+            Assert.That(semi.bounds.size.x, Is.InRange(2.50f, 2.60f));
+            Assert.That(semi.bounds.size.y, Is.InRange(3.95f, 4.05f));
+            Assert.That(semi.bounds.size.z, Is.InRange(16.1f, 16.3f));
+            Assert.That(runtime.NearArchetypeMeshes.Take(5).All(mesh =>
                 mesh.GetIndexCount(0) / 3u >= 500u &&
                 mesh.GetIndexCount(0) / 3u <= 1100u), Is.True);
+            Assert.That(semi.GetIndexCount(0) / 3u, Is.InRange(400u, 550u));
             Assert.That(runtime.NearArchetypeMeshes.All(mesh =>
                 mesh.colors32 != null &&
                 mesh.colors32.Length == mesh.vertexCount), Is.True,
                 "Every optimized vehicle needs semantic body/glass/tire/light color data.");
+            Assert.That(runtime.FarProxyMeshes, Has.Length.EqualTo(2));
+            Assert.That(runtime.FarProxyMeshes.Distinct().Count(), Is.EqualTo(2));
+            Assert.That(runtime.FarProxyMeshes.All(mesh =>
+                mesh != null &&
+                mesh.subMeshCount == 1 &&
+                mesh.GetIndexCount(0) / 3u == 36u &&
+                mesh.colors32 != null &&
+                mesh.colors32.Length == mesh.vertexCount), Is.True,
+                "Far passenger and semi proxies must be deterministic 36-triangle single-draw silhouettes.");
         }
 
         [Test]
@@ -100,7 +114,7 @@ namespace QuestFlightLab.Environment.Editor.Tests
             Assert.That(manifest.parked.All(item =>
                 item.source_pixel != null && item.source_pixel.Length == 2 &&
                 item.source_axis_pixels != null && item.source_axis_pixels.Length == 4 &&
-                item.archetype >= 0 && item.archetype < 5 &&
+                item.archetype >= 0 && item.archetype < 6 &&
                 item.paint_index >= 0 && item.paint_index < 8), Is.True);
             Assert.That(manifest.parked.Count(item =>
                 item.x >= -500f && item.x <= 500f &&
@@ -126,6 +140,17 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 route.highway_class == "secondary" ||
                 route.highway_class == "tertiary" ||
                 route.highway_class == "residential"), Is.True);
+            Assert.That(manifest.routes
+                .Where(route => route.highway_class == "trunk")
+                .All(route =>
+                    route.direction == "forward" &&
+                    (
+                        route.direction_policy == "SOURCE_WAY_ONEWAY_TRUNK" ||
+                        route.direction_policy ==
+                            "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"
+                    )),
+                Is.True,
+                "Each divided-highway carriageway must use only its source-way direction.");
             Assert.That(manifest.routes.Count(route =>
                 route.road_name == "Airport Boulevard"), Is.EqualTo(2),
                 "Moving traffic must occupy the normal airport demo corridor.");
@@ -135,7 +160,7 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 .Select(item => item.index)
                 .ToArray();
             Assert.That(manifest.moving.Count(item =>
-                trunkRoutes.Contains(item.route_index)), Is.GreaterThanOrEqualTo(200),
+                trunkRoutes.Contains(item.route_index)), Is.GreaterThanOrEqualTo(140),
                 "Diagonal Highway must read as an active traffic corridor.");
             Assert.That(manifest.moving.All(item =>
                 item.desired_speed_scale >= 0.8f &&
@@ -153,12 +178,12 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 item.acceleration_response_seconds >= 0.25f &&
                 item.acceleration_response_seconds <= 0.55f &&
                 item.vehicle_length_meters >= 4.3f &&
-                item.vehicle_length_meters <= 5.4f &&
-                item.archetype >= 0 && item.archetype < 5 &&
+                item.vehicle_length_meters <= 16.3f &&
+                item.archetype >= 0 && item.archetype < 6 &&
                 item.paint_index >= 0 && item.paint_index < 8), Is.True,
                 "Driver profiles must remain realistic, bounded, and collision-safe.");
             Assert.That(manifest.moving.Select(item => item.archetype).Distinct().Count(),
-                Is.EqualTo(5), "All market-relevant body styles must appear.");
+                Is.EqualTo(6), "All market-relevant body styles must appear.");
             Assert.That(manifest.moving.Select(item => item.paint_index).Distinct().Count(),
                 Is.EqualTo(8), "All market-weighted paint colors must appear.");
             Assert.That(
@@ -166,6 +191,33 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 (float)manifest.moving.Length,
                 Is.LessThanOrEqualTo(0.13f),
                 "Blue must not dominate the visible fleet.");
+            Assert.That(
+                manifest.moving.Count(item =>
+                    item.archetype == 5 &&
+                    trunkRoutes.Contains(item.route_index)),
+                Is.GreaterThanOrEqualTo(10),
+                "Diagonal Highway needs a visible semi-trailer population.");
+            Assert.That(
+                manifest.moving.All(item =>
+                    item.archetype != 5 ||
+                    manifest.routes[item.route_index].direction_policy ==
+                        "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"),
+                Is.True,
+                "Semi-trailers must use the closed divided-highway circuit.");
+            RouteRecord truckCircuit = manifest.routes.Single(route =>
+                route.direction_policy ==
+                    "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT");
+            Assert.That(truckCircuit.closed_loop, Is.True);
+            Assert.That(
+                Vector2.Distance(
+                    new Vector2(
+                        truckCircuit.samples[0].x,
+                        truckCircuit.samples[0].z),
+                    new Vector2(
+                        truckCircuit.samples.Last().x,
+                        truckCircuit.samples.Last().z)),
+                Is.LessThanOrEqualTo(0.01f),
+                "The truck route must recycle at the same world position.");
             Assert.That(manifest.moving
                 .Select(item => (
                     item.desired_speed_scale,
@@ -193,6 +245,10 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 {
                     MovingRecord follower = vehicles[index];
                     MovingRecord leader = vehicles[(index + 1) % vehicles.Length];
+                    Assert.That(
+                        (follower.archetype, follower.paint_index),
+                        Is.Not.EqualTo((leader.archetype, leader.paint_index)),
+                        "Exact model/color clones may not follow each other locally.");
                     float centerGap = Mathf.Repeat(
                         leader.initial_distance_meters -
                         follower.initial_distance_meters,
@@ -235,6 +291,43 @@ namespace QuestFlightLab.Environment.Editor.Tests
             Assert.That(freeRoad, Is.GreaterThan(0f));
             Assert.That(closingOnLeader, Is.LessThan(0f));
             Assert.That(closingOnLeader, Is.GreaterThanOrEqualTo(-6.5f));
+        }
+
+        [Test]
+        public void VisibilitySelection_UsesStableDistanceHysteresis()
+        {
+            float retained = KbduTrafficRuntime.CalculateSelectionScore(10000f, true);
+            float newcomer = KbduTrafficRuntime.CalculateSelectionScore(10000f, false);
+            Assert.That(retained, Is.EqualTo(7200f).Within(0.01f));
+            Assert.That(newcomer, Is.EqualTo(10000f).Within(0.01f));
+            Assert.That(
+                KbduTrafficRuntime.CalculateSelectionScore(7000f, false),
+                Is.LessThan(retained),
+                "A materially closer newcomer must still replace a retained vehicle.");
+            Assert.That(
+                KbduTrafficRuntime.SelectLodTier(700f, 0),
+                Is.EqualTo(1));
+            Assert.That(
+                KbduTrafficRuntime.SelectLodTier(1200f, 0),
+                Is.EqualTo(2));
+            Assert.That(
+                KbduTrafficRuntime.SelectLodTier(950f, 1),
+                Is.EqualTo(1),
+                "A detailed vehicle must remain detailed through the exit band.");
+            Assert.That(
+                KbduTrafficRuntime.SelectLodTier(1050f, 1),
+                Is.EqualTo(2));
+            Assert.That(
+                KbduTrafficRuntime.SelectLodTier(850f, 2),
+                Is.EqualTo(2),
+                "A proxy must not oscillate back to detail inside the hysteresis band.");
+            Assert.That(
+                KbduTrafficRuntime.SelectLodTier(750f, 2),
+                Is.EqualTo(1));
+            Assert.That(
+                KbduTrafficRuntime.SelectLodTier(3600f, 2),
+                Is.EqualTo(2),
+                "The compiled road population must not cross a hard visibility boundary.");
         }
 
         [Test]
@@ -310,8 +403,11 @@ namespace QuestFlightLab.Environment.Editor.Tests
         {
             public string road_name;
             public string highway_class;
+            public string direction;
+            public string direction_policy;
             public float lane_offset_meters;
             public float road_width_meters;
+            public bool closed_loop;
             public SampleRecord[] samples;
         }
 

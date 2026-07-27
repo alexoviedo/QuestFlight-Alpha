@@ -3,6 +3,7 @@ Shader "QuestFlight/KBDU Traffic Vehicle"
     Properties
     {
         _BodyTint ("Default Body Tint", Color) = (0.35,0.38,0.42,1)
+        _TrailerTint ("Default Trailer Tint", Color) = (0.72,0.73,0.72,1)
         _SurfaceDetail ("Shared Surface Detail", 2D) = "gray" {}
     }
     SubShader
@@ -28,6 +29,7 @@ Shader "QuestFlight/KBDU Traffic Vehicle"
             sampler2D _SurfaceDetail;
             UNITY_INSTANCING_BUFFER_START(TrafficVehicle)
                 UNITY_DEFINE_INSTANCED_PROP(float4, _BodyTint)
+                UNITY_DEFINE_INSTANCED_PROP(float4, _TrailerTint)
             UNITY_INSTANCING_BUFFER_END(TrafficVehicle)
 
             struct appdata
@@ -46,6 +48,7 @@ Shader "QuestFlight/KBDU Traffic Vehicle"
                 half3 semantic : TEXCOORD2;
                 half2 detailUv : TEXCOORD3;
                 half3 bodyTint : TEXCOORD4;
+                half3 trailerTint : TEXCOORD6;
                 UNITY_FOG_COORDS(5)
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -64,6 +67,9 @@ Shader "QuestFlight/KBDU Traffic Vehicle"
                     TrafficVehicle,
                     _BodyTint);
                 output.bodyTint = tint.rgb;
+                output.trailerTint = UNITY_ACCESS_INSTANCED_PROP(
+                    TrafficVehicle,
+                    _TrailerTint).rgb;
                 output.detailUv =
                     input.vertex.xz * half2(0.73, 0.37) +
                     tint.rb * half2(1.91, 2.37);
@@ -84,6 +90,7 @@ Shader "QuestFlight/KBDU Traffic Vehicle"
                 half trim = code.r * code.g * (1.0h - code.b);
                 half headlamp = code.r * code.b * (1.0h - code.g);
                 half taillamp = code.g * code.b * (1.0h - code.r);
+                half trailer = code.r * code.g * code.b;
 
                 fixed4 detail = tex2D(_SurfaceDetail, input.detailUv);
                 fixed3 bodyColor =
@@ -94,15 +101,22 @@ Shader "QuestFlight/KBDU Traffic Vehicle"
                     fixed3(0.018h, 0.019h, 0.020h) * tire +
                     fixed3(0.24h, 0.25h, 0.26h) * trim +
                     fixed3(0.94h, 0.87h, 0.62h) * headlamp +
-                    fixed3(0.52h, 0.025h, 0.018h) * taillamp;
+                    fixed3(0.52h, 0.025h, 0.018h) * taillamp +
+                    input.trailerTint * lerp(0.92h, 1.04h, detail.r) * trailer;
 
                 half3 normal = normalize(input.worldNormal);
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half diffuse = saturate(dot(normal, lightDirection));
-                fixed3 ambient = ShadeSH9(half4(normal, 1.0h));
-                fixed3 lighting =
-                    ambient +
-                    _LightColor0.rgb * (0.18h + diffuse * 0.82h);
+                // Match the production terrain/runway irradiance scale. The
+                // earlier full-SH + 18% constant-sun response kept vehicles
+                // bright even on back-facing surfaces and visually detached
+                // them from the photographed ground.
+                fixed3 ambient = max(
+                    ShadeSH9(half4(normal, 1.0h)),
+                    fixed3(0.0h, 0.0h, 0.0h));
+                fixed3 lighting = saturate(
+                    ambient * 0.35h +
+                    _LightColor0.rgb * (0.05h + diffuse * 0.52h));
 
                 half3 viewDirection =
                     normalize(_WorldSpaceCameraPos.xyz - input.worldPosition);
@@ -117,10 +131,11 @@ Shader "QuestFlight/KBDU Traffic Vehicle"
                 fixed3 specular =
                     _LightColor0.rgb *
                     (
-                        body * bodySpecular * 0.20h +
-                        trim * bodySpecular * 0.12h +
-                        glass * (glassSpecular * 0.42h + fresnel * 0.18h) +
-                        (headlamp + taillamp) * bodySpecular * 0.16h
+                        body * bodySpecular * 0.13h +
+                        trailer * bodySpecular * 0.07h +
+                        trim * bodySpecular * 0.09h +
+                        glass * (glassSpecular * 0.32h + fresnel * 0.13h) +
+                        (headlamp + taillamp) * bodySpecular * 0.12h
                     );
 
                 fixed4 output = fixed4(baseColor * lighting + specular, 1.0h);

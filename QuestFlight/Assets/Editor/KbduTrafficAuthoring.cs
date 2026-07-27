@@ -7,7 +7,7 @@ using UnityEngine;
 namespace QuestFlightLab.Environment.Editor
 {
     /// <summary>
-    /// Imports the optimized CC0 vehicle derivatives, reduces them to five
+    /// Imports the optimized CC0 vehicle derivatives, reduces them to six
     /// single-submesh meshes, and authors one renderer-free TrafficRoot.  Both
     /// parked and moving records are submitted through the same bounded instanced
     /// path, so visual variety does not add GameObjects or material clones.
@@ -25,6 +25,10 @@ namespace QuestFlightLab.Environment.Editor
         public const string ProductEnvironmentPath =
             "Assets/Production/Environment/ProductionEnvironmentRoot.prefab";
         public const string ImportRoot = "Assets/__TrafficVehicleImportTemp";
+        public const string PassengerProxyPath =
+            Root + "/Models/KBDU_TrafficPassengerProxy.asset";
+        public const string SemiProxyPath =
+            Root + "/Models/KBDU_TrafficSemiProxy.asset";
 
         private const string ShaderName = "QuestFlight/KBDU Traffic Vehicle";
 
@@ -59,7 +63,13 @@ namespace QuestFlightLab.Environment.Editor
                 "KBDU_TrafficCargoVan.fbx",
                 1.98f,
                 5.05f,
-                2.10f)
+                2.10f),
+            new VehicleAsset(
+                "KBDU_TrafficSemi",
+                "KBDU_TrafficSemi.fbx",
+                2.55f,
+                16.20f,
+                4.00f)
         };
 
         private static readonly string[] ObsoleteRuntimeAssets =
@@ -100,13 +110,18 @@ namespace QuestFlightLab.Environment.Editor
                 throw new InvalidOperationException(
                     "Traffic archetype count does not match the runtime contract.");
             }
+            Mesh[] proxyMeshes = BuildProxyMeshes();
 
             GameObject trafficRoot = new GameObject("TrafficRoot");
             try
             {
                 KbduTrafficRuntime runtime =
                     trafficRoot.AddComponent<KbduTrafficRuntime>();
-                runtime.Configure(manifest, material, vehicleMeshes);
+                runtime.Configure(
+                    manifest,
+                    material,
+                    vehicleMeshes,
+                    proxyMeshes);
                 if (!runtime.TryValidateContract(out string report))
                 {
                     throw new InvalidOperationException(
@@ -135,8 +150,141 @@ namespace QuestFlightLab.Environment.Editor
                 $"parked={records?.parked?.Length ?? 0}, " +
                 $"moving={records?.moving?.Length ?? 0}, " +
                 $"routes={records?.routes?.Length ?? 0}, " +
-                "five CC0 body styles, eight instanced paint colors, " +
-                "draws<=5, serialized renderers=0, transparent=0, shadows=0.");
+                "six CC0 near body styles, two project-owned far proxies, " +
+                "eight instanced paint colors, draws<=8, " +
+                "serialized renderers=0, transparent=0, shadows=0.");
+        }
+
+        private static Mesh[] BuildProxyMeshes()
+        {
+            Color32 body = new Color32(255, 0, 0, 255);
+            Color32 glass = new Color32(0, 255, 0, 255);
+            Color32 trailer = new Color32(255, 255, 255, 255);
+
+            List<Vector3> passengerVertices = new List<Vector3>(24);
+            List<int> passengerTriangles = new List<int>(36);
+            List<Color32> passengerColors = new List<Color32>(24);
+            AddBox(
+                passengerVertices,
+                passengerTriangles,
+                passengerColors,
+                new Vector3(0f, 0.45f, 0f),
+                new Vector3(1.90f, 0.70f, 4.70f),
+                body);
+            AddBox(
+                passengerVertices,
+                passengerTriangles,
+                passengerColors,
+                new Vector3(0f, 1.05f, -0.10f),
+                new Vector3(1.65f, 0.65f, 2.40f),
+                glass);
+            AddBox(
+                passengerVertices,
+                passengerTriangles,
+                passengerColors,
+                new Vector3(0f, 1.42f, -0.10f),
+                new Vector3(1.55f, 0.12f, 2.15f),
+                body);
+
+            List<Vector3> semiVertices = new List<Vector3>(24);
+            List<int> semiTriangles = new List<int>(36);
+            List<Color32> semiColors = new List<Color32>(24);
+            AddBox(
+                semiVertices,
+                semiTriangles,
+                semiColors,
+                new Vector3(0f, 2.30f, -2.45f),
+                new Vector3(2.55f, 3.40f, 11.30f),
+                trailer);
+            AddBox(
+                semiVertices,
+                semiTriangles,
+                semiColors,
+                new Vector3(0f, 0.75f, 5.65f),
+                new Vector3(2.55f, 1.50f, 4.90f),
+                body);
+            AddBox(
+                semiVertices,
+                semiTriangles,
+                semiColors,
+                new Vector3(0f, 2.625f, 5.25f),
+                new Vector3(2.45f, 2.75f, 3.70f),
+                body);
+
+            return new[]
+            {
+                WriteMesh(
+                    PassengerProxyPath,
+                    CreateProxyMesh(
+                        "KBDU_TrafficPassengerProxy",
+                        passengerVertices,
+                        passengerTriangles,
+                        passengerColors)),
+                WriteMesh(
+                    SemiProxyPath,
+                    CreateProxyMesh(
+                        "KBDU_TrafficSemiProxy",
+                        semiVertices,
+                        semiTriangles,
+                        semiColors))
+            };
+        }
+
+        private static Mesh CreateProxyMesh(
+            string name,
+            List<Vector3> vertices,
+            List<int> triangles,
+            List<Color32> colors)
+        {
+            Mesh mesh = new Mesh
+            {
+                name = name,
+                indexFormat = UnityEngine.Rendering.IndexFormat.UInt16
+            };
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0, true);
+            mesh.SetColors(colors);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            mesh.UploadMeshData(false);
+            return mesh;
+        }
+
+        private static void AddBox(
+            List<Vector3> vertices,
+            List<int> triangles,
+            List<Color32> colors,
+            Vector3 center,
+            Vector3 size,
+            Color32 semanticColor)
+        {
+            Vector3 half = size * 0.5f;
+            int start = vertices.Count;
+            vertices.Add(center + new Vector3(-half.x, -half.y, -half.z));
+            vertices.Add(center + new Vector3(half.x, -half.y, -half.z));
+            vertices.Add(center + new Vector3(half.x, half.y, -half.z));
+            vertices.Add(center + new Vector3(-half.x, half.y, -half.z));
+            vertices.Add(center + new Vector3(-half.x, -half.y, half.z));
+            vertices.Add(center + new Vector3(half.x, -half.y, half.z));
+            vertices.Add(center + new Vector3(half.x, half.y, half.z));
+            vertices.Add(center + new Vector3(-half.x, half.y, half.z));
+            for (int index = 0; index < 8; index++)
+            {
+                colors.Add(semanticColor);
+            }
+            int[] boxTriangles =
+            {
+                0, 2, 1, 0, 3, 2,
+                4, 5, 6, 4, 6, 7,
+                0, 4, 7, 0, 7, 3,
+                1, 2, 6, 1, 6, 5,
+                0, 1, 5, 0, 5, 4,
+                3, 7, 6, 3, 6, 2
+            };
+            for (int index = 0; index < boxTriangles.Length; index++)
+            {
+                triangles.Add(start + boxTriangles[index]);
+            }
         }
 
         private static Material BuildMaterial()
@@ -173,6 +321,9 @@ namespace QuestFlightLab.Environment.Editor
             material.SetColor(
                 "_BodyTint",
                 new Color(0.35f, 0.38f, 0.42f, 1f));
+            material.SetColor(
+                "_TrailerTint",
+                new Color(0.72f, 0.73f, 0.72f, 1f));
             material.SetTexture("_SurfaceDetail", detail);
             EditorUtility.SetDirty(material);
             return material;
@@ -315,11 +466,12 @@ namespace QuestFlightLab.Environment.Editor
                     $"{definition.length:F2} meters.");
             }
             uint triangles = mesh.GetIndexCount(0) / 3u;
-            if (triangles < 500u || triangles > 1100u)
+            uint minimumTriangles = definition.length > 10f ? 400u : 500u;
+            if (triangles < minimumTriangles || triangles > 1100u)
             {
                 throw new InvalidOperationException(
                     $"{definition.name} has {triangles} triangles; " +
-                    "expected a 500-1100 triangle optimized derivative.");
+                    $"expected a {minimumTriangles}-1100 triangle optimized derivative.");
             }
             if (mesh.colors32 == null || mesh.colors32.Length != mesh.vertexCount)
             {

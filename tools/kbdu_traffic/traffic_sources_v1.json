@@ -55,7 +55,7 @@
         "comfortable_deceleration_mps2": [1.8, 3.0],
         "emergency_deceleration_mps2": [5.5, 7.5],
         "acceleration_response_seconds": [0.25, 0.55],
-        "vehicle_length_meters": [4.6, 4.35, 4.7, 5.35, 5.05]
+        "vehicle_length_meters": [4.6, 4.35, 4.7, 5.35, 5.05, 16.2]
       },
       "traffic_side": "right"
     },
@@ -81,13 +81,24 @@
       {"archetype":"hatchback","sha256":"350aa3176c37af412524304e920a9b336cea4a30c63c1dd2cc547cc4c76673be"},
       {"archetype":"crossover_suv","sha256":"7a1dd80445f81564d8ce352a1e31a47ca0c81f04150090052aec3c385a070eb1"},
       {"archetype":"pickup","sha256":"a199845625780059588ccf154ef055a288944e2b62719161cb90ff91d20e974b"},
-      {"archetype":"cargo_van","sha256":"2e05fe145a8d525e9105816ee953f39c9cd66a914eecbbe2a4a8182673a31479"}
+      {"archetype":"cargo_van","sha256":"2e05fe145a8d525e9105816ee953f39c9cd66a914eecbbe2a4a8182673a31479"},
+      {"archetype":"semi_trailer","sha256":"6dbc08a6c2c6c4c8d8c18957132e6aae0329e188205e26649977ea8849ce0d75"}
     ],
-    "optimized_archetypes": ["sedan", "hatchback", "crossover_suv", "pickup", "cargo_van"],
+    "additional_source": {
+      "title": "Semi-Trailer Truck (lowpoly)",
+      "author": "Teh_Bucket",
+      "url": "https://opengameart.org/content/semi-trailer-truck-lowpoly",
+      "license": "CC0 1.0 Universal",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source_sha256": "6dbc08a6c2c6c4c8d8c18957132e6aae0329e188205e26649977ea8849ce0d75",
+      "raw_storage": "external artifact cache only"
+    },
+    "optimized_archetypes": ["sedan", "hatchback", "crossover_suv", "pickup", "cargo_van", "semi_trailer"],
     "runtime_material": "QuestFlight/Assets/Production/Environment/TrafficV1/Materials/KBDU_TrafficVehicle.mat",
     "surface_detail_texture": "QuestFlight/Assets/Production/Environment/TrafficV1/Textures/KBDU_TrafficSurfaceDetail.png",
     "surface_detail_license": "Project-owned",
-    "fleet_style_weights": [0.24, 0.14, 0.34, 0.20, 0.08],
+    "passenger_fleet_style_weights": [0.24, 0.14, 0.34, 0.20, 0.08, 0.0],
+    "trunk_fleet_style_weights": [0.20, 0.10, 0.28, 0.18, 0.08, 0.16],
     "paint_palette": ["white", "black", "gray", "silver", "blue", "red", "green", "brown"],
     "paint_weights": [0.26, 0.22, 0.19, 0.14, 0.09, 0.07, 0.02, 0.01],
     "paint_weight_source": "Edmunds 2025 U.S. new retail registration color distribution",

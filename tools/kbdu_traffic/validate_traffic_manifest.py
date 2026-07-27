@@ -215,7 +215,21 @@ def main() -> None:
     require(len(data["parked"]) == 40, "expected 40 photographed parked cars")
     require(len(data["routes"]) >= 300, "major-road route network is too sparse")
     require(len(data["moving"]) >= 600, "streamed traffic population is too sparse")
-    require(data["runtime_contract"]["maximum_draw_calls"] == 5, "draw budget changed")
+    require(
+        data["runtime_contract"]["representation"]
+        == "DETAIL_NEAR_FIXED_PROXY_FAR",
+        "traffic LOD representation changed",
+    )
+    require(data["runtime_contract"]["maximum_near_instances"] == 96, "near instance budget changed")
+    require(data["runtime_contract"]["maximum_far_instances"] == 900, "far instance budget changed")
+    require(data["runtime_contract"]["near_enter_distance_meters"] == 800.0, "near enter distance changed")
+    require(data["runtime_contract"]["near_exit_distance_meters"] == 1000.0, "near exit distance changed")
+    require(
+        data["runtime_contract"]["visibility_distance_policy"]
+        == "FULL_COMPILED_NETWORK",
+        "hard traffic visibility boundary reintroduced",
+    )
+    require(data["runtime_contract"]["maximum_draw_calls"] == 8, "draw budget changed")
     require(data["runtime_contract"]["maximum_visible_triangles"] == 130000, "triangle budget changed")
     require(data["runtime_contract"]["per_vehicle_gameobjects"] == 0, "per-car objects forbidden")
     require(data["runtime_contract"]["realtime_vehicle_shadows"] == 0, "realtime shadows forbidden")
@@ -233,7 +247,7 @@ def main() -> None:
     for parked in data["parked"]:
         require(parked["id"] not in ids, "duplicate parked id")
         ids.add(parked["id"])
-        require(0 <= parked["archetype"] < 5, "invalid parked archetype")
+        require(0 <= parked["archetype"] < 6, "invalid parked archetype")
         require(0 <= parked["paint_index"] < 8, "invalid parked paint")
         require(len(parked["source_pixel"]) == 2, "parked source pixel missing")
         require(len(parked["source_axis_pixels"]) == 4, "parked source axis missing")
@@ -258,7 +272,7 @@ def main() -> None:
 
     for moving in data["moving"]:
         require(0 <= moving["route_index"] < len(data["routes"]), "moving route index invalid")
-        require(0 <= moving["archetype"] < 5, "moving archetype invalid")
+        require(0 <= moving["archetype"] < 6, "moving archetype invalid")
         require(0 <= moving["paint_index"] < 8, "moving paint invalid")
         route = data["routes"][moving["route_index"]]
         require(0 <= moving["initial_distance_meters"] < route["length_meters"], "moving offset invalid")
@@ -269,18 +283,19 @@ def main() -> None:
         require(1.8 <= moving["comfortable_deceleration_mps2"] <= 3.0, "deceleration invalid")
         require(5.5 <= moving["emergency_deceleration_mps2"] <= 7.5, "emergency deceleration invalid")
         require(0.25 <= moving["acceleration_response_seconds"] <= 0.55, "response time invalid")
-        require(4.3 <= moving["vehicle_length_meters"] <= 5.4, "vehicle length invalid")
+        require(4.3 <= moving["vehicle_length_meters"] <= 16.3, "vehicle length invalid")
 
     fleet = data["parked"] + data["moving"]
     archetype_counts = [
         sum(1 for vehicle in fleet if vehicle["archetype"] == index)
-        for index in range(5)
+        for index in range(6)
     ]
     paint_counts = [
         sum(1 for vehicle in fleet if vehicle["paint_index"] == index)
         for index in range(8)
     ]
-    require(min(archetype_counts) >= 30, "fleet body-style variation is too sparse")
+    require(min(archetype_counts[:5]) >= 30, "passenger body-style variation is too sparse")
+    require(archetype_counts[5] >= 10, "highway semi-trailer population is too sparse")
     require(min(paint_counts) >= 5, "fleet paint variation is too sparse")
     require(
         sum(paint_counts[:4]) / len(fleet) >= 0.72,
@@ -302,8 +317,53 @@ def main() -> None:
             for moving in data["moving"]
             if moving["route_index"] in trunk_route_indices
         )
-        >= 200,
+        >= 140,
         "highway traffic population is too sparse",
+    )
+    require(
+        all(
+            route["direction"] == "forward"
+            and route["direction_policy"]
+            in {
+                "SOURCE_WAY_ONEWAY_TRUNK",
+                "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT",
+            }
+            for route in data["routes"]
+            if route["highway_class"] == "trunk"
+        ),
+        "each divided-highway carriageway must follow its source-way direction only",
+    )
+    require(
+        all(
+            data["routes"][moving["route_index"]]["direction_policy"]
+            == "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"
+            for moving in data["moving"]
+            if moving["archetype"] == 5
+        ),
+        "semi-trailers must remain confined to the closed divided-highway circuit",
+    )
+    truck_circuits = [
+        route
+        for route in data["routes"]
+        if route["direction_policy"]
+        == "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"
+    ]
+    require(len(truck_circuits) == 1, "expected one dedicated truck circuit")
+    circuit = truck_circuits[0]
+    require(circuit.get("closed_loop") is True, "truck circuit is not marked closed")
+    require(
+        math.dist(
+            (
+                circuit["samples"][0]["x"],
+                circuit["samples"][0]["z"],
+            ),
+            (
+                circuit["samples"][-1]["x"],
+                circuit["samples"][-1]["z"],
+            ),
+        )
+        <= 0.01,
+        "truck circuit has a visible endpoint recycle jump",
     )
 
     moving_by_route: dict[int, list[dict]] = {}
@@ -319,6 +379,13 @@ def main() -> None:
         )
         length = data["routes"][route_index]["length_meters"]
         ordered = sorted(vehicles, key=lambda vehicle: vehicle["initial_distance_meters"])
+        for index, vehicle in enumerate(ordered):
+            leader = ordered[(index + 1) % len(ordered)]
+            require(
+                (vehicle["archetype"], vehicle["paint_index"])
+                != (leader["archetype"], leader["paint_index"]),
+                "an exact model/color clone follows another local vehicle",
+            )
         gaps = []
         for index, vehicle in enumerate(ordered):
             leader = ordered[(index + 1) % len(ordered)]
