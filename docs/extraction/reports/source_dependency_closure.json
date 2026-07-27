@@ -3,7 +3,7 @@
     "sourceCommit": "cd4131fa7732a6db2d7387921dfef33e2c206970",
     "scenePath": "Assets/Scenes/ProductionVerticalSlice.unity",
     "ready": true,
-    "approvedCount": 308,
+    "approvedCount": 312,
     "packageCount": 5,
     "conditionalLocalCount": 0,
     "rejectedCount": 0,
@@ -986,19 +986,35 @@
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficMidProxy.asset",
+            "assetPath": "Assets/Production/Environment/TrafficV1/Materials/KBDU_TrafficVehicle.mat",
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficPickup_White.asset",
+            "assetPath": "Assets/Production/Environment/TrafficV1/Materials/KBDU_TrafficVehicle.shader",
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSedan_Blue.asset",
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficCargoVan.asset",
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSuv_Red.asset",
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficCrossover.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficHatchback.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficPickup.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSedan.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Textures/KBDU_TrafficSurfaceDetail.png",
             "classification": "approved_production"
         },
         {

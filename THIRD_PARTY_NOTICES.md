@@ -75,6 +75,24 @@ The tagged Photoreal Aerial Surface V1 baseline uses a 3DEP-derived terrain-map 
 
 No agency logo is included and no agency endorsement, navigation suitability, surveying accuracy, FAA approval, or training credit is claimed.
 
+## RGSDev CC0 traffic vehicles
+
+The product's bounded road-traffic presentation uses optimized derivatives of
+RGSDev's `Free Low Poly Vehicles Pack`.
+
+- Source: <https://opengameart.org/content/free-low-poly-vehicles-pack>
+- Author: RGSDev
+- License: Creative Commons CC0 1.0 Universal, <https://creativecommons.org/publicdomain/zero/1.0/>
+- Changes: five selected body styles are normalized to realistic dimensions,
+  decimated, joined to one submesh each, stripped of source materials, and
+  encoded with semantic vertex colors for one shared opaque instanced material.
+
+Raw archives and source FBX files remain external. Exact hashes and derivative
+inventory are recorded in
+`tools/kbdu_traffic/traffic_vehicle_derivatives_v1.json`. Attribution is not
+required by CC0 but is retained as provenance. Use does not imply endorsement
+by RGSDev or OpenGameArt.
+
 ## JSBSim (frozen and out of scope)
 
 The frozen optional development-gated native flight-dynamics package includes JSBSim

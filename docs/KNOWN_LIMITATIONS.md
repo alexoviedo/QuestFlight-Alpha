@@ -85,22 +85,23 @@ The airport corridor is a reference-faithful procedural approximation rather tha
 
 ## Bounded road traffic
 
-- Traffic V1 is a bounded life cue, not a traffic simulation. It contains 30
-  orthophoto-traced parked vehicles and 12 deterministic moving vehicles on five
-  named road corridors compiled from six OSM ways. It does not model every
+- Traffic V1 is a bounded life cue, not a traffic simulation. It contains 40
+  orthophoto-traced parked records and 924 deterministic moving records on 402
+  directional routes compiled from the bounded OSM road network. It does not model every
   parking lot, street, intersection, traffic signal, collision, or current
   vehicle occupancy.
-- The vehicle meshes are intentionally inexpensive flight-distance silhouettes.
-  They provide sedan/SUV/pickup shape and color variation but are not hero car
-  models and have no transparent glass, interiors, lights, wheel animation, or
-  realtime shadows.
-- Visual QA proves grounding and road-lock at fixed cameras. Live Meta XR stereo
-  is nonblank and scene-consistent, but the ten recorded `.vrs` sessions remain
-  absent. The exact APK installed on the connected Quest 3, but Horizon blocked
-  unattended launch on its controller-required dialog. No worn traffic review
-  or physical Quest timing, thermal, stale/tear, or allocation acceptance is
-  claimed.
-- Traffic adds no textures or materials. The inherited airport-hero source was
-  already at 221,506,450 estimated texture bytes against the current 220,200,960
-  byte static ceiling; Traffic V1 remains at the same value and therefore does
-  not convert the aggregate static budget classification into a pass.
+- The five CC0 vehicle derivatives are optimized flight-distance assets, not hero
+  automobile interiors. They provide distinct sedan, hatchback, crossover/SUV,
+  pickup, and cargo-van geometry; eight paint colors; opaque reflective-looking
+  glass; and wheel/light material response. They do not provide transparent
+  cabins, occupants, active lamps, animated wheels, or realtime shadows.
+- The runtime selects at most 128 view-relevant records within 2.5 km. This
+  bounded streaming means traffic outside that set is intentionally absent and
+  does not represent current real-world vehicle occupancy.
+- Simulator evidence does not establish Quest hardware performance. A final
+  worn review and timing/thermal/stale/tear/allocation gate are required for the
+  exact rebuilt APK before any hardware-performance claim.
+- Traffic adds one shared 128-square ASTC detail texture and one shared opaque
+  material while removing the serialized parked batch. Aggregate texture-budget
+  status remains governed by the full product performance report, not by this
+  subsystem in isolation.

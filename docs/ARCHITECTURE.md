@@ -166,20 +166,26 @@ authority, and standalone Android/OpenXR ownership.
 ## Bounded road traffic
 
 `KBDU_TrafficRoot` is one explicitly serialized child of
-`ProductionEnvironmentRoot`. Its manifest is compiled offline from six pinned
-OpenStreetMap road ways, the existing terrain surface, and thirty parked-car
+`ProductionEnvironmentRoot`. Its manifest is compiled offline from the bounded
+OpenStreetMap road network, the existing terrain surface, and forty parked-car
 observations traced against the pinned 8192-square City 2020 orthophoto. Runtime
 code never creates traffic GameObjects, modifies the product hierarchy, invokes
 physics, or searches for a road.
 
 One `KbduTrafficRuntime` parses the compact manifest once and fills preallocated
-matrix arrays during camera pre-cull. It renders three project-authored
-single-submesh near archetypes (sedan, SUV, and pickup) and one shared midrange
-proxy through at most four opaque instanced draws. There are no per-car
-components, colliders, rigidbodies, transparent windows, realtime vehicle
-shadows, or per-car `Update` calls. Twelve moving cars follow twelve
-terrain-sampled lane centerlines deterministically; thirty parked cars retain
-their traced image position and axis. Near detail is capped at 24 instances,
-midrange detail at 48, and all traffic is culled beyond 1,500 m. The serialized
-maximum is 3,888 visible vehicle triangles, with no new material, shader,
-texture, or transparent slot.
+matrix and paint arrays during camera pre-cull. Five optimized CC0 single-submesh
+archetypes—sedan, hatchback, crossover/SUV, pickup, and cargo van—share one
+opaque instanced shader/material. Exclusive vertex-color classes preserve body,
+glass, tire, wheel/trim, headlamp, and tail-lamp response; eight deterministic
+market-weighted paint tints add variety without material clones. At most five
+draws submit both parked and moving records, with the nearest/view-relevant 128
+of 964 total records selected inside 2,500 m.
+
+There are no serialized traffic renderers, per-car components, colliders,
+rigidbodies, transparent windows, realtime vehicle shadows, wheel animations,
+or per-car `Update` calls. Nine hundred twenty-four moving records follow 402
+terrain-sampled right-side lane routes under the fixed-step collision-safe
+controller; forty parked records retain their traced image positions and axes.
+Worst-case selected vehicle geometry is 129,024 triangles. The fleet uses one
+128-square ASTC detail texture, one material, no transparent slot, and zero
+steady-state managed allocation by design.

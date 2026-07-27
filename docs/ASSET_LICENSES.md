@@ -457,18 +457,30 @@ Cessna/Textron trademark rights or imply endorsement.
 
 ### Bounded road-traffic derivatives
 
-The traffic route compiler uses six selected ways from the already committed
-`KBDU_ReferenceContextV2.json` OpenStreetMap derivative. The route data remains
-under ODbL 1.0 and public display must retain `© OpenStreetMap contributors`
-with <https://www.openstreetmap.org/copyright>. Thirty parked-vehicle positions
-and axes are observations traced from the already licensed and committed
-`KBDU_City2020_Near4km_8192.jpg`; no new source image or external vehicle model
-is included.
+The traffic route compiler uses the bounded road network in the already
+committed `KBDU_ReferenceContextV2.json` OpenStreetMap derivative. Route data
+remains under ODbL 1.0 and public display must retain
+`© OpenStreetMap contributors` with
+<https://www.openstreetmap.org/copyright>. Forty parked-vehicle positions and
+axes are observations traced from the already licensed and committed
+`KBDU_City2020_Near4km_8192.jpg`; no new source imagery is included.
 
-The sedan, SUV, pickup, and far proxy meshes are deterministic project-authored
-geometry and are project-owned. They reuse the existing project-authored opaque
-vertex-color material. Exact source pixels, selected OSM way IDs, orthophoto
-GUID/SHA-256, attribution, coordinate frame, and archetype ownership are pinned
-in `tools/kbdu_traffic/traffic_sources_v1.json`. The compiler and validator are
-`tools/kbdu_traffic/build_traffic_manifest.py` and
-`tools/kbdu_traffic/validate_traffic_manifest.py`.
+The five optimized runtime vehicle silhouettes—sedan, hatchback, crossover/SUV,
+pickup, and cargo van—derive from RGSDev's
+[Free Low Poly Vehicles Pack](https://opengameart.org/content/free-low-poly-vehicles-pack),
+dedicated under
+[CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+The raw archive and FBX sources remain external. Blender 5.1.2 normalizes scale,
+reduces geometry, removes source materials, joins each model to one submesh,
+and encodes body, glass, tire, wheel/trim, headlamp, and tail-lamp classes in
+vertex colors. One project-owned 128-square detail texture and one instanced
+opaque material serve every model.
+
+Exact source/archive hashes, per-derivative triangles and dimensions, source
+pixels, OSM network lineage, paint/fleet weights, and runtime limits are pinned
+in `tools/kbdu_traffic/traffic_vehicle_derivatives_v1.json` and
+`tools/kbdu_traffic/traffic_sources_v1.json`. The compiler and validators are
+`tools/kbdu_traffic/build_traffic_manifest.py`,
+`tools/kbdu_traffic/validate_traffic_manifest.py`, and the Traffic V1 EditMode
+suite. CC0 attribution is retained as provenance and does not imply RGSDev
+endorsement.

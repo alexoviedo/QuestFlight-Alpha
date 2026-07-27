@@ -45,17 +45,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.KbduTrafficRuntime
   trafficManifest: {fileID: 4900000, guid: 7fe4d2b6f0d7ec9498919121d5721293, type: 3}
-  sharedOpaqueMaterial: {fileID: 2100000, guid: 81f0fd3796583744d8eb0e947cc558f5, type: 2}
+  sharedOpaqueMaterial: {fileID: 2100000, guid: e4bcd9e4881dd8649909a11729b214f2, type: 2}
   nearArchetypeMeshes:
-  - {fileID: 4300000, guid: ed4f911c233d9e34a8e6d8d02054606e, type: 2}
-  - {fileID: 4300000, guid: fdd974c0e547d744eb92dd098bf48062, type: 2}
-  - {fileID: 4300000, guid: 671b58d3052c4be49a2370b1f6aeed6a, type: 2}
-  midDistanceMesh: {fileID: 4300000, guid: 1d21fca0e271ef54f92b60da0d1439b8, type: 2}
+  - {fileID: 4300000, guid: 86678aa52b92bdf4b8a292587a01008a, type: 2}
+  - {fileID: 4300000, guid: a5544a94078209644993ed9ad53dabb0, type: 2}
+  - {fileID: 4300000, guid: 472c946151217c540bd841d74fde8936, type: 2}
+  - {fileID: 4300000, guid: 0865c71225ae3634c94c40b2414c7b8f, type: 2}
+  - {fileID: 4300000, guid: 9e23c8b291a41ca478262c88778e052f, type: 2}
   deterministicMotion: 1
   realtimeVehicleShadows: 0
   perVehicleGameObjects: 0
-  authoredParkedCount: 30
-  authoredDynamicCount: 12
-  authoredRouteCount: 12
-  authoredMaximumDrawCount: 4
-  authoredMaximumVisibleTriangles: 3888
+  authoredParkedCount: 40
+  authoredDynamicCount: 924
+  authoredRouteCount: 402
+  authoredMaximumDrawCount: 5
+  authoredMaximumVisibleTriangles: 129024

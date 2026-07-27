@@ -1,0 +1,73 @@
+{
+  "schema": "questflight.traffic-vehicle-derivatives-v1",
+  "source": {
+    "title": "Free Low Poly Vehicles Pack",
+    "author": "RGSDev",
+    "url": "https://opengameart.org/content/free-low-poly-vehicles-pack",
+    "license": "CC0 1.0 Universal",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "archive_sha256": "9091e478bd211a7cf8b562f04e8f061a2188d323e2fa0878f3f1641e5e67c800",
+    "raw_storage": "external artifact cache only"
+  },
+  "authoring": {
+    "blender_version": "5.1.2",
+    "script": "tools/kbdu_traffic/prepare_cc0_vehicle_assets.py",
+    "decimate_ratio": 0.58,
+    "surface_encoding": "exclusive vertex-color classes: body, glass, tire, wheel/trim, headlamp, tail lamp",
+    "unity_authoring": "QuestFlight/Assets/Editor/KbduTrafficAuthoring.cs"
+  },
+  "derivatives": [
+    {
+      "id": "sedan",
+      "source_sha256": "9ed24c5ac7d248d05ef06a0f36d2a60cd212a88285097d602e48b5682df099d7",
+      "runtime_asset": "QuestFlight/Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSedan.asset",
+      "dimensions_meters": [1.82, 1.45, 4.6],
+      "triangles": 846
+    },
+    {
+      "id": "hatchback",
+      "source_sha256": "350aa3176c37af412524304e920a9b336cea4a30c63c1dd2cc547cc4c76673be",
+      "runtime_asset": "QuestFlight/Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficHatchback.asset",
+      "dimensions_meters": [1.78, 1.5, 4.35],
+      "triangles": 794
+    },
+    {
+      "id": "crossover_suv",
+      "source_sha256": "7a1dd80445f81564d8ce352a1e31a47ca0c81f04150090052aec3c385a070eb1",
+      "runtime_asset": "QuestFlight/Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficCrossover.asset",
+      "dimensions_meters": [1.92, 1.75, 4.7],
+      "triangles": 1008
+    },
+    {
+      "id": "pickup",
+      "source_sha256": "a199845625780059588ccf154ef055a288944e2b62719161cb90ff91d20e974b",
+      "runtime_asset": "QuestFlight/Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficPickup.asset",
+      "dimensions_meters": [2.0, 1.82, 5.35],
+      "triangles": 956
+    },
+    {
+      "id": "cargo_van",
+      "source_sha256": "2e05fe145a8d525e9105816ee953f39c9cd66a914eecbbe2a4a8182673a31479",
+      "runtime_asset": "QuestFlight/Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficCargoVan.asset",
+      "dimensions_meters": [1.98, 2.1, 5.05],
+      "triangles": 802
+    }
+  ],
+  "shared_surface_detail": {
+    "runtime_asset": "QuestFlight/Assets/Production/Environment/TrafficV1/Textures/KBDU_TrafficSurfaceDetail.png",
+    "source": "project-authored deterministic generator",
+    "license": "Project-owned",
+    "generator": "tools/kbdu_traffic/build_vehicle_surface_texture.py",
+    "sha256": "14da6ff19a9f1d28a35f9d1030b76811d411793472132202a676a941bb72fdae"
+  },
+  "runtime_contract": {
+    "body_styles": 5,
+    "paint_variants": 8,
+    "materials": 1,
+    "maximum_instanced_draws": 5,
+    "maximum_visible_instances": 128,
+    "maximum_visible_vehicle_triangles": 130000,
+    "per_vehicle_gameobjects": 0,
+    "realtime_vehicle_shadows": 0
+  }
+}

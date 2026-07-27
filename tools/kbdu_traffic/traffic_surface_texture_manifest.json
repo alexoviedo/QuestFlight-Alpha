@@ -1,0 +1,16 @@
+{
+  "schema": "questflight.traffic-surface-detail-v1",
+  "path": "QuestFlight/Assets/Production/Environment/TrafficV1/Textures/KBDU_TrafficSurfaceDetail.png",
+  "size_pixels": [
+    128,
+    128
+  ],
+  "channels": {
+    "r": "project-authored paint micro-variation",
+    "g": "project-authored roughness variation",
+    "b": "reserved glass variation",
+    "a": "opaque"
+  },
+  "license": "Project-owned",
+  "sha256": "14da6ff19a9f1d28a35f9d1030b76811d411793472132202a676a941bb72fdae"
+}

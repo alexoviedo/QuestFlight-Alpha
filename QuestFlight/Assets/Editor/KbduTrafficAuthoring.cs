@@ -3,68 +3,114 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace QuestFlightLab.Environment.Editor
 {
     /// <summary>
-    /// Deterministically authors the three project-owned traffic archetypes, their
-    /// shared proxy, one TrafficRoot prefab, and the serialized product integration.
+    /// Imports the optimized CC0 vehicle derivatives, reduces them to five
+    /// single-submesh meshes, and authors one renderer-free TrafficRoot.  Both
+    /// parked and moving records are submitted through the same bounded instanced
+    /// path, so visual variety does not add GameObjects or material clones.
     /// </summary>
     public static class KbduTrafficAuthoring
     {
         public const string Root = "Assets/Production/Environment/TrafficV1";
-        public const string ManifestPath = Root + "/Data/KBDU_TrafficManifestV1.json";
+        public const string ManifestPath =
+            Root + "/Data/KBDU_TrafficManifestV1.json";
         public const string PrefabPath = Root + "/KBDU_TrafficRoot.prefab";
-        public const string ExistingMaterialPath =
-            "Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraft.mat";
+        public const string MaterialPath =
+            Root + "/Materials/KBDU_TrafficVehicle.mat";
+        public const string TexturePath =
+            Root + "/Textures/KBDU_TrafficSurfaceDetail.png";
         public const string ProductEnvironmentPath =
             "Assets/Production/Environment/ProductionEnvironmentRoot.prefab";
+        public const string ImportRoot = "Assets/__TrafficVehicleImportTemp";
 
-        private static readonly Color32 Glass = new Color32(42, 62, 72, 255);
-        private static readonly Color32 Tire = new Color32(24, 25, 25, 255);
-        private static readonly Color32 Trim = new Color32(66, 69, 70, 255);
-        private static readonly Color32 Light = new Color32(225, 215, 166, 255);
+        private const string ShaderName = "QuestFlight/KBDU Traffic Vehicle";
+
+        private static readonly VehicleAsset[] VehicleAssets =
+        {
+            new VehicleAsset(
+                "KBDU_TrafficSedan",
+                "KBDU_TrafficSedan.fbx",
+                1.82f,
+                4.60f,
+                1.45f),
+            new VehicleAsset(
+                "KBDU_TrafficHatchback",
+                "KBDU_TrafficHatchback.fbx",
+                1.78f,
+                4.35f,
+                1.50f),
+            new VehicleAsset(
+                "KBDU_TrafficCrossover",
+                "KBDU_TrafficCrossover.fbx",
+                1.92f,
+                4.70f,
+                1.75f),
+            new VehicleAsset(
+                "KBDU_TrafficPickup",
+                "KBDU_TrafficPickup.fbx",
+                2.00f,
+                5.35f,
+                1.82f),
+            new VehicleAsset(
+                "KBDU_TrafficCargoVan",
+                "KBDU_TrafficCargoVan.fbx",
+                1.98f,
+                5.05f,
+                2.10f)
+        };
+
+        private static readonly string[] ObsoleteRuntimeAssets =
+        {
+            Root + "/Models/KBDU_TrafficSedan_Blue.asset",
+            Root + "/Models/KBDU_TrafficSuv_Red.asset",
+            Root + "/Models/KBDU_TrafficPickup_White.asset",
+            Root + "/Models/KBDU_TrafficMidProxy.asset",
+            Root + "/Models/KBDU_TrafficParkedCombined.asset"
+        };
 
         [MenuItem("QuestFlight/Traffic V1/Build And Integrate")]
         public static void BuildAndIntegrate()
         {
             EnsureFolder(Root);
             EnsureFolder(Root + "/Models");
+            EnsureFolder(Root + "/Materials");
+            EnsureFolder(Root + "/Textures");
 
-            TextAsset manifest = AssetDatabase.LoadAssetAtPath<TextAsset>(ManifestPath);
+            TextAsset manifest =
+                AssetDatabase.LoadAssetAtPath<TextAsset>(ManifestPath);
             if (manifest == null)
             {
-                throw new InvalidOperationException("Compiled traffic manifest is missing: " + ManifestPath);
+                throw new InvalidOperationException(
+                    "Compiled traffic manifest is missing: " + ManifestPath);
             }
-            Material material = AssetDatabase.LoadAssetAtPath<Material>(ExistingMaterialPath);
-            if (material == null || material.shader == null || !material.enableInstancing)
+
+            Material material = BuildMaterial();
+            Mesh[] vehicleMeshes = new Mesh[VehicleAssets.Length];
+            for (int index = 0; index < VehicleAssets.Length; index++)
             {
-                throw new InvalidOperationException("Shared opaque instanced context material is missing.");
+                VehicleAsset definition = VehicleAssets[index];
+                vehicleMeshes[index] = LoadOrUpdateVehicleMesh(definition);
+                ValidateVehicleMesh(vehicleMeshes[index], definition);
+            }
+            if (vehicleMeshes.Length != KbduTrafficRuntime.ArchetypeCount)
+            {
+                throw new InvalidOperationException(
+                    "Traffic archetype count does not match the runtime contract.");
             }
 
-            Mesh sedan = WriteMesh(
-                Root + "/Models/KBDU_TrafficSedan_Blue.asset",
-                BuildSedan("KBDU_TrafficSedan_Blue", new Color32(74, 105, 137, 255)));
-            Mesh suv = WriteMesh(
-                Root + "/Models/KBDU_TrafficSuv_Red.asset",
-                BuildSuv("KBDU_TrafficSuv_Red", new Color32(132, 65, 57, 255)));
-            Mesh pickup = WriteMesh(
-                Root + "/Models/KBDU_TrafficPickup_White.asset",
-                BuildPickup("KBDU_TrafficPickup_White", new Color32(202, 202, 195, 255)));
-            Mesh proxy = WriteMesh(
-                Root + "/Models/KBDU_TrafficMidProxy.asset",
-                BuildProxy("KBDU_TrafficMidProxy"));
-
-            Mesh[] nearMeshes = { sedan, suv, pickup };
             GameObject trafficRoot = new GameObject("TrafficRoot");
             try
             {
-                KbduTrafficRuntime runtime = trafficRoot.AddComponent<KbduTrafficRuntime>();
-                runtime.Configure(manifest, material, nearMeshes, proxy);
+                KbduTrafficRuntime runtime =
+                    trafficRoot.AddComponent<KbduTrafficRuntime>();
+                runtime.Configure(manifest, material, vehicleMeshes);
                 if (!runtime.TryValidateContract(out string report))
                 {
-                    throw new InvalidOperationException("Authored traffic runtime failed: " + report);
+                    throw new InvalidOperationException(
+                        "Authored traffic runtime failed: " + report);
                 }
                 PrefabUtility.SaveAsPrefabAsset(trafficRoot, PrefabPath);
             }
@@ -73,7 +119,220 @@ namespace QuestFlightLab.Environment.Editor
                 UnityEngine.Object.DestroyImmediate(trafficRoot);
             }
 
-            GameObject productRoot = PrefabUtility.LoadPrefabContents(ProductEnvironmentPath);
+            IntegrateProductEnvironment();
+            DeleteObsoleteAssets();
+            if (AssetDatabase.IsValidFolder(ImportRoot))
+            {
+                AssetDatabase.DeleteAsset(ImportRoot);
+            }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            TrafficManifest records =
+                JsonUtility.FromJson<TrafficManifest>(manifest.text);
+            Debug.Log(
+                $"Authored and integrated {PrefabPath}: " +
+                $"parked={records?.parked?.Length ?? 0}, " +
+                $"moving={records?.moving?.Length ?? 0}, " +
+                $"routes={records?.routes?.Length ?? 0}, " +
+                "five CC0 body styles, eight instanced paint colors, " +
+                "draws<=5, serialized renderers=0, transparent=0, shadows=0.");
+        }
+
+        private static Material BuildMaterial()
+        {
+            Shader shader = Shader.Find(ShaderName);
+            if (shader == null)
+            {
+                throw new InvalidOperationException(
+                    "Traffic vehicle shader is missing: " + ShaderName);
+            }
+
+            ConfigureSurfaceTexture();
+            Texture2D detail =
+                AssetDatabase.LoadAssetAtPath<Texture2D>(TexturePath);
+            if (detail == null)
+            {
+                throw new InvalidOperationException(
+                    "Traffic surface detail texture is missing: " + TexturePath);
+            }
+
+            Material material =
+                AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
+            if (material == null)
+            {
+                material = new Material(shader)
+                {
+                    name = "KBDU_TrafficVehicle",
+                    enableInstancing = true
+                };
+                AssetDatabase.CreateAsset(material, MaterialPath);
+            }
+            material.shader = shader;
+            material.enableInstancing = true;
+            material.SetColor(
+                "_BodyTint",
+                new Color(0.35f, 0.38f, 0.42f, 1f));
+            material.SetTexture("_SurfaceDetail", detail);
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        private static void ConfigureSurfaceTexture()
+        {
+            AssetDatabase.ImportAsset(
+                TexturePath,
+                ImportAssetOptions.ForceSynchronousImport);
+            TextureImporter importer =
+                AssetImporter.GetAtPath(TexturePath) as TextureImporter;
+            if (importer == null)
+            {
+                throw new InvalidOperationException(
+                    "Traffic surface texture importer is unavailable.");
+            }
+            importer.textureType = TextureImporterType.Default;
+            importer.sRGBTexture = true;
+            importer.mipmapEnabled = true;
+            importer.streamingMipmaps = false;
+            importer.wrapMode = TextureWrapMode.Repeat;
+            importer.filterMode = FilterMode.Trilinear;
+            importer.anisoLevel = 2;
+            importer.alphaSource = TextureImporterAlphaSource.None;
+            importer.maxTextureSize = 128;
+            TextureImporterPlatformSettings android =
+                importer.GetPlatformTextureSettings("Android");
+            android.overridden = true;
+            android.maxTextureSize = 128;
+            android.format = TextureImporterFormat.ASTC_6x6;
+            android.compressionQuality = 50;
+            importer.SetPlatformTextureSettings(android);
+            importer.SaveAndReimport();
+        }
+
+        private static Mesh LoadOrUpdateVehicleMesh(VehicleAsset definition)
+        {
+            string finalPath =
+                Root + "/Models/" + definition.name + ".asset";
+            string sourcePath = ImportRoot + "/" + definition.sourceFile;
+            GameObject imported =
+                AssetDatabase.LoadAssetAtPath<GameObject>(sourcePath);
+            if (imported == null)
+            {
+                Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(finalPath);
+                if (existing != null)
+                {
+                    return existing;
+                }
+                throw new InvalidOperationException(
+                    "Neither prepared CC0 derivative nor serialized mesh exists: " +
+                    sourcePath);
+            }
+
+            Mesh generated = CombineImportedMeshes(imported, definition.name);
+            return WriteMesh(finalPath, generated);
+        }
+
+        private static Mesh CombineImportedMeshes(
+            GameObject imported,
+            string meshName)
+        {
+            GameObject instance =
+                UnityEngine.Object.Instantiate(imported);
+            instance.hideFlags = HideFlags.HideAndDontSave;
+            try
+            {
+                MeshFilter[] filters =
+                    instance.GetComponentsInChildren<MeshFilter>(true);
+                List<CombineInstance> combines = new List<CombineInstance>();
+                Matrix4x4 rootInverse = instance.transform.worldToLocalMatrix;
+                for (int filterIndex = 0;
+                    filterIndex < filters.Length;
+                    filterIndex++)
+                {
+                    Mesh source = filters[filterIndex].sharedMesh;
+                    if (source == null)
+                    {
+                        continue;
+                    }
+                    Matrix4x4 transform =
+                        rootInverse * filters[filterIndex].transform.localToWorldMatrix;
+                    for (int submesh = 0;
+                        submesh < source.subMeshCount;
+                        submesh++)
+                    {
+                        combines.Add(new CombineInstance
+                        {
+                            mesh = source,
+                            subMeshIndex = submesh,
+                            transform = transform
+                        });
+                    }
+                }
+                if (combines.Count == 0)
+                {
+                    throw new InvalidOperationException(
+                        "Prepared CC0 vehicle contains no mesh geometry: " +
+                        imported.name);
+                }
+
+                Mesh mesh = new Mesh
+                {
+                    name = meshName,
+                    indexFormat = UnityEngine.Rendering.IndexFormat.UInt16
+                };
+                mesh.CombineMeshes(
+                    combines.ToArray(),
+                    true,
+                    true,
+                    false);
+                mesh.RecalculateBounds();
+                mesh.UploadMeshData(false);
+                return mesh;
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(instance);
+            }
+        }
+
+        private static void ValidateVehicleMesh(
+            Mesh mesh,
+            VehicleAsset definition)
+        {
+            if (mesh == null || mesh.subMeshCount != 1)
+            {
+                throw new InvalidOperationException(
+                    definition.name + " must be one single-submesh mesh.");
+            }
+            Vector3 size = mesh.bounds.size;
+            if (Mathf.Abs(size.x - definition.width) > 0.08f ||
+                Mathf.Abs(size.y - definition.height) > 0.08f ||
+                Mathf.Abs(size.z - definition.length) > 0.08f)
+            {
+                throw new InvalidOperationException(
+                    $"{definition.name} bounds are {size}; expected " +
+                    $"{definition.width:F2} x {definition.height:F2} x " +
+                    $"{definition.length:F2} meters.");
+            }
+            uint triangles = mesh.GetIndexCount(0) / 3u;
+            if (triangles < 500u || triangles > 1100u)
+            {
+                throw new InvalidOperationException(
+                    $"{definition.name} has {triangles} triangles; " +
+                    "expected a 500-1100 triangle optimized derivative.");
+            }
+            if (mesh.colors32 == null || mesh.colors32.Length != mesh.vertexCount)
+            {
+                throw new InvalidOperationException(
+                    definition.name +
+                    " lost its semantic surface-color data during import.");
+            }
+        }
+
+        private static void IntegrateProductEnvironment()
+        {
+            GameObject productRoot =
+                PrefabUtility.LoadPrefabContents(ProductEnvironmentPath);
             try
             {
                 Transform existing = productRoot.transform.Find("TrafficRoot");
@@ -81,101 +340,63 @@ namespace QuestFlightLab.Environment.Editor
                 {
                     UnityEngine.Object.DestroyImmediate(existing.gameObject);
                 }
-                GameObject trafficPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
-                GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(trafficPrefab, productRoot.transform);
+                GameObject trafficPrefab =
+                    AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+                GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(
+                    trafficPrefab,
+                    productRoot.transform);
                 instance.name = "TrafficRoot";
-                instance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+                instance.transform.SetLocalPositionAndRotation(
+                    Vector3.zero,
+                    Quaternion.identity);
                 instance.transform.localScale = Vector3.one;
 
-                ProductionEnvironmentRoot environment = productRoot.GetComponent<ProductionEnvironmentRoot>();
+                ProductionEnvironmentRoot environment =
+                    productRoot.GetComponent<ProductionEnvironmentRoot>();
                 if (environment == null)
                 {
-                    throw new InvalidOperationException("Production environment marker is missing.");
+                    throw new InvalidOperationException(
+                        "Production environment marker is missing.");
                 }
                 environment.trafficRoot = instance.transform;
+                ProductionEnvironmentBudget budget = environment.CalculateBudget();
+                environment.bakedRendererCount = budget.rendererCount;
+                environment.bakedTriangleCount = budget.triangleCount;
+                environment.bakedMaterialCount = budget.materialCount;
+                if (!environment.TryValidateContract(
+                    out string environmentReport))
+                {
+                    throw new InvalidOperationException(
+                        "Traffic integration leaves the product environment invalid: " +
+                        environmentReport);
+                }
                 EditorUtility.SetDirty(environment);
-                PrefabUtility.SaveAsPrefabAsset(productRoot, ProductEnvironmentPath);
+                PrefabUtility.SaveAsPrefabAsset(
+                    productRoot,
+                    ProductEnvironmentPath);
             }
             finally
             {
                 PrefabUtility.UnloadPrefabContents(productRoot);
             }
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            Debug.Log(
-                $"Authored and integrated {PrefabPath}: parked=30, moving=12, routes=12, " +
-                "draws<=4, materials=0 net (shared context material), transparent=0, shadows=0.");
         }
 
-        private static Mesh BuildSedan(string name, Color32 body)
+        private static void DeleteObsoleteAssets()
         {
-            MeshBuilder builder = new MeshBuilder(name);
-            builder.AddBox(new Vector3(0f, 0.52f, 0f), new Vector3(1.78f, 0.50f, 4.25f), body);
-            builder.AddTaperedBox(
-                new Vector3(0f, 1.03f, -0.10f),
-                new Vector2(1.58f, 2.40f),
-                new Vector2(1.28f, 1.60f),
-                0.72f,
-                Glass);
-            builder.AddBox(new Vector3(0f, 1.43f, -0.10f), new Vector3(1.30f, 0.10f, 1.60f), body);
-            builder.AddWheelSet(0.92f, 0.36f, 1.38f);
-            builder.AddLights(0.91f, 0.62f, 2.14f);
-            return builder.ToMesh();
-        }
-
-        private static Mesh BuildSuv(string name, Color32 body)
-        {
-            MeshBuilder builder = new MeshBuilder(name);
-            builder.AddBox(new Vector3(0f, 0.63f, 0f), new Vector3(1.86f, 0.70f, 4.45f), body);
-            builder.AddTaperedBox(
-                new Vector3(0f, 1.25f, -0.18f),
-                new Vector2(1.70f, 2.70f),
-                new Vector2(1.52f, 2.28f),
-                0.88f,
-                Glass);
-            builder.AddBox(new Vector3(0f, 1.72f, -0.18f), new Vector3(1.54f, 0.11f, 2.28f), body);
-            builder.AddWheelSet(0.96f, 0.40f, 1.45f);
-            builder.AddLights(0.95f, 0.73f, 2.24f);
-            return builder.ToMesh();
-        }
-
-        private static Mesh BuildPickup(string name, Color32 body)
-        {
-            MeshBuilder builder = new MeshBuilder(name);
-            builder.AddBox(new Vector3(0f, 0.62f, 0.20f), new Vector3(1.92f, 0.68f, 4.75f), body);
-            builder.AddTaperedBox(
-                new Vector3(0f, 1.23f, -0.55f),
-                new Vector2(1.72f, 1.72f),
-                new Vector2(1.52f, 1.42f),
-                0.86f,
-                Glass);
-            builder.AddBox(new Vector3(0f, 1.70f, -0.55f), new Vector3(1.54f, 0.10f, 1.43f), body);
-            builder.AddBox(new Vector3(0f, 0.91f, 1.38f), new Vector3(1.70f, 0.16f, 1.25f), Trim);
-            builder.AddWheelSet(0.98f, 0.41f, 1.55f);
-            builder.AddLights(0.98f, 0.72f, 2.39f);
-            return builder.ToMesh();
-        }
-
-        private static Mesh BuildProxy(string name)
-        {
-            MeshBuilder builder = new MeshBuilder(name);
-            builder.AddBox(
-                new Vector3(0f, 0.56f, 0f),
-                new Vector3(1.82f, 0.62f, 4.35f),
-                new Color32(112, 118, 121, 255));
-            builder.AddTaperedBox(
-                new Vector3(0f, 1.08f, -0.12f),
-                new Vector2(1.60f, 2.30f),
-                new Vector2(1.34f, 1.72f),
-                0.70f,
-                Glass);
-            return builder.ToMesh();
+            for (int index = 0; index < ObsoleteRuntimeAssets.Length; index++)
+            {
+                if (AssetDatabase.LoadMainAssetAtPath(
+                    ObsoleteRuntimeAssets[index]) != null)
+                {
+                    AssetDatabase.DeleteAsset(ObsoleteRuntimeAssets[index]);
+                }
+            }
         }
 
         private static Mesh WriteMesh(string path, Mesh generated)
         {
-            UnityEngine.Object existing = AssetDatabase.LoadMainAssetAtPath(path);
+            UnityEngine.Object existing =
+                AssetDatabase.LoadMainAssetAtPath(path);
             if (existing == null)
             {
                 AssetDatabase.CreateAsset(generated, path);
@@ -185,7 +406,8 @@ namespace QuestFlightLab.Environment.Editor
             if (mesh == null)
             {
                 UnityEngine.Object.DestroyImmediate(generated);
-                throw new InvalidOperationException("Traffic mesh path is not a Mesh: " + path);
+                throw new InvalidOperationException(
+                    "Traffic mesh path is not a Mesh: " + path);
             }
             EditorUtility.CopySerialized(generated, mesh);
             mesh.name = generated.name;
@@ -200,154 +422,65 @@ namespace QuestFlightLab.Environment.Editor
             {
                 return;
             }
-            string parent = Path.GetDirectoryName(path)?.Replace('\\', '/');
+            string parent =
+                Path.GetDirectoryName(path)?.Replace('\\', '/');
             string leaf = Path.GetFileName(path);
-            if (string.IsNullOrWhiteSpace(parent) || string.IsNullOrWhiteSpace(leaf))
+            if (string.IsNullOrWhiteSpace(parent) ||
+                string.IsNullOrWhiteSpace(leaf))
             {
-                throw new InvalidOperationException("Invalid asset folder: " + path);
+                throw new InvalidOperationException(
+                    "Invalid asset folder: " + path);
             }
             EnsureFolder(parent);
             AssetDatabase.CreateFolder(parent, leaf);
         }
 
-        private sealed class MeshBuilder
+        [Serializable]
+        private sealed class TrafficManifest
         {
-            private readonly string name;
-            private readonly List<Vector3> vertices = new List<Vector3>();
-            private readonly List<Vector3> normals = new List<Vector3>();
-            private readonly List<Color32> colors = new List<Color32>();
-            private readonly List<int> indices = new List<int>();
+            public ParkedRecord[] parked;
+            public RouteRecord[] routes;
+            public MovingRecord[] moving;
+        }
 
-            public MeshBuilder(string meshName)
-            {
-                name = meshName;
-            }
+        [Serializable]
+        private sealed class ParkedRecord
+        {
+            public string id;
+        }
 
-            public void AddBox(Vector3 center, Vector3 size, Color32 color)
-            {
-                Vector3 half = size * 0.5f;
-                Vector3[] corners =
-                {
-                    center + new Vector3(-half.x, -half.y, -half.z),
-                    center + new Vector3(half.x, -half.y, -half.z),
-                    center + new Vector3(half.x, half.y, -half.z),
-                    center + new Vector3(-half.x, half.y, -half.z),
-                    center + new Vector3(-half.x, -half.y, half.z),
-                    center + new Vector3(half.x, -half.y, half.z),
-                    center + new Vector3(half.x, half.y, half.z),
-                    center + new Vector3(-half.x, half.y, half.z)
-                };
-                AddQuad(corners[0], corners[3], corners[2], corners[1], Vector3.back, color);
-                AddQuad(corners[5], corners[6], corners[7], corners[4], Vector3.forward, color);
-                AddQuad(corners[4], corners[7], corners[3], corners[0], Vector3.left, color);
-                AddQuad(corners[1], corners[2], corners[6], corners[5], Vector3.right, color);
-                AddQuad(corners[3], corners[7], corners[6], corners[2], Vector3.up, color);
-                AddQuad(corners[4], corners[0], corners[1], corners[5], Vector3.down, color);
-            }
+        [Serializable]
+        private sealed class RouteRecord
+        {
+            public string id;
+        }
 
-            public void AddTaperedBox(
-                Vector3 center,
-                Vector2 lowerSize,
-                Vector2 upperSize,
-                float height,
-                Color32 color)
-            {
-                float y0 = center.y - height * 0.5f;
-                float y1 = center.y + height * 0.5f;
-                Vector3[] lower =
-                {
-                    new Vector3(-lowerSize.x * 0.5f, y0, -lowerSize.y * 0.5f) + new Vector3(center.x, 0f, center.z),
-                    new Vector3(lowerSize.x * 0.5f, y0, -lowerSize.y * 0.5f) + new Vector3(center.x, 0f, center.z),
-                    new Vector3(lowerSize.x * 0.5f, y0, lowerSize.y * 0.5f) + new Vector3(center.x, 0f, center.z),
-                    new Vector3(-lowerSize.x * 0.5f, y0, lowerSize.y * 0.5f) + new Vector3(center.x, 0f, center.z)
-                };
-                Vector3[] upper =
-                {
-                    new Vector3(-upperSize.x * 0.5f, y1, -upperSize.y * 0.5f) + new Vector3(center.x, 0f, center.z),
-                    new Vector3(upperSize.x * 0.5f, y1, -upperSize.y * 0.5f) + new Vector3(center.x, 0f, center.z),
-                    new Vector3(upperSize.x * 0.5f, y1, upperSize.y * 0.5f) + new Vector3(center.x, 0f, center.z),
-                    new Vector3(-upperSize.x * 0.5f, y1, upperSize.y * 0.5f) + new Vector3(center.x, 0f, center.z)
-                };
-                AddQuad(lower[0], upper[0], upper[1], lower[1], Vector3.back, color);
-                AddQuad(lower[1], upper[1], upper[2], lower[2], Vector3.right, color);
-                AddQuad(lower[2], upper[2], upper[3], lower[3], Vector3.forward, color);
-                AddQuad(lower[3], upper[3], upper[0], lower[0], Vector3.left, color);
-                AddQuad(upper[0], upper[3], upper[2], upper[1], Vector3.up, color);
-            }
+        [Serializable]
+        private sealed class MovingRecord
+        {
+            public string id;
+        }
 
-            public void AddWheelSet(float halfWidth, float radius, float halfLength)
-            {
-                AddWheel(new Vector3(-halfWidth, radius, -halfLength), radius);
-                AddWheel(new Vector3(halfWidth, radius, -halfLength), radius);
-                AddWheel(new Vector3(-halfWidth, radius, halfLength), radius);
-                AddWheel(new Vector3(halfWidth, radius, halfLength), radius);
-            }
+        private readonly struct VehicleAsset
+        {
+            public readonly string name;
+            public readonly string sourceFile;
+            public readonly float width;
+            public readonly float length;
+            public readonly float height;
 
-            private void AddWheel(Vector3 center, float radius)
+            public VehicleAsset(
+                string nameValue,
+                string sourceFileValue,
+                float widthValue,
+                float lengthValue,
+                float heightValue)
             {
-                const int segments = 6;
-                float halfThickness = 0.11f;
-                for (int index = 0; index < segments; index++)
-                {
-                    float a0 = index / (float)segments * Mathf.PI * 2f;
-                    float a1 = (index + 1) / (float)segments * Mathf.PI * 2f;
-                    Vector3 p0 = center + new Vector3(-halfThickness, Mathf.Cos(a0) * radius, Mathf.Sin(a0) * radius);
-                    Vector3 p1 = center + new Vector3(halfThickness, Mathf.Cos(a0) * radius, Mathf.Sin(a0) * radius);
-                    Vector3 p2 = center + new Vector3(halfThickness, Mathf.Cos(a1) * radius, Mathf.Sin(a1) * radius);
-                    Vector3 p3 = center + new Vector3(-halfThickness, Mathf.Cos(a1) * radius, Mathf.Sin(a1) * radius);
-                    Vector3 normal = new Vector3(0f, Mathf.Cos((a0 + a1) * 0.5f), Mathf.Sin((a0 + a1) * 0.5f));
-                    AddQuad(p0, p1, p2, p3, normal, Tire);
-                }
-            }
-
-            public void AddLights(float halfWidth, float height, float z)
-            {
-                AddBox(new Vector3(-halfWidth * 0.58f, height, z), new Vector3(0.35f, 0.18f, 0.04f), Light);
-                AddBox(new Vector3(halfWidth * 0.58f, height, z), new Vector3(0.35f, 0.18f, 0.04f), Light);
-            }
-
-            private void AddQuad(
-                Vector3 a,
-                Vector3 b,
-                Vector3 c,
-                Vector3 d,
-                Vector3 normal,
-                Color32 color)
-            {
-                int offset = vertices.Count;
-                vertices.Add(a);
-                vertices.Add(b);
-                vertices.Add(c);
-                vertices.Add(d);
-                for (int index = 0; index < 4; index++)
-                {
-                    normals.Add(normal.normalized);
-                    colors.Add(color);
-                }
-                indices.Add(offset);
-                indices.Add(offset + 1);
-                indices.Add(offset + 2);
-                indices.Add(offset);
-                indices.Add(offset + 2);
-                indices.Add(offset + 3);
-            }
-
-            public Mesh ToMesh()
-            {
-                Mesh mesh = new Mesh
-                {
-                    name = name,
-                    indexFormat = vertices.Count > ushort.MaxValue
-                        ? IndexFormat.UInt32
-                        : IndexFormat.UInt16
-                };
-                mesh.SetVertices(vertices);
-                mesh.SetNormals(normals);
-                mesh.SetColors(colors);
-                mesh.SetTriangles(indices, 0, false);
-                mesh.RecalculateBounds();
-                mesh.UploadMeshData(false);
-                return mesh;
+                name = nameValue;
+                sourceFile = sourceFileValue;
+                width = widthValue;
+                length = lengthValue;
+                height = heightValue;
             }
         }
     }
