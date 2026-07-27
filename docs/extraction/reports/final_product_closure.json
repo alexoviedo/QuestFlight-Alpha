@@ -972,6 +972,30 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Data/KBDU_TrafficManifestV1.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/KBDU_TrafficRoot.prefab",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficMidProxy.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficPickup_White.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSedan_Blue.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSuv_Red.asset",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Materials/Cockpit/Cockpit_ButtonPlate_MAT_-3879712564025455224.mat",
             "classification": "approved_product_authored"
         },
@@ -1125,6 +1149,10 @@
         },
         {
             "assetPath": "Assets/Scripts/Environment/GeospatialMipController.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/KbduTrafficRuntime.cs",
             "classification": "approved_product_authored"
         },
         {

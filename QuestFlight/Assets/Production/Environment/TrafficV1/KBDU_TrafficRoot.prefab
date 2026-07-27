@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8487058057837095969
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4507544551868416270}
+  - component: {fileID: 8832284638587171138}
+  m_Layer: 0
+  m_Name: KBDU_TrafficRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4507544551868416270
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8487058057837095969}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8832284638587171138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8487058057837095969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 232b9e82f344d7c41b8f17a6bf7bb9ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.KbduTrafficRuntime
+  trafficManifest: {fileID: 4900000, guid: 7fe4d2b6f0d7ec9498919121d5721293, type: 3}
+  sharedOpaqueMaterial: {fileID: 2100000, guid: 81f0fd3796583744d8eb0e947cc558f5, type: 2}
+  nearArchetypeMeshes:
+  - {fileID: 4300000, guid: ed4f911c233d9e34a8e6d8d02054606e, type: 2}
+  - {fileID: 4300000, guid: fdd974c0e547d744eb92dd098bf48062, type: 2}
+  - {fileID: 4300000, guid: 671b58d3052c4be49a2370b1f6aeed6a, type: 2}
+  midDistanceMesh: {fileID: 4300000, guid: 1d21fca0e271ef54f92b60da0d1439b8, type: 2}
+  deterministicMotion: 1
+  realtimeVehicleShadows: 0
+  perVehicleGameObjects: 0
+  authoredParkedCount: 30
+  authoredDynamicCount: 12
+  authoredRouteCount: 12
+  authoredMaximumDrawCount: 4
+  authoredMaximumVisibleTriangles: 3888

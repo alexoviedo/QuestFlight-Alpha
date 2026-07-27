@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Z=north",
+  "orthophoto": {
+    "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_City2020_Near4km_8192.jpg",
+    "guid": "0021365d50509d2abe127a826626ee6e",
+    "sha256": "143c4946c06464dbdea1567cd5fe284acc4c5ba7718a38900a2e83a8eccbfb53",
+    "dimensions_pixels": [8192, 8192],
+    "world_bounds_meters": [-2000.0, -2000.0, 2000.0, 2000.0],
+    "orientation": "image row 0=north; image column 0=west"
+  },
+  "road_source": {
+    "path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ReferenceContextV2.json",
+    "license": "Open Database License 1.0",
+    "attribution": "© OpenStreetMap contributors",
+    "copyright_url": "https://www.openstreetmap.org/copyright",
+    "selected_osm_way_ids": [
+      398080516,
+      17027011,
+      17018397,
+      399347286,
+      17026345,
+      450294664
+    ]
+  },
+  "vehicle_assets": {
+    "source": "Project-authored deterministic low-poly meshes",
+    "license": "Project-owned",
+    "archetypes": ["sedan_blue", "suv_red", "pickup_white"],
+    "runtime_material": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraft.mat"
+  },
+  "parked_vehicles": [
+    {"id":"reservoir-industrial-01","lot":"reservoir_west_industrial","source_center_pixel":[1010,3638],"source_axis_pixels":[1005,3630,1015,3646],"archetype":2},
+    {"id":"reservoir-industrial-02","lot":"reservoir_west_industrial","source_center_pixel":[1034,3651],"source_axis_pixels":[1029,3643,1039,3659],"archetype":0},
+    {"id":"reservoir-industrial-03","lot":"reservoir_west_industrial","source_center_pixel":[1061,3665],"source_axis_pixels":[1056,3657,1066,3673],"archetype":1},
+    {"id":"reservoir-industrial-04","lot":"reservoir_west_industrial","source_center_pixel":[1088,3678],"source_axis_pixels":[1083,3670,1093,3686],"archetype":0},
+    {"id":"reservoir-industrial-05","lot":"reservoir_west_industrial","source_center_pixel":[1120,3694],"source_axis_pixels":[1115,3686,1125,3702],"archetype":2},
+    {"id":"reservoir-industrial-06","lot":"reservoir_west_industrial","source_center_pixel":[1151,3710],"source_axis_pixels":[1146,3702,1156,3718],"archetype":1},
+    {"id":"reservoir-industrial-07","lot":"reservoir_west_industrial","source_center_pixel":[1190,3743],"source_axis_pixels":[1185,3735,1195,3751],"archetype":0},
+    {"id":"reservoir-industrial-08","lot":"reservoir_west_industrial","source_center_pixel":[1218,3757],"source_axis_pixels":[1213,3749,1223,3765],"archetype":1},
+
+    {"id":"airport-office-01","lot":"airport_east_office","source_center_pixel":[4018,4358],"source_axis_pixels":[4012,4352,4024,4364],"archetype":0},
+    {"id":"airport-office-02","lot":"airport_east_office","source_center_pixel":[4040,4380],"source_axis_pixels":[4034,4374,4046,4386],"archetype":1},
+    {"id":"airport-office-03","lot":"airport_east_office","source_center_pixel":[4064,4402],"source_axis_pixels":[4058,4396,4070,4408],"archetype":2},
+    {"id":"airport-office-04","lot":"airport_east_office","source_center_pixel":[4087,4424],"source_axis_pixels":[4081,4418,4093,4430],"archetype":0},
+    {"id":"airport-office-05","lot":"airport_east_office","source_center_pixel":[4110,4447],"source_axis_pixels":[4104,4441,4116,4453],"archetype":1},
+    {"id":"airport-office-06","lot":"airport_east_office","source_center_pixel":[4132,4468],"source_axis_pixels":[4126,4462,4138,4474],"archetype":2},
+    {"id":"airport-office-07","lot":"airport_east_office","source_center_pixel":[4160,4495],"source_axis_pixels":[4154,4489,4166,4501],"archetype":0},
+    {"id":"airport-office-08","lot":"airport_east_office","source_center_pixel":[4183,4517],"source_axis_pixels":[4177,4511,4189,4523],"archetype":1},
+    {"id":"airport-office-09","lot":"airport_east_office","source_center_pixel":[4210,4544],"source_axis_pixels":[4204,4538,4216,4550],"archetype":2},
+    {"id":"airport-office-10","lot":"airport_east_office","source_center_pixel":[4235,4568],"source_axis_pixels":[4229,4562,4241,4574],"archetype":0},
+
+    {"id":"reservoir-south-01","lot":"reservoir_south_campus","source_center_pixel":[2926,5170],"source_axis_pixels":[2918,5170,2934,5170],"archetype":0},
+    {"id":"reservoir-south-02","lot":"reservoir_south_campus","source_center_pixel":[2961,5172],"source_axis_pixels":[2953,5172,2969,5172],"archetype":1},
+    {"id":"reservoir-south-03","lot":"reservoir_south_campus","source_center_pixel":[2997,5175],"source_axis_pixels":[2989,5175,3005,5175],"archetype":2},
+    {"id":"reservoir-south-04","lot":"reservoir_south_campus","source_center_pixel":[3032,5178],"source_axis_pixels":[3024,5178,3040,5178],"archetype":0},
+    {"id":"reservoir-south-05","lot":"reservoir_south_campus","source_center_pixel":[3068,5181],"source_axis_pixels":[3060,5181,3076,5181],"archetype":1},
+    {"id":"reservoir-south-06","lot":"reservoir_south_campus","source_center_pixel":[3104,5184],"source_axis_pixels":[3096,5184,3112,5184],"archetype":2},
+    {"id":"reservoir-south-07","lot":"reservoir_south_campus","source_center_pixel":[2875,5421],"source_axis_pixels":[2875,5413,2875,5429],"archetype":0},
+    {"id":"reservoir-south-08","lot":"reservoir_south_campus","source_center_pixel":[2909,5425],"source_axis_pixels":[2909,5417,2909,5433],"archetype":1},
+    {"id":"reservoir-south-09","lot":"reservoir_south_campus","source_center_pixel":[2942,5428],"source_axis_pixels":[2942,5420,2942,5436],"archetype":2},
+    {"id":"reservoir-south-10","lot":"reservoir_south_campus","source_center_pixel":[2976,5432],"source_axis_pixels":[2976,5424,2976,5440],"archetype":0},
+    {"id":"reservoir-south-11","lot":"reservoir_south_campus","source_center_pixel":[3010,5435],"source_axis_pixels":[3010,5427,3010,5443],"archetype":1},
+    {"id":"reservoir-south-12","lot":"reservoir_south_campus","source_center_pixel":[3044,5439],"source_axis_pixels":[3044,5431,3044,5447],"archetype":2}
+  ]
+}

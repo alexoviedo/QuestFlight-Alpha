@@ -529,6 +529,11 @@
       "path": "Assets/Scripts/Environment/AirportHeroCorridorRoot.cs",
       "classification": "approved_product_authored",
       "reason": "Product-authored fail-closed contract for the explicitly serialized airport hero-building corridor; it performs no runtime construction or repair."
+    },
+    {
+      "path": "Assets/Scripts/Environment/KbduTrafficRuntime.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored bounded traffic presenter; it advances only precompiled road-route state and submits opaque instanced vehicle draws without constructing hierarchy, physics agents, or per-vehicle objects."
     }
   ],
   "product_replacements": [

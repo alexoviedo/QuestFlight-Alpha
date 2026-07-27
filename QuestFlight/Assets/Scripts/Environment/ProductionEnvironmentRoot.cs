@@ -38,6 +38,7 @@ namespace QuestFlightLab.Environment
         public Transform airportContext;
         public Transform authoritativeRunwaySystem;
         public Transform essentialWater;
+        public Transform trafficRoot;
         [Tooltip("OrthophotoOnly deliberately defers all water effects while preserving source provenance for final polish.")]
         public ProductionWaterPresentationMode waterPresentationMode =
             ProductionWaterPresentationMode.AuthoredSurface;
@@ -146,6 +147,10 @@ namespace QuestFlightLab.Environment
             Require(airportContext != null, "AirportContext is not bound", failures);
             Require(authoritativeRunwaySystem != null, "AuthoritativeRunwaySystem is not bound", failures);
             Require(essentialWater != null, "EssentialWater is not bound", failures);
+            Require(trafficRoot != null, "TrafficRoot is not bound", failures);
+            Require(trafficRoot == null ||
+                    trafficRoot.GetComponentsInChildren<KbduTrafficRuntime>(true).Length == 1,
+                "TrafficRoot must contain exactly one authored traffic runtime", failures);
             Require(nearTerrainMeshes != null && nearTerrainMeshes.Length == 2 && nearTerrainMeshes.All(HasMesh),
                 "near terrain must contain the baked airport patch and 4 km USGS ring", failures);
             Require(HasMesh(midTerrainMesh), "12 km USGS mid terrain mesh is missing", failures);
