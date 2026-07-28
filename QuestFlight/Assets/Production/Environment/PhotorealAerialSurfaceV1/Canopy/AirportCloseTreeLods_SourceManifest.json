@@ -1,0 +1,69 @@
+{
+  "limitations": [
+    "The optimized derivative is a visual archetype, not a surveyed individual tree.",
+    "Position, height, crown diameter, and tint remain driven by the committed semantic placement manifest.",
+    "The far impostor is intentionally restricted to projected sizes where stereo depth loss is not resolvable."
+  ],
+  "lods": [
+    {
+      "name": "AirportCloseTree_LOD0",
+      "representation": "source-leaf-geometry-plus-volumetric-clumps",
+      "source_leaf_triangles": 2127,
+      "supplemental_foliage_clumps": 42,
+      "triangle_count": 2337,
+      "vertices": 6759
+    },
+    {
+      "foliage_clumps": 34,
+      "name": "AirportCloseTree_LOD1",
+      "representation": "volumetric-crossed-foliage-clumps",
+      "triangle_count": 194,
+      "vertices": 330
+    },
+    {
+      "azimuth_frames": 8,
+      "name": "AirportCloseTree_LOD2",
+      "representation": "eight-view-center-eye-impostor",
+      "triangle_count": 2,
+      "vertices": 4
+    }
+  ],
+  "output": {
+    "bytes": 270694,
+    "sha256": "295659ab4f5d18ce92f05388a936a37149747ff0f735726a2abe23b96bd9194f"
+  },
+  "processing": {
+    "blender_version": "5.1.2",
+    "generator": "tools/airport_close_trees/build_airport_close_tree_lods.py",
+    "persistent_hysteresis": true,
+    "projected_size_lod": true,
+    "runtime_material_growth": 0,
+    "runtime_texture_growth_assets": 2,
+    "xr_center_eye_impostor": true
+  },
+  "runtime_asset": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/EditorSource/AirportCloseTreeLods.bytes",
+  "schema": "questflight.airport-tree-impostor-source.v2",
+  "source": {
+    "asset": "Tree Small 02",
+    "author": "Poly Haven",
+    "license": "CC0 1.0 Universal",
+    "license_url": "https://polyhaven.com/license",
+    "raw_source_committed": false,
+    "source_blend_sha256": "af3fef6da3eb97057d9d4d3c4281c5944696b8d518715deddd8500482d30b1bd",
+    "url": "https://polyhaven.com/a/tree_small_02"
+  },
+  "textures": {
+    "eight_view_impostor_rgba": {
+      "grid": [
+        4,
+        2
+      ],
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/AirportCloseTree_Impostor8_RGBA.png",
+      "sha256": "d58cbaeb9f7b6b61e3982c66e79360d5933e97b257af3e4759f81265a34787d2"
+    },
+    "hero_leaf_rgba": {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/AirportCloseTree_HeroLeaf_RGBA.png",
+      "sha256": "67a613d7b34086d4f6c1303e4b53b052b968f57f2a2d40259a697a04e768fd1f"
+    }
+  }
+}

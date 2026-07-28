@@ -32,6 +32,7 @@ from build_canopy_surfaces import (
     GEOMETRY_OUTER_RADIUS_METERS,
     LAYER_NAME as CANOPY_LAYER_NAME,
     MANIFEST_NAME as CANOPY_MANIFEST_NAME,
+    MINIMUM_STATIC_MESH_TRIANGLES,
     MAXIMUM_MESH_TRIANGLES,
     OUTPUT_DIR as CANOPY_OUTPUT_DIR,
     PRODUCT_CANOPY_POLICY,
@@ -679,7 +680,7 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
     )
     require(int(canopy_manifest["budgets"]["mesh_batch_count"]) == 4, "Canopy mesh batch count changed")
     require(
-        TARGET_MESH_TRIANGLES
+        MINIMUM_STATIC_MESH_TRIANGLES
         <= int(canopy_manifest["budgets"]["mesh_batch_total_triangles"])
         <= MAXIMUM_MESH_TRIANGLES,
         "Canopy triangle budget changed",
@@ -711,8 +712,15 @@ def validate(root: Path = RUNTIME_ROOT) -> dict[str, Any]:
     require(int(topology["mid_connected_grove_count"]) > 0, "Mid connected groves are missing")
     require(int(topology["mid_perforated_crown_count"]) > 0, "Mid perforated crowns are missing")
     require(int(topology["grounded_trunk_count"]) > 0, "Grounded canopy trunks are missing")
-    require(int(topology["near_branch_triangle_count"]) > 0, "Near canopy branches are missing")
-    require(int(topology["near_foliage_card_triangle_count"]) > 0, "Near foliage cards are missing")
+    require(
+        int(topology["near_branch_triangle_count"]) == 0
+        and int(topology["near_foliage_card_triangle_count"]) == 0,
+        "Obsolete near foliage-card topology remains in the static canopy",
+    )
+    require(
+        int(topology["runtime_close_tree_instance_count"]) >= 100,
+        "Source-derived runtime close-tree instances are missing",
+    )
     require(
         sum(
             int(topology[key])

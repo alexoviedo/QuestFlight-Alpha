@@ -171,7 +171,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root.midBuildingCoveragePercent, Is.GreaterThanOrEqualTo(98f));
             Assert.That(root.maximumBuildingFootprintInflationPercent, Is.LessThanOrEqualTo(5f));
             Assert.That(root.canopySurfaceManifest.text,
-                Does.Contain("semantic_perforated_groves_0_2040m_over_continuous_terrain_canopy"));
+                Does.Contain("source_derived_close_tree_lods_then_semantic_groves_over_continuous_terrain_canopy"));
             Assert.That(root.canopySurfaceManifest.text, Does.Contain("\"mesh_batch_count\": 4"));
             Assert.That(root.canopySurfaceManifest.text,
                 Does.Contain("REJECTED_BLOCK_AND_CLIFF_SILHOUETTES"));
@@ -267,7 +267,10 @@ namespace QuestFlight.Editor.Tests
                 Is.EqualTo(PhotorealAerialSurfaceNativeMeshAuthoring.ExpectedBuildingBatchCount));
             Assert.That(dependencies.Count(path =>
                     path.StartsWith(PhotorealAerialSurfaceNativeMeshAuthoring.CanopyNativeRoot + "/",
-                        StringComparison.Ordinal) && path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase)),
+                        StringComparison.Ordinal) &&
+                    Path.GetFileNameWithoutExtension(path).StartsWith(
+                        "ProductionCanopySurfaceLayer_", StringComparison.Ordinal) &&
+                    path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase)),
                 Is.EqualTo(PhotorealAerialSurfaceNativeMeshAuthoring.ExpectedCanopyBatchCount));
             Assert.That(dependencies.Count(path => string.Equals(path,
                     PhotorealAerialSurfaceNativeMeshAuthoring.TerrainNativePath,
@@ -367,11 +370,14 @@ namespace QuestFlight.Editor.Tests
                 : Array.Empty<string>();
             Assert.That(sources, Has.Length.EqualTo(expectedCount));
 
+            string[] sourceNames = sources.Select(Path.GetFileNameWithoutExtension).ToArray();
             Dictionary<string, string> nativeByName = AssetDatabase.FindAssets("t:Mesh", new[] { nativeRoot })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Where(path => path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase) &&
                                string.Equals(Path.GetDirectoryName(path)?.Replace('\\', '/'), nativeRoot,
-                                   StringComparison.Ordinal))
+                                   StringComparison.Ordinal) &&
+                               sourceNames.Contains(Path.GetFileNameWithoutExtension(path),
+                                   StringComparer.Ordinal))
                 .ToDictionary(Path.GetFileNameWithoutExtension, StringComparer.Ordinal);
             Assert.That(nativeByName, Has.Count.EqualTo(expectedCount));
 

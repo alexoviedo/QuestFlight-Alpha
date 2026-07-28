@@ -59,6 +59,15 @@ namespace QuestFlightLab.Runtime
                 .Where(batch => batch != null && batch.enabled && batch.gameObject.activeInHierarchy &&
                                 batch.SharedMaterial != null && batch.NonEmptyDrawCount > 0)
                 .ToArray();
+            AirportCloseTreeLodRenderer[] closeTreeLods = UnityEngine.Object
+                .FindObjectsByType<AirportCloseTreeLodRenderer>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .Where(batch => batch != null && batch.enabled &&
+                                batch.gameObject.activeInHierarchy &&
+                                batch.SharedCanopyMaterial != null &&
+                                batch.AuthoredMaximumDrawCount > 0)
+                .ToArray();
             Plane[] frustum = camera != null ? GeometryUtility.CalculateFrustumPlanes(camera) : null;
             Dictionary<Renderer, int> rendererLodIndices = new Dictionary<Renderer, int>();
             Dictionary<LODGroup, int> selectedLodIndices = new Dictionary<LODGroup, int>();
@@ -139,6 +148,25 @@ namespace QuestFlightLab.Runtime
                         StringComparison.OrdinalIgnoreCase))
                     transparentSlots += batchDraws;
             }
+            int visibleCloseTreeDraws = 0;
+            foreach (AirportCloseTreeLodRenderer closeTree in closeTreeLods)
+            {
+                if (camera != null &&
+                    (camera.cullingMask & (1 << closeTree.gameObject.layer)) == 0)
+                    continue;
+                int batchDraws = closeTree.AuthoredMaximumDrawCount;
+                Material material = closeTree.SharedCanopyMaterial;
+                visibleCloseTreeDraws += batchDraws;
+                drawCalls += batchDraws;
+                triangles += closeTree.AuthoredMaximumSelectedTriangleCount;
+                materials.Add(material);
+                if (material.renderQueue >= (int)RenderQueue.Transparent ||
+                    string.Equals(
+                        material.GetTag("RenderType", false, string.Empty),
+                        "Transparent",
+                        StringComparison.OrdinalIgnoreCase))
+                    transparentSlots += batchDraws;
+            }
             if (camera != null && camera.clearFlags == CameraClearFlags.Skybox && RenderSettings.skybox != null)
             {
                 Material skybox = RenderSettings.skybox;
@@ -153,14 +181,17 @@ namespace QuestFlightLab.Runtime
             }
             return new RenderBudgetSnapshot
             {
-                activeRendererCount = renderers.Length + vegetationBatches.Sum(batch => batch.NonEmptyDrawCount),
-                estimatedVisibleRendererCount = visible.Length + visibleVegetationBatchDraws,
+                activeRendererCount = renderers.Length +
+                    vegetationBatches.Sum(batch => batch.NonEmptyDrawCount) +
+                    closeTreeLods.Sum(batch => batch.AuthoredMaximumDrawCount),
+                estimatedVisibleRendererCount = visible.Length +
+                    visibleVegetationBatchDraws + visibleCloseTreeDraws,
                 estimatedInstancedDrawCalls = drawCalls,
                 estimatedFrustumTriangles = triangles,
                 uniqueMaterialCount = materials.Count,
                 transparentMaterialSlots = transparentSlots,
-                drawCountSemantics = "Camera-layer/frustum and selected-LOD non-null MeshRenderer/SkinnedMeshRenderer material-submesh slots, plus conservative camera-layer-visible authored AerialVegetationBatchRenderer draws, before Unity batching.",
-                triangleCountSemantics = "Triangle topology indices for the same effective renderer slots plus every authored matrix instance submitted by camera-layer-visible aerial vegetation batches."
+                drawCountSemantics = "Camera-layer/frustum and selected-LOD non-null MeshRenderer/SkinnedMeshRenderer material-submesh slots, plus conservative authored aerial-vegetation and bounded airport-close tree LOD draws, before Unity batching.",
+                triangleCountSemantics = "Triangle topology indices for the same effective renderer slots plus conservative authored maxima for instanced aerial vegetation and airport-close tree LODs."
             };
         }
 

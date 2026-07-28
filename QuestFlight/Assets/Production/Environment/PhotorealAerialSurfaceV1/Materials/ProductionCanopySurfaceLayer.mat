@@ -47,6 +47,10 @@ Material:
         m_Texture: {fileID: 8900000, guid: 9cd62c9524f06f1429cc2072e717d455, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _HeroLeafAtlas:
+        m_Texture: {fileID: 2800000, guid: 5df61eebf4af4cf28bb8a21fc3357852, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _NearAlbedo:
         m_Texture: {fileID: 2800000, guid: 0021365d50509d2abe127a826626ee6e, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -75,6 +79,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: fef60605d09a177c1ae99bcb8c10f726, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _TreeImpostorAtlas:
+        m_Texture: {fileID: 2800000, guid: d46dec4c0bb240e0a666546496e64e5e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _AmbientFloor: 0.22
@@ -82,6 +90,8 @@ Material:
     - _Cull: 0
     - _DiagnosticMode: 0
     - _FoliageCutoff: 0.3
+    - _ImpostorFrame: 0
+    - _InstanceFade: 1
     - _SemanticMode: 1
     - _SideRoughness: 0.92
     - _TopRoughness: 0.88
@@ -92,6 +102,7 @@ Material:
     - _CanopySourceToProductRow0: {r: 0.9999968, g: -0.0025385262, b: 0, a: 0}
     - _CanopySourceToProductRow1: {r: 0.0025385262, g: 0.9999968, b: 0, a: 0}
     - _CanopyWorldMinInvSize: {r: -2048, g: -2048, b: 0.00024414062, a: 0.00024414062}
+    - _InstanceTint: {r: 1, g: 1, b: 1, a: 1}
     - _NearBlendStartEnd: {r: 1800, g: 1980, b: 0, a: 0}
     - _NearWorldMinInvSize: {r: -2000, g: -2000, b: 0.00025, a: 0.00025}
     - _RecoveryMidNEWorldMinInvSize: {r: -32, g: -32, b: 0.000246063, a: 0.000246063}

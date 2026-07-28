@@ -49,7 +49,16 @@ Poly Haven assets are dedicated under CC0 1.0. Attribution is not required, but 
 - `Concrete Wall 005`: <https://polyhaven.com/a/concrete_wall_005>
 - `Corrugated Iron 02`: <https://polyhaven.com/a/corrugated_iron_02>
 - `Worn Corrugated Iron`: <https://polyhaven.com/a/worn_corrugated_iron>
+- `Tree Small 02`: <https://polyhaven.com/a/tree_small_02>
 - License: <https://polyhaven.com/license>
+
+`Tree Small 02` is processed offline into a three-level airport-tree
+representation: source-leaf hero geometry, a reduced volumetric-clump mesh,
+and an eight-azimuth world-upright impostor. The raw blend, source textures,
+and intermediate renders remain external. The product commits only optimized
+runtime meshes, a leaf atlas, and an impostor atlas. All tiers share the
+existing opaque canopy material. Exact source and derivative hashes are
+recorded in `AirportCloseTreeLods_SourceManifest.json`.
 
 ## Poly Haven CC0 HDR sky
 

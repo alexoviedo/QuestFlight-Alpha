@@ -15,6 +15,8 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
         _CanopyNormalOcclusion ("Canopy normal and occlusion", 2D) = "gray" {}
         _CanopyFoliageAlbedo ("Project-owned canopy foliage detail", 2D) = "gray" {}
         _NearFoliageAtlas ("Project-owned perforated near foliage atlas", 2D) = "white" {}
+        _HeroLeafAtlas ("CC0-derived hero tree leaf atlas", 2D) = "white" {}
+        _TreeImpostorAtlas ("CC0-derived eight-view tree impostor", 2D) = "white" {}
         _NormalizedSurfaceHeight ("Normalized surface height", 2D) = "black" {}
         _NearWorldMinInvSize ("Near min XZ / inverse size", Vector) = (-2000,-2000,0.00025,0.00025)
         _RecoveryMidNWWorldMinInvSize ("Mid NW min XZ / inverse size", Vector) = (-4032,-32,0.000246063,0.000246063)
@@ -35,6 +37,9 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
         _CanopyNormalStrength ("Canopy normal strength", Range(0,1)) = 0.42
         _AmbientFloor ("Linear ambient floor", Range(0,0.4)) = 0.22
         _FoliageCutoff ("Near foliage alpha cutoff", Range(0,1)) = 0.30
+        [PerRendererData] _InstanceTint ("Close-tree instance tint", Color) = (1,1,1,1)
+        [PerRendererData] _InstanceFade ("Close-tree LOD coverage", Range(0,1)) = 1
+        [PerRendererData] _ImpostorFrame ("Close-tree impostor frame", Float) = 0
         [Enum(UnityEngine.Rendering.CullMode)] _Cull ("Cull", Float) = 2
         _DiagnosticMode ("Editor diagnostic", Float) = 0
     }
@@ -72,6 +77,8 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
             sampler2D _CanopyNormalOcclusion;
             sampler2D _CanopyFoliageAlbedo;
             sampler2D _NearFoliageAtlas;
+            sampler2D _HeroLeafAtlas;
+            sampler2D _TreeImpostorAtlas;
             sampler2D _NormalizedSurfaceHeight;
             float4 _NearWorldMinInvSize;
             float4 _RecoveryMidNWWorldMinInvSize;
@@ -95,6 +102,12 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
             half _FoliageCutoff;
             half _DiagnosticMode;
 
+            UNITY_INSTANCING_BUFFER_START(Props)
+                UNITY_DEFINE_INSTANCED_PROP(fixed4, _InstanceTint)
+                UNITY_DEFINE_INSTANCED_PROP(half, _InstanceFade)
+                UNITY_DEFINE_INSTANCED_PROP(half, _ImpostorFrame)
+            UNITY_INSTANCING_BUFFER_END(Props)
+
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -112,6 +125,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 UNITY_FOG_COORDS(2)
                 fixed4 semanticData : TEXCOORD3;
                 float2 wallUv : TEXCOORD4;
+                half4 treeData : TEXCOORD5;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -125,7 +139,24 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
                 output.worldNormal = UnityObjectToWorldNormal(input.normal);
                 output.semanticData = input.color;
-                output.wallUv = input.uv;
+                half clumpLeaf = step(1.5h, input.uv.x) *
+                    (1.0h - step(3.5h, input.uv.x));
+                half heroLeaf = step(3.5h, input.uv.x) *
+                    (1.0h - step(5.5h, input.uv.x));
+                half impostorLeaf = step(5.5h, input.uv.x);
+                half closeTreeLeaf = saturate(clumpLeaf + heroLeaf + impostorLeaf) *
+                    (1.0h - step(0.5h, input.color.r));
+                fixed4 instanceTint = UNITY_ACCESS_INSTANCED_PROP(Props, _InstanceTint);
+                output.semanticData.gba = lerp(
+                    output.semanticData.gba, instanceTint.rgb, closeTreeLeaf);
+                output.wallUv = float2(
+                    lerp(input.uv.x, frac(input.uv.x), closeTreeLeaf),
+                    input.uv.y);
+                output.treeData = half4(
+                    heroLeaf,
+                    impostorLeaf,
+                    UNITY_ACCESS_INSTANCED_PROP(Props, _InstanceFade),
+                    UNITY_ACCESS_INSTANCED_PROP(Props, _ImpostorFrame));
                 UNITY_TRANSFER_FOG(output, output.position);
                 return output;
             }
@@ -422,11 +453,31 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 geometricNormal = normalize(input.worldNormal);
-                half nearFoliageCard = step(0.0h, input.wallUv.x) * step(0.5h, _SemanticMode);
+                half sourceTreeCard = saturate(input.treeData.x + input.treeData.y);
+                half nearFoliageCard = saturate(
+                    step(0.0h, input.wallUv.x) * step(0.5h, _SemanticMode) +
+                    sourceTreeCard);
                 fixed4 nearFoliage = fixed4(1.0h, 1.0h, 1.0h, 1.0h);
                 UNITY_BRANCH if (nearFoliageCard > 0.5h)
                 {
-                    nearFoliage = tex2D(_NearFoliageAtlas, input.wallUv);
+                    UNITY_BRANCH if (input.treeData.y > 0.5h)
+                    {
+                        half frame = floor(input.treeData.w + 0.5h);
+                        half2 atlasCell = half2(
+                            frame - floor(frame * 0.25h) * 4.0h,
+                            1.0h - floor(frame * 0.25h));
+                        nearFoliage = tex2D(
+                            _TreeImpostorAtlas,
+                            (atlasCell + input.wallUv) / half2(4.0h, 2.0h));
+                    }
+                    else if (input.treeData.x > 0.5h)
+                    {
+                        nearFoliage = tex2D(_HeroLeafAtlas, input.wallUv);
+                    }
+                    else
+                    {
+                        nearFoliage = tex2D(_NearFoliageAtlas, input.wallUv);
+                    }
                     clip(nearFoliage.a - _FoliageCutoff);
                     if (facing < 0.0h) geometricNormal = -geometricNormal;
                 }
@@ -587,7 +638,11 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 half roofGlint = topWeight * pow(saturate(dot(geometricNormal, halfDirection)), 34.0h);
                 color += _LightColor0.rgb * roofGlint * 0.13h;
 
-                fixed4 output = fixed4(color, 1.0h);
+                half treeCoverage = saturate(input.treeData.z);
+                half outputAlpha = nearFoliageCard > 0.5h
+                    ? nearFoliage.a * treeCoverage
+                    : treeCoverage;
+                fixed4 output = fixed4(color, outputAlpha);
                 UNITY_APPLY_FOG(input.fogCoord, output);
                 return output;
             }

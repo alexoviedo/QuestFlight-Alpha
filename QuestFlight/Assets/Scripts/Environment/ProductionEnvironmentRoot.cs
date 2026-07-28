@@ -342,6 +342,11 @@ namespace QuestFlightLab.Environment
                     .Where(batch => batch != null && batch.enabled &&
                                     IsAuthoredActive(batch.transform))
                     .ToArray();
+            AirportCloseTreeLodRenderer[] closeTreeLods =
+                GetComponentsInChildren<AirportCloseTreeLodRenderer>(true)
+                    .Where(batch => batch != null && batch.enabled &&
+                                    IsAuthoredActive(batch.transform))
+                    .ToArray();
             HashSet<Material> materials = new HashSet<Material>();
             long triangles = 0;
             foreach (Renderer renderer in renderers)
@@ -355,6 +360,13 @@ namespace QuestFlightLab.Environment
                     materials.Add(batch.SharedMaterial);
                 triangles += batch.FullyInstancedTriangleCount;
             }
+            foreach (AirportCloseTreeLodRenderer closeTree in closeTreeLods)
+            {
+                if (closeTree.SharedCanopyMaterial != null &&
+                    closeTree.AuthoredMaximumDrawCount > 0)
+                    materials.Add(closeTree.SharedCanopyMaterial);
+                triangles += closeTree.AuthoredMaximumSelectedTriangleCount;
+            }
             foreach (MeshFilter filter in GetComponentsInChildren<MeshFilter>(true)
                          .Where(filter => filter != null && IsAuthoredActive(filter.transform) &&
                                           filter.GetComponent<Renderer>() is Renderer renderer &&
@@ -366,7 +378,8 @@ namespace QuestFlightLab.Environment
                     triangles += (long)mesh.GetIndexCount(subMesh) / 3L;
             }
             int authoredDrawSources = renderers.Length +
-                                      vegetationBatches.Sum(batch => batch.NonEmptyDrawCount);
+                                      vegetationBatches.Sum(batch => batch.NonEmptyDrawCount) +
+                                      closeTreeLods.Sum(batch => batch.AuthoredMaximumDrawCount);
             return new ProductionEnvironmentBudget(
                 authoredDrawSources,
                 (int)Math.Min(int.MaxValue, triangles),

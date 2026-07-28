@@ -467,7 +467,14 @@ namespace QuestFlight.Editor
                     .SelectMany(root => root.GetComponentsInChildren<AerialVegetationBatchRenderer>(true))
                     .Where(batch => batch != null && batch.enabled && batch.gameObject.activeInHierarchy)
                     .ToArray();
-                report.rendererCount = renderers.Length + vegetationBatches.Sum(batch => batch.NonEmptyDrawCount);
+                AirportCloseTreeLodRenderer[] closeTreeLods = roots
+                    .SelectMany(root => root.GetComponentsInChildren<AirportCloseTreeLodRenderer>(true))
+                    .Where(batch => batch != null && batch.enabled &&
+                                    batch.gameObject.activeInHierarchy)
+                    .ToArray();
+                report.rendererCount = renderers.Length +
+                    vegetationBatches.Sum(batch => batch.NonEmptyDrawCount) +
+                    closeTreeLods.Sum(batch => batch.AuthoredMaximumDrawCount);
                 HashSet<Material> materials = new HashSet<Material>();
                 long triangles = 0;
                 foreach (Renderer renderer in renderers)
@@ -489,6 +496,28 @@ namespace QuestFlight.Editor
                     if (batch.SharedMaterial != null && batch.NonEmptyDrawCount > 0)
                         materials.Add(batch.SharedMaterial);
                     triangles += batch.FullyInstancedTriangleCount;
+                }
+                foreach (AirportCloseTreeLodRenderer closeTree in closeTreeLods)
+                {
+                    if (closeTree.SharedCanopyMaterial == null)
+                    {
+                        report.failures.Add("airport-close tree LOD has no shared material: " +
+                                            HierarchyPath(closeTree.transform));
+                        continue;
+                    }
+                    materials.Add(closeTree.SharedCanopyMaterial);
+                    triangles += closeTree.AuthoredMaximumSelectedTriangleCount;
+                    Require(closeTree.Lod0Mesh != null && closeTree.Lod1Mesh != null,
+                        "airport-close tree LOD meshes are incomplete", report);
+                    Require(closeTree.Instances != null && closeTree.Instances.Length >= 100,
+                        "airport-close tree placement set is incomplete", report);
+                    Require(closeTree.ProjectedScreenSizeSelection &&
+                            closeTree.PersistentHysteresis &&
+                            closeTree.CenterEyeWorldUprightImpostor &&
+                            !closeTree.PerEyeFacingBehavior &&
+                            closeTree.AlphaToCoverageTransition,
+                        "airport-close trees must use persistent center-eye XR LOD transitions",
+                        report);
                 }
                 foreach (MeshFilter filter in roots.SelectMany(root => root.GetComponentsInChildren<MeshFilter>(true))
                              .Where(filter => filter != null && filter.gameObject.activeInHierarchy &&

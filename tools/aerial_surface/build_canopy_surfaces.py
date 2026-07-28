@@ -58,6 +58,7 @@ LAYER_NAME = "ProductionCanopySurfaceLayer.bytes"
 GEOMETRY_MASK_NAME = "ProductionCanopySurfaceLayer_GeometryOwnership_R8.png"
 TERRAIN_HANDOFF_MASK_NAME = "ProductionCanopySurfaceLayer_TerrainMapHandoff_R8.png"
 MANIFEST_NAME = "ProductionCanopySurfaceLayer_Manifest.json"
+NEAR_INSTANCE_MANIFEST_NAME = "ProductionAirportCloseTreeInstances.json"
 OWNERSHIP_MANIFEST_NAME = "KBDU_AerialSurface_OwnershipExclusionManifestV1.json"
 LEGACY_MASK_NAMES = (
     "ProductionCanopySurfaceLayer_Mask_R8.png",
@@ -108,12 +109,14 @@ MINIMUM_GEOMETRY_COMPONENT_PIXELS = 128
 TAPER_TERRAIN_CLEARANCE_METERS = 0.04
 MESH_BATCH_CELL_METERS = 2048.0
 MAXIMUM_LAYER_BYTES = 1_500_000
-# Preserve the complete near-airport perforated tree set, then retain at least
-# 95% of the high-confidence semantic canopy footprint with fixed, world-
-# oriented middle/far proxies.  The continuous terrain canopy map remains
+# Preserve at least 95% of the high-confidence semantic canopy footprint with
+# fixed, world-oriented middle/far proxies.  Source-derived close trees replace
+# the former near foliage cards through the separately compiled, bounded
+# AirportCloseTreeLodRenderer.  The continuous terrain canopy map remains
 # authoritative outside those selected volumes.  The lower bound rejects an
-# accidentally empty/sparse compile; the upper bound preserves the established
-# product-scene triangle ceiling.
+# accidentally empty/sparse static compile; the upper bound preserves the
+# established product-scene triangle ceiling.
+MINIMUM_STATIC_MESH_TRIANGLES = 30_000
 TARGET_MESH_TRIANGLES = 45_000
 MAXIMUM_MESH_TRIANGLES = 59_000
 GROVE_CELL_PIXELS = 8
@@ -165,8 +168,54 @@ GROVE_MINIMUM_HEIGHT_METERS = 7.0
 GROVE_MAXIMUM_HEIGHT_METERS = 24.0
 MAXIMUM_GROVE_COUNT = MAXIMUM_MESH_TRIANGLES // 4
 PRODUCT_CANOPY_POLICY = (
-    "semantic_perforated_groves_0_2040m_over_continuous_terrain_canopy"
+    "source_derived_close_tree_lods_then_semantic_groves_over_continuous_terrain_canopy"
 )
+
+
+def near_tree_instances(grove: dict[str, float]) -> list[dict[str, float]]:
+    """Return the deterministic near-tree placements formerly baked as large cards."""
+    x = float(grove["x"])
+    z = float(grove["z"])
+    ground = float(grove["ground"])
+    height = float(grove["height"])
+    radius_x = float(grove["radius_x"])
+    radius_z = float(grove["radius_z"])
+    rotation = float(grove["rotation"])
+    seed = float(grove["seed"])
+    tree_count = int(grove["near_tree_count"])
+    minimum_grove_radius = min(radius_x, radius_z)
+    golden_angle = math.pi * (3.0 - math.sqrt(5.0))
+    result: list[dict[str, float]] = []
+    for tree_index in range(tree_count):
+        identity = (seed * 97.0 + tree_index * 0.61803398875) % 1.0
+        angle = rotation + tree_index * golden_angle + identity * 0.45
+        radial = (
+            0.08
+            if tree_count == 1
+            else math.sqrt((tree_index + 0.35) / tree_count) * 0.37
+        )
+        tree_height = height * (0.78 + 0.22 * ((identity * 7.31) % 1.0))
+        crown_radius = float(np.clip(
+            max(
+                tree_height * (0.37 + 0.045 * ((identity * 11.7) % 1.0)),
+                minimum_grove_radius * (0.47 + 0.04 * ((identity * 5.3) % 1.0)),
+            ),
+            2.8,
+            min(7.8, minimum_grove_radius * 0.70),
+        ))
+        result.append({
+            "x": x + math.cos(angle) * radius_x * radial,
+            "y": ground + 0.04,
+            "z": z + math.sin(angle) * radius_z * radial,
+            "height": tree_height,
+            "crown_diameter": crown_radius * 2.0,
+            "rotation_degrees": math.degrees(angle) % 360.0,
+            "tint_r": float(grove["ground_color_r"]),
+            "tint_g": float(grove["ground_color_g"]),
+            "tint_b": float(grove["ground_color_b"]),
+            "seed": identity,
+        })
+    return result
 
 
 def load_near_ground_imagery() -> tuple[np.ndarray, tuple[float, float, float, float], dict[str, Any]]:
@@ -1294,7 +1343,9 @@ class ObjBatch:
             self.add_sparse_grove(grove)
             return
         if float(grove.get("near_detail", 0.0)) > 0.5:
-            self.add_near_grove(grove)
+            # The near tier is now authored as a bounded runtime instanced LOD
+            # set. Keeping it out of the static batches recovers the old ten
+            # oversized foliage cards and their duplicate trunk geometry.
             return
         if float(grove.get("mid_detail", 0.0)) > 0.5:
             self.add_mid_grove(grove)
@@ -1786,7 +1837,10 @@ def compile_semantic_groves(
         "source_coverage_fraction_0_1500m": float(
             np.count_nonzero(represented) / max(1, np.count_nonzero(source))
         ),
-        "triangle_count": triangle_count,
+        "triangle_count": triangle_count - (
+            sum(int(item["near_tree_count"]) for item in groves) * NEAR_TREE_TRIANGLES
+        ),
+        "selection_triangle_budget_equivalent": triangle_count,
     }
 
 def write_obj_batches(
@@ -1848,6 +1902,39 @@ def write_obj_batches(
             }
         )
     return results
+
+
+def write_near_instance_manifest(
+    groves: Sequence[dict[str, float]], output_dir: Path
+) -> tuple[Path, list[dict[str, float]]]:
+    instances = [
+        instance
+        for grove in groves
+        if float(grove.get("near_detail", 0.0)) > 0.5
+        and float(grove.get("sparse_detail", 0.0)) <= 0.5
+        for instance in near_tree_instances(grove)
+    ]
+    payload = {
+        "schema": "questflight.airport-close-tree-instances.v1",
+        "coordinate_frame": "KBDU product-local AEQD; +X east, +Y up, +Z north; metres",
+        "source": "deterministic near tier of ProductionCanopySurfaceLayer_Manifest",
+        "instance_count": len(instances),
+        "near_radius_meters": NEAR_GROVE_RADIUS_METERS,
+        "runtime_contract": {
+            "camera_facing": False,
+            "lod_crossfade_or_dither": False,
+            "per_tree_game_objects": False,
+            "maximum_lod0_instances": 8,
+            "maximum_lod1_instances": 8,
+            "maximum_lod2_instances": 696,
+            "maximum_draws_per_eye": 3,
+            "terrain_canopy_remains_beneath_handoff": True,
+        },
+        "instances": instances,
+    }
+    path = output_dir / NEAR_INSTANCE_MANIFEST_NAME
+    write_json(path, payload)
+    return path, instances
 
 
 def _metrics(values: Sequence[float] | np.ndarray) -> dict[str, float]:
@@ -2203,6 +2290,7 @@ def build(
         terrain_handoff_path, format="PNG", compress_level=9, optimize=False
     )
     mesh_batches = write_obj_batches(groves, mapping, generated_dir)
+    near_instance_path, near_instances = write_near_instance_manifest(groves, output_dir)
     triangle_total = sum(int(item["triangle_count"]) for item in mesh_batches)
     vertex_total = sum(int(item["vertex_count"]) for item in mesh_batches)
     mesh_bytes = sum(int(item["bytes"]) for item in mesh_batches)
@@ -2269,6 +2357,10 @@ def build(
                 "encoding": {"channel": "R", "container": "PNG", "eligible_code": 255},
                 "raster_horizontal_frame": "origin-relative UTM13N deltas",
             },
+            {
+                **file_record(near_instance_path, "production_airport_close_tree_instances"),
+                "encoding": {"container": "JSON", "coordinate_frame": "product_local_aeqd"},
+            },
             *mesh_batches,
         ],
         "budgets": {
@@ -2278,7 +2370,10 @@ def build(
             "mesh_batch_total_triangles": triangle_total,
             "mesh_batch_total_vertices": vertex_total,
             "maximum_layer_bytes": MAXIMUM_LAYER_BYTES,
-            "runtime_sparse_tree_instances_authored": 0,
+            "runtime_sparse_tree_instances_authored": len(near_instances),
+            "runtime_close_tree_lod0_cap": 8,
+            "runtime_close_tree_lod1_cap": 8,
+            "runtime_close_tree_lod2_cap": 696,
             "serialized_layer_bytes": layer_path.stat().st_size,
             "target_mesh_triangles": TARGET_MESH_TRIANGLES,
         },
@@ -2356,7 +2451,8 @@ def build(
             "The lidar data textures remain on the UTM13N raster grid; runtime world-space sampling must apply the exact product-AEQD-to-UTM transform before deriving texture UVs.",
         ],
         "ownership": {
-            "0_to_2040_meters": "connected opaque semantic grove crowns and grounded trunks over continuous terrain canopy shading",
+            "0_to_650_meters": "bounded source-derived opaque instanced tree LODs over continuous terrain canopy shading",
+            "650_to_2040_meters": "connected opaque semantic grove crowns and grounded trunks over continuous terrain canopy shading",
             "beyond_2040_meters": "orthophoto plus terrain canopy height, normal, density, and occlusion maps where source coverage exists",
             "building_and_hero_volume_exclusion": file_record(building_mask_path),
             "geometry_overlays_continuous_terrain_handoff": True,
@@ -2369,7 +2465,7 @@ def build(
             "match_mode": "exact_pre_exclusion_geometry_component",
         },
         "representation": {
-            "boundary_closure": "rounded multi-ring crown lower pole with grounded triangular-prism trunks; no vertical skirts",
+            "boundary_closure": "source-derived close trees, then rounded semantic groves; no vertical skirts",
             "canopy_color_registration": {
                 "source": "near_4km orthophoto",
                 "semantic_samples": "lidar-supported canopy pixels",
@@ -2385,6 +2481,8 @@ def build(
             "minimum_grove_source_pixels": MINIMUM_GROVE_SOURCE_PIXELS,
             "minimum_grove_span_meters": MINIMUM_GROVE_SPAN_METERS,
             "ordinary_vertical_billboards": False,
+            "close_tree_lod_source": "Poly Haven Tree Small 02 CC0 optimized offline",
+            "close_tree_runtime_instance_count": len(near_instances),
             "refinement_cell_meters": pixel_size * REFINEMENT_CELL_PIXELS,
             "refinement_minimum_eligible_pixels": REFINEMENT_REQUIRED_ELIGIBLE_PIXELS,
             "refinement_requires_all_source_pixels_eligible": True,
@@ -2468,10 +2566,11 @@ def build(
                 1 for item in groves if float(item["sparse_detail"]) > 0.5
             ),
             "near_tree_count": sum(int(item["near_tree_count"]) for item in groves),
+            "runtime_close_tree_instance_count": len(near_instances),
             "grounded_trunk_count": sum(
                 0
                 if float(item["sparse_detail"]) > 0.5
-                else int(item["near_tree_count"])
+                else 0
                 if float(item["near_detail"]) > 0.5
                 else MID_GROVE_TRUNK_COUNT
                 if float(item["mid_detail"]) > 0.5
@@ -2489,7 +2588,7 @@ def build(
                 sum(
                     0
                     if float(item["sparse_detail"]) > 0.5
-                    else int(item["near_tree_count"])
+                    else 0
                     if float(item["near_detail"]) > 0.5
                     else MID_GROVE_TRUNK_COUNT
                     if float(item["mid_detail"]) > 0.5
@@ -2498,13 +2597,10 @@ def build(
                 )
                 * GROVE_TRUNK_SIDES * 2
             ),
-            "near_branch_triangle_count": (
-                sum(int(item["near_tree_count"]) for item in groves)
-                * NEAR_TREE_BRANCHES * GROVE_TRUNK_SIDES * 2
-            ),
-            "near_foliage_card_triangle_count": (
-                sum(int(item["near_tree_count"]) for item in groves)
-                * NEAR_TREE_FOLIAGE_CARDS * 2
+            "near_branch_triangle_count": 0,
+            "near_foliage_card_triangle_count": 0,
+            "removed_near_card_triangle_count": (
+                len(near_instances) * NEAR_TREE_TRIANGLES
             ),
             "mid_foliage_card_triangle_count": (
                 sum(
@@ -2550,6 +2646,10 @@ def build(
         write_texture_meta(geometry_mask_path, "Raised semantic-grove source coverage; linear R8; no mips")
         write_texture_meta(terrain_handoff_path, "Continuous eligible terrain canopy-map handoff; linear R8; no mips")
         write_text_meta(manifest_path, "ProductionCanopySurfaceLayer provenance, ownership, and metrics")
+        write_text_meta(
+            near_instance_path,
+            "Deterministic airport-close source-tree LOD placements",
+        )
         write_text_meta(
             ownership_manifest_path,
             "Photoreal Aerial Surface V1 semantic ownership and exclusion contract",

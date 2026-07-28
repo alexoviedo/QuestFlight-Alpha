@@ -3,12 +3,12 @@
     "building": {
       "bytes": 46708,
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/ProductionBuildingSurfaceLayer_Manifest.json",
-      "sha256": "cc75a28fe7b021333c0370ee776ff3a7e9338d04ab68b3d9f8177a1a8bf89933"
+      "sha256": "7869dad7df1bf31e5fdbb4794bf5420805e47a9cb480205de92294a8b8993a32"
     },
     "canopy": {
-      "bytes": 37765,
+      "bytes": 38695,
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer_Manifest.json",
-      "sha256": "d5a3c7fa6b1433c7d8386b641d70249b1733665cb9e959230b0324435e7f8db3"
+      "sha256": "c9dfde4a784ad31670b814c14f961238a677adf9b4cac16e501fdce2cc9ba0d0"
     },
     "classification": {
       "bytes": 9341,
@@ -626,9 +626,9 @@
     "geometry_0_1500m": {
       "active": true,
       "mask": {
-        "bytes": 26839,
+        "bytes": 25163,
         "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer_GeometryOwnership_R8.png",
-        "sha256": "da4ce2b3487062cc9b8daf08ee0d356653f865fc0576425e141b910c9ad8eee8"
+        "sha256": "ba2fea856b532943a90f4c0bfafb91251cfea1dc0193864cd9c176bfd69582ad"
       },
       "owner": "ProductionCanopySurfaceLayer rounded opaque grove volumes",
       "source_eligible_owned_pixel_count": 47434
@@ -637,7 +637,7 @@
       "eligible_source_pixel_count": 144,
       "owner": "ProductionCanopySurfaceLayer; airport operational exclusions remain clear"
     },
-    "product_policy": "semantic_perforated_groves_0_2040m_over_continuous_terrain_canopy",
+    "product_policy": "source_derived_close_tree_lods_then_semantic_groves_over_continuous_terrain_canopy",
     "reviewed_noncanopy_exclusions": {
       "component_count": 2,
       "components": [
@@ -672,9 +672,9 @@
     "terrain_map_handoff": {
       "eligible_source_pixel_count": 63452,
       "mask": {
-        "bytes": 36048,
+        "bytes": 34031,
         "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer_TerrainMapHandoff_R8.png",
-        "sha256": "2a4e9f9a9dfd8ba058e08be052e82e8801feaf609643aa96d7345f1091ccc821"
+        "sha256": "eeabc8c2e8547343074321f112dd99aaa36127fd66c19f4ed8f51531051fceea"
       },
       "owner": "terrain_canopy_height_normal_density_occlusion_maps"
     }
@@ -745,19 +745,19 @@
     "diagnostic_affine_product_from_utm_delta": {
       "matrix_xz": [
         [
-          1.0003923483229664,
-          -0.002539530253518825
+          1.0003923483229662,
+          -0.0025395302535188412
         ],
         [
-          0.0025395302727407435,
-          1.000392340518264
+          0.0025395302727407687,
+          1.0003923405182644
         ]
       ],
       "maximum_allowed_residual_meters": 0.005,
-      "maximum_residual_meters": 0.002037462155562308,
+      "maximum_residual_meters": 0.0020374621564752584,
       "offset_xz_meters": [
-        3.1201782469145734e-11,
-        -4.1110080042791894e-10
+        3.121304254493562e-11,
+        -4.111156836224016e-10
       ],
       "sample_grid_size_per_axis": 17,
       "use_for_production_conversion": false
@@ -789,17 +789,17 @@
     "pyproj_version": "3.7.2",
     "runtime_affine_coefficients": {
       "position_maximum_allowed_residual_meters": 0.005,
-      "position_maximum_residual_meters": 0.002036656527875971,
-      "product_to_utm_x_from_product_x": 0.999601363966432,
-      "product_to_utm_x_from_product_z": 0.0025375223324244265,
-      "product_to_utm_x_offset_meters": -3.014616685237858e-11,
-      "product_to_utm_z_from_product_x": -0.002537522351631147,
-      "product_to_utm_z_from_product_z": 0.9996013717649634,
-      "product_to_utm_z_offset_meters": 4.110160992618484e-10,
-      "utm_normal_to_product_rotation_degrees_counterclockwise": 0.14544698815903367,
+      "position_maximum_residual_meters": 0.0020366565290151524,
+      "product_to_utm_x_from_product_x": 0.9996013639664322,
+      "product_to_utm_x_from_product_z": 0.002537522332424442,
+      "product_to_utm_x_offset_meters": -3.015738467305814e-11,
+      "product_to_utm_z_from_product_x": -0.002537522351631171,
+      "product_to_utm_z_from_product_z": 0.999601371764963,
+      "product_to_utm_z_offset_meters": 4.1103100509616337e-10,
+      "utm_normal_to_product_rotation_degrees_counterclockwise": 0.14544698815903484,
       "utm_normal_to_product_x_from_utm_x": 0.9999967779374186,
-      "utm_normal_to_product_x_from_utm_z": -0.002538526104050839,
-      "utm_normal_to_product_z_from_utm_x": 0.002538526104050839,
+      "utm_normal_to_product_x_from_utm_z": -0.0025385261040508592,
+      "utm_normal_to_product_z_from_utm_x": 0.0025385261040508592,
       "utm_normal_to_product_z_from_utm_z": 0.9999967779374186
     }
   },

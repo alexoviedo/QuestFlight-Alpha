@@ -3,7 +3,7 @@
     "sourceCommit": "cd4131fa7732a6db2d7387921dfef33e2c206970",
     "scenePath": "Assets/Scenes/ProductionVerticalSlice.unity",
     "ready": true,
-    "approvedCount": 315,
+    "approvedCount": 332,
     "packageCount": 5,
     "conditionalLocalCount": 0,
     "rejectedCount": 0,
@@ -262,6 +262,38 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/AirportFenceV1/AirportPerimeterFence.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportFenceV1/AirportPerimeterFence.shader",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportFenceV1/Data/KBDU_AirportFenceSourceV1.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportFenceV1/Generated/northeast_wildlife_fence.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportFenceV1/Generated/northwest_wildlife_fence.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportFenceV1/Generated/south_black_chain_link.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportFenceV1/Generated/west_hangar_fence.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportFenceV1/KBDU_AirportPerimeterFence.prefab",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/AirportHeroCorridorV1/Data/AirportHeroCorridorGenerationReportV1.json",
             "classification": "approved_production"
         },
@@ -398,6 +430,22 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/AirportCloseTreeLods_SourceManifest.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Native/AirportCloseTree_LOD0.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Native/AirportCloseTree_LOD1.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Native/AirportCloseTree_LOD2.asset",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Native/ProductionCanopySurfaceLayer_xn001_zn001.asset",
             "classification": "approved_production"
         },
@@ -414,6 +462,10 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionAirportCloseTreeInstances.json",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer_GeometryOwnership_R8.png",
             "classification": "approved_production"
         },
@@ -423,6 +475,14 @@
         },
         {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionCanopySurfaceLayer_TerrainMapHandoff_R8.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/AirportCloseTree_HeroLeaf_RGBA.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/AirportCloseTree_Impostor8_RGBA.png",
             "classification": "approved_production"
         },
         {
@@ -1166,6 +1226,10 @@
             "classification": "approved_product_authored"
         },
         {
+            "assetPath": "Assets/Scripts/Environment/AirportCloseTreeLodRenderer.cs",
+            "classification": "approved_product_authored"
+        },
+        {
             "assetPath": "Assets/Scripts/Environment/AirportCoreBenchmarkManifest.cs",
             "classification": "approved_product_authored"
         },
@@ -1179,6 +1243,10 @@
         },
         {
             "assetPath": "Assets/Scripts/Environment/AirportParkingStandManifest.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/AirportPerimeterFenceRoot.cs",
             "classification": "approved_product_authored"
         },
         {

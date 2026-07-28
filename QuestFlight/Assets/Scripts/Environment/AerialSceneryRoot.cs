@@ -13,7 +13,7 @@ namespace QuestFlightLab.Environment
     public sealed class AerialSceneryRoot : MonoBehaviour
     {
         public const string GameObjectName = "AerialSceneryRepresentationV1";
-        public const int MaximumVegetationRenderers = 6;
+        public const int MaximumVegetationRenderers = 7;
         public const int MaximumVegetationMaterials = 3;
         public const int BaselineSerializedSceneTriangles = 687607;
         public const int MaximumSerializedSceneTriangles = 721988;
@@ -96,17 +96,27 @@ namespace QuestFlightLab.Environment
                 ? Array.Empty<AerialVegetationBatchRenderer>()
                 : vegetationRoot.GetComponentsInChildren<AerialVegetationBatchRenderer>(true)
                     .Where(item => item.enabled && IsAuthoredActive(item.transform)).ToArray();
+            AirportCloseTreeLodRenderer[] closeTreeLods = vegetationRoot == null
+                ? Array.Empty<AirportCloseTreeLodRenderer>()
+                : vegetationRoot.GetComponentsInChildren<AirportCloseTreeLodRenderer>(true)
+                    .Where(item => item.enabled && IsAuthoredActive(item.transform)).ToArray();
             int authoredBatchDraws = vegetationBatches.Sum(item => item.Batches.Count(batch =>
                 batch.Mesh != null && batch.Matrices != null && batch.Matrices.Length > 0));
-            int vegetationDrawCount = conventionalVegetationRenderers.Length + authoredBatchDraws;
+            int closeTreeDraws = closeTreeLods.Sum(item => item.AuthoredMaximumDrawCount);
+            int vegetationDrawCount =
+                conventionalVegetationRenderers.Length + authoredBatchDraws + closeTreeDraws;
             HashSet<Material> vegetationMaterials = new HashSet<Material>(
                 conventionalVegetationRenderers.SelectMany(item => item.sharedMaterials)
                     .Where(item => item != null));
             foreach (AerialVegetationBatchRenderer batchRenderer in vegetationBatches)
                 if (batchRenderer.SharedMaterial != null) vegetationMaterials.Add(batchRenderer.SharedMaterial);
+            foreach (AirportCloseTreeLodRenderer closeTree in closeTreeLods)
+                if (closeTree.SharedCanopyMaterial != null)
+                    vegetationMaterials.Add(closeTree.SharedCanopyMaterial);
             int vegetationMaterialCount = vegetationMaterials.Count;
             long vegetationTriangles = CountRendererTriangles(conventionalVegetationRenderers) +
-                vegetationBatches.Sum(item => item.FullyInstancedTriangleCount);
+                vegetationBatches.Sum(item => item.FullyInstancedTriangleCount) +
+                closeTreeLods.Sum(item => item.AuthoredMaximumSelectedTriangleCount);
             Require(vegetationDrawCount <= MaximumVegetationRenderers,
                 $"vegetation draw count exceeds {MaximumVegetationRenderers} ({vegetationDrawCount})", failures);
             Require(vegetationMaterialCount <= MaximumVegetationMaterials,

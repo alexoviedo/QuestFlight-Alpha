@@ -506,6 +506,16 @@
       "reason": "Product-authored validation marker for the explicitly serialized aerial scenery hierarchy; it performs no runtime construction or repair."
     },
     {
+      "path": "Assets/Scripts/Environment/AirportCloseTreeLodRenderer.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored persistent instanced LOD renderer for the serialized airport-tree placement set; it does not construct or repair product hierarchy."
+    },
+    {
+      "path": "Assets/Scripts/Environment/AirportPerimeterFenceRoot.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored validation marker for the explicitly serialized airport perimeter fence; it performs no runtime construction or repair."
+    },
+    {
       "path": "Assets/Scenes/ProductionVerticalSlice/LightingData.asset",
       "classification": "approved_project_generated",
       "reason": "Unity-generated baked-lighting data for the bounded airport-core benchmark, pinned by the V4.2 bake manifest and structural validator."

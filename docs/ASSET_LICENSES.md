@@ -197,6 +197,36 @@ The frozen extraction ledger above remains immutable provenance. The one targete
 
 At that milestone, `QuestFlight/Assets/Production/Environment` contained 97 non-`.meta` files and 11,281,449 bytes. Its product-repository-relative inventory digest was `5758adcfeed1d97412b4ec853a8b16d13185c2d7a31e465eefa206eaeafc2d5a`, using the same sorted-line algorithm documented above.
 
+### Airport-close Poly Haven tree derivative
+
+The airport-close hybrid LOD tier adapts Poly Haven's
+[Tree Small 02](https://polyhaven.com/a/tree_small_02), distributed under
+[CC0 1.0](https://polyhaven.com/license). The raw 1K `.blend` and source
+textures remain external. Blender 5.1.2 evaluates the source trunk, branch,
+and foliage geometry. The deterministic project compiler emits source-leaf
+hero geometry, a reduced volumetric-clump middle tier, and a world-upright
+eight-azimuth far impostor. Intermediate Blender renders remain external.
+The two optimized runtime atlases and all mesh tiers use the existing shared
+opaque canopy material.
+
+| Product derivative | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `AirportCloseTreeLods.bytes` | 270,694 | `295659ab4f5d18ce92f05388a936a37149747ff0f735726a2abe23b96bd9194f` |
+| `AirportCloseTree_LOD0.asset` | 518,217 | `a320adda130595931639860f42441deb92b57a899f56862bdad84e73c737f053` |
+| `AirportCloseTree_LOD1.asset` | 29,605 | `cdeb28117aeda419896ec12cc2f713ff8ed908fbc436954a6b7d38faa6de153d` |
+| `AirportCloseTree_LOD2.asset` | 3,731 | `2ff108d3f327b49d2769e36c4fe4bdfc64447686d08880157c13c4b0eadb944d` |
+| `AirportCloseTree_HeroLeaf_RGBA.png` | 667,438 | `67a613d7b34086d4f6c1303e4b53b052b968f57f2a2d40259a697a04e768fd1f` |
+| `AirportCloseTree_Impostor8_RGBA.png` | 1,932,310 | `d58cbaeb9f7b6b61e3982c66e79360d5933e97b257af3e4759f81265a34787d2` |
+| `ProductionAirportCloseTreeInstances.json` | 257,444 | `1a92e2af0270cff7de1dbb6febf5e4f339920e34ef455387819995a5af889eb7` |
+
+The external source blend SHA-256 is
+`af3fef6da3eb97057d9d4d3c4281c5944696b8d518715deddd8500482d30b1bd`.
+Exact processing and LOD records are committed in
+`AirportCloseTreeLods_SourceManifest.json`. The derivative is a visual
+archetype; placement, scale, and tint remain driven by the existing bounded
+orthophoto/lidar semantic compilation and are not a surveyed tree inventory.
+The two runtime atlases add an estimated 1,557,696 Android ASTC bytes.
+
 ## Exclusions
 
 - No Google Maps, Google Earth, or Street View content.

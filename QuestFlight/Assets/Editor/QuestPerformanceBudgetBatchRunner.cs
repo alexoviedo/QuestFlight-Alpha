@@ -75,12 +75,21 @@ namespace QuestFlight.Editor
                 .Where(batch => batch != null && batch.enabled && batch.gameObject.activeInHierarchy &&
                                 batch.SharedMaterial != null && batch.NonEmptyDrawCount > 0)
                 .ToArray();
+            AirportCloseTreeLodRenderer[] closeTreeLods = roots
+                .SelectMany(root => root.GetComponentsInChildren<AirportCloseTreeLodRenderer>(true))
+                .Where(batch => batch != null && batch.enabled &&
+                                batch.gameObject.activeInHierarchy &&
+                                batch.SharedCanopyMaterial != null &&
+                                batch.AuthoredMaximumDrawCount > 0)
+                .ToArray();
             Camera mainCamera = roots.SelectMany(root => root.GetComponentsInChildren<Camera>(true))
                 .Single(camera => camera.CompareTag("MainCamera"));
 
-            MaterialShaderReport materialReport = BuildMaterialShaderReport(renderers, vegetationBatches);
+            MaterialShaderReport materialReport =
+                BuildMaterialShaderReport(renderers, vegetationBatches, closeTreeLods);
             TextureMemoryReport textureReport = BuildTextureReport(materialReport.materials, roots);
-            LodCullingReport lodReport = BuildLodReport(roots, renderers, vegetationBatches);
+            LodCullingReport lodReport =
+                BuildLodReport(roots, renderers, vegetationBatches, closeTreeLods);
             StaticViewBudget defaultView = CaptureViewBudget(mainCamera, renderers);
             ProductionVisualQaBatchRunner.ProductionVisualQaReport visualReport = ReadVisualQaReport();
 
@@ -189,7 +198,8 @@ namespace QuestFlight.Editor
 
         private static MaterialShaderReport BuildMaterialShaderReport(
             IEnumerable<Renderer> renderers,
-            IEnumerable<AerialVegetationBatchRenderer> vegetationBatches)
+            IEnumerable<AerialVegetationBatchRenderer> vegetationBatches,
+            IEnumerable<AirportCloseTreeLodRenderer> closeTreeLods)
         {
             Dictionary<Material, MaterialEntry> entries = new Dictionary<Material, MaterialEntry>();
             int slots = 0;
@@ -242,6 +252,36 @@ namespace QuestFlight.Editor
                         transparent = transparent,
                         instancingEnabled = material.enableInstancing,
                         keywords = material.shaderKeywords.OrderBy(keyword => keyword, StringComparer.Ordinal).ToArray(),
+                        rendererSlotCount = 0,
+                        environmentReference = true
+                    };
+                    entries.Add(material, entry);
+                }
+                entry.rendererSlotCount += drawSlots;
+                entry.environmentReference = true;
+            }
+            foreach (AirportCloseTreeLodRenderer closeTree in closeTreeLods)
+            {
+                Material material = closeTree.SharedCanopyMaterial;
+                int drawSlots = closeTree.AuthoredMaximumDrawCount;
+                if (material == null || drawSlots == 0) continue;
+                slots += drawSlots;
+                bool transparent = material.renderQueue >= (int)RenderQueue.Transparent ||
+                    string.Equals(material.GetTag("RenderType", false, string.Empty),
+                        "Transparent", StringComparison.OrdinalIgnoreCase);
+                if (transparent) transparentSlots += drawSlots;
+                if (!entries.TryGetValue(material, out MaterialEntry entry))
+                {
+                    entry = new MaterialEntry
+                    {
+                        name = material.name,
+                        assetPath = AssetDatabase.GetAssetPath(material),
+                        shader = material.shader != null ? material.shader.name : "MISSING",
+                        renderQueue = material.renderQueue,
+                        transparent = transparent,
+                        instancingEnabled = material.enableInstancing,
+                        keywords = material.shaderKeywords
+                            .OrderBy(keyword => keyword, StringComparer.Ordinal).ToArray(),
                         rendererSlotCount = 0,
                         environmentReference = true
                     };
@@ -437,7 +477,8 @@ namespace QuestFlight.Editor
         private static LodCullingReport BuildLodReport(
             IEnumerable<GameObject> roots,
             Renderer[] renderers,
-            AerialVegetationBatchRenderer[] vegetationBatches)
+            AerialVegetationBatchRenderer[] vegetationBatches,
+            AirportCloseTreeLodRenderer[] closeTreeLods)
         {
             LODGroup[] groups = roots.SelectMany(root => root.GetComponentsInChildren<LODGroup>(true)).ToArray();
             List<LodGroupEntry> entries = groups.Select(group => new LodGroupEntry
@@ -458,7 +499,9 @@ namespace QuestFlight.Editor
             return new LodCullingReport
             {
                 generatedUtc = DateTime.UtcNow.ToString("O"),
-                activeRendererCount = renderers.Length + vegetationBatches.Sum(batch => batch.NonEmptyDrawCount),
+                activeRendererCount = renderers.Length +
+                    vegetationBatches.Sum(batch => batch.NonEmptyDrawCount) +
+                    closeTreeLods.Sum(batch => batch.AuthoredMaximumDrawCount),
                 rendererBoundsRadiusMaximum = renderers.Length == 0 ? 0f : renderers.Max(renderer => renderer.bounds.extents.magnitude),
                 lodGroupCount = entries.Count,
                 crossFadeLodGroupCount = entries.Count(entry => entry.fadeMode != LODFadeMode.None.ToString()),
