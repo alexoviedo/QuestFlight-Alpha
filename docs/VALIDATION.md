@@ -376,3 +376,31 @@ Traffic V1 validation on Unity 6000.3.8f1:
   airport-hero report has the identical texture estimate.
 
 The APK and all captures remain external artifacts and are not committed.
+
+## Airport perimeter fence validation
+
+- `python -B tools/kbdu_airport_fence/validate_airport_fence_manifest.py
+  --repo-root .`: PASS; four sections, 4,273.191 m, four-draw maximum, no new
+  materials or textures.
+- Product integrity: PASS at 799,839/800,000 serialized triangles.
+- EditMode: PASS 136/136, including single-root ownership, four fixed
+  renderers, one reused material, 104 selected/serialized triangles, no LOD
+  groups, no physics, and fence vertex-data contracts.
+- PlayMode: PASS 9/9.
+- Production Visual QA: 100/100 image-integrity passes. Dedicated views
+  `37_airport_south_security_fence`, `38_airport_west_hangar_fence`, and
+  `39_airport_fence_overview` were inspected at full resolution.
+- The aggregate Visual QA script still reports `FAIL_MACHINE_QA` against its
+  inherited 600,000-triangle/25-material generic thresholds. The accepted
+  product limits pass at 638,538/650,000 visible triangles and 29/29 materials.
+- Static planning: 60/75 draws, 638,538/650,000 visible triangles, 29/29
+  materials, 3/3 transparent slots, and 4x MSAA pass. The inherited
+  221,506,450/220,200,960-byte texture overage remains; the fence adds no
+  texture residency.
+- Meta XR Simulator v201: live Quest 3 stereo/HMD/both Touch connection PASS;
+  aggregate status `BLOCKED_MISSING_RECORDED_REPLAYS`.
+- Android ARM64/Vulkan/OpenXR build: PASS; 137,116,114 bytes, SHA-256
+  `5abf73962f72c6a6675d2a0e3ac83e6ba96976fda940753a6adfb4c5e45f377f`.
+
+These are development and regression results. They do not establish physical
+Quest frame timing, thermal behavior, or surveyed airport-security fidelity.

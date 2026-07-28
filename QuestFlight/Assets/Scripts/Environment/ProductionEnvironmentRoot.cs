@@ -39,6 +39,7 @@ namespace QuestFlightLab.Environment
         public Transform authoritativeRunwaySystem;
         public Transform essentialWater;
         public Transform trafficRoot;
+        public Transform airportPerimeterFence;
         [Tooltip("OrthophotoOnly deliberately defers all water effects while preserving source provenance for final polish.")]
         public ProductionWaterPresentationMode waterPresentationMode =
             ProductionWaterPresentationMode.AuthoredSurface;
@@ -151,6 +152,18 @@ namespace QuestFlightLab.Environment
             Require(trafficRoot == null ||
                     trafficRoot.GetComponentsInChildren<KbduTrafficRuntime>(true).Length == 1,
                 "TrafficRoot must contain exactly one authored traffic runtime", failures);
+            Require(airportPerimeterFence != null,
+                "AirportPerimeterFenceRoot is not bound", failures);
+            Require(airportPerimeterFence == null ||
+                    airportPerimeterFence.GetComponentsInChildren<AirportPerimeterFenceRoot>(true).Length == 1,
+                "airport perimeter fence must contain exactly one authored fence marker", failures);
+            if (airportPerimeterFence != null)
+            {
+                AirportPerimeterFenceRoot fence =
+                    airportPerimeterFence.GetComponentInChildren<AirportPerimeterFenceRoot>(true);
+                Require(fence != null && fence.TryValidateContract(out _),
+                    "airport perimeter fence contract failed", failures);
+            }
             Require(nearTerrainMeshes != null && nearTerrainMeshes.Length == 2 && nearTerrainMeshes.All(HasMesh),
                 "near terrain must contain the baked airport patch and 4 km USGS ring", failures);
             Require(HasMesh(midTerrainMesh), "12 km USGS mid terrain mesh is missing", failures);

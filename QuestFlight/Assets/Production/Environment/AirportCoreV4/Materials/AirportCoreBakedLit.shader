@@ -22,6 +22,7 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
         Pass
         {
             Tags { "LightMode"="ForwardBase" }
+            AlphaToMask On
             CGPROGRAM
             #pragma target 3.0
             #pragma vertex vert
@@ -48,6 +49,7 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
                 half4 tangent : TANGENT;
                 float2 uv : TEXCOORD0;
                 float2 uv1 : TEXCOORD1;
+                fixed4 color : COLOR;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -61,6 +63,7 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
                 float3 worldPosition : TEXCOORD4;
                 float2 lightmapUv : TEXCOORD5;
                 UNITY_FOG_COORDS(6)
+                fixed4 color : COLOR;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -77,6 +80,7 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
                 output.worldBitangent = cross(output.worldNormal, output.worldTangent) * input.tangent.w;
                 output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
                 output.lightmapUv = input.uv1 * unity_LightmapST.xy + unity_LightmapST.zw;
+                output.color = input.color;
                 UNITY_TRANSFER_FOG(output, output.position);
                 return output;
             }
@@ -84,6 +88,57 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
             fixed4 frag(v2f input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                UNITY_BRANCH if (input.color.a < 0.5h)
+                {
+                    // Fence-only contract: UV.x is cumulative perimeter metres,
+                    // UV.y is normalized height, color.r*2 is section height,
+                    // and color.g distinguishes weathered wood from dark metal.
+                    float heightMeters = max(input.color.r * 2.0, 1.0);
+                    float uMeters = input.uv.x;
+                    float vMeters = input.uv.y * heightMeters;
+                    float diamondPeriod = 0.34;
+                    float phaseA = frac((uMeters + vMeters) / diamondPeriod);
+                    float phaseB = frac((uMeters - vMeters) / diamondPeriod);
+                    float diagonalDistance = min(
+                        min(phaseA, 1.0 - phaseA),
+                        min(phaseB, 1.0 - phaseB)) * diamondPeriod;
+                    float postPhase = frac(uMeters / 3.2);
+                    float postDistance = min(postPhase, 1.0 - postPhase) * 3.2;
+                    float railDistance = min(
+                        abs(vMeters - 0.12),
+                        abs(vMeters - (heightMeters - 0.08)));
+                    float derivativeWidth = max(
+                        fwidth(diagonalDistance),
+                        0.0008);
+                    float wire = 1.0 - smoothstep(
+                        0.014,
+                        0.014 + derivativeWidth,
+                        diagonalDistance);
+                    float post = 1.0 - smoothstep(
+                        0.035,
+                        0.035 + max(fwidth(postDistance), 0.001),
+                        postDistance);
+                    float rail = 1.0 - smoothstep(
+                        0.026,
+                        0.026 + max(fwidth(railDistance), 0.001),
+                        railDistance);
+                    clip(max(wire, max(post, rail)) - 0.32);
+
+                    half3 fenceNormal = normalize(input.worldNormal);
+                    half ndotl = saturate(
+                        dot(fenceNormal, normalize(_WorldSpaceLightPos0.xyz)));
+                    half3 metal = half3(0.105h, 0.115h, 0.112h);
+                    half3 wood = half3(0.20h, 0.145h, 0.085h);
+                    half3 fenceAlbedo = lerp(metal, wood, saturate(input.color.g));
+                    half3 ambient = max(
+                        ShadeSH9(half4(fenceNormal, 1.0)),
+                        0.0h) * 0.52h;
+                    half3 fenceColor =
+                        fenceAlbedo * (ambient + _LightColor0.rgb * (0.16h + ndotl * 0.54h));
+                    fixed4 fenceOutput = fixed4(fenceColor, 1.0);
+                    UNITY_APPLY_FOG(input.fogCoord, fenceOutput);
+                    return fenceOutput;
+                }
                 fixed3 albedo = tex2D(_MainTex, input.uv).rgb * _Tint.rgb;
                 half3 mrao = tex2D(_MRAOTex, input.uv).rgb;
                 half metallic = saturate(mrao.r);

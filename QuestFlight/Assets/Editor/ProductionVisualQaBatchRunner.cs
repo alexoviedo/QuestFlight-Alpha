@@ -633,6 +633,27 @@ namespace QuestFlightLab.Editor
                 "traffic", trafficAerialCamera,
                 LookAt(trafficAerialCamera, trafficAerialTarget), 58f, ViewProfile.Environment));
 
+            Vector3 southFenceTarget = new Vector3(-86f, 2.4f, -178f);
+            Vector3 southFenceCamera = southFenceTarget + new Vector3(22f, 3.2f, 27f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "37_airport_south_security_fence", "South black-chain-link airport boundary",
+                "airport_fence", southFenceCamera,
+                LookAt(southFenceCamera, southFenceTarget), 43f, ViewProfile.Environment));
+
+            Vector3 westFenceTarget = new Vector3(-551f, 2.1f, -478f);
+            Vector3 westFenceCamera = westFenceTarget + new Vector3(32f, 7f, 44f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "38_airport_west_hangar_fence", "West-hangar perimeter fence grounding",
+                "airport_fence", westFenceCamera,
+                LookAt(westFenceCamera, westFenceTarget), 45f, ViewProfile.Environment));
+
+            Vector3 fenceOverviewTarget = new Vector3(-80f, 0f, -245f);
+            Vector3 fenceOverviewCamera = fenceOverviewTarget + new Vector3(80f, 520f, -120f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "39_airport_fence_overview", "Complete KBDU perimeter-fence alignment",
+                "airport_fence", fenceOverviewCamera,
+                LookAt(fenceOverviewCamera, fenceOverviewTarget), 58f, ViewProfile.Environment));
+
             SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
             context.animator?.ClearControlStateForTest();
             context.visibility?.SetCockpitView();

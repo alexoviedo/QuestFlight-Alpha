@@ -117,3 +117,17 @@ The airport corridor is a reference-faithful procedural approximation rather tha
   branch retains the inherited 221,506,450-byte estimate against the
   220,200,960-byte planning target; this parked-vehicle change added no texture
   residency and does not resolve that existing 1.25 MiB overage.
+
+## Airport perimeter fence
+
+- The fence follows the current OSM aerodrome boundary as a bounded visual
+  placement authority. It is not surveyed fence-centerline, gate, ownership, or
+  security data.
+- City evidence documents mixed and historically incomplete fencing. Closing
+  the visual perimeter is a simulation choice requested for scene coherence;
+  it must not be described as a literal current airport-security layout.
+- The analytic mesh is optimized for cockpit, taxi, takeoff, and approach
+  distances. It intentionally disappears into the orthophoto at high altitude
+  and does not model individual fittings, signs, locks, or exact gate hardware.
+- No physical Quest timing/thermal acceptance was run for the exact fence APK.
+  Static and simulator evidence cannot establish headset performance.

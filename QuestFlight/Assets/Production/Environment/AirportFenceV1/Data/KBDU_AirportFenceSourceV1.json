@@ -1,0 +1,328 @@
+{
+  "schema_version": "1",
+  "stable_id": "kbdu-airport-perimeter-fence-v1",
+  "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Z=north",
+  "origin": {
+    "latitude_degrees": 40.03936527,
+    "longitude_degrees": -105.22608958,
+    "elevation_msl_meters": 1611.7824
+  },
+  "source": {
+    "name": "OpenStreetMap KBDU aerodrome boundary",
+    "way_id": 77513664,
+    "snapshot_sha256": "b429bea7576869c0a35443c07c0179874f9e0fb8e827b8d577e5c1db94c7899a",
+    "snapshot_status": "external_only_not_committed",
+    "source_url": "https://www.openstreetmap.org/way/77513664",
+    "license": "Open Database License 1.0",
+    "attribution": "\u00a9 OpenStreetMap contributors",
+    "derived_status": "ODbL Produced Work"
+  },
+  "reference_findings": {
+    "city_2007_master_plan": "Airport layout plan identifies an airport security fence and a gated vehicle barrier southeast of the terminal.",
+    "city_2007_inventory": "Four-foot chain-link wildlife fencing existed around portions of the airport.",
+    "city_2024_capital_plan": "Adequate wildlife fence exists on the northeast; older wood fence remains south of west hangars; newer black chain-link appears sporadically on the south. The AOA fence was not a continuous high-security enclosure in 2024.",
+    "simulation_decision": "Use the current aerodrome boundary as the closed placement authority requested for the simulation while retaining the documented segment character. This is visually aligned, not survey-grade security-fence data."
+  },
+  "runtime_contract": {
+    "authoring_only": true,
+    "serialized_fixed_meshes": true,
+    "section_count": 4,
+    "lod_count_per_section": 1,
+    "maximum_selected_draws": 4,
+    "new_materials": 0,
+    "new_textures": 0,
+    "colliders": 0,
+    "realtime_shadows": false,
+    "lod_switching": false
+  },
+  "sections": [
+    {
+      "stable_id": "northeast_wildlife_fence",
+      "representation": "four_foot_metal_wildlife_chain_link",
+      "height_meters": 1.22,
+      "color": "weathered dark galvanized metal",
+      "gate_segment_indices": [],
+      "source_vertex_start": 0,
+      "source_vertex_end": 10,
+      "points": [
+        {
+          "index": 0,
+          "osm_node_id": 912360030,
+          "latitude_degrees": 40.0400548,
+          "longitude_degrees": -105.2337229,
+          "east_meters": -651.622,
+          "north_meters": 76.61
+        },
+        {
+          "index": 1,
+          "osm_node_id": 912360031,
+          "latitude_degrees": 40.0400712,
+          "longitude_degrees": -105.2184557,
+          "east_meters": 651.67,
+          "north_meters": 78.431
+        },
+        {
+          "index": 2,
+          "osm_node_id": 912360032,
+          "latitude_degrees": 40.0400877,
+          "longitude_degrees": -105.2160739,
+          "east_meters": 854.993,
+          "north_meters": 80.284
+        },
+        {
+          "index": 3,
+          "osm_node_id": 912360034,
+          "latitude_degrees": 40.0395455,
+          "longitude_degrees": -105.2164494,
+          "east_meters": 822.945,
+          "north_meters": 20.062
+        },
+        {
+          "index": 4,
+          "osm_node_id": 912360040,
+          "latitude_degrees": 40.0391923,
+          "longitude_degrees": -105.2168893,
+          "east_meters": 785.396,
+          "north_meters": -19.17
+        },
+        {
+          "index": 5,
+          "osm_node_id": 912360041,
+          "latitude_degrees": 40.0386256,
+          "longitude_degrees": -105.2180373,
+          "east_meters": 687.401,
+          "north_meters": -82.119
+        },
+        {
+          "index": 6,
+          "osm_node_id": 912360042,
+          "latitude_degrees": 40.0384202,
+          "longitude_degrees": -105.2185201,
+          "east_meters": 646.188,
+          "north_meters": -104.935
+        },
+        {
+          "index": 7,
+          "osm_node_id": 3465815796,
+          "latitude_degrees": 40.0383618,
+          "longitude_degrees": -105.2223806,
+          "east_meters": 316.627,
+          "north_meters": -111.442
+        },
+        {
+          "index": 8,
+          "osm_node_id": 3465824354,
+          "latitude_degrees": 40.0383613,
+          "longitude_degrees": -105.222747,
+          "east_meters": 285.348,
+          "north_meters": -111.499
+        },
+        {
+          "index": 9,
+          "osm_node_id": 3465815797,
+          "latitude_degrees": 40.0383598,
+          "longitude_degrees": -105.2239751,
+          "east_meters": 180.508,
+          "north_meters": -111.669
+        },
+        {
+          "index": 10,
+          "osm_node_id": 912360044,
+          "latitude_degrees": 40.0383299,
+          "longitude_degrees": -105.2265453,
+          "east_meters": -38.904,
+          "north_meters": -114.992
+        }
+      ]
+    },
+    {
+      "stable_id": "south_black_chain_link",
+      "representation": "black_chain_link_security_fence",
+      "height_meters": 1.83,
+      "color": "low-gloss black",
+      "gate_segment_indices": [
+        0
+      ],
+      "source_vertex_start": 10,
+      "source_vertex_end": 15,
+      "points": [
+        {
+          "index": 10,
+          "osm_node_id": 912360044,
+          "latitude_degrees": 40.0383299,
+          "longitude_degrees": -105.2265453,
+          "east_meters": -38.904,
+          "north_meters": -114.992
+        },
+        {
+          "index": 11,
+          "osm_node_id": 11748308311,
+          "latitude_degrees": 40.0377617,
+          "longitude_degrees": -105.2270829,
+          "east_meters": -84.798,
+          "north_meters": -178.098
+        },
+        {
+          "index": 12,
+          "osm_node_id": 912360046,
+          "latitude_degrees": 40.0364817,
+          "longitude_degrees": -105.2282941,
+          "east_meters": -188.2,
+          "north_meters": -320.257
+        },
+        {
+          "index": 13,
+          "osm_node_id": 912360048,
+          "latitude_degrees": 40.0350688,
+          "longitude_degrees": -105.2283263,
+          "east_meters": -190.953,
+          "north_meters": -477.179
+        },
+        {
+          "index": 14,
+          "osm_node_id": 11748308300,
+          "latitude_degrees": 40.0350545,
+          "longitude_degrees": -105.2286315,
+          "east_meters": -217.008,
+          "north_meters": -478.766
+        },
+        {
+          "index": 15,
+          "osm_node_id": 912360050,
+          "latitude_degrees": 40.0349538,
+          "longitude_degrees": -105.2307832,
+          "east_meters": -400.703,
+          "north_meters": -489.943
+        }
+      ]
+    },
+    {
+      "stable_id": "west_hangar_fence",
+      "representation": "weathered_wood_with_metal_replacement",
+      "height_meters": 1.22,
+      "color": "weathered brown and dark metal",
+      "gate_segment_indices": [
+        0
+      ],
+      "source_vertex_start": 15,
+      "source_vertex_end": 23,
+      "points": [
+        {
+          "index": 15,
+          "osm_node_id": 912360050,
+          "latitude_degrees": 40.0349538,
+          "longitude_degrees": -105.2307832,
+          "east_meters": -400.703,
+          "north_meters": -489.943
+        },
+        {
+          "index": 16,
+          "osm_node_id": 912360052,
+          "latitude_degrees": 40.035077,
+          "longitude_degrees": -105.2315556,
+          "east_meters": -466.643,
+          "north_meters": -476.256
+        },
+        {
+          "index": 17,
+          "osm_node_id": 912360055,
+          "latitude_degrees": 40.0350606,
+          "longitude_degrees": -105.2325427,
+          "east_meters": -550.914,
+          "north_meters": -478.072
+        },
+        {
+          "index": 18,
+          "osm_node_id": 912360057,
+          "latitude_degrees": 40.0349784,
+          "longitude_degrees": -105.2329718,
+          "east_meters": -587.548,
+          "north_meters": -487.198
+        },
+        {
+          "index": 19,
+          "osm_node_id": 912360061,
+          "latitude_degrees": 40.0346252,
+          "longitude_degrees": -105.233637,
+          "east_meters": -644.34,
+          "north_meters": -526.421
+        },
+        {
+          "index": 20,
+          "osm_node_id": 912360063,
+          "latitude_degrees": 40.0341241,
+          "longitude_degrees": -105.2342593,
+          "east_meters": -697.472,
+          "north_meters": -582.071
+        },
+        {
+          "index": 21,
+          "osm_node_id": 912360064,
+          "latitude_degrees": 40.0334998,
+          "longitude_degrees": -105.2346241,
+          "east_meters": -728.623,
+          "north_meters": -651.405
+        },
+        {
+          "index": 22,
+          "osm_node_id": 8340583364,
+          "latitude_degrees": 40.0335192,
+          "longitude_degrees": -105.2347708,
+          "east_meters": -741.147,
+          "north_meters": -649.249
+        },
+        {
+          "index": 23,
+          "osm_node_id": 912360065,
+          "latitude_degrees": 40.0383299,
+          "longitude_degrees": -105.2348279,
+          "east_meters": -745.97,
+          "north_meters": -114.955
+        }
+      ]
+    },
+    {
+      "stable_id": "northwest_wildlife_fence",
+      "representation": "four_foot_metal_wildlife_chain_link",
+      "height_meters": 1.22,
+      "color": "weathered dark galvanized metal",
+      "gate_segment_indices": [],
+      "source_vertex_start": 23,
+      "source_vertex_end": 26,
+      "points": [
+        {
+          "index": 23,
+          "osm_node_id": 912360065,
+          "latitude_degrees": 40.0383299,
+          "longitude_degrees": -105.2348279,
+          "east_meters": -745.97,
+          "north_meters": -114.955
+        },
+        {
+          "index": 24,
+          "osm_node_id": 912360066,
+          "latitude_degrees": 40.0391184,
+          "longitude_degrees": -105.2341306,
+          "east_meters": -686.435,
+          "north_meters": -27.387
+        },
+        {
+          "index": 25,
+          "osm_node_id": 912360067,
+          "latitude_degrees": 40.0397263,
+          "longitude_degrees": -105.2338087,
+          "east_meters": -658.95,
+          "north_meters": 40.126
+        },
+        {
+          "index": 26,
+          "osm_node_id": 912360030,
+          "latitude_degrees": 40.0400548,
+          "longitude_degrees": -105.2337229,
+          "east_meters": -651.622,
+          "north_meters": 76.61
+        }
+      ]
+    }
+  ]
+}

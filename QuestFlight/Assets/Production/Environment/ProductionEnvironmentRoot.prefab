@@ -5922,6 +5922,7 @@ MonoBehaviour:
   authoritativeRunwaySystem: {fileID: 1857992654316816879}
   essentialWater: {fileID: 4921901537737841792}
   trafficRoot: {fileID: 1368089681776144910}
+  airportPerimeterFence: {fileID: 8847838463607608736}
   waterPresentationMode: 1
   nearTerrainMeshes:
   - {fileID: 8326111771467180925}
@@ -5974,8 +5975,8 @@ MonoBehaviour:
     bounded derivatives
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
-  bakedRendererCount: 45
-  bakedTriangleCount: 488466
+  bakedRendererCount: 49
+  bakedTriangleCount: 488570
   bakedMaterialCount: 9
   bakedTextureCount: 28
   bakeUtc: 2026-07-24T19:15:00Z
@@ -7629,6 +7630,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4417277368034730408}
+  - {fileID: 8847838463607608736}
   m_Father: {fileID: 8267578717186844639}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8455314157832285642
@@ -7812,6 +7814,68 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5908240812961848853}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &2645059198564696845
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 6265923595018418735}
+    m_Modifications:
+    - target: {fileID: 1031092950995931254, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+      propertyPath: m_Name
+      value: AirportPerimeterFenceRoot
+      objectReference: {fileID: 0}
+    - target: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+--- !u!4 &8847838463607608736 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
+  m_PrefabInstance: {fileID: 2645059198564696845}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3202742897904038656
 PrefabInstance:
   m_ObjectHideFlags: 0

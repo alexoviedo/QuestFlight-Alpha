@@ -502,3 +502,18 @@ in `tools/kbdu_traffic/traffic_vehicle_derivatives_v1.json` and
 `tools/kbdu_traffic/validate_traffic_manifest.py`, and the Traffic V1 EditMode
 suite. CC0 attribution is retained as provenance and does not imply RGSDev
 endorsement.
+
+### KBDU airport perimeter fence
+
+The placement authority is derived from OpenStreetMap KBDU aerodrome way
+`77513664`, licensed under ODbL 1.0 with `© OpenStreetMap contributors`
+attribution. The raw OSM snapshot remains external; the committed compact JSON
+contains only the reviewed boundary vertices, section contracts, source hash,
+and attribution.
+
+City of Boulder planning documents and airport imagery were used for factual
+and visual research. A Wikimedia Commons CC BY 4.0 airport photograph and an
+Airport-Data photograph were inspected as references. No reference photograph
+is committed or redistributed. The four fixed meshes, analytic fence shader
+logic, authoring code, and tests are project-authored. Exact URLs and hashes are
+recorded in `docs/KBDU_AIRPORT_PERIMETER_FENCE.md` and the milestone evidence.
