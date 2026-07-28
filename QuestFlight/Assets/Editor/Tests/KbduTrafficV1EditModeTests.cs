@@ -26,10 +26,10 @@ namespace QuestFlightLab.Environment.Editor.Tests
             KbduTrafficRuntime runtime = prefab.GetComponent<KbduTrafficRuntime>();
             Assert.That(runtime, Is.Not.Null);
             Assert.That(runtime.TryValidateContract(out string report), Is.True, report);
-            Assert.That(runtime.AuthoredParkedCount, Is.EqualTo(40));
+            Assert.That(runtime.AuthoredParkedCount, Is.GreaterThanOrEqualTo(500));
             Assert.That(runtime.AuthoredDynamicCount, Is.GreaterThanOrEqualTo(600));
             Assert.That(runtime.AuthoredRouteCount, Is.GreaterThanOrEqualTo(300));
-            Assert.That(runtime.AuthoredMaximumDrawCount, Is.EqualTo(8));
+            Assert.That(runtime.AuthoredMaximumDrawCount, Is.EqualTo(9));
             Assert.That(
                 runtime.AuthoredMaximumVisibleTriangles,
                 Is.LessThanOrEqualTo(KbduTrafficRuntime.MaximumVisibleTriangles));
@@ -73,15 +73,19 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 mesh.colors32 != null &&
                 mesh.colors32.Length == mesh.vertexCount), Is.True,
                 "Every optimized vehicle needs semantic body/glass/tire/light color data.");
-            Assert.That(runtime.FarProxyMeshes, Has.Length.EqualTo(2));
+            Assert.That(runtime.FarProxyMeshes, Has.Length.EqualTo(3));
             Assert.That(runtime.FarProxyMeshes.Distinct().Count(), Is.EqualTo(2));
+            Assert.That(
+                runtime.FarProxyMeshes[0],
+                Is.SameAs(runtime.FarProxyMeshes[1]),
+                "Two bounded passenger batches must share one mesh asset.");
             Assert.That(runtime.FarProxyMeshes.All(mesh =>
                 mesh != null &&
                 mesh.subMeshCount == 1 &&
                 mesh.GetIndexCount(0) / 3u == 36u &&
                 mesh.colors32 != null &&
                 mesh.colors32.Length == mesh.vertexCount), Is.True,
-                "Far passenger and semi proxies must be deterministic 36-triangle single-draw silhouettes.");
+                "Far passenger batches and the semi batch must use deterministic 36-triangle single-draw silhouettes.");
         }
 
         [Test]
@@ -108,18 +112,52 @@ namespace QuestFlightLab.Environment.Editor.Tests
             ManifestRecord manifest = JsonUtility.FromJson<ManifestRecord>(asset.text);
             Assert.That(manifest.schema, Is.EqualTo("questflight.kbdu-traffic-v1"));
             Assert.That(manifest.status, Is.EqualTo("STREAMED_MAJOR_ROAD_NETWORK"));
-            Assert.That(manifest.parked, Has.Length.EqualTo(40));
+            Assert.That(manifest.parked, Has.Length.GreaterThanOrEqualTo(500));
+            Assert.That(manifest.parked_cells, Is.Not.Null.And.Not.Empty);
             Assert.That(manifest.routes.Length, Is.GreaterThanOrEqualTo(300));
             Assert.That(manifest.moving.Length, Is.GreaterThanOrEqualTo(600));
             Assert.That(manifest.parked.All(item =>
-                item.source_pixel != null && item.source_pixel.Length == 2 &&
-                item.source_axis_pixels != null && item.source_axis_pixels.Length == 4 &&
                 item.archetype >= 0 && item.archetype < 6 &&
                 item.paint_index >= 0 && item.paint_index < 8), Is.True);
             Assert.That(manifest.parked.Count(item =>
-                item.x >= -500f && item.x <= 500f &&
-                item.z >= -600f && item.z <= 100f), Is.GreaterThanOrEqualTo(20),
-                "The normal cockpit/takeoff corridor must contain visible parked traffic.");
+                item.x >= -650f && item.x <= 1100f &&
+                item.z >= 2700f && item.z <= 3950f),
+                Is.GreaterThanOrEqualTo(20),
+                "Native imagery must retain source-visible Boulder Reservoir parking.");
+            int nextParkedStart = 0;
+            foreach (ParkedCellRecord cell in manifest.parked_cells)
+            {
+                Assert.That(cell.start, Is.EqualTo(nextParkedStart));
+                Assert.That(cell.count, Is.GreaterThan(0));
+                nextParkedStart += cell.count;
+            }
+            Assert.That(nextParkedStart, Is.EqualTo(manifest.parked.Length));
+            string unityProject = Directory.GetParent(Application.dataPath)?.FullName;
+            string repository = unityProject == null
+                ? null
+                : Directory.GetParent(unityProject)?.FullName;
+            Assert.That(repository, Is.Not.Null);
+            string authorityPath = Path.Combine(
+                repository,
+                "tools",
+                "kbdu_traffic",
+                "traffic_sources_v1.json");
+            SourceAuthority authority = JsonUtility.FromJson<SourceAuthority>(
+                File.ReadAllText(authorityPath));
+            Assert.That(
+                authority.parked_vehicles,
+                Has.Length.EqualTo(manifest.parked.Length));
+            Assert.That(authority.parked_vehicles.All(item =>
+                item.source_center_pixel != null &&
+                item.source_center_pixel.Length == 2 &&
+                item.source_axis_pixels != null &&
+                item.source_axis_pixels.Length == 4 &&
+                item.source_tile != null &&
+                item.source_tile.Length == 3 &&
+                item.source_image == "city2020_l19" &&
+                item.confidence >= 0.18f &&
+                item.building_osm_id > 0 &&
+                item.road_clearance_meters > 0f), Is.True);
             Assert.That(manifest.routes.All(route =>
                 route.samples != null &&
                 route.samples.Length >= 20 &&
@@ -327,7 +365,18 @@ namespace QuestFlightLab.Environment.Editor.Tests
             Assert.That(
                 KbduTrafficRuntime.SelectLodTier(3600f, 2),
                 Is.EqualTo(2),
-                "The compiled road population must not cross a hard visibility boundary.");
+                "Visible traffic must remain resident inside the far exit band.");
+            Assert.That(
+                KbduTrafficRuntime.SelectLodTier(4400f, 0),
+                Is.EqualTo(0),
+                "New traffic outside the far enter band must stay orthophoto-only.");
+            Assert.That(
+                KbduTrafficRuntime.SelectLodTier(4400f, 2),
+                Is.EqualTo(2),
+                "A retained proxy must survive through the far exit band.");
+            Assert.That(
+                KbduTrafficRuntime.SelectLodTier(4600f, 2),
+                Is.EqualTo(0));
         }
 
         [Test]
@@ -351,11 +400,17 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 "tools",
                 "kbdu_traffic",
                 "prepare_cc0_vehicle_assets.py");
+            string parkedDetector = Path.Combine(
+                repository,
+                "tools",
+                "kbdu_traffic",
+                "detect_parked_vehicles.py");
             Assert.That(File.Exists(source), Is.True);
             Assert.That(File.Exists(compiler), Is.True);
             Assert.That(File.Exists(validator), Is.True);
             Assert.That(File.Exists(derivatives), Is.True);
             Assert.That(File.Exists(preparer), Is.True);
+            Assert.That(File.Exists(parkedDetector), Is.True);
             string sourceText = File.ReadAllText(source);
             Assert.That(sourceText, Does.Contain("© OpenStreetMap contributors"));
             Assert.That(sourceText, Does.Contain("Open Database License 1.0"));
@@ -383,6 +438,7 @@ namespace QuestFlightLab.Environment.Editor.Tests
             public string schema;
             public string status;
             public ParkedRecord[] parked;
+            public ParkedCellRecord[] parked_cells;
             public RouteRecord[] routes;
             public MovingRecord[] moving;
         }
@@ -394,8 +450,31 @@ namespace QuestFlightLab.Environment.Editor.Tests
             public float z;
             public int archetype;
             public int paint_index;
-            public int[] source_pixel;
-            public int[] source_axis_pixels;
+        }
+
+        [Serializable]
+        private sealed class SourceAuthority
+        {
+            public ParkedSourceRecord[] parked_vehicles;
+        }
+
+        [Serializable]
+        private sealed class ParkedSourceRecord
+        {
+            public string source_image;
+            public float confidence;
+            public float[] source_center_pixel;
+            public float[] source_axis_pixels;
+            public int[] source_tile;
+            public long building_osm_id;
+            public float road_clearance_meters;
+        }
+
+        [Serializable]
+        private sealed class ParkedCellRecord
+        {
+            public int start;
+            public int count;
         }
 
         [Serializable]

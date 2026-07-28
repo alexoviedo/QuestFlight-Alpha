@@ -336,29 +336,40 @@ Run `AirportHeroCorridorEditModeTests` and the standard production Visual QA. De
 
 Traffic V1 validation on Unity 6000.3.8f1:
 
-- `python tools/kbdu_traffic/validate_traffic_manifest.py`: PASS; 30 parked
-  vehicles, 12 lane routes, 12 moving vehicles, and 1,644 terrain-sampled route
-  points;
-- EditMode: PASS 130/130, including five traffic ownership, mesh, source,
-  lane-width, and hierarchy tests;
+- `python tools/kbdu_traffic/validate_traffic_manifest.py`: PASS; 27,948
+  source-visible parked vehicles, 361 lane routes, 788 moving vehicles, 26,225
+  terrain-sampled route points, exact source/runtime ID parity, and 378
+  contiguous 500 m parked-vehicle cells;
+- the native City 2020 scan searched every one of 27,679 OSM building contexts;
+  8,754 buildings contain accepted source-visible vehicles, 18,925 contain no
+  supported visible vehicle, and no synthetic coverage filler was added;
+- semantic rejection counts from the complete scan were 1,567 road/highway,
+  3,762 water, 2,865 building-footprint, 19 aeroway, and 609 without building
+  context; 16 additional detections outside the 12 km product imagery were
+  excluded during final compilation;
+- EditMode: PASS 133/133, including traffic ownership, source-evidence,
+  full-map extent, spatial-cell continuity, mesh, LOD hysteresis, lane-width,
+  and hierarchy tests;
 - PlayMode: PASS 9/9;
 - production Visual QA: PASS 97/97 with
   `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`; full-resolution traffic views
-  32–36 were inspected and show parked cars over the traced parking evidence,
-  moving cars on Valmont Road and Diagonal Highway, and the pattern-altitude
-  representation;
+  32–36 were inspected. The native-source detector contact sheet shows
+  source-center/long-axis agreement across dense parking rows; product views
+  show the recovered reservoir and airport parking together with existing
+  moving traffic;
 - Meta XR Simulator: live Quest 3 profile stereo/HMD/both Touch PASS with
   consistent nonblank eyes; aggregate
   `BLOCKED_MISSING_RECORDED_REPLAYS` for the ten absent genuine `.vrs` files;
-- Android ARM64/Vulkan/OpenXR build: PASS, 135,858,491 bytes, SHA-256
-  `aafde744d6cc1082b0cd2720f5477fcf622f5762311c7b5e5c0813a2a6a0d810`;
+- Android ARM64/Vulkan/OpenXR build: PASS, 137,100,082 bytes, SHA-256
+  `8f9518a442f2c6e3bb580503c446795ec5f150b6279954f1ff476098eac5559c`;
 - unattended Quest install: PASS; launch smoke
   `BLOCKED_HUMAN_SYSTEM_DIALOG` because Horizon required awake Touch
   controllers before starting the application, so no product PID or hardware
   timing is claimed;
-- traffic contract: at most four opaque instanced draws, 3,888 maximum visible
-  vehicle triangles, no added material, texture, shader, transparent slot,
-  realtime shadow, collider, rigidbody, or per-vehicle GameObject;
+- traffic contract: at most nine opaque instanced draws and 107,712 selected
+  vehicle triangles; 64 near-detail and 1,200 far-proxy instances; no added
+  material, texture, shader, transparent slot, realtime shadow, collider,
+  rigidbody, or per-vehicle GameObject;
 - aggregate static audit: draw calls 56/75, visible triangles 638,446/650,000,
   materials 29/29, transparent slots 3/3, and 4x MSAA pass. Texture residency is
   the inherited failure at 221,506,450/220,200,960 bytes; the pre-traffic

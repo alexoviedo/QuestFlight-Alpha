@@ -150,8 +150,8 @@ namespace QuestFlightLab.Environment.Editor
                 $"parked={records?.parked?.Length ?? 0}, " +
                 $"moving={records?.moving?.Length ?? 0}, " +
                 $"routes={records?.routes?.Length ?? 0}, " +
-                "six CC0 near body styles, two project-owned far proxies, " +
-                "eight instanced paint colors, draws<=8, " +
+                "six CC0 near body styles, three far batches sharing two project-owned proxies, " +
+                "eight instanced paint colors, draws<=9, " +
                 "serialized renderers=0, transparent=0, shadows=0.");
         }
 
@@ -211,23 +211,21 @@ namespace QuestFlightLab.Environment.Editor
                 new Vector3(2.45f, 2.75f, 3.70f),
                 body);
 
-            return new[]
-            {
-                WriteMesh(
-                    PassengerProxyPath,
-                    CreateProxyMesh(
-                        "KBDU_TrafficPassengerProxy",
-                        passengerVertices,
-                        passengerTriangles,
-                        passengerColors)),
-                WriteMesh(
-                    SemiProxyPath,
-                    CreateProxyMesh(
-                        "KBDU_TrafficSemiProxy",
-                        semiVertices,
-                        semiTriangles,
-                        semiColors))
-            };
+            Mesh passengerProxy = WriteMesh(
+                PassengerProxyPath,
+                CreateProxyMesh(
+                    "KBDU_TrafficPassengerProxy",
+                    passengerVertices,
+                    passengerTriangles,
+                    passengerColors));
+            Mesh semiProxy = WriteMesh(
+                SemiProxyPath,
+                CreateProxyMesh(
+                    "KBDU_TrafficSemiProxy",
+                    semiVertices,
+                    semiTriangles,
+                    semiColors));
+            return new[] { passengerProxy, passengerProxy, semiProxy };
         }
 
         private static Mesh CreateProxyMesh(

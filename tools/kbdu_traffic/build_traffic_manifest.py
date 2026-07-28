@@ -35,6 +35,7 @@ DEFAULT_SPEEDS_MPS = {
 PASSENGER_FLEET_STYLE_WEIGHTS = [0.24, 0.14, 0.34, 0.20, 0.08, 0.0]
 TRUNK_FLEET_STYLE_WEIGHTS = [0.20, 0.10, 0.28, 0.18, 0.08, 0.16]
 PAINT_COLOR_WEIGHTS = [0.26, 0.22, 0.19, 0.14, 0.09, 0.07, 0.02, 0.01]
+AMBIGUOUS_WARM_NEUTRAL_WEIGHTS = [0.36, 0.12, 0.28, 0.24]
 
 
 def deterministic_unit(route_index: int, vehicle_index: int, salt: int) -> float:
@@ -65,6 +66,29 @@ def weighted_index(weights: list[float], unit: float) -> int:
         if threshold < cumulative:
             return index
     return len(weights) - 1
+
+
+def calibrate_observed_paint(vehicle: dict, vehicle_index: int) -> int:
+    """Map native aerial paint evidence to the runtime market palette.
+
+    Index 7 is deliberately an uncertainty bucket: warm illumination,
+    pavement bleed, beige, and oxidized neutral paint are not separable in a
+    seven-pixel median sample.  Rendering all of those detections as brown
+    would be less faithful than resolving the uncertainty into the
+    market-dominant neutral colors with a stable per-source-record hash.
+    """
+
+    paint_index = int(vehicle["observed_paint_index"])
+    if not 0 <= paint_index < len(PAINT_COLOR_WEIGHTS):
+        raise ValueError("Native parked vehicle paint index is invalid")
+    if paint_index != 7:
+        return paint_index
+    identity = str(vehicle.get("id", vehicle_index)).encode("utf-8")
+    unit = int.from_bytes(
+        hashlib.sha256(identity).digest()[:4],
+        "little",
+    ) / float(1 << 32)
+    return weighted_index(AMBIGUOUS_WARM_NEUTRAL_WEIGHTS, unit)
 
 
 def fleet_weights(highway_class: str | None) -> list[float]:
@@ -465,7 +489,25 @@ def main() -> None:
     parked = []
     parked_signatures_by_lot: dict[str, list[tuple[int, int]]] = {}
     for index, vehicle in enumerate(source["parked_vehicles"]):
-        x, z = pixel_to_world(vehicle["source_center_pixel"], orthophoto)
+        source_image = vehicle.get("source_image", "near")
+        world_position = vehicle.get("world_position_meters")
+        if world_position is not None:
+            if len(world_position) != 2:
+                raise ValueError("Native parked vehicle world position is invalid")
+            x, z = map(float, world_position)
+            yaw_degrees = float(vehicle["yaw_degrees"]) % 360.0
+        else:
+            parked_imagery = source.get("parked_imagery_sources", {})
+            vehicle_orthophoto = parked_imagery.get(source_image, orthophoto)
+            if not vehicle_orthophoto:
+                raise ValueError(
+                    f"Unknown parked-vehicle source image: {source_image}"
+                )
+            x, z = pixel_to_world(
+                vehicle["source_center_pixel"],
+                vehicle_orthophoto,
+            )
+            yaw_degrees = heading_from_axis(vehicle["source_axis_pixels"])
         recent = parked_signatures_by_lot.setdefault(vehicle["lot"], [])
         archetype, paint_index = choose_local_signature(
             index,
@@ -473,21 +515,66 @@ def main() -> None:
             None,
             recent,
         )
+        if "observed_paint_index" in vehicle:
+            paint_index = calibrate_observed_paint(vehicle, index)
+            if recent and (archetype, paint_index) == recent[-1]:
+                archetype = (archetype + 1 + index) % (
+                    len(PASSENGER_FLEET_STYLE_WEIGHTS) - 1
+                )
         recent.append((archetype, paint_index))
         parked.append(
             {
                 "id": vehicle["id"],
-                "lot": vehicle["lot"],
                 "archetype": archetype,
                 "paint_index": paint_index,
                 "x": round(x, 4),
                 "y": round(sampler.sample(x, z) + GROUND_CLEARANCE_METERS, 3),
                 "z": round(z, 4),
-                "yaw_degrees": round(heading_from_axis(vehicle["source_axis_pixels"]), 3),
-                "source_pixel": vehicle["source_center_pixel"],
-                "source_axis_pixels": vehicle["source_axis_pixels"],
+                "yaw_degrees": round(yaw_degrees, 3),
             }
         )
+
+    parked_cell_size_meters = 500.0
+    parked.sort(
+        key=lambda vehicle: (
+            math.floor(vehicle["z"] / parked_cell_size_meters),
+            math.floor(vehicle["x"] / parked_cell_size_meters),
+            vehicle["id"],
+        )
+    )
+    parked_cells = []
+    cell_start = 0
+    while cell_start < len(parked):
+        cell_x = math.floor(
+            parked[cell_start]["x"] / parked_cell_size_meters
+        )
+        cell_z = math.floor(
+            parked[cell_start]["z"] / parked_cell_size_meters
+        )
+        cell_end = cell_start + 1
+        while cell_end < len(parked):
+            next_x = math.floor(
+                parked[cell_end]["x"] / parked_cell_size_meters
+            )
+            next_z = math.floor(
+                parked[cell_end]["z"] / parked_cell_size_meters
+            )
+            if next_x != cell_x or next_z != cell_z:
+                break
+            cell_end += 1
+        parked_cells.append(
+            {
+                "cell_x": cell_x,
+                "cell_z": cell_z,
+                "start": cell_start,
+                "count": cell_end - cell_start,
+                "min_x": round(cell_x * parked_cell_size_meters, 3),
+                "min_z": round(cell_z * parked_cell_size_meters, 3),
+                "max_x": round((cell_x + 1) * parked_cell_size_meters, 3),
+                "max_z": round((cell_z + 1) * parked_cell_size_meters, 3),
+            }
+        )
+        cell_start = cell_end
 
     dynamic = []
     spacing_by_class = {
@@ -709,16 +796,26 @@ def main() -> None:
             "osm_license": source["road_source"]["license"],
             "osm_attribution": source["road_source"]["attribution"],
             "vehicle_assets": source["vehicle_assets"],
+            "parked_authority_path": str(
+                SOURCES.relative_to(ROOT)
+            ).replace("\\", "/"),
+            "parked_authority_sha256": sha256(SOURCES),
+            "parked_detection": source.get("parked_detection", {}),
         },
         "runtime_contract": {
             "representation": "DETAIL_NEAR_FIXED_PROXY_FAR",
-            "maximum_near_instances": 96,
-            "maximum_far_instances": 900,
+            "maximum_near_instances": 64,
+            "maximum_far_instances": 1200,
             "near_enter_distance_meters": 800.0,
             "near_exit_distance_meters": 1000.0,
-            "maximum_draw_calls": 8,
+            "far_enter_distance_meters": 4200.0,
+            "far_exit_distance_meters": 4500.0,
+            "parked_cell_size_meters": parked_cell_size_meters,
+            "maximum_draw_calls": 9,
             "maximum_visible_triangles": 130000,
-            "visibility_distance_policy": "FULL_COMPILED_NETWORK",
+            "visibility_distance_policy": (
+                "SPATIALLY_INDEXED_EXACT_POSES_WITH_HYSTERETIC_FAR_CUTOFF"
+            ),
             "steady_state_gc_allocations": 0,
             "per_vehicle_gameobjects": 0,
             "realtime_vehicle_shadows": 0,
@@ -734,6 +831,7 @@ def main() -> None:
             ),
         },
         "parked": parked,
+        "parked_cells": parked_cells,
         "routes": routes,
         "moving": dynamic,
     }

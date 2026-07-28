@@ -1000,11 +1000,23 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficPassengerProxy.asset",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficPickup.asset",
             "classification": "approved_production"
         },
         {
             "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSedan.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSemi.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSemiProxy.asset",
             "classification": "approved_production"
         },
         {

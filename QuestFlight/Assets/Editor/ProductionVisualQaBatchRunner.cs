@@ -597,12 +597,13 @@ namespace QuestFlightLab.Editor
                 "parked_aircraft", aircraftOverviewCamera,
                 LookAt(aircraftOverviewCamera, aircraftOverviewTarget), 58f, ViewProfile.Environment));
 
-            Vector3 reservoirParkingTarget = new Vector3(-1507f, 3.7f, 224f);
-            Vector3 reservoirParkingCamera = reservoirParkingTarget + new Vector3(24f, 12f, -30f);
+            Vector3 reservoirParkingTarget = new Vector3(250f, -27f, 3400f);
+            Vector3 reservoirParkingCamera =
+                reservoirParkingTarget + new Vector3(150f, 85f, -180f);
             Capture(context, report, outputDir, width, height, new ShotDefinition(
-                "32_traffic_reservoir_parking", "Orthophoto-aligned reservoir-area parked cars",
+                "32_traffic_reservoir_parking", "Orthophoto-aligned Boulder Reservoir parked-car rows",
                 "traffic", reservoirParkingCamera,
-                LookAt(reservoirParkingCamera, reservoirParkingTarget), 38f, ViewProfile.Environment));
+                LookAt(reservoirParkingCamera, reservoirParkingTarget), 50f, ViewProfile.Environment));
 
             Vector3 airportParkingTarget = new Vector3(-38f, 0.5f, -128f);
             Vector3 airportParkingCamera = airportParkingTarget + new Vector3(24f, 11f, 28f);

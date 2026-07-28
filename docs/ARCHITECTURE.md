@@ -167,25 +167,32 @@ authority, and standalone Android/OpenXR ownership.
 
 `KBDU_TrafficRoot` is one explicitly serialized child of
 `ProductionEnvironmentRoot`. Its manifest is compiled offline from the bounded
-OpenStreetMap road network, the existing terrain surface, and forty parked-car
-observations traced against the pinned 8192-square City 2020 orthophoto. Runtime
-code never creates traffic GameObjects, modifies the product hierarchy, invokes
-physics, or searches for a road.
+OpenStreetMap road network, the existing terrain surface, and 27,948
+source-visible parked-vehicle observations recovered from the native City of
+Boulder 2020 nine-inch imagery. The offline scan searches a 100 m source
+envelope around every one of 27,679 OSM buildings in the 12 km product area,
+plus the developed Boulder Reservoir parking envelope. Candidates on roads or
+highways, aeroways, water, and building footprints are rejected. Runtime code
+never creates traffic GameObjects, modifies the product hierarchy, invokes
+physics, searches for a road, or runs the detector.
 
 One `KbduTrafficRuntime` parses the compact manifest once and fills preallocated
-matrix and paint arrays during camera pre-cull. Five optimized CC0 single-submesh
-archetypes—sedan, hatchback, crossover/SUV, pickup, and cargo van—share one
-opaque instanced shader/material. Exclusive vertex-color classes preserve body,
-glass, tire, wheel/trim, headlamp, and tail-lamp response; eight deterministic
-market-weighted paint tints add variety without material clones. At most five
-draws submit both parked and moving records, with the nearest/view-relevant 128
-of 964 total records selected inside 2,500 m.
+matrix and paint arrays during camera pre-cull. The parked authority is sorted
+into 378 fixed 500 m cells; only cells intersecting the 4.5 km hysteretic
+visibility envelope are visited, then allocation-free max-heaps retain at most
+64 detailed and 1,200 far-proxy vehicles. Five optimized CC0 passenger
+archetypes—sedan, hatchback, crossover/SUV, pickup, and cargo van—and one
+semi-trailer archetype share one opaque instanced shader/material. Three far
+batches share two project-owned proxy meshes. Exclusive vertex-color classes
+preserve body, glass, tire, wheel/trim, headlamp, tail-lamp, and trailer
+response; eight market-calibrated paint tints add variety without material
+clones.
 
 There are no serialized traffic renderers, per-car components, colliders,
 rigidbodies, transparent windows, realtime vehicle shadows, wheel animations,
-or per-car `Update` calls. Nine hundred twenty-four moving records follow 402
-terrain-sampled right-side lane routes under the fixed-step collision-safe
-controller; forty parked records retain their traced image positions and axes.
-Worst-case selected vehicle geometry is 129,024 triangles. The fleet uses one
-128-square ASTC detail texture, one material, no transparent slot, and zero
-steady-state managed allocation by design.
+or per-car `Update` calls. Seven hundred eighty-eight moving records follow 361
+terrain-sampled directional lane routes under the fixed-step collision-safe
+controller. Every parked record retains its native-source position and recovered
+long axis. At most nine opaque instanced draws and 107,712 vehicle triangles are
+submitted. The fleet uses one 128-square ASTC detail texture, one material, no
+transparent slot, and zero steady-state managed allocation by design.

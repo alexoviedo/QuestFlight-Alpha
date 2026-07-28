@@ -85,23 +85,35 @@ The airport corridor is a reference-faithful procedural approximation rather tha
 
 ## Bounded road traffic
 
-- Traffic V1 is a bounded life cue, not a traffic simulation. It contains 40
-  orthophoto-traced parked records and 924 deterministic moving records on 402
-  directional routes compiled from the bounded OSM road network. It does not model every
-  parking lot, street, intersection, traffic signal, collision, or current
-  vehicle occupancy.
+- Traffic V1 is a bounded life cue, not a current occupancy database. Its
+  27,948 parked records are detector-supported observations in spring/summer
+  2020 City imagery, not a claim about present-day vehicles. All 27,679 OSM
+  buildings in the product area received a native-source search envelope;
+  8,754 buildings had at least one accepted source-visible vehicle and 18,925
+  did not. No vehicle is invented merely to satisfy building coverage.
+- Detection is not perfect. Small, occluded, shadowed, or low-contrast vehicles
+  may be absent, and source-pixel long-axis fitting can be ambiguous. The
+  semantic filter rejects candidates on roads/highways, aeroways, water, and
+  building footprints, but the committed poses are still an offline visual
+  approximation rather than surveyed parking inventory.
+- Seven hundred eighty-eight deterministic moving records follow 361
+  directional routes compiled from the bounded OSM road network. Traffic does
+  not model every street, intersection, signal, collision, or driver decision.
 - The five CC0 vehicle derivatives are optimized flight-distance assets, not hero
   automobile interiors. They provide distinct sedan, hatchback, crossover/SUV,
   pickup, and cargo-van geometry; eight paint colors; opaque reflective-looking
   glass; and wheel/light material response. They do not provide transparent
   cabins, occupants, active lamps, animated wheels, or realtime shadows.
-- The runtime selects at most 128 view-relevant records within 2.5 km. This
-  bounded streaming means traffic outside that set is intentionally absent and
-  does not represent current real-world vehicle occupancy.
+- The runtime visits only 500 m spatial cells intersecting a 4.5 km hysteretic
+  visibility envelope and selects at most 64 detailed vehicles plus 1,200
+  far-proxy vehicles. Source-supported vehicles outside that visible set are
+  intentionally culled to preserve standalone Quest cost.
 - Simulator evidence does not establish Quest hardware performance. A final
   worn review and timing/thermal/stale/tear/allocation gate are required for the
   exact rebuilt APK before any hardware-performance claim.
 - Traffic adds one shared 128-square ASTC detail texture and one shared opaque
   material while removing the serialized parked batch. Aggregate texture-budget
-  status remains governed by the full product performance report, not by this
-  subsystem in isolation.
+  status remains governed by the full product performance report. The current
+  branch retains the inherited 221,506,450-byte estimate against the
+  220,200,960-byte planning target; this parked-vehicle change added no texture
+  residency and does not resolve that existing 1.25 MiB overage.

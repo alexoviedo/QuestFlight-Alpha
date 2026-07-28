@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -10,6 +11,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "QuestFlight/Assets/Production/Environment/TrafficV1/Data/KBDU_TrafficManifestV1.json"
+SOURCE = ROOT / "tools/kbdu_traffic/traffic_sources_v1.json"
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def require(condition: bool, message: str) -> None:
@@ -210,9 +220,13 @@ def simulate_car_following(data: dict, duration_seconds: float = 120.0) -> dict:
 
 def main() -> None:
     data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    authority = json.loads(SOURCE.read_text(encoding="utf-8"))
     require(data["schema"] == "questflight.kbdu-traffic-v1", "schema mismatch")
     require(data["status"] == "STREAMED_MAJOR_ROAD_NETWORK", "status mismatch")
-    require(len(data["parked"]) == 40, "expected 40 photographed parked cars")
+    require(
+        500 <= len(data["parked"]) <= 50000,
+        "native parked-vehicle scan is missing or implausibly large",
+    )
     require(len(data["routes"]) >= 300, "major-road route network is too sparse")
     require(len(data["moving"]) >= 600, "streamed traffic population is too sparse")
     require(
@@ -220,16 +234,19 @@ def main() -> None:
         == "DETAIL_NEAR_FIXED_PROXY_FAR",
         "traffic LOD representation changed",
     )
-    require(data["runtime_contract"]["maximum_near_instances"] == 96, "near instance budget changed")
-    require(data["runtime_contract"]["maximum_far_instances"] == 900, "far instance budget changed")
+    require(data["runtime_contract"]["maximum_near_instances"] == 64, "near instance budget changed")
+    require(data["runtime_contract"]["maximum_far_instances"] == 1200, "far instance budget changed")
     require(data["runtime_contract"]["near_enter_distance_meters"] == 800.0, "near enter distance changed")
     require(data["runtime_contract"]["near_exit_distance_meters"] == 1000.0, "near exit distance changed")
+    require(data["runtime_contract"]["far_enter_distance_meters"] == 4200.0, "far enter distance changed")
+    require(data["runtime_contract"]["far_exit_distance_meters"] == 4500.0, "far exit distance changed")
+    require(data["runtime_contract"]["parked_cell_size_meters"] == 500.0, "parked spatial cell changed")
     require(
         data["runtime_contract"]["visibility_distance_policy"]
-        == "FULL_COMPILED_NETWORK",
-        "hard traffic visibility boundary reintroduced",
+        == "SPATIALLY_INDEXED_EXACT_POSES_WITH_HYSTERETIC_FAR_CUTOFF",
+        "parked traffic spatial-index policy changed",
     )
-    require(data["runtime_contract"]["maximum_draw_calls"] == 8, "draw budget changed")
+    require(data["runtime_contract"]["maximum_draw_calls"] == 9, "draw budget changed")
     require(data["runtime_contract"]["maximum_visible_triangles"] == 130000, "triangle budget changed")
     require(data["runtime_contract"]["per_vehicle_gameobjects"] == 0, "per-car objects forbidden")
     require(data["runtime_contract"]["realtime_vehicle_shadows"] == 0, "realtime shadows forbidden")
@@ -244,14 +261,69 @@ def main() -> None:
     )
 
     ids = set()
+    reservoir_count = 0
     for parked in data["parked"]:
         require(parked["id"] not in ids, "duplicate parked id")
         ids.add(parked["id"])
         require(0 <= parked["archetype"] < 6, "invalid parked archetype")
         require(0 <= parked["paint_index"] < 8, "invalid parked paint")
-        require(len(parked["source_pixel"]) == 2, "parked source pixel missing")
-        require(len(parked["source_axis_pixels"]) == 4, "parked source axis missing")
-        require(-2000 <= parked["x"] <= 2000 and -2000 <= parked["z"] <= 2000, "parked outside near image")
+        require(
+            -6000 <= parked["x"] <= 6000
+            and -6000 <= parked["z"] <= 6000,
+            "parked outside scanned imagery",
+        )
+        if (
+            -650 <= parked["x"] <= 1100
+            and 2700 <= parked["z"] <= 3950
+        ):
+            reservoir_count += 1
+    require(
+        reservoir_count >= 20,
+        "Boulder Reservoir source-visible parking evidence is missing",
+    )
+    require(
+        data["source"]["parked_authority_sha256"] == sha256(SOURCE),
+        "compiled parked authority hash is stale",
+    )
+    source_ids = set()
+    for parked in authority["parked_vehicles"]:
+        require(parked["id"] not in source_ids, "duplicate source parked id")
+        source_ids.add(parked["id"])
+        require(
+            len(parked["source_center_pixel"]) == 2,
+            "parked source pixel missing",
+        )
+        require(
+            len(parked["source_axis_pixels"]) == 4,
+            "parked source axis missing",
+        )
+        require(len(parked["source_tile"]) == 3, "parked source tile missing")
+        require(
+            parked["source_image"] == "city2020_l19",
+            "parked source image is not native City 2020 imagery",
+        )
+        require(
+            parked["detection_method"]
+            == "NATIVE_9IN_GEODEEP_SEMANTIC_FILTER_ORIENTED_SOURCE_FIT",
+            "parked evidence method is unsupported",
+        )
+        require(parked["confidence"] >= 0.18, "parked evidence confidence too low")
+        require(parked["building_osm_id"] > 0, "parked building association missing")
+        require(parked["road_clearance_meters"] > 0.0, "parked road clearance missing")
+    require(
+        source_ids == ids,
+        "compiled parked ids differ from native source authority",
+    )
+    next_cell_start = 0
+    for cell in data["parked_cells"]:
+        require(cell["start"] == next_cell_start, "parked cell range is not contiguous")
+        require(cell["count"] > 0, "empty parked cell")
+        require(
+            cell["max_x"] > cell["min_x"] and cell["max_z"] > cell["min_z"],
+            "invalid parked cell bounds",
+        )
+        next_cell_start += cell["count"]
+    require(next_cell_start == len(data["parked"]), "parked cells do not cover every pose")
 
     for route_index, route in enumerate(data["routes"]):
         samples = route["samples"]

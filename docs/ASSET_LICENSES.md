@@ -461,9 +461,26 @@ The traffic route compiler uses the bounded road network in the already
 committed `KBDU_ReferenceContextV2.json` OpenStreetMap derivative. Route data
 remains under ODbL 1.0 and public display must retain
 `© OpenStreetMap contributors` with
-<https://www.openstreetmap.org/copyright>. Forty parked-vehicle positions and
-axes are observations traced from the already licensed and committed
-`KBDU_City2020_Near4km_8192.jpg`; no new source imagery is included.
+<https://www.openstreetmap.org/copyright>.
+
+The parked-vehicle authority is derived offline from the City of Boulder
+`AP2020Cached9inWM` ArcGIS service at level 19
+(`0.228595274 m/px`). The City item identifies the imagery as nine-inch 2020
+orthophotography and applies CC0 1.0 Universal. Source tiles and caches remain
+external and are not committed. The committed derivative contains only
+27,948 compact positions, source-tile/pixel axes, OSM building associations,
+confidence values, and source/license metadata. Sixteen detections outside the
+actual 12 km product-image extent are excluded.
+
+GeoDeep 0.9.13 and its
+`car_aerial_detection_yolo7_ITCVD_deepness.onnx` model were used only as an
+external AGPL-3.0 offline authoring dependency. Neither GeoDeep, its ONNX model,
+nor its code enters the Unity runtime or the committed product dependency
+closure. The model SHA-256 used for the scan is
+`4875d27f34985a080c4def32bc9408b9820e4178e55acdc5fcc185e0e8f29a56`.
+The deterministic project-owned semantic pass rejects detections on OSM roads,
+highways, aeroways, water, and building footprints before the compact derivative
+is produced.
 
 The five optimized runtime vehicle silhouettes—sedan, hatchback, crossover/SUV,
 pickup, and cargo van—derive from RGSDev's
@@ -476,10 +493,11 @@ and encodes body, glass, tire, wheel/trim, headlamp, and tail-lamp classes in
 vertex colors. One project-owned 128-square detail texture and one instanced
 opaque material serve every model.
 
-Exact source/archive hashes, per-derivative triangles and dimensions, source
-pixels, OSM network lineage, paint/fleet weights, and runtime limits are pinned
+Exact source/archive hashes, per-derivative triangles and dimensions, native
+source pixels/axes, OSM network lineage, paint/fleet weights, and runtime limits are pinned
 in `tools/kbdu_traffic/traffic_vehicle_derivatives_v1.json` and
 `tools/kbdu_traffic/traffic_sources_v1.json`. The compiler and validators are
+`tools/kbdu_traffic/detect_parked_vehicles.py`,
 `tools/kbdu_traffic/build_traffic_manifest.py`,
 `tools/kbdu_traffic/validate_traffic_manifest.py`, and the Traffic V1 EditMode
 suite. CC0 attribution is retained as provenance and does not imply RGSDev

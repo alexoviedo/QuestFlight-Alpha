@@ -3,7 +3,7 @@
     "sourceCommit": "cd4131fa7732a6db2d7387921dfef33e2c206970",
     "scenePath": "Assets/Scenes/ProductionVerticalSlice.unity",
     "ready": true,
-    "approvedCount": 312,
+    "approvedCount": 315,
     "packageCount": 5,
     "conditionalLocalCount": 0,
     "rejectedCount": 0,
@@ -1006,11 +1006,23 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficPassengerProxy.asset",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficPickup.asset",
             "classification": "approved_production"
         },
         {
             "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSedan.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSemi.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSemiProxy.asset",
             "classification": "approved_production"
         },
         {

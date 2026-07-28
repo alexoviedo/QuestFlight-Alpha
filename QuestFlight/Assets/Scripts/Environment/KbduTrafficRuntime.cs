@@ -8,23 +8,27 @@ namespace QuestFlightLab.Environment
     /// Allocation-free, road-constrained traffic presentation. Drivers use a fixed-step,
     /// deterministic, IDM-inspired longitudinal controller so following distance responds
     /// to speed and leaders instead of oscillating around a fixed spacing lattice.
-    /// Rendering uses six detailed near archetypes and two silhouette-preserving
-    /// far proxies. Surface classes are vertex encoded and paint is supplied per
-    /// instance, so fleet variety does not create material clones or GameObjects.
+    /// Rendering uses six detailed near archetypes and three bounded far batches:
+    /// two passenger batches sharing one silhouette mesh plus a semi batch. Surface
+    /// classes are vertex encoded and paint is supplied per instance, so whole-map
+    /// parked density does not create material clones or GameObjects.
     /// </summary>
     [ExecuteAlways]
     [DisallowMultipleComponent]
     public sealed class KbduTrafficRuntime : MonoBehaviour
     {
         public const int ArchetypeCount = 6;
-        public const int ProxyArchetypeCount = 2;
-        public const int MaximumDrawCalls = 8;
-        public const int MaximumNearInstances = 96;
-        public const int MaximumFarInstances = 900;
+        public const int ProxyArchetypeCount = 3;
+        public const int MaximumDrawCalls = 9;
+        public const int MaximumNearInstances = 64;
+        public const int MaximumFarInstances = 1200;
         public const int PaintVariantCount = 8;
         public const int MaximumVisibleTriangles = 130000;
         public const float NearEnterDistanceMeters = 800f;
         public const float NearExitDistanceMeters = 1000f;
+        public const float FarEnterDistanceMeters = 4200f;
+        public const float FarExitDistanceMeters = 4500f;
+        public const float ParkedCellSizeMeters = 500f;
         public const float SimulationStepSeconds = 0.1f;
         private const float MinimumNumericalGapMeters = 0.05f;
         private const float MaximumFrameCatchupSeconds = 0.5f;
@@ -35,6 +39,7 @@ namespace QuestFlightLab.Environment
             public string schema;
             public string status;
             public ParkedRecord[] parked;
+            public ParkedCell[] parked_cells;
             public RouteRecord[] routes;
             public DynamicRecord[] moving;
             public RuntimeContract runtime_contract;
@@ -47,6 +52,9 @@ namespace QuestFlightLab.Environment
             public float simulation_step_seconds;
             public float minimum_initial_bumper_gap_meters;
             public float minimum_runtime_bumper_gap_meters;
+            public float far_enter_distance_meters;
+            public float far_exit_distance_meters;
+            public float parked_cell_size_meters;
         }
 
         [Serializable]
@@ -60,6 +68,19 @@ namespace QuestFlightLab.Environment
             public float y;
             public float z;
             public float yaw_degrees;
+        }
+
+        [Serializable]
+        private sealed class ParkedCell
+        {
+            public int cell_x;
+            public int cell_z;
+            public int start;
+            public int count;
+            public float min_x;
+            public float min_z;
+            public float max_x;
+            public float max_z;
         }
 
         [Serializable]
@@ -144,15 +165,18 @@ namespace QuestFlightLab.Environment
         private readonly Matrix4x4[][] farMatrices =
         {
             new Matrix4x4[MaximumFarInstances],
+            new Matrix4x4[MaximumFarInstances],
             new Matrix4x4[MaximumFarInstances]
         };
         private readonly Vector4[][] farPaintTints =
         {
             new Vector4[MaximumFarInstances],
+            new Vector4[MaximumFarInstances],
             new Vector4[MaximumFarInstances]
         };
         private readonly Vector4[][] farTrailerTints =
         {
+            new Vector4[MaximumFarInstances],
             new Vector4[MaximumFarInstances],
             new Vector4[MaximumFarInstances]
         };
@@ -296,7 +320,10 @@ namespace QuestFlightLab.Environment
                 !string.Equals(parsedManifest.schema, "questflight.kbdu-traffic-v1", StringComparison.Ordinal) ||
                 !string.Equals(parsedManifest.status, "STREAMED_MAJOR_ROAD_NETWORK", StringComparison.Ordinal) ||
                 parsedManifest.parked == null ||
-                parsedManifest.parked.Length != 40 ||
+                parsedManifest.parked.Length < 500 ||
+                parsedManifest.parked.Length > 50000 ||
+                parsedManifest.parked_cells == null ||
+                parsedManifest.parked_cells.Length < 1 ||
                 parsedManifest.routes == null ||
                 parsedManifest.routes.Length < 300 ||
                 parsedManifest.moving == null ||
@@ -309,7 +336,17 @@ namespace QuestFlightLab.Environment
                 Mathf.Abs(
                     parsedManifest.runtime_contract.simulation_step_seconds -
                     SimulationStepSeconds) > 0.0001f ||
+                Mathf.Abs(
+                    parsedManifest.runtime_contract.far_enter_distance_meters -
+                    FarEnterDistanceMeters) > 0.001f ||
+                Mathf.Abs(
+                    parsedManifest.runtime_contract.far_exit_distance_meters -
+                    FarExitDistanceMeters) > 0.001f ||
+                Mathf.Abs(
+                    parsedManifest.runtime_contract.parked_cell_size_meters -
+                    ParkedCellSizeMeters) > 0.001f ||
                 parsedManifest.runtime_contract.minimum_runtime_bumper_gap_meters < 1.5f ||
+                !AllParkedCellsAreValid() ||
                 !AllFleetIndicesAreValid())
             {
                 report = "compiled traffic manifest mismatch";
@@ -318,9 +355,7 @@ namespace QuestFlightLab.Environment
             int triangleCount = ComputeMaximumVisibleTriangles();
             if (authoredMaximumDrawCount != MaximumDrawCalls ||
                 triangleCount > MaximumVisibleTriangles ||
-                authoredMaximumVisibleTriangles != triangleCount ||
-                parsedManifest.parked.Length +
-                    parsedManifest.moving.Length > MaximumFarInstances)
+                authoredMaximumVisibleTriangles != triangleCount)
             {
                 report = $"traffic render budget mismatch: draws={authoredMaximumDrawCount}, triangles={triangleCount}";
                 return false;
@@ -672,19 +707,31 @@ namespace QuestFlightLab.Environment
         {
             if (previousTier == 1)
             {
-                return distanceMeters <= NearExitDistanceMeters
-                    ? (byte)1
-                    : (byte)2;
+                if (distanceMeters <= NearExitDistanceMeters)
+                {
+                    return 1;
+                }
+                return distanceMeters <= FarExitDistanceMeters
+                    ? (byte)2
+                    : (byte)0;
             }
             if (previousTier == 2)
             {
-                return distanceMeters < NearEnterDistanceMeters
-                    ? (byte)1
-                    : (byte)2;
+                if (distanceMeters < NearEnterDistanceMeters)
+                {
+                    return 1;
+                }
+                return distanceMeters <= FarExitDistanceMeters
+                    ? (byte)2
+                    : (byte)0;
             }
-            return distanceMeters <= NearEnterDistanceMeters
-                ? (byte)1
-                : (byte)2;
+            if (distanceMeters <= NearEnterDistanceMeters)
+            {
+                return 1;
+            }
+            return distanceMeters <= FarEnterDistanceMeters
+                ? (byte)2
+                : (byte)0;
         }
 
         private static float CalculateFreeAcceleration(
@@ -763,6 +810,38 @@ namespace QuestFlightLab.Environment
                 }
             }
             return true;
+        }
+
+        private bool AllParkedCellsAreValid()
+        {
+            if (parsedManifest?.parked == null ||
+                parsedManifest.parked_cells == null)
+            {
+                return false;
+            }
+            int nextStart = 0;
+            for (int index = 0;
+                index < parsedManifest.parked_cells.Length;
+                index++)
+            {
+                ParkedCell cell = parsedManifest.parked_cells[index];
+                if (cell.start != nextStart ||
+                    cell.count <= 0 ||
+                    cell.start + cell.count > parsedManifest.parked.Length ||
+                    cell.max_x <= cell.min_x ||
+                    cell.max_z <= cell.min_z ||
+                    Mathf.Abs(
+                        cell.min_x -
+                        cell.cell_x * ParkedCellSizeMeters) > 0.01f ||
+                    Mathf.Abs(
+                        cell.min_z -
+                        cell.cell_z * ParkedCellSizeMeters) > 0.01f)
+                {
+                    return false;
+                }
+                nextStart += cell.count;
+            }
+            return nextStart == parsedManifest.parked.Length;
         }
 
         private void DrawForCamera(Camera camera)
@@ -880,21 +959,48 @@ namespace QuestFlightLab.Environment
             selectedFarCount = 0;
 
             ParkedRecord[] parked = parsedManifest.parked;
-            for (int index = 0; index < parked.Length; index++)
+            ParkedCell[] parkedCells = parsedManifest.parked_cells;
+            Vector3 cameraPosition = camera.transform.position;
+            float farCellDistanceSquared =
+                FarExitDistanceMeters * FarExitDistanceMeters;
+            for (int cellIndex = 0;
+                cellIndex < parkedCells.Length;
+                cellIndex++)
             {
-                ParkedRecord vehicle = parked[index];
-                Vector3 position = new Vector3(vehicle.x, vehicle.y, vehicle.z);
-                Matrix4x4 matrix = Matrix4x4.TRS(
-                    position,
-                    Quaternion.Euler(0f, vehicle.yaw_degrees, 0f),
-                    Vector3.one);
-                ConsiderVisible(
-                    camera,
-                    position,
-                    vehicle.archetype,
-                    vehicle.paint_index,
-                    matrix,
-                    index);
+                ParkedCell cell = parkedCells[cellIndex];
+                float closestX = Mathf.Clamp(
+                    cameraPosition.x,
+                    cell.min_x,
+                    cell.max_x);
+                float closestZ = Mathf.Clamp(
+                    cameraPosition.z,
+                    cell.min_z,
+                    cell.max_z);
+                float deltaX = cameraPosition.x - closestX;
+                float deltaZ = cameraPosition.z - closestZ;
+                if (deltaX * deltaX + deltaZ * deltaZ >
+                    farCellDistanceSquared)
+                {
+                    continue;
+                }
+                int end = cell.start + cell.count;
+                for (int index = cell.start; index < end; index++)
+                {
+                    ParkedRecord vehicle = parked[index];
+                    Vector3 position =
+                        new Vector3(vehicle.x, vehicle.y, vehicle.z);
+                    Matrix4x4 matrix = Matrix4x4.TRS(
+                        position,
+                        Quaternion.Euler(0f, vehicle.yaw_degrees, 0f),
+                        Vector3.one);
+                    ConsiderVisible(
+                        camera,
+                        position,
+                        vehicle.archetype,
+                        vehicle.paint_index,
+                        matrix,
+                        index);
+                }
             }
 
             DynamicRecord[] dynamicVehicles = parsedManifest.moving;
@@ -1025,7 +1131,9 @@ namespace QuestFlightLab.Environment
             TryInsertFar(
                 distanceSquared,
                 previousTier == 2,
-                archetype == ArchetypeCount - 1 ? 1 : 0,
+                archetype == ArchetypeCount - 1
+                    ? 2
+                    : Mathf.Abs(vehicleId) % 2,
                 paintIndex,
                 matrix,
                 vehicleId);
@@ -1040,37 +1148,31 @@ namespace QuestFlightLab.Environment
             int vehicleId)
         {
             float score = CalculateSelectionScore(distanceSquared, retained);
-            int insertion;
             if (selectedCount < MaximumNearInstances)
             {
-                insertion = selectedCount;
-                selectedCount++;
+                int insertion = selectedCount++;
+                SetNearSelection(
+                    insertion,
+                    score,
+                    archetype,
+                    paintIndex,
+                    matrix,
+                    vehicleId);
+                SiftNearUp(insertion);
+                return true;
             }
-            else
+            if (score >= selectedScores[0])
             {
-                insertion = selectedCount - 1;
-                if (score >= selectedScores[insertion])
-                {
-                    return false;
-                }
+                return false;
             }
-
-            while (insertion > 0 && score < selectedScores[insertion - 1])
-            {
-                selectedScores[insertion] = selectedScores[insertion - 1];
-                selectedMatrices[insertion] = selectedMatrices[insertion - 1];
-                selectedArchetypes[insertion] = selectedArchetypes[insertion - 1];
-                selectedPaintIndices[insertion] =
-                    selectedPaintIndices[insertion - 1];
-                selectedVehicleIds[insertion] =
-                    selectedVehicleIds[insertion - 1];
-                insertion--;
-            }
-            selectedScores[insertion] = score;
-            selectedMatrices[insertion] = matrix;
-            selectedArchetypes[insertion] = archetype;
-            selectedPaintIndices[insertion] = paintIndex;
-            selectedVehicleIds[insertion] = vehicleId;
+            SetNearSelection(
+                0,
+                score,
+                archetype,
+                paintIndex,
+                matrix,
+                vehicleId);
+            SiftNearDown(0);
             return true;
         }
 
@@ -1083,41 +1185,166 @@ namespace QuestFlightLab.Environment
             int vehicleId)
         {
             float score = CalculateSelectionScore(distanceSquared, retained);
-            int insertion;
             if (selectedFarCount < MaximumFarInstances)
             {
-                insertion = selectedFarCount;
-                selectedFarCount++;
+                int insertion = selectedFarCount++;
+                SetFarSelection(
+                    insertion,
+                    score,
+                    archetype,
+                    paintIndex,
+                    matrix,
+                    vehicleId);
+                SiftFarUp(insertion);
+                return true;
             }
-            else
+            if (score >= selectedFarScores[0])
             {
-                insertion = selectedFarCount - 1;
-                if (score >= selectedFarScores[insertion])
-                {
-                    return false;
-                }
+                return false;
             }
-
-            while (insertion > 0 && score < selectedFarScores[insertion - 1])
-            {
-                selectedFarScores[insertion] =
-                    selectedFarScores[insertion - 1];
-                selectedFarMatrices[insertion] =
-                    selectedFarMatrices[insertion - 1];
-                selectedFarArchetypes[insertion] =
-                    selectedFarArchetypes[insertion - 1];
-                selectedFarPaintIndices[insertion] =
-                    selectedFarPaintIndices[insertion - 1];
-                selectedFarVehicleIds[insertion] =
-                    selectedFarVehicleIds[insertion - 1];
-                insertion--;
-            }
-            selectedFarScores[insertion] = score;
-            selectedFarMatrices[insertion] = matrix;
-            selectedFarArchetypes[insertion] = archetype;
-            selectedFarPaintIndices[insertion] = paintIndex;
-            selectedFarVehicleIds[insertion] = vehicleId;
+            SetFarSelection(
+                0,
+                score,
+                archetype,
+                paintIndex,
+                matrix,
+                vehicleId);
+            SiftFarDown(0);
             return true;
+        }
+
+        private void SetNearSelection(
+            int index,
+            float score,
+            int archetype,
+            int paintIndex,
+            Matrix4x4 matrix,
+            int vehicleId)
+        {
+            selectedScores[index] = score;
+            selectedMatrices[index] = matrix;
+            selectedArchetypes[index] = archetype;
+            selectedPaintIndices[index] = paintIndex;
+            selectedVehicleIds[index] = vehicleId;
+        }
+
+        private void SiftNearUp(int index)
+        {
+            while (index > 0)
+            {
+                int parent = (index - 1) / 2;
+                if (selectedScores[parent] >= selectedScores[index])
+                {
+                    return;
+                }
+                SwapNear(parent, index);
+                index = parent;
+            }
+        }
+
+        private void SiftNearDown(int index)
+        {
+            while (true)
+            {
+                int left = index * 2 + 1;
+                if (left >= selectedCount)
+                {
+                    return;
+                }
+                int right = left + 1;
+                int largest =
+                    right < selectedCount &&
+                    selectedScores[right] > selectedScores[left]
+                        ? right
+                        : left;
+                if (selectedScores[index] >= selectedScores[largest])
+                {
+                    return;
+                }
+                SwapNear(index, largest);
+                index = largest;
+            }
+        }
+
+        private void SwapNear(int first, int second)
+        {
+            (selectedScores[first], selectedScores[second]) =
+                (selectedScores[second], selectedScores[first]);
+            (selectedMatrices[first], selectedMatrices[second]) =
+                (selectedMatrices[second], selectedMatrices[first]);
+            (selectedArchetypes[first], selectedArchetypes[second]) =
+                (selectedArchetypes[second], selectedArchetypes[first]);
+            (selectedPaintIndices[first], selectedPaintIndices[second]) =
+                (selectedPaintIndices[second], selectedPaintIndices[first]);
+            (selectedVehicleIds[first], selectedVehicleIds[second]) =
+                (selectedVehicleIds[second], selectedVehicleIds[first]);
+        }
+
+        private void SetFarSelection(
+            int index,
+            float score,
+            int archetype,
+            int paintIndex,
+            Matrix4x4 matrix,
+            int vehicleId)
+        {
+            selectedFarScores[index] = score;
+            selectedFarMatrices[index] = matrix;
+            selectedFarArchetypes[index] = archetype;
+            selectedFarPaintIndices[index] = paintIndex;
+            selectedFarVehicleIds[index] = vehicleId;
+        }
+
+        private void SiftFarUp(int index)
+        {
+            while (index > 0)
+            {
+                int parent = (index - 1) / 2;
+                if (selectedFarScores[parent] >= selectedFarScores[index])
+                {
+                    return;
+                }
+                SwapFar(parent, index);
+                index = parent;
+            }
+        }
+
+        private void SiftFarDown(int index)
+        {
+            while (true)
+            {
+                int left = index * 2 + 1;
+                if (left >= selectedFarCount)
+                {
+                    return;
+                }
+                int right = left + 1;
+                int largest =
+                    right < selectedFarCount &&
+                    selectedFarScores[right] > selectedFarScores[left]
+                        ? right
+                        : left;
+                if (selectedFarScores[index] >= selectedFarScores[largest])
+                {
+                    return;
+                }
+                SwapFar(index, largest);
+                index = largest;
+            }
+        }
+
+        private void SwapFar(int first, int second)
+        {
+            (selectedFarScores[first], selectedFarScores[second]) =
+                (selectedFarScores[second], selectedFarScores[first]);
+            (selectedFarMatrices[first], selectedFarMatrices[second]) =
+                (selectedFarMatrices[second], selectedFarMatrices[first]);
+            (selectedFarArchetypes[first], selectedFarArchetypes[second]) =
+                (selectedFarArchetypes[second], selectedFarArchetypes[first]);
+            (selectedFarPaintIndices[first], selectedFarPaintIndices[second]) =
+                (selectedFarPaintIndices[second], selectedFarPaintIndices[first]);
+            (selectedFarVehicleIds[first], selectedFarVehicleIds[second]) =
+                (selectedFarVehicleIds[second], selectedFarVehicleIds[first]);
         }
 
         private static void EvaluateRoute(
