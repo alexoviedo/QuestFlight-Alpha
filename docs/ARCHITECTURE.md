@@ -180,7 +180,7 @@ One `KbduTrafficRuntime` parses the compact manifest once and fills preallocated
 matrix and paint arrays during camera pre-cull. The parked authority is sorted
 into 378 fixed 500 m cells; only cells intersecting the 4.5 km hysteretic
 visibility envelope are visited, then allocation-free max-heaps retain at most
-64 detailed and 1,200 far-proxy vehicles. Five optimized CC0 passenger
+64 detailed and 1,800 far-proxy vehicles. Five optimized CC0 passenger
 archetypes—sedan, hatchback, crossover/SUV, pickup, and cargo van—and one
 semi-trailer archetype share one opaque instanced shader/material. Three far
 batches share two project-owned proxy meshes. Exclusive vertex-color classes
@@ -193,6 +193,6 @@ rigidbodies, transparent windows, realtime vehicle shadows, wheel animations,
 or per-car `Update` calls. Seven hundred eighty-eight moving records follow 361
 terrain-sampled directional lane routes under the fixed-step collision-safe
 controller. Every parked record retains its native-source position and recovered
-long axis. At most nine opaque instanced draws and 107,712 vehicle triangles are
+long axis. At most nine opaque instanced draws and 129,312 vehicle triangles are
 submitted. The fleet uses one 128-square ASTC detail texture, one material, no
 transparent slot, and zero steady-state managed allocation by design.

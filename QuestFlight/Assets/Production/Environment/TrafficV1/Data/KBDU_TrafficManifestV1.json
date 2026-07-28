@@ -429550,7 +429550,7 @@
     "far_enter_distance_meters": 4200.0,
     "far_exit_distance_meters": 4500.0,
     "maximum_draw_calls": 9,
-    "maximum_far_instances": 1200,
+    "maximum_far_instances": 1800,
     "maximum_near_instances": 64,
     "maximum_visible_triangles": 130000,
     "minimum_initial_bumper_gap_meters": 14.0,

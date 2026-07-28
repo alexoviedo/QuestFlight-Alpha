@@ -39,12 +39,12 @@ boundary.
 
 - 378 fixed 500 m spatial cells.
 - 64 maximum near/detail instances.
-- 1,200 maximum far/proxy instances.
+- 1,800 maximum far/proxy instances.
 - 800/1,000 m near enter/exit hysteresis.
 - 4,200/4,500 m far enter/exit hysteresis.
 - Three far batches sharing two proxy meshes.
 - Nine opaque instanced draws maximum.
-- 107,712 selected vehicle triangles maximum in current authored output.
+- 129,312 selected vehicle triangles maximum in current authored output.
 - One existing shared material and 128-square detail texture.
 - No per-car GameObjects, colliders, rigidbodies, realtime shadows, transparent
   vehicle glass, runtime detector, source imagery, or steady-state allocation.
@@ -60,9 +60,13 @@ boundary.
   `PASS_MACHINE_VISUAL_QA_HUMAN_HEADSET_REQUIRED`.
 - Android ARM64/Vulkan/OpenXR build: PASS.
 - APK: `QuestFlight/Builds/Android/QuestFlight-production.apk`
-  (external, not committed), 137,100,082 bytes.
+  (external, not committed), 137,099,870 bytes.
 - APK SHA-256:
-  `8f9518a442f2c6e3bb580503c446795ec5f150b6279954f1ff476098eac5559c`.
+  `529f2a715585f4b11d212b34b2f5c8690751681fbca809ff59c371cf9d18778b`.
+- Worn Quest 3 review: PASS at 9/10. Vehicle placement, density, and alignment
+  were accepted; the stronger retained-selection preference and expanded
+  far-proxy pool materially reduced the previously reported popping without
+  observed stutter, discomfort, or misplaced cars.
 
 External evidence root:
 

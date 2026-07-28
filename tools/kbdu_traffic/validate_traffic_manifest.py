@@ -235,7 +235,7 @@ def main() -> None:
         "traffic LOD representation changed",
     )
     require(data["runtime_contract"]["maximum_near_instances"] == 64, "near instance budget changed")
-    require(data["runtime_contract"]["maximum_far_instances"] == 1200, "far instance budget changed")
+    require(data["runtime_contract"]["maximum_far_instances"] == 1800, "far instance budget changed")
     require(data["runtime_contract"]["near_enter_distance_meters"] == 800.0, "near enter distance changed")
     require(data["runtime_contract"]["near_exit_distance_meters"] == 1000.0, "near exit distance changed")
     require(data["runtime_contract"]["far_enter_distance_meters"] == 4200.0, "far enter distance changed")

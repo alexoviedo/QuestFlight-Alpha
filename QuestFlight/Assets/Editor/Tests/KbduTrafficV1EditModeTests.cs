@@ -336,10 +336,10 @@ namespace QuestFlightLab.Environment.Editor.Tests
         {
             float retained = KbduTrafficRuntime.CalculateSelectionScore(10000f, true);
             float newcomer = KbduTrafficRuntime.CalculateSelectionScore(10000f, false);
-            Assert.That(retained, Is.EqualTo(7200f).Within(0.01f));
+            Assert.That(retained, Is.EqualTo(5000f).Within(0.01f));
             Assert.That(newcomer, Is.EqualTo(10000f).Within(0.01f));
             Assert.That(
-                KbduTrafficRuntime.CalculateSelectionScore(7000f, false),
+                KbduTrafficRuntime.CalculateSelectionScore(4000f, false),
                 Is.LessThan(retained),
                 "A materially closer newcomer must still replace a retained vehicle.");
             Assert.That(

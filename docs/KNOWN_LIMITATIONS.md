@@ -105,7 +105,7 @@ The airport corridor is a reference-faithful procedural approximation rather tha
   glass; and wheel/light material response. They do not provide transparent
   cabins, occupants, active lamps, animated wheels, or realtime shadows.
 - The runtime visits only 500 m spatial cells intersecting a 4.5 km hysteretic
-  visibility envelope and selects at most 64 detailed vehicles plus 1,200
+  visibility envelope and selects at most 64 detailed vehicles plus 1,800
   far-proxy vehicles. Source-supported vehicles outside that visible set are
   intentionally culled to preserve standalone Quest cost.
 - Simulator evidence does not establish Quest hardware performance. A final

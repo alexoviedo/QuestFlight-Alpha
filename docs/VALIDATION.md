@@ -360,14 +360,14 @@ Traffic V1 validation on Unity 6000.3.8f1:
 - Meta XR Simulator: live Quest 3 profile stereo/HMD/both Touch PASS with
   consistent nonblank eyes; aggregate
   `BLOCKED_MISSING_RECORDED_REPLAYS` for the ten absent genuine `.vrs` files;
-- Android ARM64/Vulkan/OpenXR build: PASS, 137,100,082 bytes, SHA-256
-  `8f9518a442f2c6e3bb580503c446795ec5f150b6279954f1ff476098eac5559c`;
+- Android ARM64/Vulkan/OpenXR build: PASS, 137,099,870 bytes, SHA-256
+  `529f2a715585f4b11d212b34b2f5c8690751681fbca809ff59c371cf9d18778b`;
 - unattended Quest install: PASS; launch smoke
   `BLOCKED_HUMAN_SYSTEM_DIALOG` because Horizon required awake Touch
   controllers before starting the application, so no product PID or hardware
   timing is claimed;
-- traffic contract: at most nine opaque instanced draws and 107,712 selected
-  vehicle triangles; 64 near-detail and 1,200 far-proxy instances; no added
+- traffic contract: at most nine opaque instanced draws and 129,312 selected
+  vehicle triangles; 64 near-detail and 1,800 far-proxy instances; no added
   material, texture, shader, transparent slot, realtime shadow, collider,
   rigidbody, or per-vehicle GameObject;
 - aggregate static audit: draw calls 56/75, visible triangles 638,446/650,000,

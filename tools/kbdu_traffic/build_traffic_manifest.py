@@ -805,7 +805,7 @@ def main() -> None:
         "runtime_contract": {
             "representation": "DETAIL_NEAR_FIXED_PROXY_FAR",
             "maximum_near_instances": 64,
-            "maximum_far_instances": 1200,
+            "maximum_far_instances": 1800,
             "near_enter_distance_meters": 800.0,
             "near_exit_distance_meters": 1000.0,
             "far_enter_distance_meters": 4200.0,

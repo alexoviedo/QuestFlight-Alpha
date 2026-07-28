@@ -21,7 +21,7 @@ namespace QuestFlightLab.Environment
         public const int ProxyArchetypeCount = 3;
         public const int MaximumDrawCalls = 9;
         public const int MaximumNearInstances = 64;
-        public const int MaximumFarInstances = 1200;
+        public const int MaximumFarInstances = 1800;
         public const int PaintVariantCount = 8;
         public const int MaximumVisibleTriangles = 130000;
         public const float NearEnterDistanceMeters = 800f;
@@ -698,7 +698,7 @@ namespace QuestFlightLab.Environment
             bool retainedFromPreviousFrame)
         {
             return Mathf.Max(0f, distanceSquared) *
-                (retainedFromPreviousFrame ? 0.72f : 1f);
+                (retainedFromPreviousFrame ? 0.5f : 1f);
         }
 
         public static byte SelectLodTier(
