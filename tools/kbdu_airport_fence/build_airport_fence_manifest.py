@@ -208,8 +208,13 @@ def build(snapshot: Path) -> dict:
             "section_count": len(sections),
             "lod_count_per_section": 1,
             "maximum_selected_draws": len(sections),
-            "new_materials": 0,
+            "new_materials": 1,
             "new_textures": 0,
+            "serialized_triangles": 252,
+            "visual_treatment": (
+                "project-authored green privacy slats with galvanized "
+                "chain-link and rails"
+            ),
             "colliders": 0,
             "realtime_shadows": False,
             "lod_switching": False,

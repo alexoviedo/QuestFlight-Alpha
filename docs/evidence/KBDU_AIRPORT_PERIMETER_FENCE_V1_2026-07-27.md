@@ -39,24 +39,27 @@ mesh assets and shader treatment are project-authored derivatives.
 - One serialized `AirportPerimeterFenceRoot` under `AirportContext`.
 - Four fixed meshes, one renderer per documented section.
 - Total length: 4,273.191 m.
-- Selected and serialized geometry: 104 triangles.
-- Existing shared airport material: one; new materials/textures: zero.
-- Analytic chain-link, posts, and rails use continuous perimeter-distance UVs,
-  shader derivatives, alpha clip, and 4x-MSAA alpha-to-coverage.
+- Selected and serialized geometry: 252 triangles.
+- One dedicated project-authored material; new textures: zero.
+- Terrain-conformed panel spans, bounded physical top rails/posts, and
+  continuous perimeter-distance UVs render green vertical privacy slats with a
+  galvanized diamond pattern.
 - No LOD switching, realtime shadows, colliders, rigidbodies, transparent
   passes, runtime hierarchy construction, or per-frame script.
 
 An initial detailed-geometry prototype was rejected because it exceeded the
-unchanged 800,000-triangle product closure. A 224-triangle solid-strip fallback
-passed tests but was rejected during full-resolution review because it read as
-a single diagonal line. The shipped candidate preserves the 104-triangle strip
-budget while providing recognizable open mesh through the analytic shader.
-Acceptance criteria and product ceilings were not weakened.
+unchanged 800,000-triangle product closure. The first 104-triangle analytic
+candidate and subsequent sparse-rail candidates were rejected in repeated worn
+reviews because only posts were visible. Pilot-left sightline sampling proved
+terrain was not occluding the fence; the failure was inadequate screen
+coverage. The accepted 252-triangle candidate uses terrain-conformed panels and
+physical rails/posts while retaining four draws. Acceptance criteria and
+product ceilings were not weakened.
 
 ## Validation
 
 - Fence manifest validation: PASS; 4 sections, 4,273.191 m, at most 4 draws,
-  zero new materials and textures.
+  one project-authored material, zero new textures, and 252 triangles.
 - Product integrity: PASS; 1,115 assets, 367 scene objects, 101 renderers,
   799,839/800,000 serialized triangles.
 - EditMode: PASS 136/136.
@@ -76,26 +79,29 @@ Acceptance criteria and product ceilings were not weakened.
   PASS; both eyes are nonblank and scene-consistent. Aggregate status remains
   `BLOCKED_MISSING_RECORDED_REPLAYS` for the ten absent genuine `.vrs` files.
   Simulator evidence is not Quest hardware performance evidence.
-- Android release-style build: PASS; APK
+- Final green-slat Android release-style build: PASS; APK
   `QuestFlight/Builds/Android/QuestFlight-production.apk`,
-  137,116,114 bytes, SHA-256
-  `5abf73962f72c6a6675d2a0e3ac83e6ba96976fda940753a6adfb4c5e45f377f`.
+  137,698,121 bytes, SHA-256
+  `00b487ab7d46bc147d3708336f8c88f213e67557edb4ea493be561096e9cec0f`.
   The APK is ignored build output and is not committed.
+- Worn Quest 3 visual acceptance: 9/10. Alex confirmed green infill,
+  galvanized mesh/top rail, continuous pilot-left coverage, and no flicker or
+  clipping.
 
 ## Evidence paths
 
 - Full Visual QA/contact sheet:
   `C:\Users\ovied\Dev\T2\T2-QuestFlight-product-artifacts\airport_fence_reference_20260727\visual_qa_analytic`
 - Dedicated fence screenshots:
-  `visual_qa_analytic\screenshots\37_airport_south_security_fence.png`,
-  `38_airport_west_hangar_fence.png`, and
-  `39_airport_fence_overview.png`
+  `visual_qa_green_slat_fence\screenshots\37_airport_south_security_fence.png`
+  and
+  `visual_qa_green_slat_fence\screenshots\40_pilot_left_airport_fence.png`
 - Static budget:
   `airport_fence_reference_20260727\performance_budget`
 - Simulator stereo:
   `airport_fence_reference_20260727\simulator_retry`
 - Android build log:
-  `airport_fence_reference_20260727\build_final\unity_product_build.log`
+  `airport_fence_reference_20260727\build_green_slat_fence\unity_product_build.log`
 
 ## Limitations
 

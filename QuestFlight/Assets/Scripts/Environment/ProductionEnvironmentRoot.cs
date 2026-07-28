@@ -161,8 +161,14 @@ namespace QuestFlightLab.Environment
             {
                 AirportPerimeterFenceRoot fence =
                     airportPerimeterFence.GetComponentInChildren<AirportPerimeterFenceRoot>(true);
-                Require(fence != null && fence.TryValidateContract(out _),
-                    "airport perimeter fence contract failed", failures);
+                if (fence == null)
+                {
+                    failures.Add("airport perimeter fence marker is missing");
+                }
+                else if (!fence.TryValidateContract(out string fenceReport))
+                {
+                    failures.Add("airport perimeter fence contract failed: " + fenceReport);
+                }
             }
             Require(nearTerrainMeshes != null && nearTerrainMeshes.Length == 2 && nearTerrainMeshes.All(HasMesh),
                 "near terrain must contain the baked airport patch and 4 km USGS ring", failures);

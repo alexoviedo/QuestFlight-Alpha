@@ -46,7 +46,11 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     AssetDatabase.GetAssetPath(marker.sharedMaterial),
-                    Is.EqualTo(AirportPerimeterFenceAuthoring.SharedMaterialPath));
+                    Is.EqualTo(AirportPerimeterFenceAuthoring.FenceMaterialPath));
+                Assert.That(marker.sharedMaterial.shader.name,
+                    Is.EqualTo("QuestFlight/Airport Perimeter Fence"));
+                Assert.That(marker.sharedMaterial.renderQueue,
+                    Is.EqualTo((int)RenderQueue.Transparent));
                 Renderer[] renderers = fence.GetComponentsInChildren<Renderer>(true);
                 Assert.That(renderers, Has.Length.EqualTo(4));
                 Assert.That(
@@ -86,14 +90,22 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 Assert.That(marker.authoredMaximumSelectedTriangles,
                     Is.EqualTo(marker.authoredSerializedTriangles));
                 Assert.That(marker.authoredSerializedTriangles,
-                    Is.GreaterThan(0).And.LessThanOrEqualTo(104));
-                Assert.That(marker.authoredSerializedTriangles, Is.EqualTo(104));
+                    Is.GreaterThan(0).And.LessThanOrEqualTo(262));
+                Assert.That(marker.authoredSerializedTriangles, Is.EqualTo(252));
                 Assert.That(
                     marker.sections.All(renderer =>
-                        renderer.GetComponent<MeshFilter>().sharedMesh.colors.All(
-                            color => color.a < 0.5f)),
+                        renderer.GetComponent<MeshFilter>().sharedMesh.colors.Any(
+                            color => color.b < 0.5f) &&
+                        renderer.GetComponent<MeshFilter>().sharedMesh.colors.Any(
+                            color => color.b > 0.5f)),
                     Is.True,
-                    "Every fence vertex must select the analytic cutout path.");
+                    "Each fence section must contain blended mesh and solid rails.");
+                Assert.That(
+                    marker.sections.All(renderer =>
+                        (GameObjectUtility.GetStaticEditorFlags(renderer.gameObject) &
+                         StaticEditorFlags.BatchingStatic) == 0),
+                    Is.True,
+                    "Fence renderers must remain outside player static batching.");
             }
             finally
             {

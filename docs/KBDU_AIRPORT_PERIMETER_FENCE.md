@@ -29,22 +29,26 @@ survey, access-control plan, or claim about current security infrastructure.
 
 | Section | Visual treatment | Height |
 | --- | --- | ---: |
-| Northeast | weathered metal wildlife/chain-link | 1.22 m |
-| South | low-gloss black chain-link | 1.83 m |
-| West hangars | weathered brown with dark metal replacement character | 1.22 m |
-| Northwest | weathered metal wildlife/chain-link | 1.22 m |
+| Northeast | green privacy slats with galvanized chain-link | 1.22 m |
+| South | green privacy slats with galvanized chain-link | 1.83 m |
+| West hangars | green privacy slats with galvanized chain-link | 1.22 m |
+| Northwest | green privacy slats with galvanized chain-link | 1.22 m |
 
-Each section is one two-sided vertical strip. Continuous world-distance UVs and
-project-authored vertex metadata drive an analytic diamond mesh, posts, and
-rails in the existing airport baked-lit shader. Alpha-to-coverage under the
-product's 4x MSAA avoids committing a large fence texture and avoids modelling
-thousands of individual links.
+Each section uses terrain-conformed panel spans plus bounded physical top rails
+and posts. Continuous world-distance UVs and project-authored vertex metadata
+drive green vertical slats and a galvanized diamond pattern in one dedicated
+fence shader. The representation avoids a large fence texture and avoids
+modelling thousands of individual links.
 
-The complete fence costs four renderers/draws and 104 selected/serialized
-triangles. It reuses one existing opaque airport material and adds no material,
-texture, transparent slot, collider, rigidbody, realtime shadow, runtime
-callback, LOD group, or per-eye state. High-altitude views intentionally fall
-back to the orthophoto rather than keeping a sub-pixel fence visible.
+The complete fence costs four renderers/draws and 252 selected/serialized
+triangles. It uses one project-authored material and adds no texture, collider,
+rigidbody, realtime shadow, runtime callback, LOD group, or per-eye state.
+High-altitude views intentionally fall back to the orthophoto rather than
+keeping a sub-pixel fence visible.
+
+The green privacy-slat treatment was selected from Alex's external visual
+reference during a worn Quest review. That photograph is not committed and is
+not used as a texture source.
 
 ## Sources
 

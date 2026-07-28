@@ -5922,7 +5922,7 @@ MonoBehaviour:
   authoritativeRunwaySystem: {fileID: 1857992654316816879}
   essentialWater: {fileID: 4921901537737841792}
   trafficRoot: {fileID: 1368089681776144910}
-  airportPerimeterFence: {fileID: 8847838463607608736}
+  airportPerimeterFence: {fileID: 8359583617304773077}
   waterPresentationMode: 1
   nearTerrainMeshes:
   - {fileID: 8326111771467180925}
@@ -5976,8 +5976,8 @@ MonoBehaviour:
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
   bakedRendererCount: 49
-  bakedTriangleCount: 488570
-  bakedMaterialCount: 9
+  bakedTriangleCount: 488718
+  bakedMaterialCount: 10
   bakedTextureCount: 28
   bakeUtc: 2026-07-24T19:15:00Z
   bakeToolVersion: photoreal_aerial_surface_v1
@@ -7630,7 +7630,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4417277368034730408}
-  - {fileID: 8847838463607608736}
+  - {fileID: 8359583617304773077}
   m_Father: {fileID: 8267578717186844639}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8455314157832285642
@@ -7814,7 +7814,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5908240812961848853}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &2645059198564696845
+--- !u!1001 &3062377814120126328
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -7871,10 +7871,10 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
---- !u!4 &8847838463607608736 stripped
+--- !u!4 &8359583617304773077 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6808586563049133741, guid: 60d8581c19d278c4cbf472a72054257d, type: 3}
-  m_PrefabInstance: {fileID: 2645059198564696845}
+  m_PrefabInstance: {fileID: 3062377814120126328}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3202742897904038656
 PrefabInstance:

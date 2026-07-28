@@ -380,16 +380,18 @@ The APK and all captures remain external artifacts and are not committed.
 ## Airport perimeter fence validation
 
 - `python -B tools/kbdu_airport_fence/validate_airport_fence_manifest.py
-  --repo-root .`: PASS; four sections, 4,273.191 m, four-draw maximum, no new
-  materials or textures.
-- Product integrity: PASS at 799,839/800,000 serialized triangles.
-- EditMode: PASS 136/136, including single-root ownership, four fixed
-  renderers, one reused material, 104 selected/serialized triangles, no LOD
-  groups, no physics, and fence vertex-data contracts.
+  --repo-root .`: PASS for the four-section, 4,273.191 m source authority.
+- Product integrity: the accepted authored candidate reports 799,987/800,000
+  serialized triangles.
+- EditMode: PASS 136/136. The fence suite covers single-root ownership, four
+  fixed renderers, one dedicated material, 252 selected/serialized triangles,
+  no LOD groups, no physics, and fence vertex-data contracts.
 - PlayMode: PASS 9/9.
-- Production Visual QA: 100/100 image-integrity passes. Dedicated views
+- Production Visual QA: the current capture includes dedicated views
   `37_airport_south_security_fence`, `38_airport_west_hangar_fence`, and
-  `39_airport_fence_overview` were inspected at full resolution.
+  `39_airport_fence_overview`, plus exact pilot-left view
+  `40_pilot_left_airport_fence`; the green-slat candidate was inspected at full
+  resolution.
 - The aggregate Visual QA script still reports `FAIL_MACHINE_QA` against its
   inherited 600,000-triangle/25-material generic thresholds. The accepted
   product limits pass at 638,538/650,000 visible triangles and 29/29 materials.
@@ -399,8 +401,11 @@ The APK and all captures remain external artifacts and are not committed.
   texture residency.
 - Meta XR Simulator v201: live Quest 3 stereo/HMD/both Touch connection PASS;
   aggregate status `BLOCKED_MISSING_RECORDED_REPLAYS`.
-- Android ARM64/Vulkan/OpenXR build: PASS; 137,116,114 bytes, SHA-256
-  `5abf73962f72c6a6675d2a0e3ac83e6ba96976fda940753a6adfb4c5e45f377f`.
+- Android ARM64/Vulkan/OpenXR build: PASS; 137,698,121 bytes, SHA-256
+  `00b487ab7d46bc147d3708336f8c88f213e67557edb4ea493be561096e9cec0f`.
+- Worn Quest 3 visual review: PASS at 9/10. Green infill, galvanized mesh/top
+  rail, and continuous pilot-left takeoff coverage were visible; no flicker,
+  clipping, or solid-wall artifact was reported.
 
 These are development and regression results. They do not establish physical
 Quest frame timing, thermal behavior, or surveyed airport-security fidelity.

@@ -205,8 +205,9 @@ follow the bounded OSM aerodrome perimeter and preserve the mixed wildlife,
 black chain-link, and weathered west-hangar character found in City planning
 evidence. The perimeter is a visual approximation, not surveyed security data.
 
-Continuous distance UVs and vertex metadata let the existing airport baked-lit
-shader render analytic diamond mesh, posts, and rails with 4x-MSAA
-alpha-to-coverage. The complete 4.27 km perimeter is 104 triangles and at most
-four draws. It adds no material, texture, transparent slot, collider, realtime
-shadow, LOD group, runtime callback, or hierarchy construction.
+Terrain-conformed panels, bounded physical rails/posts, continuous distance UVs,
+and vertex metadata let one dedicated project-authored material render green
+privacy slats with a galvanized diamond pattern. The complete 4.27 km perimeter
+is 252 triangles and at most four draws. It adds one material but no texture,
+collider, realtime shadow, LOD group, runtime callback, or hierarchy
+construction.

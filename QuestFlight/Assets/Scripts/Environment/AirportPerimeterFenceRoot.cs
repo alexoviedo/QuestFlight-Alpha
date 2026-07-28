@@ -16,8 +16,8 @@ namespace QuestFlightLab.Environment
         public const string GameObjectName = "AirportPerimeterFenceRoot";
         public const int ExpectedSectionCount = 4;
         public const int MaximumSelectedDraws = 4;
-        public const int MaximumSelectedTriangles = 104;
-        public const int MaximumSerializedTriangles = 104;
+        public const int MaximumSelectedTriangles = 262;
+        public const int MaximumSerializedTriangles = 262;
 
         public TextAsset sourceManifest;
         public Material sharedMaterial;

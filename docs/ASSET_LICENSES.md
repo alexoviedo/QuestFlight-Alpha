@@ -513,7 +513,9 @@ and attribution.
 
 City of Boulder planning documents and airport imagery were used for factual
 and visual research. A Wikimedia Commons CC BY 4.0 airport photograph and an
-Airport-Data photograph were inspected as references. No reference photograph
-is committed or redistributed. The four fixed meshes, analytic fence shader
-logic, authoring code, and tests are project-authored. Exact URLs and hashes are
-recorded in `docs/KBDU_AIRPORT_PERIMETER_FENCE.md` and the milestone evidence.
+Airport-Data photograph were inspected as references. Alex also supplied an
+external green privacy-slat chain-link photograph for visual direction. No
+reference photograph is committed, redistributed, or sampled into runtime
+textures. The four fixed meshes, fence material/shader logic, authoring code,
+and tests are project-authored. Exact public URLs and hashes are recorded in
+`docs/KBDU_AIRPORT_PERIMETER_FENCE.md` and the milestone evidence.

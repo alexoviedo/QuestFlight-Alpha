@@ -33,8 +33,12 @@ def main() -> None:
     require(data["source"]["license"] == "Open Database License 1.0", "license changed")
     require(len(data["sections"]) == 4, "expected four authored fence sections")
     require(data["runtime_contract"]["maximum_selected_draws"] == 4, "draw contract changed")
-    require(data["runtime_contract"]["new_materials"] == 0, "fence must reuse a material")
+    require(data["runtime_contract"]["new_materials"] == 1, "fence must use one material")
     require(data["runtime_contract"]["new_textures"] == 0, "fence must not add textures")
+    require(
+        data["runtime_contract"]["serialized_triangles"] == 252,
+        "fence triangle contract changed",
+    )
     require(data["runtime_contract"]["colliders"] == 0, "fence must not add colliders")
 
     total_length = 0.0
@@ -68,8 +72,9 @@ def main() -> None:
                 "sections": len(data["sections"]),
                 "perimeter_length_meters": round(total_length, 2),
                 "maximum_selected_draws": 4,
-                "new_materials": 0,
+                "new_materials": 1,
                 "new_textures": 0,
+                "serialized_triangles": 252,
             },
             indent=2,
         )

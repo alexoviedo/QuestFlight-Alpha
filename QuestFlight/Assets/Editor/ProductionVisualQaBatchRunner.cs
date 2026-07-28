@@ -657,6 +657,14 @@ namespace QuestFlightLab.Editor
             SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
             context.animator?.ClearControlStateForTest();
             context.visibility?.SetCockpitView();
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "40_pilot_left_airport_fence",
+                "Airport fence from the seated pilot's left takeoff view",
+                "airport_fence",
+                pilotEye,
+                pilotForward * Quaternion.Euler(0f, -90f, 0f),
+                72f,
+                ViewProfile.Cockpit));
             RenderPhotorealAerialSurfaceShots(context, report, outputDir, width, height);
             RenderAirportCoreBenchmarkAbShots(context, report, outputDir, width, height);
         }

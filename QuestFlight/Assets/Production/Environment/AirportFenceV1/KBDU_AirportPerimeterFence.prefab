@@ -49,15 +49,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.AirportPerimeterFenceRoot
   sourceManifest: {fileID: 4900000, guid: 82f94cdad1f039b44957f745e82fb84c, type: 3}
-  sharedMaterial: {fileID: 2100000, guid: 480e5d209d593a03cdced17d71b4d007, type: 2}
+  sharedMaterial: {fileID: 2100000, guid: 0947134ef3d2a3e4db36dd6d37967ac8, type: 2}
   sections:
   - {fileID: 950998504432672880}
   - {fileID: 4154374624395151953}
   - {fileID: 3040738498041389656}
   - {fileID: 435534535800567969}
   authoredPerimeterLengthMeters: 4273.191
-  authoredMaximumSelectedTriangles: 104
-  authoredSerializedTriangles: 104
+  authoredMaximumSelectedTriangles: 252
+  authoredSerializedTriangles: 252
   authoredRendererCount: 4
 --- !u!1 &3231914850051661462
 GameObject:
@@ -75,7 +75,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 20
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &6720532656398645042
 Transform:
@@ -125,7 +125,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 480e5d209d593a03cdced17d71b4d007, type: 2}
+  - {fileID: 2100000, guid: 0947134ef3d2a3e4db36dd6d37967ac8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -165,7 +165,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 20
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &7115539381431684539
 Transform:
@@ -215,7 +215,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 480e5d209d593a03cdced17d71b4d007, type: 2}
+  - {fileID: 2100000, guid: 0947134ef3d2a3e4db36dd6d37967ac8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -255,7 +255,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 20
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1911695068872405118
 Transform:
@@ -305,7 +305,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 480e5d209d593a03cdced17d71b4d007, type: 2}
+  - {fileID: 2100000, guid: 0947134ef3d2a3e4db36dd6d37967ac8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -345,7 +345,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 20
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1910606093659776366
 Transform:
@@ -395,7 +395,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 480e5d209d593a03cdced17d71b4d007, type: 2}
+  - {fileID: 2100000, guid: 0947134ef3d2a3e4db36dd6d37967ac8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
