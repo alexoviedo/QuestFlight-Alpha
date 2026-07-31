@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93a61b7ce5d54ecbb7e77b8bfa8138e2, type: 3}
+  m_Name: C172_AnalogInstrumentLayout
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.CockpitDynamics.Analog.ProductionAnalogInstrumentLayout
+  neutralizedMeterMesh: {fileID: 4300000, guid: 508b38165be632a499dbb92adce2c840, type: 2}
+  dynamicInstrumentMesh: {fileID: 4300000, guid: 0b0907a984b10344fa282a903d81db11, type: 2}
+  sharedSourceMeterMaterial: {fileID: 2100000, guid: 41a74f85cac24174fa743839906a2d0f, type: 2}
+  bindings:
+  - label: IAS / KNOTS
+    function: 0
+    firstVertex: 0
+    vertexCount: 48
+    pivotLocal: {x: -0.004498316, y: -0.03165085, z: -0.071638905}
+    rotationAxisLocal: {x: 0, y: 0.08715622, z: -0.99619466}
+    dialRightLocal: {x: 1, y: 0, z: 0}
+    dialUpLocal: {x: 0, y: -0.99619466, z: -0.08715622}
+    authoredIndicatorDirectionLocal: {x: -0.17346177, y: -0.98109293, z: -0.08583498}
+    sourceFaceTriangleSeed: 2819
+    sourceTipTriangleSeed: 4157
+    sourceTriangleCount: 16
+  - label: Principal VERTICAL SPEED
+    function: 1
+    firstVertex: 48
+    vertexCount: 72
+    pivotLocal: {x: -0.004614267, y: -0.013257569, z: -0.068812504}
+    rotationAxisLocal: {x: 0, y: 0.08715622, z: -0.99619466}
+    dialRightLocal: {x: 1, y: 0, z: 0}
+    dialUpLocal: {x: 0, y: -0.99619466, z: -0.08715622}
+    authoredIndicatorDirectionLocal: {x: -0.99999845, y: -0.0017238875, z: -0.0001508212}
+    sourceFaceTriangleSeed: 2541
+    sourceTipTriangleSeed: 5639
+    sourceTriangleCount: 24
+  sourceTriangleCount: 6241
+  neutralizedTriangleCount: 6201
+  dynamicTriangleCount: 40
+  sourceMeshName: Cessna_Interior_Meter_01_MAT_0_Meter_01_MAT_0
+  sourceAssetGuid: d312be0fd0ba928458dd86cbe967956b

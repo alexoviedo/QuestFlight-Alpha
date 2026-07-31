@@ -124,6 +124,19 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 new Vector3(1.18f, 0.075f, 0.19f),
                 Quaternion.Euler(-4f, 0f, 0f));
 
+            // The real firewall and upper cowl keep forward sunlight out of the footwell.
+            // These two bounded occluders extend the existing one-draw shadow proxy; they
+            // are deliberately confined below/forward of the instrument panel so they do
+            // not reintroduce the earlier full-cabin dark slab.
+            AddBox(vertices, triangles,
+                new Vector3(0f, 0.18f, 0.50f),
+                new Vector3(0.86f, 0.66f, 0.08f),
+                Quaternion.identity);
+            AddBox(vertices, triangles,
+                new Vector3(0f, 0.72f, 0.50f),
+                new Vector3(0.88f, 0.11f, 0.18f),
+                Quaternion.Euler(-5f, 0f, 0f));
+
             Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(ShadowCasterMeshPath);
             if (mesh == null)
             {

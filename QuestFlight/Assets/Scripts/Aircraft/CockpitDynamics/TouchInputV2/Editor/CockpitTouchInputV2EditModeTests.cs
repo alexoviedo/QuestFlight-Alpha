@@ -1,0 +1,329 @@
+#if UNITY_EDITOR
+using System.IO;
+using System.Reflection;
+using NUnit.Framework;
+using QuestFlightLab.Flight.Backends;
+using QuestFlightLab.Input;
+using UnityEngine;
+
+namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
+{
+    public sealed class CockpitTouchInputV2EditModeTests
+    {
+        private GameObject _root;
+        private ProductControlInput _input;
+        private FlightDynamicsCoordinator _coordinator;
+        private CockpitTouchInputV2Bridge _bridge;
+        private Transform _yokeFrame;
+        private Transform _engineFrame;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _root = new GameObject("TouchInputV2TestRoot");
+            _root.SetActive(false);
+            GamepadInputReader gamepad =
+                _root.AddComponent<GamepadInputReader>();
+            DeterministicGamepadInputSource deterministic =
+                _root.AddComponent<DeterministicGamepadInputSource>();
+            _input = _root.AddComponent<ProductControlInput>();
+            _input.ConfigureAuthoredSources(gamepad, deterministic);
+            _coordinator =
+                _root.AddComponent<FlightDynamicsCoordinator>();
+            _coordinator.controls = _input;
+            _yokeFrame = Child("StableYokeFrame", _root.transform);
+            _engineFrame = Child("StableEngineFrame", _root.transform);
+            _bridge =
+                _root.AddComponent<CockpitTouchInputV2Bridge>();
+            _bridge.ConfigureAuthoredReferences(
+                _coordinator,
+                _yokeFrame,
+                _engineFrame,
+                _engineFrame,
+                CockpitTouchInputV2Bridge.AuthoredYokeAxisLocal,
+                CockpitTouchInputV2Bridge.AuthoredYokeAxisLocal,
+                CockpitTouchInputV2Bridge
+                    .AuthoredEngineFullForwardAxisLocal,
+                CockpitTouchInputV2Bridge
+                    .AuthoredEngineFullForwardAxisLocal);
+            _root.SetActive(true);
+            Assert.That(
+                _bridge.ValidateAuthoredReferences(out string error),
+                Is.True,
+                error);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Object.DestroyImmediate(_root);
+        }
+
+        [Test]
+        public void YokeGrabOverridesBothAxesAndRestoresUnderlyingInput()
+        {
+            _input.Current.aileron = 0.2f;
+            _input.Current.elevator = -0.1f;
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "pilot_yoke_grab",
+                        CockpitTouchInteractionV2Target.PilotYoke,
+                        CockpitTouchInteractionV2Hand.Left,
+                        CockpitTouchInteractionV2Operation.BeginGrab,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "pilot_yoke_grab",
+                        CockpitTouchInteractionV2Target.PilotYoke,
+                        CockpitTouchInteractionV2Hand.Left,
+                        CockpitTouchInteractionV2Operation.UpdateGrab,
+                        new Vector3(0f, 0f, 0.02f),
+                        Quaternion.AngleAxis(
+                            27.5f,
+                            Vector3.forward))),
+                Is.True);
+            Assert.That(
+                _input.Current.aileron,
+                Is.EqualTo(-0.3f).Within(0.001f));
+            Assert.That(
+                _input.Current.elevator,
+                Is.EqualTo(0.4f).Within(0.001f));
+
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "pilot_yoke_grab",
+                        CockpitTouchInteractionV2Target.PilotYoke,
+                        CockpitTouchInteractionV2Hand.Left,
+                        CockpitTouchInteractionV2Operation.EndGrab,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(
+                _input.Current.aileron,
+                Is.EqualTo(0.2f).Within(0.001f));
+            Assert.That(
+                _input.Current.elevator,
+                Is.EqualTo(-0.1f).Within(0.001f));
+            Assert.That(_bridge.ActiveCaptureCount, Is.Zero);
+        }
+
+        [Test]
+        public void EngineControlsUseProvenTravelClampAndSafeRelease()
+        {
+            Vector3 axis = CockpitTouchInputV2Bridge
+                .AuthoredEngineFullForwardAxisLocal.normalized;
+            _input.Current.throttle = 0.25f;
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "throttle_grab",
+                        CockpitTouchInteractionV2Target.Throttle,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.BeginGrab,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "throttle_grab",
+                        CockpitTouchInteractionV2Target.Throttle,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.UpdateGrab,
+                        axis * 0.09f,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(_input.Current.throttle, Is.EqualTo(1f));
+
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "throttle_grab",
+                        CockpitTouchInteractionV2Target.Throttle,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.EndGrab,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(
+                _input.Current.throttle,
+                Is.EqualTo(0.25f).Within(0.001f));
+
+            _input.Current.mixture = 0.8f;
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "mixture_grab",
+                        CockpitTouchInteractionV2Target.Mixture,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.BeginGrab,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "mixture_grab",
+                        CockpitTouchInteractionV2Target.Mixture,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.UpdateGrab,
+                        -axis * 0.018f,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(
+                _input.Current.mixture,
+                Is.EqualTo(0.4f).Within(0.001f));
+        }
+
+        [Test]
+        public void WrongHandsUnknownBindingsAndCompetingOwnersFailClosed()
+        {
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "pilot_yoke_grab",
+                        CockpitTouchInteractionV2Target.PilotYoke,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.BeginGrab,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.False);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "flaps_grab",
+                        CockpitTouchInteractionV2Target.Throttle,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.BeginGrab,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.False);
+            Assert.That(_bridge.ActiveCaptureCount, Is.Zero);
+
+            const int owner = 101;
+            Assert.That(
+                _input.TryBeginTouchOverride(
+                    ProductTouchControlChannel.Throttle,
+                    owner,
+                    2f),
+                Is.True);
+            Assert.That(_input.Current.throttle, Is.EqualTo(1f));
+            Assert.That(
+                _input.TryUpdateTouchOverride(
+                    ProductTouchControlChannel.Throttle,
+                    202,
+                    0f),
+                Is.False);
+            Assert.That(
+                _input.TryEndTouchOverride(
+                    ProductTouchControlChannel.Throttle,
+                    202),
+                Is.False);
+            Assert.That(
+                _input.TryEndTouchOverride(
+                    ProductTouchControlChannel.Throttle,
+                    owner),
+                Is.True);
+        }
+
+        [Test]
+        public void StaleGrabLeaseRestoresUnderlyingInput()
+        {
+            _input.Current.throttle = 0.35f;
+            const int owner = 303;
+            Assert.That(
+                _input.TryBeginTouchOverride(
+                    ProductTouchControlChannel.Throttle,
+                    owner,
+                    0.9f),
+                Is.True);
+            Assert.That(_input.Current.throttle, Is.EqualTo(0.9f));
+
+            MethodInfo releaseStale = typeof(ProductControlInput)
+                .GetMethod(
+                    "ReleaseStaleTouchOverrides",
+                    BindingFlags.Instance |
+                    BindingFlags.NonPublic);
+            Assert.That(releaseStale, Is.Not.Null);
+            releaseStale.Invoke(
+                _input,
+                new object[]
+                {
+                    Time.unscaledTime +
+                    ProductControlInput
+                        .TouchOverrideLeaseTimeoutSeconds +
+                    0.01f
+                });
+            Assert.That(_input.ActiveTouchOverrideCount, Is.Zero);
+            Assert.That(
+                _input.Current.throttle,
+                Is.EqualTo(0.35f).Within(0.001f));
+        }
+
+        [Test]
+        public void BridgeHasNoUpdateLoopDiscoveryOrVisualWrites()
+        {
+            string path = Path.Combine(
+                Application.dataPath,
+                "Scripts/Aircraft/CockpitDynamics/TouchInputV2/" +
+                "CockpitTouchInputV2Bridge.cs");
+            string source = File.ReadAllText(path);
+            StringAssert.DoesNotContain(
+                "private void Update()",
+                source);
+            StringAssert.DoesNotContain(
+                "private void LateUpdate()",
+                source);
+            string[] forbidden =
+            {
+                "FindObjectOfType",
+                "FindFirstObjectByType",
+                "FindAnyObjectByType",
+                "GameObject.Find",
+                "AddComponent<",
+                "new GameObject",
+                ".localPosition =",
+                ".localRotation =",
+                ".SetPositionAndRotation("
+            };
+            foreach (string value in forbidden)
+                StringAssert.DoesNotContain(value, source, value);
+        }
+
+        private static CockpitTouchInteractionV2Command Command(
+            string id,
+            CockpitTouchInteractionV2Target target,
+            CockpitTouchInteractionV2Hand hand,
+            CockpitTouchInteractionV2Operation operation,
+            Vector3 pointerWorldPosition,
+            Quaternion pointerWorldRotation)
+        {
+            return new CockpitTouchInteractionV2Command
+            {
+                bindingId = id,
+                target = target,
+                hand = hand,
+                operation = operation,
+                pointerWorldPosition = pointerWorldPosition,
+                pointerWorldRotation = pointerWorldRotation,
+                hitWorldPosition = pointerWorldPosition
+            };
+        }
+
+        private static Transform Child(
+            string name,
+            Transform parent)
+        {
+            GameObject value = new GameObject(name);
+            value.transform.SetParent(parent, false);
+            return value.transform;
+        }
+    }
+}
+#endif

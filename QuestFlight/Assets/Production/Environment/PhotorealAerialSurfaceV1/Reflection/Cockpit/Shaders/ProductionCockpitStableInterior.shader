@@ -15,6 +15,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
         emissiveFactor ("Emission Factor", Color) = (0,0,0,1)
         _CabinDepthStrength ("Cabin Depth Strength", Range(0,0.42)) = 0.38
         _DirectionalCabinShadowStrength ("Directional Cabin Shade", Range(0,0.65)) = 0.58
+        _FootwellEnclosureStrength ("Footwell Enclosure Strength", Range(0,0.72)) = 0.70
     }
 
     SubShader
@@ -51,6 +52,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
             fixed4 emissiveFactor;
             half _CabinDepthStrength;
             half _DirectionalCabinShadowStrength;
+            half _FootwellEnclosureStrength;
             float4x4 _WorldToAircraft;
             sampler2D _CockpitLocalShadowMap;
             float4x4 _CockpitLocalShadowWorldToCamera;
@@ -170,6 +172,25 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 half3 warmCabinBounce = half3(0.20h, 0.17h, 0.14h) *
                     lerp(0.92h, 0.48h, skyExposure);
 
+                // The firewall/engine cowl permanently encloses the forward lower cabin.
+                // This aircraft-local cavity term is the baked analogue of that blocked
+                // skylight: continuous, world-locked, identical in both eyes, and free of
+                // the jagged/temporal artifacts produced by extra realtime shadow maps.
+                // It is restricted to the footwell so panel labels and avionics remain clear.
+                half3 aircraftLocalPosition = mul(
+                    _WorldToAircraft, float4(input.worldPosition, 1.0)).xyz;
+                half lowerCabin = 1.0h - smoothstep(
+                    0.30h, 0.58h, aircraftLocalPosition.y);
+                half forwardCavity = smoothstep(
+                    0.00h, 0.30h, aircraftLocalPosition.z);
+                half lateralCavity = 1.0h - smoothstep(
+                    0.52h, 0.72h, abs(aircraftLocalPosition.x));
+                half footwellEnclosure = saturate(
+                    lowerCabin * forwardCavity * lateralCavity *
+                    _FootwellEnclosureStrength);
+                ambient *= lerp(1.0h, 0.34h, footwellEnclosure);
+                warmCabinBounce *= lerp(1.0h, 0.55h, footwellEnclosure);
+
                 half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 half nDotL = saturate(dot(normalWS, lightDirection));
                 half aperture = lerp(0.28h, 0.82h, skyExposure);
@@ -207,6 +228,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 ambient *= lerp(1.0h, 0.72h, localShadowAmount);
                 half3 direct =
                     _LightColor0.rgb * nDotL * aperture * directShadowVisibility;
+                direct *= lerp(1.0h, 0.04h, footwellEnclosure);
 
                 half4 packedSurface = tex2D(metallicRoughnessTexture, input.uv);
                 half metallic = saturate(packedSurface.b * metallicFactor);
@@ -222,7 +244,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Stable Interior"
                 half3 color = readableAlbedo * bakedOcclusion * enclosure *
                     (ambient + warmCabinBounce + direct);
                 color += specularColor * specular * _LightColor0.rgb * aperture *
-                    directShadowVisibility;
+                    directShadowVisibility * lerp(1.0h, 0.08h, footwellEnclosure);
                 color += emission;
                 fixed4 result = fixed4(color, 1.0h);
                 UNITY_APPLY_FOG(input.fogCoord, result);

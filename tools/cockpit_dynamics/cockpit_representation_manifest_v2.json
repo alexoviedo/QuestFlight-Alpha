@@ -1,0 +1,381 @@
+{
+  "schemaVersion": 2,
+  "sourceAsset": "QuestFlight/Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
+  "sourceBytes": 26962216,
+  "sourceSha256": "a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872",
+  "sourceLicense": "CC BY 4.0",
+  "sourceCredit": "KOG_THORNS",
+  "embeddedAnimationClips": 0,
+  "productPrefab": "QuestFlight/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+  "runtimeHierarchyConstructionAllowed": false,
+  "completionState": "serialized_in_product_pending_current_validation",
+  "authorityArchitecture": {
+    "owner": "ProductionCockpitSystemsController",
+    "flightAuthority": "FlightDynamicsCoordinator",
+    "systemsReducer": "CockpitSystemsAuthorityV2Model",
+    "authoritativeChannels": [
+      "scenarioClock",
+      "flightControlCommands",
+      "engineRpm",
+      "electricalControlPositions",
+      "ignitionAndStarterControl",
+      "primerControl",
+      "fuelSelectorControl",
+      "flapSelectorCommand"
+    ],
+    "conditionalChannels": [
+      "electricalBusPower",
+      "starterMotorPower"
+    ],
+    "conditionalChannelRule": "Available only when external electrical-source state is authoritative, or when both electrical masters prove the buses off.",
+    "explicitlyUnavailable": [
+      "barometricSetting",
+      "actualFlapPosition",
+      "measuredBrakePressure",
+      "magneticVariation",
+      "fuelQuantity",
+      "fuelFlow",
+      "oilPressure",
+      "oilTemperature",
+      "vacuum",
+      "voltage",
+      "current",
+      "navigation",
+      "radio",
+      "dme",
+      "transponder",
+      "audioPanel"
+    ],
+    "zeroInventedData": true
+  },
+  "touchInteraction": {
+    "status": "serialized_in_product_pending_current_validation",
+    "controller": "CockpitTouchInteractionV2Controller",
+    "consumer": "CockpitTouchInputV2Bridge",
+    "inputAuthority": "ProductControlInput through the sole FlightDynamicsCoordinator",
+    "targets": [
+      "pilot_yoke",
+      "throttle",
+      "mixture"
+    ],
+    "unsupportedControlsRemainNonInteractive": true,
+    "runtimeHierarchyConstruction": false
+  },
+  "failClosedPresentation": {
+    "liveAnalogGauges": [
+      "airspeed_indicator",
+      "vertical_speed_indicator"
+    ],
+    "v2InstrumentAvailabilityExposedButNotSerializedAsNewGauges": [
+      "attitude",
+      "trueHeading",
+      "scenarioClock"
+    ],
+    "avionicsAvailabilityExposed": [
+      "electricalPower"
+    ],
+    "avionicsLiveDataUnavailable": [
+      "gps",
+      "com1",
+      "com2",
+      "dme",
+      "transponder",
+      "audioPanel"
+    ],
+    "unsupportedGaugeAndAvionicsPolicy": "Hold authored static presentation or blank a V2 field; never synthesize a value."
+  },
+  "implementedTargets": [
+    {
+      "id": "pilot_yoke",
+      "authority": ["aileron", "elevator"],
+      "owner": "ProductionAircraftControlAnimator",
+      "touchInputOwner": "CockpitTouchInputV2Bridge",
+      "touchBinding": "pilot_yoke_grab",
+      "renderCostDelta": 0
+    },
+    {
+      "id": "copilot_yoke",
+      "sourceNode": "Cessna_Interior_Steering_MAT_0.001",
+      "authority": ["aileron", "elevator"],
+      "owner": "ProductionCockpitDynamicsController",
+      "renderCostDelta": 0
+    },
+    {
+      "id": "throttle",
+      "sourceNode": "Dynamic_Switch_005",
+      "authority": ["throttle"],
+      "owner": "ProductionCockpitDynamicsController",
+      "touchInputOwner": "CockpitTouchInputV2Bridge",
+      "touchBinding": "throttle_grab",
+      "renderCostDelta": 0
+    },
+    {
+      "id": "mixture",
+      "sourceNode": "Dynamic_Switch_006",
+      "authority": ["mixture"],
+      "owner": "ProductionCockpitDynamicsController",
+      "touchInputOwner": "CockpitTouchInputV2Bridge",
+      "touchBinding": "mixture_grab",
+      "renderCostDelta": 0
+    },
+    {
+      "id": "exterior_ailerons",
+      "authority": ["aileron"],
+      "owner": "ProductionAircraftControlAnimator",
+      "renderCostDelta": 0
+    },
+    {
+      "id": "exterior_elevators",
+      "authority": ["elevator"],
+      "owner": "ProductionAircraftControlAnimator",
+      "renderCostDelta": 0
+    },
+    {
+      "id": "exterior_flaps",
+      "authority": ["flapCommand"],
+      "owner": "ProductionAircraftControlAnimator",
+      "renderCostDelta": 0
+    },
+    {
+      "id": "exterior_rudder",
+      "sourceNode": "Cessna_Exterior_Body_MAT_0.008",
+      "authority": ["rudder"],
+      "owner": "ProductionAircraftControlAnimator",
+      "renderCostDelta": 0
+    },
+    {
+      "id": "nose_steering",
+      "sourceNodes": [
+        "Cessna_Exterior_Body_MAT_0.019",
+        "Cessna_Exterior_Body_MAT_0.021"
+      ],
+      "authority": ["rudder", "groundSpeed", "weightOnWheels"],
+      "owner": "ProductionAircraftNoseSteeringAnimator",
+      "renderCostDelta": 0
+    },
+    {
+      "id": "airspeed_indicator",
+      "sourceNode": "Cessna_Interior_Meter_01_MAT_0",
+      "sourceFaceSeed": 2819,
+      "authority": ["calibratedAirspeed"],
+      "owner": "ProductionAnalogInstrumentController",
+      "maximumRendererDelta": 1,
+      "maximumDrawDelta": 1,
+      "maximumMaterialDelta": 0,
+      "maximumTextureDelta": 0
+    },
+    {
+      "id": "vertical_speed_indicator",
+      "sourceNode": "Cessna_Interior_Meter_01_MAT_0",
+      "sourceFaceSeed": 2541,
+      "authority": ["verticalSpeed"],
+      "owner": "ProductionAnalogInstrumentController",
+      "maximumRendererDelta": 1,
+      "maximumDrawDelta": 1,
+      "maximumMaterialDelta": 0,
+      "maximumTextureDelta": 0
+    }
+  ],
+  "representedCandidates": [
+    {
+      "id": "wing_flap_selector",
+      "sourceNode": "Dynamic_Switch_007",
+      "status": "represented_pending_motion_calibration",
+      "requiredAuthority": ["flapCommand"],
+      "blocker": "Real selector track travel and detent mapping are not yet calibrated."
+    },
+    {
+      "id": "rudder_toe_brake_pedal_assembly",
+      "sourceNode": "Cessna_Interior_Paddle_MAT_0",
+      "status": "represented_pending_complete_component_identity",
+      "requiredAuthority": ["rudder", "leftToeBrake", "rightToeBrake"],
+      "blocker": "The merged mesh audit proves only three dominant pedal-sized assemblies; incomplete geometry may not be fabricated."
+    },
+    {
+      "id": "principal_altimeter",
+      "sourceNode": "Cessna_Interior_Meter_01_MAT_0",
+      "sourceFaceSeeds": [2667, 2621, 2713],
+      "status": "static_fail_closed_missing_geometry_and_barometric_authority",
+      "requiredAuthority": ["pressureAltitude", "barometricSetting"],
+      "blocker": "MSL altitude is not substituted for pressure altitude; barometric setting and a complete separable needle/drum set are unavailable."
+    },
+    {
+      "id": "attitude_indicator",
+      "sourceNode": "Cessna_Interior_Meter_01_MAT_0",
+      "status": "authority_available_geometry_static",
+      "requiredAuthority": ["pitch", "bank"],
+      "blocker": "Pitch/bank authority is exposed, but the combined source card is not proven separable without damaging unrelated art."
+    },
+    {
+      "id": "directional_gyro",
+      "sourceNode": "Cessna_Interior_Meter_01_MAT_0",
+      "sourceFaceSeed": 2891,
+      "status": "authority_available_geometry_static",
+      "requiredAuthority": ["trueHeading"],
+      "blocker": "True heading is exposed, but absolute authored-card/lubber registration is not proven."
+    },
+    {
+      "id": "fixed_pitch_propeller_and_spinner",
+      "sourceNodes": [
+        "Cessna_Exterior_Body_MAT_0.001",
+        "Cessna_Exterior_Body_MAT_0.024"
+      ],
+      "status": "represented_pending_alias_safe_presentation",
+      "requiredAuthority": ["engineRpm"]
+    },
+    {
+      "id": "fixed_gear_wheel_roll",
+      "sourceNodes": [
+        "Cessna_Exterior_Body_MAT_0.021",
+        "Cessna_Exterior_Body_MAT_0.022",
+        "Cessna_Exterior_Body_MAT_0.023"
+      ],
+      "status": "represented_pending_tire_pant_separation",
+      "requiredAuthority": ["groundSpeed", "weightOnWheels"]
+    },
+    {
+      "id": "clock",
+      "sourceNode": "Cessna_Interior_Meter_01_MAT_0",
+      "sourceFaceSeed": 2849,
+      "status": "authority_available_geometry_static",
+      "requiredAuthority": ["scenarioUtc", "simulationTime"],
+      "blocker": "Deterministic scenario time is authoritative, but clock-hand topology and calibration are not proven."
+    },
+    {
+      "id": "alt_bat_master",
+      "sourceNode": "Dynamic_Switch_001",
+      "status": "authority_available_presentation_static",
+      "requiredAuthority": ["batteryMasterPosition", "alternatorMasterPosition"],
+      "blocker": "SystemsV2 owns deterministic control positions, but no reviewed serialized motion binding is active."
+    },
+    {
+      "id": "primer",
+      "sourceNode": "Dynamic_Switch_002",
+      "status": "authority_available_presentation_static",
+      "requiredAuthority": ["primerPosition"],
+      "blocker": "SystemsV2 owns primer position, but no reviewed serialized motion binding is active."
+    },
+    {
+      "id": "ignition_start_key",
+      "sourceNode": "Dynamic_Switch_003",
+      "status": "authority_available_presentation_static",
+      "requiredAuthority": ["ignitionSwitchPosition", "starterMotorPower"],
+      "blocker": "SystemsV2 owns the switch position; motor power remains conditional and no reviewed serialized motion binding is active."
+    },
+    {
+      "id": "avionics_power_control",
+      "sourceNode": "Dynamic_Switch_004",
+      "status": "authority_available_presentation_static",
+      "requiredAuthority": ["avionicsMasterPosition", "avionicsBusPower"],
+      "blocker": "SystemsV2 owns the master position; bus power is conditional and no reviewed serialized motion binding is active."
+    },
+    {
+      "id": "fuel_selector",
+      "sourceNode": "Dynamic_Switch_008",
+      "status": "authority_available_presentation_static",
+      "requiredAuthority": ["fuelSelectorPosition"],
+      "blocker": "SystemsV2 owns selector position only; it does not invent fuel quantity, flow, or tank state, and no reviewed serialized motion binding is active."
+    },
+    {
+      "id": "merged_lighting_switches",
+      "sourceNode": "Cessna_Interior_Paddle_MAT_0",
+      "status": "represented_pending_component_identity_and_system_authority",
+      "requiredAuthority": ["electricalSystem", "lightingSystem"]
+    },
+    {
+      "id": "merged_circuit_breakers",
+      "sourceNode": "Cessna_Interior_Paddle_MAT_0",
+      "status": "represented_pending_component_identity_and_system_authority",
+      "requiredAuthority": ["electricalLoads", "faultSystem"]
+    },
+    {
+      "id": "alternate_static_control",
+      "sourceNode": "Cessna_Interior_Paddle_MAT_0",
+      "status": "represented_pending_component_identity_and_system_authority",
+      "requiredAuthority": ["pitotStaticSystem"]
+    },
+    {
+      "id": "brake_pressure_indicator",
+      "sourceNode": "Cessna_Interior_Meter_01_MAT_0",
+      "sourceFaceSeed": 2906,
+      "status": "represented_pending_system_authority",
+      "requiredAuthority": ["brakePressure"]
+    },
+    {
+      "id": "flap_position_indicator",
+      "sourceNode": "Cessna_Interior_Meter_01_MAT_0",
+      "sourceFaceSeed": 2759,
+      "status": "represented_pending_actual_position_authority",
+      "requiredAuthority": ["actualFlapPosition"]
+    },
+    {
+      "id": "magnetic_compass",
+      "sourceNode": "Cessna_Interior_Meter_01_MAT_0",
+      "sourceFaceSeeds": [77, 78],
+      "status": "represented_pending_magnetic_authority",
+      "requiredAuthority": ["magneticHeading"]
+    },
+    {
+      "id": "avionics_suite",
+      "sourceNodes": [
+        "Static_Display",
+        "Static_TXT",
+        "ButtonPlate",
+        "Buttons"
+      ],
+      "status": "static_fail_closed_electrical_power_only",
+      "requiredAuthority": [
+        "electricalBusPower",
+        "navigation",
+        "radio",
+        "dme",
+        "transponder",
+        "audioPanel"
+      ],
+      "blocker": "The consolidated provider exposes electrical power only. GPS, COM, DME, transponder, and audio data remain unavailable; the existing readable static panels are preserved."
+    },
+    {
+      "id": "system_instrument_faces",
+      "sourceNode": "Cessna_Interior_Meter_01_MAT_0",
+      "status": "identity_pending",
+      "requiredAuthority": [
+        "fuelSystem",
+        "oilSystem",
+        "electricalSystem",
+        "vacuumSystem",
+        "engineRpm"
+      ],
+      "blocker": "Fuel, oil, electrical, vacuum, and tachometer face/pointer pairs are not yet positively mapped."
+    }
+  ],
+  "excludedTargets": [
+    {
+      "id": "fantasy_or_duplicate_gauges",
+      "reason": "MACH/AS, GYRO/LOC, duplicate VSI, and unlabeled indicators have no reliable real-aircraft identity."
+    },
+    {
+      "id": "turn_coordinator_and_slip_ball",
+      "reason": "A conventional face/ball is not positively identified and aerodynamic sideslip is not inclinometer specific force."
+    },
+    {
+      "id": "propeller_pitch_control",
+      "reason": "No separate represented control exists and the aircraft is fixed pitch."
+    },
+    {
+      "id": "retractable_gear",
+      "reason": "The represented C172 is fixed gear."
+    },
+    {
+      "id": "autopilot_control_head",
+      "reason": "No positively represented control head exists."
+    },
+    {
+      "id": "operable_doors_windows_latches_belts_vents_trim_parking_brake_cabin_controls",
+      "reason": "Separate operable source geometry is absent or not positively identified."
+    },
+    {
+      "id": "runtime_product_hierarchy_repair",
+      "reason": "Product hierarchy must remain explicitly authored and serialized."
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+    "schema": "questflight.cockpit.dynamic_analog.v1",
+    "sourceGlb": "Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
+    "sourceGuid": "d312be0fd0ba928458dd86cbe967956b",
+    "sourceSha256": "a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872",
+    "sourceMesh": "Cessna_Interior_Meter_01_MAT_0_Meter_01_MAT_0",
+    "sourceVertices": 4823,
+    "sourceTriangles": 6241,
+    "authorityBoundary": {
+        "owner": "ProductionCockpitSystemsController",
+        "systemsReducer": "CockpitSystemsAuthorityV2Model",
+        "liveGaugePresentation": [
+            "IAS / KNOTS",
+            "Principal VERTICAL SPEED"
+        ],
+        "v2AvailableButUnboundPresentationChannels": [
+            "attitude",
+            "trueHeading",
+            "scenarioClock"
+        ],
+        "policy": "Unsupported or incompletely identified gauges remain static; no command, MSL altitude, true heading, or default zero is relabeled as a missing measured quantity."
+    },
+    "connectedComponents": 259,
+    "geometryDerivedRoundApertures": 13,
+    "supported": [
+        {
+            "label": "IAS / KNOTS",
+            "function": "IndicatedAirspeedKnots",
+            "authority": "Positively labeled IAS/KNOTS face driven by calibrated airspeed.",
+            "calibration": "Piecewise source-face marks through the normal C172 operating range; no generic 270-degree gauge formula.",
+            "faceTriangleSeed": 2819,
+            "dynamicTriangleSeeds": [
+                4147,
+                4151,
+                4153,
+                4157,
+                4159
+            ],
+            "sourceTriangles": 16
+        },
+        {
+            "label": "Principal VERTICAL SPEED",
+            "function": "IndicatedVerticalSpeedFeetPerMinute",
+            "authority": "Positively labeled VERTICAL SPEED / 1000 FPM face driven by the filtered authoritative air-data state.",
+            "calibration": "Audited zero-at-left split scale: climb uses the upper arc and descent uses the lower arc at 0.5/1/2/4/6 thousand FPM.",
+            "faceTriangleSeed": 2541,
+            "dynamicTriangleSeeds": [
+                2533,
+                2535,
+                2537,
+                2539,
+                5631,
+                5635,
+                5639,
+                5641,
+                6011
+            ],
+            "sourceTriangles": 24
+        }
+    ],
+    "exclusions": [
+        {
+            "item": "BRAKE PRESS face",
+            "faceTriangleSeeds": [
+                2906
+            ],
+            "reason": "Toe-brake command exists, but measured brake-system pressure does not. A control command is not presented as hydraulic pressure."
+        },
+        {
+            "item": "MACH/AS hybrid faces",
+            "faceTriangleSeeds": [
+                2501,
+                2469
+            ],
+            "reason": "Ambiguous fantasy/reused faces; not a positively identified airspeed target."
+        },
+        {
+            "item": "Duplicate reused VSI faces",
+            "faceTriangleSeeds": [
+                2789,
+                2585
+            ],
+            "reason": "Duplicate fantasy presentation; only the principal labeled VSI is dynamic."
+        },
+        {
+            "item": "ALT faces",
+            "faceTriangleSeeds": [
+                2667,
+                2621,
+                2713
+            ],
+            "reason": "Altitude is authoritative, but only one hand is separable while the counter/drum geometry remains static. Partial animation would be misleading."
+        },
+        {
+            "item": "Clock",
+            "faceTriangleSeeds": [
+                2849
+            ],
+            "reason": "Deterministic scenario UTC authority now exists, but the clock-hand topology and calibration are not proven; the represented clock remains static."
+        },
+        {
+            "item": "FLAPS indicator",
+            "faceTriangleSeeds": [
+                2759
+            ],
+            "reason": "Only flap command is authoritative; actual flap-position feedback is unavailable."
+        },
+        {
+            "item": "GYRO/LOC face",
+            "faceTriangleSeeds": [],
+            "reason": "Ambiguous fantasy face with no authoritative localizer/gyro presentation contract."
+        },
+        {
+            "item": "Directional gyro heading card",
+            "faceTriangleSeeds": [
+                2891
+            ],
+            "reason": "The card is identity-audited and heading is authoritative, but the fixed lubber vector and absolute authored-card registration are not proven. An arbitrary first-sample offset would be misleading."
+        },
+        {
+            "item": "Magnetic compass tape",
+            "faceTriangleSeeds": [
+                77,
+                78
+            ],
+            "reason": "Geometry is separate, but magnetic variation/heading is unavailable; true heading is not relabeled as magnetic heading."
+        },
+        {
+            "item": "Attitude card",
+            "faceTriangleSeeds": [],
+            "reason": "Pitch/bank state exists, but the combined lower atlas/card topology is not deterministically separable without damaging unrelated panel art."
+        },
+        {
+            "item": "Fuel, oil, tachometer and unlabeled faces",
+            "faceTriangleSeeds": [],
+            "reason": "No positive face identity plus authoritative value pairing was proven."
+        }
+    ],
+    "neutralizedMesh": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_Meter01_Neutralized.asset",
+    "combinedDynamicMesh": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_DynamicAnalogInstruments.asset",
+    "reusedMaterial": "Assets/Production/Materials/Cockpit/Cockpit_Meter_01_MAT_7515756384451954381.mat",
+    "neutralizedTriangles": 6201,
+    "dynamicTriangles": 40,
+    "runtimeDrawDelta": 1,
+    "visibleMaterialDelta": 0,
+    "runtimeTextureDelta": 0,
+    "transparentSlotDelta": 0,
+    "preservedOverlays": [
+        "ProductionPrincipalInstrumentLensArray",
+        "ProductionInstrumentDisplayReadouts"
+    ]
+}

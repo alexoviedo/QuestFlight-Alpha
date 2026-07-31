@@ -56,6 +56,7 @@ namespace QuestFlightLab.Aircraft
         public const float DefaultInstrumentReadabilityEmission = 0.20f;
         public const float DefaultDirectionalCabinShadowStrength = 0.58f;
         public const float MaximumDirectionalCabinShadowStrength = 0.65f;
+        public const float DefaultFootwellEnclosureStrength = 0.70f;
         public const float DefaultCockpitLocalShadowStrength = 0.62f;
         public const float MaximumCockpitLocalShadowStrength = 0.72f;
         public const float DefaultCockpitLocalShadowBias = 0.0018f;
@@ -64,6 +65,8 @@ namespace QuestFlightLab.Aircraft
         private static readonly int WorldToAircraftId = Shader.PropertyToID("_WorldToAircraft");
         private static readonly int DirectionalCabinShadowStrengthId =
             Shader.PropertyToID("_DirectionalCabinShadowStrength");
+        private static readonly int FootwellEnclosureStrengthId =
+            Shader.PropertyToID("_FootwellEnclosureStrength");
         private static readonly int CockpitLocalShadowMapId =
             Shader.PropertyToID("_CockpitLocalShadowMap");
         private static readonly int CockpitLocalShadowWorldToCameraId =
@@ -300,6 +303,8 @@ namespace QuestFlightLab.Aircraft
                         stable.shader = stableShader;
                         if (stable.HasProperty("_DirectionalCabinShadowStrength"))
                             stable.SetFloat(DirectionalCabinShadowStrengthId, DefaultDirectionalCabinShadowStrength);
+                        if (stable.HasProperty("_FootwellEnclosureStrength"))
+                            stable.SetFloat(FootwellEnclosureStrengthId, DefaultFootwellEnclosureStrength);
                         stable.SetMatrix(WorldToAircraftId, root.transform.worldToLocalMatrix);
                         cockpitClones.Add(source, stable);
                         ownedMaterials.Add(stable);
