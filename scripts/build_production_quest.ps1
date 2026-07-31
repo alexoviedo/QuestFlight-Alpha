@@ -12,6 +12,25 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if (-not (Test-Path -LiteralPath $UnityExe)) { throw "Unity not found: $UnityExe" }
 if (-not (Test-Path -LiteralPath $ProjectPath)) { throw "Project not found: $ProjectPath" }
+
+function Get-Sha256Hex {
+  param([Parameter(Mandatory = $true)][string]$LiteralPath)
+
+  $fileHashCommand = Get-Command Get-FileHash -ErrorAction SilentlyContinue
+  if ($null -ne $fileHashCommand) {
+    return (Get-FileHash -LiteralPath $LiteralPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  }
+
+  $stream = [IO.File]::OpenRead($LiteralPath)
+  $sha256 = [Security.Cryptography.SHA256]::Create()
+  try {
+    return ([BitConverter]::ToString($sha256.ComputeHash($stream))).Replace('-', '').ToLowerInvariant()
+  } finally {
+    $sha256.Dispose()
+    $stream.Dispose()
+  }
+}
+
 if ([string]::IsNullOrWhiteSpace($ArtifactDir)) {
   $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
   $ArtifactDir = "C:\Users\ovied\Dev\T2\T2-QuestFlight-product-extraction-artifacts\product_build_$stamp"
@@ -55,7 +74,7 @@ if ($exitCode -ne 0) { throw "Product Quest build failed with exit code $exitCod
 
 $apk = Join-Path $ProjectPath 'Builds\Android\QuestFlight-production.apk'
 if (-not (Test-Path -LiteralPath $apk)) { throw "Unity exited without the product APK: $apk" }
-$hash = (Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash.ToLowerInvariant()
+$hash = Get-Sha256Hex -LiteralPath $apk
 [ordered]@{
   generatedUtc = [DateTime]::UtcNow.ToString('O')
   applicationIdentifier = 'com.alexoviedo.t2.questflight'

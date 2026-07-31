@@ -244,7 +244,7 @@ $sessionTable = if ($sessionEvidence.Count -gt 0) {
         "| $($_.id) | $($_.mode) | $($_.productConnected) | $($_.passed) | $($_.classification) |"
     }) -join [Environment]::NewLine
 } else {
-    "| _none_ | — | False | False | No session evidence |"
+    "| _none_ | N/A | False | False | No session evidence |"
 }
 $missingText = if ($missingRecordings.Count -gt 0) { $missingRecordings -join ", " } else { "none" }
 $summary = @"
