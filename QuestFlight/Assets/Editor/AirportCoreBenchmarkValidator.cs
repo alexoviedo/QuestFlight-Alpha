@@ -441,9 +441,11 @@ namespace QuestFlight.Editor
                     ProductionEnvironmentRoot.MinimumAcceptedWaterTerrainSeparationMeters,
                 "authoritative reservoir terrain separation regressed", violations);
 
-            bool orthophotoOnly = environment.waterPresentationMode ==
-                                  ProductionWaterPresentationMode.OrthophotoOnly;
-            if (orthophotoOnly)
+            bool terrainOwned = environment.waterPresentationMode ==
+                                    ProductionWaterPresentationMode.OrthophotoOnly ||
+                                environment.waterPresentationMode ==
+                                    ProductionWaterPresentationMode.OrthophotoMaskedReflection;
+            if (terrainOwned)
             {
                 Require(manifest.waterEffectsDeferredToOrthophoto,
                     "environment and benchmark water-defer contracts disagree", violations);

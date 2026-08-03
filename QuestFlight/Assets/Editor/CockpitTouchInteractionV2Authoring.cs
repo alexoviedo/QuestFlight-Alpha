@@ -1,5 +1,6 @@
 using System;
 using QuestFlightLab.Aircraft.CockpitDynamics;
+using QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,7 +8,7 @@ namespace QuestFlight.Editor
 {
     /// <summary>
     /// Editor-only integration recipe for one centralized Touch interaction
-    /// loop. It adds only three bounded trigger colliders to already-authored,
+    /// loop. It adds only bounded trigger colliders to already-authored,
     /// positively represented controls. A serialized authoritative command
     /// consumer is mandatory; authoring fails rather than creating a dead or
     /// speculative control path.
@@ -29,7 +30,7 @@ namespace QuestFlight.Editor
         public const string MixtureTargetPath =
             "AircraftVisualRoot/ImportedCockpitInterior/MixtureTravelPivot";
 
-        public const int ExpectedBindingCount = 3;
+        public const int ExpectedBindingCount = 9;
         public const int QueueCapacity = 32;
         public const float ColliderPaddingMeters = 0.008f;
         public const float MaximumRayDistanceMeters = 0.8f;
@@ -56,6 +57,19 @@ namespace QuestFlight.Editor
             Transform pilotYoke = RequirePath(root, PilotYokeTargetPath);
             Transform throttle = RequirePath(root, ThrottleTargetPath);
             Transform mixture = RequirePath(root, MixtureTargetPath);
+            Transform altBatMaster = RequirePath(
+                root, CockpitDynamicsIntegrationAuthoring.AltBatMasterPath);
+            Transform primer = RequirePath(
+                root, CockpitDynamicsIntegrationAuthoring.PrimerPath);
+            Transform ignition = RequirePath(
+                root, CockpitDynamicsIntegrationAuthoring.IgnitionSwitchPath);
+            Transform avionics = RequirePath(
+                root, CockpitDynamicsIntegrationAuthoring.AvionicsMasterPath);
+            Transform flapSelector = RequirePath(
+                root,
+                CockpitDynamicsIntegrationAuthoring.WingFlapSelectorSourcePath);
+            Transform fuelSelector = RequirePath(
+                root, CockpitDynamicsIntegrationAuthoring.FuelSelectorPath);
 
             BoxCollider yokeCollider =
                 EnsureBoundedInteractionCollider(pilotYoke);
@@ -63,10 +77,28 @@ namespace QuestFlight.Editor
                 EnsureBoundedInteractionCollider(throttle);
             BoxCollider mixtureCollider =
                 EnsureBoundedInteractionCollider(mixture);
+            BoxCollider altBatCollider =
+                EnsureBoundedInteractionCollider(altBatMaster);
+            BoxCollider primerCollider =
+                EnsureBoundedInteractionCollider(primer);
+            BoxCollider ignitionCollider =
+                EnsureBoundedInteractionCollider(ignition);
+            BoxCollider avionicsCollider =
+                EnsureBoundedInteractionCollider(avionics);
+            BoxCollider flapCollider =
+                EnsureBoundedInteractionCollider(flapSelector);
+            BoxCollider fuelCollider =
+                EnsureBoundedInteractionCollider(fuelSelector);
             LayerMask layers =
                 (1 << yokeCollider.gameObject.layer) |
                 (1 << throttleCollider.gameObject.layer) |
-                (1 << mixtureCollider.gameObject.layer);
+                (1 << mixtureCollider.gameObject.layer) |
+                (1 << altBatCollider.gameObject.layer) |
+                (1 << primerCollider.gameObject.layer) |
+                (1 << ignitionCollider.gameObject.layer) |
+                (1 << avionicsCollider.gameObject.layer) |
+                (1 << flapCollider.gameObject.layer) |
+                (1 << fuelCollider.gameObject.layer);
 
             CockpitTouchInteractionV2Controller controller =
                 RequireOrAddSingleController(root, host);
@@ -79,7 +111,7 @@ namespace QuestFlight.Editor
                 {
                     new CockpitTouchInteractionV2Controller.Binding
                     {
-                        id = "pilot_yoke_grab",
+                        id = CockpitTouchInputV2Bridge.PilotYokeBindingId,
                         targetCollider = yokeCollider,
                         target = CockpitTouchInteractionV2Target.PilotYoke,
                         allowedHand = CockpitTouchInteractionV2Hand.Left,
@@ -87,7 +119,7 @@ namespace QuestFlight.Editor
                     },
                     new CockpitTouchInteractionV2Controller.Binding
                     {
-                        id = "throttle_grab",
+                        id = CockpitTouchInputV2Bridge.ThrottleBindingId,
                         targetCollider = throttleCollider,
                         target = CockpitTouchInteractionV2Target.Throttle,
                         allowedHand = CockpitTouchInteractionV2Hand.Right,
@@ -95,11 +127,59 @@ namespace QuestFlight.Editor
                     },
                     new CockpitTouchInteractionV2Controller.Binding
                     {
-                        id = "mixture_grab",
+                        id = CockpitTouchInputV2Bridge.MixtureBindingId,
                         targetCollider = mixtureCollider,
                         target = CockpitTouchInteractionV2Target.Mixture,
                         allowedHand = CockpitTouchInteractionV2Hand.Right,
                         mode = CockpitTouchInteractionV2Mode.GrabPose
+                    },
+                    new CockpitTouchInteractionV2Controller.Binding
+                    {
+                        id = CockpitTouchInputV2Bridge.AltBatMasterBindingId,
+                        targetCollider = altBatCollider,
+                        target = CockpitTouchInteractionV2Target.AltBatMaster,
+                        allowedHand = CockpitTouchInteractionV2Hand.Either,
+                        mode = CockpitTouchInteractionV2Mode.Toggle
+                    },
+                    new CockpitTouchInteractionV2Controller.Binding
+                    {
+                        id = CockpitTouchInputV2Bridge.PrimerBindingIdPrefix,
+                        targetCollider = primerCollider,
+                        target = CockpitTouchInteractionV2Target.Primer,
+                        allowedHand = CockpitTouchInteractionV2Hand.Either,
+                        mode = CockpitTouchInteractionV2Mode.Momentary
+                    },
+                    new CockpitTouchInteractionV2Controller.Binding
+                    {
+                        id = CockpitTouchInputV2Bridge.IgnitionBindingIdPrefix,
+                        targetCollider = ignitionCollider,
+                        target = CockpitTouchInteractionV2Target.IgnitionStart,
+                        allowedHand = CockpitTouchInteractionV2Hand.Either,
+                        mode = CockpitTouchInteractionV2Mode.Toggle
+                    },
+                    new CockpitTouchInteractionV2Controller.Binding
+                    {
+                        id = CockpitTouchInputV2Bridge.AvionicsPowerBindingId,
+                        targetCollider = avionicsCollider,
+                        target = CockpitTouchInteractionV2Target.AvionicsPower,
+                        allowedHand = CockpitTouchInteractionV2Hand.Either,
+                        mode = CockpitTouchInteractionV2Mode.Toggle
+                    },
+                    new CockpitTouchInteractionV2Controller.Binding
+                    {
+                        id = CockpitTouchInputV2Bridge.FlapSelectorBindingIdPrefix,
+                        targetCollider = flapCollider,
+                        target = CockpitTouchInteractionV2Target.FlapSelector,
+                        allowedHand = CockpitTouchInteractionV2Hand.Either,
+                        mode = CockpitTouchInteractionV2Mode.Toggle
+                    },
+                    new CockpitTouchInteractionV2Controller.Binding
+                    {
+                        id = CockpitTouchInputV2Bridge.FuelSelectorBindingIdPrefix,
+                        targetCollider = fuelCollider,
+                        target = CockpitTouchInteractionV2Target.FuelSelector,
+                        allowedHand = CockpitTouchInteractionV2Hand.Either,
+                        mode = CockpitTouchInteractionV2Mode.Toggle
                     }
                 },
                 authoritativeCommandConsumer,
@@ -108,6 +188,12 @@ namespace QuestFlight.Editor
             EditorUtility.SetDirty(yokeCollider);
             EditorUtility.SetDirty(throttleCollider);
             EditorUtility.SetDirty(mixtureCollider);
+            EditorUtility.SetDirty(altBatCollider);
+            EditorUtility.SetDirty(primerCollider);
+            EditorUtility.SetDirty(ignitionCollider);
+            EditorUtility.SetDirty(avionicsCollider);
+            EditorUtility.SetDirty(flapCollider);
+            EditorUtility.SetDirty(fuelCollider);
             EditorUtility.SetDirty(controller);
 
             if (!ValidatePrefabContents(root, out string error))
@@ -132,6 +218,20 @@ namespace QuestFlight.Editor
                     RequirePath(root, ThrottleTargetPath);
                 Transform mixture =
                     RequirePath(root, MixtureTargetPath);
+                Transform altBatMaster = RequirePath(
+                    root, CockpitDynamicsIntegrationAuthoring.AltBatMasterPath);
+                Transform primer = RequirePath(
+                    root, CockpitDynamicsIntegrationAuthoring.PrimerPath);
+                Transform ignition = RequirePath(
+                    root,
+                    CockpitDynamicsIntegrationAuthoring.IgnitionSwitchPath);
+                Transform avionics = RequirePath(
+                    root, CockpitDynamicsIntegrationAuthoring.AvionicsMasterPath);
+                Transform flapSelector = RequirePath(
+                    root,
+                    CockpitDynamicsIntegrationAuthoring.WingFlapSelectorSourcePath);
+                Transform fuelSelector = RequirePath(
+                    root, CockpitDynamicsIntegrationAuthoring.FuelSelectorPath);
 
                 CockpitTouchInteractionV2Controller[] controllers =
                     root.GetComponentsInChildren<
@@ -159,6 +259,12 @@ namespace QuestFlight.Editor
                 RequireBoundedCollider(pilotYoke);
                 RequireBoundedCollider(throttle);
                 RequireBoundedCollider(mixture);
+                RequireBoundedCollider(altBatMaster);
+                RequireBoundedCollider(primer);
+                RequireBoundedCollider(ignition);
+                RequireBoundedCollider(avionics);
+                RequireBoundedCollider(flapSelector);
+                RequireBoundedCollider(fuelSelector);
 
                 Require(
                     root.GetComponentsInChildren<

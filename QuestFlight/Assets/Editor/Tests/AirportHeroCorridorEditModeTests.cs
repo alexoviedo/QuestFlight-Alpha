@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using NUnit.Framework;
 using QuestFlightLab.Environment;
@@ -8,8 +9,24 @@ namespace QuestFlightLab.Editor.Tests
 {
     public sealed class AirportHeroCorridorEditModeTests
     {
+        [Serializable]
+        private sealed class GenerationReport
+        {
+            public AssetRecord[] assets = Array.Empty<AssetRecord>();
+        }
+
+        [Serializable]
+        private sealed class AssetRecord
+        {
+            public string family;
+            public int footprint_vertex_count;
+            public bool wall_winding_normalized;
+            public string roof_style;
+            public float maximum_footprint_error_m;
+        }
+
         [Test]
-        public void SerializedCorridorOwnsEighteenBuildingsWithOneStableDraw()
+        public void SerializedCorridorOwnsAllHeroBuildingsWithOneStableDraw()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
                 ProductionEnvironmentRoot.PrefabAssetPath);
@@ -34,6 +51,27 @@ namespace QuestFlightLab.Editor.Tests
             Assert.That(AssetDatabase.GetAssetPath(materials[0]),
                 Is.EqualTo("Assets/Production/Environment/AirportCoreV4/Materials/" +
                            "AirportCoreHangarKitAtlas.mat"));
+        }
+
+        [Test]
+        public void GenerationManifestRequiresOutwardWallsExactFootprintsAndResidentialGables()
+        {
+            TextAsset manifest = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                "Assets/Production/Environment/AirportHeroCorridorV1/Data/" +
+                "AirportHeroCorridorGenerationReportV1.json");
+            Assert.That(manifest, Is.Not.Null);
+            GenerationReport report = JsonUtility.FromJson<GenerationReport>(manifest.text);
+            Assert.That(report.assets,
+                Has.Length.EqualTo(AirportHeroCorridorRoot.ExpectedBuildingCount));
+            Assert.That(report.assets.All(item =>
+                item.footprint_vertex_count >= 3 &&
+                item.wall_winding_normalized &&
+                item.maximum_footprint_error_m <= 0.01f), Is.True);
+            Assert.That(report.assets
+                .Where(item => string.Equals(item.family, "residential",
+                    StringComparison.Ordinal))
+                .All(item => string.Equals(item.roof_style, "exact_footprint_gable",
+                    StringComparison.Ordinal)), Is.True);
         }
 
         [Test]

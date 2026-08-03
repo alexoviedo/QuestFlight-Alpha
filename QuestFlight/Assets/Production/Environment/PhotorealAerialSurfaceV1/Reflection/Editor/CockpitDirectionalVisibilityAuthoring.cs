@@ -231,6 +231,19 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 Mesh source = renderer.GetComponent<MeshFilter>()?.sharedMesh;
                 if (source == null || source.vertexCount == 0) return false;
                 if (renderer.name.IndexOf("Glass", StringComparison.OrdinalIgnoreCase) >= 0) return false;
+                // V2 instrument/avionics overlays are already double-sided,
+                // unshadowed, source-aligned presentation batches. A geometry
+                // visibility stream would be semantically wrong and would no
+                // longer match their deterministic generated vertex ranges.
+                if (string.Equals(
+                        renderer.name,
+                        "ProductionDynamicAnalogInstruments",
+                        StringComparison.Ordinal) ||
+                    string.Equals(
+                        renderer.name,
+                        "ProductionInstrumentDisplayReadouts",
+                        StringComparison.Ordinal))
+                    return false;
                 return !renderer.sharedMaterials.Any(material => material != null && material.shader != null &&
                     (material.shader.name.IndexOf("Window Reflection", StringComparison.OrdinalIgnoreCase) >= 0 ||
                      material.shader.name.IndexOf("Instrument Glass", StringComparison.OrdinalIgnoreCase) >= 0));

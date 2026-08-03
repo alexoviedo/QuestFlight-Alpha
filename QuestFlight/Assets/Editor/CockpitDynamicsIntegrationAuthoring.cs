@@ -30,8 +30,18 @@ namespace QuestFlight.Editor
             "AircraftVisualRoot/ImportedCockpitInterior/Dynamic_Switch_005";
         public const string MixturePath =
             "AircraftVisualRoot/ImportedCockpitInterior/Dynamic_Switch_006";
+        public const string AltBatMasterPath =
+            "AircraftVisualRoot/ImportedCockpitInterior/Dynamic_Switch_001";
+        public const string PrimerPath =
+            "AircraftVisualRoot/ImportedCockpitInterior/Dynamic_Switch_002";
+        public const string IgnitionSwitchPath =
+            "AircraftVisualRoot/ImportedCockpitInterior/Dynamic_Switch_003";
+        public const string AvionicsMasterPath =
+            "AircraftVisualRoot/ImportedCockpitInterior/Dynamic_Switch_004";
         public const string WingFlapSelectorSourcePath =
             "AircraftVisualRoot/ImportedCockpitInterior/Dynamic_Switch_007";
+        public const string FuelSelectorPath =
+            "AircraftVisualRoot/ImportedCockpitInterior/Dynamic_Switch_008";
         public const string ImportedCockpitPath =
             "AircraftVisualRoot/ImportedCockpitInterior";
         public const string RudderSourcePath =
@@ -65,7 +75,7 @@ namespace QuestFlight.Editor
         // +Y; its leading edge is the maximum parent-local Z boundary.
         public const float RudderMaximumTravelDegrees = 16f + 10f / 60f;
 
-        public const int ExpectedPresentationBindingCount = 4;
+        public const int ExpectedPresentationBindingCount = 18;
         public const int ExpectedLegacyAnimatorBindingCountBeforeRudder = 8;
         public const int ExpectedAnimatorBindingCountAfterRudder = 9;
         public const long ProductScenarioUtcUnixSeconds = 1785434400L;
@@ -86,8 +96,9 @@ namespace QuestFlight.Editor
                 PrefabUtility.SaveAsPrefabAsset(root, AircraftPrefabPath);
                 AssetDatabase.SaveAssets();
                 Debug.Log(
-                    "[QuestFlight][CockpitDynamics] Serialized only identity-audited " +
-                    "copilot yoke, throttle, mixture and rudder motion.");
+                    "[QuestFlight][CockpitDynamics] Serialized identity-audited " +
+                    "flight controls, engine controls, six represented switches, " +
+                    "single systems authority, and centralized Touch interaction.");
             }
             finally
             {
@@ -125,14 +136,24 @@ namespace QuestFlight.Editor
                 MixtureTravelPivotPath,
                 MixtureTravelPivotName,
                 out Vector3 mixtureFullRichAxis);
-            EnsureWingFlapSelectorRemainsStatic(root, importedCockpit);
+            EnsureWingFlapSelectorDirectBinding(root, importedCockpit);
+            Transform altBatMaster = RequirePath(root, AltBatMasterPath);
+            Transform primer = RequirePath(root, PrimerPath);
+            Transform ignitionSwitch = RequirePath(root, IgnitionSwitchPath);
+            Transform avionicsMaster = RequirePath(root, AvionicsMasterPath);
+            Transform flapSelector =
+                RequirePath(root, WingFlapSelectorSourcePath);
+            Transform fuelSelector = RequirePath(root, FuelSelectorPath);
             Transform rudderPivot = EnsureRudderPivot(root, animatedControls);
+            Transform pedalRoot = RequirePath(
+                root,
+                CockpitPedalCompletionAuthoring.RootPath);
 
             ProductionCockpitSystemsController systems =
                 RequireOrAddSingle<ProductionCockpitSystemsController>(animatedControls.gameObject);
             systems.ConfigureAuthoredSource(
                 coordinator,
-                CockpitElectricalPowerInput.Unavailable,
+                ProductElectricalPowerSource(),
                 ProductSystemsScenario());
 
             ProductionCockpitDynamicsController presentation =
@@ -146,7 +167,14 @@ namespace QuestFlight.Editor
                     throttlePivot,
                     mixturePivot,
                     throttleFullForwardAxis,
-                    mixtureFullRichAxis));
+                    mixtureFullRichAxis,
+                    altBatMaster,
+                    primer,
+                    ignitionSwitch,
+                    avionicsMaster,
+                    flapSelector,
+                    fuelSelector,
+                    pedalRoot));
 
             AuthorRudderBinding(legacyAnimator, rudderPivot);
 
@@ -162,6 +190,7 @@ namespace QuestFlight.Editor
                 CockpitTouchInputV2Bridge.AuthoredYokeAxisLocal,
                 throttleFullForwardAxis,
                 mixtureFullRichAxis);
+            touchInputBridge.ConfigureSystemsAuthority(systems);
             CockpitTouchInteractionV2Authoring.AuthorPrefabContents(
                 root,
                 touchInputBridge);
@@ -201,6 +230,18 @@ namespace QuestFlight.Editor
                 Require(presentation.transform == animatedControls,
                     "Cockpit presentation must be serialized on AnimatedControlSurfaces.");
                 Require(systems.HasAuthoredReferences(out string systemsError), systemsError);
+                SerializedObject systemsObject = new SerializedObject(systems);
+                SerializedProperty authoredPower =
+                    systemsObject.FindProperty("electricalPowerInput");
+                Require(
+                    authoredPower.FindPropertyRelative("hasAuthoritativeState").boolValue,
+                    "Product cockpit electrical source must be authoritative.");
+                Require(
+                    authoredPower.FindPropertyRelative("batteryCanPowerBus").boolValue,
+                    "Product cockpit battery must be able to power the avionics bus.");
+                Require(
+                    !authoredPower.FindPropertyRelative("alternatorProducingPower").boolValue,
+                    "Product startup must not claim unsupported alternator output.");
                 Require(presentation.Coordinator == coordinator,
                     "Cockpit presentation coordinator reference is not authoritative.");
                 Require(presentation.AuthoritativeStateProvider == systems,
@@ -231,7 +272,47 @@ namespace QuestFlight.Editor
                         [ThrottleTravelPivotPath] =
                             CockpitPresentationChannel.ThrottleNormalized,
                         [MixtureTravelPivotPath] =
-                            CockpitPresentationChannel.MixtureNormalized
+                            CockpitPresentationChannel.MixtureNormalized,
+                        [AltBatMasterPath] =
+                            CockpitPresentationChannel.BatteryMasterOn,
+                        [PrimerPath] =
+                            CockpitPresentationChannel.PrimerPositionNormalized,
+                        [IgnitionSwitchPath] =
+                            CockpitPresentationChannel.IgnitionSwitchPosition,
+                        [AvionicsMasterPath] =
+                            CockpitPresentationChannel.AvionicsMasterOn,
+                        [WingFlapSelectorSourcePath] =
+                            CockpitPresentationChannel.FlapsCommandNormalized,
+                        [FuelSelectorPath] =
+                            CockpitPresentationChannel.FuelSelectorPosition,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.PilotLeftRudderName] =
+                            CockpitPresentationChannel.RudderPedalsNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.PilotLeftRudderName + "/" +
+                         CockpitPedalCompletionAuthoring.PilotLeftToeName] =
+                            CockpitPresentationChannel.LeftToeBrakeNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.PilotRightRudderName] =
+                            CockpitPresentationChannel.RudderPedalsNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.PilotRightRudderName + "/" +
+                         CockpitPedalCompletionAuthoring.PilotRightToeName] =
+                            CockpitPresentationChannel.RightToeBrakeNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotLeftRudderName] =
+                            CockpitPresentationChannel.RudderPedalsNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotLeftRudderName + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotLeftToeName] =
+                            CockpitPresentationChannel.LeftToeBrakeNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotRightRudderName] =
+                            CockpitPresentationChannel.RudderPedalsNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotRightRudderName + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotRightToeName] =
+                            CockpitPresentationChannel.RightToeBrakeNormalized
                     };
 
                 SerializedObject presentationObject = new SerializedObject(presentation);
@@ -323,11 +404,11 @@ namespace QuestFlight.Editor
                     "Copilot yoke pivot must retain exactly its represented source renderer.");
                 Require(RequirePath(root, WingFlapSelectorSourcePath)
                         .GetComponentsInChildren<MeshRenderer>(true).Length == 1,
-                    "Static flap selector must retain exactly its represented source renderer.");
+                    "Flap selector must retain exactly its represented source renderer.");
                 Require(
                     RequirePath(root, ImportedCockpitPath)
                         .Find(LegacyWingFlapSelectorPivotName) == null,
-                    "Flap selector must remain static until a real hinge/arc is proven.");
+                    "Obsolete flap-selector wrapper must not remain in the authored hierarchy.");
                 Require(RequirePath(root, RudderPivotPath)
                         .GetComponentsInChildren<MeshRenderer>(true).Length == 1,
                     "Rudder pivot must retain exactly its represented source renderer.");
@@ -362,9 +443,17 @@ namespace QuestFlight.Editor
                 Transform throttlePivot,
                 Transform mixturePivot,
                 Vector3 throttleFullForwardAxis,
-                Vector3 mixtureFullRichAxis)
+                Vector3 mixtureFullRichAxis,
+                Transform altBatMaster,
+                Transform primer,
+                Transform ignitionSwitch,
+                Transform avionicsMaster,
+                Transform flapSelector,
+                Transform fuelSelector,
+                Transform pedalRoot)
         {
-            return new[]
+            List<ProductionCockpitDynamicsController.TransformBinding> result =
+                new List<ProductionCockpitDynamicsController.TransformBinding>
             {
                 Binding(
                     "Copilot yoke pitch travel",
@@ -374,7 +463,9 @@ namespace QuestFlight.Editor
                         CockpitPresentationChannel.YokePitchNormalized,
                         -1f, 1f,
                         Vector3.zero, 0f, 0f,
-                        Vector3.forward,
+                        // Positive elevator is nose-up, so the linked yoke must
+                        // travel aft toward the pilot rather than into the panel.
+                        Vector3.back,
                         -CopilotYokePitchHalfTravelMeters,
                         CopilotYokePitchHalfTravelMeters)),
                 Binding(
@@ -409,8 +500,72 @@ namespace QuestFlight.Editor
                         Vector3.zero, 0f, 0f,
                         mixtureFullRichAxis,
                         -EngineControlHalfTravelMeters,
-                        EngineControlHalfTravelMeters))
+                        EngineControlHalfTravelMeters)),
+                Binding(
+                    "Combined alternator and battery master",
+                    altBatMaster,
+                    Motion(
+                        "ALT/BAT master rocker state",
+                        CockpitPresentationChannel.BatteryMasterOn,
+                        0f, 1f,
+                        Vector3.right,
+                        -12f, 12f,
+                        Vector3.zero, 0f, 0f)),
+                Binding(
+                    "Engine primer",
+                    primer,
+                    Motion(
+                        "Primer plunger position",
+                        CockpitPresentationChannel.PrimerPositionNormalized,
+                        0f, 1f,
+                        Vector3.zero, 0f, 0f,
+                        Vector3.forward,
+                        0f, -0.018f)),
+                Binding(
+                    "Ignition and starter switch",
+                    ignitionSwitch,
+                    Motion(
+                        "OFF-R-L-BOTH-START selector",
+                        CockpitPresentationChannel.IgnitionSwitchPosition,
+                        0f, 4f,
+                        Vector3.forward,
+                        -70f, 70f,
+                        Vector3.zero, 0f, 0f)),
+                Binding(
+                    "Avionics master",
+                    avionicsMaster,
+                    Motion(
+                        "Avionics master rocker state",
+                        CockpitPresentationChannel.AvionicsMasterOn,
+                        0f, 1f,
+                        Vector3.right,
+                        -12f, 12f,
+                        Vector3.zero, 0f, 0f)),
+                Binding(
+                    "Wing flap selector",
+                    flapSelector,
+                    Motion(
+                        "0-10-20-30 degree flap selector",
+                        CockpitPresentationChannel.FlapsCommandNormalized,
+                        0f, 1f,
+                        Vector3.right,
+                        -16f, 24f,
+                        Vector3.zero, 0f, 0f)),
+                Binding(
+                    "Fuel selector",
+                    fuelSelector,
+                    Motion(
+                        "OFF-LEFT-BOTH-RIGHT fuel selector",
+                        CockpitPresentationChannel.FuelSelectorPosition,
+                        0f, 3f,
+                        Vector3.forward,
+                        -90f, 90f,
+                        Vector3.zero, 0f, 0f))
             };
+            result.AddRange(
+                CockpitPedalCompletionAuthoring.BuildPedalPresentationBindings(
+                    pedalRoot));
+            return result.ToArray();
         }
 
         private static ProductionCockpitDynamicsController.TransformBinding Binding(
@@ -440,6 +595,21 @@ namespace QuestFlight.Editor
                 primerPositionNormalized = 0f,
                 fuelSelectorPosition =
                     CockpitFuelSelectorPositionV2.Both
+            };
+        }
+
+        /// <summary>
+        /// Product startup has a serviceable battery but no authoritative engine-
+        /// driven alternator model. Systems V2 owns the serialized master-switch
+        /// positions; this source describes only the available electrical supply.
+        /// </summary>
+        public static CockpitElectricalPowerInput ProductElectricalPowerSource()
+        {
+            return new CockpitElectricalPowerInput
+            {
+                hasAuthoritativeState = true,
+                batteryCanPowerBus = true,
+                alternatorProducingPower = false
             };
         }
 
@@ -601,7 +771,7 @@ namespace QuestFlight.Editor
             return panelwardParent;
         }
 
-        private static void EnsureWingFlapSelectorRemainsStatic(
+        private static void EnsureWingFlapSelectorDirectBinding(
             GameObject root,
             Transform importedCockpit)
         {

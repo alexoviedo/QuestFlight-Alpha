@@ -31,8 +31,23 @@ namespace QuestFlight.Editor
         public const int ClockFaceSeed = 2849;
         public const int FlapIndicatorFaceSeed = 2759;
         public const int DirectionalGyroFaceSeed = 2891;
-        public static readonly int[] MagneticCompassSeeds = { 77, 78 };
+        // The earlier 77/78 note identified two triangles on the attitude
+        // sphere, not the represented compass card. Texture-ownership and
+        // pilot-view projection audits identify this complete, independently
+        // connected curved card instead.
+        public const int MagneticCompassCardSeed = 2339;
+        public const int MagneticCompassAuxiliaryCardSeed = 2279;
+        public const int ExpectedMagneticCompassCardVertexCount = 84;
+        public const int ExpectedMagneticCompassCardTriangleCount = 130;
+        public const int ExpectedMagneticCompassAuxiliaryVertexCount = 42;
+        public const int ExpectedMagneticCompassAuxiliaryTriangleCount = 60;
+        public const float MagneticCompassAuthoredHeadingDegrees = 330f;
         public const int BrakePressureFaceSeed = 2906;
+        public static readonly int[] AttitudeSphereComponentSeeds =
+            { 70, 525, 697, 1153, 1355 };
+        public const int ExpectedAttitudeSphereVertexCount = 998;
+        public const int ExpectedAttitudeSphereTriangleCount = 1740;
+        public const float MaximumAttitudeSphereFitRms = 0.00006f;
 
         public static bool ValidateFrozenSource(out string error)
         {
@@ -92,10 +107,11 @@ namespace QuestFlight.Editor
             }
             if (!string.Equals(
                     AssetDatabase.GetAssetPath(layout.ExistingSourceMaterial),
-                    SourceMeterMaterialPath,
+                    CockpitInstrumentV2Authoring.MaterialPath,
                     StringComparison.Ordinal))
             {
-                error = "V2 instruments do not reuse the frozen meter material.";
+                error =
+                    "V2 instruments do not use the one audited opaque batch material.";
                 return false;
             }
 
@@ -108,6 +124,8 @@ namespace QuestFlight.Editor
         {
             switch (function)
             {
+                case CockpitInstrumentV2Function.IndicatedAirspeedNeedleDegrees:
+                case CockpitInstrumentV2Function.IndicatedVerticalSpeedNeedleDegrees:
                 case CockpitInstrumentV2Function.AltimeterHundredsNeedleDegrees:
                 case CockpitInstrumentV2Function.AltimeterThousandsNeedleDegrees:
                 case CockpitInstrumentV2Function.AltimeterTenThousandsNeedleDegrees:
@@ -118,6 +136,9 @@ namespace QuestFlight.Editor
                 case CockpitInstrumentV2Function.MagneticCompassHeadingDegrees:
                 case CockpitInstrumentV2Function.ActualFlapDegrees:
                 case CockpitInstrumentV2Function.AverageBrakePressurePsi:
+                case CockpitInstrumentV2Function.EngineRpmNeedleDegrees:
+                case CockpitInstrumentV2Function.TurnCoordinatorBankDegrees:
+                case CockpitInstrumentV2Function.SlipSkidNormalized:
                 case CockpitInstrumentV2Function.ClockHourHandDegrees:
                 case CockpitInstrumentV2Function.ClockMinuteHandDegrees:
                 case CockpitInstrumentV2Function.ClockSecondHandDegrees:
@@ -128,7 +149,7 @@ namespace QuestFlight.Editor
         }
 
         public const string ExcludedAuthorityContract =
-            "Fuel, oil, tachometer, GYRO/LOC, MACH/AS hybrids, duplicate VSI, " +
+            "Fuel, oil, GYRO/LOC, MACH/AS hybrids, duplicate VSI, " +
             "and unlabeled/fantasy faces remain static unless positive identity, " +
             "separable topology, units, calibration, and authoritative state are proven.";
     }

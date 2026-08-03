@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: ProductionCockpitInstrumentV2
+  m_Shader: {fileID: 4800000, guid: d7b638ca7f314ddcb6082cd814b73a4b, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 2003
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _AuthoredReflectionCube:
+        m_Texture: {fileID: 8900000, guid: c01217539a4b6e2498c40fdef3dc926d, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _PresentationTex:
+        m_Texture: {fileID: 2800000, guid: 9bc7333bf4989cf458c7a9f6d2b0734c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SourceTex:
+        m_Texture: {fileID: -3112187905955043861, guid: d312be0fd0ba928458dd86cbe967956b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _GlassReflectionStrength: 0.34
+    - _GlassRoughness: 0.28
+    - _LayerDepthBias: 0.00004
+    - _MagneticCompassAtlasPhaseDegrees: 15
+    - _MagneticCompassHeadingDegrees: 330
+    - _MagneticCompassWindowCenterDegrees: 135
+    m_Colors:
+    - _AltitudeApertureUv: {r: 0.056334384, g: 0.29207444, b: 0.19499207, a: 0.3541956}
+    - _AltitudeDigits: {r: 5, g: 2, b: 8, a: 0}
+    - _AttitudePivot: {r: 0, g: 0, b: 0, a: 0}
+    - _AttitudeRotation: {r: 0, g: 0, b: 0, a: 1}
+    - _InstrumentToAircraftRow0: {r: 1, g: 0, b: 0, a: 0}
+    - _InstrumentToAircraftRow1: {r: -0, g: -0.9961947, b: -0.08715622, a: 0}
+    - _InstrumentToAircraftRow2: {r: 0, g: 0.08715622, b: -0.9961947, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

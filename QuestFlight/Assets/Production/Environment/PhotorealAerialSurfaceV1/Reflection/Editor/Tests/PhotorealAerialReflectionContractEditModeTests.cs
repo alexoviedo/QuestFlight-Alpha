@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using NUnit.Framework;
+using QuestFlight.Editor;
 using QuestFlightLab.PhotorealAerialSurfaceV1.Reflection;
 using QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor;
 using UnityEditor;
@@ -268,12 +269,20 @@ namespace QuestFlightLab.Tests.EditMode
                     StringComparison.Ordinal));
             Assert.That(displayReadout.sharedMaterials, Has.Exactly(1).SameAs(
                 AssetDatabase.LoadAssetAtPath<Material>(
-                    PhotorealAerialReflectionAuthoring.InstrumentDisplayReadoutMaterialPath)));
-            Assert.That(displayReadout.sharedMaterial.shader.name, Is.EqualTo(
-                PhotorealAerialReflectionAuthoring.InstrumentDisplayReadoutShaderName));
+                    CockpitAvionicsV2PresentationAuthoring.DynamicMaterialPath)));
+            Assert.That(displayReadout.sharedMaterial.renderQueue,
+                Is.LessThan((int)RenderQueue.Transparent));
             Mesh displayReadoutMesh = displayReadout.GetComponent<MeshFilter>().sharedMesh;
-            Assert.That(displayReadoutMesh.vertexCount, Is.EqualTo(36));
-            Assert.That(displayReadoutMesh.triangles.Length, Is.EqualTo(36));
+            Assert.That(
+                displayReadoutMesh.vertexCount,
+                Is.EqualTo(
+                    CockpitAvionicsV2PresentationAuthoring
+                        .ExpectedGlyphSlots * 4));
+            Assert.That(
+                displayReadoutMesh.triangles.Length,
+                Is.EqualTo(
+                    CockpitAvionicsV2PresentationAuthoring
+                        .ExpectedGlyphSlots * 6));
             Assert.That(aircraft.GetComponentsInChildren<Transform>(true).Any(transform =>
                 string.Equals(transform.name,
                     PhotorealAerialReflectionAuthoring.RejectedGeneratedInstrumentCoverName,
@@ -321,14 +330,51 @@ namespace QuestFlightLab.Tests.EditMode
                                 PhotorealAerialReflectionAuthoring.InstrumentMeterRendererName,
                                 StringComparison.Ordinal))
                         {
-                            Assert.That(material.shader.name,
-                                Does.Contain("glTF"));
-                            Assert.That(material.HasProperty("_AuthoredReflectionCube"), Is.False);
-                            Assert.That(material.HasProperty("emissiveFactor"), Is.True);
-                            Assert.That(material.GetColor("emissiveFactor").maxColorComponent,
-                                Is.GreaterThanOrEqualTo(0.24f));
-                            Assert.That(material.GetTexture("emissiveTexture"),
-                                Is.SameAs(material.GetTexture("baseColorTexture")));
+                            Material v2Material =
+                                AssetDatabase.LoadAssetAtPath<Material>(
+                                    CockpitInstrumentV2Authoring.MaterialPath);
+                            if (ReferenceEquals(material, v2Material) ||
+                                string.Equals(
+                                    material.shader.name,
+                                    "QuestFlight/Cockpit/" +
+                                    "Instrument V2 Batched Opaque",
+                                    StringComparison.Ordinal))
+                            {
+                                Assert.That(material.shader.name,
+                                    Is.EqualTo(
+                                        "QuestFlight/Cockpit/" +
+                                        "Instrument V2 Batched Opaque"));
+                                Assert.That(
+                                    material.GetTexture("_SourceTex"),
+                                    Is.Not.Null);
+                                Assert.That(
+                                    material.GetTexture("_PresentationTex"),
+                                    Is.Not.Null);
+                                Assert.That(material.renderQueue,
+                                    Is.LessThan(
+                                        (int)RenderQueue.Transparent));
+                            }
+                            else
+                            {
+                                Assert.That(material.shader.name,
+                                    Does.Contain("glTF"));
+                                Assert.That(
+                                    material.HasProperty(
+                                        "_AuthoredReflectionCube"),
+                                    Is.False);
+                                Assert.That(
+                                    material.HasProperty("emissiveFactor"),
+                                    Is.True);
+                                Assert.That(
+                                    material.GetColor("emissiveFactor")
+                                        .maxColorComponent,
+                                    Is.GreaterThanOrEqualTo(0.24f));
+                                Assert.That(
+                                    material.GetTexture("emissiveTexture"),
+                                    Is.SameAs(
+                                        material.GetTexture(
+                                            "baseColorTexture")));
+                            }
                         }
                         else if (authoritativeName.Contains("Static_Display", StringComparison.Ordinal))
                         {

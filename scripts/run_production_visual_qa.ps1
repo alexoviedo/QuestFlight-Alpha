@@ -74,6 +74,7 @@ $required = @(
   '02_calibrated_cockpit',
   '03_instrument_yoke',
   '04_runway_from_cockpit',
+  '04b_cockpit_engine_cowl',
   '05_runway_surface_markings',
   '06_apron_hangars',
   '07_boulder_reservoir',

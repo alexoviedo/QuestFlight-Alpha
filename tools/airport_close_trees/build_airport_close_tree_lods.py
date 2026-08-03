@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Compile the CC0 source tree into three silhouette-compatible Quest LODs.
 
-The raw Poly Haven blend remains outside Git.  LOD0 retains the source leaf
-geometry and UVs, LOD1 uses overlapping source-positioned foliage clumps, and
-LOD2 is a center-eye-facing multiview impostor quad.  Unity consumes the compact
-binary and creates native Mesh assets offline.
+The raw Poly Haven blend remains outside Git.  LOD0 and LOD1 preserve the
+source-informed trunk, branch locations, crown bounds, and foliage density, but
+replace crown-spanning source leaf planes with small branch-local trihedral
+clusters.  LOD2 remains a center-eye-facing multiview impostor quad.  Unity
+consumes the compact binary and creates native Mesh assets offline.
 """
 
 from __future__ import annotations
@@ -216,58 +217,96 @@ def append_source_informed_wood(vertices, indices, samples, branch_count, sides,
         )
 
 
-def append_source_leaf_geometry(vertices, indices, source_mesh, frame):
-    uv_layer = source_mesh.uv_layers.active
-    if uv_layer is None:
-        raise RuntimeError("Source leaf geometry has no UV layer")
-    count = 0
-    for triangle in source_mesh.loop_triangles:
-        polygon = source_mesh.polygons[triangle.polygon_index]
-        if material_name(source_mesh, polygon) != LEAF_MATERIAL:
-            continue
-        start = len(vertices)
-        converted_normal = normal_to_unity(polygon.normal)
-        for loop_index, vertex_index in zip(triangle.loops, triangle.vertices):
-            uv = uv_layer.data[loop_index].uv
-            vertices.append((
-                to_unity(source_mesh.vertices[vertex_index].co, frame),
-                converted_normal,
-                (0, 75, 118, 48),
-                (float(uv.x) + 4.0, float(uv.y)),
-            ))
-        # Blender-to-Unity axis conversion reverses winding.
-        indices.extend((start, start + 2, start + 1))
-        count += 1
-    return count
-
-
 def select_clump_centers(samples, frame, count):
     minimum_z, height, center_x, center_y = frame
     voxels = {}
-    voxel = height * 0.105
+    voxel = height * 0.075
     for center, normal in samples:
+        normalized_height = (center.z - minimum_z) / height
+        if normalized_height < 0.40:
+            continue
         key = tuple(math.floor(value / voxel) for value in center)
-        if key not in voxels:
-            voxels[key] = (center.copy(), normal.copy())
-    candidates = list(voxels.values())
+        bucket = voxels.setdefault(key, [Vector(), Vector(), 0])
+        bucket[0] += center
+        bucket[1] += normal
+        bucket[2] += 1
+    candidates = [
+        (center_sum / sample_count, normal_sum.normalized())
+        for center_sum, normal_sum, sample_count in voxels.values()
+    ]
     candidates.sort(key=lambda item: (
-        round((item[0].z - minimum_z) / height, 3),
-        math.atan2(item[0].y - center_y, item[0].x - center_x),
-        math.hypot(item[0].x - center_x, item[0].y - center_y),
+        round((item[0].z - minimum_z) / height, 6),
+        round(math.atan2(item[0].y - center_y, item[0].x - center_x), 6),
+        round(math.hypot(item[0].x - center_x, item[0].y - center_y), 6),
     ))
     if len(candidates) <= count:
         return candidates
-    return [
-        candidates[round(index * (len(candidates) - 1) / (count - 1))]
-        for index in range(count)
+
+    # Farthest-point sampling retains the source crown envelope and interior
+    # volume without inheriting the source leaf-card orientation.  Normalized
+    # crown coordinates prevent the vertical extent from dominating selection.
+    def normalized(center):
+        return Vector((
+            (center.x - center_x) / height,
+            (center.y - center_y) / height,
+            (center.z - minimum_z) / height,
+        ))
+
+    points = [normalized(center) for center, _normal in candidates]
+    first = max(
+        range(len(candidates)),
+        key=lambda index: (
+            points[index].z * 0.35 + points[index].xy.length,
+            -index,
+        ),
+    )
+    selected = [first]
+    minimum_squared = [
+        (point - points[first]).length_squared for point in points
     ]
+    while len(selected) < count:
+        following = max(
+            (
+                index for index in range(len(candidates))
+                if index not in selected
+            ),
+            key=lambda index: (
+                minimum_squared[index],
+                points[index].z,
+                -index,
+            ),
+        )
+        selected.append(following)
+        for index, point in enumerate(points):
+            minimum_squared[index] = min(
+                minimum_squared[index],
+                (point - points[following]).length_squared,
+            )
+    return [candidates[index] for index in selected]
 
 
-def append_clump_cards(vertices, indices, samples, frame):
-    _minimum_z, height, _center_x, _center_y = frame
-    width = height * 0.145
-    vertical = height * 0.115
-    for sample_index, (center, _source_normal) in enumerate(samples):
+def append_lobe_cards(vertices, indices, samples, frame, size_scale):
+    minimum_z, height, center_x, center_y = frame
+    card_count = 0
+    maximum_vertical_normal = 0.0
+    for sample_index, (center, source_normal) in enumerate(samples):
+        radial = Vector((center.x - center_x, center.y - center_y, 0.0))
+        if radial.length_squared < 1e-5:
+            radial = Vector((
+                math.cos(sample_index * 2.39996323),
+                math.sin(sample_index * 2.39996323),
+                0.0,
+            ))
+        radial.normalize()
+        normalized_height = (center.z - minimum_z) / height
+        edge_scale = 0.84 + 0.16 * min(
+            1.0, math.hypot(center.x - center_x, center.y - center_y) /
+            (height * 0.36)
+        )
+        half_width = height * size_scale * edge_scale
+        half_height = height * size_scale * (
+            0.88 + 0.08 * math.sin(sample_index * 1.73)
+        )
         atlas_cell = (sample_index * 5 + sample_index // 3) % 16
         cell_x = atlas_cell % 4
         cell_y = atlas_cell // 4
@@ -276,16 +315,34 @@ def append_clump_cards(vertices, indices, samples, frame):
         v0 = cell_y * 0.25 + inset
         u1 = (cell_x + 1) * 0.25 - inset + 2.0
         v1 = (cell_y + 1) * 0.25 - inset
-        for plane in range(2):
-            angle = math.tau * (plane * 0.25 + (sample_index % 7) * 0.019)
-            tangent = Vector((math.cos(angle), math.sin(angle), 0.0))
-            up = Vector((0.0, 0.0, 1.0))
+        base_angle = math.atan2(radial.y, radial.x) + sample_index * 0.071
+        for plane, (azimuth_offset, tilt_degrees) in enumerate((
+            (0.0, 0.0),
+            (math.tau / 3.0, 28.0),
+            (math.tau * 2.0 / 3.0, -24.0),
+        )):
+            angle = base_angle + azimuth_offset
+            outward = Vector((math.cos(angle), math.sin(angle), 0.0))
+            tangent = Vector((-outward.y, outward.x, 0.0))
+            tilt = math.radians(tilt_degrees)
+            up = (
+                Vector((0.0, 0.0, 1.0)) * math.cos(tilt) +
+                outward * math.sin(tilt)
+            ).normalized()
             normal = tangent.cross(up).normalized()
+            maximum_vertical_normal = max(
+                maximum_vertical_normal, abs(normal.z)
+            )
+            offset = outward * height * size_scale * 0.11
+            vertical_jitter = height * size_scale * 0.10 * math.sin(
+                sample_index * 2.11 + plane * 1.37
+            )
+            card_center = center + offset + Vector((0.0, 0.0, vertical_jitter))
             points = (
-                center - tangent * width - up * vertical,
-                center - tangent * width + up * vertical,
-                center + tangent * width + up * vertical,
-                center + tangent * width - up * vertical,
+                card_center - tangent * half_width - up * half_height,
+                card_center - tangent * half_width + up * half_height,
+                card_center + tangent * half_width + up * half_height,
+                card_center + tangent * half_width - up * half_height,
             )
             start = len(vertices)
             converted_normal = normal_to_unity(normal)
@@ -298,34 +355,45 @@ def append_clump_cards(vertices, indices, samples, frame):
                 ))
             indices.extend((start, start + 2, start + 1,
                             start, start + 3, start + 2))
+            card_count += 1
+    return {
+        "foliage_cards": card_count,
+        "foliage_lobes": len(samples),
+        "maximum_abs_vertical_card_normal": maximum_vertical_normal,
+    }
 
 
 def compile_lod0(source_mesh, density_mesh, frame):
     vertices = []
     indices = []
     samples = leaf_centers(source_mesh)
-    append_source_informed_wood(vertices, indices, samples, 12, 5, frame)
-    source_leaf_triangles = append_source_leaf_geometry(
-        vertices, indices, source_mesh, frame
+    append_source_informed_wood(vertices, indices, samples, 4, 5, frame)
+    lobes = select_clump_centers(leaf_centers(density_mesh), frame, 52)
+    card_metrics = append_lobe_cards(
+        vertices, indices, lobes, frame, size_scale=0.185
     )
-    supplemental = select_clump_centers(leaf_centers(density_mesh), frame, 46)
-    append_clump_cards(vertices, indices, supplemental, frame)
     return mesh_record(LOD0_NAME, vertices, indices, {
-        "representation": "source-leaf-geometry-plus-volumetric-clumps",
-        "source_leaf_triangles": source_leaf_triangles,
-        "supplemental_foliage_clumps": len(supplemental),
+        "representation": "dense-source-informed-branch-local-trihedral-foliage-lobes",
+        "source_leaf_triangles_copied": 0,
+        "foliage_lobe_target": 52,
+        "wood_branch_target": 4,
+        **card_metrics,
     })
 
 
 def compile_lod1(source_mesh, frame):
     vertices = []
     indices = []
-    samples = select_clump_centers(leaf_centers(source_mesh), frame, 34)
-    append_source_informed_wood(vertices, indices, samples, 8, 4, frame)
-    append_clump_cards(vertices, indices, samples, frame)
+    samples = select_clump_centers(leaf_centers(source_mesh), frame, 16)
+    append_source_informed_wood(vertices, indices, samples, 2, 4, frame)
+    card_metrics = append_lobe_cards(
+        vertices, indices, samples, frame, size_scale=0.300
+    )
     return mesh_record(LOD1_NAME, vertices, indices, {
-        "representation": "volumetric-crossed-foliage-clumps",
-        "foliage_clumps": len(samples),
+        "representation": "dense-reduced-source-informed-trihedral-foliage-lobes",
+        "foliage_lobe_target": 16,
+        "wood_branch_target": 2,
+        **card_metrics,
     })
 
 
@@ -395,7 +463,7 @@ def main() -> int:
     ]
     write_binary(args.output, lods)
     manifest = {
-        "schema": "questflight.airport-tree-impostor-source.v2",
+        "schema": "questflight.airport-tree-volumetric-source.v3",
         "runtime_asset": (
             "QuestFlight/Assets/Production/Environment/"
             "PhotorealAerialSurfaceV1/Canopy/EditorSource/"
@@ -418,6 +486,8 @@ def main() -> int:
             "persistent_hysteresis": True,
             "runtime_material_growth": 0,
             "runtime_texture_growth_assets": 2,
+            "near_horizontal_source_cards_copied": False,
+            "shared_lobe_topology_between_lod0_lod1": True,
         },
         "textures": {
             "hero_leaf_rgba": {
@@ -446,6 +516,7 @@ def main() -> int:
         "limitations": [
             "The optimized derivative is a visual archetype, not a surveyed individual tree.",
             "Position, height, crown diameter, and tint remain driven by the committed semantic placement manifest.",
+            "Near and middle foliage use fixed branch-local trihedral clusters; no crown-scale horizontal card is authored.",
             "The far impostor is intentionally restricted to projected sizes where stereo depth loss is not resolvable.",
         ],
     }

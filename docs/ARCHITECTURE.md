@@ -7,6 +7,7 @@ ProductionWorldRoot
 │   ├── Fixed DTM-only bare-earth terrain and semantic ownership manifests
 │   ├── OSM-footprint building batches, authored hero objects, and parked-aircraft HLOD
 │   ├── Terrain-owned far canopy, four fixed semantic-grove batches, and orthophoto-only water
+│   ├── Bounded instanced runway-side grass and one combined airport-detail mesh
 │   └── Bounded aircraft/runway blob shadow
 ├── ProductionInputRoot
 ├── AircraftSimulationRoot (one Unity prototype authority, CG pivot)
@@ -23,6 +24,15 @@ ProductionWorldRoot
 │                   └── Right Touch Controller
 └── ProductionLightingRoot
 ```
+
+`AirportNearFieldDetailRoot` is an explicitly authored child of
+`AirportContext`. Its 1,000 deterministic grass placements are submitted by one
+allocation-free `DrawMeshInstanced` source and culled per camera at 340 m. A
+second, single-submesh renderer combines the north utility corridor, narrow
+runway shoulders, runway-edge lights, one source-located windsock, and bounded
+taxiway signs. Both sources reuse the existing opaque context material, cast no
+realtime shadows, add no colliders or `LODGroup`, and never construct hierarchy
+at runtime.
 
 The hierarchy exists before frame zero. OpenXR owns tracked camera motion. Calibration modifies only `UserViewCalibrationOffset`. Input produces a neutral control snapshot consumed by one `FlightDynamicsCoordinator`; `UnityPrototypeFlightBackend` is the sole serialized authority. Environment geometry, runway, water, immutable far terrain, and presentation effects are authored assets rather than runtime reconstruction.
 

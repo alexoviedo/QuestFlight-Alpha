@@ -1,3 +1,4 @@
+using System;
 using QuestFlightLab.Flight.Backends;
 
 namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
@@ -25,6 +26,12 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
         private CockpitIgnitionSwitchPositionV2 _ignitionSwitchPosition;
         private float _primerPositionNormalized;
         private CockpitFuelSelectorPositionV2 _fuelSelectorPosition;
+        private float _actualFlapDegrees;
+        private float _leftBrakePressurePsi;
+        private float _rightBrakePressurePsi;
+        private float _leftFuelGallons;
+        private float _rightFuelGallons;
+        private float _oilTemperatureCelsius;
 
         public bool Reset(
             in CockpitSystemsScenarioV2 scenario,
@@ -40,10 +47,23 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
             _ignitionSwitchPosition = scenario.ignitionSwitchPosition;
             _primerPositionNormalized = scenario.primerPositionNormalized;
             _fuelSelectorPosition = scenario.fuelSelectorPosition;
+            _actualFlapDegrees = 0f;
+            _leftBrakePressurePsi = 0f;
+            _rightBrakePressurePsi = 0f;
+            _leftFuelGallons =
+                CockpitSystemsPhysicalConfigurationV2.InitialFuelGallonsPerTank;
+            _rightFuelGallons =
+                CockpitSystemsPhysicalConfigurationV2.InitialFuelGallonsPerTank;
+            _oilTemperatureCelsius =
+                input.flightState.engineRpm > 500.0
+                    ? CockpitSystemsPhysicalConfigurationV2
+                        .NormalOilTemperatureCelsius
+                    : CockpitSystemsPhysicalConfigurationV2
+                        .AmbientOilTemperatureCelsius;
             _hasAppliedCommandSequence = false;
             _lastAppliedCommandSequence = 0ul;
             _initialized = true;
-            return Refresh(input);
+            return Refresh(input, 0f);
         }
 
         public bool Step(in CockpitSystemsAuthorityInputV2 input)
@@ -56,7 +76,10 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
                 return false;
             }
 
-            return Refresh(input);
+            float deltaTimeSeconds = (float)(
+                input.flightState.simulationTimeSeconds -
+                _current.flightSimulationTimeSeconds);
+            return Refresh(input, deltaTimeSeconds);
         }
 
         /// <summary>
@@ -68,7 +91,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
         {
             if (!_initialized ||
                 command.kind <= CockpitSystemsCommandKindV2.None ||
-                command.kind > CockpitSystemsCommandKindV2.SetFuelSelector ||
+                command.kind > CockpitSystemsCommandKindV2.SetFlapSelector ||
                 (_hasAppliedCommandSequence &&
                  command.sequence <= _lastAppliedCommandSequence))
             {
@@ -122,6 +145,21 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
                     _fuelSelectorPosition = selector;
                     break;
 
+                case CockpitSystemsCommandKindV2.SetFlapSelector:
+                    if (!CockpitSystemsAuthorityV2Math.IsFinite(
+                            command.normalizedValue) ||
+                        command.normalizedValue < 0f ||
+                        command.normalizedValue > 1f)
+                    {
+                        return false;
+                    }
+                    // Echo the already-arbitrated requested selector position.
+                    // The next coordinator sample remains authoritative and
+                    // actual flap travel never follows this echo directly.
+                    _current.flapSelectorCommandNormalized =
+                        command.normalizedValue;
+                    break;
+
                 default:
                     return false;
             }
@@ -144,12 +182,43 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
             _ignitionSwitchPosition = CockpitIgnitionSwitchPositionV2.Off;
             _primerPositionNormalized = 0f;
             _fuelSelectorPosition = CockpitFuelSelectorPositionV2.Off;
+            _actualFlapDegrees = 0f;
+            _leftBrakePressurePsi = 0f;
+            _rightBrakePressurePsi = 0f;
+            _leftFuelGallons = 0f;
+            _rightFuelGallons = 0f;
+            _oilTemperatureCelsius = 0f;
         }
 
-        private bool Refresh(in CockpitSystemsAuthorityInputV2 input)
+        private bool Refresh(
+            in CockpitSystemsAuthorityInputV2 input,
+            float deltaTimeSeconds)
         {
             FlightDynamicsState state = input.flightState;
             FlightDynamicsControlSnapshot controls = input.flightControls;
+            float engineRpm = NonNegative((float)state.engineRpm);
+            float flapCommand = CockpitSystemsAuthorityV2Math.Clamp01(
+                controls.flaps);
+            UpdateActuators(controls, flapCommand, deltaTimeSeconds);
+            float fuelFlowGallonsPerHour = UpdateFuel(
+                controls, engineRpm, deltaTimeSeconds);
+            float oilPressurePsi = OilPressure(engineRpm);
+            UpdateOilTemperature(controls, engineRpm, deltaTimeSeconds);
+            float barometricSettingInHg =
+                CockpitSystemsPhysicalConfigurationV2
+                    .StandardBarometricSettingInHg;
+            float altitudeMslFeet =
+                (float)(state.altitudeMslMeters *
+                        FlightFrameConversions.MetersToFeet);
+            float pressureAltitudeFeet = altitudeMslFeet -
+                (barometricSettingInHg -
+                 CockpitSystemsPhysicalConfigurationV2
+                    .StandardBarometricSettingInHg) * 1000f;
+            float magneticVariation =
+                CockpitSystemsPhysicalConfigurationV2
+                    .KbduMagneticVariationEastDegrees;
+            float magneticHeading = NormalizeHeading(
+                (float)state.headingDegrees - magneticVariation);
             CockpitSystemsAvailabilityV2 availability =
                 CockpitSystemsAvailabilityV2.ScenarioClock |
                 CockpitSystemsAvailabilityV2.FlightControlCommands |
@@ -158,7 +227,21 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
                 CockpitSystemsAvailabilityV2.IgnitionAndStarterControl |
                 CockpitSystemsAvailabilityV2.PrimerControl |
                 CockpitSystemsAvailabilityV2.FuelSelectorControl |
-                CockpitSystemsAvailabilityV2.FlapSelectorCommand;
+                CockpitSystemsAvailabilityV2.FlapSelectorCommand |
+                CockpitSystemsAvailabilityV2.PressureAltitude |
+                CockpitSystemsAvailabilityV2.BarometricSetting |
+                CockpitSystemsAvailabilityV2.ActualFlapPosition |
+                CockpitSystemsAvailabilityV2.BrakeHydraulicPressure |
+                CockpitSystemsAvailabilityV2.MagneticVariation |
+                CockpitSystemsAvailabilityV2.MagneticHeading |
+                CockpitSystemsAvailabilityV2.VacuumSuction |
+                CockpitSystemsAvailabilityV2.FuelQuantity |
+                CockpitSystemsAvailabilityV2.FuelFlow |
+                CockpitSystemsAvailabilityV2.OilPressure |
+                CockpitSystemsAvailabilityV2.OilTemperature |
+                CockpitSystemsAvailabilityV2.GpsDepartureStatus |
+                CockpitSystemsAvailabilityV2.ComRadios |
+                CockpitSystemsAvailabilityV2.Transponder;
 
             CockpitElectricalPowerSourceInputV2 sources =
                 input.electricalPowerSources;
@@ -168,6 +251,8 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
                 sources.hasAuthoritativeState || mastersGuaranteePowerOff;
             bool mainBusPowered = false;
             bool avionicsBusPowered = false;
+            float electricalBusVolts = 0f;
+            float alternatorAmps = 0f;
             if (busStateAvailable)
             {
                 if (sources.hasAuthoritativeState)
@@ -181,7 +266,26 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
 
                 avionicsBusPowered = mainBusPowered && _avionicsMasterOn;
                 availability |= CockpitSystemsAvailabilityV2.ElectricalBusPower |
-                                CockpitSystemsAvailabilityV2.StarterMotorPower;
+                                CockpitSystemsAvailabilityV2.StarterMotorPower |
+                                CockpitSystemsAvailabilityV2
+                                    .ElectricalIndications;
+
+                if (mainBusPowered)
+                {
+                    bool alternatorSupplying =
+                        _alternatorMasterOn &&
+                        sources.hasAuthoritativeState &&
+                        sources.alternatorCanPowerMainBus;
+                    electricalBusVolts = alternatorSupplying
+                        ? CockpitSystemsPhysicalConfigurationV2
+                            .NominalAlternatorBusVolts
+                        : CockpitSystemsPhysicalConfigurationV2
+                            .NominalBatteryBusVolts;
+                    if (alternatorSupplying)
+                    {
+                        alternatorAmps = avionicsBusPowered ? 18f : 8f;
+                    }
+                }
             }
 
             bool starterSwitchEngaged =
@@ -198,9 +302,45 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
                 lastAppliedCommandSequence = _hasAppliedCommandSequence
                     ? _lastAppliedCommandSequence
                     : 0ul,
-                engineRpm = (float)state.engineRpm,
-                flapSelectorCommandNormalized =
-                    CockpitSystemsAuthorityV2Math.Clamp01(controls.flaps),
+                engineRpm = engineRpm,
+                flapSelectorCommandNormalized = flapCommand,
+                pressureAltitudeFeet = pressureAltitudeFeet,
+                barometricSettingInHg = barometricSettingInHg,
+                magneticVariationEastDegrees = magneticVariation,
+                magneticHeadingDegrees = magneticHeading,
+                actualFlapDegrees = _actualFlapDegrees,
+                leftBrakePressurePsi = _leftBrakePressurePsi,
+                rightBrakePressurePsi = _rightBrakePressurePsi,
+                vacuumInHg = 5f * Clamp(engineRpm / 1800f, 0f, 1f),
+                leftFuelGallons = _leftFuelGallons,
+                rightFuelGallons = _rightFuelGallons,
+                fuelFlowGallonsPerHour = fuelFlowGallonsPerHour,
+                oilPressurePsi = oilPressurePsi,
+                oilTemperatureCelsius = _oilTemperatureCelsius,
+                electricalBusVolts = electricalBusVolts,
+                alternatorAmps = alternatorAmps,
+                // Packed "KBDU", least-significant byte first.
+                gpsDestinationIdentAscii = 0x5542444Bu,
+                gpsBearingDegrees = BearingToKbdu(
+                    state.latitudeDegrees, state.longitudeDegrees),
+                gpsDistanceNauticalMiles = DistanceToKbduNauticalMiles(
+                    state.latitudeDegrees, state.longitudeDegrees),
+                gpsGroundTrackDegrees = NormalizeHeading(
+                    (float)state.headingDegrees),
+                gpsAltitudeMslFeet = altitudeMslFeet,
+                com1ActiveKHz =
+                    CockpitSystemsPhysicalConfigurationV2.KbduCtafKHz,
+                com1StandbyKHz =
+                    CockpitSystemsPhysicalConfigurationV2.KbduAwosKHz,
+                com2ActiveKHz =
+                    CockpitSystemsPhysicalConfigurationV2
+                        .EmergencyFrequencyKHz,
+                com2StandbyKHz =
+                    CockpitSystemsPhysicalConfigurationV2.KbduCtafKHz,
+                transponderCodeBcd =
+                    CockpitSystemsPhysicalConfigurationV2
+                        .VisualFlightRulesTransponderCodeBcd,
+                transponderMode = CockpitTransponderModeV2.Altitude,
                 batteryMasterOn = _batteryMasterOn,
                 alternatorMasterOn = _alternatorMasterOn,
                 avionicsMasterOn = _avionicsMasterOn,
@@ -216,6 +356,212 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2
                 fuelSelectorPosition = _fuelSelectorPosition
             };
             return true;
+        }
+
+        private void UpdateActuators(
+            in FlightDynamicsControlSnapshot controls,
+            float flapCommand,
+            float deltaTimeSeconds)
+        {
+            float flapRate =
+                CockpitSystemsPhysicalConfigurationV2.MaximumFlapDegrees /
+                CockpitSystemsPhysicalConfigurationV2.FlapFullTravelSeconds;
+            _actualFlapDegrees = MoveTowards(
+                _actualFlapDegrees,
+                flapCommand *
+                    CockpitSystemsPhysicalConfigurationV2.MaximumFlapDegrees,
+                flapRate * deltaTimeSeconds);
+
+            float leftTarget = CockpitSystemsAuthorityV2Math.Clamp01(
+                controls.leftToeBrake) *
+                CockpitSystemsPhysicalConfigurationV2.MaximumBrakePressurePsi;
+            float rightTarget = CockpitSystemsAuthorityV2Math.Clamp01(
+                controls.rightToeBrake) *
+                CockpitSystemsPhysicalConfigurationV2.MaximumBrakePressurePsi;
+            _leftBrakePressurePsi = HydraulicResponse(
+                _leftBrakePressurePsi, leftTarget, deltaTimeSeconds);
+            _rightBrakePressurePsi = HydraulicResponse(
+                _rightBrakePressurePsi, rightTarget, deltaTimeSeconds);
+        }
+
+        private float UpdateFuel(
+            in FlightDynamicsControlSnapshot controls,
+            float engineRpm,
+            float deltaTimeSeconds)
+        {
+            if (_fuelSelectorPosition == CockpitFuelSelectorPositionV2.Off ||
+                engineRpm < 100f ||
+                controls.mixture <= 0.001f)
+            {
+                return 0f;
+            }
+
+            bool leftAvailable = _leftFuelGallons > 0f;
+            bool rightAvailable = _rightFuelGallons > 0f;
+            bool selectedFuelAvailable =
+                (_fuelSelectorPosition == CockpitFuelSelectorPositionV2.Left &&
+                 leftAvailable) ||
+                (_fuelSelectorPosition == CockpitFuelSelectorPositionV2.Right &&
+                 rightAvailable) ||
+                (_fuelSelectorPosition == CockpitFuelSelectorPositionV2.Both &&
+                 (leftAvailable || rightAvailable));
+            if (!selectedFuelAvailable) return 0f;
+
+            float rpmFraction = Clamp(engineRpm / 2700f, 0f, 1f);
+            float loadFraction =
+                0.25f + 0.75f *
+                CockpitSystemsAuthorityV2Math.Clamp01(controls.throttle);
+            float flow =
+                CockpitSystemsPhysicalConfigurationV2
+                    .MaximumFuelFlowGallonsPerHour *
+                rpmFraction *
+                loadFraction *
+                CockpitSystemsAuthorityV2Math.Clamp01(controls.mixture);
+            float burned = flow * deltaTimeSeconds / 3600f;
+            if (_fuelSelectorPosition == CockpitFuelSelectorPositionV2.Left)
+            {
+                _leftFuelGallons = NonNegative(_leftFuelGallons - burned);
+            }
+            else if (_fuelSelectorPosition ==
+                     CockpitFuelSelectorPositionV2.Right)
+            {
+                _rightFuelGallons = NonNegative(_rightFuelGallons - burned);
+            }
+            else if (leftAvailable && rightAvailable)
+            {
+                float half = burned * 0.5f;
+                _leftFuelGallons = NonNegative(_leftFuelGallons - half);
+                _rightFuelGallons = NonNegative(_rightFuelGallons - half);
+            }
+            else if (leftAvailable)
+            {
+                _leftFuelGallons = NonNegative(_leftFuelGallons - burned);
+            }
+            else
+            {
+                _rightFuelGallons = NonNegative(_rightFuelGallons - burned);
+            }
+
+            return flow;
+        }
+
+        private void UpdateOilTemperature(
+            in FlightDynamicsControlSnapshot controls,
+            float engineRpm,
+            float deltaTimeSeconds)
+        {
+            float running = Clamp(engineRpm / 1800f, 0f, 1f);
+            float load = CockpitSystemsAuthorityV2Math.Clamp01(
+                controls.throttle);
+            float target =
+                CockpitSystemsPhysicalConfigurationV2
+                    .AmbientOilTemperatureCelsius +
+                (CockpitSystemsPhysicalConfigurationV2
+                    .NormalOilTemperatureCelsius -
+                 CockpitSystemsPhysicalConfigurationV2
+                    .AmbientOilTemperatureCelsius) *
+                running * (0.8f + 0.2f * load);
+            float rate = target >= _oilTemperatureCelsius ? 0.05f : 0.025f;
+            _oilTemperatureCelsius = MoveTowards(
+                _oilTemperatureCelsius, target, rate * deltaTimeSeconds);
+        }
+
+        private static float OilPressure(float engineRpm)
+        {
+            if (engineRpm <= 300f) return 0f;
+            return 25f + 50f * Clamp(
+                (engineRpm - 500f) / 2000f, 0f, 1f);
+        }
+
+        private static float HydraulicResponse(
+            float current,
+            float target,
+            float deltaTimeSeconds)
+        {
+            float responseSeconds = target >= current
+                ? CockpitSystemsPhysicalConfigurationV2
+                    .BrakePressureRiseSeconds
+                : CockpitSystemsPhysicalConfigurationV2
+                    .BrakePressureReleaseSeconds;
+            float rate =
+                CockpitSystemsPhysicalConfigurationV2.MaximumBrakePressurePsi /
+                responseSeconds;
+            return MoveTowards(current, target, rate * deltaTimeSeconds);
+        }
+
+        private static float MoveTowards(
+            float current,
+            float target,
+            float maximumDelta)
+        {
+            float delta = target - current;
+            if (delta > maximumDelta) return current + maximumDelta;
+            if (delta < -maximumDelta) return current - maximumDelta;
+            return target;
+        }
+
+        private static float NormalizeHeading(float value)
+        {
+            value %= 360f;
+            return value < 0f ? value + 360f : value;
+        }
+
+        private static float DistanceToKbduNauticalMiles(
+            double latitudeDegrees,
+            double longitudeDegrees)
+        {
+            const double EarthRadiusNauticalMiles = 3440.065;
+            double latitude1 = latitudeDegrees * Math.PI / 180.0;
+            double latitude2 =
+                CockpitSystemsPhysicalConfigurationV2.KbduLatitudeDegrees *
+                Math.PI / 180.0;
+            double latitudeDelta = latitude2 - latitude1;
+            double longitudeDelta =
+                (CockpitSystemsPhysicalConfigurationV2.KbduLongitudeDegrees -
+                 longitudeDegrees) * Math.PI / 180.0;
+            double sinLatitude = Math.Sin(latitudeDelta * 0.5);
+            double sinLongitude = Math.Sin(longitudeDelta * 0.5);
+            double a = sinLatitude * sinLatitude +
+                Math.Cos(latitude1) * Math.Cos(latitude2) *
+                sinLongitude * sinLongitude;
+            double centralAngle = 2.0 * Math.Atan2(
+                Math.Sqrt(a), Math.Sqrt(Math.Max(0.0, 1.0 - a)));
+            return (float)(EarthRadiusNauticalMiles * centralAngle);
+        }
+
+        private static float BearingToKbdu(
+            double latitudeDegrees,
+            double longitudeDegrees)
+        {
+            double latitude1 = latitudeDegrees * Math.PI / 180.0;
+            double latitude2 =
+                CockpitSystemsPhysicalConfigurationV2.KbduLatitudeDegrees *
+                Math.PI / 180.0;
+            double longitudeDelta =
+                (CockpitSystemsPhysicalConfigurationV2.KbduLongitudeDegrees -
+                 longitudeDegrees) * Math.PI / 180.0;
+            double y = Math.Sin(longitudeDelta) * Math.Cos(latitude2);
+            double x = Math.Cos(latitude1) * Math.Sin(latitude2) -
+                Math.Sin(latitude1) * Math.Cos(latitude2) *
+                Math.Cos(longitudeDelta);
+            if (Math.Abs(x) < 0.000000001 &&
+                Math.Abs(y) < 0.000000001)
+            {
+                return 0f;
+            }
+            return NormalizeHeading(
+                (float)(Math.Atan2(y, x) * 180.0 / Math.PI));
+        }
+
+        private static float NonNegative(float value)
+        {
+            return value <= 0f ? 0f : value;
+        }
+
+        private static float Clamp(float value, float minimum, float maximum)
+        {
+            if (value <= minimum) return minimum;
+            return value >= maximum ? maximum : value;
         }
 
         private static bool CanConsume(in CockpitSystemsAuthorityInputV2 input)

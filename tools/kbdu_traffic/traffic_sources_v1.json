@@ -123,7 +123,33 @@
       399347286,
       17026345,
       450294664
-    ]
+    ],
+    "truck_circuit_network": {
+      "policy": "PAVED_55TH_AND_63RD_STREET_CONNECTORS",
+      "source": "OpenStreetMap context acquisition",
+      "source_date": "2026-07-10T21:41:30Z",
+      "source_raw_sha256": "2c4a4afe035e88f0b2db466a82e3fd20f25e76905e3e56233e73789ed1a69eda",
+      "license": "Open Database License 1.0",
+      "attribution": "© OpenStreetMap contributors",
+      "source_osm_way_ids": [
+        398080530,
+        398080519,
+        398080523,
+        398080552,
+        398080567,
+        398080493,
+        398080491,
+        398080548,
+        398080571,
+        398080566,
+        398080568,
+        398080518,
+        355298123,
+        398080554,
+        1420076514
+      ],
+      "derivative": "Compact ENU centerlines in build_traffic_manifest.py; raw Overpass response remains external."
+    }
   },
   "vehicle_assets": {
     "source": "RGSDev Free Low Poly Vehicles Pack",

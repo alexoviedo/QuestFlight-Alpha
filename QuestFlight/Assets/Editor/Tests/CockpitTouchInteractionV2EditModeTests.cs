@@ -187,6 +187,133 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
+        public void DirectGrabUsesGripProximityWhenAimRayPointsAway()
+        {
+            CockpitTouchInteractionV2Controller.Binding binding =
+                Binding(
+                    "near_yoke",
+                    _nearCollider,
+                    CockpitTouchInteractionV2Target.PilotYoke,
+                    CockpitTouchInteractionV2Hand.Left);
+            _controller.ConfigureAuthoredReferences(
+                _left,
+                _right,
+                ~0,
+                0.8f,
+                new[] { binding },
+                null);
+            Physics.SyncTransforms();
+
+            _controller.ProcessPointerSampleForTest(
+                CockpitTouchInteractionV2Hand.Right,
+                true,
+                _nearCollider.bounds.center,
+                Quaternion.identity,
+                Vector3.zero,
+                Vector3.back,
+                1f,
+                10);
+
+            AssertCommand(
+                CockpitTouchInteractionV2Operation.BeginGrab,
+                CockpitTouchInteractionV2Target.PilotYoke,
+                "near_yoke");
+        }
+
+        [Test]
+        public void HeldSelectAcquiresAfterHandMovesIntoDirectReach()
+        {
+            CockpitTouchInteractionV2Controller.Binding binding =
+                Binding(
+                    "near_yoke",
+                    _nearCollider,
+                    CockpitTouchInteractionV2Target.PilotYoke,
+                    CockpitTouchInteractionV2Hand.Left);
+            _controller.ConfigureAuthoredReferences(
+                _left,
+                _right,
+                ~0,
+                0.8f,
+                new[] { binding },
+                null);
+            Physics.SyncTransforms();
+
+            _controller.ProcessPointerSampleForTest(
+                CockpitTouchInteractionV2Hand.Left,
+                true,
+                new Vector3(3f, 3f, 3f),
+                Quaternion.identity,
+                Vector3.zero,
+                Vector3.back,
+                1f,
+                10);
+            Assert.That(_controller.QueuedCommandCount, Is.Zero);
+
+            _controller.ProcessPointerSampleForTest(
+                CockpitTouchInteractionV2Hand.Left,
+                true,
+                _nearCollider.bounds.center,
+                Quaternion.identity,
+                Vector3.zero,
+                Vector3.back,
+                1.01f,
+                11);
+            AssertCommand(
+                CockpitTouchInteractionV2Operation.BeginGrab,
+                CockpitTouchInteractionV2Target.PilotYoke,
+                "near_yoke");
+        }
+
+        [Test]
+        public void IndependentSystemControlsAcceptOnlySafeModes()
+        {
+            CockpitTouchInteractionV2Controller.Binding toggle =
+                new CockpitTouchInteractionV2Controller.Binding
+                {
+                    id = "alt_bat_master_toggle",
+                    targetCollider = _nearCollider,
+                    target =
+                        CockpitTouchInteractionV2Target.AltBatMaster,
+                    allowedHand =
+                        CockpitTouchInteractionV2Hand.Right,
+                    mode = CockpitTouchInteractionV2Mode.Toggle,
+                    normalizedValue = 1f
+                };
+            Assert.That(toggle.IsValid(), Is.True);
+
+            toggle.mode = CockpitTouchInteractionV2Mode.GrabPose;
+            Assert.That(toggle.IsValid(), Is.False);
+            toggle.mode = CockpitTouchInteractionV2Mode.Toggle;
+            toggle.normalizedValue = float.NaN;
+            Assert.That(toggle.IsValid(), Is.False);
+
+            CockpitTouchInteractionV2Controller.Binding primer =
+                new CockpitTouchInteractionV2Controller.Binding
+                {
+                    id = "primer_set_momentary",
+                    targetCollider = _farCollider,
+                    target = CockpitTouchInteractionV2Target.Primer,
+                    allowedHand = CockpitTouchInteractionV2Hand.Right,
+                    mode = CockpitTouchInteractionV2Mode.Momentary,
+                    normalizedValue = 1f
+                };
+            Assert.That(primer.IsValid(), Is.True);
+            primer.target =
+                CockpitTouchInteractionV2Target.IgnitionStart;
+            Assert.That(primer.IsValid(), Is.True);
+            primer.mode =
+                CockpitTouchInteractionV2Mode.SetNormalized;
+            Assert.That(primer.IsValid(), Is.True);
+            primer.target =
+                CockpitTouchInteractionV2Target.FlapSelector;
+            primer.mode = CockpitTouchInteractionV2Mode.Toggle;
+            Assert.That(primer.IsValid(), Is.True);
+            primer.target =
+                CockpitTouchInteractionV2Target.FuelSelector;
+            Assert.That(primer.IsValid(), Is.True);
+        }
+
+        [Test]
         public void RuntimeUsesOneNonAllocLoopAndNeverBuildsHierarchy()
         {
             string path = Path.Combine(
@@ -195,6 +322,9 @@ namespace QuestFlightLab.Tests.EditMode
                 "CockpitTouchInteractionV2Controller.cs");
             string source = File.ReadAllText(path);
             StringAssert.Contains("Physics.RaycastNonAlloc", source);
+            StringAssert.Contains("ClosestPoint(", source);
+            StringAssert.Contains("\"pointerPosition\"", source);
+            StringAssert.Contains("CommonUsages.gripButton", source);
             Assert.That(
                 Occurrences(source, "private void Update()"),
                 Is.EqualTo(1));

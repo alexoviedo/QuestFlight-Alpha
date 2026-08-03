@@ -28,14 +28,17 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
         ExistingNoseSteeringAssembly = 0,
         SeparateSourcesOnOneProvenShaftAxis = 1,
         SingleRepresentedSourceWithoutProvenMotion = 2,
-        MergedSourceWithoutSafeSeparation = 3
+        MergedSourceWithoutSafeSeparation = 3,
+        AuthoredFourPedalRigidBatch = 4
     }
 
     public enum CockpitMechanicalV2AxisEvidence
     {
         None = 0,
         AircraftVerticalFromExistingNoseGear = 1,
-        MeshLocalPositiveZPropellerShaft = 2
+        MeshLocalPositiveZPropellerShaft = 2,
+        SourceSymmetryPlaneAndRigidPedalBounds = 3,
+        AuthoredRudderAndToeBrakeHingeAxes = 4
     }
 
     /// <summary>
@@ -187,18 +190,17 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                 auditedConnectedComponentCount: 5,
                 auditedRepresentedAssemblyCount: 1),
             new CockpitMechanicalV2SourceDescriptor(
-                "rudder_toe_brake_pedals_excluded",
-                CockpitMechanicalV2Disposition.FailClosedExcluded,
-                CockpitMechanicalV2Blocker
-                    .PedalSetIncompleteAndHingesUnproven,
-                CockpitMechanicalV2LayoutKind
-                    .MergedSourceWithoutSafeSeparation,
-                CockpitMechanicalV2AxisEvidence.None,
+                "rudder_toe_brake_pedals_completed",
+                CockpitMechanicalV2Disposition.ExistingAuthoredMotion,
+                CockpitMechanicalV2Blocker.None,
+                CockpitMechanicalV2LayoutKind.AuthoredFourPedalRigidBatch,
+                CockpitMechanicalV2AxisEvidence
+                    .AuthoredRudderAndToeBrakeHingeAxes,
                 PedalMergedSourcePath,
                 14635,
                 12971,
                 auditedConnectedComponentCount: 1229,
-                auditedRepresentedAssemblyCount: 3),
+                auditedRepresentedAssemblyCount: 4),
             new CockpitMechanicalV2SourceDescriptor(
                 "fixed_pitch_propeller_and_spinner_static",
                 CockpitMechanicalV2Disposition.RepresentedStatic,

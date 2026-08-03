@@ -91,7 +91,9 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
                 -1f,
                 1f);
             elevator = Mathf.Clamp(
-                baselineElevator +
+                // The authored +axis points into the panel: pushing forward
+                // commands nose-down, while pulling aft commands nose-up.
+                baselineElevator -
                 pitchDelta / pitchHalfTravelMeters,
                 -1f,
                 1f);

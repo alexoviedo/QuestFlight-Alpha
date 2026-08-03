@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.Reflection;
 using NUnit.Framework;
 using QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2;
 using QuestFlightLab.Flight.Backends;
@@ -187,30 +186,36 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void SnapshotContainsNoUnsupportedFantasyIndications()
+        public void FlapSelectorCommandIsEchoOnlyUntilCoordinatorSample()
         {
-            string[] forbidden =
-            {
-                "FuelQuantity", "FuelFlow", "OilPressure", "OilTemperature",
-                "Vacuum", "Voltage", "Amps", "Navigation", "Radio",
-                "Transponder", "EngineRunning", "ActualFlap"
-            };
-            FieldInfo[] fields = typeof(CockpitSystemsSnapshotV2).GetFields(
-                BindingFlags.Instance | BindingFlags.Public);
-            for (int fieldIndex = 0; fieldIndex < fields.Length; fieldIndex++)
-            {
-                for (int forbiddenIndex = 0;
-                     forbiddenIndex < forbidden.Length;
-                     forbiddenIndex++)
-                {
-                    Assert.That(
-                        fields[fieldIndex].Name.IndexOf(
-                            forbidden[forbiddenIndex],
-                            StringComparison.OrdinalIgnoreCase),
-                        Is.LessThan(0));
-                }
-            }
+            CockpitSystemsAuthorityV2Model model =
+                new CockpitSystemsAuthorityV2Model();
+            CockpitSystemsAuthorityInputV2 input = Input(
+                CockpitElectricalPowerSourceInputV2.Unavailable);
+            input.flightControls.flaps = 0.25f;
+            Assert.That(model.Reset(Scenario(), input), Is.True);
 
+            Assert.That(model.ApplyCommand(
+                CockpitSystemsCommandV2.Normalized(
+                    1,
+                    CockpitSystemsCommandKindV2.SetFlapSelector,
+                    0.75f)), Is.True);
+            Assert.That(model.Current.flapSelectorCommandNormalized,
+                Is.EqualTo(0.75f).Within(0.001f));
+            Assert.That(model.Current.actualFlapDegrees, Is.Zero);
+
+            input.flightState.simulationTimeSeconds += 1.0;
+            Assert.That(model.Step(input), Is.True);
+            Assert.That(model.Current.flapSelectorCommandNormalized,
+                Is.EqualTo(0.25f).Within(0.001f),
+                "The single FlightDynamicsCoordinator sample must win.");
+            Assert.That(model.Current.actualFlapDegrees,
+                Is.EqualTo(3f).Within(0.001f));
+        }
+
+        [Test]
+        public void DerivedChannelsAreExplicitAndPhysicallyBounded()
+        {
             CockpitSystemsAuthorityV2Model model =
                 new CockpitSystemsAuthorityV2Model();
             Assert.That(model.Reset(
@@ -224,8 +229,91 @@ namespace QuestFlightLab.Tests.EditMode
                 CockpitSystemsAvailabilityV2.IgnitionAndStarterControl |
                 CockpitSystemsAvailabilityV2.PrimerControl |
                 CockpitSystemsAvailabilityV2.FuelSelectorControl |
-                CockpitSystemsAvailabilityV2.FlapSelectorCommand;
+                CockpitSystemsAvailabilityV2.FlapSelectorCommand |
+                CockpitSystemsAvailabilityV2.PressureAltitude |
+                CockpitSystemsAvailabilityV2.BarometricSetting |
+                CockpitSystemsAvailabilityV2.ActualFlapPosition |
+                CockpitSystemsAvailabilityV2.BrakeHydraulicPressure |
+                CockpitSystemsAvailabilityV2.MagneticVariation |
+                CockpitSystemsAvailabilityV2.MagneticHeading |
+                CockpitSystemsAvailabilityV2.VacuumSuction |
+                CockpitSystemsAvailabilityV2.FuelQuantity |
+                CockpitSystemsAvailabilityV2.FuelFlow |
+                CockpitSystemsAvailabilityV2.OilPressure |
+                CockpitSystemsAvailabilityV2.OilTemperature |
+                CockpitSystemsAvailabilityV2.GpsDepartureStatus |
+                CockpitSystemsAvailabilityV2.ComRadios |
+                CockpitSystemsAvailabilityV2.Transponder;
             Assert.That(model.Current.availability, Is.EqualTo(expected));
+            Assert.That(model.Current.pressureAltitudeFeet,
+                Is.EqualTo(1700.0 * FlightFrameConversions.MetersToFeet)
+                    .Within(0.01));
+            Assert.That(model.Current.barometricSettingInHg,
+                Is.EqualTo(29.92f).Within(0.001f));
+            Assert.That(model.Current.magneticHeadingDegrees,
+                Is.EqualTo(76.34f).Within(0.001f));
+            Assert.That(model.Current.vacuumInHg,
+                Is.InRange(4.9f, 5.01f));
+            Assert.That(model.Current.leftFuelGallons,
+                Is.EqualTo(25f).Within(0.001f));
+            Assert.That(model.Current.rightFuelGallons,
+                Is.EqualTo(25f).Within(0.001f));
+            Assert.That(model.Current.fuelFlowGallonsPerHour,
+                Is.GreaterThan(0f));
+            Assert.That(model.Current.oilPressurePsi,
+                Is.InRange(60f, 75f));
+            Assert.That(model.Current.electricalBusVolts, Is.Zero,
+                "Numeric electrical indications fail closed with no source truth.");
+        }
+
+        [Test]
+        public void ActuatorsLagAndFuelBurnFollowSimulationTime()
+        {
+            CockpitSystemsAuthorityV2Model model =
+                new CockpitSystemsAuthorityV2Model();
+            CockpitSystemsAuthorityInputV2 input = Input(
+                CockpitElectricalPowerSourceInputV2.Unavailable);
+            input.flightControls.flaps = 1f;
+            input.flightControls.leftToeBrake = 1f;
+            input.flightControls.rightToeBrake = 0.5f;
+            Assert.That(model.Reset(Scenario(), input), Is.True);
+
+            float initialFuel = model.Current.leftFuelGallons +
+                                model.Current.rightFuelGallons;
+            input.flightState.simulationTimeSeconds += 2.0;
+            Assert.That(model.Step(input), Is.True);
+
+            Assert.That(model.Current.actualFlapDegrees,
+                Is.EqualTo(6f).Within(0.001f));
+            Assert.That(model.Current.leftBrakePressurePsi,
+                Is.EqualTo(600f).Within(0.001f));
+            Assert.That(model.Current.rightBrakePressurePsi,
+                Is.EqualTo(300f).Within(0.001f));
+            Assert.That(
+                model.Current.leftFuelGallons +
+                model.Current.rightFuelGallons,
+                Is.LessThan(initialFuel));
+        }
+
+        [Test]
+        public void ElectricalIndicationsRequireSourceTruth()
+        {
+            CockpitSystemsAuthorityV2Model model =
+                new CockpitSystemsAuthorityV2Model();
+            CockpitSystemsAuthorityInputV2 input = Input(
+                new CockpitElectricalPowerSourceInputV2
+                {
+                    hasAuthoritativeState = true,
+                    batteryCanPowerMainBus = true,
+                    alternatorCanPowerMainBus = true
+                });
+            Assert.That(model.Reset(Scenario(), input), Is.True);
+            Assert.That(model.Current.Has(
+                CockpitSystemsAvailabilityV2.ElectricalIndications), Is.True);
+            Assert.That(model.Current.electricalBusVolts,
+                Is.EqualTo(28.2f).Within(0.001f));
+            Assert.That(model.Current.alternatorAmps,
+                Is.EqualTo(18f).Within(0.001f));
         }
 
         [Test]
@@ -347,6 +435,57 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(first.engineRpm, Is.EqualTo(second.engineRpm));
             Assert.That(first.flapSelectorCommandNormalized,
                 Is.EqualTo(second.flapSelectorCommandNormalized));
+            Assert.That(first.pressureAltitudeFeet,
+                Is.EqualTo(second.pressureAltitudeFeet));
+            Assert.That(first.barometricSettingInHg,
+                Is.EqualTo(second.barometricSettingInHg));
+            Assert.That(first.magneticVariationEastDegrees,
+                Is.EqualTo(second.magneticVariationEastDegrees));
+            Assert.That(first.magneticHeadingDegrees,
+                Is.EqualTo(second.magneticHeadingDegrees));
+            Assert.That(first.actualFlapDegrees,
+                Is.EqualTo(second.actualFlapDegrees));
+            Assert.That(first.leftBrakePressurePsi,
+                Is.EqualTo(second.leftBrakePressurePsi));
+            Assert.That(first.rightBrakePressurePsi,
+                Is.EqualTo(second.rightBrakePressurePsi));
+            Assert.That(first.vacuumInHg, Is.EqualTo(second.vacuumInHg));
+            Assert.That(first.leftFuelGallons,
+                Is.EqualTo(second.leftFuelGallons));
+            Assert.That(first.rightFuelGallons,
+                Is.EqualTo(second.rightFuelGallons));
+            Assert.That(first.fuelFlowGallonsPerHour,
+                Is.EqualTo(second.fuelFlowGallonsPerHour));
+            Assert.That(first.oilPressurePsi,
+                Is.EqualTo(second.oilPressurePsi));
+            Assert.That(first.oilTemperatureCelsius,
+                Is.EqualTo(second.oilTemperatureCelsius));
+            Assert.That(first.electricalBusVolts,
+                Is.EqualTo(second.electricalBusVolts));
+            Assert.That(first.alternatorAmps,
+                Is.EqualTo(second.alternatorAmps));
+            Assert.That(first.gpsDestinationIdentAscii,
+                Is.EqualTo(second.gpsDestinationIdentAscii));
+            Assert.That(first.gpsBearingDegrees,
+                Is.EqualTo(second.gpsBearingDegrees));
+            Assert.That(first.gpsDistanceNauticalMiles,
+                Is.EqualTo(second.gpsDistanceNauticalMiles));
+            Assert.That(first.gpsGroundTrackDegrees,
+                Is.EqualTo(second.gpsGroundTrackDegrees));
+            Assert.That(first.gpsAltitudeMslFeet,
+                Is.EqualTo(second.gpsAltitudeMslFeet));
+            Assert.That(first.com1ActiveKHz,
+                Is.EqualTo(second.com1ActiveKHz));
+            Assert.That(first.com1StandbyKHz,
+                Is.EqualTo(second.com1StandbyKHz));
+            Assert.That(first.com2ActiveKHz,
+                Is.EqualTo(second.com2ActiveKHz));
+            Assert.That(first.com2StandbyKHz,
+                Is.EqualTo(second.com2StandbyKHz));
+            Assert.That(first.transponderCodeBcd,
+                Is.EqualTo(second.transponderCodeBcd));
+            Assert.That(first.transponderMode,
+                Is.EqualTo(second.transponderMode));
             Assert.That(first.batteryMasterOn, Is.EqualTo(second.batteryMasterOn));
             Assert.That(first.alternatorMasterOn,
                 Is.EqualTo(second.alternatorMasterOn));

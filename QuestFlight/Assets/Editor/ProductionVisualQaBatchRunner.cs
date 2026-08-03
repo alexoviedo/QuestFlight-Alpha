@@ -405,6 +405,14 @@ namespace QuestFlightLab.Editor
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "04_runway_from_cockpit", "Runway from default cockpit", "cockpit",
                 pilotEye, pilotForward, 64f, ViewProfile.Cockpit));
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "04b_cockpit_engine_cowl",
+                "Inward-facing imported engine cowl from the seated pilot view",
+                "cockpit",
+                pilotEye,
+                pilotForward * Quaternion.Euler(34f, 0f, 0f),
+                68f,
+                ViewProfile.Cockpit));
 
             Vector3 runwayCloseCamera = runwayBounds.center - context.runwayForward * 80f + context.runwayRight * 8f + Vector3.up * 2.1f;
             Capture(context, report, outputDir, width, height, new ShotDefinition(
@@ -589,6 +597,17 @@ namespace QuestFlightLab.Editor
                 "30_north_sailplane_line", "North-side sailplane line from the runway",
                 "parked_aircraft", sailplaneCamera,
                 LookAt(sailplaneCamera, sailplaneTarget), 48f, ViewProfile.Environment));
+
+            Vector3 takeoffLeftBuildingsTarget = new Vector3(-330f, 5.0f, 165f);
+            Vector3 takeoffLeftBuildingsCamera = new Vector3(-400f, 8.0f, -12f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "30b_takeoff_left_buildings",
+                "Pilot-left takeoff buildings: closed walls, footprint alignment, and pitched roofs",
+                "airport_hero_corridor",
+                takeoffLeftBuildingsCamera,
+                LookAt(takeoffLeftBuildingsCamera, takeoffLeftBuildingsTarget),
+                52f,
+                ViewProfile.Environment));
 
             Vector3 aircraftOverviewTarget = new Vector3(-415f, 0f, -57f);
             Vector3 aircraftOverviewCamera = new Vector3(-415f, 300f, -57f);
@@ -833,6 +852,21 @@ namespace QuestFlightLab.Editor
                     new Vector3(0f, -0.025f, 0.015f)),
                 context.originalAircraftRotation * Quaternion.Euler(9f, 0f, 0f), 56f,
                 ViewProfile.Cockpit));
+            foreach (float magneticHeading in
+                     new[] { 0f, 90f, 180f, 270f, 359f, 1f })
+            {
+                CaptureMagneticCompassHeading(
+                    context,
+                    report,
+                    outputDir,
+                    width,
+                    height,
+                    pilotEye + context.rig.transform.TransformVector(
+                        new Vector3(0.035f, -0.035f, 0.025f)),
+                    context.originalAircraftRotation *
+                        Quaternion.Euler(8f, 1.5f, 0f),
+                    magneticHeading);
+            }
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "pasv1_24_cockpit_ao_only", "Stable cockpit AO without analytic sun occlusion",
                 "photoreal_cockpit", pilotEye,
@@ -884,6 +918,60 @@ namespace QuestFlightLab.Editor
             }
             SetAircraftPose(
                 context, context.originalAircraftPosition, context.originalAircraftRotation);
+        }
+
+        private static void CaptureMagneticCompassHeading(
+            VisualContext context,
+            ProductionVisualQaReport report,
+            string outputDir,
+            int width,
+            int height,
+            Vector3 cameraPosition,
+            Quaternion cameraRotation,
+            float magneticHeadingDegrees)
+        {
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(
+                QuestFlight.Editor.CockpitInstrumentV2Authoring.MaterialPath);
+            if (material == null ||
+                !material.HasProperty("_MagneticCompassHeadingDegrees"))
+                throw new InvalidOperationException(
+                    "The magnetic-compass QA material contract is missing.");
+            var controller = UnityEngine.Object.FindFirstObjectByType<
+                QuestFlightLab.Aircraft.CockpitDynamics.V2.
+                    CockpitInstrumentV2BatchController>();
+            MeshRenderer renderer = controller != null
+                ? controller.NeutralizedSourceRenderer
+                : null;
+            if (renderer == null)
+                throw new InvalidOperationException(
+                    "The magnetic-compass QA renderer is missing.");
+            var properties = new MaterialPropertyBlock();
+            renderer.GetPropertyBlock(properties);
+            int headingId = Shader.PropertyToID(
+                "_MagneticCompassHeadingDegrees");
+            float previous = properties.GetFloat(headingId);
+            try
+            {
+                properties.SetFloat(headingId, magneticHeadingDegrees);
+                renderer.SetPropertyBlock(properties);
+                string suffix = Mathf.RoundToInt(magneticHeadingDegrees)
+                    .ToString("000", CultureInfo.InvariantCulture);
+                Capture(context, report, outputDir, width, height,
+                    new ShotDefinition(
+                        "pasv1_28_magnetic_compass_" + suffix,
+                        "Fixed-geometry magnetic compass at " + suffix +
+                            " degrees magnetic",
+                        "photoreal_cockpit",
+                        cameraPosition,
+                        cameraRotation,
+                        48f,
+                        ViewProfile.Cockpit));
+            }
+            finally
+            {
+                properties.SetFloat(headingId, previous);
+                renderer.SetPropertyBlock(properties);
+            }
         }
 
         private static void CaptureSemanticDistanceShot(
@@ -1183,9 +1271,12 @@ namespace QuestFlightLab.Editor
             Bounds reservoir = context.environment.boulderReservoirSurface.GetComponent<Renderer>().bounds;
             Bounds minorWater = MinorWaterBounds(benchmark, context.environment);
             string minorWaterTitle = context.environment.waterPresentationMode ==
-                                     ProductionWaterPresentationMode.OrthophotoOnly
-                ? "Minor water orthophoto-only hold"
-                : "Minor-water terrain-mask effect";
+                                     ProductionWaterPresentationMode.OrthophotoMaskedReflection
+                ? "Full-map terrain-owned water reflection"
+                : context.environment.waterPresentationMode ==
+                  ProductionWaterPresentationMode.OrthophotoOnly
+                    ? "Minor water orthophoto-only hold"
+                    : "Minor-water authored-surface effect";
             Vector3 north = Vector3.forward;
             Vector3 east = Vector3.right;
 
@@ -2028,9 +2119,15 @@ namespace QuestFlightLab.Editor
             Material material = root.minorWaterTerrainEffect != null
                 ? root.minorWaterTerrainEffect.sharedMaterial
                 : null;
-            bool orthophotoOnly = environment != null && environment.waterPresentationMode ==
-                                  ProductionWaterPresentationMode.OrthophotoOnly;
-            if (!orthophotoOnly)
+            bool terrainOwned = environment != null &&
+                                (environment.waterPresentationMode ==
+                                     ProductionWaterPresentationMode.OrthophotoOnly ||
+                                 environment.waterPresentationMode ==
+                                     ProductionWaterPresentationMode.OrthophotoMaskedReflection);
+            bool reflected = environment != null &&
+                             environment.waterPresentationMode ==
+                                 ProductionWaterPresentationMode.OrthophotoMaskedReflection;
+            if (!terrainOwned)
             {
                 if (material == null || !material.HasProperty("_AirportCoreMinorWaterNearWorldMinInvSize"))
                     throw new InvalidOperationException("Minor-water world-space binding is missing.");
@@ -2043,6 +2140,22 @@ namespace QuestFlightLab.Editor
             {
                 throw new InvalidOperationException(
                     "Orthophoto-only minor-water QA requires the authoritative terrain renderer.");
+            }
+            else if (reflected)
+            {
+                if (!material.HasProperty("_FullMapWaterMask") ||
+                    material.GetTexture("_FullMapWaterMask") == null)
+                {
+                    throw new InvalidOperationException(
+                        "Full-map water-reflection QA requires the geospatial terrain mask.");
+                }
+                Vector4 binding = material.GetVector(
+                    "_FullMapWaterWorldMinInvSize");
+                if (binding.z <= 0f || binding.w <= 0f)
+                {
+                    throw new InvalidOperationException(
+                        "Full-map water-reflection binding has an invalid inverse size.");
+                }
             }
             // Focus the dedicated ground-level shot on the existing OSM-derived drainage
             // feature southwest of the airport. In orthophoto-only mode this deliberately

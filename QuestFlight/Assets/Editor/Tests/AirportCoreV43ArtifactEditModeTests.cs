@@ -62,7 +62,7 @@ namespace QuestFlight.Editor.Tests
             Material material = AssetDatabase.LoadAssetAtPath<Material>(
                 AirportCoreV43ArtifactAuthoring.ReservoirMaterialPath);
             Assert.That(contract.waterPresentationMode,
-                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoOnly));
+                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoMaskedReflection));
             Assert.That(renderer.enabled, Is.False);
             Assert.That(renderer.gameObject.activeSelf, Is.False);
             Assert.That(renderer.sharedMaterials, Is.Empty);
@@ -92,7 +92,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void MinorWaterIsDeferredToOrthophotoOnlyAndHasNoRuntimeSamplingPath()
+        public void MinorWaterUsesOnlyTheFullMapTerrainSamplingPath()
         {
             GameObject environment = LoadEnvironment();
             ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
@@ -105,7 +105,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root.minorWaterTerrainEffect, Is.Not.Null);
             Material terrain = root.minorWaterTerrainEffect.sharedMaterial;
             Assert.That(contract.waterPresentationMode,
-                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoOnly));
+                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoMaskedReflection));
             Assert.That(terrain.HasProperty("_AirportCoreMinorWaterMask"), Is.False);
             Assert.That(ReadAsset(TerrainShaderPath), Does.Not.Contain("KBDUMinorWaterTerrainEffect"));
 

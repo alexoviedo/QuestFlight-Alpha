@@ -258,9 +258,10 @@ namespace QuestFlight.Editor
                 "proven. An arbitrary first-sample offset would be misleading."),
             Exclusion(
                 "Magnetic compass tape",
-                new[] { 77, 78 },
-                "Geometry is separate, but magnetic variation/heading is unavailable; true " +
-                "heading is not relabeled as magnetic heading."),
+                new[] { 2339 },
+                "The legacy Analog V1 partition does not own the curved compass card. " +
+                "Instrument V2 binds the complete audited card to magnetic heading " +
+                "with the explicit KBDU variation contract."),
             Exclusion(
                 "Attitude card",
                 Array.Empty<int>(),

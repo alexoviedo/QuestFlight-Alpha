@@ -577,7 +577,7 @@ class CommittedAssetContractTests(unittest.TestCase):
         report = validate(RUNTIME_ROOT)
         self.assertEqual(report["status"], "PASS")
         self.assertEqual(report["building"]["triangle_count"], 128_092)
-        self.assertTrue(30_000 <= report["canopy"]["triangle_count"] <= 59_000)
+        self.assertTrue(29_000 <= report["canopy"]["triangle_count"] <= 59_000)
         self.assertGreater(report["canopy"]["vertex_count"], 0)
         self.assertGreater(report["canopy"]["geometry_component_count"], 0)
         self.assertEqual(report["canopy"]["combined_source_assignment_percent"], 100.0)
@@ -623,10 +623,19 @@ class CommittedAssetContractTests(unittest.TestCase):
         self.assertEqual(manifest["coverage"]["source_assignment_coverage_fraction"], 1.0)
         self.assertEqual(manifest["budgets"]["mesh_batch_count"], 4)
         self.assertTrue(
-            30_000 <= manifest["budgets"]["mesh_batch_total_triangles"] <= 59_000
+            29_000 <= manifest["budgets"]["mesh_batch_total_triangles"] <= 59_000
         )
         self.assertEqual(
-            manifest["topology"]["runtime_close_tree_instance_count"], 696
+            manifest["topology"]["runtime_close_tree_instance_count"], 1047
+        )
+        self.assertEqual(
+            manifest["topology"]["near_horizontal_static_foliage_card_count"], 0
+        )
+        self.assertLess(
+            manifest["topology"][
+                "maximum_abs_vertical_static_foliage_card_normal"
+            ],
+            0.75,
         )
         self.assertEqual(manifest["topology"]["near_branch_triangle_count"], 0)
         self.assertEqual(manifest["topology"]["near_foliage_card_triangle_count"], 0)

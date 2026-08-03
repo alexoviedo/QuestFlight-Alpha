@@ -6,17 +6,18 @@ namespace QuestFlightLab.Environment
 {
     /// <summary>
     /// Draws the explicitly authored airport tree set without per-tree
-    /// GameObjects. Near trees retain source foliage, the reduced tier is a
-    /// volumetric clump mesh, and the far tier is one world-upright multiview
-    /// impostor selected from the XR center-eye pose.
+    /// GameObjects. Near and middle trees share source-informed volumetric
+    /// crown lobes around a real trunk/branch scaffold, while the far tier is
+    /// one world-upright multiview impostor selected from the XR center-eye
+    /// pose.
     /// </summary>
     [ExecuteAlways]
     [DisallowMultipleComponent]
     public sealed class AirportCloseTreeLodRenderer : MonoBehaviour
     {
-        public const int MaximumLod0Instances = 6;
-        public const int MaximumLod1Instances = 28;
-        public const int MaximumLod2Instances = 696;
+        public const int MaximumLod0Instances = 15;
+        public const int MaximumLod1Instances = 128;
+        public const int MaximumLod2Instances = 850;
         public const int MaximumDrawCount = 3;
         public const int ImpostorFrameCount = 8;
 
@@ -81,13 +82,13 @@ namespace QuestFlightLab.Environment
         [SerializeField] private TextAsset placementManifest;
         [SerializeField] private TextAsset sourceLicenseManifest;
         [SerializeField] private Instance[] instances = Array.Empty<Instance>();
-        [SerializeField] private float lod0EnterScreenPixels = 105f;
-        [SerializeField] private float lod0ExitScreenPixels = 76f;
-        [SerializeField] private float lod1EnterScreenPixels = 34f;
-        [SerializeField] private float lod1ExitScreenPixels = 22f;
-        [SerializeField] private float maximumDistanceMeters = 650f;
-        [SerializeField] private float transitionDurationSeconds = 0.32f;
-        [SerializeField] private float minimumResidencySeconds = 0.75f;
+        [SerializeField] private float lod0EnterScreenPixels = 72f;
+        [SerializeField] private float lod0ExitScreenPixels = 48f;
+        [SerializeField] private float lod1EnterScreenPixels = 12f;
+        [SerializeField] private float lod1ExitScreenPixels = 7f;
+        [SerializeField] private float maximumDistanceMeters = 750f;
+        [SerializeField] private float transitionDurationSeconds = 0.60f;
+        [SerializeField] private float minimumResidencySeconds = 1.00f;
         [SerializeField] private float impostorAngularHysteresisDegrees = 6f;
         [SerializeField] private int authoredMaximumDrawCount;
         [SerializeField] private long authoredMaximumSelectedTriangleCount;
@@ -175,13 +176,13 @@ namespace QuestFlightLab.Environment
             placementManifest = placements;
             sourceLicenseManifest = sourceManifest;
             instances = authoredInstances ?? Array.Empty<Instance>();
-            lod0EnterScreenPixels = 105f;
-            lod0ExitScreenPixels = 76f;
-            lod1EnterScreenPixels = 34f;
-            lod1ExitScreenPixels = 22f;
-            maximumDistanceMeters = 650f;
-            transitionDurationSeconds = 0.32f;
-            minimumResidencySeconds = 0.75f;
+            lod0EnterScreenPixels = 72f;
+            lod0ExitScreenPixels = 48f;
+            lod1EnterScreenPixels = 12f;
+            lod1ExitScreenPixels = 7f;
+            maximumDistanceMeters = 750f;
+            transitionDurationSeconds = 0.60f;
+            minimumResidencySeconds = 1.00f;
             impostorAngularHysteresisDegrees = 6f;
             projectedScreenSizeSelection = true;
             persistentHysteresis = true;

@@ -9,10 +9,9 @@ using UnityEngine;
 namespace QuestFlight.Editor
 {
     /// <summary>
-    /// Read-only eligibility audit for V2 avionics authoring. The current
-    /// product deliberately fails closed: its existing 512 atlas is a composed
-    /// static readout, not a character atlas, and no concrete V2 authority
-    /// provider is serialized yet. No asset is emitted until both facts change.
+    /// Eligibility audit and bounded entry point for the V2 avionics
+    /// presentation. The authoring implementation owns one fixed glyph atlas,
+    /// one opaque material, and one combined mesh over audited apertures.
     /// </summary>
     public static class CockpitAvionicsV2Authoring
     {
@@ -85,19 +84,19 @@ namespace QuestFlight.Editor
         [MenuItem("QuestFlight/Cockpit/Build V2 Avionics Layout If Eligible")]
         public static void BuildAssetsIfEligible()
         {
+            CockpitAvionicsV2PresentationAuthoring.BuildAssetsOnly();
             AuditReport report = AuditCurrentProduct();
             if (!report.canGenerateRuntimeLayout)
                 throw new InvalidOperationException(
                     "V2 avionics authoring is fail-closed:\n- " +
                     string.Join("\n- ", report.blockers));
 
-            // This guard is intentional. Once the product owns a fixed glyph
-            // atlas manifest and a concrete authority provider, implement the
-            // generated mesh against the audited aperture components in a
-            // separately reviewed integration commit. Generating a guessed
-            // layout over the current static atlas would cover readable panels.
-            throw new InvalidOperationException(
-                "Eligibility changed; a reviewed aperture-to-glyph mapping is required.");
+            CockpitAvionicsV2Layout layout =
+                AssetDatabase.LoadAssetAtPath<CockpitAvionicsV2Layout>(
+                    CockpitAvionicsV2PresentationAuthoring.LayoutPath);
+            if (!CockpitAvionicsV2EditorContract.ValidateLayout(
+                    layout, out string error))
+                throw new InvalidOperationException(error);
         }
 
         public static AuditReport AuditCurrentProduct()

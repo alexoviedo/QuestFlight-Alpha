@@ -4,11 +4,41 @@ Audit basis: frozen R&D commit `cd4131fa7732a6db2d7387921dfef33e2c206970`, tagge
 
 Every product binary must match an entry here or receive a new source/license review. Raw downloads are not product assets.
 
+## Cockpit Completion V3 generated derivatives
+
+The V3 instrument layout/mesh/atlas, neutralized source-meter mesh, avionics
+layout/glyph mesh/glyph atlas, materials, shaders, and JSON manifests are
+project-authored deterministic derivatives. They use only:
+
+- the already recorded KOG_THORNS C172 source (CC BY 4.0, SHA-256
+  `a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872`);
+- project-authored vector/raster markings and glyphs;
+- deterministic Unity authoring code committed with the derivatives.
+
+No new external download or license boundary was introduced. KOG_THORNS
+attribution and the existing change notice remain required.
+
+## Airport near-field ground detail V1
+
+The near-field layer introduces no external binary asset. Geometry is generated
+offline by `AirportNearFieldDetailAuthoring` from project-owned procedural
+rules. FAA runway facts are United States public-domain government data; the
+bounded aeroway context and windsock location remain an OSM Produced Work under
+ODbL-1.0 with `© OpenStreetMap contributors` attribution. The layer reuses the
+existing `KBDU_ContextVegetation.mat`.
+
+| Derived asset | Bytes | Terms | SHA-256 |
+| --- | ---: | --- | --- |
+| `AirportGrassClump.asset` | 6,540 | Project-owned procedural geometry | `613aa1520df6fa4fd607d72e975947cf97281c2ebfd04ffbd3ddad3d07928d35` |
+| `AirportNearFieldCombined.asset` | 72,033 | Project-owned geometry derived from public-domain FAA and ODbL aeroway context | `daf1b395816835fb3ab44638ef6e56423b18d87b3acb7665a962ec7959ec503c` |
+| `AirportNearFieldSourceV1.json` | 1,420 | Project-authored provenance/contract record | `b8b836ca4eac8fc9bb712e4e4d9d27554b8c748dc053a06b6db49db8eda44975` |
+
 ## Runtime visual assets
 
 | Product asset | Source / creator | Terms | SHA-256 |
 | --- | --- | --- | --- |
 | `cessna172.glb` (26,962,216 bytes) | `Cessna172`, KOG_THORNS, [original Sketchfab model](https://sketchfab.com/3d-models/cessna172-d1b15841c29c43d0862667300bad55a4) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); attribution and change notice required | `a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872` |
+| `C172_FourPedalAssembly.asset` | Project-authored derivative of the frozen KOG_THORNS `cessna172.glb` pedal geometry; the missing copilot pedal is symmetry-derived and winding/tangents are corrected | CC BY 4.0; KOG_THORNS attribution retained; modified Unity runtime derivative | Source and output geometry/hash record: `Assets/Production/Cockpit/Pedals/C172_FourPedalAssemblyManifest.json` |
 | `withered_grass_diff_1k.jpg` | Withered Grass, Charlotte Baglioni, [Poly Haven](https://polyhaven.com/a/withered_grass) | [CC0 1.0](https://polyhaven.com/license) | `8bebfb639ef74f651bc445526c46c845beee52a86d831848b82eb2bbbf2d98ee` |
 | `sparse_grass_diff_1k.jpg` | Sparse Grass, Amal Kumar, [Poly Haven](https://polyhaven.com/a/sparse_grass) | CC0 1.0 | `ae94f2b34597b9108eefd88217f55eccaec6d6b382e858a478ee92df90e66617` |
 | `dry_ground_01_diff_1k.jpg` | Dry Ground 01, Rob Tuytel, [Poly Haven](https://polyhaven.com/a/dry_ground_01) | CC0 1.0 | `75222fc97a82b635a09cf8f2891dd58bc42e49599b9fda920b2c50193fe85e9f` |

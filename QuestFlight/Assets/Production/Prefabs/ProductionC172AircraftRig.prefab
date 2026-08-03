@@ -382,7 +382,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 298900147609157243}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -1094,6 +1094,38 @@ Transform:
   - {fileID: 5890805275022476959}
   m_Father: {fileID: 4923760209843649888}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1111464181370521837
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8882049656544377105}
+  m_Layer: 0
+  m_Name: CopilotRightRudderPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8882049656544377105
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1111464181370521837}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.0345, y: 0.03112, z: -0.07475}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 159860249692224746}
+  m_Father: {fileID: 7652705198291692277}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1117734017748022143
 GameObject:
   m_ObjectHideFlags: 0
@@ -1134,7 +1166,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1117734017748022143}
-  m_Mesh: {fileID: 4300000, guid: 0b0907a984b10344fa282a903d81db11, type: 2}
+  m_Mesh: {fileID: 4300000, guid: fc12429725b25194b8d92d7633f4e8be, type: 2}
 --- !u!23 &1148531289808265268
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1160,7 +1192,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 41a74f85cac24174fa743839906a2d0f, type: 2}
+  - {fileID: 2100000, guid: 44a9bf5c91b1adc4d9ca8be8b315592b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1183,7 +1215,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 4300000, guid: 110308c7f46c0d843815b899507f1e2f, type: 2}
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &1260189394815190821
 GameObject:
   m_ObjectHideFlags: 0
@@ -1550,6 +1582,37 @@ Transform:
   - {fileID: 5515296118923522622}
   m_Father: {fileID: 263864879818673976}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1514646372792145652
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 159860249692224746}
+  m_Layer: 0
+  m_Name: CopilotRightToeBrakePivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &159860249692224746
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1514646372792145652}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8882049656544377105}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1538969069273086587
 GameObject:
   m_ObjectHideFlags: 0
@@ -1671,7 +1734,7 @@ Transform:
   m_GameObject: {fileID: 1661277326789972384}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.000010499731, y: 0.8970591, z: -5.7739863}
+  m_LocalPosition: {x: -0.000010499731, y: 0.8970606, z: -5.774}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2288,6 +2351,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4148887390516000443}
+  - {fileID: 5110177937592099912}
   m_Father: {fileID: 8215558822124447454}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &3933625592776445154
@@ -2297,7 +2361,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2311172344359605001}
-  m_Mesh: {fileID: 4300000, guid: 508b38165be632a499dbb92adce2c840, type: 2}
+  m_Mesh: {fileID: 4300000, guid: 6d3e734995d86934790d56e6abeef2e1, type: 2}
 --- !u!23 &8894041682761315326
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2323,7 +2387,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 41a74f85cac24174fa743839906a2d0f, type: 2}
+  - {fileID: 2100000, guid: 44a9bf5c91b1adc4d9ca8be8b315592b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2347,6 +2411,37 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 4300000, guid: 6fc100091edb7604d9e7dbe87a40bbef, type: 2}
+--- !u!1 &2323268987441470082
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2750644125708092758}
+  m_Layer: 0
+  m_Name: CopilotLeftToeBrakePivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2750644125708092758
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2323268987441470082}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1617175000157700866}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2361495439100042033
 GameObject:
   m_ObjectHideFlags: 0
@@ -2597,6 +2692,38 @@ Transform:
   - {fileID: 6831588562490014054}
   m_Father: {fileID: 4923760209843649888}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2542722939184985620
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2632839786798616457}
+  m_Layer: 0
+  m_Name: PilotLeftRudderPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2632839786798616457
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2542722939184985620}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.0345, y: 0.03112, z: -0.07475}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8719869927961670161}
+  m_Father: {fileID: 7652705198291692277}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2545862557975056379
 GameObject:
   m_ObjectHideFlags: 0
@@ -2696,6 +2823,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5176097671679220229}
+  - component: {fileID: 1790047318741743800}
   m_Layer: 0
   m_Name: Dynamic_Switch_008
   m_TagString: Untagged
@@ -2719,6 +2847,27 @@ Transform:
   - {fileID: 1042799732194643372}
   m_Father: {fileID: 5753584931669925431}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1790047318741743800
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2632150775257229509}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.091924235, y: 0.03152082, z: 0.040236983}
+  m_Center: {x: -0.015383221, y: -0.00000016810372, z: -0.0000000018626451}
 --- !u!1 &2640778053260030316
 GameObject:
   m_ObjectHideFlags: 0
@@ -3601,8 +3750,8 @@ Transform:
   m_GameObject: {fileID: 3630411035855466975}
   serializedVersion: 2
   m_LocalRotation: {x: -0.99904823, y: -0, z: -0, w: -0.043619633}
-  m_LocalPosition: {x: 0.000010499731, y: -0.54219633, z: 5.3288054}
-  m_LocalScale: {x: 0.011350489, y: 0.011350493, z: 0.011350493}
+  m_LocalPosition: {x: 0.000010499731, y: -0.5421978, z: 5.3288193}
+  m_LocalScale: {x: 0.011350489, y: 0.011350523, z: 0.011350523}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1394684629934910014}
@@ -4128,6 +4277,38 @@ Transform:
   - {fileID: 1048600754406605567}
   m_Father: {fileID: 4923760209843649888}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4320476361220235504
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1617175000157700866}
+  m_Layer: 0
+  m_Name: CopilotLeftRudderPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1617175000157700866
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4320476361220235504}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.01338, y: 0.03112, z: -0.07475}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2750644125708092758}
+  m_Father: {fileID: 7652705198291692277}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4323255873178580533
 GameObject:
   m_ObjectHideFlags: 0
@@ -4192,6 +4373,111 @@ Transform:
   - {fileID: 8030850418740485877}
   m_Father: {fileID: 949839124294202198}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4372473365852009750
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7652705198291692277}
+  - component: {fileID: 5746429513516460118}
+  m_Layer: 0
+  m_Name: ProductionFourPedalAssembly
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7652705198291692277
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4372473365852009750}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2632839786798616457}
+  - {fileID: 9067311160596328036}
+  - {fileID: 1617175000157700866}
+  - {fileID: 8882049656544377105}
+  m_Father: {fileID: 6846038944357921172}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!137 &5746429513516460118
+SkinnedMeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4372473365852009750}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 2
+  m_RayTracingMode: 3
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: f8cb9ae34b6e1814eaf21f16d0f6035d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 5575580927321522012}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  serializedVersion: 2
+  m_Quality: 1
+  m_UpdateWhenOffscreen: 0
+  m_SkinnedMotionVectors: 1
+  m_Mesh: {fileID: 4300000, guid: 0171a1c78c4130e4b9805deb209b2ecd, type: 2}
+  m_Bones:
+  - {fileID: 7652705198291692277}
+  - {fileID: 2632839786798616457}
+  - {fileID: 8719869927961670161}
+  - {fileID: 9067311160596328036}
+  - {fileID: 5614039867301126164}
+  - {fileID: 1617175000157700866}
+  - {fileID: 2750644125708092758}
+  - {fileID: 8882049656544377105}
+  - {fileID: 159860249692224746}
+  m_BlendShapeWeights: []
+  m_RootBone: {fileID: 7652705198291692277}
+  m_AABB:
+    m_Center: {x: 0.0004452113, y: 0.020221725, z: -0.06601624}
+    m_Extent: {x: 0.04956899, y: 0.028088931, z: 0.01571044}
+  m_DirtyAABB: 0
 --- !u!1 &4457632904033145550
 GameObject:
   m_ObjectHideFlags: 0
@@ -4747,6 +5033,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8944790443181660802}
+  - component: {fileID: 2074953056869830980}
   m_Layer: 0
   m_Name: Dynamic_Switch_007
   m_TagString: Untagged
@@ -4770,6 +5057,27 @@ Transform:
   - {fileID: 5122735839606980016}
   m_Father: {fileID: 5753584931669925431}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &2074953056869830980
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5212491587258705316}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.038775936, y: 0.02898015, z: 0.060594313}
+  m_Center: {x: 0.000000039115548, y: -0.00000011129305, z: 0.00000006891787}
 --- !u!1 &5223354177025128869
 GameObject:
   m_ObjectHideFlags: 0
@@ -5336,6 +5644,7 @@ Transform:
   - {fileID: 460590931920278706}
   - {fileID: 4798184079775854587}
   - {fileID: 7272684523755625303}
+  - {fileID: 7652705198291692277}
   m_Father: {fileID: 5753584931669925431}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5579052886848694100
@@ -5851,6 +6160,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 949839124294202198}
+  - component: {fileID: 2702519515889528491}
   m_Layer: 0
   m_Name: Dynamic_Switch_004
   m_TagString: Untagged
@@ -5874,6 +6184,27 @@ Transform:
   - {fileID: 6021565947719083828}
   m_Father: {fileID: 5753584931669925431}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &2702519515889528491
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6037168921493641951}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.027523214, y: 0.03153278, z: 0.041090958}
+  m_Center: {x: -0.000000026542693, y: 0.00000024493784, z: 0.011606154}
 --- !u!1 &6290700484578549177
 GameObject:
   m_ObjectHideFlags: 0
@@ -6143,7 +6474,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.AircraftVisibilityProfileController
   interiorRenderers:
-  - {fileID: 8557247915601611455}
+  - {fileID: 5746429513516460118}
   - {fileID: 3511983274700416355}
   - {fileID: 4638446874749790903}
   - {fileID: 2344788289932887862}
@@ -6310,7 +6641,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6508593165679087910}
-  m_Mesh: {fileID: 4300000, guid: 9f97bada35eabf843a47a5283473d949, type: 2}
+  m_Mesh: {fileID: 4300000, guid: 3ed9d0552794def4daa8655e45c23a1e, type: 2}
 --- !u!23 &6775896974154446733
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6321,10 +6652,10 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
+  m_DynamicOccludee: 0
   m_StaticShadowCaster: 0
   m_MotionVectors: 2
-  m_LightProbeUsage: 1
+  m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 2
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
@@ -6336,7 +6667,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: c10e1910091b6eb4f85adbfa406f2553, type: 2}
+  - {fileID: 2100000, guid: 9a8472f768a0f8c4fad1463b648fa33f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -6482,6 +6813,37 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &6704603198133206965
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8719869927961670161}
+  m_Layer: 0
+  m_Name: PilotLeftToeBrakePivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8719869927961670161
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6704603198133206965}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2632839786798616457}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6775408628502928161
 GameObject:
   m_ObjectHideFlags: 0
@@ -7219,6 +7581,38 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.0573638, y: 0.06628075, z: 0.12332477}
   m_Center: {x: -0.0000043902546, y: 0.0044813454, z: 0.051226057}
+--- !u!1 &7387685450773548916
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9067311160596328036}
+  m_Layer: 0
+  m_Name: PilotRightRudderPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9067311160596328036
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7387685450773548916}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.01338, y: 0.03112, z: -0.07475}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 5614039867301126164}
+  m_Father: {fileID: 7652705198291692277}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7411373742601669578
 GameObject:
   m_ObjectHideFlags: 0
@@ -7235,7 +7629,6 @@ GameObject:
   - component: {fileID: 3005309151451274305}
   - component: {fileID: 80294514084062902}
   - component: {fileID: 9060366833482072133}
-  - component: {fileID: 6847137719699334429}
   m_Layer: 0
   m_Name: ProductionC172AircraftRig
   m_TagString: Untagged
@@ -7438,24 +7831,6 @@ MonoBehaviour:
   projectedTexelSafetyFactor: 0.72
   logMipChanges: 1
   authoredContractVersion: photoreal_aerial_surface_v1_explicit_mips
---- !u!114 &6847137719699334429
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7411373742601669578}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b21d1d851c42454f9ab8b1ea8a8e1a4a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.CockpitDynamics.Analog.ProductionAnalogInstrumentController
-  systems: {fileID: 1931250911074994315}
-  layout: {fileID: 11400000, guid: 1a00f2c50809256489bd1a3f3701c9ba, type: 2}
-  neutralizedMeterFilter: {fileID: 3933625592776445154}
-  neutralizedMeterRenderer: {fileID: 8894041682761315326}
-  dynamicInstrumentFilter: {fileID: 882251038503767574}
-  dynamicInstrumentRenderer: {fileID: 1148531289808265268}
 --- !u!1 &7493522847109766222
 GameObject:
   m_ObjectHideFlags: 0
@@ -7614,6 +7989,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1335199959016302985}
+  - component: {fileID: 7978569885869692351}
   m_Layer: 0
   m_Name: Dynamic_Switch_002
   m_TagString: Untagged
@@ -7637,6 +8013,27 @@ Transform:
   - {fileID: 809837507320949283}
   m_Father: {fileID: 5753584931669925431}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &7978569885869692351
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7658894249073416932}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.042525038, y: 0.048821367, z: 0.056865163}
+  m_Center: {x: 0.000000026077032, y: -0.00000018440187, z: -0.012097597}
 --- !u!1 &7857883309551610281
 GameObject:
   m_ObjectHideFlags: 0
@@ -7971,6 +8368,37 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 4300000, guid: 44cc8b3c5d4e07847b86ec5c12ade398, type: 2}
+--- !u!1 &8048844779201923395
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5614039867301126164}
+  m_Layer: 0
+  m_Name: PilotRightToeBrakePivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5614039867301126164
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8048844779201923395}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9067311160596328036}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8090760876341504573
 GameObject:
   m_ObjectHideFlags: 0
@@ -7980,6 +8408,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4033338253362184684}
+  - component: {fileID: 3400217567238314964}
   m_Layer: 0
   m_Name: Dynamic_Switch_003
   m_TagString: Untagged
@@ -8003,6 +8432,27 @@ Transform:
   - {fileID: 2245602359138317274}
   m_Father: {fileID: 5753584931669925431}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &3400217567238314964
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8090760876341504573}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.03655842, y: 0.043497935, z: 0.05953291}
+  m_Center: {x: -0.00000015739352, y: -0.00000022910535, z: 0.0054370053}
 --- !u!1 &8105911231555603955
 GameObject:
   m_ObjectHideFlags: 0
@@ -8346,6 +8796,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5913301298119056231}
+  - component: {fileID: 5359967563630217146}
   m_Layer: 0
   m_Name: Dynamic_Switch_001
   m_TagString: Untagged
@@ -8369,6 +8820,27 @@ Transform:
   - {fileID: 9139981872344753288}
   m_Father: {fileID: 5753584931669925431}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5359967563630217146
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8285402870267597722}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.037622068, y: 0.05883149, z: 0.040087584}
+  m_Center: {x: 0, y: 0.000014415011, z: 0.005642866}
 --- !u!1 &8302959109439112495
 GameObject:
   m_ObjectHideFlags: 0
@@ -8569,6 +9041,8 @@ GameObject:
   - component: {fileID: 6736871791396094732}
   - component: {fileID: 6933074023060788180}
   - component: {fileID: 8810564402341903292}
+  - component: {fileID: 8926389741152348112}
+  - component: {fileID: 6882686379251648806}
   m_Layer: 0
   m_Name: AnimatedControlSurfaces
   m_TagString: Untagged
@@ -8684,7 +9158,7 @@ MonoBehaviour:
     localRotationAxis: {x: 1, y: 0, z: 0}
     minimumAngleDegrees: 0
     maximumAngleDegrees: 0
-    localTranslationAxis: {x: 0, y: 0, z: 1}
+    localTranslationAxis: {x: 0, y: 0, z: -1}
     minimumTranslationMeters: -0.04
     maximumTranslationMeters: 0.04
   - label: Exterior rudder
@@ -8710,11 +9184,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.CockpitDynamics.ProductionCockpitSystemsController
   coordinator: {fileID: 3005309151451274305}
   electricalPowerInput:
-    hasAuthoritativeState: 0
+    hasAuthoritativeState: 1
     batteryMasterOn: 0
     alternatorMasterOn: 0
     avionicsMasterOn: 0
-    batteryCanPowerBus: 0
+    batteryCanPowerBus: 1
     alternatorProducingPower: 0
   systemsScenarioV2:
     hasAuthoritativeConfiguration: 1
@@ -8760,7 +9234,7 @@ MonoBehaviour:
       localRotationAxis: {x: 0, y: 0, z: 0}
       minimumAngleDegrees: 0
       maximumAngleDegrees: 0
-      localTranslationAxis: {x: 0, y: 0, z: 1}
+      localTranslationAxis: {x: 0, y: 0, z: -1}
       minimumTranslationMeters: -0.04
       maximumTranslationMeters: 0.04
   - label: Copilot yoke roll
@@ -8832,6 +9306,328 @@ MonoBehaviour:
       localTranslationAxis: {x: 0, y: 0.08715622, z: 0.9961947}
       minimumTranslationMeters: -0.0225
       maximumTranslationMeters: 0.0225
+  - label: Combined alternator and battery master
+    target: {fileID: 5913301298119056231}
+    motions:
+    - label: ALT/BAT master rocker state
+      channel: 217
+      inputRemap: 0
+      inputMinimum: 0
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 0
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 1, y: 0, z: 0}
+      minimumAngleDegrees: -12
+      maximumAngleDegrees: 12
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Engine primer
+    target: {fileID: 1335199959016302985}
+    motions:
+    - label: Primer plunger position
+      channel: 221
+      inputRemap: 0
+      inputMinimum: 0
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 0
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 0, y: 0, z: 0}
+      minimumAngleDegrees: 0
+      maximumAngleDegrees: 0
+      localTranslationAxis: {x: 0, y: 0, z: 1}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: -0.018
+  - label: Ignition and starter switch
+    target: {fileID: 4033338253362184684}
+    motions:
+    - label: OFF-R-L-BOTH-START selector
+      channel: 220
+      inputRemap: 0
+      inputMinimum: 0
+      inputMaximum: 4
+      invert: 0
+      responseRatePerSecond: 0
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 0, y: 0, z: 1}
+      minimumAngleDegrees: -70
+      maximumAngleDegrees: 70
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Avionics master
+    target: {fileID: 949839124294202198}
+    motions:
+    - label: Avionics master rocker state
+      channel: 219
+      inputRemap: 0
+      inputMinimum: 0
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 0
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 1, y: 0, z: 0}
+      minimumAngleDegrees: -12
+      maximumAngleDegrees: 12
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Wing flap selector
+    target: {fileID: 8944790443181660802}
+    motions:
+    - label: 0-10-20-30 degree flap selector
+      channel: 22
+      inputRemap: 0
+      inputMinimum: 0
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 0
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 1, y: 0, z: 0}
+      minimumAngleDegrees: -16
+      maximumAngleDegrees: 24
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Fuel selector
+    target: {fileID: 5176097671679220229}
+    motions:
+    - label: OFF-LEFT-BOTH-RIGHT fuel selector
+      channel: 222
+      inputRemap: 0
+      inputMinimum: 0
+      inputMaximum: 3
+      invert: 0
+      responseRatePerSecond: 0
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 0, y: 0, z: 1}
+      minimumAngleDegrees: -90
+      maximumAngleDegrees: 90
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Pilot left rudder pedal
+    target: {fileID: 2632839786798616457}
+    motions:
+    - label: Pilot left rudder pedal authored hinge travel
+      channel: 15
+      inputRemap: 0
+      inputMinimum: -1
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 5.5
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 1, y: 0, z: 0}
+      minimumAngleDegrees: 12
+      maximumAngleDegrees: -12
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Pilot right rudder pedal
+    target: {fileID: 9067311160596328036}
+    motions:
+    - label: Pilot right rudder pedal authored hinge travel
+      channel: 15
+      inputRemap: 0
+      inputMinimum: -1
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 5.5
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 1, y: 0, z: 0}
+      minimumAngleDegrees: -12
+      maximumAngleDegrees: 12
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Copilot left rudder pedal
+    target: {fileID: 1617175000157700866}
+    motions:
+    - label: Copilot left rudder pedal authored hinge travel
+      channel: 15
+      inputRemap: 0
+      inputMinimum: -1
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 5.5
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 1, y: 0, z: 0}
+      minimumAngleDegrees: 12
+      maximumAngleDegrees: -12
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Copilot right rudder pedal
+    target: {fileID: 8882049656544377105}
+    motions:
+    - label: Copilot right rudder pedal authored hinge travel
+      channel: 15
+      inputRemap: 0
+      inputMinimum: -1
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 5.5
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 1, y: 0, z: 0}
+      minimumAngleDegrees: -12
+      maximumAngleDegrees: 12
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Pilot left toe brake
+    target: {fileID: 8719869927961670161}
+    motions:
+    - label: Pilot left toe brake authored hinge travel
+      channel: 16
+      inputRemap: 0
+      inputMinimum: 0
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 5.5
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 1, y: 0, z: 0}
+      minimumAngleDegrees: 0
+      maximumAngleDegrees: 10
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Copilot left toe brake
+    target: {fileID: 2750644125708092758}
+    motions:
+    - label: Copilot left toe brake authored hinge travel
+      channel: 16
+      inputRemap: 0
+      inputMinimum: 0
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 5.5
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 1, y: 0, z: 0}
+      minimumAngleDegrees: 0
+      maximumAngleDegrees: 10
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Pilot right toe brake
+    target: {fileID: 5614039867301126164}
+    motions:
+    - label: Pilot right toe brake authored hinge travel
+      channel: 17
+      inputRemap: 0
+      inputMinimum: 0
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 5.5
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 1, y: 0, z: 0}
+      minimumAngleDegrees: 0
+      maximumAngleDegrees: 10
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
+  - label: Copilot right toe brake
+    target: {fileID: 159860249692224746}
+    motions:
+    - label: Copilot right toe brake authored hinge travel
+      channel: 17
+      inputRemap: 0
+      inputMinimum: 0
+      inputMaximum: 1
+      invert: 0
+      responseRatePerSecond: 5.5
+      useResponseCurve: 0
+      responseCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      localRotationAxis: {x: 1, y: 0, z: 0}
+      minimumAngleDegrees: 0
+      maximumAngleDegrees: 10
+      localTranslationAxis: {x: 0, y: 0, z: 0}
+      minimumTranslationMeters: 0
+      maximumTranslationMeters: 0
 --- !u!114 &6933074023060788180
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8845,6 +9641,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.CockpitTouchInputV2Bridge
   coordinator: {fileID: 3005309151451274305}
+  systemsAuthority: {fileID: 1931250911074994315}
   yokeReferenceFrame: {fileID: 263864879818673976}
   throttleReferenceFrame: {fileID: 5753584931669925431}
   mixtureReferenceFrame: {fileID: 5753584931669925431}
@@ -8890,8 +9687,78 @@ MonoBehaviour:
     allowedHand: 1
     mode: 3
     normalizedValue: 1
+  - id: alt_bat_master_toggle
+    targetCollider: {fileID: 5359967563630217146}
+    target: 4
+    allowedHand: 2
+    mode: 1
+    normalizedValue: 1
+  - id: primer_set
+    targetCollider: {fileID: 7978569885869692351}
+    target: 5
+    allowedHand: 2
+    mode: 0
+    normalizedValue: 1
+  - id: ignition_set
+    targetCollider: {fileID: 3400217567238314964}
+    target: 6
+    allowedHand: 2
+    mode: 1
+    normalizedValue: 1
+  - id: avionics_power_toggle
+    targetCollider: {fileID: 2702519515889528491}
+    target: 7
+    allowedHand: 2
+    mode: 1
+    normalizedValue: 1
+  - id: flap_selector_set
+    targetCollider: {fileID: 2074953056869830980}
+    target: 8
+    allowedHand: 2
+    mode: 1
+    normalizedValue: 1
+  - id: fuel_selector_set
+    targetCollider: {fileID: 1790047318741743800}
+    target: 9
+    allowedHand: 2
+    mode: 1
+    normalizedValue: 1
   commandConsumer: {fileID: 6933074023060788180}
   commandQueueCapacity: 32
+--- !u!114 &8926389741152348112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8562734228759498875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8ef626cdd5246fb9d833a563b3b9285, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.CockpitDynamics.V2.CockpitInstrumentV2BatchController
+  authorityProvider: {fileID: 1931250911074994315}
+  layout: {fileID: 11400000, guid: edfb638e3fb389e44b2c059e14690db4, type: 2}
+  neutralizedSourceFilter: {fileID: 3933625592776445154}
+  neutralizedSourceRenderer: {fileID: 8894041682761315326}
+  combinedDynamicFilter: {fileID: 882251038503767574}
+  combinedDynamicRenderer: {fileID: 1148531289808265268}
+--- !u!114 &6882686379251648806
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8562734228759498875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d09ad051d99d49f3911c79826f4805c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.CockpitDynamics.V2.CockpitAvionicsV2BatchController
+  authorityProvider: {fileID: 1931250911074994315}
+  layout: {fileID: 11400000, guid: e33ac0c2d33148b4fa7fca3230316301, type: 2}
+  combinedGlyphFilter: {fileID: 5078149160023036745}
+  combinedGlyphRenderer: {fileID: 6775896974154446733}
 --- !u!1 &8578341871634842778
 GameObject:
   m_ObjectHideFlags: 0
@@ -8956,6 +9823,112 @@ Transform:
   - {fileID: 4776921530006523099}
   m_Father: {fileID: 6081661009165695536}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8749756509756877812
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5110177937592099912}
+  - component: {fileID: 8593243951528343311}
+  - component: {fileID: 6817048787481161534}
+  - component: {fileID: 9205380976255841089}
+  m_Layer: 0
+  m_Name: ProductionMagneticCompassV2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5110177937592099912
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8749756509756877812}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7356277589273120372}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &8593243951528343311
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8749756509756877812}
+  m_Mesh: {fileID: 4300000, guid: d785d43a067575546bbe0ef19231c540, type: 2}
+--- !u!23 &6817048787481161534
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8749756509756877812}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 585787bc45820424eb8d607ded07f709, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &9205380976255841089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8749756509756877812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: faa1f2392977eda40bb2afeea826cc6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.CockpitDynamics.V2.CockpitMagneticCompassController
+  authorityProvider: {fileID: 1931250911074994315}
+  cardRenderer: {fileID: 6817048787481161534}
+  authoredHeadingDegrees: 330
 --- !u!1 &8761810620090188127
 GameObject:
   m_ObjectHideFlags: 0

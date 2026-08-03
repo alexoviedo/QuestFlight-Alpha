@@ -398,7 +398,7 @@ def main() -> None:
             and route["direction_policy"]
             in {
                 "SOURCE_WAY_ONEWAY_TRUNK",
-                "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT",
+                "DEDICATED_DIVIDED_HIGHWAY_PAVED_TRUCK_CIRCUIT",
             }
             for route in data["routes"]
             if route["highway_class"] == "trunk"
@@ -408,7 +408,7 @@ def main() -> None:
     require(
         all(
             data["routes"][moving["route_index"]]["direction_policy"]
-            == "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"
+            == "DEDICATED_DIVIDED_HIGHWAY_PAVED_TRUCK_CIRCUIT"
             for moving in data["moving"]
             if moving["archetype"] == 5
         ),
@@ -418,11 +418,26 @@ def main() -> None:
         route
         for route in data["routes"]
         if route["direction_policy"]
-        == "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"
+        == "DEDICATED_DIVIDED_HIGHWAY_PAVED_TRUCK_CIRCUIT"
     ]
     require(len(truck_circuits) == 1, "expected one dedicated truck circuit")
     circuit = truck_circuits[0]
     require(circuit.get("closed_loop") is True, "truck circuit is not marked closed")
+    require(
+        circuit.get("junction_policy")
+        == "PAVED_55TH_AND_63RD_STREET_CONNECTORS",
+        "truck circuit does not use the mapped paved junction policy",
+    )
+    require(
+        {398080493, 398080491, 1420076514, 398080530}.issubset(
+            set(circuit.get("source_osm_way_ids", []))
+        ),
+        "truck circuit is missing a required paved connector way",
+    )
+    require(
+        float(circuit.get("maximum_centerline_join_meters", 9999.0)) <= 2.0,
+        "truck circuit bridges an unmapped median gap",
+    )
     require(
         math.dist(
             (

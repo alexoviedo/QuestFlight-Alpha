@@ -370,6 +370,7 @@ namespace QuestFlightLab.Environment.Editor
                 Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(finalPath);
                 if (existing != null)
                 {
+                    EnsureSemiExteriorIsTwoSided(existing, definition);
                     return existing;
                 }
                 throw new InvalidOperationException(
@@ -378,7 +379,44 @@ namespace QuestFlightLab.Environment.Editor
             }
 
             Mesh generated = CombineImportedMeshes(imported, definition.name);
+            EnsureSemiExteriorIsTwoSided(generated, definition);
             return WriteMesh(finalPath, generated);
+        }
+
+        private static void EnsureSemiExteriorIsTwoSided(
+            Mesh mesh,
+            VehicleAsset definition)
+        {
+            if (definition.length < 10f)
+            {
+                return;
+            }
+
+            int[] source = mesh.GetTriangles(0);
+            int sourceTriangleCount = source.Length / 3;
+            if (sourceTriangleCount >= 800)
+            {
+                return;
+            }
+            if (sourceTriangleCount < 400 || sourceTriangleCount > 550)
+            {
+                throw new InvalidOperationException(
+                    $"{definition.name} cannot be made two-sided from an " +
+                    $"unexpected {sourceTriangleCount}-triangle source.");
+            }
+
+            int[] twoSided = new int[source.Length * 2];
+            Array.Copy(source, twoSided, source.Length);
+            int destination = source.Length;
+            for (int index = 0; index < source.Length; index += 3)
+            {
+                twoSided[destination++] = source[index];
+                twoSided[destination++] = source[index + 2];
+                twoSided[destination++] = source[index + 1];
+            }
+            mesh.SetTriangles(twoSided, 0, true);
+            mesh.RecalculateBounds();
+            EditorUtility.SetDirty(mesh);
         }
 
         private static Mesh CombineImportedMeshes(
@@ -464,7 +502,7 @@ namespace QuestFlightLab.Environment.Editor
                     $"{definition.length:F2} meters.");
             }
             uint triangles = mesh.GetIndexCount(0) / 3u;
-            uint minimumTriangles = definition.length > 10f ? 400u : 500u;
+            uint minimumTriangles = definition.length > 10f ? 800u : 500u;
             if (triangles < minimumTriangles || triangles > 1100u)
             {
                 throw new InvalidOperationException(

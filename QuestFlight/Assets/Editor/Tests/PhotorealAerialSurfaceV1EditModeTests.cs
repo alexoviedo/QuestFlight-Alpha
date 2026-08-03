@@ -53,7 +53,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root.ownershipExclusionManifest.text, Does.Contain("ProductionBuildingSurfaceLayer"));
             Assert.That(root.ownershipExclusionManifest.text, Does.Contain("ProductionCanopySurfaceLayer"));
             ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
-            Assert.That(contract.waterPresentationMode, Is.EqualTo(ProductionWaterPresentationMode.OrthophotoOnly));
+            Assert.That(contract.waterPresentationMode,
+                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoMaskedReflection));
         }
 
         [Test]
@@ -171,7 +172,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root.midBuildingCoveragePercent, Is.GreaterThanOrEqualTo(98f));
             Assert.That(root.maximumBuildingFootprintInflationPercent, Is.LessThanOrEqualTo(5f));
             Assert.That(root.canopySurfaceManifest.text,
-                Does.Contain("source_derived_close_tree_lods_then_semantic_groves_over_continuous_terrain_canopy"));
+                Does.Contain("volumetric_close_tree_lods_then_oblique_semantic_groves_over_continuous_terrain_canopy"));
+            Assert.That(root.canopySurfaceManifest.text,
+                Does.Contain("\"near_horizontal_static_foliage_card_count\": 0"));
             Assert.That(root.canopySurfaceManifest.text, Does.Contain("\"mesh_batch_count\": 4"));
             Assert.That(root.canopySurfaceManifest.text,
                 Does.Contain("REJECTED_BLOCK_AND_CLIFF_SILHOUETTES"));

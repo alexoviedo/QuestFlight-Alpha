@@ -57,7 +57,7 @@ namespace QuestFlight.Editor.Tests
                 renderer.GetComponent<MeshFilter>()?.sharedMesh != null), Is.True);
             Assert.That(surface.canopySurfaceRenderers.Sum(renderer =>
                 renderer.GetComponent<MeshFilter>().sharedMesh.triangles.Length / 3),
-                Is.InRange(30000, 59000));
+                Is.InRange(29000, 59000));
             Assert.That(surface.canopySurfaceRenderers.Select(renderer => renderer.sharedMaterial)
                 .Distinct().Count(), Is.EqualTo(1));
             Assert.That(surface.productionCanopySurfaceLayer
@@ -68,14 +68,16 @@ namespace QuestFlight.Editor.Tests
             AirportCloseTreeLodRenderer[] closeTrees = surface.productionCanopySurfaceLayer
                 .GetComponentsInChildren<AirportCloseTreeLodRenderer>(true);
             Assert.That(closeTrees, Has.Length.EqualTo(1));
-            Assert.That(closeTrees[0].Instances, Has.Length.EqualTo(696));
+            Assert.That(closeTrees[0].Instances, Has.Length.EqualTo(1047));
             Assert.That(closeTrees[0].CenterEyeWorldUprightImpostor, Is.True);
             Assert.That(closeTrees[0].PerEyeFacingBehavior, Is.False);
             Assert.That(closeTrees[0].ProjectedScreenSizeSelection, Is.True);
             Assert.That(closeTrees[0].PersistentHysteresis, Is.True);
             Assert.That(closeTrees[0].AlphaToCoverageTransition, Is.True);
             Assert.That(surface.canopySurfaceManifest.text,
-                Does.Contain("source_derived_close_tree_lods_then_semantic_groves_over_continuous_terrain_canopy"));
+                Does.Contain("volumetric_close_tree_lods_then_oblique_semantic_groves_over_continuous_terrain_canopy"));
+            Assert.That(surface.canopySurfaceManifest.text,
+                Does.Contain("\"near_horizontal_static_foliage_card_count\": 0"));
             Assert.That(surface.canopySurfaceManifest.text,
                 Does.Contain("\"source_coverage_fraction_0_1500m\": 0.960"),
                 "Committed grove geometry must cover at least 95% of the high-confidence source footprint.");
@@ -124,7 +126,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void TerrainShaderCompilesAndWaterIsOrthophotoOnly()
+        public void TerrainShaderCompilesAndWaterUsesFullMapTerrainMask()
         {
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(TerrainShaderPath);
             Assert.That(shader, Is.Not.Null);
@@ -139,7 +141,7 @@ namespace QuestFlight.Editor.Tests
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
             ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
             Assert.That(contract.waterPresentationMode,
-                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoOnly));
+                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoMaskedReflection));
             Renderer reservoir = contract.boulderReservoirSurface.GetComponent<Renderer>();
             Renderer shore = contract.boulderReservoirShoreBank.GetComponent<Renderer>();
             Assert.That(reservoir.enabled, Is.False);

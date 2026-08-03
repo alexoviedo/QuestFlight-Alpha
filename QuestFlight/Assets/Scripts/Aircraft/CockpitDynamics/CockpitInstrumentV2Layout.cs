@@ -14,7 +14,13 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
         MagneticVariation = 1 << 4,
         ActualFlapPosition = 1 << 5,
         BrakeHydraulics = 1 << 6,
-        ClockUtc = 1 << 7
+        ClockUtc = 1 << 7,
+        EngineRpm = 1 << 8,
+        FuelSystem = 1 << 9,
+        OilSystem = 1 << 10,
+        ElectricalIndications = 1 << 11,
+        VacuumSuction = 1 << 12,
+        TurnAndSlip = 1 << 13
     }
 
     /// <summary>
@@ -30,6 +36,8 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
         // Standard-datum pressure altitude. The barometric setting is applied
         // here; geometric/MSL altitude must not be substituted.
         public float pressureAltitudeFeet;
+        public float indicatedAirspeedKnots;
+        public float indicatedVerticalSpeedFeetPerMinute;
         public float barometricSettingInHg;
         public float pitchDegrees;
         public float bankDegrees;
@@ -39,6 +47,17 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
         public float leftBrakePressurePsi;
         public float rightBrakePressurePsi;
         public double clockUtcSeconds;
+        public float engineRpm;
+        public float leftFuelGallons;
+        public float rightFuelGallons;
+        public float fuelFlowGallonsPerHour;
+        public float oilPressurePsi;
+        public float oilTemperatureFahrenheit;
+        public float electricalBusVolts;
+        public float alternatorAmps;
+        public float vacuumInHg;
+        public float turnRateDegreesPerSecond;
+        public float slipSkidNormalized;
 
         public bool Has(CockpitInstrumentV2Availability required)
         {
@@ -54,16 +73,21 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
     public enum CockpitInstrumentV2Function
     {
         None = 0,
-        AltimeterHundredsNeedleDegrees = 1,
-        AltimeterThousandsNeedleDegrees = 2,
-        AltimeterTenThousandsNeedleDegrees = 3,
-        AltimeterBarometricDrumInHg = 4,
+        IndicatedAirspeedNeedleDegrees = 1,
+        IndicatedVerticalSpeedNeedleDegrees = 2,
+        AltimeterHundredsNeedleDegrees = 3,
+        AltimeterThousandsNeedleDegrees = 4,
+        AltimeterTenThousandsNeedleDegrees = 5,
+        AltimeterBarometricDrumInHg = 6,
         AttitudeBankDegrees = 10,
         AttitudePitchDegrees = 11,
         DirectionalGyroHeadingDegrees = 12,
         MagneticCompassHeadingDegrees = 13,
         ActualFlapDegrees = 20,
         AverageBrakePressurePsi = 21,
+        EngineRpmNeedleDegrees = 22,
+        TurnCoordinatorBankDegrees = 23,
+        SlipSkidNormalized = 24,
         ClockHourHandDegrees = 30,
         ClockMinuteHandDegrees = 31,
         ClockSecondHandDegrees = 32
@@ -113,6 +137,79 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
     }
 
     /// <summary>
+    /// One decimal position in the principal altimeter's frozen odometer
+    /// aperture. The six de-indexed quad vertices stay in the existing single
+    /// instrument batch; only their UVs change at runtime.
+    /// </summary>
+    [Serializable]
+    public struct CockpitInstrumentV2AltitudeDigitSlot
+    {
+        public string label;
+        public int firstVertex;
+        public int vertexCount;
+        public int placeValue;
+    }
+
+    /// <summary>
+    /// Frozen topology contract for the existing attitude-indicator gyro ball.
+    /// The ball remains in the neutralized source mesh and is selected in the
+    /// vertex shader, so pitch and bank add no renderer, material, or mesh
+    /// upload. The miniature-aircraft reference geometry is deliberately not
+    /// part of this contract and therefore remains fixed to the case.
+    /// </summary>
+    [Serializable]
+    public struct CockpitInstrumentV2AttitudeContract
+    {
+        public bool enabled;
+        public int[] sourceComponentSeeds;
+        public int sourceVertexCount;
+        public int sourceTriangleCount;
+        public Vector3 pivotLocal;
+        public Vector3 pitchAxisLocal;
+        public Vector3 bankAxisLocal;
+        public float sphereRadiusLocal;
+        public float sphereFitRmsLocal;
+
+        public bool Validate(out string error)
+        {
+            if (!enabled)
+            {
+                error = "The represented attitude-indicator gyro ball is disabled.";
+                return false;
+            }
+            if (sourceComponentSeeds == null ||
+                sourceComponentSeeds.Length != 5 ||
+                sourceVertexCount != 998 ||
+                sourceTriangleCount != 1740)
+            {
+                error = "The frozen attitude-indicator topology contract changed.";
+                return false;
+            }
+            if (pitchAxisLocal.sqrMagnitude < 0.999f ||
+                bankAxisLocal.sqrMagnitude < 0.999f ||
+                Mathf.Abs(Vector3.Dot(
+                    pitchAxisLocal.normalized,
+                    bankAxisLocal.normalized)) > 0.001f)
+            {
+                error = "The attitude-indicator axes are not an orthonormal frame.";
+                return false;
+            }
+            if (sphereRadiusLocal <= 0f ||
+                float.IsNaN(sphereRadiusLocal) ||
+                float.IsInfinity(sphereRadiusLocal) ||
+                sphereFitRmsLocal < 0f ||
+                sphereFitRmsLocal > 0.00006f)
+            {
+                error = "The attitude-indicator sphere fit is outside tolerance.";
+                return false;
+            }
+
+            error = string.Empty;
+            return true;
+        }
+    }
+
+    /// <summary>
     /// Generated Editor-time partition of represented source geometry. The V2
     /// controller consumes exactly one neutralized static renderer and one
     /// combined dynamic renderer using the same existing source material.
@@ -124,9 +221,18 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
         [SerializeField] private Material existingSourceMaterial;
         [SerializeField] private CockpitInstrumentV2MeshBinding[] bindings =
             Array.Empty<CockpitInstrumentV2MeshBinding>();
+        [SerializeField]
+        private CockpitInstrumentV2AltitudeDigitSlot[] altitudeDigitSlots =
+            Array.Empty<CockpitInstrumentV2AltitudeDigitSlot>();
+        [SerializeField] private Rect[] altitudeDigitUvRects =
+            Array.Empty<Rect>();
+        [SerializeField]
+        private CockpitInstrumentV2AttitudeContract attitudeContract;
         [SerializeField] private int sourceTriangleCount;
         [SerializeField] private int neutralizedTriangleCount;
         [SerializeField] private int dynamicTriangleCount;
+        [SerializeField] private int staticOverlayVertexCount;
+        [SerializeField] private bool opaqueOverlayCoversSourceApertures;
         [SerializeField] private string sourceAssetGuid = string.Empty;
         [SerializeField] private string sourceSha256 = string.Empty;
 
@@ -134,9 +240,17 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
         public Mesh CombinedDynamicMesh => combinedDynamicMesh;
         public Material ExistingSourceMaterial => existingSourceMaterial;
         public CockpitInstrumentV2MeshBinding[] Bindings => bindings;
+        public CockpitInstrumentV2AltitudeDigitSlot[] AltitudeDigitSlots =>
+            altitudeDigitSlots;
+        public Rect[] AltitudeDigitUvRects => altitudeDigitUvRects;
+        public CockpitInstrumentV2AttitudeContract AttitudeContract =>
+            attitudeContract;
         public int SourceTriangleCount => sourceTriangleCount;
         public int NeutralizedTriangleCount => neutralizedTriangleCount;
         public int DynamicTriangleCount => dynamicTriangleCount;
+        public int StaticOverlayVertexCount => staticOverlayVertexCount;
+        public bool OpaqueOverlayCoversSourceApertures =>
+            opaqueOverlayCoversSourceApertures;
         public string SourceAssetGuid => sourceAssetGuid;
         public string SourceSha256 => sourceSha256;
 
@@ -151,6 +265,37 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
             string authoredSourceAssetGuid,
             string authoredSourceSha256)
         {
+            ConfigureGenerated(
+                authoredNeutralizedSourceMesh,
+                authoredCombinedDynamicMesh,
+                authoredExistingSourceMaterial,
+                authoredBindings,
+                authoredSourceTriangleCount,
+                authoredNeutralizedTriangleCount,
+                authoredDynamicTriangleCount,
+                authoredSourceAssetGuid,
+                authoredSourceSha256,
+                0,
+                false,
+                Array.Empty<CockpitInstrumentV2AltitudeDigitSlot>(),
+                Array.Empty<Rect>());
+        }
+
+        public void ConfigureGenerated(
+            Mesh authoredNeutralizedSourceMesh,
+            Mesh authoredCombinedDynamicMesh,
+            Material authoredExistingSourceMaterial,
+            CockpitInstrumentV2MeshBinding[] authoredBindings,
+            int authoredSourceTriangleCount,
+            int authoredNeutralizedTriangleCount,
+            int authoredDynamicTriangleCount,
+            string authoredSourceAssetGuid,
+            string authoredSourceSha256,
+            int authoredStaticOverlayVertexCount,
+            bool authoredOpaqueOverlayCoversSourceApertures,
+            CockpitInstrumentV2AltitudeDigitSlot[] authoredAltitudeDigitSlots,
+            Rect[] authoredAltitudeDigitUvRects)
+        {
             neutralizedSourceMesh = authoredNeutralizedSourceMesh;
             combinedDynamicMesh = authoredCombinedDynamicMesh;
             existingSourceMaterial = authoredExistingSourceMaterial;
@@ -160,6 +305,19 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
             dynamicTriangleCount = authoredDynamicTriangleCount;
             sourceAssetGuid = authoredSourceAssetGuid ?? string.Empty;
             sourceSha256 = authoredSourceSha256 ?? string.Empty;
+            staticOverlayVertexCount = authoredStaticOverlayVertexCount;
+            opaqueOverlayCoversSourceApertures =
+                authoredOpaqueOverlayCoversSourceApertures;
+            altitudeDigitSlots = authoredAltitudeDigitSlots ??
+                Array.Empty<CockpitInstrumentV2AltitudeDigitSlot>();
+            altitudeDigitUvRects = authoredAltitudeDigitUvRects ??
+                Array.Empty<Rect>();
+        }
+
+        public void ConfigureAttitudeContract(
+            CockpitInstrumentV2AttitudeContract authoredContract)
+        {
+            attitudeContract = authoredContract;
         }
 
         public bool Validate(out string error)
@@ -182,11 +340,9 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
             }
             if (sourceTriangleCount <= 0 ||
                 neutralizedTriangleCount < 0 ||
-                dynamicTriangleCount <= 0 ||
-                neutralizedTriangleCount + dynamicTriangleCount !=
-                    sourceTriangleCount)
+                dynamicTriangleCount <= 0)
             {
-                error = "V2 instrument triangle partitions do not reconstruct the source.";
+                error = "V2 instrument triangle accounting is invalid.";
                 return false;
             }
             if ((int)(neutralizedSourceMesh.GetIndexCount(0) / 3u) !=
@@ -196,6 +352,73 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
             {
                 error = "V2 serialized triangle counts do not match the meshes.";
                 return false;
+            }
+            if (staticOverlayVertexCount < 0 ||
+                staticOverlayVertexCount > combinedDynamicMesh.vertexCount ||
+                staticOverlayVertexCount % 3 != 0)
+            {
+                error = "V2 static overlay vertex prefix is invalid.";
+                return false;
+            }
+            if (opaqueOverlayCoversSourceApertures)
+            {
+                if (staticOverlayVertexCount == 0)
+                {
+                    error =
+                        "Opaque overlay presentation requires a non-empty static prefix.";
+                    return false;
+                }
+                if (neutralizedTriangleCount > sourceTriangleCount)
+                {
+                    error =
+                        "The neutralized source cannot contain more triangles than its source.";
+                    return false;
+                }
+            }
+            else if (staticOverlayVertexCount != 0 ||
+                     neutralizedTriangleCount + dynamicTriangleCount !=
+                         sourceTriangleCount)
+            {
+                error =
+                    "A source partition without an overlay must reconstruct the source.";
+                return false;
+            }
+            bool hasAltitudeDigitContract =
+                (altitudeDigitUvRects != null &&
+                 altitudeDigitUvRects.Length > 0) ||
+                (altitudeDigitSlots != null && altitudeDigitSlots.Length > 0);
+            if (hasAltitudeDigitContract &&
+                (altitudeDigitUvRects == null ||
+                 altitudeDigitUvRects.Length != 10))
+            {
+                error = "The altimeter digit atlas must provide 0-9 UV cells.";
+                return false;
+            }
+            if (hasAltitudeDigitContract &&
+                (altitudeDigitSlots == null ||
+                 altitudeDigitSlots.Length != 4))
+            {
+                error = "The principal altimeter requires four odometer digits.";
+                return false;
+            }
+            int expectedPlace = 1000;
+            for (int index = 0;
+                 hasAltitudeDigitContract && index < altitudeDigitSlots.Length;
+                 index++)
+            {
+                CockpitInstrumentV2AltitudeDigitSlot slot =
+                    altitudeDigitSlots[index];
+                if (string.IsNullOrWhiteSpace(slot.label) ||
+                    slot.vertexCount != 6 ||
+                    slot.firstVertex < 0 ||
+                    slot.firstVertex + slot.vertexCount >
+                        staticOverlayVertexCount ||
+                    slot.placeValue != expectedPlace)
+                {
+                    error = $"Altimeter digit slot {index} is malformed.";
+                    return false;
+                }
+                expectedPlace /= 10;
             }
             if (string.IsNullOrWhiteSpace(sourceAssetGuid) ||
                 sourceSha256 == null || sourceSha256.Length != 64)
@@ -208,8 +431,29 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
                 error = "V2 instrument bindings are missing.";
                 return false;
             }
+            if (!attitudeContract.Validate(out error))
+                return false;
 
-            int expectedFirstVertex = 0;
+            var sourceSelector = new System.Collections.Generic.List<Vector4>();
+            neutralizedSourceMesh.GetUVs(3, sourceSelector);
+            if (sourceSelector.Count != neutralizedSourceMesh.vertexCount)
+            {
+                error = "The attitude-indicator source selector stream is incomplete.";
+                return false;
+            }
+            int attitudeVertexCount = 0;
+            for (int index = 0; index < sourceSelector.Count; index++)
+            {
+                if (sourceSelector[index].z > 0.5f)
+                    attitudeVertexCount++;
+            }
+            if (attitudeVertexCount != attitudeContract.sourceVertexCount)
+            {
+                error = "The attitude-indicator shader mask does not match its frozen topology.";
+                return false;
+            }
+
+            int expectedFirstVertex = staticOverlayVertexCount;
             bool[] functions = new bool[
                 (int)CockpitInstrumentV2Function.ClockSecondHandDegrees + 1];
             for (int index = 0; index < bindings.Length; index++)

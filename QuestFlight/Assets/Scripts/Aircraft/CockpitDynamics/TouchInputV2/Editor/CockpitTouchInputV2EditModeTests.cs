@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2;
 using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Input;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
         private GameObject _root;
         private ProductControlInput _input;
         private FlightDynamicsCoordinator _coordinator;
+        private ProductionCockpitSystemsController _systems;
         private CockpitTouchInputV2Bridge _bridge;
         private Transform _yokeFrame;
         private Transform _engineFrame;
@@ -31,6 +33,20 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
             _coordinator =
                 _root.AddComponent<FlightDynamicsCoordinator>();
             _coordinator.controls = _input;
+            _systems =
+                _root.AddComponent<ProductionCockpitSystemsController>();
+            _systems.ConfigureAuthoredSource(
+                _coordinator,
+                default,
+                Scenario());
+            Assert.That(
+                _systems.StepForTest(
+                    State(),
+                    Controls(),
+                    default,
+                    Scenario(),
+                    0f),
+                Is.True);
             _yokeFrame = Child("StableYokeFrame", _root.transform);
             _engineFrame = Child("StableEngineFrame", _root.transform);
             _bridge =
@@ -46,6 +62,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                     .AuthoredEngineFullForwardAxisLocal,
                 CockpitTouchInputV2Bridge
                     .AuthoredEngineFullForwardAxisLocal);
+            _bridge.ConfigureSystemsAuthority(_systems);
             _root.SetActive(true);
             Assert.That(
                 _bridge.ValidateAuthoredReferences(out string error),
@@ -82,7 +99,8 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                         CockpitTouchInteractionV2Target.PilotYoke,
                         CockpitTouchInteractionV2Hand.Left,
                         CockpitTouchInteractionV2Operation.UpdateGrab,
-                        new Vector3(0f, 0f, 0.02f),
+                        // Pull 20 mm aft: positive elevator / nose-up.
+                        new Vector3(0f, 0f, -0.02f),
                         Quaternion.AngleAxis(
                             27.5f,
                             Vector3.forward))),
@@ -182,7 +200,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
         }
 
         [Test]
-        public void WrongHandsUnknownBindingsAndCompetingOwnersFailClosed()
+        public void EitherPhysicalHandWorksButUnknownBindingsFailClosed()
         {
             Assert.That(
                 _bridge.TryConsumeCockpitTouchCommand(
@@ -193,7 +211,17 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                         CockpitTouchInteractionV2Operation.BeginGrab,
                         Vector3.zero,
                         Quaternion.identity)),
-                Is.False);
+                Is.True);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "pilot_yoke_grab",
+                        CockpitTouchInteractionV2Target.PilotYoke,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.EndGrab,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
             Assert.That(
                 _bridge.TryConsumeCockpitTouchCommand(
                     Command(
@@ -230,6 +258,264 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                     ProductTouchControlChannel.Throttle,
                     owner),
                 Is.True);
+        }
+
+        [Test]
+        public void IndependentSwitchCommandsRouteThroughSystemsAuthority()
+        {
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        CockpitTouchInputV2Bridge
+                            .AltBatMasterBindingId,
+                        CockpitTouchInteractionV2Target.AltBatMaster,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.Toggle,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        CockpitTouchInputV2Bridge
+                            .PrimerBindingIdPrefix + "_65",
+                        CockpitTouchInteractionV2Target.Primer,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.SetNormalized,
+                        Vector3.zero,
+                        Quaternion.identity,
+                        0.65f)),
+                Is.True);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        CockpitTouchInputV2Bridge
+                            .IgnitionBindingIdPrefix + "_start",
+                        CockpitTouchInteractionV2Target.IgnitionStart,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.SetNormalized,
+                        Vector3.zero,
+                        Quaternion.identity,
+                        1f)),
+                Is.True);
+            FlightDynamicsState ignitionState = State();
+            ignitionState.simulationTimeSeconds += 0.1;
+            Assert.That(
+                _systems.StepForTest(
+                    ignitionState,
+                    Controls(),
+                    default,
+                    0.1f),
+                Is.True);
+            Assert.That(
+                _systems.TryGetCockpitSystemsSnapshotV2(
+                    out CockpitSystemsSnapshotV2 ignitionStart),
+                Is.True);
+            Assert.That(
+                ignitionStart.ignitionSwitchPosition,
+                Is.EqualTo(CockpitIgnitionSwitchPositionV2.Start));
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        CockpitTouchInputV2Bridge
+                            .IgnitionBindingIdPrefix + "_both",
+                        CockpitTouchInteractionV2Target.IgnitionStart,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.SetNormalized,
+                        Vector3.zero,
+                        Quaternion.identity,
+                        0.75f)),
+                Is.True);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        CockpitTouchInputV2Bridge
+                            .AvionicsPowerBindingId,
+                        CockpitTouchInteractionV2Target.AvionicsPower,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.Toggle,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        CockpitTouchInputV2Bridge
+                            .FlapSelectorBindingIdPrefix + "_75",
+                        CockpitTouchInteractionV2Target.FlapSelector,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.SetNormalized,
+                        Vector3.zero,
+                        Quaternion.identity,
+                        0.75f)),
+                Is.True);
+            Assert.That(_input.Current.flaps, Is.EqualTo(0.75f));
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        CockpitTouchInputV2Bridge
+                            .FuelSelectorBindingIdPrefix + "_right",
+                        CockpitTouchInteractionV2Target.FuelSelector,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.SetNormalized,
+                        Vector3.zero,
+                        Quaternion.identity,
+                        1f)),
+                Is.True);
+
+            FlightDynamicsState state = State();
+            state.simulationTimeSeconds += 1.0;
+            FlightDynamicsControlSnapshot appliedControls = Controls();
+            appliedControls.flaps = _input.Current.flaps;
+            Assert.That(
+                _systems.StepForTest(
+                    state,
+                    appliedControls,
+                    default,
+                    1f),
+                Is.True);
+            Assert.That(
+                _systems.TryGetCockpitSystemsSnapshotV2(
+                    out CockpitSystemsSnapshotV2 snapshot),
+                Is.True);
+            Assert.That(snapshot.batteryMasterOn, Is.False);
+            Assert.That(snapshot.alternatorMasterOn, Is.False);
+            Assert.That(
+                snapshot.primerPositionNormalized,
+                Is.EqualTo(0.65f).Within(0.0001f));
+            Assert.That(
+                snapshot.ignitionSwitchPosition,
+                Is.EqualTo(CockpitIgnitionSwitchPositionV2.Both));
+            Assert.That(snapshot.avionicsMasterOn, Is.False);
+            Assert.That(
+                snapshot.flapSelectorCommandNormalized,
+                Is.EqualTo(0.75f).Within(0.0001f));
+            Assert.That(
+                snapshot.fuelSelectorPosition,
+                Is.EqualTo(CockpitFuelSelectorPositionV2.Right));
+        }
+
+        [Test]
+        public void OneColliderToggleBindingsAdvanceSafeDetents()
+        {
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        CockpitTouchInputV2Bridge
+                            .IgnitionBindingIdPrefix + "_cycle",
+                        CockpitTouchInteractionV2Target.IgnitionStart,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.Toggle,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        CockpitTouchInputV2Bridge
+                            .FuelSelectorBindingIdPrefix + "_cycle",
+                        CockpitTouchInteractionV2Target.FuelSelector,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.Toggle,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        CockpitTouchInputV2Bridge
+                            .FlapSelectorBindingIdPrefix + "_cycle",
+                        CockpitTouchInteractionV2Target.FlapSelector,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.Toggle,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(
+                _input.Current.flaps,
+                Is.EqualTo(1f / 3f).Within(0.0001f));
+
+            FlightDynamicsControlSnapshot appliedControls = Controls();
+            appliedControls.flaps = _input.Current.flaps;
+            FlightDynamicsState state = State();
+            state.simulationTimeSeconds += 0.1;
+            Assert.That(
+                _systems.StepForTest(
+                    state,
+                    appliedControls,
+                    default,
+                    0.1f),
+                Is.True);
+            Assert.That(
+                _systems.TryGetCockpitSystemsSnapshotV2(
+                    out CockpitSystemsSnapshotV2 snapshot),
+                Is.True);
+            Assert.That(
+                snapshot.ignitionSwitchPosition,
+                Is.EqualTo(CockpitIgnitionSwitchPositionV2.Off));
+            Assert.That(
+                snapshot.fuelSelectorPosition,
+                Is.EqualTo(CockpitFuelSelectorPositionV2.Right));
+            Assert.That(
+                snapshot.flapSelectorCommandNormalized,
+                Is.EqualTo(1f / 3f).Within(0.0001f));
+        }
+
+        [Test]
+        public void PrimerMomentaryPullReturnsToClosedOnRelease()
+        {
+            string bindingId =
+                CockpitTouchInputV2Bridge.PrimerBindingIdPrefix +
+                "_momentary";
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        bindingId,
+                        CockpitTouchInteractionV2Target.Primer,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.Press,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            FlightDynamicsState pulled = State();
+            pulled.simulationTimeSeconds += 0.1;
+            Assert.That(
+                _systems.StepForTest(
+                    pulled,
+                    Controls(),
+                    default,
+                    0.1f),
+                Is.True);
+            Assert.That(
+                _systems.TryGetCockpitSystemsSnapshotV2(
+                    out CockpitSystemsSnapshotV2 open),
+                Is.True);
+            Assert.That(open.primerPositionNormalized, Is.EqualTo(1f));
+
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        bindingId,
+                        CockpitTouchInteractionV2Target.Primer,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.Release,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            FlightDynamicsState released = State();
+            released.simulationTimeSeconds += 0.2;
+            Assert.That(
+                _systems.StepForTest(
+                    released,
+                    Controls(),
+                    default,
+                    0.1f),
+                Is.True);
+            Assert.That(
+                _systems.TryGetCockpitSystemsSnapshotV2(
+                    out CockpitSystemsSnapshotV2 closed),
+                Is.True);
+            Assert.That(closed.primerPositionNormalized, Is.EqualTo(0f));
         }
 
         [Test]
@@ -304,15 +590,80 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
             Vector3 pointerWorldPosition,
             Quaternion pointerWorldRotation)
         {
+            return Command(
+                id,
+                target,
+                hand,
+                operation,
+                pointerWorldPosition,
+                pointerWorldRotation,
+                0f);
+        }
+
+        private static CockpitTouchInteractionV2Command Command(
+            string id,
+            CockpitTouchInteractionV2Target target,
+            CockpitTouchInteractionV2Hand hand,
+            CockpitTouchInteractionV2Operation operation,
+            Vector3 pointerWorldPosition,
+            Quaternion pointerWorldRotation,
+            float normalizedValue)
+        {
             return new CockpitTouchInteractionV2Command
             {
                 bindingId = id,
                 target = target,
                 hand = hand,
                 operation = operation,
+                normalizedValue = normalizedValue,
                 pointerWorldPosition = pointerWorldPosition,
                 pointerWorldRotation = pointerWorldRotation,
                 hitWorldPosition = pointerWorldPosition
+            };
+        }
+
+        private static CockpitSystemsScenarioV2 Scenario()
+        {
+            return new CockpitSystemsScenarioV2
+            {
+                hasAuthoritativeConfiguration = true,
+                scenarioUtcUnixSeconds = 1_780_000_000L,
+                batteryMasterOn = true,
+                alternatorMasterOn = true,
+                avionicsMasterOn = true,
+                ignitionSwitchPosition =
+                    CockpitIgnitionSwitchPositionV2.Both,
+                primerPositionNormalized = 0f,
+                fuelSelectorPosition =
+                    CockpitFuelSelectorPositionV2.Both
+            };
+        }
+
+        private static FlightDynamicsState State()
+        {
+            return new FlightDynamicsState
+            {
+                simulationTimeSeconds = 12.5,
+                latitudeDegrees = 40.03936527,
+                longitudeDegrees = -105.22608958,
+                altitudeMslMeters = 1600.0,
+                altitudeAglMeters = 0.0,
+                calibratedAirspeedKnots = 0.0,
+                groundSpeedKnots = 0.0,
+                headingDegrees = 80.0,
+                rotationUnity = Quaternion.identity,
+                engineRpm = 900.0,
+                weightOnWheels = true
+            };
+        }
+
+        private static FlightDynamicsControlSnapshot Controls()
+        {
+            return new FlightDynamicsControlSnapshot
+            {
+                throttle = 0.25f,
+                mixture = 1f,
+                flaps = 0f
             };
         }
 

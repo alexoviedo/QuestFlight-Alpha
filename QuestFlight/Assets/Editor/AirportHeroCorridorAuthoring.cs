@@ -40,7 +40,12 @@ namespace QuestFlightLab.Editor
             public string asset_id;
             public string address;
             public long source_osm_id;
+            public string family;
             public float[] position_xz_m;
+            public int footprint_vertex_count;
+            public bool wall_winding_normalized;
+            public string roof_style;
+            public float maximum_footprint_error_m;
             public LodRecord[] lods = Array.Empty<LodRecord>();
         }
 
@@ -69,6 +74,18 @@ namespace QuestFlightLab.Editor
                     item.position_xz_m == null || item.position_xz_m.Length != 2 ||
                     item.lods == null || item.lods.Length != 3))
                 throw new InvalidOperationException("Airport hero corridor generation record is incomplete.");
+            if (report.assets.Any(item =>
+                    item.footprint_vertex_count < 3 ||
+                    !item.wall_winding_normalized ||
+                    item.maximum_footprint_error_m > 0.01f))
+                throw new InvalidOperationException(
+                    "Airport hero corridor requires outward-facing walls and <= 1 cm footprint error.");
+            if (report.assets.Any(item =>
+                    string.Equals(item.family, "residential", StringComparison.Ordinal) &&
+                    !string.Equals(item.roof_style, "exact_footprint_gable",
+                        StringComparison.Ordinal)))
+                throw new InvalidOperationException(
+                    "Every residential takeoff-corridor building requires an exact-footprint pitched roof.");
 
             ProductionTerrainSurfaceAsset surface = LoadRequired<ProductionTerrainSurfaceAsset>(SurfacePath);
             Mesh corridorMesh = BuildCombinedCorridor(report.assets, surface, 0);

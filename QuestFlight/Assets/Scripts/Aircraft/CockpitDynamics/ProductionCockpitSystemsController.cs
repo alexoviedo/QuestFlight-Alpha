@@ -178,6 +178,23 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
 
             CockpitInstrumentV2Availability availability =
                 CockpitInstrumentV2Availability.None;
+            if (legacy.Has(CockpitDataAvailability.AirData))
+            {
+                availability |=
+                    CockpitInstrumentV2Availability.AirData |
+                    CockpitInstrumentV2Availability.BarometricSetting;
+                snapshot.indicatedAirspeedKnots =
+                    legacy.indicatedAirspeedKnots;
+                snapshot.indicatedVerticalSpeedFeetPerMinute =
+                    legacy.indicatedVerticalSpeedFeetPerMinute;
+                // The legacy product flight snapshot always carries indicated
+                // MSL altitude. Use standard pressure as a fail-safe until the
+                // richer V2 barometric snapshot is available later in this
+                // method, where it deterministically overrides both fields.
+                snapshot.pressureAltitudeFeet =
+                    legacy.indicatedAltitudeMslFeet;
+                snapshot.barometricSettingInHg = 29.92f;
+            }
             if (legacy.Has(CockpitDataAvailability.Attitude))
             {
                 availability |= CockpitInstrumentV2Availability.Attitude;
@@ -190,6 +207,19 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                 snapshot.trueHeadingDegrees =
                     legacy.indicatedHeadingDegrees;
             }
+            if (legacy.Has(CockpitDataAvailability.BodyTurnRate) &&
+                legacy.Has(CockpitDataAvailability.AerodynamicSideslip))
+            {
+                availability |=
+                    CockpitInstrumentV2Availability.TurnAndSlip;
+                snapshot.turnRateDegreesPerSecond =
+                    legacy.indicatedBodyTurnRateDegreesPerSecond;
+                // Presentation-grade slip-ball contract: the authored travel
+                // reaches its stop at +/-8 degrees of authoritative sideslip.
+                // This is not a lateral-accelerometer certification claim.
+                snapshot.slipSkidNormalized = Mathf.Clamp(
+                    legacy.aerodynamicSideslipDegrees / 8f, -1f, 1f);
+            }
 
             CockpitSystemsSnapshotV2 systems = _systemsV2Model.Current;
             if (systems.isValid &&
@@ -198,6 +228,88 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                 availability |= CockpitInstrumentV2Availability.ClockUtc;
                 snapshot.clockUtcSeconds =
                     systems.scenarioUtcSecondsSinceUnixEpoch;
+            }
+            if (systems.isValid &&
+                systems.Has(
+                    CockpitSystemsAvailabilityV2.PressureAltitude |
+                    CockpitSystemsAvailabilityV2.BarometricSetting))
+            {
+                availability |=
+                    CockpitInstrumentV2Availability.AirData |
+                    CockpitInstrumentV2Availability.BarometricSetting;
+                snapshot.pressureAltitudeFeet =
+                    systems.pressureAltitudeFeet;
+                snapshot.barometricSettingInHg =
+                    systems.barometricSettingInHg;
+            }
+            if (systems.isValid &&
+                systems.Has(CockpitSystemsAvailabilityV2.MagneticVariation))
+            {
+                availability |=
+                    CockpitInstrumentV2Availability.MagneticVariation;
+                snapshot.magneticVariationEastDegrees =
+                    systems.magneticVariationEastDegrees;
+            }
+            if (systems.isValid &&
+                systems.Has(CockpitSystemsAvailabilityV2.ActualFlapPosition))
+            {
+                availability |=
+                    CockpitInstrumentV2Availability.ActualFlapPosition;
+                snapshot.actualFlapDegrees = systems.actualFlapDegrees;
+            }
+            if (systems.isValid &&
+                systems.Has(
+                    CockpitSystemsAvailabilityV2.BrakeHydraulicPressure))
+            {
+                availability |=
+                    CockpitInstrumentV2Availability.BrakeHydraulics;
+                snapshot.leftBrakePressurePsi =
+                    systems.leftBrakePressurePsi;
+                snapshot.rightBrakePressurePsi =
+                    systems.rightBrakePressurePsi;
+            }
+            if (systems.isValid &&
+                systems.Has(CockpitSystemsAvailabilityV2.EngineRpm))
+            {
+                availability |= CockpitInstrumentV2Availability.EngineRpm;
+                snapshot.engineRpm = systems.engineRpm;
+            }
+            if (systems.isValid &&
+                systems.Has(
+                    CockpitSystemsAvailabilityV2.FuelQuantity |
+                    CockpitSystemsAvailabilityV2.FuelFlow))
+            {
+                availability |= CockpitInstrumentV2Availability.FuelSystem;
+                snapshot.leftFuelGallons = systems.leftFuelGallons;
+                snapshot.rightFuelGallons = systems.rightFuelGallons;
+                snapshot.fuelFlowGallonsPerHour =
+                    systems.fuelFlowGallonsPerHour;
+            }
+            if (systems.isValid &&
+                systems.Has(
+                    CockpitSystemsAvailabilityV2.OilPressure |
+                    CockpitSystemsAvailabilityV2.OilTemperature))
+            {
+                availability |= CockpitInstrumentV2Availability.OilSystem;
+                snapshot.oilPressurePsi = systems.oilPressurePsi;
+                snapshot.oilTemperatureFahrenheit =
+                    systems.oilTemperatureCelsius * 1.8f + 32f;
+            }
+            if (systems.isValid &&
+                systems.Has(
+                    CockpitSystemsAvailabilityV2.ElectricalIndications))
+            {
+                availability |=
+                    CockpitInstrumentV2Availability.ElectricalIndications;
+                snapshot.electricalBusVolts = systems.electricalBusVolts;
+                snapshot.alternatorAmps = systems.alternatorAmps;
+            }
+            if (systems.isValid &&
+                systems.Has(CockpitSystemsAvailabilityV2.VacuumSuction))
+            {
+                availability |=
+                    CockpitInstrumentV2Availability.VacuumSuction;
+                snapshot.vacuumInHg = systems.vacuumInHg;
             }
 
             snapshot.availability = availability;
@@ -222,6 +334,38 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             snapshot.availability =
                 CockpitAvionicsV2Availability.ElectricalPower;
             snapshot.avionicsBusPowered = systems.avionicsBusPowered;
+            if (systems.Has(
+                    CockpitSystemsAvailabilityV2.GpsDepartureStatus))
+            {
+                snapshot.availability |=
+                    CockpitAvionicsV2Availability.GpsNavigation;
+                snapshot.gpsDestinationIdentAscii =
+                    systems.gpsDestinationIdentAscii;
+                snapshot.gpsBearingDegrees = systems.gpsBearingDegrees;
+                snapshot.gpsDistanceNauticalMiles =
+                    systems.gpsDistanceNauticalMiles;
+                snapshot.gpsGroundTrackDegrees =
+                    systems.gpsGroundTrackDegrees;
+                snapshot.gpsAltitudeMslFeet = systems.gpsAltitudeMslFeet;
+            }
+            if (systems.Has(CockpitSystemsAvailabilityV2.ComRadios))
+            {
+                snapshot.availability |=
+                    CockpitAvionicsV2Availability.ComRadios;
+                snapshot.com1ActiveKHz = systems.com1ActiveKHz;
+                snapshot.com1StandbyKHz = systems.com1StandbyKHz;
+                snapshot.com2ActiveKHz = systems.com2ActiveKHz;
+                snapshot.com2StandbyKHz = systems.com2StandbyKHz;
+            }
+            if (systems.Has(CockpitSystemsAvailabilityV2.Transponder))
+            {
+                snapshot.availability |=
+                    CockpitAvionicsV2Availability.Transponder;
+                snapshot.transponderCodeBcd = systems.transponderCodeBcd;
+                snapshot.transponderMode =
+                    (CockpitAvionicsV2TransponderMode)
+                    systems.transponderMode;
+            }
             return true;
         }
 
@@ -316,6 +460,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             out float value)
         {
             CockpitSystemsSnapshot snapshot = _model.Current;
+            CockpitSystemsSnapshotV2 systems = _systemsV2Model.Current;
             value = 0f;
             if (!snapshot.isValid) return false;
 
@@ -395,10 +540,103 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                 case CockpitPresentationChannel.TurnRateDegreesPerSecond:
                     value = snapshot.indicatedBodyTurnRateDegreesPerSecond;
                     return snapshot.Has(CockpitDataAvailability.BodyTurnRate);
+                case CockpitPresentationChannel.ActualFlapDegrees:
+                    value = systems.actualFlapDegrees;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2
+                                   .ActualFlapPosition);
+                case CockpitPresentationChannel.MagneticHeadingDegrees:
+                    value = systems.magneticHeadingDegrees;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2.MagneticHeading);
+                case CockpitPresentationChannel.BarometricSettingInHg:
+                    value = systems.barometricSettingInHg;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2
+                                   .BarometricSetting);
+                case CockpitPresentationChannel.LeftFuelGallons:
+                    value = systems.leftFuelGallons;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2.FuelQuantity);
+                case CockpitPresentationChannel.RightFuelGallons:
+                    value = systems.rightFuelGallons;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2.FuelQuantity);
+                case CockpitPresentationChannel.FuelFlowGallonsPerHour:
+                    value = systems.fuelFlowGallonsPerHour;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2.FuelFlow);
+                case CockpitPresentationChannel.OilPressurePsi:
+                    value = systems.oilPressurePsi;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2.OilPressure);
+                case CockpitPresentationChannel.OilTemperatureFahrenheit:
+                    value = systems.oilTemperatureCelsius * 1.8f + 32f;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2.OilTemperature);
+                case CockpitPresentationChannel.ElectricalBusVolts:
+                    value = systems.electricalBusVolts;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2
+                                   .ElectricalIndications);
+                case CockpitPresentationChannel.AlternatorAmps:
+                    value = systems.alternatorAmps;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2
+                                   .ElectricalIndications);
+                case CockpitPresentationChannel.VacuumInHg:
+                    value = systems.vacuumInHg;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2.VacuumSuction);
+                case CockpitPresentationChannel.BatteryMasterOn:
+                    value = systems.batteryMasterOn ? 1f : 0f;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2
+                                   .ElectricalControlPositions);
+                case CockpitPresentationChannel.AlternatorMasterOn:
+                    value = systems.alternatorMasterOn ? 1f : 0f;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2
+                                   .ElectricalControlPositions);
+                case CockpitPresentationChannel.AvionicsMasterOn:
+                    value = systems.avionicsMasterOn ? 1f : 0f;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2
+                                   .ElectricalControlPositions);
+                case CockpitPresentationChannel.IgnitionSwitchPosition:
+                    value = (float)systems.ignitionSwitchPosition;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2
+                                   .IgnitionAndStarterControl);
+                case CockpitPresentationChannel.PrimerPositionNormalized:
+                    value = systems.primerPositionNormalized;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2.PrimerControl);
+                case CockpitPresentationChannel.FuelSelectorPosition:
+                    value = (float)systems.fuelSelectorPosition;
+                    return systems.isValid &&
+                           systems.Has(
+                               CockpitSystemsAvailabilityV2
+                                   .FuelSelectorControl);
                 default:
-                    // AGL, actual flap travel, slip-ball acceleration, magnetic
-                    // variation, barometric setting, fuel, oil, avionics and
-                    // numeric electrical values are not available here.
+                    // AGL, slip-ball acceleration, unrepresented temperature
+                    // channels, lighting controls and navigation remain absent.
                     return false;
             }
         }

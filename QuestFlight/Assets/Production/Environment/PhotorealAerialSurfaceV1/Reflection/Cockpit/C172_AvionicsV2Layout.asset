@@ -1,0 +1,173 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbd41f3736b840169276344889483d71, type: 3}
+  m_Name: C172_AvionicsV2Layout
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.CockpitDynamics.V2.CockpitAvionicsV2Layout
+  combinedGlyphMesh: {fileID: 4300000, guid: 3ed9d0552794def4daa8655e45c23a1e, type: 2}
+  existingReadoutMaterial: {fileID: 2100000, guid: 9a8472f768a0f8c4fad1463b648fa33f, type: 2}
+  existingGlyphAtlas: {fileID: 2800000, guid: dc9e48a0e77756e46a41b0f18164068f, type: 2}
+  glyphSlots:
+  - characterIndex: 4
+    firstVertex: 0
+  - characterIndex: 5
+    firstVertex: 4
+  - characterIndex: 6
+    firstVertex: 8
+  - characterIndex: 7
+    firstVertex: 12
+  - characterIndex: 8
+    firstVertex: 16
+  - characterIndex: 9
+    firstVertex: 20
+  - characterIndex: 10
+    firstVertex: 24
+  - characterIndex: 11
+    firstVertex: 28
+  - characterIndex: 12
+    firstVertex: 32
+  - characterIndex: 13
+    firstVertex: 36
+  - characterIndex: 14
+    firstVertex: 40
+  - characterIndex: 15
+    firstVertex: 44
+  - characterIndex: 20
+    firstVertex: 48
+  - characterIndex: 21
+    firstVertex: 52
+  - characterIndex: 22
+    firstVertex: 56
+  - characterIndex: 23
+    firstVertex: 60
+  - characterIndex: 24
+    firstVertex: 64
+  - characterIndex: 25
+    firstVertex: 68
+  - characterIndex: 26
+    firstVertex: 72
+  - characterIndex: 27
+    firstVertex: 76
+  - characterIndex: 28
+    firstVertex: 80
+  - characterIndex: 34
+    firstVertex: 84
+  - characterIndex: 35
+    firstVertex: 88
+  - characterIndex: 36
+    firstVertex: 92
+  - characterIndex: 40
+    firstVertex: 96
+  - characterIndex: 41
+    firstVertex: 100
+  - characterIndex: 42
+    firstVertex: 104
+  - characterIndex: 43
+    firstVertex: 108
+  - characterIndex: 44
+    firstVertex: 112
+  - characterIndex: 45
+    firstVertex: 116
+  - characterIndex: 46
+    firstVertex: 120
+  - characterIndex: 47
+    firstVertex: 124
+  - characterIndex: 48
+    firstVertex: 128
+  - characterIndex: 49
+    firstVertex: 132
+  - characterIndex: 50
+    firstVertex: 136
+  - characterIndex: 51
+    firstVertex: 140
+  - characterIndex: 63
+    firstVertex: 144
+  - characterIndex: 64
+    firstVertex: 148
+  - characterIndex: 65
+    firstVertex: 152
+  - characterIndex: 66
+    firstVertex: 156
+  - characterIndex: 67
+    firstVertex: 160
+  - characterIndex: 68
+    firstVertex: 164
+  - characterIndex: 69
+    firstVertex: 168
+  - characterIndex: 72
+    firstVertex: 172
+  - characterIndex: 73
+    firstVertex: 176
+  - characterIndex: 74
+    firstVertex: 180
+  - characterIndex: 75
+    firstVertex: 184
+  - characterIndex: 76
+    firstVertex: 188
+  - characterIndex: 77
+    firstVertex: 192
+  - characterIndex: 78
+    firstVertex: 196
+  - characterIndex: 83
+    firstVertex: 200
+  - characterIndex: 84
+    firstVertex: 204
+  - characterIndex: 85
+    firstVertex: 208
+  - characterIndex: 86
+    firstVertex: 212
+  - characterIndex: 87
+    firstVertex: 216
+  - characterIndex: 88
+    firstVertex: 220
+  - characterIndex: 89
+    firstVertex: 224
+  - characterIndex: 92
+    firstVertex: 228
+  - characterIndex: 93
+    firstVertex: 232
+  - characterIndex: 94
+    firstVertex: 236
+  - characterIndex: 95
+    firstVertex: 240
+  - characterIndex: 96
+    firstVertex: 244
+  - characterIndex: 97
+    firstVertex: 248
+  - characterIndex: 98
+    firstVertex: 252
+  - characterIndex: 125
+    firstVertex: 256
+  - characterIndex: 126
+    firstVertex: 260
+  - characterIndex: 127
+    firstVertex: 264
+  - characterIndex: 128
+    firstVertex: 268
+  - characterIndex: 129
+    firstVertex: 272
+  - characterIndex: 130
+    firstVertex: 276
+  - characterIndex: 131
+    firstVertex: 280
+  - characterIndex: 132
+    firstVertex: 284
+  - characterIndex: 133
+    firstVertex: 288
+  - characterIndex: 134
+    firstVertex: 292
+  atlasColumns: 16
+  atlasRows: 6
+  firstAsciiCode: 32
+  glyphCount: 95
+  estimatedTextureBytes: 131072
+  sourceAssetGuid: d312be0fd0ba928458dd86cbe967956b
+  sourceSha256: a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872

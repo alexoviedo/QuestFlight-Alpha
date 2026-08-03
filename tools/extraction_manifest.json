@@ -388,7 +388,27 @@
     {
       "path": "Assets/Scripts/Aircraft/CockpitDynamics/CockpitTouchInteractionV2Controller.cs",
       "classification": "approved_product_authored",
-      "reason": "Single bounded OpenXR Touch interaction loop for the three positively represented cockpit controls."
+      "reason": "Single bounded allocation-free OpenXR Touch interaction loop for the nine positively represented cockpit controls."
+    },
+    {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/CockpitAvionicsV2BatchController.cs",
+      "classification": "approved_product_authored",
+      "reason": "One-renderer allocation-free UV presenter for the represented GPS, COM, and transponder apertures."
+    },
+    {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/CockpitAvionicsV2Layout.cs",
+      "classification": "approved_product_authored",
+      "reason": "Immutable one-draw avionics glyph layout, source identity, and bounded texture contract."
+    },
+    {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/CockpitInstrumentV2BatchController.cs",
+      "classification": "approved_product_authored",
+      "reason": "One-renderer allocation-free presenter for positively identity-audited cockpit instrument geometry."
+    },
+    {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/CockpitInstrumentV2Layout.cs",
+      "classification": "approved_product_authored",
+      "reason": "Immutable source-registered instrument geometry, authority binding, and one-material batch contract."
     },
     {
       "path": "Assets/Scripts/Aircraft/CockpitDynamics/Presentation/ProductionCockpitDynamicsController.cs",
@@ -549,6 +569,16 @@
       "path": "Assets/Scripts/Environment/AirportPerimeterFenceRoot.cs",
       "classification": "approved_product_authored",
       "reason": "Product-authored validation marker for the explicitly serialized airport perimeter fence; it performs no runtime construction or repair."
+    },
+    {
+      "path": "Assets/Scripts/Environment/AirportNearFieldDetailRoot.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored fail-closed contract for the explicitly serialized airport near-field detail root; it performs no runtime construction or repair."
+    },
+    {
+      "path": "Assets/Scripts/Environment/AirportNearFieldGrassRenderer.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored bounded instanced grass presenter for the serialized placement set; it creates no product hierarchy, physics object, or per-instance GameObject."
     },
     {
       "path": "Assets/Scenes/ProductionVerticalSlice/LightingData.asset",

@@ -20,6 +20,9 @@ namespace QuestFlight.Editor
         public const string ExistingReadoutMaterialPath =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/" +
             "Reflection/Cockpit/Materials/ProductionInstrumentDisplayReadout.mat";
+        public const string DynamicReadoutMaterialPath =
+            "Assets/Production/Environment/PhotorealAerialSurfaceV1/" +
+            "Reflection/Cockpit/Materials/ProductionInstrumentDynamicReadout.mat";
         public const string ExistingReadableBasePath =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/" +
             "Reflection/Cockpit/Textures/C172_StaticDisplayReadable_BaseColor.png";
@@ -58,10 +61,11 @@ namespace QuestFlight.Editor
             }
             if (!string.Equals(
                     AssetDatabase.GetAssetPath(layout.ExistingReadoutMaterial),
-                    ExistingReadoutMaterialPath,
+                    DynamicReadoutMaterialPath,
                     StringComparison.Ordinal))
             {
-                error = "V2 avionics do not reuse the existing readout material.";
+                error =
+                    "V2 avionics do not use the one opaque replacement readout material.";
                 return false;
             }
             if (layout.EstimatedTextureBytes > 1024 * 1024)

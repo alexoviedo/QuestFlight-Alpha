@@ -17,6 +17,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
             MeshUpdateFlags.DontRecalculateBounds |
             MeshUpdateFlags.DontValidateIndices |
             MeshUpdateFlags.DontNotifyMeshUsers;
+        private const float MagneticCompassResponseSeconds = 0.45f;
 
         [SerializeField] private MonoBehaviour authorityProvider;
         [SerializeField] private CockpitInstrumentV2Layout layout;
@@ -33,9 +34,24 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
         private List<Vector3> _workingVertices;
         private List<Vector3> _workingNormals;
         private List<Vector4> _workingTangents;
+        private MaterialPropertyBlock _materialProperties;
+        private MaterialPropertyBlock _sourceMaterialProperties;
+        private int _displayAltitudeFeet;
+        private bool _hasDisplayAltitude;
+        private float _magneticCompassHeadingDegrees;
+        private bool _hasMagneticCompassHeading;
+
+        private static readonly int AltitudeDigitsId =
+            Shader.PropertyToID("_AltitudeDigits");
+        private static readonly int AttitudePivotId =
+            Shader.PropertyToID("_AttitudePivot");
+        private static readonly int AttitudeRotationId =
+            Shader.PropertyToID("_AttitudeRotation");
 
         public CockpitInstrumentV2Layout Layout => layout;
         public MonoBehaviour AuthorityProvider => authorityProvider;
+        public MeshRenderer NeutralizedSourceRenderer =>
+            neutralizedSourceRenderer;
 
         public void ConfigureAuthoredReferences(
             MonoBehaviour authoredAuthorityProvider,
@@ -145,6 +161,12 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
             _workingVertices = new List<Vector3>(_baseVertices);
             _workingNormals = new List<Vector3>(_baseNormals);
             _workingTangents = new List<Vector4>(_baseTangents);
+            _materialProperties = new MaterialPropertyBlock();
+            combinedDynamicRenderer.GetPropertyBlock(_materialProperties);
+            _sourceMaterialProperties = new MaterialPropertyBlock();
+            neutralizedSourceRenderer.GetPropertyBlock(_sourceMaterialProperties);
+            ApplyAttitudeBallRotation(Quaternion.identity);
+            ApplyAltitudeDigitsProperty(0);
         }
 
         private void OnDestroy()
@@ -174,18 +196,19 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
             bool uploadToMesh)
         {
             EnsureWorkingDataForTest();
-            ApplySnapshot(snapshot, uploadToMesh);
+            ApplySnapshot(snapshot, uploadToMesh, float.PositiveInfinity);
         }
 
         private void ApplySnapshot(
             in CockpitInstrumentV2Snapshot snapshot)
         {
-            ApplySnapshot(snapshot, true);
+            ApplySnapshot(snapshot, true, Time.deltaTime);
         }
 
         private void ApplySnapshot(
             in CockpitInstrumentV2Snapshot snapshot,
-            bool uploadToMesh)
+            bool uploadToMesh,
+            float deltaTimeSeconds)
         {
             CockpitInstrumentV2MeshBinding[] bindings = layout.Bindings;
             for (int bindingIndex = 0;
@@ -203,7 +226,14 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
                     CockpitInstrumentV2Kinematics.TryEvaluate(
                         binding.translationFunction, snapshot,
                         out translationValue);
-
+                if (hasRotation &&
+                    binding.rotationFunction == CockpitInstrumentV2Function
+                        .MagneticCompassHeadingDegrees)
+                {
+                    rotationValue = StabilizeMagneticCompassHeading(
+                        rotationValue,
+                        deltaTimeSeconds);
+                }
                 float rotationDegrees = hasRotation
                     ? (rotationValue - binding.authoredRotationValue) *
                       binding.rotationDegreesPerUnit
@@ -236,6 +266,9 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
                 }
             }
 
+            ApplyAltitudeDigits(snapshot);
+            ApplyAttitude(snapshot);
+
             if (!uploadToMesh) return;
             Upload();
         }
@@ -249,7 +282,81 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
                 _workingNormals[index] = _baseNormals[index];
                 _workingTangents[index] = _baseTangents[index];
             }
+            ApplyAttitudeBallRotation(Quaternion.identity);
+            _hasMagneticCompassHeading = false;
             Upload();
+        }
+
+        private float StabilizeMagneticCompassHeading(
+            float targetHeadingDegrees,
+            float deltaTimeSeconds)
+        {
+            if (!_hasMagneticCompassHeading ||
+                float.IsPositiveInfinity(deltaTimeSeconds))
+            {
+                _magneticCompassHeadingDegrees =
+                    CockpitInstrumentV2Kinematics.NormalizeHeadingDegrees(
+                        targetHeadingDegrees);
+                _hasMagneticCompassHeading = true;
+                return _magneticCompassHeadingDegrees;
+            }
+
+            _magneticCompassHeadingDegrees =
+                CockpitInstrumentV2Kinematics.DampHeadingDegrees(
+                    _magneticCompassHeadingDegrees,
+                    targetHeadingDegrees,
+                    deltaTimeSeconds,
+                    MagneticCompassResponseSeconds);
+            return _magneticCompassHeadingDegrees;
+        }
+
+        private void ApplyAttitude(
+            in CockpitInstrumentV2Snapshot snapshot)
+        {
+            bool hasPitch = CockpitInstrumentV2Kinematics.TryEvaluate(
+                CockpitInstrumentV2Function.AttitudePitchDegrees,
+                snapshot,
+                out float pitchDegrees);
+            bool hasBank = CockpitInstrumentV2Kinematics.TryEvaluate(
+                CockpitInstrumentV2Function.AttitudeBankDegrees,
+                snapshot,
+                out float bankDegrees);
+            if (!hasPitch || !hasBank)
+            {
+                ApplyAttitudeBallRotation(Quaternion.identity);
+                return;
+            }
+
+            CockpitInstrumentV2AttitudeContract contract =
+                layout.AttitudeContract;
+            ApplyAttitudeBallRotation(
+                CockpitInstrumentV2Kinematics.EvaluateAttitudeBallRotation(
+                    pitchDegrees,
+                    bankDegrees,
+                    contract.pitchAxisLocal,
+                    contract.bankAxisLocal));
+        }
+
+        private void ApplyAttitudeBallRotation(Quaternion rotation)
+        {
+            if (neutralizedSourceRenderer == null || layout == null)
+                return;
+            if (_sourceMaterialProperties == null)
+            {
+                _sourceMaterialProperties = new MaterialPropertyBlock();
+                neutralizedSourceRenderer.GetPropertyBlock(
+                    _sourceMaterialProperties);
+            }
+            CockpitInstrumentV2AttitudeContract contract =
+                layout.AttitudeContract;
+            _sourceMaterialProperties.SetVector(
+                AttitudePivotId,
+                contract.pivotLocal);
+            _sourceMaterialProperties.SetVector(
+                AttitudeRotationId,
+                new Vector4(rotation.x, rotation.y, rotation.z, rotation.w));
+            neutralizedSourceRenderer.SetPropertyBlock(
+                _sourceMaterialProperties);
         }
 
         private void Upload()
@@ -275,6 +382,45 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
             _workingVertices = new List<Vector3>(_baseVertices);
             _workingNormals = new List<Vector3>(_baseNormals);
             _workingTangents = new List<Vector4>(_baseTangents);
+        }
+
+        private void ApplyAltitudeDigits(
+            in CockpitInstrumentV2Snapshot snapshot)
+        {
+            if (!CockpitInstrumentV2Kinematics.TryEvaluateIndicatedAltitudeFeet(
+                    snapshot, out float indicatedFeet))
+                return;
+
+            int stabilized =
+                CockpitInstrumentV2Kinematics.StabilizeAltitudeReadoutFeet(
+                    indicatedFeet,
+                    _displayAltitudeFeet,
+                    _hasDisplayAltitude);
+            if (_hasDisplayAltitude && stabilized == _displayAltitudeFeet)
+                return;
+            _displayAltitudeFeet = stabilized;
+            _hasDisplayAltitude = true;
+            ApplyAltitudeDigitsProperty(stabilized);
+        }
+
+        private void ApplyAltitudeDigitsProperty(int altitudeFeet)
+        {
+            if (combinedDynamicRenderer == null)
+                return;
+            if (_materialProperties == null)
+            {
+                _materialProperties = new MaterialPropertyBlock();
+                combinedDynamicRenderer.GetPropertyBlock(_materialProperties);
+            }
+            int altitude = Mathf.Clamp(altitudeFeet, 0, 9990);
+            _materialProperties.SetVector(
+                AltitudeDigitsId,
+                new Vector4(
+                    altitude / 1000 % 10,
+                    altitude / 100 % 10,
+                    altitude / 10 % 10,
+                    altitude % 10));
+            combinedDynamicRenderer.SetPropertyBlock(_materialProperties);
         }
     }
 }

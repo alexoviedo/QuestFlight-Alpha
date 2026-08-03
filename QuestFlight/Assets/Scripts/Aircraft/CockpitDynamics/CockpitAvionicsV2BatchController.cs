@@ -106,6 +106,10 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
             combinedGlyphFilter.sharedMesh = _runtimeMesh;
             _workingUv = new List<Vector2>(
                 layout.CombinedGlyphMesh.uv);
+            // Establish the formatter's fail-closed, unpowered state before
+            // the first upload. A newly allocated char buffer contains NUL,
+            // which is intentionally not part of the fixed glyph atlas.
+            _formatter.Format(default);
             ApplyCharacters(_formatter.Characters, true);
         }
 

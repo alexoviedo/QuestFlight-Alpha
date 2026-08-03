@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using NUnit.Framework;
 using QuestFlightLab.Aircraft.CockpitDynamics;
+using QuestFlightLab.Aircraft.CockpitDynamics.Presentation;
 using QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2;
 using QuestFlightLab.Aircraft.CockpitDynamics.V2;
 using QuestFlightLab.Flight.Backends;
@@ -63,9 +64,19 @@ namespace QuestFlightLab.Tests.EditMode
                         out CockpitInstrumentV2Snapshot instruments),
                     Is.True);
                 CockpitInstrumentV2Availability expected =
+                    CockpitInstrumentV2Availability.AirData |
+                    CockpitInstrumentV2Availability.BarometricSetting |
                     CockpitInstrumentV2Availability.Attitude |
                     CockpitInstrumentV2Availability.TrueHeading |
-                    CockpitInstrumentV2Availability.ClockUtc;
+                    CockpitInstrumentV2Availability.MagneticVariation |
+                    CockpitInstrumentV2Availability.ActualFlapPosition |
+                    CockpitInstrumentV2Availability.BrakeHydraulics |
+                    CockpitInstrumentV2Availability.ClockUtc |
+                    CockpitInstrumentV2Availability.EngineRpm |
+                    CockpitInstrumentV2Availability.FuelSystem |
+                    CockpitInstrumentV2Availability.OilSystem |
+                    CockpitInstrumentV2Availability.VacuumSuction |
+                    CockpitInstrumentV2Availability.TurnAndSlip;
                 Assert.That(instruments.availability, Is.EqualTo(expected));
                 Assert.That(
                     instruments.pitchDegrees,
@@ -77,25 +88,50 @@ namespace QuestFlightLab.Tests.EditMode
                     instruments.trueHeadingDegrees,
                     Is.EqualTo((float)state.headingDegrees).Within(0.001f));
                 Assert.That(
+                    instruments.indicatedAirspeedKnots,
+                    Is.EqualTo((float)state.calibratedAirspeedKnots)
+                        .Within(0.001f));
+                Assert.That(
+                    instruments.indicatedVerticalSpeedFeetPerMinute,
+                    Is.EqualTo((float)state.verticalSpeedFeetPerMinute)
+                        .Within(0.001f));
+                Assert.That(
+                    instruments.pressureAltitudeFeet,
+                    Is.EqualTo(
+                        (float)(state.altitudeMslMeters *
+                                FlightFrameConversions.MetersToFeet))
+                        .Within(0.01f));
+                Assert.That(instruments.barometricSettingInHg,
+                    Is.EqualTo(29.92f).Within(0.001f));
+                Assert.That(
+                    instruments.turnRateDegreesPerSecond,
+                    Is.EqualTo(
+                        state.angularVelocityBodyDegreesPerSecond.y)
+                        .Within(0.001f));
+                Assert.That(
+                    instruments.slipSkidNormalized,
+                    Is.EqualTo((float)state.sideslipDegrees / 8f)
+                        .Within(0.001f));
+                Assert.That(
                     instruments.Has(
                         CockpitInstrumentV2Availability.AirData),
-                    Is.False);
+                    Is.True);
                 Assert.That(
                     instruments.Has(
                         CockpitInstrumentV2Availability.BarometricSetting),
-                    Is.False);
+                    Is.True);
                 Assert.That(
                     instruments.Has(
                         CockpitInstrumentV2Availability.ActualFlapPosition),
-                    Is.False);
+                    Is.True);
                 Assert.That(
                     instruments.Has(
                         CockpitInstrumentV2Availability.BrakeHydraulics),
-                    Is.False);
+                    Is.True);
                 Assert.That(
                     instruments.Has(
                         CockpitInstrumentV2Availability.MagneticVariation),
-                    Is.False);
+                    Is.True);
             });
         }
 
@@ -132,16 +168,19 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(
                     avionics.availability,
                     Is.EqualTo(
-                        CockpitAvionicsV2Availability.ElectricalPower));
+                        CockpitAvionicsV2Availability.ElectricalPower |
+                        CockpitAvionicsV2Availability.GpsNavigation |
+                        CockpitAvionicsV2Availability.ComRadios |
+                        CockpitAvionicsV2Availability.Transponder));
                 Assert.That(avionics.avionicsBusPowered, Is.True);
                 Assert.That(
                     avionics.Has(
                         CockpitAvionicsV2Availability.GpsNavigation),
-                    Is.False);
+                    Is.True);
                 Assert.That(
                     avionics.Has(
                         CockpitAvionicsV2Availability.ComRadios),
-                    Is.False);
+                    Is.True);
                 Assert.That(
                     avionics.Has(
                         CockpitAvionicsV2Availability.Dme),
@@ -149,11 +188,21 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(
                     avionics.Has(
                         CockpitAvionicsV2Availability.Transponder),
-                    Is.False);
+                    Is.True);
                 Assert.That(
                     avionics.Has(
                         CockpitAvionicsV2Availability.AudioPanel),
                     Is.False);
+                Assert.That(avionics.gpsDestinationIdentAscii,
+                    Is.EqualTo(0x5542444Bu));
+                Assert.That(avionics.com1ActiveKHz, Is.EqualTo(122725));
+                Assert.That(avionics.com1StandbyKHz, Is.EqualTo(118825));
+                Assert.That(avionics.com2ActiveKHz, Is.EqualTo(121500));
+                Assert.That(avionics.transponderCodeBcd,
+                    Is.EqualTo(0x1200));
+                Assert.That(avionics.transponderMode,
+                    Is.EqualTo(
+                        CockpitAvionicsV2TransponderMode.Altitude));
             });
         }
 
@@ -217,6 +266,36 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(
                     controller.CurrentSnapshot.electricalPower.mainBusPowered,
                     Is.False);
+            });
+        }
+
+        [Test]
+        public void RepresentedSwitchChannelsReadFromSystemsAuthority()
+        {
+            WithController(controller =>
+            {
+                Assert.That(
+                    controller.StepForTest(
+                        State(35.0),
+                        Controls(),
+                        CockpitElectricalPowerInput.Unavailable,
+                        Scenario(),
+                        1f / 72f),
+                    Is.True);
+                Assert.That(controller.TryGetCockpitPresentationValue(
+                    CockpitPresentationChannel.BatteryMasterOn,
+                    out float battery), Is.True);
+                Assert.That(battery, Is.EqualTo(1f));
+                Assert.That(controller.TryGetCockpitPresentationValue(
+                    CockpitPresentationChannel.IgnitionSwitchPosition,
+                    out float ignition), Is.True);
+                Assert.That(ignition, Is.EqualTo(
+                    (float)CockpitIgnitionSwitchPositionV2.Both));
+                Assert.That(controller.TryGetCockpitPresentationValue(
+                    CockpitPresentationChannel.FuelSelectorPosition,
+                    out float selector), Is.True);
+                Assert.That(selector, Is.EqualTo(
+                    (float)CockpitFuelSelectorPositionV2.Both));
             });
         }
 

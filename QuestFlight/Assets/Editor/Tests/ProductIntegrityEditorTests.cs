@@ -165,5 +165,42 @@ namespace QuestFlight.Editor.Tests
                 UnityEngine.Object.DestroyImmediate(target);
             }
         }
+
+        [Test]
+        public void ProductDemoRudderRouteIsVisibleCoordinatedAndRateLimited()
+        {
+            AircraftControlState taxi =
+                ProductDemoPilot.ScheduledControls(5f, out string taxiPhase);
+            AircraftControlState takeoff =
+                ProductDemoPilot.ScheduledControls(20f, out string takeoffPhase);
+            AircraftControlState rollIn =
+                ProductDemoPilot.ScheduledControls(53f, out string turnPhase);
+            AircraftControlState rollOut =
+                ProductDemoPilot.ScheduledControls(61f, out _);
+
+            Assert.That(taxiPhase, Is.EqualTo("taxi"));
+            Assert.That(Mathf.Abs(taxi.rudder), Is.GreaterThan(0.18f));
+            Assert.That(takeoffPhase, Is.EqualTo("takeoff_roll"));
+            Assert.That(takeoff.rudder, Is.GreaterThan(0.04f));
+            Assert.That(turnPhase, Is.EqualTo("shallow_left_turn"));
+            Assert.That(rollIn.aileron, Is.LessThan(0f));
+            Assert.That(rollIn.rudder, Is.LessThan(0f));
+            Assert.That(rollOut.aileron, Is.GreaterThan(0f));
+            Assert.That(rollOut.rudder, Is.GreaterThan(0f));
+
+            AircraftControlState target = AircraftControlState.Neutral(1f);
+            target.rudder = 1f;
+            target.leftToeBrake = 1f;
+            target.rightToeBrake = 1f;
+            AircraftControlState current = AircraftControlState.Neutral(0.1f);
+            ProductDemoPilot.RateLimitControlsInto(target, current, 0.1f);
+            Assert.That(current.rudder,
+                Is.EqualTo(ProductDemoPilot.PrimaryControlRatePerSecond * 0.1f)
+                    .Within(0.0001f));
+            Assert.That(current.leftToeBrake,
+                Is.EqualTo(ProductDemoPilot.ToeBrakeRatePerSecond * 0.1f)
+                    .Within(0.0001f));
+            Assert.That(current.rudder, Is.LessThan(target.rudder));
+        }
     }
 }

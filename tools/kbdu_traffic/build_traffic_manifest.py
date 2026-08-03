@@ -36,6 +36,87 @@ PASSENGER_FLEET_STYLE_WEIGHTS = [0.24, 0.14, 0.34, 0.20, 0.08, 0.0]
 TRUNK_FLEET_STYLE_WEIGHTS = [0.20, 0.10, 0.28, 0.18, 0.08, 0.16]
 PAINT_COLOR_WEIGHTS = [0.26, 0.22, 0.19, 0.14, 0.09, 0.07, 0.02, 0.01]
 AMBIGUOUS_WARM_NEUTRAL_WEIGHTS = [0.36, 0.12, 0.28, 0.24]
+TRUCK_CIRCUIT_DIRECTION_POLICY = (
+    "DEDICATED_DIVIDED_HIGHWAY_PAVED_TRUCK_CIRCUIT"
+)
+TRUCK_CIRCUIT_JUNCTION_POLICY = (
+    "PAVED_55TH_AND_63RD_STREET_CONNECTORS"
+)
+
+# The compact product context intentionally caps road features and omits these
+# short continuation/turn-lane ways. These ENU centerlines are a compact
+# derivative of the same OSM context acquisition recorded in
+# traffic_sources_v1.json. Together they carry trucks through the paved 63rd
+# Street intersection instead of drawing a synthetic line across the median.
+TRUCK_CIRCUIT_SUPPLEMENTAL_CENTERLINES = {
+    398080523: [
+        (1449.346, 3597.032),
+        (1507.791, 3664.687),
+    ],
+    398080552: [
+        (1507.791, 3664.687),
+        (1568.172, 3734.929),
+        (1586.303, 3757.684),
+    ],
+    398080567: [
+        (1586.303, 3757.684),
+        (1623.477, 3798.131),
+        (1632.594, 3808.560),
+        (1647.910, 3828.416),
+    ],
+    398080493: [
+        (1647.910, 3828.416),
+        (1647.767, 3897.569),
+    ],
+    398080491: [
+        (1647.767, 3897.569),
+        (1647.808, 3902.788),
+        (1648.472, 3987.797),
+    ],
+    # The connector joins this return carriageway at its second source point.
+    398080548: [
+        (1648.472, 3987.797),
+        (1632.149, 3971.594),
+    ],
+    398080571: [
+        (1632.149, 3971.594),
+        (1624.082, 3962.598),
+        (1614.479, 3952.125),
+        (1605.380, 3942.019),
+        (1581.492, 3916.731),
+        (1561.162, 3893.099),
+    ],
+    398080566: [
+        (1561.162, 3893.099),
+        (1522.617, 3834.986),
+        (1504.659, 3804.214),
+        (1493.241, 3784.203),
+    ],
+    398080568: [
+        (1493.241, 3784.203),
+        (1457.955, 3719.551),
+        (1438.700, 3687.580),
+        (1421.362, 3661.283),
+        (1414.352, 3651.200),
+    ],
+    398080518: [
+        (1414.352, 3651.200),
+        (1384.708, 3612.565),
+        (1355.071, 3573.941),
+        (1309.554, 3520.658),
+        (1214.738, 3407.408),
+        (1173.210, 3358.879),
+        (1139.272, 3317.924),
+        (1129.114, 3305.664),
+        (1076.812, 3243.654),
+        (1020.005, 3176.214),
+        (996.524, 3148.085),
+        (957.210, 3101.867),
+        (823.171, 2942.282),
+        (738.305, 2841.608),
+        (611.499, 2691.876),
+    ],
+}
 
 
 def deterministic_unit(route_index: int, vehicle_index: int, salt: int) -> float:
@@ -309,64 +390,113 @@ def route_record(
 
 
 def build_diagonal_highway_truck_circuit(
-    routes: list[dict],
+    source_roads: list[dict],
+    quantization: float,
+    lane_offset_contract: dict,
     sampler: TerrainSampler,
 ) -> dict:
-    """Build a closed loop from both photographed divided-highway carriageways.
+    """Build a closed semi route using only mapped, paved road centerlines.
 
-    Dynamic routes are normally open OSM way fragments. Modulo-wrapping those
-    fragments is visually tolerable for tiny distant cars but makes a 16 m
-    semi appear to teleport hundreds of meters. The three source ways below
-    overlap as opposing Diagonal Highway carriageways around the product
-    flight area, allowing a real-road closed circuit with only short median
-    turnarounds at its remote ends.
+    The previous route joined carriageways with two straight synthetic links.
+    Those links were short enough to look harmless in data review, but a
+    16-metre semi visibly crossed the grass median. The replacement turns via
+    the actual 63rd Street and 55th Street paved connectors.
     """
 
-    by_way = {route["osm_way_id"]: route for route in routes}
-    required = (398080519, 355298123, 398080554)
+    by_way = {
+        int(road["source"]["osm_id"]): road
+        for road in source_roads
+    }
+    compact_sequence = (
+        (398080530, 1),
+        (398080519, 1),
+    )
+    supplemental_sequence = (
+        398080523,
+        398080552,
+        398080567,
+        398080493,
+        398080491,
+        398080548,
+        398080571,
+        398080566,
+        398080568,
+        398080518,
+    )
+    return_sequence = (
+        (355298123, 1),
+        (398080554, 1),
+        (1420076514, -1),
+    )
+    required = {
+        way_id
+        for way_id, _ in compact_sequence + return_sequence
+    }
     if any(way_id not in by_way for way_id in required):
-        raise ValueError("Required Diagonal Highway truck-circuit ways are missing")
+        raise ValueError(
+            "Required paved Diagonal Highway truck-circuit ways are missing"
+        )
+
+    def compact_centerline(
+        way_id: int,
+        direction: int,
+    ) -> list[tuple[float, float]]:
+        quantized = by_way[way_id]["points_q"]
+        centerline = [
+            (
+                quantized[index] * quantization,
+                quantized[index + 1] * quantization,
+            )
+            for index in range(0, len(quantized), 2)
+        ]
+        return centerline if direction > 0 else list(reversed(centerline))
+
+    centerline: list[tuple[float, float]] = []
+    maximum_join = 0.0
+
+    def append_mapped(path: list[tuple[float, float]], way_id: int) -> None:
+        nonlocal maximum_join
+        if not path:
+            raise ValueError(f"Truck-circuit way {way_id} has no geometry")
+        if not centerline:
+            centerline.extend(path)
+            return
+        join = math.dist(centerline[-1], path[0])
+        maximum_join = max(maximum_join, join)
+        if join > 2.0:
+            raise ValueError(
+                f"Truck-circuit mapped ways do not meet: {way_id}, {join:.3f} m"
+            )
+        centerline.extend(path[1:])
+
+    for way_id, direction in compact_sequence:
+        append_mapped(compact_centerline(way_id, direction), way_id)
+    for way_id in supplemental_sequence:
+        append_mapped(
+            TRUCK_CIRCUIT_SUPPLEMENTAL_CENTERLINES[way_id],
+            way_id,
+        )
+    for way_id, direction in return_sequence:
+        append_mapped(compact_centerline(way_id, direction), way_id)
+
+    closure = math.dist(centerline[-1], centerline[0])
+    maximum_join = max(maximum_join, closure)
+    if closure > 2.0:
+        raise ValueError(
+            f"Paved truck circuit did not close: {closure:.3f} m"
+        )
+    centerline[-1] = centerline[0]
+
     outbound = by_way[398080519]
-    return_a = by_way[355298123]
-    return_b = by_way[398080554]
-
-    def points(route: dict) -> list[tuple[float, float]]:
-        return [(sample["x"], sample["z"]) for sample in route["samples"]]
-
-    outbound_points = points(outbound)
-    return_points_a = points(return_a)
-    return_points_b = points(return_b)
-    outbound_start_target = return_points_b[-1]
-    outbound_end_target = return_points_a[0]
-    start_index = min(
-        range(len(outbound_points)),
-        key=lambda index: math.dist(
-            outbound_points[index],
-            outbound_start_target,
-        ),
+    lane_offset_meters = lane_offset_for_road(
+        outbound,
+        lane_offset_contract,
     )
-    end_index = min(
-        range(len(outbound_points)),
-        key=lambda index: math.dist(
-            outbound_points[index],
-            outbound_end_target,
-        ),
+    circuit = resample(
+        offset_polyline(centerline, -lane_offset_meters),
+        SAMPLE_SPACING_METERS,
     )
-    if start_index >= end_index:
-        raise ValueError("Diagonal Highway truck-circuit overlap is reversed")
-    circuit = list(outbound_points[start_index : end_index + 1])
-
-    def append_connected(path: list[tuple[float, float]]) -> None:
-        connector = resample([circuit[-1], path[0]], SAMPLE_SPACING_METERS)
-        circuit.extend(connector[1:])
-        circuit.extend(path[1:])
-
-    append_connected(return_points_a)
-    append_connected(return_points_b)
-    closure = resample([circuit[-1], circuit[0]], SAMPLE_SPACING_METERS)
-    circuit.extend(closure[1:])
-    if math.dist(circuit[0], circuit[-1]) > 0.01:
-        raise ValueError("Diagonal Highway truck circuit did not close")
+    circuit[-1] = circuit[0]
 
     synthetic_road = {
         "tags": {
@@ -374,17 +504,29 @@ def build_diagonal_highway_truck_circuit(
             "highway": "trunk",
         },
         "source": {"osm_id": 398080519},
-        "render_width_meters": outbound["road_width_meters"],
+        "render_width_meters": outbound["render_width_meters"],
     }
     record = route_record(
         "diagonal-highway-dedicated-truck-circuit",
         synthetic_road,
         1,
-        outbound["lane_offset_meters"],
+        lane_offset_meters,
         circuit,
         sampler,
     )
-    record["direction_policy"] = "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"
+    source_way_ids = [
+        way_id
+        for way_id, _ in compact_sequence
+    ]
+    source_way_ids.extend(supplemental_sequence)
+    source_way_ids.extend(
+        way_id
+        for way_id, _ in return_sequence
+    )
+    record["direction_policy"] = TRUCK_CIRCUIT_DIRECTION_POLICY
+    record["junction_policy"] = TRUCK_CIRCUIT_JUNCTION_POLICY
+    record["source_osm_way_ids"] = source_way_ids
+    record["maximum_centerline_join_meters"] = round(maximum_join, 3)
     record["closed_loop"] = True
     return record
 
@@ -411,7 +553,7 @@ def main() -> None:
     ]
     minimum_length = float(network["minimum_segment_length_meters"])
     allowed_classes = set(network["allowed_highway_classes"])
-    roads = [
+    source_roads = [
         feature
         for feature in context["openstreetmap"]["features"]
         if feature.get("category") == "road"
@@ -420,7 +562,7 @@ def main() -> None:
         and len(feature.get("points_q", [])) >= 4
     ]
     bounded_roads = []
-    for road in roads:
+    for road in source_roads:
         quantized = road["points_q"]
         center = [
             (quantized[index] * quantization, quantized[index + 1] * quantization)
@@ -484,7 +626,14 @@ def main() -> None:
                     sampler,
                 )
             )
-    routes.append(build_diagonal_highway_truck_circuit(routes, sampler))
+    routes.append(
+        build_diagonal_highway_truck_circuit(
+            source_roads,
+            quantization,
+            lane_offset_contract,
+            sampler,
+        )
+    )
 
     parked = []
     parked_signatures_by_lot: dict[str, list[tuple[int, int]]] = {}
@@ -588,7 +737,7 @@ def main() -> None:
     for route_index, route in enumerate(routes):
         is_truck_circuit = (
             route["direction_policy"]
-            == "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"
+            == TRUCK_CIRCUIT_DIRECTION_POLICY
         )
         vehicle_count = 10 if is_truck_circuit else max(
             1,

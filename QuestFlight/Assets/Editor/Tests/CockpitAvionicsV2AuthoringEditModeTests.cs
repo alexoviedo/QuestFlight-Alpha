@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using QuestFlightLab.Aircraft.CockpitDynamics.V2;
+using UnityEditor;
 
 namespace QuestFlight.Editor.Tests
 {
@@ -28,7 +30,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void CurrentProduct_FailsClosedOnTruthfulKnownBlockers()
+        public void CurrentProduct_HasReviewedOneDrawRuntimePresentation()
         {
             CockpitAvionicsV2Authoring.AuditReport report =
                 CockpitAvionicsV2Authoring.AuditCurrentProduct();
@@ -36,14 +38,32 @@ namespace QuestFlight.Editor.Tests
             Assert.That(report.materialOpaque, Is.True);
             Assert.That(report.materialUsesAuditedAtlas, Is.True);
             Assert.That(report.textureBudgetPass, Is.True);
-            Assert.That(report.fixedGlyphManifestPresent, Is.False);
+            Assert.That(report.fixedGlyphManifestPresent, Is.True);
             Assert.That(report.concreteAuthorityProviderPresent, Is.True);
-            Assert.That(report.liveChannelAuthorityManifestPresent, Is.False);
-            Assert.That(report.canGenerateRuntimeLayout, Is.False);
-            Assert.That(report.blockers, Has.Some.Contains(
-                "composed static GPS/radio/transponder image"));
-            Assert.That(report.blockers, Has.Some.Contains(
-                "provider exposes electrical power only"));
+            Assert.That(report.liveChannelAuthorityManifestPresent, Is.True);
+            Assert.That(report.canGenerateRuntimeLayout, Is.True);
+            Assert.That(report.blockers, Is.Empty);
+
+            CockpitAvionicsV2Layout layout =
+                AssetDatabase.LoadAssetAtPath<CockpitAvionicsV2Layout>(
+                    CockpitAvionicsV2PresentationAuthoring.LayoutPath);
+            Assert.That(
+                CockpitAvionicsV2EditorContract.ValidateLayout(
+                    layout, out string error),
+                Is.True, error);
+            Assert.That(layout.CombinedGlyphMesh.subMeshCount, Is.EqualTo(1));
+            Assert.That(
+                layout.CombinedGlyphMesh.vertexCount,
+                Is.EqualTo(
+                    CockpitAvionicsV2PresentationAuthoring
+                        .ExpectedGlyphSlots * 4));
+            Assert.That(
+                layout.GlyphSlots.Length,
+                Is.EqualTo(
+                    CockpitAvionicsV2PresentationAuthoring
+                        .ExpectedGlyphSlots));
+            Assert.That(layout.EstimatedTextureBytes,
+                Is.LessThanOrEqualTo(1024 * 1024));
         }
     }
 }

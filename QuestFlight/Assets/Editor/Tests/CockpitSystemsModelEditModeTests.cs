@@ -184,13 +184,16 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(throttle, Is.EqualTo(0.78f).Within(0.001f));
                 Assert.That(controller.TryGetCockpitPresentationValue(
                     CockpitPresentationChannel.OilPressurePsi,
-                    out _), Is.False);
+                    out float oilPressure), Is.True);
+                Assert.That(oilPressure, Is.GreaterThan(0f));
                 Assert.That(controller.TryGetCockpitPresentationValue(
                     CockpitPresentationChannel.LeftFuelGallons,
-                    out _), Is.False);
+                    out float leftFuel), Is.True);
+                Assert.That(leftFuel, Is.EqualTo(25f).Within(0.001f));
                 Assert.That(controller.TryGetCockpitPresentationValue(
                     CockpitPresentationChannel.ActualFlapDegrees,
-                    out _), Is.False);
+                    out float actualFlap), Is.True);
+                Assert.That(actualFlap, Is.EqualTo(0f).Within(0.001f));
                 Assert.That(controller.TryGetCockpitPresentationValue(
                     CockpitPresentationChannel.SlipSkidNormalized,
                     out _), Is.False);

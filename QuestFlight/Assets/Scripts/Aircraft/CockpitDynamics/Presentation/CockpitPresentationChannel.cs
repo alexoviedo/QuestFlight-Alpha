@@ -55,6 +55,12 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.Presentation
         AlternatorAmps = 213,
         VacuumInHg = 214,
         InstrumentLightNormalized = 215,
-        PanelFloodLightNormalized = 216
+        PanelFloodLightNormalized = 216,
+        BatteryMasterOn = 217,
+        AlternatorMasterOn = 218,
+        AvionicsMasterOn = 219,
+        IgnitionSwitchPosition = 220,
+        PrimerPositionNormalized = 221,
+        FuelSelectorPosition = 222
     }
 }

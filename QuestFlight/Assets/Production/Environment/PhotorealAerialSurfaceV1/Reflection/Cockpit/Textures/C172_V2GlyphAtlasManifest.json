@@ -1,0 +1,22 @@
+{
+    "schema": "questflight.cockpit.avionics_glyph_atlas.v2",
+    "glyph_count": 95,
+    "first_ascii_code": 32,
+    "atlas_columns": 16,
+    "atlas_rows": 6,
+    "cell_pixels": 16,
+    "represented_apertures": 6,
+    "live_rows": [
+        "GPS rows 0-2",
+        "COM1 active/standby row 3",
+        "COM2 active/standby row 4",
+        "transponder row 6"
+    ],
+    "excluded_rows": [
+        "DME row 5: no positively identified physical aperture",
+        "audio row 7: no positively identified physical aperture"
+    ],
+    "font_source": "Project-authored fixed 5x7 bitmap definitions in CockpitAvionicsV2PresentationAuthoring.cs",
+    "material_contract": "Opaque render queue, one material, one submesh, no sorting.",
+    "estimated_texture_bytes": 131072
+}

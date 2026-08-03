@@ -28,16 +28,22 @@ namespace QuestFlight.Editor.Tests
             Assert.That(renderers, Has.Length.EqualTo(1));
 
             AirportCloseTreeLodRenderer renderer = renderers[0];
-            Assert.That(renderer.Instances, Has.Length.EqualTo(696));
+            AirportCoreBenchmarkRoot benchmark =
+                environment.GetComponentInChildren<AirportCoreBenchmarkRoot>(true);
+            Assert.That(renderer.Instances, Has.Length.EqualTo(1047));
+            Assert.That(benchmark, Is.Not.Null);
+            Assert.That(benchmark.vegetationHeroCluster, Is.Not.Null);
+            Assert.That(benchmark.vegetationHeroCluster.gameObject.activeSelf, Is.False,
+                "The obsolete card-heavy V4 hero cluster must not draw beside the close-tree tier.");
             Assert.That(renderer.Lod0Mesh, Is.Not.Null);
             Assert.That(renderer.Lod1Mesh, Is.Not.Null);
             Assert.That(renderer.Lod2Mesh, Is.Not.Null);
-            Assert.That(TriangleCount(renderer.Lod0Mesh), Is.EqualTo(2337));
-            Assert.That(TriangleCount(renderer.Lod1Mesh), Is.EqualTo(194));
+            Assert.That(TriangleCount(renderer.Lod0Mesh), Is.EqualTo(344));
+            Assert.That(TriangleCount(renderer.Lod1Mesh), Is.EqualTo(122));
             Assert.That(TriangleCount(renderer.Lod2Mesh), Is.EqualTo(2));
             Assert.That(renderer.AuthoredMaximumDrawCount, Is.EqualTo(3));
             Assert.That(renderer.AuthoredMaximumSelectedTriangleCount,
-                Is.EqualTo(22066));
+                Is.EqualTo(24562));
             Assert.That(renderer.ProjectedScreenSizeSelection, Is.True);
             Assert.That(renderer.PersistentHysteresis, Is.True);
             Assert.That(renderer.CenterEyeWorldUprightImpostor, Is.True);
@@ -68,12 +74,27 @@ namespace QuestFlight.Editor.Tests
             Assert.That(source.text, Does.Contain("\"license\": \"CC0 1.0 Universal\""));
             Assert.That(source.text, Does.Contain("\"raw_source_committed\": false"));
             Assert.That(source.text,
-                Does.Contain("\"schema\": \"questflight.airport-tree-impostor-source.v2\""));
+                Does.Contain("\"schema\": \"questflight.airport-tree-volumetric-source.v3\""));
             Assert.That(source.text, Does.Contain("\"xr_center_eye_impostor\": true"));
             Assert.That(source.text, Does.Contain("\"azimuth_frames\": 8"));
+            Assert.That(source.text, Does.Contain("\"source_leaf_triangles_copied\": 0"));
+            Assert.That(source.text,
+                Does.Contain("\"near_horizontal_source_cards_copied\": false"));
             Assert.That(placements.text,
                 Does.Contain("\"schema\": \"questflight.airport-close-tree-instances.v1\""));
-            Assert.That(placements.text, Does.Contain("\"instance_count\": 696"));
+            Assert.That(placements.text, Does.Contain("\"instance_count\": 1047"));
+        }
+
+        [Test]
+        public void NearAndMiddleTreeLodsContainNoHorizontalFoliagePlate()
+        {
+            GameObject environment =
+                AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
+            AirportCloseTreeLodRenderer renderer =
+                environment.GetComponentInChildren<AirportCloseTreeLodRenderer>(true);
+
+            AssertFoliageCardsStayVolumetric(renderer.Lod0Mesh, 250);
+            AssertFoliageCardsStayVolumetric(renderer.Lod1Mesh, 90);
         }
 
         [Test]
@@ -107,6 +128,42 @@ namespace QuestFlight.Editor.Tests
         private static int TriangleCount(Mesh mesh)
         {
             return checked((int)(mesh.GetIndexCount(0) / 3u));
+        }
+
+        private static void AssertFoliageCardsStayVolumetric(
+            Mesh mesh,
+            int minimumFoliageTriangles)
+        {
+            Vector3[] vertices = mesh.vertices;
+            Vector2[] uv = mesh.uv;
+            Color32[] colors = mesh.colors32;
+            int[] triangles = mesh.triangles;
+            int foliageTriangleCount = 0;
+            float maximumAbsVerticalNormal = 0f;
+
+            for (int i = 0; i < triangles.Length; i += 3)
+            {
+                int a = triangles[i];
+                int b = triangles[i + 1];
+                int c = triangles[i + 2];
+                bool foliage =
+                    colors[a].r < 128 && colors[b].r < 128 && colors[c].r < 128 &&
+                    uv[a].x >= 1.5f && uv[b].x >= 1.5f && uv[c].x >= 1.5f;
+                if (!foliage)
+                {
+                    continue;
+                }
+
+                Vector3 normal = Vector3.Cross(vertices[b] - vertices[a],
+                    vertices[c] - vertices[a]).normalized;
+                maximumAbsVerticalNormal =
+                    Mathf.Max(maximumAbsVerticalNormal, Mathf.Abs(normal.y));
+                foliageTriangleCount++;
+            }
+
+            Assert.That(foliageTriangleCount, Is.GreaterThanOrEqualTo(minimumFoliageTriangles));
+            Assert.That(maximumAbsVerticalNormal, Is.LessThan(0.75f),
+                "Near/middle foliage must not reintroduce a crown-scale horizontal plate.");
         }
     }
 }

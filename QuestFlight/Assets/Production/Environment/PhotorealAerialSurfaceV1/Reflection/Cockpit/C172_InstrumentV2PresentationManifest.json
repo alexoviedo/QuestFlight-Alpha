@@ -1,0 +1,149 @@
+{
+    "schema": "questflight.cockpit.instrument_presentation.v2",
+    "authority": "ProductionCockpitSystemsController",
+    "source_guid": "d312be0fd0ba928458dd86cbe967956b",
+    "source_sha256": "a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872",
+    "renderer_contract": "One combined opaque renderer and material; original Meter_01 texture plus one ASTC project-authored face atlas; no per-gauge objects.",
+    "selected_principal_altimeter_seed": 2713,
+    "active": [
+        {
+            "id": "airspeed_indicator",
+            "source_face_seeds": [
+                2819
+            ],
+            "functions": [
+                "IndicatedAirspeedNeedleDegrees"
+            ],
+            "authority": "calibrated airspeed",
+            "calibration": "Existing audited piecewise KNOTS scale"
+        },
+        {
+            "id": "vertical_speed_indicator",
+            "source_face_seeds": [
+                2541
+            ],
+            "functions": [
+                "IndicatedVerticalSpeedNeedleDegrees"
+            ],
+            "authority": "filtered vertical speed",
+            "calibration": "Existing audited split FPM scale"
+        },
+        {
+            "id": "principal_altimeter",
+            "source_face_seeds": [
+                2713
+            ],
+            "functions": [
+                "AltimeterHundredsNeedleDegrees",
+                "AltimeterThousandsNeedleDegrees",
+                "AltimeterTenThousandsNeedleDegrees",
+                "AltimeterBarometricDrumInHg"
+            ],
+            "authority": "pressure altitude and barometric setting",
+            "calibration": "Three standard 10/1/0.1-revolution hands plus bounded baro indication"
+        },
+        {
+            "id": "directional_gyro",
+            "source_face_seeds": [
+                2891
+            ],
+            "functions": [
+                "DirectionalGyroHeadingDegrees"
+            ],
+            "authority": "true heading",
+            "calibration": "Project-authored card/lubber zero registration"
+        },
+        {
+            "id": "magnetic_compass",
+            "source_face_seeds": [
+                2339
+            ],
+            "functions": [
+                "MagneticCompassHeadingDegrees"
+            ],
+            "authority": "true heading minus frozen KBDU east magnetic variation",
+            "calibration": "Complete curved source card rotates behind a fixed lubber line with shortest-path liquid-style visual damping"
+        },
+        {
+            "id": "flap_position",
+            "source_face_seeds": [
+                2759
+            ],
+            "functions": [
+                "ActualFlapDegrees"
+            ],
+            "authority": "actual flap position",
+            "calibration": "0/10/20/30-degree bounded scale"
+        },
+        {
+            "id": "brake_pressure",
+            "source_face_seeds": [
+                2906
+            ],
+            "functions": [
+                "AverageBrakePressurePsi"
+            ],
+            "authority": "measured left/right hydraulic pressure average",
+            "calibration": "0-1000 PSI bounded indication"
+        },
+        {
+            "id": "tachometer",
+            "source_face_seeds": [
+                2621
+            ],
+            "functions": [
+                "EngineRpmNeedleDegrees"
+            ],
+            "authority": "authoritative engine RPM",
+            "calibration": "0-3000 RPM, 300-degree C172-style sweep with 2700 RPM red line"
+        },
+        {
+            "id": "turn_coordinator",
+            "source_face_seeds": [
+                2667
+            ],
+            "functions": [
+                "TurnCoordinatorBankDegrees",
+                "SlipSkidNormalized"
+            ],
+            "authority": "authoritative turn-rate and slip/skid state",
+            "calibration": "standard-rate reference at 3 degrees/second; bounded slip ball"
+        },
+        {
+            "id": "attitude_indicator",
+            "source_face_seeds": [
+                70,
+                525,
+                697,
+                1153,
+                1355
+            ],
+            "functions": [
+                "AttitudePitchDegrees",
+                "AttitudeBankDegrees"
+            ],
+            "authority": "filtered aircraft pitch and bank",
+            "calibration": "Frozen 998-vertex gyro sphere rotates about its fitted center opposite aircraft pitch/bank; fixed miniature aircraft remains case-mounted"
+        }
+    ],
+    "blocked": [
+        {
+            "id": "clock",
+            "source_identity": "candidate component 2849",
+            "blocker": "Full-resolution QA proved that candidate 2849 occupies the attitude/turn cluster rather than an independently represented clock. The failed identity was removed instead of relabeling art.",
+            "policy": "Preserve authored static presentation; never synthesize an identity."
+        },
+        {
+            "id": "fuel_oil_electrical_vacuum",
+            "source_identity": "remaining unlabeled/fantasy apertures",
+            "blocker": "Authority exists, but no remaining face/pointer has a positive system identity, units, topology, and calibration.",
+            "policy": "Preserve authored static presentation; never synthesize an identity."
+        },
+        {
+            "id": "mach_as_duplicate_vsi_gyro_loc",
+            "source_identity": "2501,2469,2789,2585",
+            "blocker": "Fantasy/duplicate source art is not relabeled as a real instrument.",
+            "policy": "Preserve authored static presentation; never synthesize an identity."
+        }
+    ]
+}

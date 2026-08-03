@@ -1,0 +1,34 @@
+{
+  "schema":"questflight.cockpit.avionics_authority.v2",
+  "owner":"ProductionCockpitSystemsController",
+  "systems_reducer":"CockpitSystemsAuthorityV2Model",
+  "scenario_contract":"One authored deterministic KBDU departure scenario; no wall-clock or random state.",
+  "live_channels":[
+    "electricalPower",
+    "gpsDepartureStatus",
+    "com1",
+    "com2",
+    "transponder"
+  ],
+  "represented_apertures":[
+    "GPS rows 0-2",
+    "COM1 active and standby",
+    "COM2 active and standby",
+    "transponder code and mode"
+  ],
+  "excluded_channels":[
+    {
+      "channel":"dme",
+      "reason":"No independently proven physical aperture and no authority."
+    },
+    {
+      "channel":"audioPanel",
+      "reason":"No independently proven dynamic display aperture and no authority."
+    },
+    {
+      "channel":"navRadio",
+      "reason":"No authoritative tuned NAV receiver/localizer state."
+    }
+  ],
+  "fail_closed":"Unavailable fields remain blank; no presenter synthesizes navigation or radio state."
+}

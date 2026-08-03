@@ -123,13 +123,13 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void WaterIsExplicitlyDeferredToOrthophotoOnlyWithoutActiveWaterRenderers()
+        public void WaterIsTerrainOwnedWithNoActiveWaterRenderers()
         {
             WithInstance(root =>
             {
                 ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
                 Assert.That(contract.waterPresentationMode,
-                    Is.EqualTo(ProductionWaterPresentationMode.OrthophotoOnly));
+                    Is.EqualTo(ProductionWaterPresentationMode.OrthophotoMaskedReflection));
                 Assert.That(contract.retainedWaterBodyCount, Is.GreaterThan(1));
                 Assert.That(contract.discardedMinorWaterFeatureCount, Is.GreaterThan(0));
                 Assert.That(contract.waterFeatureManifestV2, Is.Not.Null);

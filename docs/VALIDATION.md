@@ -15,6 +15,48 @@ Run from the repository root:
 
 `validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current feature candidate captures 81 Visual-QA views; every full-resolution image requires inspection. Historical milestones below retain their original capture counts. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. The accepted-baseline hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. Historical and feature-scoped values below are evidence only.
 
+## Cockpit Completion V3
+
+- focused/full EditMode: PASS 239/239;
+- PlayMode: PASS 9/9;
+- dependency closure: PASS, 365 dependencies, zero rejected/unknown;
+- affected full-resolution Visual QA: inspected; image checks pass;
+- aggregate Visual QA: blocked only by the inherited 31/29 scene-material
+  planning limit;
+- static delta: 63 draws unchanged, 31 scene materials unchanged, seven
+  transparent slots unchanged, +395 selected triangles, and approximately
+  10.39 MiB lower estimated texture residency;
+- Meta XR Simulator: live Quest 3 profile stereo/HMD/left-Touch/right-Touch
+  PASS; aggregate `BLOCKED_MISSING_RECORDED_REPLAYS`;
+- Android ARM64/Vulkan/OpenXR release-style build: PASS, 141,179,223 bytes,
+  SHA-256
+  `0aea18b2e82807ebd7811fd9bc732cb17596be396476120533c8dfcde61d7533`;
+- physical Quest worn interaction/performance acceptance: PENDING.
+
+See `docs/evidence/COCKPIT_COMPLETION_V3_2026-07-30.md`.
+
+## Airport Near-Field Ground Detail V1
+
+- Serialized authoring/integration: PASS; exactly one
+  `AirportNearFieldDetailRoot`, one instanced grass draw, one combined static
+  renderer, one reused material, no collider, and no `LODGroup`.
+- Product environment contract: PASS at 51 draws, 500,650 selected triangles,
+  and 10 materials.
+- EditMode: PASS 143/143. PlayMode: PASS 9/9.
+- Android release-style build: PASS; 140,508,038 bytes; SHA-256
+  `45e2c17e52afac7df3d658797d489b9a97c405593e664740cea1a078173fe00a`.
+- Meta XR Simulator: live Quest 3 stereo/HMD/Touch smoke PASS; aggregate status
+  `BLOCKED_MISSING_RECORDED_REPLAYS` because all ten genuine `.vrs` sessions are
+  absent. Simulator timing is not Quest performance.
+- Production Visual QA: all 101 image files are valid and affected full-size
+  views were inspected. Aggregate classification remains `FAIL_MACHINE_QA`
+  solely because the inherited scene inventory is 30 materials against its
+  29-material planning target; the near-field layer reuses an existing material.
+- One-command validation reaches dependency closure and then stops on the
+  pre-existing R&D source-scene closure (`Usb2BleInputMapper`,
+  `FlightTelemetry`, and `ShortPlaytestDemoPilot`). Those source dependencies
+  are not introduced by this layer and are not present as active new scenery.
+
 ## Airport Parked Aircraft V1
 
 - focused parked-aircraft authoring: PASS for 17 placements, seven powered

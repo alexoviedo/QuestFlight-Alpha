@@ -5,6 +5,7 @@ using NUnit.Framework;
 using QuestFlight.Editor;
 using QuestFlightLab.Aircraft.CockpitDynamics;
 using QuestFlightLab.Aircraft.CockpitDynamics.Analog;
+using QuestFlightLab.Aircraft.CockpitDynamics.V2;
 using UnityEditor;
 using UnityEngine;
 
@@ -133,19 +134,19 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void ProductPrefab_UsesExplicitValidatedAnalogIntegration()
+        public void ProductPrefab_UsesExplicitValidatedV2InstrumentIntegration()
         {
-            CockpitAnalogInstrumentAuthoring.ValidateProductPrefab();
+            CockpitCompletionV3Authoring.ValidateProductPrefab();
         }
 
         [Test]
-        public void SystemsSnapshot_ExecutesBeforeAnalogPresentation()
+        public void SystemsSnapshot_ExecutesBeforeV2InstrumentPresentation()
         {
             var systemsOrder = (DefaultExecutionOrder)Attribute.GetCustomAttribute(
                 typeof(ProductionCockpitSystemsController),
                 typeof(DefaultExecutionOrder));
             var analogOrder = (DefaultExecutionOrder)Attribute.GetCustomAttribute(
-                typeof(ProductionAnalogInstrumentController),
+                typeof(CockpitInstrumentV2BatchController),
                 typeof(DefaultExecutionOrder));
             Assert.That(systemsOrder, Is.Not.Null);
             Assert.That(analogOrder, Is.Not.Null);
@@ -157,12 +158,12 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void RuntimeAnalogController_CannotConstructOrDiscoverHierarchy()
+        public void RuntimeV2InstrumentController_CannotConstructOrDiscoverHierarchy()
         {
             string sourcePath = Path.Combine(
                 Application.dataPath,
-                "Scripts/Aircraft/CockpitDynamics/Analog/" +
-                "ProductionAnalogInstrumentController.cs");
+                "Scripts/Aircraft/CockpitDynamics/" +
+                "CockpitInstrumentV2BatchController.cs");
             string source = File.ReadAllText(sourcePath);
             string[] forbidden =
             {

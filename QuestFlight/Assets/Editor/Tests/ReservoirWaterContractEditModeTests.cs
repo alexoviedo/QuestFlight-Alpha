@@ -121,7 +121,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void OrthophotoOnlyProductHasNoReservoirMaterialDependencyAndSourceRemainsAudited()
+        public void TerrainOwnedProductHasNoReservoirMaterialDependencyAndSourceRemainsAudited()
         {
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(ProductionEnvironmentRoot.PrefabAssetPath);
             Assert.That(environment, Is.Not.Null);
@@ -139,7 +139,7 @@ namespace QuestFlight.Editor.Tests
                 AirportCoreV43ArtifactAuthoring.ReservoirMaterialPath);
             Assert.That(renderer, Is.SameAs(root.boulderReservoir));
             Assert.That(contract.waterPresentationMode,
-                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoOnly));
+                Is.EqualTo(ProductionWaterPresentationMode.OrthophotoMaskedReflection));
             Assert.That(renderer.enabled, Is.False);
             Assert.That(renderer.gameObject.activeSelf, Is.False);
             Assert.That(renderer.sharedMaterials, Is.Empty);

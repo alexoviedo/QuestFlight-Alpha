@@ -1,5 +1,45 @@
 # Known limitations
 
+## Cockpit Completion V3
+
+- The represented yokes, throttle, mixture, ALT/BAT master, primer,
+  ignition/start key, avionics master, flap selector, and fuel selector now
+  move from one cockpit authority. Nine controls have bounded either-hand
+  OpenXR Touch bindings.
+- Airspeed, vertical speed, directional gyro, altimeter, flap position, and
+  brake pressure have live presentation in one opaque batch. GPS, COM1, COM2,
+  and transponder have live presentation in one opaque glyph batch.
+- Rudder/toe-brake pedals, trim, parking brake, attitude, turn/slip, magnetic
+  compass, clock, tachometer, fuel/oil/electrical/vacuum/thermal faces,
+  NAV/DME/audio, lighting switches, circuit breakers, alternate static,
+  environmental controls, vents, doors, latches, seats, and belts remain
+  static. Their imported geometry is merged, incomplete, or not positively
+  identifiable; some also lack truthful system authority. False overlays are
+  not used to simulate completion.
+- SystemsV2 values are deterministic development approximations, not certified
+  C172 systems fidelity. DME, NAV deviation, audio routing, CHT/EGT, faults,
+  and certified magnetic/engine/electrical/fuel behavior remain unavailable.
+- The inherited scene still exceeds its 29-material and three-transparent-slot
+  planning targets at 31 and seven. Cockpit Completion V3 adds no draw,
+  material, or transparent-slot regression, but does not fix that separately
+  scoped scene-budget debt.
+- Live Meta XR Simulator stereo/HMD/both-Touch passes. The ten genuine recorded
+  `.vrs` sessions remain absent, so aggregate replay evidence is blocked.
+  Physical Quest worn interaction, timing, thermal, and comfort acceptance
+  remain required.
+
+- **Airport Near-Field Ground Detail V1 is a bounded development candidate, not
+  final grass or infrastructure fidelity.** It adds 1,000 deterministic
+  volumetric grass tufts, a pilot-left utility corridor, restrained runway-edge
+  breakup, runway-edge lights, one windsock, and bounded signs in two draws and
+  one already-active material. The product environment contract passes at 51
+  draws, 500,650 selected triangles, and 10 materials; 143/143 EditMode, 9/9
+  PlayMode, Android build, and live Meta XR stereo pass. The aggregate Visual QA
+  still reports its inherited 30/29 material-planning mismatch even though this
+  layer adds no unique material. Ten recorded `.vrs` sessions remain absent,
+  and no physical Quest timing or worn acceptance is claimed for the exact APK.
+  Grass is intentionally bounded to the airport operating corridor and does not
+  represent a botanical survey or full-world vegetation layer.
 - **Airport Parked Aircraft V1 is machine-validated and awaits worn review.**
   Seventeen static aircraft now occupy the takeoff/landing corridor: seven
   powered aircraft on the south apron and ten sailplanes on the north glider

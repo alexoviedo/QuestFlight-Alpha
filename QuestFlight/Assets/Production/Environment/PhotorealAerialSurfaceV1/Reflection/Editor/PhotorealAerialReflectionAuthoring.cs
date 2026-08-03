@@ -166,6 +166,32 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             }
         }
 
+        /// <summary>
+        /// Rebuilds only the geometry-derived principal gauge lens mesh.  This
+        /// focused entry point deliberately avoids cubemap generation so gauge
+        /// aperture corrections remain deterministic in headless build agents.
+        /// </summary>
+        public static void RebuildInstrumentLensMeshOnlyBatch()
+        {
+            try
+            {
+                EnsureFolders();
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                EnsureInstrumentLensMeshAsset();
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                Debug.Log(
+                    "[QuestFlight][PhotorealAerialReflection] " +
+                    "INSTRUMENT_LENS_MESH_ONLY_SUCCESS");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorApplication.Exit(1);
+            }
+        }
+
         public static void IntegrateInstrumentMaterialRestorationBatch()
         {
             try
@@ -1774,11 +1800,19 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 Vector3 normal = Vector3.forward;
                 if (Vector3.Dot(normal, eye - bounds.center) < 0f)
                     normal = -normal;
+                const float lensFaceClearanceMeters = 0.0001f;
+                const float enclosureRadialClearanceMeters = 0.00025f;
                 float front = componentPoints.Max(point => Vector3.Dot(point, normal));
                 Vector3 center = bounds.center + normal *
-                    (front - Vector3.Dot(bounds.center, normal) + 0.00025f);
+                    (front - Vector3.Dot(bounds.center, normal) +
+                     lensFaceClearanceMeters);
+                float radius = Mathf.Min(size.x, size.y) * 0.5f -
+                    enclosureRadialClearanceMeters;
+                if (radius <= 0f)
+                    throw new InvalidOperationException(
+                        "A measured gauge aperture is too small for its physical clearance.");
                 apertures.Add(new GaugeAperture(
-                    center, normal, Mathf.Min(size.x, size.y) * 0.405f));
+                    center, normal, radius));
             }
 
             apertures = apertures.OrderByDescending(item => item.Center.y)

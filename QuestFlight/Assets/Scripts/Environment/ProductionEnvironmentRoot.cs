@@ -9,7 +9,8 @@ namespace QuestFlightLab.Environment
     public enum ProductionWaterPresentationMode
     {
         AuthoredSurface = 0,
-        OrthophotoOnly = 1
+        OrthophotoOnly = 1,
+        OrthophotoMaskedReflection = 2
     }
 
     /// <summary>
@@ -40,7 +41,8 @@ namespace QuestFlightLab.Environment
         public Transform essentialWater;
         public Transform trafficRoot;
         public Transform airportPerimeterFence;
-        [Tooltip("OrthophotoOnly deliberately defers all water effects while preserving source provenance for final polish.")]
+        public Transform airportNearFieldDetail;
+        [Tooltip("OrthophotoMaskedReflection keeps water terrain-owned and adds a bounded reflection response through the shared terrain material.")]
         public ProductionWaterPresentationMode waterPresentationMode =
             ProductionWaterPresentationMode.AuthoredSurface;
 
@@ -93,6 +95,12 @@ namespace QuestFlightLab.Environment
         public int boulderReservoirSmoothedShorelineVertexCount;
         public bool boulderReservoirShorelineClosed;
         public int boulderReservoirShorelineSelfIntersectionCount;
+
+        [Header("Full-map terrain-owned water reflection")]
+        public Texture2D fullMapWaterMask;
+        public TextAsset fullMapWaterReflectionManifest;
+        public int reflectedWaterFeatureCount;
+        public float minimumReflectedWaterAreaSquareMeters;
 
         [Header("Pinned provenance")]
         public string terrainSourceSnapshot = "USGS 3DEP snapshot 20260710T214309Z";
@@ -168,6 +176,30 @@ namespace QuestFlightLab.Environment
                 else if (!fence.TryValidateContract(out string fenceReport))
                 {
                     failures.Add("airport perimeter fence contract failed: " + fenceReport);
+                }
+            }
+            Require(airportNearFieldDetail != null,
+                "AirportNearFieldDetailRoot is not bound", failures);
+            Require(airportNearFieldDetail == null ||
+                    airportNearFieldDetail
+                        .GetComponentsInChildren<AirportNearFieldDetailRoot>(true)
+                        .Length == 1,
+                "airport near-field detail must contain exactly one marker",
+                failures);
+            if (airportNearFieldDetail != null)
+            {
+                AirportNearFieldDetailRoot nearField = airportNearFieldDetail
+                    .GetComponentInChildren<AirportNearFieldDetailRoot>(true);
+                if (nearField == null)
+                {
+                    failures.Add("airport near-field detail marker is missing");
+                }
+                else if (!nearField.TryValidateContract(
+                             out string nearFieldReport))
+                {
+                    failures.Add(
+                        "airport near-field detail contract failed: " +
+                        nearFieldReport);
                 }
             }
             Require(nearTerrainMeshes != null && nearTerrainMeshes.Length == 2 && nearTerrainMeshes.All(HasMesh),
@@ -255,17 +287,45 @@ namespace QuestFlightLab.Environment
             Renderer shoreRenderer = boulderReservoirShoreBank == null
                 ? null
                 : boulderReservoirShoreBank.GetComponent<Renderer>();
-            if (waterPresentationMode == ProductionWaterPresentationMode.OrthophotoOnly)
+            if (waterPresentationMode == ProductionWaterPresentationMode.OrthophotoOnly ||
+                waterPresentationMode == ProductionWaterPresentationMode.OrthophotoMaskedReflection)
             {
                 Require(reservoirRenderer != null &&
                         !reservoirRenderer.enabled && !IsAuthoredActive(reservoirRenderer.transform),
-                    "orthophoto-only water requires the reservoir renderer to be explicitly disabled", failures);
+                    "terrain-owned water requires the reservoir renderer to be explicitly disabled", failures);
                 Require(reservoirRenderer == null || reservoirRenderer.sharedMaterials.Length == 0,
-                    "orthophoto-only water must not serialize a reservoir material dependency", failures);
+                    "terrain-owned water must not serialize a reservoir material dependency", failures);
                 Require(shoreRenderer != null && !shoreRenderer.enabled && !IsAuthoredActive(shoreRenderer.transform),
-                    "orthophoto-only water requires the shore-bank renderer to be disabled", failures);
+                    "terrain-owned water requires the shore-bank renderer to be disabled", failures);
                 Require(shoreRenderer == null || shoreRenderer.sharedMaterials.Length == 0,
-                    "orthophoto-only water must not serialize a shore-bank material dependency", failures);
+                    "terrain-owned water must not serialize a shore-bank material dependency", failures);
+                if (waterPresentationMode == ProductionWaterPresentationMode.OrthophotoMaskedReflection)
+                {
+                    Require(fullMapWaterMask != null,
+                        "full-map terrain water mask is missing", failures);
+                    Require(fullMapWaterReflectionManifest != null,
+                        "full-map water reflection manifest is missing", failures);
+                    Require(reflectedWaterFeatureCount >= 1000,
+                        $"full-map water coverage is unexpectedly sparse ({reflectedWaterFeatureCount})", failures);
+                    Require(minimumReflectedWaterAreaSquareMeters > 0f &&
+                            minimumReflectedWaterAreaSquareMeters <= 250f,
+                        $"full-map water area threshold is invalid ({minimumReflectedWaterAreaSquareMeters:0.0} m2)",
+                        failures);
+                    Material terrainMaterial = nearTerrainMeshes?
+                        .FirstOrDefault(HasMesh)?
+                        .GetComponent<Renderer>()?
+                        .sharedMaterial;
+                    Require(terrainMaterial != null &&
+                            terrainMaterial.HasProperty("_FullMapWaterMask") &&
+                            ReferenceEquals(
+                                terrainMaterial.GetTexture("_FullMapWaterMask"),
+                                fullMapWaterMask),
+                        "shared terrain material is not bound to the full-map water mask", failures);
+                    Require(terrainMaterial != null &&
+                            terrainMaterial.HasProperty("_FullMapWaterReflectionStrength") &&
+                            terrainMaterial.GetFloat("_FullMapWaterReflectionStrength") > 0f,
+                        "shared terrain material has no water reflection response", failures);
+                }
             }
             else if (boulderReservoirSurface != null)
             {
@@ -347,6 +407,11 @@ namespace QuestFlightLab.Environment
                     .Where(batch => batch != null && batch.enabled &&
                                     IsAuthoredActive(batch.transform))
                     .ToArray();
+            AirportNearFieldGrassRenderer[] nearFieldGrass =
+                GetComponentsInChildren<AirportNearFieldGrassRenderer>(true)
+                    .Where(batch => batch != null && batch.enabled &&
+                                    IsAuthoredActive(batch.transform))
+                    .ToArray();
             HashSet<Material> materials = new HashSet<Material>();
             long triangles = 0;
             foreach (Renderer renderer in renderers)
@@ -367,6 +432,13 @@ namespace QuestFlightLab.Environment
                     materials.Add(closeTree.SharedCanopyMaterial);
                 triangles += closeTree.AuthoredMaximumSelectedTriangleCount;
             }
+            foreach (AirportNearFieldGrassRenderer grass in nearFieldGrass)
+            {
+                if (grass.SharedMaterial != null &&
+                    grass.AuthoredMaximumDrawCount > 0)
+                    materials.Add(grass.SharedMaterial);
+                triangles += grass.AuthoredMaximumTriangleCount;
+            }
             foreach (MeshFilter filter in GetComponentsInChildren<MeshFilter>(true)
                          .Where(filter => filter != null && IsAuthoredActive(filter.transform) &&
                                           filter.GetComponent<Renderer>() is Renderer renderer &&
@@ -379,7 +451,8 @@ namespace QuestFlightLab.Environment
             }
             int authoredDrawSources = renderers.Length +
                                       vegetationBatches.Sum(batch => batch.NonEmptyDrawCount) +
-                                      closeTreeLods.Sum(batch => batch.AuthoredMaximumDrawCount);
+                                      closeTreeLods.Sum(batch => batch.AuthoredMaximumDrawCount) +
+                                      nearFieldGrass.Sum(batch => batch.AuthoredMaximumDrawCount);
             return new ProductionEnvironmentBudget(
                 authoredDrawSources,
                 (int)Math.Min(int.MaxValue, triangles),

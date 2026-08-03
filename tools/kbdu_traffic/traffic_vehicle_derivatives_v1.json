@@ -25,7 +25,8 @@
     "script": "tools/kbdu_traffic/prepare_cc0_vehicle_assets.py",
     "decimate_ratio": 0.58,
     "surface_encoding": "exclusive vertex-color classes: body, glass, tire, wheel/trim, headlamp, tail lamp",
-    "unity_authoring": "QuestFlight/Assets/Editor/KbduTrafficAuthoring.cs"
+    "unity_authoring": "QuestFlight/Assets/Editor/KbduTrafficAuthoring.cs",
+    "semi_exterior_policy": "Two-sided indexed exterior derived from the CC0 source to prevent aerial/back-angle panel loss without an extra material or draw."
   },
   "derivatives": [
     {
@@ -68,7 +69,7 @@
       "source_sha256": "6dbc08a6c2c6c4c8d8c18957132e6aae0329e188205e26649977ea8849ce0d75",
       "runtime_asset": "QuestFlight/Assets/Production/Environment/TrafficV1/Models/KBDU_TrafficSemi.asset",
       "dimensions_meters": [2.55, 4.0, 16.2],
-      "triangles": 450
+      "triangles": 900
     }
   ],
   "shared_surface_detail": {

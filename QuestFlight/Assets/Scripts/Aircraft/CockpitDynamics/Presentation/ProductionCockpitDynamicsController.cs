@@ -164,6 +164,19 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.Presentation
         public FlightDynamicsCoordinator Coordinator => coordinator;
         public MonoBehaviour AuthoritativeStateProvider => authoritativeStateProvider;
 
+#if UNITY_EDITOR
+        /// <summary>
+        /// Editor-only copy used by narrowly scoped authoring passes that append
+        /// positively identified controls without rebuilding unrelated bindings.
+        /// </summary>
+        public TransformBinding[] CopyAuthoredBindingsForEditor()
+        {
+            return bindings == null
+                ? Array.Empty<TransformBinding>()
+                : (TransformBinding[])bindings.Clone();
+        }
+#endif
+
         private void Awake()
         {
             CacheProvider();

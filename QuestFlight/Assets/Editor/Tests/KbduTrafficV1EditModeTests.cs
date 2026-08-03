@@ -68,7 +68,16 @@ namespace QuestFlightLab.Environment.Editor.Tests
             Assert.That(runtime.NearArchetypeMeshes.Take(5).All(mesh =>
                 mesh.GetIndexCount(0) / 3u >= 500u &&
                 mesh.GetIndexCount(0) / 3u <= 1100u), Is.True);
-            Assert.That(semi.GetIndexCount(0) / 3u, Is.InRange(400u, 550u));
+            Assert.That(semi.GetIndexCount(0) / 3u, Is.InRange(800u, 1100u));
+            int[] semiTriangles = semi.GetTriangles(0);
+            int half = semiTriangles.Length / 2;
+            Assert.That(semiTriangles.Length % 6, Is.EqualTo(0));
+            for (int index = 0; index < half; index += 3)
+            {
+                Assert.That(semiTriangles[half + index], Is.EqualTo(semiTriangles[index]));
+                Assert.That(semiTriangles[half + index + 1], Is.EqualTo(semiTriangles[index + 2]));
+                Assert.That(semiTriangles[half + index + 2], Is.EqualTo(semiTriangles[index + 1]));
+            }
             Assert.That(runtime.NearArchetypeMeshes.All(mesh =>
                 mesh.colors32 != null &&
                 mesh.colors32.Length == mesh.vertexCount), Is.True,
@@ -185,7 +194,7 @@ namespace QuestFlightLab.Environment.Editor.Tests
                     (
                         route.direction_policy == "SOURCE_WAY_ONEWAY_TRUNK" ||
                         route.direction_policy ==
-                            "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"
+                            "DEDICATED_DIVIDED_HIGHWAY_PAVED_TRUCK_CIRCUIT"
                     )),
                 Is.True,
                 "Each divided-highway carriageway must use only its source-way direction.");
@@ -239,13 +248,30 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 manifest.moving.All(item =>
                     item.archetype != 5 ||
                     manifest.routes[item.route_index].direction_policy ==
-                        "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT"),
+                        "DEDICATED_DIVIDED_HIGHWAY_PAVED_TRUCK_CIRCUIT"),
                 Is.True,
-                "Semi-trailers must use the closed divided-highway circuit.");
+                "Semi-trailers must use the paved divided-highway circuit.");
             RouteRecord truckCircuit = manifest.routes.Single(route =>
                 route.direction_policy ==
-                    "DEDICATED_DIVIDED_HIGHWAY_TRUCK_CIRCUIT");
+                    "DEDICATED_DIVIDED_HIGHWAY_PAVED_TRUCK_CIRCUIT");
             Assert.That(truckCircuit.closed_loop, Is.True);
+            Assert.That(
+                truckCircuit.junction_policy,
+                Is.EqualTo("PAVED_55TH_AND_63RD_STREET_CONNECTORS"));
+            CollectionAssert.IsSubsetOf(
+                new[]
+                {
+                    398080493,
+                    398080491,
+                    1420076514,
+                    398080530
+                },
+                truckCircuit.source_osm_way_ids,
+                "Truck direction changes must follow both mapped paved connectors.");
+            Assert.That(
+                truckCircuit.maximum_centerline_join_meters,
+                Is.LessThanOrEqualTo(2f),
+                "The circuit must not bridge an unmapped median gap.");
             Assert.That(
                 Vector2.Distance(
                     new Vector2(
@@ -484,6 +510,9 @@ namespace QuestFlightLab.Environment.Editor.Tests
             public string highway_class;
             public string direction;
             public string direction_policy;
+            public string junction_policy;
+            public int[] source_osm_way_ids;
+            public float maximum_centerline_join_meters;
             public float lane_offset_meters;
             public float road_width_meters;
             public bool closed_loop;

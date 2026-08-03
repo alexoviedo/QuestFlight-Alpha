@@ -13,8 +13,9 @@ import math
 import sys
 from pathlib import Path
 
-import bmesh
 import bpy
+from mathutils import Vector
+from mathutils.geometry import tessellate_polygon
 
 
 SCRIPT = Path(__file__).resolve()
@@ -53,6 +54,40 @@ def polygon_without_close(points):
     return result
 
 
+def signed_area(points):
+    return 0.5 * sum(
+        points[index][0] * points[(index + 1) % len(points)][1]
+        - points[(index + 1) % len(points)][0] * points[index][1]
+        for index in range(len(points))
+    )
+
+
+def counter_clockwise(points):
+    """Normalize mixed OSM ring winding before creating outward-facing walls."""
+    values = polygon_without_close(points)
+    return list(reversed(values)) if signed_area(values) < 0.0 else values
+
+
+def triangle_normal(vertices, face):
+    """Return an unnormalized normal from the first nondegenerate face corner."""
+    for index in range(1, len(face) - 1):
+        a = Vector(vertices[face[0]])
+        b = Vector(vertices[face[index]])
+        c = Vector(vertices[face[index + 1]])
+        normal = (b - a).cross(c - a)
+        if normal.length_squared > 1e-12:
+            return normal
+    raise RuntimeError(f"Degenerate authored face: {face}")
+
+
+def outward_face(vertices, face, expected):
+    """Orient a face toward a known exterior direction before mesh creation."""
+    normal = triangle_normal(vertices, face)
+    if normal.dot(Vector(expected)) < 0.0:
+        return tuple(reversed(face))
+    return tuple(face)
+
+
 def centroid(points):
     return (
         sum(point[0] for point in points) / len(points),
@@ -60,18 +95,54 @@ def centroid(points):
     )
 
 
-def prism(name, points, height, mat, tile, roof_tile=None, bevel=0.04):
-    """Closed exact-footprint prism with deterministic atlas UVs."""
-    local = polygon_without_close(points)
+def prism(
+    name,
+    points,
+    height,
+    mat,
+    tile,
+    roof_tile=None,
+    bevel=0.04,
+    close_bottom=True,
+    close_top=True,
+):
+    """Exact-footprint prism with optional caps and deterministic atlas UVs."""
+    local = counter_clockwise(points)
     count = len(local)
     vertices = [(x, y, 0.0) for x, y in local] + [(x, y, height) for x, y in local]
-    faces = [tuple(reversed(range(count))), tuple(range(count, count * 2))]
+    faces = []
+    if close_bottom:
+        faces.append(tuple(reversed(range(count))))
+    if close_top:
+        faces.append(tuple(range(count, count * 2)))
     for index in range(count):
         nxt = (index + 1) % count
         faces.append((index, nxt, nxt + count, index + count))
     mesh = bpy.data.meshes.new(name + "_Mesh")
     mesh.from_pydata(vertices, [], faces)
     mesh.validate(verbose=False)
+    mesh.update()
+    # Open runtime shells have no enclosed volume from which Blender can
+    # infer "outside". Preserve the analytically authored winding and assert
+    # every wall points away from its source edge.
+    polygon_offset = int(close_bottom) + int(close_top)
+    if close_bottom and mesh.polygons[0].normal.z > -0.99:
+        raise RuntimeError(f"{name} bottom cap does not face outward")
+    if close_top:
+        top_index = int(close_bottom)
+        if mesh.polygons[top_index].normal.z < 0.99:
+            raise RuntimeError(f"{name} top cap does not face outward")
+    for edge_index in range(count):
+        edge_a = local[edge_index]
+        edge_b = local[(edge_index + 1) % count]
+        expected = Vector((
+            edge_b[1] - edge_a[1],
+            -(edge_b[0] - edge_a[0]),
+            0.0,
+        ))
+        polygon = mesh.polygons[polygon_offset + edge_index]
+        if polygon.normal.dot(expected) <= 1e-5:
+            polygon.flip()
     mesh.update()
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
@@ -127,7 +198,7 @@ def rectangular_footprint(points, tolerance=0.18):
 
 def exact_gable_roof(name, points, wall_height, rise, mat, tile):
     """Closed gable wedge aligned to an actual rectangular footprint."""
-    p0, p1, p2, p3 = points
+    p0, p1, p2, p3 = counter_clockwise(points)
     ridge0 = ((p0[0] + p3[0]) * 0.5, (p0[1] + p3[1]) * 0.5)
     ridge1 = ((p1[0] + p2[0]) * 0.5, (p1[1] + p2[1]) * 0.5)
     vertices = [
@@ -136,19 +207,203 @@ def exact_gable_roof(name, points, wall_height, rise, mat, tile):
         (ridge0[0], ridge0[1], wall_height + rise),
         (ridge1[0], ridge1[1], wall_height + rise),
     ]
-    faces = [
+    raw_faces = [
         (0, 1, 5, 4), (2, 3, 4, 5),
         (1, 2, 5), (3, 0, 4), (3, 2, 1, 0),
     ]
+    center_x, center_y = centroid(points)
+    faces = [
+        outward_face(vertices, raw_faces[0], (0.0, 0.0, 1.0)),
+        outward_face(vertices, raw_faces[1], (0.0, 0.0, 1.0)),
+    ]
+    for face in raw_faces[2:4]:
+        face_center = (
+            sum(vertices[index][0] for index in face) / len(face),
+            sum(vertices[index][1] for index in face) / len(face),
+        )
+        faces.append(outward_face(
+            vertices,
+            face,
+            (face_center[0] - center_x, face_center[1] - center_y, 0.0),
+        ))
+    faces.append(outward_face(vertices, raw_faces[4], (0.0, 0.0, -1.0)))
     mesh = bpy.data.meshes.new(name + "_Mesh")
     mesh.from_pydata(vertices, [], faces)
     mesh.validate(verbose=False)
     mesh.update()
-    bm = bmesh.new()
-    bm.from_mesh(mesh)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    bm.to_mesh(mesh)
-    bm.free()
+    for index in (0, 1):
+        if mesh.polygons[index].normal.z <= 0.0:
+            mesh.polygons[index].flip()
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    obj.data.materials.append(mat)
+    V4.remap_uv(obj, tile)
+    return obj
+
+
+def clip_convex_half_plane(points, axis, split, keep_lower):
+    """Clip a convex polygon against one side of the roof ridge."""
+    result = []
+    epsilon = 1e-6
+
+    def projection(point):
+        return point[0] * axis[0] + point[1] * axis[1]
+
+    def inside(point):
+        value = projection(point)
+        return value <= split + epsilon if keep_lower else value >= split - epsilon
+
+    for index, current in enumerate(points):
+        previous = points[index - 1]
+        current_inside = inside(current)
+        previous_inside = inside(previous)
+        if current_inside != previous_inside:
+            previous_projection = projection(previous)
+            current_projection = projection(current)
+            denominator = current_projection - previous_projection
+            t = 0.0 if abs(denominator) < epsilon else (
+                split - previous_projection
+            ) / denominator
+            result.append((
+                previous[0] + (current[0] - previous[0]) * t,
+                previous[1] + (current[1] - previous[1]) * t,
+            ))
+        if current_inside:
+            result.append(current)
+    return result
+
+
+def profiled_gable_roof(name, points, wall_height, rise, mat, tile):
+    """Exact-footprint pitched roof for irregular residential outlines.
+
+    The source polygon is triangulated first. Each convex triangle is clipped by
+    a principal-axis ridge and evaluated on one of two continuous roof planes.
+    This preserves concave footprints without a rectangular overhang, while the
+    boundary infill closes every gable/roof-to-wall gap.
+    """
+    local = counter_clockwise(points)
+    center_x, center_y = centroid(local)
+    covariance_xx = sum((x - center_x) ** 2 for x, _ in local) / len(local)
+    covariance_xy = sum(
+        (x - center_x) * (y - center_y) for x, y in local
+    ) / len(local)
+    covariance_yy = sum((y - center_y) ** 2 for _, y in local) / len(local)
+    major_angle = 0.5 * math.atan2(
+        2.0 * covariance_xy, covariance_xx - covariance_yy
+    )
+    minor_axis = (-math.sin(major_angle), math.cos(major_angle))
+
+    projections = [
+        x * minor_axis[0] + y * minor_axis[1] for x, y in local
+    ]
+    projection_min = min(projections)
+    projection_max = max(projections)
+    ridge = (projection_min + projection_max) * 0.5
+    lower_span = max(ridge - projection_min, 0.001)
+    upper_span = max(projection_max - ridge, 0.001)
+
+    def roof_height(point):
+        projection = point[0] * minor_axis[0] + point[1] * minor_axis[1]
+        if projection <= ridge:
+            factor = (projection - projection_min) / lower_span
+        else:
+            factor = (projection_max - projection) / upper_span
+        return wall_height + rise * max(0.0, min(1.0, factor))
+
+    vertices = []
+    faces = []
+
+    def append_face(points_3d, expected):
+        start = len(vertices)
+        vertices.extend(points_3d)
+        raw_face = tuple(range(start, start + len(points_3d)))
+        try:
+            faces.append(outward_face(vertices, raw_face, expected))
+        except RuntimeError:
+            # Ridge clipping can produce a zero-area triangle when a source
+            # triangle merely touches the split plane. It covers no surface
+            # and must not be exported as a phantom panel.
+            del vertices[start:]
+
+    triangles = tessellate_polygon([
+        [Vector((x, y, 0.0)) for x, y in local]
+    ])
+    if not triangles:
+        raise RuntimeError(f"Unable to tessellate irregular roof {name}")
+    for triangle in triangles:
+        # Blender 5.1 returns source-vertex indices here, while earlier
+        # versions returned Vectors. Support both so the authored result is
+        # deterministic across the currently supported Blender toolchain.
+        triangle_2d = [
+            local[vertex]
+            if isinstance(vertex, int)
+            else (float(vertex.x), float(vertex.y))
+            for vertex in triangle
+        ]
+        for keep_lower in (True, False):
+            clipped = clip_convex_half_plane(
+                triangle_2d, minor_axis, ridge, keep_lower
+            )
+            if len(clipped) >= 3:
+                append_face([
+                    (x, y, roof_height((x, y))) for x, y in clipped
+                ], (0.0, 0.0, 1.0))
+
+    roof_face_count = len(faces)
+
+    # Split each source boundary segment where it crosses the ridge so the
+    # vertical gable infill reaches the same continuous roof profile.
+    for index, point_a in enumerate(local):
+        point_b = local[(index + 1) % len(local)]
+        projection_a = point_a[0] * minor_axis[0] + point_a[1] * minor_axis[1]
+        projection_b = point_b[0] * minor_axis[0] + point_b[1] * minor_axis[1]
+        segment = [point_a]
+        if (projection_a - ridge) * (projection_b - ridge) < -1e-6:
+            t = (ridge - projection_a) / (projection_b - projection_a)
+            segment.append((
+                point_a[0] + (point_b[0] - point_a[0]) * t,
+                point_a[1] + (point_b[1] - point_a[1]) * t,
+            ))
+        segment.append(point_b)
+        for start, end in zip(segment, segment[1:]):
+            start_height = roof_height(start)
+            end_height = roof_height(end)
+            if max(start_height, end_height) <= wall_height + 1e-5:
+                continue
+            outward = (
+                end[1] - start[1],
+                -(end[0] - start[0]),
+                0.0,
+            )
+            if start_height <= wall_height + 1e-5:
+                append_face([
+                    (start[0], start[1], wall_height),
+                    (end[0], end[1], wall_height),
+                    (end[0], end[1], end_height),
+                ], outward)
+            elif end_height <= wall_height + 1e-5:
+                append_face([
+                    (start[0], start[1], wall_height),
+                    (end[0], end[1], wall_height),
+                    (start[0], start[1], start_height),
+                ], outward)
+            else:
+                append_face([
+                    (start[0], start[1], wall_height),
+                    (end[0], end[1], wall_height),
+                    (end[0], end[1], end_height),
+                    (start[0], start[1], start_height),
+                ], outward)
+
+    mesh = bpy.data.meshes.new(name + "_Mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.validate(verbose=False)
+    mesh.update()
+    for index in range(roof_face_count):
+        if mesh.polygons[index].normal.z <= 0.0:
+            mesh.polygons[index].flip()
+    mesh.update()
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
     obj.data.materials.append(mat)
@@ -204,6 +459,11 @@ def add_roof(items, spec, points, wall_height, lod, mat):
             items.append(exact_gable_roof(
                 f"{spec['asset_id']}_FootprintGable",
                 rectangle, wall_height, rise, mat, 3,
+            ))
+        elif family == "residential":
+            items.append(profiled_gable_roof(
+                f"{spec['asset_id']}_ProfiledFootprintGable",
+                points, wall_height, rise, mat, 3,
             ))
         else:
             cap = prism(
@@ -435,6 +695,11 @@ def build_building(spec, lod, mat):
             else 8 if "t_hangar" in spec["family"] or int(spec["osm_id"]) % 2 == 0
             else 1 if spec["family"] == "service_hangar" else 10,
             bevel=0.0,
+            # Every shell is grounded and receives a separate exact roof.
+            # Omit the permanently buried caps rather than spending Quest's
+            # serialized triangle budget on invisible geometry.
+            close_bottom=False,
+            close_top=False,
         ),
     ]
     add_roof(items, spec, local, wall_height, lod, mat)
@@ -502,6 +767,16 @@ def main():
             "source_osm_id": spec["osm_id"],
             "family": spec["family"],
             "position_xz_m": [round(cx, 4), round(cy, 4)],
+            "footprint_vertex_count": len(polygon_without_close(spec["footprint_xz_m"])),
+            "wall_winding_normalized": True,
+            "roof_style": (
+                "exact_footprint_gable"
+                if spec["family"] == "residential"
+                else "exact_footprint_flat"
+                if spec["family"] in ("commercial", "light_industrial")
+                else "semantic_airport_gable"
+            ),
+            "maximum_footprint_error_m": 0.0,
             "lods": lod_rows,
         })
     bpy.context.scene["generator"] = str(SCRIPT.relative_to(ROOT)).replace("\\", "/")

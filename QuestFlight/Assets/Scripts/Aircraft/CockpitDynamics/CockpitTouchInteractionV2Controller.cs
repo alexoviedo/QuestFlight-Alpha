@@ -16,7 +16,13 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
         None = 0,
         PilotYoke = 1,
         Throttle = 2,
-        Mixture = 3
+        Mixture = 3,
+        AltBatMaster = 4,
+        Primer = 5,
+        IgnitionStart = 6,
+        AvionicsPower = 7,
+        FlapSelector = 8,
+        FuelSelector = 9
     }
 
     public enum CockpitTouchInteractionV2Mode
@@ -83,6 +89,39 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
         public const float DefaultMaximumRayDistanceMeters = 0.8f;
         public const float MinimumRayDistanceMeters = 0.05f;
         public const float MaximumRayDistanceMeters = 2f;
+        public const float DirectTouchRadiusMeters = 0.11f;
+        public const float SelectPressThreshold = 0.55f;
+        public const float SelectReleaseThreshold = 0.35f;
+
+        private static readonly InputFeatureUsage<Vector3>
+            PointerPositionUsage =
+                new InputFeatureUsage<Vector3>("pointerPosition");
+        private static readonly InputFeatureUsage<Quaternion>
+            PointerRotationUsage =
+                new InputFeatureUsage<Quaternion>("pointerRotation");
+
+        private struct PointerSample
+        {
+            public Vector3 gripWorldPosition;
+            public Quaternion gripWorldRotation;
+            public Vector3 aimWorldPosition;
+            public Vector3 aimWorldDirection;
+
+            public static PointerSample FromTransform(Transform value)
+            {
+                return new PointerSample
+                {
+                    gripWorldPosition =
+                        value != null ? value.position : Vector3.zero,
+                    gripWorldRotation =
+                        value != null ? value.rotation : Quaternion.identity,
+                    aimWorldPosition =
+                        value != null ? value.position : Vector3.zero,
+                    aimWorldDirection =
+                        value != null ? value.forward : Vector3.forward
+                };
+            }
+        }
 
         [Serializable]
         public sealed class Binding
@@ -101,7 +140,9 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                 if (string.IsNullOrWhiteSpace(id) ||
                     targetCollider == null ||
                     target == CockpitTouchInteractionV2Target.None ||
-                    !IsFinite(normalizedValue))
+                    !IsFinite(normalizedValue) ||
+                    normalizedValue < 0f ||
+                    normalizedValue > 1f)
                     return false;
 
                 switch (target)
@@ -113,6 +154,29 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                         return mode == CockpitTouchInteractionV2Mode.GrabPose ||
                                mode ==
                                CockpitTouchInteractionV2Mode.SetNormalized;
+                    case CockpitTouchInteractionV2Target.AltBatMaster:
+                    case CockpitTouchInteractionV2Target.AvionicsPower:
+                        return mode == CockpitTouchInteractionV2Mode.Toggle ||
+                               mode ==
+                               CockpitTouchInteractionV2Mode.SetNormalized;
+                    case CockpitTouchInteractionV2Target.Primer:
+                        return mode ==
+                                   CockpitTouchInteractionV2Mode.SetNormalized ||
+                               mode ==
+                                   CockpitTouchInteractionV2Mode.Momentary;
+                    case CockpitTouchInteractionV2Target.FlapSelector:
+                    case CockpitTouchInteractionV2Target.FuelSelector:
+                        return mode ==
+                                   CockpitTouchInteractionV2Mode.SetNormalized ||
+                               mode ==
+                                   CockpitTouchInteractionV2Mode.Toggle;
+                    case CockpitTouchInteractionV2Target.IgnitionStart:
+                        return mode ==
+                                   CockpitTouchInteractionV2Mode.SetNormalized ||
+                               mode ==
+                                   CockpitTouchInteractionV2Mode.Toggle ||
+                               mode ==
+                                   CockpitTouchInteractionV2Mode.Momentary;
                     default:
                         return false;
                 }
@@ -271,18 +335,23 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
 
         private void OnDisable()
         {
+            ReleaseActiveCaptures();
             ClearInteractionState();
         }
 
         private void Update()
         {
+            InputDevice leftDevice =
+                InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+            InputDevice rightDevice =
+                InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
             bool leftPressed =
-                ReadSelectButton(XRNode.LeftHand);
+                ReadSelectButton(leftDevice, _leftWasPressed);
             bool rightPressed =
-                ReadSelectButton(XRNode.RightHand);
+                ReadSelectButton(rightDevice, _rightWasPressed);
             ProcessPointer(
                 CockpitTouchInteractionV2Hand.Left,
-                leftRayOrigin,
+                BuildPointerSample(leftRayOrigin, leftDevice),
                 leftPressed,
                 ref _leftWasPressed,
                 ref _leftActiveBinding,
@@ -291,7 +360,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                 Time.frameCount);
             ProcessPointer(
                 CockpitTouchInteractionV2Hand.Right,
-                rightRayOrigin,
+                BuildPointerSample(rightRayOrigin, rightDevice),
                 rightPressed,
                 ref _rightWasPressed,
                 ref _rightActiveBinding,
@@ -315,7 +384,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             {
                 ProcessPointer(
                     hand,
-                    leftRayOrigin,
+                    PointerSample.FromTransform(leftRayOrigin),
                     pressed,
                     ref _leftWasPressed,
                     ref _leftActiveBinding,
@@ -327,7 +396,53 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             {
                 ProcessPointer(
                     hand,
-                    rightRayOrigin,
+                    PointerSample.FromTransform(rightRayOrigin),
+                    pressed,
+                    ref _rightWasPressed,
+                    ref _rightActiveBinding,
+                    ref _rightHitWorldPosition,
+                    unscaledTime,
+                    frameNumber);
+            }
+        }
+
+        public void ProcessPointerSampleForTest(
+            CockpitTouchInteractionV2Hand hand,
+            bool pressed,
+            Vector3 gripWorldPosition,
+            Quaternion gripWorldRotation,
+            Vector3 aimWorldPosition,
+            Vector3 aimWorldDirection,
+            float unscaledTime,
+            int frameNumber)
+        {
+            PointerSample sample = new PointerSample
+            {
+                gripWorldPosition = gripWorldPosition,
+                gripWorldRotation = gripWorldRotation,
+                aimWorldPosition = aimWorldPosition,
+                aimWorldDirection =
+                    NormalizeOrFallback(
+                        aimWorldDirection,
+                        gripWorldRotation * Vector3.forward)
+            };
+            if (hand == CockpitTouchInteractionV2Hand.Left)
+            {
+                ProcessPointer(
+                    hand,
+                    sample,
+                    pressed,
+                    ref _leftWasPressed,
+                    ref _leftActiveBinding,
+                    ref _leftHitWorldPosition,
+                    unscaledTime,
+                    frameNumber);
+            }
+            else if (hand == CockpitTouchInteractionV2Hand.Right)
+            {
+                ProcessPointer(
+                    hand,
+                    sample,
                     pressed,
                     ref _rightWasPressed,
                     ref _rightActiveBinding,
@@ -400,7 +515,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
 
         private void ProcessPointer(
             CockpitTouchInteractionV2Hand hand,
-            Transform rayOrigin,
+            PointerSample pointer,
             bool pressed,
             ref bool wasPressed,
             ref int activeBinding,
@@ -412,27 +527,33 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             bool releasedThisFrame = !pressed && wasPressed;
             wasPressed = pressed;
 
-            if (pressedThisFrame)
+            // Direct grabs commonly begin with the grip/trigger already held
+            // while the hand moves onto a control. Re-evaluate acquisition
+            // until a binding is captured instead of requiring a one-frame
+            // button-down/raycast coincidence.
+            if ((pressedThisFrame ||
+                 (pressed && activeBinding < 0)) &&
+                activeBinding < 0)
             {
                 if (!TryResolveNearestBinding(
                         hand,
-                        rayOrigin,
+                        pointer,
                         out int bindingIndex,
                         out Vector3 hitWorldPosition))
                     return;
 
                 Binding binding = bindings[bindingIndex];
+                activeBinding = bindingIndex;
                 activeHitWorldPosition = hitWorldPosition;
                 switch (binding.mode)
                 {
                     case CockpitTouchInteractionV2Mode.Momentary:
-                        activeBinding = bindingIndex;
                         Enqueue(
                             Command(
                                 binding,
                                 hand,
                                 CockpitTouchInteractionV2Operation.Press,
-                                rayOrigin,
+                                pointer,
                                 hitWorldPosition,
                                 unscaledTime,
                                 frameNumber));
@@ -443,7 +564,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                                 binding,
                                 hand,
                                 CockpitTouchInteractionV2Operation.Toggle,
-                                rayOrigin,
+                                pointer,
                                 hitWorldPosition,
                                 unscaledTime,
                                 frameNumber));
@@ -454,19 +575,18 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                                 binding,
                                 hand,
                                 CockpitTouchInteractionV2Operation.SetNormalized,
-                                rayOrigin,
+                                pointer,
                                 hitWorldPosition,
                                 unscaledTime,
                                 frameNumber));
                         break;
                     case CockpitTouchInteractionV2Mode.GrabPose:
-                        activeBinding = bindingIndex;
                         Enqueue(
                             Command(
                                 binding,
                                 hand,
                                 CockpitTouchInteractionV2Operation.BeginGrab,
-                                rayOrigin,
+                                pointer,
                                 hitWorldPosition,
                                 unscaledTime,
                                 frameNumber));
@@ -484,7 +604,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                         bindings[activeBinding],
                         hand,
                         CockpitTouchInteractionV2Operation.UpdateGrab,
-                        rayOrigin,
+                        pointer,
                         activeHitWorldPosition,
                         unscaledTime,
                         frameNumber));
@@ -494,40 +614,82 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                 return;
 
             Binding released = bindings[activeBinding];
-            CockpitTouchInteractionV2Operation operation =
+            if (released.mode ==
+                CockpitTouchInteractionV2Mode.GrabPose ||
                 released.mode ==
-                CockpitTouchInteractionV2Mode.GrabPose
-                    ? CockpitTouchInteractionV2Operation.EndGrab
-                    : CockpitTouchInteractionV2Operation.Release;
-            Enqueue(
-                Command(
-                    released,
-                    hand,
-                    operation,
-                    rayOrigin,
-                    activeHitWorldPosition,
-                    unscaledTime,
-                    frameNumber));
+                CockpitTouchInteractionV2Mode.Momentary)
+            {
+                CockpitTouchInteractionV2Operation operation =
+                    released.mode ==
+                    CockpitTouchInteractionV2Mode.GrabPose
+                        ? CockpitTouchInteractionV2Operation.EndGrab
+                        : CockpitTouchInteractionV2Operation.Release;
+                Enqueue(
+                    Command(
+                        released,
+                        hand,
+                        operation,
+                        pointer,
+                        activeHitWorldPosition,
+                        unscaledTime,
+                        frameNumber));
+            }
             activeBinding = -1;
             activeHitWorldPosition = Vector3.zero;
         }
 
         private bool TryResolveNearestBinding(
             CockpitTouchInteractionV2Hand hand,
-            Transform rayOrigin,
+            PointerSample pointer,
             out int bindingIndex,
             out Vector3 hitWorldPosition)
         {
             bindingIndex = -1;
             hitWorldPosition = Vector3.zero;
-            if (rayOrigin == null ||
-                bindings == null ||
+            if (bindings == null ||
                 bindings.Length == 0)
                 return false;
 
+            float directDistanceSquared =
+                DirectTouchRadiusMeters *
+                DirectTouchRadiusMeters;
+            for (int candidate = 0;
+                 candidate < bindings.Length;
+                 candidate++)
+            {
+                Binding binding = bindings[candidate];
+                if (!IsBindingAvailable(
+                        binding,
+                        candidate,
+                        hand,
+                        true))
+                    continue;
+
+                Vector3 closest =
+                    binding.targetCollider.ClosestPoint(
+                        pointer.gripWorldPosition);
+                float distanceSquared =
+                    (closest -
+                     pointer.gripWorldPosition).sqrMagnitude;
+                if (distanceSquared >
+                    directDistanceSquared)
+                    continue;
+
+                directDistanceSquared = distanceSquared;
+                bindingIndex = candidate;
+                hitWorldPosition = closest;
+            }
+            if (bindingIndex >= 0)
+                return true;
+
+            Vector3 direction =
+                NormalizeOrFallback(
+                    pointer.aimWorldDirection,
+                    pointer.gripWorldRotation *
+                    Vector3.forward);
             int hitCount = Physics.RaycastNonAlloc(
-                rayOrigin.position,
-                rayOrigin.forward,
+                pointer.aimWorldPosition,
+                direction,
                 _raycastHits,
                 maximumRayDistanceMeters,
                 interactionLayers,
@@ -543,10 +705,12 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                      candidate++)
                 {
                     Binding binding = bindings[candidate];
-                    if (binding == null ||
+                    if (!IsBindingAvailable(
+                            binding,
+                            candidate,
+                            hand,
+                            false) ||
                         binding.targetCollider != hit.collider ||
-                        !AllowsHand(binding.allowedHand, hand) ||
-                        IsCapturedByOtherHand(candidate, hand) ||
                         hit.distance >= nearestDistance)
                         continue;
                     bindingIndex = candidate;
@@ -555,6 +719,43 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                 }
             }
             return bindingIndex >= 0;
+        }
+
+        private bool IsBindingAvailable(
+            Binding binding,
+            int bindingIndex,
+            CockpitTouchInteractionV2Hand hand,
+            bool direct)
+        {
+            if (binding == null ||
+                binding.targetCollider == null ||
+                !binding.targetCollider.enabled ||
+                !binding.targetCollider.gameObject.activeInHierarchy ||
+                IsCapturedByOtherHand(bindingIndex, hand))
+                return false;
+
+            int layerBit =
+                1 << binding.targetCollider.gameObject.layer;
+            if ((interactionLayers.value & layerBit) == 0)
+                return false;
+
+            // A physically direct grab is safe with either controller for the
+            // three positively represented continuous controls. The authored
+            // hand remains authoritative for distant aim-ray selection.
+            return direct && IsRepresentedGrabTarget(binding.target)
+                ? true
+                : AllowsHand(binding.allowedHand, hand);
+        }
+
+        private static bool IsRepresentedGrabTarget(
+            CockpitTouchInteractionV2Target target)
+        {
+            return target ==
+                   CockpitTouchInteractionV2Target.PilotYoke ||
+                   target ==
+                   CockpitTouchInteractionV2Target.Throttle ||
+                   target ==
+                   CockpitTouchInteractionV2Target.Mixture;
         }
 
         private bool IsCapturedByOtherHand(
@@ -578,7 +779,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             Binding binding,
             CockpitTouchInteractionV2Hand hand,
             CockpitTouchInteractionV2Operation operation,
-            Transform rayOrigin,
+            PointerSample pointer,
             Vector3 hitWorldPosition,
             float unscaledTime,
             int frameNumber)
@@ -591,13 +792,9 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                 operation = operation,
                 normalizedValue = binding.normalizedValue,
                 pointerWorldPosition =
-                    rayOrigin != null
-                        ? rayOrigin.position
-                        : Vector3.zero,
+                    pointer.gripWorldPosition,
                 pointerWorldRotation =
-                    rayOrigin != null
-                        ? rayOrigin.rotation
-                        : Quaternion.identity,
+                    pointer.gripWorldRotation,
                 hitWorldPosition = hitWorldPosition,
                 frameNumber = frameNumber,
                 unscaledTime = unscaledTime
@@ -643,21 +840,189 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             }
         }
 
-        private static bool ReadSelectButton(XRNode node)
+        private void ReleaseActiveCaptures()
         {
-            InputDevice device =
-                InputDevices.GetDeviceAtXRNode(node);
-            return device.isValid &&
-                   device.TryGetFeatureValue(
-                       CommonUsages.triggerButton,
-                       out bool pressed) &&
-                   pressed;
+            float unscaledTime = Time.unscaledTime;
+            int frameNumber = Time.frameCount;
+            ReleaseActiveCapture(
+                CockpitTouchInteractionV2Hand.Left,
+                PointerSample.FromTransform(leftRayOrigin),
+                ref _leftActiveBinding,
+                ref _leftHitWorldPosition,
+                unscaledTime,
+                frameNumber);
+            ReleaseActiveCapture(
+                CockpitTouchInteractionV2Hand.Right,
+                PointerSample.FromTransform(rightRayOrigin),
+                ref _rightActiveBinding,
+                ref _rightHitWorldPosition,
+                unscaledTime,
+                frameNumber);
+            FlushToSerializedConsumer();
+        }
+
+        private void ReleaseActiveCapture(
+            CockpitTouchInteractionV2Hand hand,
+            PointerSample pointer,
+            ref int activeBinding,
+            ref Vector3 activeHitWorldPosition,
+            float unscaledTime,
+            int frameNumber)
+        {
+            if (activeBinding < 0 ||
+                activeBinding >= BindingCount)
+                return;
+
+            Binding binding = bindings[activeBinding];
+            if (binding.mode ==
+                CockpitTouchInteractionV2Mode.GrabPose ||
+                binding.mode ==
+                CockpitTouchInteractionV2Mode.Momentary)
+            {
+                Enqueue(
+                    Command(
+                        binding,
+                        hand,
+                        binding.mode ==
+                        CockpitTouchInteractionV2Mode.GrabPose
+                            ? CockpitTouchInteractionV2Operation.EndGrab
+                            : CockpitTouchInteractionV2Operation.Release,
+                        pointer,
+                        activeHitWorldPosition,
+                        unscaledTime,
+                        frameNumber));
+            }
+            activeBinding = -1;
+            activeHitWorldPosition = Vector3.zero;
+        }
+
+        private static bool ReadSelectButton(
+            InputDevice device,
+            bool wasPressed)
+        {
+            if (!device.isValid)
+                return false;
+
+            bool digitalPressed =
+                TryReadBoolean(
+                    device,
+                    CommonUsages.triggerButton) ||
+                TryReadBoolean(
+                    device,
+                    CommonUsages.gripButton);
+            if (digitalPressed)
+                return true;
+
+            float analogValue = 0f;
+            if (device.TryGetFeatureValue(
+                    CommonUsages.trigger,
+                    out float trigger))
+                analogValue = Mathf.Max(analogValue, trigger);
+            if (device.TryGetFeatureValue(
+                    CommonUsages.grip,
+                    out float grip))
+                analogValue = Mathf.Max(analogValue, grip);
+            return analogValue >=
+                   (wasPressed
+                       ? SelectReleaseThreshold
+                       : SelectPressThreshold);
+        }
+
+        private static bool TryReadBoolean(
+            InputDevice device,
+            InputFeatureUsage<bool> usage)
+        {
+            return device.TryGetFeatureValue(
+                       usage,
+                       out bool value) &&
+                   value;
+        }
+
+        private static PointerSample BuildPointerSample(
+            Transform gripTransform,
+            InputDevice device)
+        {
+            PointerSample fallback =
+                PointerSample.FromTransform(gripTransform);
+            if (gripTransform == null ||
+                !device.isValid)
+                return fallback;
+
+            bool hasGripPosition =
+                device.TryGetFeatureValue(
+                    CommonUsages.devicePosition,
+                    out Vector3 gripTrackingPosition);
+            bool hasGripRotation =
+                device.TryGetFeatureValue(
+                    CommonUsages.deviceRotation,
+                    out Quaternion gripTrackingRotation);
+            bool hasPointerPosition =
+                device.TryGetFeatureValue(
+                    PointerPositionUsage,
+                    out Vector3 pointerTrackingPosition);
+            bool hasPointerRotation =
+                device.TryGetFeatureValue(
+                    PointerRotationUsage,
+                    out Quaternion pointerTrackingRotation);
+            if (!hasGripRotation ||
+                !IsFinite(gripTrackingRotation))
+                return fallback;
+
+            Quaternion trackingToWorld =
+                gripTransform.rotation *
+                Quaternion.Inverse(gripTrackingRotation);
+            if (hasPointerRotation &&
+                IsFinite(pointerTrackingRotation))
+            {
+                Quaternion aimWorldRotation =
+                    trackingToWorld *
+                    pointerTrackingRotation;
+                fallback.aimWorldDirection =
+                    aimWorldRotation * Vector3.forward;
+            }
+            if (hasGripPosition &&
+                hasPointerPosition &&
+                IsFinite(gripTrackingPosition) &&
+                IsFinite(pointerTrackingPosition))
+            {
+                fallback.aimWorldPosition =
+                    gripTransform.position +
+                    trackingToWorld *
+                    (pointerTrackingPosition -
+                     gripTrackingPosition);
+            }
+            return fallback;
+        }
+
+        private static Vector3 NormalizeOrFallback(
+            Vector3 value,
+            Vector3 fallback)
+        {
+            return IsFinite(value) &&
+                   value.sqrMagnitude > 0.000001f
+                ? value.normalized
+                : fallback.normalized;
         }
 
         private static bool IsFinite(float value)
         {
             return !float.IsNaN(value) &&
                    !float.IsInfinity(value);
+        }
+
+        private static bool IsFinite(Vector3 value)
+        {
+            return IsFinite(value.x) &&
+                   IsFinite(value.y) &&
+                   IsFinite(value.z);
+        }
+
+        private static bool IsFinite(Quaternion value)
+        {
+            return IsFinite(value.x) &&
+                   IsFinite(value.y) &&
+                   IsFinite(value.z) &&
+                   IsFinite(value.w);
         }
     }
 }

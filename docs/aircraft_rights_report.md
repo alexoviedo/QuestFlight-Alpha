@@ -48,7 +48,7 @@ The exact audited GLB may be copied and redistributed in the product when all of
 
 1. `THIRD_PARTY_NOTICES.md` ships with the repository and product notices.
 2. Credit identifies `Cessna172` and KOG_THORNS, links the original model and CC BY 4.0, and does not imply endorsement.
-3. Any modification to the licensed material is identified. The current GLB binary is unchanged; the product adds a separate Unity hierarchy, visibility policy, lighting treatment, and authored control pivots.
+3. Any modification to the licensed material is identified. The current GLB binary is unchanged; the product adds separate Unity hierarchy, visibility/lighting treatment, authored control pivots, and a symmetry-derived four-pedal runtime mesh documented by `Assets/Production/Cockpit/Pedals/C172_FourPedalAssemblyManifest.json`.
 4. No DRM or additional legal term prevents recipients from exercising CC BY rights in the licensed material.
 5. Only the exact SHA-256 above enters the product. A new download, revision, conversion, or replacement returns to the rights gate.
 6. The binary is stored through Git LFS with its original Unity `.meta` GUID preserved.

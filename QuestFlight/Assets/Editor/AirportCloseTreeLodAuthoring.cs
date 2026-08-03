@@ -120,10 +120,18 @@ namespace QuestFlight.Editor
                     environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true);
                 AerialSceneryRoot aerial =
                     environment.GetComponentInChildren<AerialSceneryRoot>(true);
+                AirportCoreBenchmarkRoot benchmark =
+                    environment.GetComponentInChildren<AirportCoreBenchmarkRoot>(true);
                 if (environmentRoot == null || surface == null || aerial == null ||
+                    benchmark == null || benchmark.vegetationHeroCluster == null ||
                     surface.productionCanopySurfaceLayer == null)
                     throw new InvalidOperationException(
                         "Authored production aerial hierarchy is incomplete.");
+
+                // V4's card-heavy hero cluster occupies the same runway-left corridor as
+                // the source-derived close-tree tier. Keep it serialized for historical
+                // A/B provenance, but never draw both representations in the product.
+                benchmark.vegetationHeroCluster.gameObject.SetActive(false);
 
                 Transform canopy = surface.productionCanopySurfaceLayer;
                 Transform previous = canopy.Find(RuntimeObjectName);
@@ -157,7 +165,7 @@ namespace QuestFlight.Editor
 
                 if (renderer.AuthoredMaximumDrawCount != 3 ||
                     renderer.AuthoredMaximumSelectedTriangleCount <= 0 ||
-                    renderer.AuthoredMaximumSelectedTriangleCount > 24000)
+                    renderer.AuthoredMaximumSelectedTriangleCount > 30000)
                     throw new InvalidOperationException(
                         "Airport-close runtime LOD budget exceeds its authored contract.");
                 if (budget.rendererCount > 75 || budget.triangleCount > 650000 ||
@@ -170,6 +178,7 @@ namespace QuestFlight.Editor
                 EditorUtility.SetDirty(canopyMaterial);
                 EditorUtility.SetDirty(surface);
                 EditorUtility.SetDirty(aerial);
+                EditorUtility.SetDirty(benchmark);
                 EditorUtility.SetDirty(environmentRoot);
                 EditorUtility.SetDirty(renderer);
                 PrefabUtility.SaveAsPrefabAsset(

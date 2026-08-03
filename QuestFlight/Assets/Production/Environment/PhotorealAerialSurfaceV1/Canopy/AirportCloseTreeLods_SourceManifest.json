@@ -2,23 +2,32 @@
   "limitations": [
     "The optimized derivative is a visual archetype, not a surveyed individual tree.",
     "Position, height, crown diameter, and tint remain driven by the committed semantic placement manifest.",
+    "Near and middle foliage use fixed branch-local trihedral clusters; no crown-scale horizontal card is authored.",
     "The far impostor is intentionally restricted to projected sizes where stereo depth loss is not resolvable."
   ],
   "lods": [
     {
+      "foliage_cards": 156,
+      "foliage_lobe_target": 52,
+      "foliage_lobes": 52,
+      "maximum_abs_vertical_card_normal": 0.46947163343429565,
       "name": "AirportCloseTree_LOD0",
-      "representation": "source-leaf-geometry-plus-volumetric-clumps",
-      "source_leaf_triangles": 2127,
-      "supplemental_foliage_clumps": 42,
-      "triangle_count": 2337,
-      "vertices": 6759
+      "representation": "dense-source-informed-branch-local-trihedral-foliage-lobes",
+      "source_leaf_triangles_copied": 0,
+      "triangle_count": 344,
+      "vertices": 656,
+      "wood_branch_target": 4
     },
     {
-      "foliage_clumps": 34,
+      "foliage_cards": 48,
+      "foliage_lobe_target": 16,
+      "foliage_lobes": 16,
+      "maximum_abs_vertical_card_normal": 0.46947163343429565,
       "name": "AirportCloseTree_LOD1",
-      "representation": "volumetric-crossed-foliage-clumps",
-      "triangle_count": 194,
-      "vertices": 330
+      "representation": "dense-reduced-source-informed-trihedral-foliage-lobes",
+      "triangle_count": 122,
+      "vertices": 218,
+      "wood_branch_target": 2
     },
     {
       "azimuth_frames": 8,
@@ -29,20 +38,22 @@
     }
   ],
   "output": {
-    "bytes": 270694,
-    "sha256": "295659ab4f5d18ce92f05388a936a37149747ff0f735726a2abe23b96bd9194f"
+    "bytes": 34564,
+    "sha256": "be844e836745699eff08f3aed4cca64273fbcc811cacc62fa51e40dd9b14e5fe"
   },
   "processing": {
     "blender_version": "5.1.2",
     "generator": "tools/airport_close_trees/build_airport_close_tree_lods.py",
+    "near_horizontal_source_cards_copied": false,
     "persistent_hysteresis": true,
     "projected_size_lod": true,
     "runtime_material_growth": 0,
     "runtime_texture_growth_assets": 2,
+    "shared_lobe_topology_between_lod0_lod1": true,
     "xr_center_eye_impostor": true
   },
   "runtime_asset": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/EditorSource/AirportCloseTreeLods.bytes",
-  "schema": "questflight.airport-tree-impostor-source.v2",
+  "schema": "questflight.airport-tree-volumetric-source.v3",
   "source": {
     "asset": "Tree Small 02",
     "author": "Poly Haven",

@@ -4,16 +4,18 @@ using UnityEngine;
 namespace QuestFlightLab.Input
 {
     /// <summary>
-    /// The only cockpit controls currently proven both represented and safe
-    /// for direct Touch arbitration. This contract deliberately excludes
-    /// switches, pedals, brakes, trim, carb heat, and flaps.
+    /// Cockpit flight-control channels positively represented and safe for
+    /// Touch arbitration. Continuous grabs use an owner-checked lease; the
+    /// represented flap selector writes the same persistent command value the
+    /// gamepad buttons already own.
     /// </summary>
     public enum ProductTouchControlChannel
     {
         None = 0,
         PilotYoke = 1,
         Throttle = 2,
-        Mixture = 3
+        Mixture = 3,
+        FlapSelector = 4
     }
 
     /// <summary>
@@ -228,6 +230,23 @@ namespace QuestFlightLab.Input
             primary = state.primary;
             secondary = state.secondary;
             return state.active;
+        }
+
+        public bool TryApplyTouchDiscreteValue(
+            ProductTouchControlChannel channel,
+            int ownerToken,
+            float normalizedValue)
+        {
+            if (!CanAcceptTouchOverrides ||
+                ownerToken == 0 ||
+                !IsFinite(normalizedValue) ||
+                channel !=
+                ProductTouchControlChannel.FlapSelector)
+                return false;
+
+            _flaps = Mathf.Clamp01(normalizedValue);
+            Current.flaps = _flaps;
+            return true;
         }
 
         private void Awake()

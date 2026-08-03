@@ -146,6 +146,18 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
                 error = "V2 avionics require one combined glyph submesh.";
                 return false;
             }
+            if (existingReadoutMaterial.renderQueue >=
+                    (int)UnityEngine.Rendering.RenderQueue.Transparent ||
+                string.Equals(
+                    existingReadoutMaterial.GetTag(
+                        "RenderType", false, string.Empty),
+                    "Transparent",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                error =
+                    "V2 avionics require an opaque material; transparent sorting is prohibited.";
+                return false;
+            }
             Vector2[] sourceUv = combinedGlyphMesh.uv;
             if (sourceUv == null || sourceUv.Length != combinedGlyphMesh.vertexCount)
             {

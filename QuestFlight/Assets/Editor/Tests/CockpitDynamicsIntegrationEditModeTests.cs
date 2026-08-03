@@ -7,6 +7,7 @@ using QuestFlight.Editor;
 using QuestFlightLab.Aircraft;
 using QuestFlightLab.Aircraft.CockpitDynamics;
 using QuestFlightLab.Aircraft.CockpitDynamics.Presentation;
+using QuestFlightLab.Aircraft.CockpitDynamics.V2;
 using QuestFlightLab.Flight.Backends;
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +17,53 @@ namespace QuestFlightLab.Tests.EditMode
     public sealed class CockpitDynamicsIntegrationEditModeTests
     {
         [Test]
-        public void AuthoringBindsOnlyFourPositivelyRepresentedCockpitTargets()
+        public void ProductPrefabStartsWithTruthfulBatteryBackedAvionicsReadouts()
+        {
+            WithAuthoredPrefab(root =>
+            {
+                ProductionCockpitSystemsController systems =
+                    root.GetComponentInChildren<ProductionCockpitSystemsController>(true);
+                SerializedProperty authoredPower = new SerializedObject(systems)
+                    .FindProperty("electricalPowerInput");
+
+                Assert.That(
+                    authoredPower.FindPropertyRelative("hasAuthoritativeState").boolValue,
+                    Is.True);
+                Assert.That(
+                    authoredPower.FindPropertyRelative("batteryCanPowerBus").boolValue,
+                    Is.True);
+                Assert.That(
+                    authoredPower.FindPropertyRelative("alternatorProducingPower").boolValue,
+                    Is.False);
+
+                Assert.That(
+                    systems.StepForTest(
+                        RepresentativeState(),
+                        RepresentativeControls(),
+                        CockpitDynamicsIntegrationAuthoring.ProductElectricalPowerSource(),
+                        1f / 72f),
+                    Is.True);
+                Assert.That(
+                    systems.TryGetAvionicsV2Snapshot(
+                        out CockpitAvionicsV2Snapshot avionics),
+                    Is.True);
+                Assert.That(avionics.avionicsBusPowered, Is.True);
+                Assert.That(
+                    avionics.availability,
+                    Is.EqualTo(
+                        CockpitAvionicsV2Availability.ElectricalPower |
+                        CockpitAvionicsV2Availability.GpsNavigation |
+                        CockpitAvionicsV2Availability.ComRadios |
+                        CockpitAvionicsV2Availability.Transponder));
+                Assert.That(avionics.gpsDestinationIdentAscii,
+                    Is.EqualTo(0x5542444Bu));
+                Assert.That(avionics.com1ActiveKHz, Is.EqualTo(122725));
+                Assert.That(avionics.transponderCodeBcd, Is.EqualTo(0x1200));
+            });
+        }
+
+        [Test]
+        public void AuthoringBindsAllTenPositivelyRepresentedCockpitTargets()
         {
             WithAuthoredPrefab(root =>
             {
@@ -45,7 +92,19 @@ namespace QuestFlightLab.Tests.EditMode
                         [CockpitDynamicsIntegrationAuthoring.ThrottleTravelPivotPath] =
                             CockpitPresentationChannel.ThrottleNormalized,
                         [CockpitDynamicsIntegrationAuthoring.MixtureTravelPivotPath] =
-                            CockpitPresentationChannel.MixtureNormalized
+                            CockpitPresentationChannel.MixtureNormalized,
+                        [CockpitDynamicsIntegrationAuthoring.AltBatMasterPath] =
+                            CockpitPresentationChannel.BatteryMasterOn,
+                        [CockpitDynamicsIntegrationAuthoring.PrimerPath] =
+                            CockpitPresentationChannel.PrimerPositionNormalized,
+                        [CockpitDynamicsIntegrationAuthoring.IgnitionSwitchPath] =
+                            CockpitPresentationChannel.IgnitionSwitchPosition,
+                        [CockpitDynamicsIntegrationAuthoring.AvionicsMasterPath] =
+                            CockpitPresentationChannel.AvionicsMasterOn,
+                        [CockpitDynamicsIntegrationAuthoring.WingFlapSelectorSourcePath] =
+                            CockpitPresentationChannel.FlapsCommandNormalized,
+                        [CockpitDynamicsIntegrationAuthoring.FuelSelectorPath] =
+                            CockpitPresentationChannel.FuelSelectorPosition
                     };
                 for (int index = 0; index < bindings.arraySize; index++)
                 {
@@ -62,12 +121,21 @@ namespace QuestFlightLab.Tests.EditMode
                             .FindPropertyRelative("channel").intValue,
                         Is.EqualTo((int)expected[path]),
                         path);
+                    if (path == CockpitDynamicsIntegrationAuthoring.CopilotYokePitchPivotPath)
+                    {
+                        Vector3 axis = motions.GetArrayElementAtIndex(0)
+                            .FindPropertyRelative("localTranslationAxis").vector3Value;
+                        Assert.That(
+                            Vector3.Dot(axis.normalized, Vector3.back),
+                            Is.GreaterThan(0.9999f),
+                            "Positive/nose-up elevator must pull the copilot yoke aft.");
+                    }
                 }
             });
         }
 
         [Test]
-        public void WingFlapSelectorRemainsStaticAndUnboundWithoutProvenHinge()
+        public void WingFlapSelectorUsesDirectIdentityAuditedBinding()
         {
             WithAuthoredPrefab(root =>
             {
@@ -84,19 +152,23 @@ namespace QuestFlightLab.Tests.EditMode
 
                 SerializedProperty bindings =
                     new SerializedObject(presentation).FindProperty("bindings");
+                int matchingBindings = 0;
                 for (int index = 0; index < bindings.arraySize; index++)
                 {
                     SerializedProperty binding = bindings.GetArrayElementAtIndex(index);
-                    Assert.That(
-                        binding.FindPropertyRelative("target").objectReferenceValue,
-                        Is.Not.SameAs(selector));
+                    if (!ReferenceEquals(
+                            binding.FindPropertyRelative("target").objectReferenceValue,
+                            selector))
+                        continue;
+                    matchingBindings++;
                     Assert.That(
                         binding.FindPropertyRelative("motions")
                             .GetArrayElementAtIndex(0)
                             .FindPropertyRelative("channel").intValue,
-                        Is.Not.EqualTo(
+                        Is.EqualTo(
                             (int)CockpitPresentationChannel.FlapsCommandNormalized));
                 }
+                Assert.That(matchingBindings, Is.EqualTo(1));
             });
         }
 
@@ -260,10 +332,22 @@ namespace QuestFlightLab.Tests.EditMode
                     new SerializedObject(animator).FindProperty("bindings");
                 for (int index = 0; index < animatorBindings.arraySize; index++)
                 {
-                    Transform target = animatorBindings.GetArrayElementAtIndex(index)
-                        .FindPropertyRelative("target").objectReferenceValue as Transform;
+                    SerializedProperty binding =
+                        animatorBindings.GetArrayElementAtIndex(index);
+                    Transform target = binding.FindPropertyRelative("target")
+                        .objectReferenceValue as Transform;
                     Assert.That(targets.Add(target), Is.True,
                         $"{target.name} is controlled by both update loops.");
+                    if (binding.FindPropertyRelative("channel").intValue ==
+                        (int)ProductionAircraftControlAnimator.ControlChannel.YokePitch)
+                    {
+                        Vector3 axis = binding
+                            .FindPropertyRelative("localTranslationAxis").vector3Value;
+                        Assert.That(
+                            Vector3.Dot(axis.normalized, Vector3.back),
+                            Is.GreaterThan(0.9999f),
+                            "Positive/nose-up elevator must pull the pilot yoke aft.");
+                    }
                 }
 
                 string[] existingExclusiveTargets =
@@ -336,7 +420,7 @@ namespace QuestFlightLab.Tests.EditMode
                     root.transform.Find(
                         CockpitDynamicsIntegrationAuthoring.WingFlapSelectorSourcePath),
                     Is.SameAs(flap),
-                    "The represented flap selector must be restored to its static source path.");
+                    "The represented flap selector must remain at its stable source path.");
                 rudderBefore.AssertPreserved(rudder);
 
                 CockpitDynamicsIntegrationAuthoring.AuthorPrefabContents(root);
@@ -388,8 +472,7 @@ namespace QuestFlightLab.Tests.EditMode
                     new SerializedObject(controller).FindProperty("bindings");
                 string[] prohibited =
                 {
-                    "master", "primer", "ignition", "key", "breaker",
-                    "fuel selector", "instrument", "propeller", "wheel"
+                    "breaker", "instrument", "propeller", "wheel"
                 };
                 for (int index = 0; index < bindings.arraySize; index++)
                 {

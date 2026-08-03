@@ -1,4 +1,5 @@
 using System;
+using QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2;
 using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Input;
 using UnityEngine;
@@ -24,12 +25,24 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
         public static readonly Vector3 AuthoredEngineFullForwardAxisLocal =
             new Vector3(0f, 0.08715622f, 0.9961947f);
 
-        private const string PilotYokeBindingId = "pilot_yoke_grab";
-        private const string ThrottleBindingId = "throttle_grab";
-        private const string MixtureBindingId = "mixture_grab";
+        public const string PilotYokeBindingId = "pilot_yoke_grab";
+        public const string ThrottleBindingId = "throttle_grab";
+        public const string MixtureBindingId = "mixture_grab";
+        public const string AltBatMasterBindingId =
+            "alt_bat_master_toggle";
+        public const string PrimerBindingIdPrefix = "primer_set";
+        public const string IgnitionBindingIdPrefix = "ignition_set";
+        public const string AvionicsPowerBindingId =
+            "avionics_power_toggle";
+        public const string FlapSelectorBindingIdPrefix =
+            "flap_selector_set";
+        public const string FuelSelectorBindingIdPrefix =
+            "fuel_selector_set";
 
         [Header("Serialized single flight/input authority")]
         [SerializeField] private FlightDynamicsCoordinator coordinator;
+        [SerializeField]
+        private ProductionCockpitSystemsController systemsAuthority;
 
         [Header("Stable authored aircraft-local frames")]
         [SerializeField] private Transform yokeReferenceFrame;
@@ -60,10 +73,13 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
         private Capture _throttleCapture;
         private Capture _mixtureCapture;
         private int _ownerToken;
+        private ulong _systemsCommandSequence;
 
         public FlightDynamicsCoordinator Coordinator => coordinator;
         public ProductControlInput InputAuthority =>
             coordinator != null ? coordinator.controls : null;
+        public ProductionCockpitSystemsController SystemsAuthority =>
+            systemsAuthority;
         public int ActiveCaptureCount =>
             (_yokeCapture.active ? 1 : 0) +
             (_throttleCapture.active ? 1 : 0) +
@@ -97,12 +113,25 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
             EnsureOwnerToken();
         }
 
+        public void ConfigureSystemsAuthority(
+            ProductionCockpitSystemsController authoredSystemsAuthority)
+        {
+            systemsAuthority = authoredSystemsAuthority;
+            SynchronizeCommandSequence();
+        }
+
         public bool ValidateAuthoredReferences(out string error)
         {
             if (coordinator == null)
             {
                 error =
                     "Touch V2 requires the serialized sole FlightDynamicsCoordinator.";
+                return false;
+            }
+            if (systemsAuthority == null)
+            {
+                error =
+                    "Touch V2 requires the serialized ProductionCockpitSystemsController command authority.";
                 return false;
             }
             if (yokeReferenceFrame == null ||
@@ -138,6 +167,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
         private void Awake()
         {
             EnsureOwnerToken();
+            SynchronizeCommandSequence();
             if (ValidateAuthoredReferences(out string error) &&
                 InputAuthority != null &&
                 InputAuthority.HasAuthoredSources)
@@ -169,6 +199,9 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
                 !CockpitTouchInputV2Kinematics.IsFinite(
                     command.pointerWorldRotation))
                 return false;
+
+            if (IsSystemsTarget(command.target))
+                return ConsumeSystemsCommand(command);
 
             switch (command.operation)
             {
@@ -350,29 +383,348 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
             switch (command.target)
             {
                 case CockpitTouchInteractionV2Target.PilotYoke:
-                    return command.hand ==
-                           CockpitTouchInteractionV2Hand.Left &&
+                    return IsPhysicalHand(command.hand) &&
                            string.Equals(
                                command.bindingId,
                                PilotYokeBindingId,
                                StringComparison.Ordinal);
                 case CockpitTouchInteractionV2Target.Throttle:
-                    return command.hand ==
-                           CockpitTouchInteractionV2Hand.Right &&
+                    return IsPhysicalHand(command.hand) &&
                            string.Equals(
                                command.bindingId,
                                ThrottleBindingId,
                                StringComparison.Ordinal);
                 case CockpitTouchInteractionV2Target.Mixture:
-                    return command.hand ==
-                           CockpitTouchInteractionV2Hand.Right &&
+                    return IsPhysicalHand(command.hand) &&
                            string.Equals(
                                command.bindingId,
                                MixtureBindingId,
                                StringComparison.Ordinal);
+                case CockpitTouchInteractionV2Target.AltBatMaster:
+                    return IsPhysicalHand(command.hand) &&
+                           string.Equals(
+                               command.bindingId,
+                               AltBatMasterBindingId,
+                               StringComparison.Ordinal);
+                case CockpitTouchInteractionV2Target.Primer:
+                    return IsPhysicalHand(command.hand) &&
+                           HasBindingPrefix(
+                               command.bindingId,
+                               PrimerBindingIdPrefix);
+                case CockpitTouchInteractionV2Target.IgnitionStart:
+                    return IsPhysicalHand(command.hand) &&
+                           HasBindingPrefix(
+                               command.bindingId,
+                               IgnitionBindingIdPrefix);
+                case CockpitTouchInteractionV2Target.AvionicsPower:
+                    return IsPhysicalHand(command.hand) &&
+                           string.Equals(
+                               command.bindingId,
+                               AvionicsPowerBindingId,
+                               StringComparison.Ordinal);
+                case CockpitTouchInteractionV2Target.FlapSelector:
+                    return IsPhysicalHand(command.hand) &&
+                           HasBindingPrefix(
+                               command.bindingId,
+                               FlapSelectorBindingIdPrefix);
+                case CockpitTouchInteractionV2Target.FuelSelector:
+                    return IsPhysicalHand(command.hand) &&
+                           HasBindingPrefix(
+                               command.bindingId,
+                               FuelSelectorBindingIdPrefix);
                 default:
                     return false;
             }
+        }
+
+        private bool ConsumeSystemsCommand(
+            in CockpitTouchInteractionV2Command command)
+        {
+            if (systemsAuthority == null)
+                return false;
+
+            switch (command.target)
+            {
+                case CockpitTouchInteractionV2Target.AltBatMaster:
+                    if (command.operation !=
+                            CockpitTouchInteractionV2Operation.Toggle &&
+                        command.operation !=
+                            CockpitTouchInteractionV2Operation.SetNormalized)
+                        return false;
+                    if (!systemsAuthority
+                            .TryGetCockpitSystemsSnapshotV2(
+                                out CockpitSystemsSnapshotV2 electrical))
+                        return false;
+                    bool mastersOn =
+                        command.operation ==
+                        CockpitTouchInteractionV2Operation.Toggle
+                            ? !(electrical.batteryMasterOn &&
+                                electrical.alternatorMasterOn)
+                            : command.normalizedValue >= 0.5f;
+                    return ApplyBoolean(
+                               CockpitSystemsCommandKindV2.SetBatteryMaster,
+                               mastersOn) &&
+                           ApplyBoolean(
+                               CockpitSystemsCommandKindV2
+                                   .SetAlternatorMaster,
+                               mastersOn);
+
+                case CockpitTouchInteractionV2Target.Primer:
+                    if (command.operation ==
+                        CockpitTouchInteractionV2Operation.Press)
+                    {
+                        return ApplyNormalized(
+                            CockpitSystemsCommandKindV2.SetPrimerPosition,
+                            1f);
+                    }
+                    if (command.operation ==
+                        CockpitTouchInteractionV2Operation.Release)
+                    {
+                        return ApplyNormalized(
+                            CockpitSystemsCommandKindV2.SetPrimerPosition,
+                            0f);
+                    }
+                    return command.operation ==
+                               CockpitTouchInteractionV2Operation.SetNormalized &&
+                           ApplyNormalized(
+                               CockpitSystemsCommandKindV2.SetPrimerPosition,
+                               command.normalizedValue);
+
+                case CockpitTouchInteractionV2Target.IgnitionStart:
+                    if (command.operation ==
+                        CockpitTouchInteractionV2Operation.Press)
+                    {
+                        return ApplyDiscrete(
+                            CockpitSystemsCommandKindV2.SetIgnitionSwitch,
+                            (int)CockpitIgnitionSwitchPositionV2.Start);
+                    }
+                    if (command.operation ==
+                        CockpitTouchInteractionV2Operation.Release)
+                    {
+                        return ApplyDiscrete(
+                            CockpitSystemsCommandKindV2.SetIgnitionSwitch,
+                            (int)CockpitIgnitionSwitchPositionV2.Both);
+                    }
+                    if (command.operation ==
+                        CockpitTouchInteractionV2Operation.SetNormalized)
+                    {
+                        return ApplyDiscrete(
+                            CockpitSystemsCommandKindV2.SetIgnitionSwitch,
+                            Mathf.RoundToInt(
+                                Mathf.Clamp01(
+                                    command.normalizedValue) *
+                                (int)CockpitIgnitionSwitchPositionV2.Start));
+                    }
+                    if (command.operation !=
+                            CockpitTouchInteractionV2Operation.Toggle ||
+                        !systemsAuthority
+                            .TryGetCockpitSystemsSnapshotV2(
+                                out CockpitSystemsSnapshotV2 ignition))
+                        return false;
+                    return ApplyDiscrete(
+                        CockpitSystemsCommandKindV2.SetIgnitionSwitch,
+                        (int)NextIgnitionToggle(
+                            ignition.ignitionSwitchPosition));
+
+                case CockpitTouchInteractionV2Target.AvionicsPower:
+                    if (command.operation !=
+                            CockpitTouchInteractionV2Operation.Toggle &&
+                        command.operation !=
+                            CockpitTouchInteractionV2Operation.SetNormalized)
+                        return false;
+                    if (!systemsAuthority
+                            .TryGetCockpitSystemsSnapshotV2(
+                                out CockpitSystemsSnapshotV2 avionics))
+                        return false;
+                    bool avionicsOn =
+                        command.operation ==
+                        CockpitTouchInteractionV2Operation.Toggle
+                            ? !avionics.avionicsMasterOn
+                            : command.normalizedValue >= 0.5f;
+                    return ApplyBoolean(
+                        CockpitSystemsCommandKindV2.SetAvionicsMaster,
+                        avionicsOn);
+
+                case CockpitTouchInteractionV2Target.FlapSelector:
+                    if ((command.operation !=
+                             CockpitTouchInteractionV2Operation.SetNormalized &&
+                         command.operation !=
+                             CockpitTouchInteractionV2Operation.Toggle) ||
+                        InputAuthority == null ||
+                        !InputAuthority.CanAcceptTouchOverrides)
+                        return false;
+                    float flapCommand;
+                    if (command.operation ==
+                        CockpitTouchInteractionV2Operation.Toggle)
+                    {
+                        if (!systemsAuthority
+                                .TryGetCockpitSystemsSnapshotV2(
+                                    out CockpitSystemsSnapshotV2 flaps))
+                            return false;
+                        int currentDetent =
+                            Mathf.RoundToInt(
+                                Mathf.Clamp01(
+                                    flaps.flapSelectorCommandNormalized) *
+                                3f);
+                        flapCommand =
+                            ((currentDetent + 1) % 4) / 3f;
+                    }
+                    else
+                    {
+                        flapCommand =
+                            Mathf.Clamp01(command.normalizedValue);
+                    }
+                    if (!ApplyNormalized(
+                            CockpitSystemsCommandKindV2.SetFlapSelector,
+                            flapCommand))
+                        return false;
+                    EnsureOwnerToken();
+                    return InputAuthority.TryApplyTouchDiscreteValue(
+                        ProductTouchControlChannel.FlapSelector,
+                        _ownerToken,
+                        flapCommand);
+
+                case CockpitTouchInteractionV2Target.FuelSelector:
+                    if (command.operation ==
+                        CockpitTouchInteractionV2Operation.SetNormalized)
+                    {
+                        return ApplyDiscrete(
+                            CockpitSystemsCommandKindV2.SetFuelSelector,
+                            Mathf.RoundToInt(
+                                Mathf.Clamp01(
+                                    command.normalizedValue) *
+                                (int)CockpitFuelSelectorPositionV2.Right));
+                    }
+                    if (command.operation !=
+                            CockpitTouchInteractionV2Operation.Toggle ||
+                        !systemsAuthority
+                            .TryGetCockpitSystemsSnapshotV2(
+                                out CockpitSystemsSnapshotV2 fuel))
+                        return false;
+                    int nextFuel =
+                        ((int)fuel.fuelSelectorPosition + 1) %
+                        ((int)CockpitFuelSelectorPositionV2.Right + 1);
+                    return ApplyDiscrete(
+                        CockpitSystemsCommandKindV2.SetFuelSelector,
+                        nextFuel);
+
+                default:
+                    return false;
+            }
+        }
+
+        private bool ApplyBoolean(
+            CockpitSystemsCommandKindV2 kind,
+            bool value)
+        {
+            return systemsAuthority.TryApplyCommand(
+                CockpitSystemsCommandV2.Boolean(
+                    NextSystemsCommandSequence(),
+                    kind,
+                    value));
+        }
+
+        private bool ApplyDiscrete(
+            CockpitSystemsCommandKindV2 kind,
+            int value)
+        {
+            return systemsAuthority.TryApplyCommand(
+                CockpitSystemsCommandV2.Discrete(
+                    NextSystemsCommandSequence(),
+                    kind,
+                    value));
+        }
+
+        private bool ApplyNormalized(
+            CockpitSystemsCommandKindV2 kind,
+            float value)
+        {
+            return systemsAuthority.TryApplyCommand(
+                CockpitSystemsCommandV2.Normalized(
+                    NextSystemsCommandSequence(),
+                    kind,
+                    value));
+        }
+
+        private static CockpitIgnitionSwitchPositionV2
+            NextIgnitionToggle(
+                CockpitIgnitionSwitchPositionV2 current)
+        {
+            switch (current)
+            {
+                case CockpitIgnitionSwitchPositionV2.Off:
+                    return CockpitIgnitionSwitchPositionV2.Right;
+                case CockpitIgnitionSwitchPositionV2.Right:
+                    return CockpitIgnitionSwitchPositionV2.Left;
+                case CockpitIgnitionSwitchPositionV2.Left:
+                    return CockpitIgnitionSwitchPositionV2.Both;
+                case CockpitIgnitionSwitchPositionV2.Start:
+                    return CockpitIgnitionSwitchPositionV2.Both;
+                default:
+                    return CockpitIgnitionSwitchPositionV2.Off;
+            }
+        }
+
+        private ulong NextSystemsCommandSequence()
+        {
+            ulong minimum = 1ul;
+            if (systemsAuthority != null &&
+                systemsAuthority.TryGetCockpitSystemsSnapshotV2(
+                    out CockpitSystemsSnapshotV2 snapshot) &&
+                snapshot.lastAppliedCommandSequence < ulong.MaxValue)
+            {
+                minimum =
+                    snapshot.lastAppliedCommandSequence + 1ul;
+            }
+            if (_systemsCommandSequence < minimum)
+                _systemsCommandSequence = minimum;
+            else if (_systemsCommandSequence < ulong.MaxValue)
+                _systemsCommandSequence++;
+            return _systemsCommandSequence;
+        }
+
+        private void SynchronizeCommandSequence()
+        {
+            _systemsCommandSequence = 0ul;
+            if (systemsAuthority != null &&
+                systemsAuthority.TryGetCockpitSystemsSnapshotV2(
+                    out CockpitSystemsSnapshotV2 snapshot))
+            {
+                _systemsCommandSequence =
+                    snapshot.lastAppliedCommandSequence;
+            }
+        }
+
+        private static bool IsSystemsTarget(
+            CockpitTouchInteractionV2Target target)
+        {
+            return target >=
+                       CockpitTouchInteractionV2Target.AltBatMaster &&
+                   target <=
+                       CockpitTouchInteractionV2Target.FuelSelector;
+        }
+
+        private static bool IsPhysicalHand(
+            CockpitTouchInteractionV2Hand hand)
+        {
+            return hand == CockpitTouchInteractionV2Hand.Left ||
+                   hand == CockpitTouchInteractionV2Hand.Right;
+        }
+
+        private static bool HasBindingPrefix(
+            string bindingId,
+            string prefix)
+        {
+            return !string.IsNullOrEmpty(bindingId) &&
+                   (string.Equals(
+                        bindingId,
+                        prefix,
+                        StringComparison.Ordinal) ||
+                    (bindingId.Length > prefix.Length &&
+                     bindingId[prefix.Length] == '_' &&
+                     bindingId.StartsWith(
+                         prefix,
+                         StringComparison.Ordinal)));
         }
 
         private bool IsHandCaptured(

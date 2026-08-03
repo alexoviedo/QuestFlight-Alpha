@@ -150,9 +150,9 @@ NEAR_TREE_TRIANGLES = (
     + NEAR_TREE_FOLIAGE_CARDS * 2
 )
 # Pattern-altitude groves use one fixed, perforated multiview crown rather than
-# ordinary camera-facing billboards. Two vertical foliage planes carry oblique
-# volume, one horizontal plane carries the aerial silhouette, and one shallow
-# oblique plane bridges the views. One substantial trunk grounds the volume.
+# ordinary camera-facing billboards. Two vertical and two opposing oblique
+# foliage planes preserve side, underside, and aerial evidence without a
+# crown-spanning horizontal plate. One substantial trunk grounds the volume.
 MID_GROVE_FOLIAGE_CARDS = 4
 MID_GROVE_TRUNK_COUNT = 1
 MID_GROVE_TRIANGLES = (
@@ -168,7 +168,7 @@ GROVE_MINIMUM_HEIGHT_METERS = 7.0
 GROVE_MAXIMUM_HEIGHT_METERS = 24.0
 MAXIMUM_GROVE_COUNT = MAXIMUM_MESH_TRIANGLES // 4
 PRODUCT_CANOPY_POLICY = (
-    "source_derived_close_tree_lods_then_semantic_groves_over_continuous_terrain_canopy"
+    "volumetric_close_tree_lods_then_oblique_semantic_groves_over_continuous_terrain_canopy"
 )
 
 
@@ -951,6 +951,8 @@ class ObjBatch:
         self.trunk_count = 0
         self.branch_count = 0
         self.foliage_card_count = 0
+        self.near_horizontal_foliage_card_count = 0
+        self.maximum_abs_vertical_foliage_card_normal = 0.0
 
     def vertex(
         self,
@@ -1072,6 +1074,16 @@ class ObjBatch:
             (minimum_u, maximum_v),
         )
         normal = np.cross(right_value, up_value)
+        normal_length = float(np.linalg.norm(normal))
+        if normal_length <= 1e-6:
+            raise ValueError("Foliage card orientation is degenerate")
+        absolute_vertical = abs(float(normal[1] / normal_length))
+        self.maximum_abs_vertical_foliage_card_normal = max(
+            self.maximum_abs_vertical_foliage_card_normal,
+            absolute_vertical,
+        )
+        if absolute_vertical >= 0.75:
+            self.near_horizontal_foliage_card_count += 1
         face_center = tuple((center_value + normal * 0.01).tolist())
         self.outward_triangle(
             points[0], points[1], points[2], color, face_center,
@@ -1212,10 +1224,12 @@ class ObjBatch:
     def add_sparse_grove(self, grove: dict[str, float]) -> None:
         """Retain a small high-confidence canopy patch without a runtime object.
 
-        One horizontal top card and one vertical side card give the patch useful
-        top-down and oblique evidence without the star silhouette created by two
-        tilted planes. They never rotate toward a camera and intentionally omit
-        a trunk because these sub-cell patches sit over the orthophoto base.
+        Two compact opposing-oblique cards give the patch useful top-down and
+        side evidence without a crown-spanning horizontal plate. They never
+        rotate toward a camera and intentionally omit a trunk because these
+        sub-cell patches sit over the orthophoto base. Sparse components inside
+        the 650 m close corridor are handled by the runtime volumetric tier and
+        never reach this method.
         """
         x = float(grove["x"])
         z = float(grove["z"])
@@ -1232,36 +1246,37 @@ class ObjBatch:
         )
         foliage_color = (0.0, *ground_color)
         angle = rotation + seed * 0.35
-        right = (math.cos(angle), 0.0, math.sin(angle))
-        horizontal_up = (-math.sin(angle), 0.0, math.cos(angle))
         atlas_base = int(((seed * 79.0) % 1.0) * 997.0) % 16
-        self.add_foliage_card(
-            (x, ground + height * 0.79, z),
-            right,
-            horizontal_up,
-            max(3.0, radius_x),
-            max(3.0, radius_z),
-            atlas_base,
-            foliage_color,
-        )
-        self.add_foliage_card(
-            (x, ground + height * 0.71, z),
-            right,
-            (0.0, 1.0, 0.0),
-            max(3.0, radius_x, radius_z),
-            float(np.clip(height * 0.33, 2.5, 6.8)),
-            (atlas_base + 7) % 16,
-            foliage_color,
-        )
+        for card_index, tilt in enumerate((-0.46, 0.52)):
+            card_angle = angle + card_index * math.pi * 0.5
+            right = (math.cos(card_angle), 0.0, math.sin(card_angle))
+            up = (
+                -math.cos(card_angle) * tilt,
+                math.sqrt(1.0 - tilt * tilt),
+                -math.sin(card_angle) * tilt,
+            )
+            self.add_foliage_card(
+                (
+                    x + math.cos(card_angle) * max(radius_x, radius_z) * 0.05,
+                    ground + height * (0.72 + card_index * 0.05),
+                    z + math.sin(card_angle) * max(radius_x, radius_z) * 0.05,
+                ),
+                right,
+                up,
+                max(3.0, radius_x, radius_z) * 0.92,
+                float(np.clip(height * 0.34, 2.5, 6.8)),
+                (atlas_base + card_index * 7) % 16,
+                foliage_color,
+            )
         self.crown_count += 1
 
     def add_mid_grove(self, grove: dict[str, float]) -> None:
         """Author one fixed, grounded multiview grove for pattern-altitude views.
 
-        A horizontal canopy plate supplies the aerial footprint while two
-        vertical and one shallow-oblique perforated planes supply oblique volume.
-        Adjacent valid cells overlap into continuous groves; no card faces a
-        camera at runtime and one substantial trunk prevents floating.
+        Two vertical and two opposing-oblique perforated planes preserve crown
+        depth from flight and aerial views. Adjacent valid cells overlap into
+        continuous groves; no card faces a camera at runtime, no plane is
+        horizontal, and one substantial trunk prevents floating.
         """
         x = float(grove["x"])
         z = float(grove["z"])
@@ -1310,23 +1325,20 @@ class ObjBatch:
                 )
                 half_width = horizontal_radius
                 half_height = vertical_radius
-            elif card_index == 2:
-                up = (-math.sin(card_angle), 0.0, math.cos(card_angle))
-                card_center = (crown_center[0], crown_center[1] + vertical_radius * 0.32,
-                               crown_center[2])
-                half_width = max(3.0, radius_x)
-                half_height = max(3.0, radius_z)
             else:
-                tilt = 0.72
+                tilt = 0.58 if card_index == 2 else -0.52
                 up = (
                     -math.cos(card_angle) * tilt,
                     math.sqrt(1.0 - tilt * tilt),
                     -math.sin(card_angle) * tilt,
                 )
-                card_center = (crown_center[0], crown_center[1] + vertical_radius * 0.12,
-                               crown_center[2])
-                half_width = horizontal_radius * 0.96
-                half_height = vertical_radius * 0.90
+                card_center = (
+                    crown_center[0] + math.cos(card_angle) * horizontal_radius * 0.06,
+                    crown_center[1] + vertical_radius * (0.13 if card_index == 2 else 0.05),
+                    crown_center[2] + math.sin(card_angle) * horizontal_radius * 0.06,
+                )
+                half_width = horizontal_radius * 0.92
+                half_height = vertical_radius * 0.92
             self.add_foliage_card(
                 card_center,
                 right,
@@ -1339,13 +1351,14 @@ class ObjBatch:
         self.crown_count += 1
 
     def add_grove(self, grove: dict[str, float]) -> None:
-        if float(grove.get("sparse_detail", 0.0)) > 0.5:
-            self.add_sparse_grove(grove)
-            return
         if float(grove.get("near_detail", 0.0)) > 0.5:
             # The near tier is now authored as a bounded runtime instanced LOD
-            # set. Keeping it out of the static batches recovers the old ten
-            # oversized foliage cards and their duplicate trunk geometry.
+            # set. Keeping every near component, including sparse source cells,
+            # out of the static batches guarantees that a crown-scale horizontal
+            # plate cannot appear in the runway/takeoff corridor.
+            return
+        if float(grove.get("sparse_detail", 0.0)) > 0.5:
+            self.add_sparse_grove(grove)
             return
         if float(grove.get("mid_detail", 0.0)) > 0.5:
             self.add_mid_grove(grove)
@@ -1709,7 +1722,7 @@ def compile_semantic_groves(
             "near_detail": 1.0 if near_detail else 0.0,
             "mid_detail": 1.0 if mid_detail else 0.0,
             "sparse_detail": 1.0 if sparse_detail else 0.0,
-            "near_tree_count": near_tree_count if near_detail and not sparse_detail else 0,
+            "near_tree_count": near_tree_count if near_detail else 0,
             "source_rows": global_rows,
             "source_columns": global_columns,
             "crown_segments": (
@@ -1732,8 +1745,8 @@ def compile_semantic_groves(
             ),
         })
     candidates.sort(key=lambda item: (
-        float(item["sparse_detail"]),
         -float(item["near_detail"]),
+        float(item["sparse_detail"]),
         -float(item["mid_detail"]),
         -float(item["priority"]),
         float(item["x"]),
@@ -1745,10 +1758,10 @@ def compile_semantic_groves(
     source_pixel_count = int(np.count_nonzero(source))
     for item in candidates:
         item_triangles = (
-            SPARSE_GROVE_TRIANGLES
-            if float(item["sparse_detail"]) > 0.5
-            else int(item["near_tree_count"]) * NEAR_TREE_TRIANGLES
+            0
             if float(item["near_detail"]) > 0.5
+            else SPARSE_GROVE_TRIANGLES
+            if float(item["sparse_detail"]) > 0.5
             else MID_GROVE_TRIANGLES
             if float(item["mid_detail"]) > 0.5
             else (
@@ -1804,7 +1817,6 @@ def compile_semantic_groves(
         "near_detailed_grove_count": sum(
             1 for item in groves
             if float(item["near_detail"]) > 0.5
-            and float(item["sparse_detail"]) <= 0.5
         ),
         "mid_connected_grove_count": sum(
             1 for item in groves
@@ -1837,9 +1849,7 @@ def compile_semantic_groves(
         "source_coverage_fraction_0_1500m": float(
             np.count_nonzero(represented) / max(1, np.count_nonzero(source))
         ),
-        "triangle_count": triangle_count - (
-            sum(int(item["near_tree_count"]) for item in groves) * NEAR_TREE_TRIANGLES
-        ),
+        "triangle_count": triangle_count,
         "selection_triangle_budget_equivalent": triangle_count,
     }
 
@@ -1882,6 +1892,10 @@ def write_obj_batches(
                 "crown_count": batch.crown_count,
                 "branch_count": batch.branch_count,
                 "foliage_card_count": batch.foliage_card_count,
+                "near_horizontal_foliage_card_count":
+                    batch.near_horizontal_foliage_card_count,
+                "maximum_abs_vertical_foliage_card_normal":
+                    batch.maximum_abs_vertical_foliage_card_normal,
                 "material_slots": 1,
                 "object_name": batch.name,
                 "horizontal_frame": "KBDU product-local WGS84 azimuthal equidistant",
@@ -1911,7 +1925,6 @@ def write_near_instance_manifest(
         instance
         for grove in groves
         if float(grove.get("near_detail", 0.0)) > 0.5
-        and float(grove.get("sparse_detail", 0.0)) <= 0.5
         for instance in near_tree_instances(grove)
     ]
     payload = {
@@ -1924,9 +1937,9 @@ def write_near_instance_manifest(
             "camera_facing": False,
             "lod_crossfade_or_dither": False,
             "per_tree_game_objects": False,
-            "maximum_lod0_instances": 8,
-            "maximum_lod1_instances": 8,
-            "maximum_lod2_instances": 696,
+            "maximum_lod0_instances": 12,
+            "maximum_lod1_instances": 40,
+            "maximum_lod2_instances": 1100,
             "maximum_draws_per_eye": 3,
             "terrain_canopy_remains_beneath_handoff": True,
         },
@@ -2290,7 +2303,29 @@ def build(
         terrain_handoff_path, format="PNG", compress_level=9, optimize=False
     )
     mesh_batches = write_obj_batches(groves, mapping, generated_dir)
+    near_horizontal_card_total = sum(
+        int(item["near_horizontal_foliage_card_count"])
+        for item in mesh_batches
+    )
+    maximum_abs_vertical_card_normal = max(
+        (
+            float(item["maximum_abs_vertical_foliage_card_normal"])
+            for item in mesh_batches
+        ),
+        default=0.0,
+    )
+    if near_horizontal_card_total != 0 or maximum_abs_vertical_card_normal >= 0.75:
+        raise ValueError(
+            "Static canopy compile emitted a near-horizontal foliage card: "
+            f"count={near_horizontal_card_total}, "
+            f"maximum_abs_vertical_normal={maximum_abs_vertical_card_normal:.6f}"
+        )
     near_instance_path, near_instances = write_near_instance_manifest(groves, output_dir)
+    if len(near_instances) > 1100:
+        raise ValueError(
+            "Airport-close instance count exceeds the 1,100-instance contract: "
+            f"{len(near_instances)}"
+        )
     triangle_total = sum(int(item["triangle_count"]) for item in mesh_batches)
     vertex_total = sum(int(item["vertex_count"]) for item in mesh_batches)
     mesh_bytes = sum(int(item["bytes"]) for item in mesh_batches)
@@ -2371,9 +2406,9 @@ def build(
             "mesh_batch_total_vertices": vertex_total,
             "maximum_layer_bytes": MAXIMUM_LAYER_BYTES,
             "runtime_sparse_tree_instances_authored": len(near_instances),
-            "runtime_close_tree_lod0_cap": 8,
-            "runtime_close_tree_lod1_cap": 8,
-            "runtime_close_tree_lod2_cap": 696,
+            "runtime_close_tree_lod0_cap": 12,
+            "runtime_close_tree_lod1_cap": 40,
+            "runtime_close_tree_lod2_cap": 1100,
             "serialized_layer_bytes": layer_path.stat().st_size,
             "target_mesh_triangles": TARGET_MESH_TRIANGLES,
         },
@@ -2481,6 +2516,7 @@ def build(
             "minimum_grove_source_pixels": MINIMUM_GROVE_SOURCE_PIXELS,
             "minimum_grove_span_meters": MINIMUM_GROVE_SPAN_METERS,
             "ordinary_vertical_billboards": False,
+            "crown_scale_horizontal_foliage_cards": False,
             "close_tree_lod_source": "Poly Haven Tree Small 02 CC0 optimized offline",
             "close_tree_runtime_instance_count": len(near_instances),
             "refinement_cell_meters": pixel_size * REFINEMENT_CELL_PIXELS,
@@ -2549,7 +2585,6 @@ def build(
             "near_detailed_grove_count": sum(
                 1 for item in groves
                 if float(item["near_detail"]) > 0.5
-                and float(item["sparse_detail"]) <= 0.5
             ),
             "mid_connected_grove_count": sum(
                 1 for item in groves
@@ -2563,15 +2598,17 @@ def build(
                 and float(item["sparse_detail"]) <= 0.5
             ),
             "sparse_fixed_crown_count": sum(
-                1 for item in groves if float(item["sparse_detail"]) > 0.5
+                1 for item in groves
+                if float(item["sparse_detail"]) > 0.5
+                and float(item["near_detail"]) <= 0.5
             ),
             "near_tree_count": sum(int(item["near_tree_count"]) for item in groves),
             "runtime_close_tree_instance_count": len(near_instances),
             "grounded_trunk_count": sum(
                 0
-                if float(item["sparse_detail"]) > 0.5
-                else 0
                 if float(item["near_detail"]) > 0.5
+                else 0
+                if float(item["sparse_detail"]) > 0.5
                 else MID_GROVE_TRUNK_COUNT
                 if float(item["mid_detail"]) > 0.5
                 else int(item["trunk_count"])
@@ -2587,9 +2624,9 @@ def build(
             "grounded_trunk_triangle_count": (
                 sum(
                     0
-                    if float(item["sparse_detail"]) > 0.5
-                    else 0
                     if float(item["near_detail"]) > 0.5
+                    else 0
+                    if float(item["sparse_detail"]) > 0.5
                     else MID_GROVE_TRUNK_COUNT
                     if float(item["mid_detail"]) > 0.5
                     else int(item["trunk_count"])
@@ -2599,6 +2636,10 @@ def build(
             ),
             "near_branch_triangle_count": 0,
             "near_foliage_card_triangle_count": 0,
+            "near_horizontal_static_foliage_card_count":
+                near_horizontal_card_total,
+            "maximum_abs_vertical_static_foliage_card_normal":
+                maximum_abs_vertical_card_normal,
             "removed_near_card_triangle_count": (
                 len(near_instances) * NEAR_TREE_TRIANGLES
             ),
@@ -2616,6 +2657,7 @@ def build(
                     SPARSE_GROVE_FOLIAGE_CARDS
                     for item in groves
                     if float(item["sparse_detail"]) > 0.5
+                    and float(item["near_detail"]) <= 0.5
                 )
                 * 2
             ),

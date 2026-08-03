@@ -138,15 +138,18 @@ namespace QuestFlight.Editor
                     "The uncalibrated flap selector must remain fail-closed.");
                 Require(
                     CockpitMechanicalV2Contract.TryGetRecord(
-                        "rudder_toe_brake_pedals_excluded",
+                        "rudder_toe_brake_pedals_completed",
                         out CockpitMechanicalV2SourceDescriptor pedalRecord) &&
-                    !pedalRecord.HasRuntimeMotion &&
-                    pedalRecord.auditedRepresentedAssemblyCount == 3 &&
-                    pedalRecord.blocker ==
-                    CockpitMechanicalV2Blocker
-                        .PedalSetIncompleteAndHingesUnproven,
-                    "The incomplete three-assembly pedal source may not fabricate " +
-                    "a fourth pedal or speculative hinges.");
+                    pedalRecord.HasRuntimeMotion &&
+                    pedalRecord.auditedRepresentedAssemblyCount == 4 &&
+                    pedalRecord.blocker == CockpitMechanicalV2Blocker.None &&
+                    pedalRecord.layout ==
+                        CockpitMechanicalV2LayoutKind.AuthoredFourPedalRigidBatch &&
+                    pedalRecord.axisEvidence ==
+                        CockpitMechanicalV2AxisEvidence
+                            .AuthoredRudderAndToeBrakeHingeAxes,
+                    "The four-pedal derivative must retain its source-audited, " +
+                    "symmetry-derived rudder and toe-brake motion contract.");
 
                 Require(
                     TryBuildPropellerLayout(

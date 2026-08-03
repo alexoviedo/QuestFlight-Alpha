@@ -394,7 +394,19 @@ namespace QuestFlight.Editor
             if (reservoir == null)
                 throw new InvalidOperationException("The authoritative Boulder Reservoir renderer is missing.");
 
-            contract.waterPresentationMode = ProductionWaterPresentationMode.OrthophotoOnly;
+            Texture2D fullMapWaterMask = LoadRequired<Texture2D>(
+                FullMapWaterReflectionAuthoring.MaskPath);
+            TextAsset fullMapWaterManifest = LoadRequired<TextAsset>(
+                FullMapWaterReflectionAuthoring.ManifestPath);
+            Material terrainMaterial = LoadRequired<Material>(TerrainMaterialPath);
+            FullMapWaterReflectionAuthoring.ConfigureMaterialState(
+                terrainMaterial,
+                fullMapWaterMask);
+            FullMapWaterReflectionAuthoring.ConfigureEnvironmentState(
+                contract,
+                fullMapWaterMask,
+                fullMapWaterManifest);
+            EditorUtility.SetDirty(terrainMaterial);
             contract.macroSource = MacroSourceDescription;
             DisableAndClearMaterials(reservoir);
             if (shore != null) DisableAndClearMaterials(shore);

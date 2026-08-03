@@ -304,6 +304,26 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/AirportNearFieldV1/Data/AirportNearFieldSourceV1.json",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportNearFieldV1/Generated/AirportGrassAtlas_RGBA.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportNearFieldV1/Generated/AirportGrassClump.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportNearFieldV1/Generated/AirportNearFieldCombined.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/AirportNearFieldV1/KBDU_AirportNearFieldDetail.prefab",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/Generated/BoulderReservoir_NaturalShoreBank_Mesh.asset",
             "classification": "approved_production"
         },
@@ -516,11 +536,23 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/C172_AvionicsV2Layout.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/C172_InstrumentV2Layout.asset",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Cessna_Interior_ButtonPlate_MAT_0_ButtonPlate_MAT_0_dfd8b5af_Visibility.asset",
             "classification": "approved_production"
         },
         {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Cessna_Interior_Buttons_MAT_0_Buttons_MAT_0_1df28889_Visibility.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Cessna_Interior_EngineCowlLiner_1ac0e0b8_Visibility.asset",
             "classification": "approved_production"
         },
         {
@@ -568,11 +600,11 @@
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Dynamic_Switch_005_New_Mat_0_New_Mat_0_b5b3bdc0_Visibility.asset",
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Dynamic_Switch_005_New_Mat_0_New_Mat_0_2a7db969_Visibility.asset",
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Dynamic_Switch_006_New_Mat_0_New_Mat_0_4690d701_Visibility.asset",
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Dynamic_Switch_006_New_Mat_0_New_Mat_0_05c1f857_Visibility.asset",
             "classification": "approved_production"
         },
         {
@@ -596,11 +628,19 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/C172_CockpitEngineCowlInterior.mat",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionCockpitInstrumentV2.mat",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionCockpitWindowReflection.mat",
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentDisplayReadout.mat",
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentDynamicReadout.mat",
             "classification": "approved_production"
         },
         {
@@ -608,15 +648,31 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_CockpitEngineCowlInterior.asset",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_CockpitShadowCasterProxy.asset",
             "classification": "approved_production"
         },
         {
-            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_InstrumentDisplayReadouts.asset",
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_InstrumentV2Combined.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_InstrumentV2Neutralized.asset",
             "classification": "approved_production"
         },
         {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_PrincipalInstrumentLensArray.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_V2AvionicsGlyphs.asset",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionCockpitInstrumentV2.shader",
             "classification": "approved_production"
         },
         {
@@ -644,11 +700,19 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Textures/C172_InstrumentV2Atlas.png",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Textures/C172_StaticDisplayReadable_BaseColor.png",
             "classification": "approved_production"
         },
         {
             "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Textures/C172_StaticDisplayReadable_Emission.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Textures/C172_V2GlyphAtlas.asset",
             "classification": "approved_production"
         },
         {
@@ -992,6 +1056,14 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Water/KBDU_FullMapWaterMask.png",
+            "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Production/Environment/PhotorealTerrainV1/Water/KBDU_FullMapWaterReflectionManifest.json",
+            "classification": "approved_production"
+        },
+        {
             "assetPath": "Assets/Production/Environment/Presentation/AircraftRunwayBlobShadow.asset",
             "classification": "approved_production"
         },
@@ -1104,10 +1176,6 @@
             "classification": "approved_product_authored"
         },
         {
-            "assetPath": "Assets/Production/Materials/Cockpit/Cockpit_Meter_01_MAT_7515756384451954381.mat",
-            "classification": "approved_product_authored"
-        },
-        {
             "assetPath": "Assets/Production/Materials/Cockpit/Cockpit_New_Mat_-3503549811397914274.mat",
             "classification": "approved_product_authored"
         },
@@ -1196,12 +1264,48 @@
             "classification": "approved_production"
         },
         {
+            "assetPath": "Assets/Scripts/Aircraft/CockpitDynamics/CockpitAvionicsV2BatchController.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/CockpitDynamics/CockpitAvionicsV2Layout.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/CockpitDynamics/CockpitInstrumentV2BatchController.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/CockpitDynamics/CockpitInstrumentV2Layout.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/CockpitDynamics/CockpitTouchInteractionV2Controller.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/CockpitDynamics/Presentation/ProductionCockpitDynamicsController.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/CockpitDynamics/ProductionCockpitSystemsController.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/CockpitDynamics/TouchInputV2/CockpitTouchInputV2Bridge.cs",
+            "classification": "approved_product_authored"
+        },
+        {
             "assetPath": "Assets/Scripts/Aircraft/ProductionAircraftControlAnimator.cs",
             "classification": "approved_production"
         },
         {
             "assetPath": "Assets/Scripts/Aircraft/ProductionAircraftLightingController.cs",
             "classification": "approved_production"
+        },
+        {
+            "assetPath": "Assets/Scripts/Aircraft/ProductionAircraftNoseSteeringAnimator.cs",
+            "classification": "approved_product_authored"
         },
         {
             "assetPath": "Assets/Scripts/Aircraft/ProductionAircraftViewController.cs",
@@ -1233,6 +1337,14 @@
         },
         {
             "assetPath": "Assets/Scripts/Environment/AirportHeroCorridorRoot.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/AirportNearFieldDetailRoot.cs",
+            "classification": "approved_product_authored"
+        },
+        {
+            "assetPath": "Assets/Scripts/Environment/AirportNearFieldGrassRenderer.cs",
             "classification": "approved_product_authored"
         },
         {
