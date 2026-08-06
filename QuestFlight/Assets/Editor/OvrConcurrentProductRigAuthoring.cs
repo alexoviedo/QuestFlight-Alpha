@@ -643,10 +643,6 @@ namespace QuestFlight.Editor
             grabbable.InjectOptionalThrowWhenUnselected(false);
             grabbable.InjectOptionalKinematicWhileSelected(false);
 
-            OvrPhysicalHandInteractorFilter handFilter =
-                interactionRoot.AddComponent<
-                    OvrPhysicalHandInteractorFilter>();
-
             GameObject handPrefab = RequireAsset<GameObject>(
                 HandGrabInteractablePath);
             GameObject handObject = (GameObject)
@@ -667,13 +663,25 @@ namespace QuestFlight.Editor
             handGrab.InjectSupportedGrabTypes(GrabTypeFlags.All);
             handGrab.InjectOptionalPointableElement(grabbable);
             handGrab.InjectOptionalHandGrabPoses(
-                new List<HandGrabPose>());
+                new List<HandGrabPose>
+                {
+                    AuthorYokeHandGrabCandidate(
+                        interactionRoot.transform,
+                        yoke,
+                        leftGrip,
+                        "LeftGripCandidate"),
+                    AuthorYokeHandGrabCandidate(
+                        interactionRoot.transform,
+                        yoke,
+                        rightGrip,
+                        "RightGripCandidate")
+                });
+            handGrab.InjectOptionalScoreModifier(
+                PoseMeasureParameters.DEFAULT);
             handGrab.HandAlignment = HandAlignType.None;
             MoveAtSourceProvider handMovement =
                 handObject.AddComponent<MoveAtSourceProvider>();
             handGrab.InjectOptionalMovementProvider(handMovement);
-            handGrab.InjectOptionalInteractorFilters(
-                new List<IGameObjectFilter> { handFilter });
 
             GameObject grabPrefab = RequireAsset<GameObject>(
                 GrabInteractablePath);
@@ -747,6 +755,26 @@ namespace QuestFlight.Editor
             collider.size = bounds.size + Vector3.one * 0.012f;
             collider.isTrigger = true;
             return collider;
+        }
+
+        private static HandGrabPose AuthorYokeHandGrabCandidate(
+            Transform parent,
+            Transform yoke,
+            BoxCollider grip,
+            string name)
+        {
+            var poseObject = new GameObject(name);
+            poseObject.transform.SetParent(parent, false);
+            poseObject.transform.localPosition =
+                grip.transform.localPosition + grip.center;
+            poseObject.transform.localRotation = Quaternion.identity;
+            poseObject.transform.localScale = Vector3.one;
+            HandGrabPose pose = poseObject.AddComponent<HandGrabPose>();
+            pose.InjectAllHandGrabPose(yoke);
+            // The candidate is positional only. It makes either real handle
+            // reliably discoverable without imposing a wrist/finger pose.
+            pose.InjectOptionalHandPose(null);
+            return pose;
         }
 
         private static void DerivePilotYokeGripBounds(
@@ -1162,10 +1190,13 @@ namespace QuestFlight.Editor
                         Require(handGrab != null &&
                                 handGrab.HandAlignment ==
                                     HandAlignType.None &&
-                                handGrab.HandGrabPoses.Count == 0 &&
+                                handGrab.HandGrabPoses.Count == 2 &&
+                                handGrab.HandGrabPoses.All(value =>
+                                    value != null &&
+                                    !value.UsesHandPose()) &&
                                 handGrab.GetComponent<
                                     MoveAtSourceProvider>() != null,
-                            "The pilot yoke must preserve the physical hand pose without an alignment tween.");
+                            "The pilot yoke requires two positional grip candidates while preserving the physical hand pose without an alignment tween.");
                         Require(grabbable != null &&
                                 grabbable.MaxGrabPoints == 1,
                             "The pilot yoke requires one single-owner Meta Grabbable.");
