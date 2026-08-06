@@ -14,6 +14,7 @@ namespace QuestFlightLab.Runtime
         public static bool HasRequiredBindings(Camera camera)
         {
             if (camera == null) return false;
+            if (IsOwnedByOvrCameraRig(camera.transform)) return true;
             TrackedPoseDriver driver = camera.GetComponent<TrackedPoseDriver>();
             return driver != null &&
                    driver.trackingType == TrackedPoseDriver.TrackingType.RotationAndPosition &&
@@ -21,6 +22,18 @@ namespace QuestFlightLab.Runtime
                    HasBinding(driver.positionInput, PositionBinding) &&
                    HasBinding(driver.rotationInput, RotationBinding) &&
                    HasBinding(driver.trackingStateInput, TrackingStateBinding);
+        }
+
+        public static bool IsOwnedByOvrCameraRig(Transform value)
+        {
+            for (Transform current = value;
+                 current != null;
+                 current = current.parent)
+            {
+                if (current.GetComponent<OVRCameraRig>() != null)
+                    return true;
+            }
+            return false;
         }
 
         public static string PositionBindingPath(Camera camera)

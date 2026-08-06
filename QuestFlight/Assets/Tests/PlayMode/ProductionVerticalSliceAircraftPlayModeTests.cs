@@ -8,7 +8,6 @@ using QuestFlightLab.Input;
 using QuestFlightLab.Runtime;
 using QuestFlightLab.Environment;
 using QuestFlight.Product;
-using Unity.XR.CoreUtils;
 using UnityEngine;
 
 namespace QuestFlightLab.Tests.PlayMode
@@ -38,13 +37,13 @@ namespace QuestFlightLab.Tests.PlayMode
                 "AircraftSimulationRoot/AircraftVisualRoot/ImportedAircraftExterior",
                 "AircraftSimulationRoot/AircraftVisualRoot/ImportedCockpitInterior",
                 "AircraftSimulationRoot/AircraftVisualRoot/AnimatedControlSurfaces",
-                "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/XR Origin/Camera Offset/Main Camera",
-                "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/XR Origin/Left Touch Controller",
-                "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/XR Origin/Right Touch Controller"
+                "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/ProductOVRCameraRig/TrackingSpace/CenterEyeAnchor/Main Camera",
+                "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/ProductOVRCameraRig/TrackingSpace/LeftHandAnchor/LeftControllerAnchor/Left Touch Controller",
+                "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/ProductOVRCameraRig/TrackingSpace/RightHandAnchor/RightControllerAnchor/Right Touch Controller"
             };
             foreach (string path in requiredPaths) Assert.That(world.Find(path), Is.Not.Null, path);
 
-            XROrigin[] origins = ComponentsInWorld<XROrigin>(world);
+            OVRCameraRig[] origins = ComponentsInWorld<OVRCameraRig>(world);
             Assert.That(origins, Has.Length.EqualTo(1));
             Assert.That(origins[0].isActiveAndEnabled, Is.True);
             Camera main = ComponentsInWorld<Camera>(world).Single(camera => camera.CompareTag("MainCamera"));

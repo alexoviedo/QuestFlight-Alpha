@@ -117,9 +117,9 @@ namespace QuestFlightLab.Runtime
             if (XrOrigin == null || XrOrigin.parent != UserViewCalibrationOffset) return false;
             if (TrackedCamera == null || !TrackedCamera.transform.IsChildOf(XrOrigin)) return false;
             if (!TrackedXrCameraPoseDriver.HasRequiredBindings(TrackedCamera)) return false;
-            if (LeftController == null || LeftController.parent != XrOrigin ||
+            if (LeftController == null || !LeftController.IsChildOf(XrOrigin) ||
                 !TrackedXrControllerPoseDrivers.HasRequiredBindings(LeftController, true)) return false;
-            if (RightController == null || RightController.parent != XrOrigin ||
+            if (RightController == null || !RightController.IsChildOf(XrOrigin) ||
                 !TrackedXrControllerPoseDrivers.HasRequiredBindings(RightController, false)) return false;
             return CenterOfGravityReference.localPosition.sqrMagnitude < 0.000001f;
         }

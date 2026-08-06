@@ -65,6 +65,10 @@ namespace QuestFlight.Editor
                 ["com.unity.xr.management"] = "4.5.4",
                 ["com.unity.xr.core-utils"] = "2.5.3",
                 ["com.unity.xr.openxr"] = "1.16.1"
+                , ["com.meta.xr.sdk.core"] = "205.0.0"
+                , ["com.meta.xr.sdk.interaction"] = "205.0.0"
+                , ["com.meta.xr.sdk.interaction.ovr"] = "205.0.0"
+                , ["com.unity.xr.hands"] = "1.7.3"
             };
 
         private static readonly HashSet<string> AllowedManifestPackages = new HashSet<string>(StringComparer.Ordinal)
@@ -75,13 +79,21 @@ namespace QuestFlight.Editor
             "com.unity.xr.management",
             "com.unity.xr.core-utils",
             "com.unity.xr.openxr",
+            "com.meta.xr.sdk.core",
+            "com.meta.xr.sdk.interaction",
+            "com.meta.xr.sdk.interaction.ovr",
+            "com.unity.xr.hands",
+            "com.unity.modules.ai",
             "com.unity.modules.animation",
             "com.unity.modules.androidjni",
+            "com.unity.modules.assetbundle",
             "com.unity.modules.audio",
             "com.unity.modules.imageconversion",
             "com.unity.modules.imgui",
             "com.unity.modules.jsonserialize",
             "com.unity.modules.physics",
+            "com.unity.modules.physics2d",
+            "com.unity.modules.particlesystem",
             "com.unity.modules.ui",
             "com.unity.modules.uielements",
             "com.unity.modules.vr",
@@ -372,8 +384,8 @@ namespace QuestFlight.Editor
                     Require(productRoot.transform.Find("AircraftSimulationRoot/AircraftVisualRoot") != null,
                         "AircraftVisualRoot is missing", report);
                     Require(productRoot.transform.Find(
-                                "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/XR Origin") != null,
-                        "explicit PilotSeatAnchor/UserViewCalibrationOffset/XR Origin hierarchy is missing", report);
+                                "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/ProductOVRCameraRig") != null,
+                        "explicit PilotSeatAnchor/UserViewCalibrationOffset/ProductOVRCameraRig hierarchy is missing", report);
                 }
 
                 Camera[] cameras = roots.SelectMany(root => root.GetComponentsInChildren<Camera>(true)).ToArray();
@@ -383,15 +395,19 @@ namespace QuestFlight.Editor
                 Require(mainCameras.Length == 1,
                     $"scene must contain exactly one Main Camera, found {mainCameras.Length}", report);
                 Require(enabledCameras.Length == 1 && enabledCameras[0] == mainCameras.SingleOrDefault(),
-                    $"only the tracked Main Camera may be enabled at startup; enabled cameras={enabledCameras.Length}", report);
+                    "only the tracked Main Camera may be enabled at startup; enabled cameras=" +
+                    string.Join(", ", enabledCameras.Select(camera =>
+                        HierarchyPath(camera.transform))), report);
                 if (mainCameras.Length == 1)
                 {
-                    Require(mainCameras[0].GetComponents<Component>().Any(component =>
-                            component != null && component.GetType().Name == "TrackedPoseDriver"),
-                        "Main Camera is not owned by TrackedPoseDriver", report);
+                    Require(TrackedXrCameraPoseDriver.HasRequiredBindings(
+                            mainCameras[0]),
+                        "Main Camera is not owned by the serialized OVR rig", report);
                 }
-                Require(transforms.Count(transform => transform.name == "XR Origin") == 1,
-                    "scene must contain exactly one XR Origin", report);
+                Require(transforms.Count(transform =>
+                            transform.name == "ProductOVRCameraRig" &&
+                            transform.GetComponent<OVRCameraRig>() != null) == 1,
+                    "scene must contain exactly one product OVRCameraRig", report);
 
                 MonoBehaviour[] behaviours = roots.SelectMany(root => root.GetComponentsInChildren<MonoBehaviour>(true)).ToArray();
                 ProductControlInput[] productInputs = behaviours.OfType<ProductControlInput>().ToArray();
@@ -545,7 +561,10 @@ namespace QuestFlight.Editor
                     $"serialized scene triangle budget exceeded: {triangles}/{report.serializedTriangleCeiling} " +
                     $"({report.serializedTriangleBudgetContract}); " +
                     "selected-view Quest budget is validated separately", report);
-                Require(materials.Count <= 40, $"scene material budget exceeded: {materials.Count}/40", report);
+                Require(materials.Count <= 40,
+                    $"scene material budget exceeded: {materials.Count}/40; active=" +
+                    string.Join(", ", materials.Select(material => material.name)
+                        .OrderBy(name => name, StringComparer.Ordinal)), report);
 
                 Transform aircraftVisual = productRoot != null
                     ? productRoot.transform.Find("AircraftSimulationRoot/AircraftVisualRoot")

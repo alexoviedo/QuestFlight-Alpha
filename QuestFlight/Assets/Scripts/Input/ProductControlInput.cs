@@ -232,6 +232,22 @@ namespace QuestFlightLab.Input
             return state.active;
         }
 
+        /// <summary>
+        /// Returns whether the specified owner still holds the authoritative
+        /// lease for a continuous cockpit control. Interaction adapters use
+        /// this to reconcile their event-owned selection after the safety
+        /// lease expires during a tracking loss or long frame stall.
+        /// </summary>
+        public bool IsTouchOverrideOwnedBy(
+            ProductTouchControlChannel channel,
+            int ownerToken)
+        {
+            if (!IsTouchChannel(channel) || ownerToken == 0)
+                return false;
+            TouchOverrideState state = TouchState(channel);
+            return state.active && state.ownerToken == ownerToken;
+        }
+
         public bool TryApplyTouchDiscreteValue(
             ProductTouchControlChannel channel,
             int ownerToken,

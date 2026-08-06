@@ -19,10 +19,12 @@ namespace QuestFlight.Editor
             "AircraftVisualRoot/AnimatedControlSurfaces";
         public const string LeftControllerPath =
             "AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/" +
-            "XR Origin/Left Touch Controller";
+            "ProductOVRCameraRig/TrackingSpace/LeftHandAnchor/" +
+            "LeftControllerAnchor/Left Touch Controller";
         public const string RightControllerPath =
             "AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/" +
-            "XR Origin/Right Touch Controller";
+            "ProductOVRCameraRig/TrackingSpace/RightHandAnchor/" +
+            "RightControllerAnchor/Right Touch Controller";
         public const string PilotYokeTargetPath =
             HostPath + "/PilotYokePitchPivot/PilotYokeRollPivot";
         public const string ThrottleTargetPath =

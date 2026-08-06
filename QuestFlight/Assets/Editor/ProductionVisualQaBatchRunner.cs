@@ -317,8 +317,9 @@ namespace QuestFlightLab.Editor
             report.productionEnvironmentContractPassed = environment.TryValidateContract(out report.productionEnvironmentContract);
             report.authoredHierarchyPassed = rig.ValidateHierarchy();
             report.singleEnabledXrOrigin = scene.GetRootGameObjects()
-                .SelectMany(root => root.GetComponentsInChildren<XROrigin>(true))
-                .Count(origin => origin.isActiveAndEnabled) == 1;
+                .SelectMany(root => root.GetComponentsInChildren<OVRCameraRig>(true))
+                .Count(origin => origin.isActiveAndEnabled &&
+                    origin.name == "ProductOVRCameraRig") == 1;
             report.legacyComponentsFound = FindLegacyComponents(scene);
             report.legacyBootstrapAndUiSuppressed = report.legacyComponentsFound.Count == 0;
             report.defaultEyeLocal = marker.PilotSeatProfile != null

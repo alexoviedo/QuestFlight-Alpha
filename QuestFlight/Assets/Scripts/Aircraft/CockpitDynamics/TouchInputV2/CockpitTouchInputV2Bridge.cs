@@ -229,7 +229,21 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
             ref Capture capture =
                 ref CaptureFor(command.target);
             if (capture.active)
-                return false;
+            {
+                ProductTouchControlChannel capturedChannel =
+                    ProductChannel(command.target);
+                if (inputAuthority.IsTouchOverrideOwnedBy(
+                        capturedChannel,
+                        _ownerToken))
+                    return false;
+
+                // ProductControlInput deliberately expires a continuous
+                // lease after tracking silence. The Meta pointable selection
+                // can outlive that watchdog (for example across a long frame
+                // or modality transition), so never let the bridge retain a
+                // phantom capture that permanently rejects the next grab.
+                capture = default;
+            }
             Transform frame = FrameFor(command.target);
             if (!CockpitTouchInputV2Kinematics
                     .TryPointerPoseInFrame(
@@ -289,13 +303,25 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
                 return false;
             ref Capture capture =
                 ref CaptureFor(command.target);
-            if (!capture.active ||
-                capture.hand != command.hand ||
-                !inputAuthority.CanAcceptTouchOverrides)
+            if (!inputAuthority.CanAcceptTouchOverrides)
                 return false;
 
             ProductTouchControlChannel channel =
                 ProductChannel(command.target);
+            if (!capture.active ||
+                capture.hand != command.hand ||
+                !inputAuthority.IsTouchOverrideOwnedBy(
+                    channel,
+                    _ownerToken))
+            {
+                // A selected Meta interactor continues emitting Move after a
+                // watchdog expiry. Reacquire from the current pointer pose so
+                // the held control becomes live again instead of remaining
+                // dead until the application restarts.
+                capture = default;
+                return BeginCapture(command);
+            }
+
             switch (channel)
             {
                 case ProductTouchControlChannel.PilotYoke:
@@ -369,12 +395,18 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
                 capture.hand != command.hand)
                 return false;
 
-            if (!inputAuthority.TryEndTouchOverride(
-                    ProductChannel(command.target),
-                    _ownerToken))
-                return false;
+            ProductTouchControlChannel channel =
+                ProductChannel(command.target);
+            bool stillOwned =
+                inputAuthority.IsTouchOverrideOwnedBy(
+                    channel,
+                    _ownerToken);
+            bool released = !stillOwned ||
+                inputAuthority.TryEndTouchOverride(
+                    channel,
+                    _ownerToken);
             capture = default;
-            return true;
+            return released;
         }
 
         private bool ValidateFixedBinding(

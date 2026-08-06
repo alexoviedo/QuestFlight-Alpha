@@ -35,8 +35,10 @@ namespace QuestFlight.PlayModeTests
             Assert.That(root.transform.Find("AircraftSimulationRoot/CenterOfGravityReference"), Is.Not.Null);
             Assert.That(root.transform.Find("AircraftSimulationRoot/AircraftVisualRoot"), Is.Not.Null);
             Assert.That(root.transform.Find(
-                "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/XR Origin/Camera Offset/Main Camera"), Is.Not.Null);
-            Assert.That(AllTransforms().Count(transform => transform.name == "XR Origin"), Is.EqualTo(1));
+                "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset/ProductOVRCameraRig/TrackingSpace/CenterEyeAnchor/Main Camera"), Is.Not.Null);
+            Assert.That(AllTransforms().Count(transform =>
+                transform.name == "ProductOVRCameraRig" &&
+                transform.GetComponent<OVRCameraRig>() != null), Is.EqualTo(1));
         }
 
         [Test]
@@ -47,8 +49,8 @@ namespace QuestFlight.PlayModeTests
             Assert.That(mainCamera, Is.Not.Null);
             Assert.That(cameras.Count(camera => camera.enabled && camera.gameObject.activeInHierarchy), Is.EqualTo(1),
                 "Only the tracked Main Camera may be enabled at startup; disabled external QA cameras are allowed.");
-            Assert.That(mainCamera.GetComponents<Component>().Any(component =>
-                component != null && component.GetType().Name == "TrackedPoseDriver"), Is.True);
+            Assert.That(QuestFlightLab.Runtime.TrackedXrCameraPoseDriver
+                .HasRequiredBindings(mainCamera), Is.True);
 
             MonoBehaviour[] behaviours = _worldInstance.GetComponentsInChildren<MonoBehaviour>(true);
             MonoBehaviour[] enabledCoordinators = behaviours.Where(behaviour =>

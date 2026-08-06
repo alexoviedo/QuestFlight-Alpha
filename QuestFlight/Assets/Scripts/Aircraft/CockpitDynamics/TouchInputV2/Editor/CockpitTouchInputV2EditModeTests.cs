@@ -553,6 +553,72 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
         }
 
         [Test]
+        public void StaleMetaSelectionReconcilesAndCanBeGrabbedAgain()
+        {
+            Vector3 axis = CockpitTouchInputV2Bridge
+                .AuthoredEngineFullForwardAxisLocal.normalized;
+            CockpitTouchInteractionV2Command begin = Command(
+                "throttle_grab",
+                CockpitTouchInteractionV2Target.Throttle,
+                CockpitTouchInteractionV2Hand.Right,
+                CockpitTouchInteractionV2Operation.BeginGrab,
+                Vector3.zero,
+                Quaternion.identity);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(in begin),
+                Is.True);
+            Assert.That(_bridge.ActiveCaptureCount, Is.EqualTo(1));
+
+            MethodInfo releaseStale = typeof(ProductControlInput)
+                .GetMethod(
+                    "ReleaseStaleTouchOverrides",
+                    BindingFlags.Instance |
+                    BindingFlags.NonPublic);
+            Assert.That(releaseStale, Is.Not.Null);
+            releaseStale.Invoke(
+                _input,
+                new object[]
+                {
+                    Time.unscaledTime +
+                    ProductControlInput
+                        .TouchOverrideLeaseTimeoutSeconds +
+                    0.01f
+                });
+            Assert.That(_input.ActiveTouchOverrideCount, Is.Zero);
+            Assert.That(_bridge.ActiveCaptureCount, Is.EqualTo(1));
+
+            CockpitTouchInteractionV2Command continued = Command(
+                "throttle_grab",
+                CockpitTouchInteractionV2Target.Throttle,
+                CockpitTouchInteractionV2Hand.Right,
+                CockpitTouchInteractionV2Operation.UpdateGrab,
+                axis * 0.02f,
+                Quaternion.identity);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(in continued),
+                Is.True,
+                "The still-selected Meta interactor must reacquire its expired lease.");
+            Assert.That(_input.ActiveTouchOverrideCount, Is.EqualTo(1));
+
+            CockpitTouchInteractionV2Command end = Command(
+                "throttle_grab",
+                CockpitTouchInteractionV2Target.Throttle,
+                CockpitTouchInteractionV2Hand.Right,
+                CockpitTouchInteractionV2Operation.EndGrab,
+                Vector3.zero,
+                Quaternion.identity);
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(in end),
+                Is.True);
+            Assert.That(_bridge.ActiveCaptureCount, Is.Zero);
+
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(in begin),
+                Is.True,
+                "A later grab must not be rejected by a phantom bridge capture.");
+        }
+
+        [Test]
         public void BridgeHasNoUpdateLoopDiscoveryOrVisualWrites()
         {
             string path = Path.Combine(

@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR;
 
 namespace QuestFlightLab.Runtime
 {
@@ -44,7 +42,6 @@ namespace QuestFlightLab.Runtime
         private bool _rightPrimaryWasPressed;
         private bool _rightSecondaryWasPressed;
         private bool _incrementWasPressed;
-        private static readonly List<InputDevice> DeviceScratch = new List<InputDevice>();
 
         public void ConfigureAuthoredReferences(
             AircraftReferenceFrameRig rig,
@@ -91,7 +88,10 @@ namespace QuestFlightLab.Runtime
 
         private void Update()
         {
-            bool menu = ReadButtonDown(XRNode.LeftHand, CommonUsages.menuButton, ref _menuWasPressed);
+            bool menu = ReadButtonDown(
+                OVRInput.Button.Start,
+                OVRInput.Controller.LTouch,
+                ref _menuWasPressed);
             if (menu)
             {
                 if (IsOpen) Cancel();
@@ -100,11 +100,24 @@ namespace QuestFlightLab.Runtime
 
             if (!IsOpen) return;
 
-            bool leftPrimary = ReadButtonDown(XRNode.LeftHand, CommonUsages.primaryButton, ref _leftPrimaryWasPressed);
-            bool leftSecondary = ReadButtonDown(XRNode.LeftHand, CommonUsages.secondaryButton, ref _leftSecondaryWasPressed);
-            bool rightPrimary = ReadButtonDown(XRNode.RightHand, CommonUsages.primaryButton, ref _rightPrimaryWasPressed);
-            bool rightSecondary = ReadButtonDown(XRNode.RightHand, CommonUsages.secondaryButton, ref _rightSecondaryWasPressed);
-            bool incrementPressed = ReadEitherButtonDown(CommonUsages.gripButton, ref _incrementWasPressed);
+            bool leftPrimary = ReadButtonDown(
+                OVRInput.Button.Three,
+                OVRInput.Controller.LTouch,
+                ref _leftPrimaryWasPressed);
+            bool leftSecondary = ReadButtonDown(
+                OVRInput.Button.Four,
+                OVRInput.Controller.LTouch,
+                ref _leftSecondaryWasPressed);
+            bool rightPrimary = ReadButtonDown(
+                OVRInput.Button.One,
+                OVRInput.Controller.RTouch,
+                ref _rightPrimaryWasPressed);
+            bool rightSecondary = ReadButtonDown(
+                OVRInput.Button.Two,
+                OVRInput.Controller.RTouch,
+                ref _rightSecondaryWasPressed);
+            bool incrementPressed = ReadEitherGripDown(
+                ref _incrementWasPressed);
 
             if (incrementPressed) ToggleIncrementSize();
             if (leftPrimary) Recenter();
@@ -113,8 +126,12 @@ namespace QuestFlightLab.Runtime
             else if (rightSecondary) Cancel();
             if (!IsOpen) return;
 
-            Vector2 left = ApplyDeadzone(ReadAxis(XRNode.LeftHand));
-            Vector2 right = ApplyDeadzone(ReadAxis(XRNode.RightHand));
+            Vector2 left = ApplyDeadzone(OVRInput.Get(
+                OVRInput.Axis2D.PrimaryThumbstick,
+                OVRInput.Controller.LTouch));
+            Vector2 right = ApplyDeadzone(OVRInput.Get(
+                OVRInput.Axis2D.SecondaryThumbstick,
+                OVRInput.Controller.RTouch));
             float step = CurrentStepMeters * repeatStepsPerSecond * Mathf.Min(Time.unscaledDeltaTime, 0.05f);
             Vector3 delta = new Vector3(left.x, left.y, right.y) * step;
             if (delta.sqrMagnitude > 0.00000001f)
@@ -243,32 +260,26 @@ namespace QuestFlightLab.Runtime
 
         private Vector2 ApplyDeadzone(Vector2 value) => value.magnitude >= stickDeadzone ? value : Vector2.zero;
 
-        private static Vector2 ReadAxis(XRNode node)
+        private static bool ReadButtonDown(
+            OVRInput.Button button,
+            OVRInput.Controller controller,
+            ref bool wasPressed)
         {
-            InputDevice device = InputDevices.GetDeviceAtXRNode(node);
-            return device.isValid && device.TryGetFeatureValue(CommonUsages.primary2DAxis, out Vector2 value)
-                ? value
-                : Vector2.zero;
-        }
-
-        private static bool ReadButtonDown(XRNode node, InputFeatureUsage<bool> usage, ref bool wasPressed)
-        {
-            InputDevice device = InputDevices.GetDeviceAtXRNode(node);
-            bool pressed = device.isValid && device.TryGetFeatureValue(usage, out bool value) && value;
+            bool pressed = OVRInput.Get(button, controller);
             bool down = pressed && !wasPressed;
             wasPressed = pressed;
             return down;
         }
 
-        private static bool ReadEitherButtonDown(InputFeatureUsage<bool> usage, ref bool wasPressed)
+        private static bool ReadEitherGripDown(ref bool wasPressed)
         {
-            DeviceScratch.Clear();
-            InputDevices.GetDevicesWithCharacteristics(InputDeviceCharacteristics.Controller, DeviceScratch);
-            bool pressed = false;
-            for (int i = 0; i < DeviceScratch.Count; i++)
-            {
-                pressed |= DeviceScratch[i].TryGetFeatureValue(usage, out bool value) && value;
-            }
+            bool pressed =
+                OVRInput.Get(
+                    OVRInput.Axis1D.PrimaryHandTrigger,
+                    OVRInput.Controller.LTouch) > 0.55f ||
+                OVRInput.Get(
+                    OVRInput.Axis1D.SecondaryHandTrigger,
+                    OVRInput.Controller.RTouch) > 0.55f;
             bool down = pressed && !wasPressed;
             wasPressed = pressed;
             return down;

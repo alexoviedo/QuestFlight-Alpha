@@ -57,6 +57,9 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
         public Vector3 hitWorldPosition;
         public int frameNumber;
         public float unscaledTime;
+        public int sourceIdentifier;
+        public CockpitInputSourceKind sourceKind;
+        public ulong pointerEventId;
 
         public bool IsTerminal =>
             operation == CockpitTouchInteractionV2Operation.Release ||
@@ -225,6 +228,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
         public Transform RightRayOrigin => rightRayOrigin;
         public MonoBehaviour CommandConsumer => commandConsumer;
         public int BindingCount => bindings?.Length ?? 0;
+        public Binding[] AuthoredBindings => bindings;
         public int QueuedCommandCount => _queueCount;
         public int DroppedCommandCount { get; private set; }
 
