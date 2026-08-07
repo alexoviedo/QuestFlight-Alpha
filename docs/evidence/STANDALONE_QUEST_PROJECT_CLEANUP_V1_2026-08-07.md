@@ -109,3 +109,23 @@ budget reconciliation: first replace conservative estimates with importer-backed
 measurements, then remove or consolidate the largest verified material,
 transparent-slot, and texture offenders without changing the accepted visual or
 interaction behavior.
+
+## Local cleanup result
+
+- Validation-hygiene checkpoint: `dce94a14507f981b890be6fcc13179c95508cf13`
+- Checkpoint push: `origin/integration/standalone-quest-cleanup-v1` verified
+- Free space: 35.57 GiB before cleanup; 90.80 GiB after cleanup
+- Reclaimed: approximately 55.23 GiB
+- Removed: old generated product-artifact roots, ignored Android build output,
+  the local QuestFlight temporary cache, the archived dirty Meta harness
+  worktree, and the clean detached OVR recovery worktree
+- Retained: the 0.75 GiB current preservation/evidence root, exact validated
+  APK, 13.90 GiB primary Unity `Library`, all Git branch refs, and the separate
+  policy-required URP experiment worktree
+- Final local state: clean working tree, zero stashes, two intentional
+  worktrees, local integration HEAD equal to its remote
+
+`git gc --prune=now` completed, `git lfs fsck` passed, and `git fsck` reported
+no corruption. One unreachable historical commit remains visible to fsck; it is
+not referenced by the product and the complete pre-cleanup bundle remains the
+recovery authority.
