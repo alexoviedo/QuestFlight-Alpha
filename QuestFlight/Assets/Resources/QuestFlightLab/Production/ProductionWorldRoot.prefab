@@ -279,8 +279,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.ProductDemoPilot
   productInput: {fileID: 1171423066720843826}
   deterministicInput: {fileID: 9105462521216613047}
+  flightCoordinator: {fileID: 742791276885309778}
   autoStartDemo: 1
   loopDurationSeconds: 72
+  runwayHeadingGain: 0.025
+  runwayCrossTrackGain: 0.015
+  maximumRunwayRudder: 0.14
 --- !u!1 &3983972066274778650
 GameObject:
   m_ObjectHideFlags: 0

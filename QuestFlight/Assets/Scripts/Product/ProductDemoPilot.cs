@@ -1,4 +1,5 @@
 using QuestFlightLab.Input;
+using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Runtime;
 using UnityEngine;
 
@@ -17,26 +18,38 @@ namespace QuestFlight.Product
 
         [SerializeField] private ProductControlInput productInput;
         [SerializeField] private DeterministicGamepadInputSource deterministicInput;
+        [SerializeField] private FlightDynamicsCoordinator flightCoordinator;
         [SerializeField] private bool autoStartDemo;
         [SerializeField, Min(30f)] private float loopDurationSeconds = 72f;
+        [SerializeField, Min(0f)] private float runwayHeadingGain = 0.025f;
+        [SerializeField, Min(0f)] private float runwayCrossTrackGain = 0.015f;
+        [SerializeField, Range(0.02f, 0.25f)] private float maximumRunwayRudder = 0.14f;
 
         public bool IsRunning { get; private set; }
         public string Phase { get; private set; } = "ready";
         public ProductControlInput AuthoredProductInput => productInput;
         public DeterministicGamepadInputSource AuthoredDeterministicInput => deterministicInput;
-        public bool HasAuthoredSources => productInput != null && deterministicInput != null;
+        public bool HasAuthoredSources => productInput != null &&
+                                          deterministicInput != null &&
+                                          flightCoordinator != null;
         public bool AutoStartDemo => autoStartDemo;
 
         private float _startedAt;
         private readonly AircraftControlState _scheduledControls = AircraftControlState.Neutral(0.10f);
         private readonly AircraftControlState _appliedControls = AircraftControlState.Neutral(0.10f);
+        private bool _runwayReferenceCaptured;
+        private double _runwayReferenceHeadingDegrees;
+        private Vector3 _runwayReferencePosition;
+        private Vector3 _runwayRight;
 
         public void ConfigureAuthoredSources(
             ProductControlInput authoredProductInput,
-            DeterministicGamepadInputSource authoredDeterministicInput)
+            DeterministicGamepadInputSource authoredDeterministicInput,
+            FlightDynamicsCoordinator authoredFlightCoordinator)
         {
             productInput = authoredProductInput;
             deterministicInput = authoredDeterministicInput;
+            flightCoordinator = authoredFlightCoordinator;
         }
 
         public void ConfigureAuthoredAutoStart(bool enabled) => autoStartDemo = enabled;
@@ -48,7 +61,7 @@ namespace QuestFlight.Product
 
         public void StartDemo()
         {
-            if (productInput == null || deterministicInput == null)
+            if (!HasAuthoredSources)
             {
                 Debug.LogError("[QuestFlight][Demo] Authored product input references are missing.", this);
                 return;
@@ -56,6 +69,7 @@ namespace QuestFlight.Product
             _startedAt = Time.unscaledTime;
             _scheduledControls.SetNeutral(0.10f);
             _appliedControls.SetNeutral(0.10f);
+            _runwayReferenceCaptured = false;
             deterministicInput.SetControls(_appliedControls);
             IsRunning = true;
             Phase = "idle_brake_hold";
@@ -75,6 +89,7 @@ namespace QuestFlight.Product
             if (!IsRunning || deterministicInput == null) return;
             float time = Mathf.Repeat(Time.unscaledTime - _startedAt, Mathf.Max(30f, loopDurationSeconds));
             ScheduledControlsInto(time, out string phase, _scheduledControls);
+            ApplyRunwayTracking(phase, _scheduledControls);
             RateLimitControlsInto(
                 _scheduledControls,
                 _appliedControls,
@@ -112,12 +127,7 @@ namespace QuestFlight.Product
             {
                 phase = "taxi";
                 controls.throttle = 0.28f;
-                float taxiTime = seconds - 3f;
-                float envelope = Smooth01(taxiTime / 1.2f) *
-                                 Smooth01((11f - seconds) / 1.2f);
-                // Deliberate, low-speed centerline corrections make the linked
-                // pedals and nose steering observable without weaving sharply.
-                controls.rudder = Mathf.Sin(taxiTime * 0.82f) * 0.24f * envelope;
+                controls.rudder = 0f;
             }
             else if (seconds < 14f)
             {
@@ -131,12 +141,7 @@ namespace QuestFlight.Product
                 phase = "takeoff_roll";
                 controls.throttle = 1f;
                 controls.trim = 0.08f;
-                float takeoffTime = seconds - 14f;
-                float envelope = Smooth01(takeoffTime / 1.5f) *
-                                 Smooth01((31f - seconds) / 2f);
-                // A bounded right-rudder tracking input is sustained through
-                // acceleration, then released smoothly before rotation.
-                controls.rudder = 0.055f * envelope;
+                controls.rudder = 0f;
             }
             else if (seconds < 37f)
             {
@@ -144,7 +149,7 @@ namespace QuestFlight.Product
                 controls.throttle = 1f;
                 controls.elevator = 0.32f;
                 controls.trim = 0.08f;
-                controls.rudder = 0.035f * Smooth01((37f - seconds) / 2f);
+                controls.rudder = 0f;
             }
             else if (seconds < 50f)
             {
@@ -185,6 +190,60 @@ namespace QuestFlight.Product
                 controls.elevator = 0.04f;
                 controls.trim = 0.08f;
             }
+        }
+
+        private void ApplyRunwayTracking(
+            string phase,
+            AircraftControlState controls)
+        {
+            if (controls == null || flightCoordinator == null ||
+                !flightCoordinator.IsInitialized ||
+                (phase != "taxi" && phase != "taxi_brake" &&
+                 phase != "takeoff_roll" && phase != "rotation"))
+                return;
+
+            FlightDynamicsState state = flightCoordinator.CurrentState;
+            if (!_runwayReferenceCaptured)
+            {
+                _runwayReferenceHeadingDegrees = state.headingDegrees;
+                _runwayReferencePosition = state.positionUnityMeters;
+                _runwayRight = Vector3.ProjectOnPlane(
+                    state.rotationUnity * Vector3.right,
+                    Vector3.up).normalized;
+                _runwayReferenceCaptured = _runwayRight.sqrMagnitude > 0.5f;
+            }
+            if (!_runwayReferenceCaptured)
+                return;
+
+            float crossTrackMeters = Vector3.Dot(
+                state.positionUnityMeters - _runwayReferencePosition,
+                _runwayRight);
+            controls.rudder = ComputeRunwayTrackingRudder(
+                state.headingDegrees,
+                _runwayReferenceHeadingDegrees,
+                crossTrackMeters,
+                runwayHeadingGain,
+                runwayCrossTrackGain,
+                maximumRunwayRudder);
+        }
+
+        public static float ComputeRunwayTrackingRudder(
+            double currentHeadingDegrees,
+            double referenceHeadingDegrees,
+            float crossTrackMeters,
+            float headingGain,
+            float crossTrackGain,
+            float maximumRudder)
+        {
+            float headingError = Mathf.DeltaAngle(
+                (float)currentHeadingDegrees,
+                (float)referenceHeadingDegrees);
+            float command = headingError * Mathf.Max(0f, headingGain) -
+                            crossTrackMeters * Mathf.Max(0f, crossTrackGain);
+            return Mathf.Clamp(
+                command,
+                -Mathf.Abs(maximumRudder),
+                Mathf.Abs(maximumRudder));
         }
 
         /// <summary>

@@ -63,7 +63,7 @@ namespace QuestFlightLab.Flight.Backends
         {
             get
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if (UNITY_EDITOR || DEVELOPMENT_BUILD) && QUESTFLIGHT_ENABLE_NATIVE_JSBSIM && !QUESTFLIGHT_FORCE_UNITY_PROTOTYPE
                 return true;
 #else
                 return false;

@@ -72,6 +72,13 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
 
         private void HandlePointerEvent(PointerEvent evt)
         {
+            // Continuous Move events arrive every frame and previously filled
+            // the bounded device trace before a modality handoff could be
+            // observed. The constrained transformer already records sampled
+            // authority updates, so this probe persists boundaries only.
+            if (evt.Type == PointerEventType.Move)
+                return;
+
             CockpitTouchInteractionV2Hand hand =
                 CockpitTouchInteractionV2Hand.Either;
             CockpitInputSourceKind source = CockpitInputSourceKind.Unknown;

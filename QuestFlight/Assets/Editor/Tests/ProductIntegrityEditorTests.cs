@@ -167,7 +167,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void ProductDemoRudderRouteIsVisibleCoordinatedAndRateLimited()
+        public void ProductDemoRunwayRouteUsesFeedbackAndTurnIsCoordinated()
         {
             AircraftControlState taxi =
                 ProductDemoPilot.ScheduledControls(5f, out string taxiPhase);
@@ -179,14 +179,24 @@ namespace QuestFlight.Editor.Tests
                 ProductDemoPilot.ScheduledControls(61f, out _);
 
             Assert.That(taxiPhase, Is.EqualTo("taxi"));
-            Assert.That(Mathf.Abs(taxi.rudder), Is.GreaterThan(0.18f));
+            Assert.That(taxi.rudder, Is.EqualTo(0f));
             Assert.That(takeoffPhase, Is.EqualTo("takeoff_roll"));
-            Assert.That(takeoff.rudder, Is.GreaterThan(0.04f));
+            Assert.That(takeoff.rudder, Is.EqualTo(0f));
             Assert.That(turnPhase, Is.EqualTo("shallow_left_turn"));
             Assert.That(rollIn.aileron, Is.LessThan(0f));
             Assert.That(rollIn.rudder, Is.LessThan(0f));
             Assert.That(rollOut.aileron, Is.GreaterThan(0f));
             Assert.That(rollOut.rudder, Is.GreaterThan(0f));
+
+            Assert.That(ProductDemoPilot.ComputeRunwayTrackingRudder(
+                    85.0, 90.0, 0f, 0.025f, 0.015f, 0.14f),
+                Is.GreaterThan(0f));
+            Assert.That(ProductDemoPilot.ComputeRunwayTrackingRudder(
+                    95.0, 90.0, 0f, 0.025f, 0.015f, 0.14f),
+                Is.LessThan(0f));
+            Assert.That(ProductDemoPilot.ComputeRunwayTrackingRudder(
+                    90.0, 90.0, 2f, 0.025f, 0.015f, 0.14f),
+                Is.LessThan(0f));
 
             AircraftControlState target = AircraftControlState.Neutral(1f);
             target.rudder = 1f;

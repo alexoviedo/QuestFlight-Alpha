@@ -80,6 +80,12 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
             coordinator != null ? coordinator.controls : null;
         public ProductionCockpitSystemsController SystemsAuthority =>
             systemsAuthority;
+        public Transform ThrottleReferenceFrame => throttleReferenceFrame;
+        public Transform MixtureReferenceFrame => mixtureReferenceFrame;
+        public Vector3 ThrottleFullForwardAxisLocal =>
+            throttleFullForwardAxisLocal;
+        public Vector3 MixtureFullRichAxisLocal =>
+            mixtureFullRichAxisLocal;
         public int ActiveCaptureCount =>
             (_yokeCapture.active ? 1 : 0) +
             (_throttleCapture.active ? 1 : 0) +

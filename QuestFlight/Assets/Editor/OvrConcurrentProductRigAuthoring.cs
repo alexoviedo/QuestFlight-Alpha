@@ -111,6 +111,40 @@ namespace QuestFlight.Editor
                 "authored without rebuilding the concurrent rig.");
         }
 
+        /// <summary>
+        /// Narrow recovery pass for the three represented continuous controls.
+        /// It preserves the accepted OVR rig and all discrete pointables.
+        /// </summary>
+        public static void ApplyConstrainedContinuousControls()
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(
+                AircraftPrefabPath);
+            try
+            {
+                AuthorConstrainedContinuousGrab(
+                    root,
+                    CockpitTouchInteractionV2Target.PilotYoke);
+                AuthorConstrainedContinuousGrab(
+                    root,
+                    CockpitTouchInteractionV2Target.Throttle);
+                AuthorConstrainedContinuousGrab(
+                    root,
+                    CockpitTouchInteractionV2Target.Mixture);
+                if (!ValidateProductRig(root, out string error))
+                    throw new InvalidOperationException(error);
+                PrefabUtility.SaveAsPrefabAsset(root, AircraftPrefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+
+            AssetDatabase.SaveAssets();
+            Debug.Log(
+                "[QuestFlight][OVRInput] Constrained yoke, throttle, and " +
+                "mixture grabs authored without rebuilding the concurrent rig.");
+        }
+
         public static void DumpRigContracts()
         {
             string output = Environment.GetEnvironmentVariable(
@@ -413,6 +447,15 @@ namespace QuestFlight.Editor
                 controller,
                 registry,
                 controller.CommandConsumer);
+            AuthorConstrainedContinuousGrab(
+                root,
+                CockpitTouchInteractionV2Target.PilotYoke);
+            AuthorConstrainedContinuousGrab(
+                root,
+                CockpitTouchInteractionV2Target.Throttle);
+            AuthorConstrainedContinuousGrab(
+                root,
+                CockpitTouchInteractionV2Target.Mixture);
             controller.enabled = false;
 
             EditorUtility.SetDirty(referenceFrame);
@@ -636,6 +679,7 @@ namespace QuestFlight.Editor
             Grabbable grabbable =
                 interactionRoot.AddComponent<Grabbable>();
             grabbable.MaxGrabPoints = 1;
+            grabbable.TransferOnSecondSelection = true;
             grabbable.InjectOptionalOneGrabTransformer(transformer);
             grabbable.InjectOptionalTargetTransform(
                 interactionRoot.transform);
@@ -708,6 +752,150 @@ namespace QuestFlight.Editor
             EditorUtility.SetDirty(body);
             EditorUtility.SetDirty(leftGrip);
             EditorUtility.SetDirty(rightGrip);
+            EditorUtility.SetDirty(transformer);
+            EditorUtility.SetDirty(grabbable);
+            EditorUtility.SetDirty(handGrab);
+            EditorUtility.SetDirty(adapter);
+            EditorUtility.SetDirty(traceProbe);
+        }
+
+        private static void AuthorConstrainedContinuousGrab(
+            GameObject root,
+            CockpitTouchInteractionV2Target target)
+        {
+            if (target == CockpitTouchInteractionV2Target.PilotYoke)
+            {
+                AuthorConstrainedPilotYokeGrab(root);
+                return;
+            }
+            Require(target == CockpitTouchInteractionV2Target.Throttle ||
+                    target == CockpitTouchInteractionV2Target.Mixture,
+                "Only represented continuous cockpit controls can use the constrained Meta route.");
+
+            CockpitTouchInteractionV2Controller controller =
+                RequireSingle<CockpitTouchInteractionV2Controller>(root);
+            CockpitTouchInteractionV2Controller.Binding binding =
+                controller.AuthoredBindings.Single(value =>
+                    value.target == target);
+            Transform control = binding.targetCollider.transform;
+            string objectName = "OVR_" + binding.id;
+            Transform prior = control.Find(objectName);
+            if (prior != null)
+                UnityEngine.Object.DestroyImmediate(prior.gameObject);
+
+            OvrPointerSourceRegistry registry =
+                RequireSingle<OvrPointerSourceRegistry>(root);
+            CockpitTouchInputV2Bridge bridge =
+                controller.CommandConsumer as CockpitTouchInputV2Bridge;
+            Require(bridge != null,
+                "The serialized Touch V2 bridge is missing.");
+
+            var interactionRoot = new GameObject(objectName);
+            interactionRoot.layer = control.gameObject.layer;
+            interactionRoot.transform.SetParent(control, false);
+            interactionRoot.transform.SetLocalPositionAndRotation(
+                Vector3.zero, Quaternion.identity);
+            interactionRoot.transform.localScale = Vector3.one;
+
+            Rigidbody body = interactionRoot.AddComponent<Rigidbody>();
+            body.isKinematic = true;
+            body.useGravity = false;
+            body.interpolation = RigidbodyInterpolation.None;
+
+            Collider sourceCollider = binding.targetCollider;
+            Collider interactionCollider;
+            if (sourceCollider is BoxCollider sourceBox)
+            {
+                BoxCollider box = interactionRoot.AddComponent<BoxCollider>();
+                box.center = sourceBox.center;
+                box.size = sourceBox.size + Vector3.one * 0.012f;
+                box.isTrigger = true;
+                interactionCollider = box;
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"Control '{control.name}' requires its audited BoxCollider.");
+            }
+
+            OvrConstrainedLinearGrabTransformer transformer =
+                interactionRoot.AddComponent<
+                    OvrConstrainedLinearGrabTransformer>();
+            transformer.ConfigureAuthoredReferences(
+                bridge.Coordinator,
+                target == CockpitTouchInteractionV2Target.Throttle
+                    ? bridge.ThrottleReferenceFrame
+                    : bridge.MixtureReferenceFrame,
+                target,
+                target == CockpitTouchInteractionV2Target.Throttle
+                    ? bridge.ThrottleFullForwardAxisLocal
+                    : bridge.MixtureFullRichAxisLocal,
+                CockpitTouchInputV2Bridge.EngineControlFullTravelMeters);
+
+            Grabbable grabbable = interactionRoot.AddComponent<Grabbable>();
+            grabbable.MaxGrabPoints = 1;
+            grabbable.TransferOnSecondSelection = true;
+            grabbable.InjectOptionalOneGrabTransformer(transformer);
+            grabbable.InjectOptionalTargetTransform(interactionRoot.transform);
+            grabbable.InjectOptionalRigidbody(body);
+            grabbable.InjectOptionalThrowWhenUnselected(false);
+            grabbable.InjectOptionalKinematicWhileSelected(false);
+
+            GameObject handPrefab = RequireAsset<GameObject>(
+                HandGrabInteractablePath);
+            GameObject handObject = (GameObject)
+                PrefabUtility.InstantiatePrefab(
+                    handPrefab, interactionRoot.transform);
+            PrefabUtility.UnpackPrefabInstance(
+                handObject,
+                PrefabUnpackMode.Completely,
+                InteractionMode.AutomatedAction);
+            handObject.transform.SetLocalPositionAndRotation(
+                Vector3.zero, Quaternion.identity);
+            handObject.transform.localScale = Vector3.one;
+            HandGrabInteractable handGrab =
+                handObject.GetComponent<HandGrabInteractable>();
+            handGrab.InjectRigidbody(body);
+            handGrab.InjectSupportedGrabTypes(GrabTypeFlags.All);
+            handGrab.InjectOptionalPointableElement(grabbable);
+            handGrab.InjectOptionalHandGrabPoses(new List<HandGrabPose>());
+            handGrab.InjectOptionalScoreModifier(PoseMeasureParameters.DEFAULT);
+            handGrab.HandAlignment = HandAlignType.None;
+            MoveAtSourceProvider movement =
+                handObject.AddComponent<MoveAtSourceProvider>();
+            handGrab.InjectOptionalMovementProvider(movement);
+
+            foreach (Transform child in interactionRoot.transform
+                         .GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name == "InteractableDebugVisual")
+                    child.gameObject.SetActive(false);
+            }
+
+            OvrCockpitPointableAdapter adapter =
+                interactionRoot.AddComponent<OvrCockpitPointableAdapter>();
+            adapter.ConfigureAuthoredReferences(
+                binding.id,
+                binding.target,
+                binding.allowedHand,
+                binding.mode,
+                binding.normalizedValue,
+                interactionCollider,
+                registry,
+                controller.CommandConsumer,
+                new MonoBehaviour[] { handGrab });
+            adapter.enabled = false;
+
+            OvrContinuousControlTraceProbe traceProbe =
+                interactionRoot.AddComponent<OvrContinuousControlTraceProbe>();
+            traceProbe.ConfigureAuthoredReferences(
+                target,
+                registry,
+                grabbable,
+                new MonoBehaviour[] { handGrab });
+
+            EditorUtility.SetDirty(body);
+            EditorUtility.SetDirty(interactionCollider);
             EditorUtility.SetDirty(transformer);
             EditorUtility.SetDirty(grabbable);
             EditorUtility.SetDirty(handGrab);
@@ -1157,7 +1345,8 @@ namespace QuestFlight.Editor
                                     MoveAtSourceProvider>() != null,
                             "The pilot yoke must use Meta's collider fallback while preserving the physical hand pose without an alignment tween.");
                         Require(grabbable != null &&
-                                grabbable.MaxGrabPoints == 1,
+                                grabbable.MaxGrabPoints == 1 &&
+                                grabbable.TransferOnSecondSelection,
                             "The pilot yoke requires one single-owner Meta Grabbable.");
                         Require(transformer != null,
                             "The constrained Meta yoke transformer is missing.");
@@ -1184,14 +1373,43 @@ namespace QuestFlight.Editor
                     }
                     else if (continuous)
                     {
-                        Require(adapter.PointableCount == 2,
-                            $"OVR adapter '{adapter.name}' has an incomplete Meta pointable set.");
                         HandGrabInteractable handGrab = adapter
                             .GetComponentInChildren<HandGrabInteractable>(true);
+                        Grabbable grabbable = adapter
+                            .GetComponent<Grabbable>();
+                        OvrConstrainedLinearGrabTransformer transformer =
+                            adapter.GetComponent<
+                                OvrConstrainedLinearGrabTransformer>();
+                        OvrContinuousControlTraceProbe traceProbe = adapter
+                            .GetComponent<OvrContinuousControlTraceProbe>();
+                        GrabInteractable rawGrab = adapter
+                            .GetComponentInChildren<GrabInteractable>(true);
+                        Require(adapter.PointableCount == 1 &&
+                                !adapter.enabled &&
+                                rawGrab == null,
+                            $"OVR adapter '{adapter.name}' must expose only the constrained Meta HandGrab route.");
                         Require(handGrab != null &&
-                                handGrab.HandGrabPoses.Count == 1 &&
-                                handGrab.HandGrabPoses[0] != null,
-                            $"OVR adapter '{adapter.name}' requires one authored hand-grab pose.");
+                                handGrab.HandAlignment ==
+                                    HandAlignType.None &&
+                                handGrab.HandGrabPoses.Count == 0 &&
+                                handGrab.GetComponent<
+                                    MoveAtSourceProvider>() != null,
+                            $"OVR adapter '{adapter.name}' must preserve the physical hand pose and use collider fallback.");
+                        Require(grabbable != null &&
+                                grabbable.MaxGrabPoints == 1 &&
+                                grabbable.TransferOnSecondSelection,
+                            $"OVR adapter '{adapter.name}' requires Meta single-owner transfer.");
+                        Require(transformer != null &&
+                                transformer.Target == adapter.Target,
+                            $"OVR adapter '{adapter.name}' is missing its constrained linear transformer.");
+                        Require(transformer.ValidateAuthoredReferences(
+                                out string linearError),
+                            linearError);
+                        Require(traceProbe != null,
+                            $"OVR adapter '{adapter.name}' is missing its hardware trace probe.");
+                        Require(traceProbe.ValidateAuthoredReferences(
+                                out string traceError),
+                            traceError);
                     }
                     else
                     {

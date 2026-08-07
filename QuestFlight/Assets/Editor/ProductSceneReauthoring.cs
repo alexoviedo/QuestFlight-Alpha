@@ -133,8 +133,6 @@ namespace QuestFlight.Editor
 
                 ProductDemoPilot demo = inputRoot.GetComponent<ProductDemoPilot>();
                 if (demo == null) demo = inputRoot.gameObject.AddComponent<ProductDemoPilot>();
-                demo.ConfigureAuthoredSources(productInput, deterministic);
-                demo.ConfigureAuthoredAutoStart(true);
 
                 ProductAttribution attribution = root.GetComponent<ProductAttribution>();
                 if (attribution == null) attribution = root.AddComponent<ProductAttribution>();
@@ -146,6 +144,8 @@ namespace QuestFlight.Editor
                 recorder.ConfigureAuthoredReferences(productionMarker, mountainProbe);
 
                 FlightDynamicsCoordinator coordinator = RequireOne<FlightDynamicsCoordinator>(root);
+                demo.ConfigureAuthoredSources(productInput, deterministic, coordinator);
+                demo.ConfigureAuthoredAutoStart(true);
                 SimpleAircraftPhysics prototype = RequireOne<SimpleAircraftPhysics>(root);
                 AircraftState state = RequireOne<AircraftState>(root);
                 AircraftReferenceFrameRig rig = RequireOne<AircraftReferenceFrameRig>(root);

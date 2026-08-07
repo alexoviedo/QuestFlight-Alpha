@@ -28,6 +28,17 @@ namespace QuestFlight.Editor
                 Environment.GetEnvironmentVariable("QUESTFLIGHT_DEVELOPMENT_BUILD"),
                 "1",
                 StringComparison.Ordinal);
+            bool forceUnityPrototype = string.Equals(
+                Environment.GetEnvironmentVariable("QUESTFLIGHT_FORCE_UNITY_PROTOTYPE"),
+                "1",
+                StringComparison.Ordinal);
+            bool enableNativeJsbsim = string.Equals(
+                Environment.GetEnvironmentVariable("QUESTFLIGHT_ENABLE_NATIVE_JSBSIM"),
+                "1",
+                StringComparison.Ordinal);
+            if (forceUnityPrototype && enableNativeJsbsim)
+                throw new InvalidOperationException(
+                    "Unity-prototype forcing and native-JSBSim opt-in are mutually exclusive.");
             BuildOptions buildOptions = development
                 ? BuildOptions.Development | BuildOptions.AllowDebugging | BuildOptions.ConnectWithProfiler
                 : BuildOptions.None;
@@ -36,7 +47,12 @@ namespace QuestFlight.Editor
                 scenes = new[] { ProductProjectConfigurator.ProductionScenePath },
                 locationPathName = apkPath,
                 target = BuildTarget.Android,
-                options = buildOptions
+                options = buildOptions,
+                extraScriptingDefines = forceUnityPrototype
+                    ? new[] { "QUESTFLIGHT_FORCE_UNITY_PROTOTYPE" }
+                    : enableNativeJsbsim
+                        ? new[] { "QUESTFLIGHT_ENABLE_NATIVE_JSBSIM" }
+                        : Array.Empty<string>()
             };
 
             BuildReport report = BuildPipeline.BuildPlayer(options);
