@@ -59,7 +59,7 @@ namespace T2.QuestFlight.Editor
             {
                 throw new InvalidOperationException(
                     $"Product dependency closure is blocked: rejected={report.rejectedCount}, " +
-                    $"unknown={report.unknownCount}. See docs/extraction/reports.");
+                    $"unknown={report.unknownCount}. See the dependency-closure report directory.");
             }
         }
 
@@ -227,13 +227,17 @@ namespace T2.QuestFlight.Editor
 
         private static void WriteReports(ClosureReport report)
         {
-            string reportDirectory = Path.GetFullPath(Path.Combine(
-                Application.dataPath,
-                "..",
-                "..",
-                "docs",
-                "extraction",
-                "reports"));
+            string configuredDirectory = Environment.GetEnvironmentVariable(
+                "QFL_DEPENDENCY_CLOSURE_DIR");
+            string reportDirectory = string.IsNullOrWhiteSpace(configuredDirectory)
+                ? Path.GetFullPath(Path.Combine(
+                    Application.dataPath,
+                    "..",
+                    "..",
+                    "docs",
+                    "extraction",
+                    "reports"))
+                : Path.GetFullPath(configuredDirectory);
             Directory.CreateDirectory(reportDirectory);
 
             string reportJson = JsonUtility.ToJson(report, true) + Environment.NewLine;

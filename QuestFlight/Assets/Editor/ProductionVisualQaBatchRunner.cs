@@ -807,20 +807,36 @@ namespace QuestFlightLab.Editor
                 "pasv1_17_canopy_topdown", "Fixed grove volume top-down integration", "photoreal_canopy",
                 canopyTop, LookAt(canopyTop, groveTop), 44f, ViewProfile.Environment));
 
-            float previousTerrainDiagnostic = terrain.GetFloat("_DiagnosticMode");
-            float previousCanopyColorStrength = terrain.GetFloat("_AerialCanopyColorStrength");
-            float previousCanopyNormalStrength = terrain.GetFloat("_AerialCanopyNormalStrength");
-            Color previousCanopyTint = terrain.GetColor("_AerialCanopyTint");
+            Material diagnosticTerrain = new Material(terrain)
+            {
+                name = terrain.name + " (QA diagnostic)",
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            List<(Renderer renderer, Material[] materials)> terrainBindings =
+                context.environment.GetComponentsInChildren<Renderer>(true)
+                    .Where(renderer => renderer.sharedMaterials.Contains(terrain))
+                    .Select(renderer => (renderer, renderer.sharedMaterials))
+                    .ToList();
             try
             {
                 // The terrain shader's texture-level diagnostics deliberately bypass the
                 // canopy branch. Keep the production branch active and exaggerate only its
                 // serialized map response so this editor-only capture proves exact handoff
                 // ownership without adding a runtime renderer or shader variant.
-                terrain.SetFloat("_DiagnosticMode", 0f);
-                terrain.SetFloat("_AerialCanopyColorStrength", 1f);
-                terrain.SetFloat("_AerialCanopyNormalStrength", 0f);
-                terrain.SetColor("_AerialCanopyTint", new Color(0.02f, 1f, 0.92f, 1f));
+                foreach ((Renderer renderer, Material[] materials) in terrainBindings)
+                {
+                    Material[] diagnosticMaterials = materials
+                        .Select(material => material == terrain
+                            ? diagnosticTerrain
+                            : material)
+                        .ToArray();
+                    renderer.sharedMaterials = diagnosticMaterials;
+                }
+                diagnosticTerrain.SetFloat("_DiagnosticMode", 0f);
+                diagnosticTerrain.SetFloat("_AerialCanopyColorStrength", 1f);
+                diagnosticTerrain.SetFloat("_AerialCanopyNormalStrength", 0f);
+                diagnosticTerrain.SetColor(
+                    "_AerialCanopyTint", new Color(0.02f, 1f, 0.92f, 1f));
                 Capture(context, report, outputDir, width, height, new ShotDefinition(
                     "pasv1_21_canopy_height_heatmap", "Terrain canopy-map handoff diagnostic",
                     "photoreal_diagnostic", canopyTopSample.worldPosition + Vector3.up * 520f,
@@ -829,10 +845,9 @@ namespace QuestFlightLab.Editor
             }
             finally
             {
-                terrain.SetFloat("_DiagnosticMode", previousTerrainDiagnostic);
-                terrain.SetFloat("_AerialCanopyColorStrength", previousCanopyColorStrength);
-                terrain.SetFloat("_AerialCanopyNormalStrength", previousCanopyNormalStrength);
-                terrain.SetColor("_AerialCanopyTint", previousCanopyTint);
+                foreach ((Renderer renderer, Material[] materials) in terrainBindings)
+                    renderer.sharedMaterials = materials;
+                UnityEngine.Object.DestroyImmediate(diagnosticTerrain);
             }
 
             SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
@@ -931,25 +946,21 @@ namespace QuestFlightLab.Editor
             Quaternion cameraRotation,
             float magneticHeadingDegrees)
         {
-            Material material = AssetDatabase.LoadAssetAtPath<Material>(
-                QuestFlight.Editor.CockpitInstrumentV2Authoring.MaterialPath);
-            if (material == null ||
-                !material.HasProperty("_MagneticCompassHeadingDegrees"))
-                throw new InvalidOperationException(
-                    "The magnetic-compass QA material contract is missing.");
             var controller = UnityEngine.Object.FindFirstObjectByType<
                 QuestFlightLab.Aircraft.CockpitDynamics.V2.
-                    CockpitInstrumentV2BatchController>();
+                    CockpitMagneticCompassController>();
             MeshRenderer renderer = controller != null
-                ? controller.NeutralizedSourceRenderer
+                ? controller.CardRenderer
                 : null;
-            if (renderer == null)
+            Material material = renderer != null ? renderer.sharedMaterial : null;
+            if (renderer == null || material == null ||
+                !material.HasProperty("_HeadingDegrees"))
                 throw new InvalidOperationException(
-                    "The magnetic-compass QA renderer is missing.");
+                    "The isolated magnetic-compass QA contract is missing.");
             var properties = new MaterialPropertyBlock();
             renderer.GetPropertyBlock(properties);
             int headingId = Shader.PropertyToID(
-                "_MagneticCompassHeadingDegrees");
+                "_HeadingDegrees");
             float previous = properties.GetFloat(headingId);
             try
             {

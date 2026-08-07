@@ -20,6 +20,8 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
         private float _velocity;
         private bool _hasHeading;
 
+        public MeshRenderer CardRenderer => cardRenderer;
+
         public void ConfigureAuthoredReferences(
             MonoBehaviour provider,
             MeshRenderer renderer,

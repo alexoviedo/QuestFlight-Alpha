@@ -17,6 +17,8 @@ namespace QuestFlightLab.Tests.EditMode
         private const string CockpitMaterialFolder = "Assets/Production/Materials/Cockpit";
         private const string AuthoredReflectionMaterialFolder =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials";
+        private const string IsolatedCompassMaterialFolder =
+            "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/MagneticCompass";
         private const string CockpitRootName = "ImportedCockpitInterior";
 
         [Test]
@@ -54,8 +56,15 @@ namespace QuestFlightLab.Tests.EditMode
                     if (renderer.shadowCastingMode != ShadowCastingMode.Off) shadowCasters++;
                     if (renderer.receiveShadows) shadowReceivers++;
                     Assert.That(renderer.lightProbeUsage, Is.EqualTo(LightProbeUsage.Off), renderer.name);
+                    ReflectionProbeUsage expectedReflectionUsage =
+                        string.Equals(
+                            renderer.name,
+                            "ProductionMagneticCompassV2",
+                            StringComparison.Ordinal)
+                            ? ReflectionProbeUsage.Off
+                            : ReflectionProbeUsage.BlendProbesAndSkybox;
                     Assert.That(renderer.reflectionProbeUsage,
-                        Is.EqualTo(ReflectionProbeUsage.BlendProbesAndSkybox), renderer.name);
+                        Is.EqualTo(expectedReflectionUsage), renderer.name);
                     Assert.That(renderer.motionVectorGenerationMode, Is.EqualTo(MotionVectorGenerationMode.ForceNoMotion), renderer.name);
                     foreach (Material material in renderer.sharedMaterials)
                     {
@@ -63,6 +72,8 @@ namespace QuestFlightLab.Tests.EditMode
                         string path = AssetDatabase.GetAssetPath(material).Replace('\\', '/');
                         Assert.That(path.StartsWith(CockpitMaterialFolder + "/", StringComparison.Ordinal) ||
                                     path.StartsWith(AuthoredReflectionMaterialFolder + "/",
+                                        StringComparison.Ordinal) ||
+                                    path.StartsWith(IsolatedCompassMaterialFolder + "/",
                                         StringComparison.Ordinal),
                             Is.True, path);
                         if (materials.Add(material) && HasBakedOcclusion(material)) bakedAoMaterials++;

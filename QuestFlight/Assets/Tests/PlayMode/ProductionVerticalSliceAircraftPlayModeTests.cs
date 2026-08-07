@@ -46,7 +46,9 @@ namespace QuestFlightLab.Tests.PlayMode
             OVRCameraRig[] origins = ComponentsInWorld<OVRCameraRig>(world);
             Assert.That(origins, Has.Length.EqualTo(1));
             Assert.That(origins[0].isActiveAndEnabled, Is.True);
-            Camera main = ComponentsInWorld<Camera>(world).Single(camera => camera.CompareTag("MainCamera"));
+            Camera main = ComponentsInWorld<Camera>(world).Single(camera =>
+                camera.CompareTag("MainCamera") && camera.enabled &&
+                camera.gameObject.activeInHierarchy);
             Assert.That(TrackedXrCameraPoseDriver.HasRequiredBindings(main), Is.True);
             Assert.That(main.transform.localPosition, Is.EqualTo(Vector3.zero));
             Assert.That(main.transform.localRotation, Is.EqualTo(Quaternion.identity));
@@ -144,7 +146,24 @@ namespace QuestFlightLab.Tests.PlayMode
                 "External view must retain the imported static propeller geometry.");
             Assert.That(interior.GetComponentsInChildren<Renderer>(true).All(renderer => !renderer.enabled), Is.True);
             visibility.SetCockpitView();
-            Assert.That(interior.GetComponentsInChildren<Renderer>(true).All(renderer => renderer.enabled), Is.True);
+            Renderer[] interiorRenderers = interior.GetComponentsInChildren<Renderer>(true);
+            Renderer[] unexpectedDisabledInterior = interiorRenderers
+                .Where(renderer =>
+                    renderer.name !=
+                        "Cessna_Interior_Paddle_MAT_0_Paddle_MAT_0" &&
+                    !renderer.enabled)
+                .ToArray();
+            Assert.That(
+                unexpectedDisabledInterior,
+                Is.Empty,
+                string.Join(", ", unexpectedDisabledInterior.Select(renderer =>
+                    renderer.name)));
+            Assert.That(
+                interiorRenderers.Single(renderer => renderer.name ==
+                    "Cessna_Interior_Paddle_MAT_0_Paddle_MAT_0").enabled,
+                Is.False,
+                "The incomplete frozen three-pedal source must remain replaced " +
+                "by the authored four-pedal renderer.");
             Assert.That(leftAileron.GetComponentsInChildren<Renderer>(true).All(renderer => renderer.enabled), Is.True);
             Assert.That(staticPropeller.enabled, Is.False,
                 "Cockpit view must hide the static vertical propeller blade that blocks the runway/horizon.");

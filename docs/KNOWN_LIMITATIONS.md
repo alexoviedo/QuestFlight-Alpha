@@ -1,5 +1,23 @@
 # Known limitations
 
+## Standalone Quest cleanup checkpoint
+
+- The 2026-08-07 cleanup checkpoint preserves the user-accepted mixed Meta OVR
+  hand/Touch controls, stable scripted takeoff, and photoreal KBDU runway, and
+  passes 248/248 EditMode tests, 9/9 PlayMode tests, dependency closure, and the
+  Android release-style build.
+- The integrated scene does **not** pass its existing static planning budget:
+  77/75 selected draws, 675,833/650,000 visible triangles, 36/29 visible
+  materials, 267.60/210.00 MiB estimated texture memory, and 17/3 transparent
+  material slots. The limits were not weakened. Some texture-subasset estimates
+  are conservative, but measured Quest performance may not be inferred.
+- The 109-view capture is nonblank and free of magenta fallback and was visually
+  inspected, but the aggregate Visual QA result remains failed because it
+  correctly includes the static-budget failure.
+- No long-duration timing, thermal, allocation, stale-frame, or tear acceptance
+  is claimed for the exact cleanup APK. See
+  `docs/evidence/STANDALONE_QUEST_PROJECT_CLEANUP_V1_2026-08-07.md`.
+
 ## Cockpit Completion V3
 
 - The represented yokes, throttle, mixture, ALT/BAT master, primer,

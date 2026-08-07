@@ -70,7 +70,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(layout.CombinedDynamicMesh.subMeshCount, Is.EqualTo(1));
             Assert.That(layout.OpaqueOverlayCoversSourceApertures, Is.True);
             Assert.That(layout.StaticOverlayVertexCount, Is.GreaterThan(0));
-            Assert.That(layout.Bindings.Length, Is.EqualTo(13));
+            Assert.That(layout.Bindings.Length, Is.EqualTo(12));
             Assert.That(layout.AltitudeDigitSlots, Is.Empty,
                 "Altitude numerals must be composited in the face shader, not " +
                 "drawn as competing geometry planes.");
@@ -107,24 +107,25 @@ namespace QuestFlight.Editor.Tests
             Assert.That(sourceSelectors.FindAll(value => value.z > 0.5f).Count,
                 Is.EqualTo(998));
 
-            CockpitInstrumentV2MeshBinding compass = Array.Find(
-                layout.Bindings,
-                binding => binding.rotationFunction ==
-                    CockpitInstrumentV2Function.MagneticCompassHeadingDegrees);
-            Assert.That(compass.label, Is.EqualTo("magnetic_compass_card"));
-            Assert.That(compass.sourceTriangleSeed, Is.EqualTo(
-                CockpitInstrumentV2EditorContract.MagneticCompassCardSeed));
-            Assert.That(compass.vertexCount, Is.EqualTo(
-                CockpitInstrumentV2EditorContract
-                    .ExpectedMagneticCompassCardTriangleCount * 3));
-            Assert.That(compass.rotationAxisLocal.sqrMagnitude,
-                Is.EqualTo(1f).Within(0.0001f));
-            Assert.That(compass.authoredRotationValue, Is.EqualTo(
-                CockpitInstrumentV2EditorContract
-                    .MagneticCompassAuthoredHeadingDegrees));
-            Assert.That(compass.rotationDegreesPerUnit, Is.EqualTo(-1f));
-            Assert.That(compass.absoluteRegistrationProven, Is.True);
-            Assert.That(compass.magneticVariationContractProven, Is.True);
+            Assert.That(
+                Array.Exists(
+                    layout.Bindings,
+                    binding => binding.rotationFunction ==
+                        CockpitInstrumentV2Function.MagneticCompassHeadingDegrees),
+                Is.False,
+                "The accepted compass is an isolated renderer and must not " +
+                "re-enter the shared instrument batch.");
+
+            GameObject aircraft = AssetDatabase.LoadAssetAtPath<GameObject>(
+                CockpitDynamicsIntegrationAuthoring.AircraftPrefabPath);
+            CockpitMagneticCompassController compass =
+                aircraft.GetComponentInChildren<CockpitMagneticCompassController>(true);
+            Assert.That(compass, Is.Not.Null);
+            Assert.That(compass.CardRenderer, Is.Not.Null);
+            Assert.That(compass.CardRenderer.name,
+                Is.EqualTo("ProductionMagneticCompassV2"));
+            Assert.That(compass.CardRenderer.sharedMaterial.HasProperty("_HeadingDegrees"),
+                Is.True);
         }
 
         [Test]

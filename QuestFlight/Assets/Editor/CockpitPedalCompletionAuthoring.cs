@@ -140,6 +140,8 @@ namespace QuestFlight.Editor
                 renderer.receiveShadows = sourceRenderer.receiveShadows;
                 renderer.lightProbeUsage = sourceRenderer.lightProbeUsage;
                 renderer.reflectionProbeUsage = sourceRenderer.reflectionProbeUsage;
+                renderer.motionVectorGenerationMode =
+                    MotionVectorGenerationMode.ForceNoMotion;
                 renderer.probeAnchor = sourceRenderer.probeAnchor;
                 sourceRenderer.enabled = false;
                 ReplaceRuntimeVisibilityAuthority(

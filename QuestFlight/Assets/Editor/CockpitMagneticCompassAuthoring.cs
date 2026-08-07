@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QuestFlightLab.Aircraft;
 using QuestFlightLab.Aircraft.CockpitDynamics.Analog;
 using QuestFlightLab.Aircraft.CockpitDynamics.V2;
 using UnityEditor;
@@ -337,6 +338,9 @@ namespace QuestFlight.Editor
                 renderer.receiveShadows = false;
                 renderer.lightProbeUsage = LightProbeUsage.Off;
                 renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
+                renderer.motionVectorGenerationMode =
+                    MotionVectorGenerationMode.ForceNoMotion;
+                EnsureInteriorVisibilityRenderer(root, renderer);
                 var controller = child.AddComponent<CockpitMagneticCompassController>();
                 var batch = root.GetComponentInChildren<CockpitInstrumentV2BatchController>(true);
                 Require(batch != null && batch.AuthorityProvider != null,
@@ -362,6 +366,32 @@ namespace QuestFlight.Editor
                     AssetDatabase.CreateFolder(current, part);
                 current = next;
             }
+        }
+
+        private static void EnsureInteriorVisibilityRenderer(
+            GameObject root,
+            Renderer renderer)
+        {
+            AircraftVisibilityProfileController[] controllers =
+                root.GetComponentsInChildren<AircraftVisibilityProfileController>(true);
+            Require(controllers.Length == 1,
+                "The authored aircraft must contain exactly one visibility profile.");
+            var serialized = new SerializedObject(controllers[0]);
+            SerializedProperty interiors = serialized.FindProperty("interiorRenderers");
+            Require(interiors != null && interiors.isArray,
+                "The visibility profile interior-renderer list is unavailable.");
+            Renderer[] current = Enumerable.Range(0, interiors.arraySize)
+                .Select(index => interiors.GetArrayElementAtIndex(index)
+                    .objectReferenceValue as Renderer)
+                .Where(item => item != null && item != renderer)
+                .Append(renderer)
+                .ToArray();
+            interiors.arraySize = current.Length;
+            for (int index = 0; index < current.Length; index++)
+                interiors.GetArrayElementAtIndex(index).objectReferenceValue =
+                    current[index];
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(controllers[0]);
         }
 
         private static void Require(bool condition, string message)

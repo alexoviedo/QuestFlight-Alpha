@@ -376,6 +376,46 @@
   ],
   "product_authored_entries": [
     {
+      "path": "Assets/Production/Cockpit/Pedals/C172_FourPedalAssembly.asset",
+      "classification": "approved_product_authored",
+      "reason": "Project-authored four-pedal runtime mesh used by the serialized pilot and copilot rudder/brake presentation."
+    },
+    {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/CockpitMagneticCompassController.cs",
+      "classification": "approved_product_authored",
+      "reason": "Allocation-free controller for the isolated, source-registered magnetic-compass card."
+    },
+    {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/OvrCockpitPointableAdapter.cs",
+      "classification": "approved_product_authored",
+      "reason": "Thin serialized adapter from Meta OVR pointable events to the existing cockpit semantic-command authority."
+    },
+    {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/OvrConcurrentInputTrace.cs",
+      "classification": "approved_product_authored",
+      "reason": "Bounded on-device evidence recorder for concurrent hand and Touch-controller interaction state."
+    },
+    {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/OvrContinuousControlTraceProbe.cs",
+      "classification": "approved_product_authored",
+      "reason": "Development evidence probe for continuous cockpit-control acquisition and release without runtime hierarchy construction."
+    },
+    {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/OvrPointerSourceRegistry.cs",
+      "classification": "approved_product_authored",
+      "reason": "Serialized per-side registry that preserves independent hand and Touch-controller pointer sources."
+    },
+    {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/TouchInputV2/OvrConstrainedLinearGrabTransformer.cs",
+      "classification": "approved_product_authored",
+      "reason": "Meta OVR grab transformer constrained to the authored throttle and mixture travel axes."
+    },
+    {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/TouchInputV2/OvrConstrainedYokeGrabTransformer.cs",
+      "classification": "approved_product_authored",
+      "reason": "Meta OVR grab transformer constrained to the authored yoke pitch and roll geometry."
+    },
+    {
       "path": "Assets/Scripts/Aircraft/CockpitDynamics/Analog/ProductionAnalogInstrumentController.cs",
       "classification": "approved_product_authored",
       "reason": "Serialized allocation-free controller for the identity-audited IAS/VSI combined mesh."

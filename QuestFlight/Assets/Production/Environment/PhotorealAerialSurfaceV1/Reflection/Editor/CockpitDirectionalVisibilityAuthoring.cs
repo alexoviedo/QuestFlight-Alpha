@@ -242,6 +242,10 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     string.Equals(
                         renderer.name,
                         "ProductionInstrumentDisplayReadouts",
+                        StringComparison.Ordinal) ||
+                    string.Equals(
+                        renderer.name,
+                        "ProductionMagneticCompassV2",
                         StringComparison.Ordinal))
                     return false;
                 return !renderer.sharedMaterials.Any(material => material != null && material.shader != null &&

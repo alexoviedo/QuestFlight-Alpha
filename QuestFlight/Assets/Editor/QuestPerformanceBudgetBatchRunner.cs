@@ -83,7 +83,8 @@ namespace QuestFlight.Editor
                                 batch.AuthoredMaximumDrawCount > 0)
                 .ToArray();
             Camera mainCamera = roots.SelectMany(root => root.GetComponentsInChildren<Camera>(true))
-                .Single(camera => camera.CompareTag("MainCamera"));
+                .Single(camera => camera.CompareTag("MainCamera") &&
+                    camera.enabled && camera.gameObject.activeInHierarchy);
 
             MaterialShaderReport materialReport =
                 BuildMaterialShaderReport(renderers, vegetationBatches, closeTreeLods);
@@ -531,7 +532,8 @@ namespace QuestFlight.Editor
             HashSet<Mesh> countedSkinnedMeshes = new HashSet<Mesh>();
             foreach (Renderer renderer in renderers)
             {
-                Mesh mesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
+                MeshFilter filter = renderer.GetComponent<MeshFilter>();
+                Mesh mesh = filter != null ? filter.sharedMesh : null;
                 if (mesh == null && renderer is SkinnedMeshRenderer skinned)
                 {
                     mesh = skinned.sharedMesh;

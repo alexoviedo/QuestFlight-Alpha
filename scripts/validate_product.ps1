@@ -17,6 +17,8 @@ if ([string]::IsNullOrWhiteSpace($ArtifactDir)) {
 }
 New-Item -ItemType Directory -Force -Path $ArtifactDir | Out-Null
 $ArtifactDir = (Resolve-Path -LiteralPath $ArtifactDir).Path
+$previousDependencyClosureDir = $env:QFL_DEPENDENCY_CLOSURE_DIR
+$env:QFL_DEPENDENCY_CLOSURE_DIR = Join-Path $ArtifactDir 'dependency_closure'
 
 function Invoke-Checked {
   param([string]$Label, [scriptblock]$Command)
@@ -136,5 +138,6 @@ try {
   } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $ArtifactDir 'validation_summary.json') -Encoding UTF8
   Write-Host "Product validation passed. Artifacts: $ArtifactDir"
 } finally {
+  $env:QFL_DEPENDENCY_CLOSURE_DIR = $previousDependencyClosureDir
   Pop-Location
 }

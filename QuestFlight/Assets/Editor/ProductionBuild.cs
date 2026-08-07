@@ -55,7 +55,20 @@ namespace QuestFlight.Editor
                         : Array.Empty<string>()
             };
 
-            BuildReport report = BuildPipeline.BuildPlayer(options);
+            UnityEngine.Object[] authoredPreloadedAssets = PlayerSettings.GetPreloadedAssets();
+            BuildReport report;
+            try
+            {
+                report = BuildPipeline.BuildPlayer(options);
+            }
+            finally
+            {
+                // OpenXR build processors temporarily remove settings subassets.
+                // Restore the exact serialized objects (including their local file
+                // IDs) so batch builds cannot mutate tracked ProjectSettings.
+                PlayerSettings.SetPreloadedAssets(authoredPreloadedAssets);
+                AssetDatabase.SaveAssets();
+            }
             WriteBuildEvidence(report, apkPath, development, integrity);
             if (report.summary.result != BuildResult.Succeeded)
                 throw new InvalidOperationException(

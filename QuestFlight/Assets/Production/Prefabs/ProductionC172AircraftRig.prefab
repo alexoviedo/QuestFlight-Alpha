@@ -40130,7 +40130,7 @@ SkinnedMeshRenderer:
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
-  m_MotionVectors: 1
+  m_MotionVectors: 2
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 2
   m_RayTracingMode: 3
@@ -59767,6 +59767,7 @@ MonoBehaviour:
   - {fileID: 6775896974154446733}
   - {fileID: 2870139016678433591}
   - {fileID: 1148531289808265268}
+  - {fileID: 6817048787481161534}
   exteriorRenderers:
   - {fileID: 984774629529791191}
   - {fileID: 5793067980537313131}
@@ -87073,7 +87074,7 @@ MeshRenderer:
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
-  m_MotionVectors: 1
+  m_MotionVectors: 2
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 2

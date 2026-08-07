@@ -63,7 +63,7 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void AuthoringBindsAllTenPositivelyRepresentedCockpitTargets()
+        public void AuthoringBindsAllEighteenPositivelyRepresentedCockpitTargets()
         {
             WithAuthoredPrefab(root =>
             {
@@ -104,7 +104,35 @@ namespace QuestFlightLab.Tests.EditMode
                         [CockpitDynamicsIntegrationAuthoring.WingFlapSelectorSourcePath] =
                             CockpitPresentationChannel.FlapsCommandNormalized,
                         [CockpitDynamicsIntegrationAuthoring.FuelSelectorPath] =
-                            CockpitPresentationChannel.FuelSelectorPosition
+                            CockpitPresentationChannel.FuelSelectorPosition,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.PilotLeftRudderName] =
+                            CockpitPresentationChannel.RudderPedalsNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.PilotLeftRudderName + "/" +
+                         CockpitPedalCompletionAuthoring.PilotLeftToeName] =
+                            CockpitPresentationChannel.LeftToeBrakeNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.PilotRightRudderName] =
+                            CockpitPresentationChannel.RudderPedalsNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.PilotRightRudderName + "/" +
+                         CockpitPedalCompletionAuthoring.PilotRightToeName] =
+                            CockpitPresentationChannel.RightToeBrakeNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotLeftRudderName] =
+                            CockpitPresentationChannel.RudderPedalsNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotLeftRudderName + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotLeftToeName] =
+                            CockpitPresentationChannel.LeftToeBrakeNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotRightRudderName] =
+                            CockpitPresentationChannel.RudderPedalsNormalized,
+                        [CockpitPedalCompletionAuthoring.RootPath + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotRightRudderName + "/" +
+                         CockpitPedalCompletionAuthoring.CopilotRightToeName] =
+                            CockpitPresentationChannel.RightToeBrakeNormalized
                     };
                 for (int index = 0; index < bindings.arraySize; index++)
                 {
