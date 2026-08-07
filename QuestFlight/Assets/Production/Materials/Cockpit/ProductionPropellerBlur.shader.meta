@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 5e5e4ae0a10a4c8f94ec3171d13e33df
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: Project-authored fixed propeller exposure blur for standalone Quest
+  assetBundleName:
+  assetBundleVariant:

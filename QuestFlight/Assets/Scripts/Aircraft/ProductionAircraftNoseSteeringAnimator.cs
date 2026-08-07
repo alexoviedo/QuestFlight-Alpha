@@ -20,10 +20,10 @@ namespace QuestFlightLab.Aircraft
     /// Both source nodes yaw together beneath one AircraftVisualRoot-aligned
     /// pivot using local +Y. The source meshes combine rotating tires with fixed
     /// wheel pants, so neither nose nor main-wheel spin is represented. The
-    /// fixed-pitch propeller and spinner also remain static because exact phase
-    /// can reverse-strobe at the 72 Hz Quest target. No renderer, material,
-    /// texture, transparent pass, hierarchy repair, or fabricated motion is
-    /// introduced for those excluded systems.
+    /// fixed-pitch propeller's exact phase remains unrepresented because it can
+    /// reverse-strobe at the 72 Hz Quest target. A separate serialized presenter
+    /// swaps the source blade for a fixed exposure-blur disc while the engine is
+    /// running; this steering component introduces no presentation dependency.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class ProductionAircraftNoseSteeringAnimator : MonoBehaviour

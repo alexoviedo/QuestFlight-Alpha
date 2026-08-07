@@ -471,6 +471,21 @@
       "reason": "Serialized low-speed, weight-on-wheels nose-steering presentation for the fixed-gear aircraft."
     },
     {
+      "path": "Assets/Scripts/Aircraft/ProductionPropellerPresentationController.cs",
+      "classification": "approved_product_authored",
+      "reason": "Serialized allocation-free RPM-driven swap between the audited stopped propeller and a fixed two-triangle Quest blur."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/ProductionPropellerBlur.shader",
+      "classification": "approved_product_authored",
+      "reason": "Project-authored texture-free stereo-stable exposure blur for the production propeller."
+    },
+    {
+      "path": "Assets/Production/Materials/Cockpit/ProductionPropellerBlur.mat",
+      "classification": "approved_product_authored",
+      "reason": "One shared project-authored material for the two-triangle running propeller presentation."
+    },
+    {
       "path": "Assets/Scripts/Input/ProductControlInput.cs",
       "classification": "approved_product_authored",
       "reason": "Clean control adapter replacing the excluded USB2BLE mapper."
