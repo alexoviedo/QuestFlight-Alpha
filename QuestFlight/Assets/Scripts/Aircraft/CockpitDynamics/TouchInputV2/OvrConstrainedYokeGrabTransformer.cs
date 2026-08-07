@@ -1,4 +1,5 @@
 using Oculus.Interaction;
+using QuestFlightLab.Aircraft.CockpitDynamics;
 using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Input;
 using UnityEngine;
@@ -36,6 +37,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
         private Vector3 _startRadialLocal;
         private float _baselineAileron;
         private float _baselineElevator;
+        private float _lastTraceTime = float.NegativeInfinity;
 
         public FlightDynamicsCoordinator Coordinator => coordinator;
         public ProductControlInput InputAuthority =>
@@ -102,6 +104,13 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
 
         public void BeginTransform()
         {
+            OvrConcurrentInputTrace.RecordTransformer(
+                CockpitTouchInteractionV2Target.PilotYoke,
+                "BeginTransform",
+                true,
+                GrabPointCount,
+                0f,
+                0f);
             ReleaseOverride();
             TryBeginFromCurrentGrabPoint();
         }
@@ -112,12 +121,21 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
                 _grabbable.GrabPoints == null ||
                 _grabbable.GrabPoints.Count == 0)
             {
+                OvrConcurrentInputTrace.RecordTransformer(
+                    CockpitTouchInteractionV2Target.PilotYoke,
+                    "UpdateRejected",
+                    false,
+                    GrabPointCount,
+                    0f,
+                    0f,
+                    "NoGrabPoint");
                 ReleaseOverride();
                 return;
             }
 
-            if (!_active ||
-                !InputAuthority.IsTouchOverrideOwnedBy(
+            ProductControlInput inputAuthority = InputAuthority;
+            if (!_active || inputAuthority == null ||
+                !inputAuthority.IsTouchOverrideOwnedBy(
                     ProductTouchControlChannel.PilotYoke,
                     _ownerToken))
             {
@@ -158,15 +176,34 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
                 pitchDelta / pitchHalfTravelMeters,
                 -1f,
                 1f);
-            InputAuthority.TryUpdateTouchOverride(
+            bool accepted = inputAuthority.TryUpdateTouchOverride(
                 ProductTouchControlChannel.PilotYoke,
                 _ownerToken,
                 aileron,
                 elevator);
+            if (!accepted || Time.unscaledTime - _lastTraceTime >= 0.25f)
+            {
+                _lastTraceTime = Time.unscaledTime;
+                OvrConcurrentInputTrace.RecordTransformer(
+                    CockpitTouchInteractionV2Target.PilotYoke,
+                    "UpdateAuthority",
+                    accepted,
+                    GrabPointCount,
+                    aileron,
+                    elevator,
+                    accepted ? string.Empty : "AuthorityRejected");
+            }
         }
 
         public void EndTransform()
         {
+            OvrConcurrentInputTrace.RecordTransformer(
+                CockpitTouchInteractionV2Target.PilotYoke,
+                "EndTransform",
+                true,
+                GrabPointCount,
+                0f,
+                0f);
             ReleaseOverride();
         }
 
@@ -191,11 +228,14 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
         {
             if (_grabbable == null ||
                 _grabbable.GrabPoints == null ||
-                _grabbable.GrabPoints.Count == 0 ||
-                !ValidateAuthoredReferences(out _) ||
-                InputAuthority == null ||
-                !InputAuthority.CanAcceptTouchOverrides)
-                return false;
+                _grabbable.GrabPoints.Count == 0)
+                return RejectBegin("NoGrabPoint");
+            if (!ValidateAuthoredReferences(out string validationError))
+                return RejectBegin(validationError);
+            if (InputAuthority == null)
+                return RejectBegin("MissingInputAuthority");
+            if (!InputAuthority.CanAcceptTouchOverrides)
+                return RejectBegin("InputAuthorityUnavailable");
 
             Pose grabPoint = _grabbable.GrabPoints[0];
             Vector3 local = stableReferenceFrame
@@ -206,11 +246,12 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
             Vector3 radial = Vector3.ProjectOnPlane(
                 local - centerLocal,
                 rollAxis);
-            if (!CockpitTouchInputV2Kinematics.IsFinite(local) ||
-                radial.sqrMagnitude <
-                    MinimumRadialDistanceMeters *
-                    MinimumRadialDistanceMeters)
-                return false;
+            if (!CockpitTouchInputV2Kinematics.IsFinite(local))
+                return RejectBegin("NonFiniteGrabPoint");
+            if (radial.sqrMagnitude <
+                MinimumRadialDistanceMeters *
+                MinimumRadialDistanceMeters)
+                return RejectBegin("GrabPointInsideRollDeadZone");
 
             EnsureOwnerToken();
             _baselineAileron = InputAuthority.Current.aileron;
@@ -220,25 +261,62 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
                     _ownerToken,
                     _baselineAileron,
                     _baselineElevator))
-                return false;
+                return RejectBegin("AuthorityRejected");
 
             _startPointerLocal = local;
             _startRadialLocal = radial.normalized;
             _active = true;
+            _lastTraceTime = float.NegativeInfinity;
+            OvrConcurrentInputTrace.RecordTransformer(
+                CockpitTouchInteractionV2Target.PilotYoke,
+                "BeginAuthority",
+                true,
+                GrabPointCount,
+                _baselineAileron,
+                _baselineElevator);
             return true;
+        }
+
+        private bool RejectBegin(string reason)
+        {
+            OvrConcurrentInputTrace.RecordTransformer(
+                CockpitTouchInteractionV2Target.PilotYoke,
+                "BeginRejected",
+                false,
+                GrabPointCount,
+                0f,
+                0f,
+                reason);
+            return false;
         }
 
         private void ReleaseOverride()
         {
             ProductControlInput inputAuthority = InputAuthority;
+            bool wasActive = _active;
+            bool released = false;
             if (inputAuthority != null && _ownerToken != 0)
             {
-                inputAuthority.TryEndTouchOverride(
+                released = inputAuthority.TryEndTouchOverride(
                     ProductTouchControlChannel.PilotYoke,
                     _ownerToken);
             }
             _active = false;
+            if (wasActive)
+            {
+                OvrConcurrentInputTrace.RecordTransformer(
+                    CockpitTouchInteractionV2Target.PilotYoke,
+                    "ReleaseAuthority",
+                    released,
+                    GrabPointCount,
+                    0f,
+                    0f,
+                    released ? string.Empty : "AuthorityReleaseRejected");
+            }
         }
+
+        private int GrabPointCount =>
+            _grabbable?.GrabPoints?.Count ?? 0;
 
         private void EnsureOwnerToken()
         {

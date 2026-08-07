@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using Oculus.Interaction;
 using UnityEngine;
 
 namespace QuestFlightLab.Aircraft.CockpitDynamics
@@ -17,6 +18,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
 
         private static OvrConcurrentInputTrace _instance;
         private string _path;
+        private string _sessionId;
         private bool _simultaneousEnableResult;
         private const long MaximumTraceBytes = 256 * 1024;
 
@@ -30,9 +32,19 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
         private void Awake()
         {
             _instance = this;
+            _sessionId = Guid.NewGuid().ToString("N");
+            string fileName =
+                "questflight_ovr_concurrent_trace_" +
+                DateTime.UtcNow.ToString("yyyyMMdd_HHmmss") + "_" +
+                _sessionId + ".jsonl";
             _path = Path.Combine(
                 Application.persistentDataPath,
-                "questflight_ovr_concurrent_trace.jsonl");
+                fileName);
+            File.WriteAllText(
+                Path.Combine(
+                    Application.persistentDataPath,
+                    "questflight_ovr_concurrent_trace_latest.txt"),
+                fileName);
             if (manager == null)
             {
                 Debug.LogError(
@@ -55,7 +67,14 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
         private void Start()
         {
             WriteLine(
-                "{\"type\":\"startup\",\"enabled\":" +
+                "{\"type\":\"startup\",\"session\":\"" +
+                _sessionId + "\",\"buildGuid\":\"" +
+                Escape(Application.buildGUID) +
+                "\",\"version\":\"" +
+                Escape(Application.version) +
+                "\",\"unity\":\"" +
+                Escape(Application.unityVersion) +
+                "\",\"enabled\":" +
                 (_simultaneousEnableResult ? "true" : "false") +
                 ",\"managerConfigured\":" +
                 (manager != null &&
@@ -98,13 +117,66 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             _instance.WriteLine(builder.ToString());
         }
 
+        public static void RecordPointerEvent(
+            PointerEvent evt,
+            CockpitTouchInteractionV2Target target,
+            CockpitTouchInteractionV2Hand hand,
+            CockpitInputSourceKind sourceKind,
+            string pointableName,
+            int grabPointCount)
+        {
+            if (_instance == null) return;
+            var builder = new StringBuilder(320);
+            builder.Append("{\"type\":\"pointer\",\"frame\":")
+                .Append(Time.frameCount)
+                .Append(",\"pointerId\":").Append(evt.Identifier)
+                .Append(",\"eventId\":").Append(evt.EventId)
+                .Append(",\"event\":\"").Append(evt.Type)
+                .Append("\",\"source\":\"").Append(sourceKind)
+                .Append("\",\"side\":\"").Append(hand)
+                .Append("\",\"target\":\"").Append(target)
+                .Append("\",\"pointable\":\"")
+                .Append(Escape(pointableName))
+                .Append("\",\"grabPoints\":").Append(grabPointCount)
+                .Append("}");
+            _instance.WriteLine(builder.ToString());
+        }
+
+        public static void RecordTransformer(
+            CockpitTouchInteractionV2Target target,
+            string operation,
+            bool accepted,
+            int grabPointCount,
+            float primary,
+            float secondary,
+            string reason = "")
+        {
+            if (_instance == null) return;
+            var builder = new StringBuilder(320);
+            builder.Append("{\"type\":\"transformer\",\"frame\":")
+                .Append(Time.frameCount)
+                .Append(",\"target\":\"").Append(target)
+                .Append("\",\"operation\":\"")
+                .Append(Escape(operation))
+                .Append("\",\"accepted\":")
+                .Append(accepted ? "true" : "false")
+                .Append(",\"grabPoints\":").Append(grabPointCount)
+                .Append(",\"primary\":")
+                .Append(primary.ToString("R", System.Globalization.CultureInfo.InvariantCulture))
+                .Append(",\"secondary\":")
+                .Append(secondary.ToString("R", System.Globalization.CultureInfo.InvariantCulture))
+                .Append(",\"reason\":\"")
+                .Append(Escape(reason)).Append("\"}");
+            _instance.WriteLine(builder.ToString());
+        }
+
         private void WriteLine(string line)
         {
             try
             {
                 if (File.Exists(_path) &&
                     new FileInfo(_path).Length > MaximumTraceBytes)
-                    File.Delete(_path);
+                    return;
                 File.AppendAllText(_path, line + System.Environment.NewLine);
             }
             catch (Exception exception)
