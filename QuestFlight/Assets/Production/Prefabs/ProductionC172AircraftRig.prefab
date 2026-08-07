@@ -85767,7 +85767,7 @@ MonoBehaviour:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
-      localRotationAxis: {x: 0, y: 0, z: 1}
+      localRotationAxis: {x: 0, y: 1, z: 0}
       minimumAngleDegrees: -90
       maximumAngleDegrees: 90
       localTranslationAxis: {x: 0, y: 0, z: 0}

@@ -558,7 +558,10 @@ namespace QuestFlight.Editor
                         "OFF-LEFT-BOTH-RIGHT fuel selector",
                         CockpitPresentationChannel.FuelSelectorPosition,
                         0f, 3f,
-                        Vector3.forward,
+                        // The selector is mounted on the horizontal cabin floor.
+                        // Its imported face is the local XZ plane, so local +Y
+                        // is the spindle normal and produces radial detent travel.
+                        Vector3.up,
                         -90f, 90f,
                         Vector3.zero, 0f, 0f))
             };
