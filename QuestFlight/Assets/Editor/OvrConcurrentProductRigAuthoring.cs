@@ -683,27 +683,6 @@ namespace QuestFlight.Editor
                 handObject.AddComponent<MoveAtSourceProvider>();
             handGrab.InjectOptionalMovementProvider(handMovement);
 
-            GameObject grabPrefab = RequireAsset<GameObject>(
-                GrabInteractablePath);
-            GameObject grabObject = (GameObject)
-                PrefabUtility.InstantiatePrefab(
-                    grabPrefab,
-                    interactionRoot.transform);
-            PrefabUtility.UnpackPrefabInstance(
-                grabObject,
-                PrefabUnpackMode.Completely,
-                InteractionMode.AutomatedAction);
-            grabObject.transform.SetLocalPositionAndRotation(
-                Vector3.zero,
-                Quaternion.identity);
-            grabObject.transform.localScale = Vector3.one;
-            GrabInteractable grab =
-                grabObject.GetComponent<GrabInteractable>();
-            grab.InjectRigidbody(body);
-            grab.InjectOptionalPointableElement(grabbable);
-            grab.UseClosestPointAsGrabSource = false;
-            grab.ResetGrabOnGrabsUpdated = false;
-
             foreach (Transform child in interactionRoot.transform
                          .GetComponentsInChildren<Transform>(true))
             {
@@ -723,11 +702,20 @@ namespace QuestFlight.Editor
                 binding.targetCollider,
                 registry,
                 controller.CommandConsumer,
-                new MonoBehaviour[] { handGrab, grab });
+                new MonoBehaviour[] { handGrab });
             // The Grabbable transformer is the sole yoke command path. Keep
             // the adapter serialized for catalog parity, but prevent the old
             // raw-pointer-orientation bridge from competing for authority.
             adapter.enabled = false;
+
+            OvrContinuousControlTraceProbe traceProbe =
+                interactionRoot.AddComponent<
+                    OvrContinuousControlTraceProbe>();
+            traceProbe.ConfigureAuthoredReferences(
+                CockpitTouchInteractionV2Target.PilotYoke,
+                registry,
+                grabbable,
+                new MonoBehaviour[] { handGrab });
 
             EditorUtility.SetDirty(body);
             EditorUtility.SetDirty(leftGrip);
@@ -735,8 +723,8 @@ namespace QuestFlight.Editor
             EditorUtility.SetDirty(transformer);
             EditorUtility.SetDirty(grabbable);
             EditorUtility.SetDirty(handGrab);
-            EditorUtility.SetDirty(grab);
             EditorUtility.SetDirty(adapter);
+            EditorUtility.SetDirty(traceProbe);
         }
 
         private static BoxCollider AuthorYokeGripCollider(
@@ -1171,9 +1159,6 @@ namespace QuestFlight.Editor
                             CockpitTouchInteractionV2Target.Throttle ||
                         adapter.Target ==
                             CockpitTouchInteractionV2Target.Mixture;
-                    Require(
-                        adapter.PointableCount == 2,
-                        $"OVR adapter '{adapter.name}' has an incomplete Meta pointable set.");
                     if (adapter.Target ==
                         CockpitTouchInteractionV2Target.PilotYoke)
                     {
@@ -1185,8 +1170,17 @@ namespace QuestFlight.Editor
                         OvrConstrainedYokeGrabTransformer transformer =
                             adapter.GetComponent<
                                 OvrConstrainedYokeGrabTransformer>();
+                        OvrContinuousControlTraceProbe traceProbe =
+                            adapter.GetComponent<
+                                OvrContinuousControlTraceProbe>();
+                        GrabInteractable rawGrab = adapter
+                            .GetComponentInChildren<GrabInteractable>(true);
+                        Require(adapter.PointableCount == 1,
+                            "The pilot yoke must expose one Meta HandGrab pointable route.");
                         Require(!adapter.enabled,
                             "The rejected raw-pose yoke adapter must remain disabled.");
+                        Require(rawGrab == null,
+                            "The pilot yoke must not retain a parallel raw GrabInteractable route.");
                         Require(handGrab != null &&
                                 handGrab.HandAlignment ==
                                     HandAlignType.None &&
@@ -1205,6 +1199,11 @@ namespace QuestFlight.Editor
                         Require(transformer.ValidateAuthoredReferences(
                                 out string transformerError),
                             transformerError);
+                        Require(traceProbe != null,
+                            "The yoke hardware trace probe is missing.");
+                        Require(traceProbe.ValidateAuthoredReferences(
+                                out string traceError),
+                            traceError);
                         BoxCollider[] grips = adapter
                             .GetComponentsInChildren<BoxCollider>(true)
                             .Where(value =>
@@ -1220,12 +1219,19 @@ namespace QuestFlight.Editor
                     }
                     else if (continuous)
                     {
+                        Require(adapter.PointableCount == 2,
+                            $"OVR adapter '{adapter.name}' has an incomplete Meta pointable set.");
                         HandGrabInteractable handGrab = adapter
                             .GetComponentInChildren<HandGrabInteractable>(true);
                         Require(handGrab != null &&
                                 handGrab.HandGrabPoses.Count == 1 &&
                                 handGrab.HandGrabPoses[0] != null,
                             $"OVR adapter '{adapter.name}' requires one authored hand-grab pose.");
+                    }
+                    else
+                    {
+                        Require(adapter.PointableCount == 2,
+                            $"OVR adapter '{adapter.name}' has an incomplete Meta pointable set.");
                     }
                 }
                 OVRControllerInHandActiveState[] inHandStates = root
