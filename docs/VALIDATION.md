@@ -451,3 +451,21 @@ The APK and all captures remain external artifacts and are not committed.
 
 These are development and regression results. They do not establish physical
 Quest frame timing, thermal behavior, or surveyed airport-security fidelity.
+
+## KBDU runway photoreal material V1
+
+The bounded 2026-08-07 runway pass preserves the authoritative mesh, collider,
+grade, and markings while replacing the warm analytic presentation with a
+generated neutral-gray aggregate albedo/normal pair and a unique runway-local
+wear/roughness map. Full-resolution cockpit, surface, takeoff, aerial, and live
+stereo views were inspected with no slab bands, repeating macro squares,
+z-fighting, or marking misalignment. The runway-specific EditMode test passes
+1/1 and the Android ARM64/Vulkan/OpenXR build passes at 174,592,893 bytes,
+SHA-256 `0ab18fbe6533e467b999eb26d0141cce93951492add0606d4ea9f2859c71f0a8`.
+
+The material adds no renderer, draw, material, sampler, or transparent slot;
+estimated residency for its three Android textures is 1,327,872 bytes, a
+1,177,280-byte reduction from the preceding manifest. Aggregate validation is
+still blocked by pre-existing accepted-branch cockpit/OVR dependency, hierarchy,
+magnetic-compass QA, and missing recorded-replay issues. See
+`docs/evidence/KBDU_RUNWAY_PHOTOREAL_MATERIAL_V1_2026-08-07.md` for exact evidence.

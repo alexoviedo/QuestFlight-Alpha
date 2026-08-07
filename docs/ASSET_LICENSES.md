@@ -281,6 +281,23 @@ V4.3 introduces no external asset or new license boundary. It deletes the obsole
 
 V4.3.1 introduces no external binary asset or license boundary. Its runtime changes are project-authored shader source only: a bounded runway depth bias and a tuned response for the existing OSM-derived terrain water mask. The new isolation shader, evidence shader, camera authoring, tests, and image analyzer are project-authored Editor/tooling sources. No diagnostic capture is committed. Updated runtime hashes are pinned in the runway and water source manifests.
 
+### KBDU runway photoreal material source (2026-08-07)
+
+The runway material refresh uses one project-generated, top-down asphalt source
+created with OpenAI's built-in image-generation tool. It contains no downloaded
+texture pixels. The committed source prompt, exact generated-source hash,
+reference URLs, deterministic compiler, optimized derivative hashes, and
+runtime texture settings are recorded in
+`tools/kbdu_runway_photoreal/SOURCE_PROMPT.md` and the adjacent
+`AirportCoreV4/Runway/SOURCE_MANIFEST.json`.
+
+City of Boulder photographs were inspected only as uncommitted appearance
+references. FAA-derived public-domain runway facts establish that Runway 08/26
+is a maintained asphalt surface; they do not establish surveyed material color
+or physical friction. The project-generated source and deterministic normal and
+wear/roughness derivatives are project-owned. The refresh adds no external
+license boundary, material, renderer, transparent pass, or runtime camera.
+
 The rejected V4 `LightingData.asset`, bake manifest, two color lightmaps, and two directional lightmaps were deleted from the product tree by the V4.1 fail-closed quarantine. Two replacement bake attempts were also rejected and deleted because each exceeded the bounded V4.1 one-atlas remediation budget. Their logs remain external under the V4.1 artifact root; no V4.1 lightmap is accepted or committed.
 
 V4 originally produced 55 LFS-covered binaries. V4.1 deletes the four rejected baked-lightmap textures and retains 51, all with paired Unity metadata. The existing non-LFS historical 5.43 MiB HDR blob remains a bounded policy exception; this branch does not rewrite history. No V4 raw download, build, APK, capture, or cache is committed.

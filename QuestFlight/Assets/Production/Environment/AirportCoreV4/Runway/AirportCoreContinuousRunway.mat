@@ -38,8 +38,8 @@ Material:
     m_Ints: []
     m_Floats:
     - _NormalStrength: 0.62
-    - _SecondaryTiling: 0.031
-    - _WorldTiling: 0.09
+    - _SecondaryTiling: 0.047
+    - _WorldTiling: 0.18
     m_Colors:
     - _RunwayAxis: {r: 0.9999999, g: 0.0004934469, b: 0, a: 0}
     - _RunwayLengthWidth: {r: 1250.3851, g: 22.86, b: 0, a: 0}

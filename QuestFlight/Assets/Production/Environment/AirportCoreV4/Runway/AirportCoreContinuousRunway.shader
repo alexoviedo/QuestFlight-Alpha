@@ -2,15 +2,15 @@ Shader "QuestFlight/AirportCoreV4/ContinuousRunway"
 {
     Properties
     {
-        _MainTex ("Worn Asphalt Albedo", 2D) = "white" {}
+        _MainTex ("Photoreal Asphalt Albedo", 2D) = "white" {}
         _NormalTex ("Aggregate Normal", 2D) = "bump" {}
-        _MRAOTex ("Metallic / Roughness / AO", 2D) = "white" {}
+        _MRAOTex ("Runway Wear / Roughness / Repair", 2D) = "white" {}
         _Tint ("Orthophoto Match Tint", Color) = (1,1,1,1)
         _RunwayOrigin ("Runway 08 origin XZ", Vector) = (-629.757,-30.671,0,0)
         _RunwayAxis ("Runway longitudinal axis XZ", Vector) = (1,0,0,0)
         _RunwayLengthWidth ("Runway length / width", Vector) = (1250.385,22.86,0,0)
-        _WorldTiling ("Fine aggregate tiling per meter", Float) = 0.09
-        _SecondaryTiling ("Rotated detail tiling per meter", Float) = 0.031
+        _WorldTiling ("Fine aggregate tiling per meter", Float) = 0.18
+        _SecondaryTiling ("Rotated detail tiling per meter", Float) = 0.047
         _NormalStrength ("Normal Strength", Range(0,1)) = 0.62
     }
 
@@ -93,6 +93,9 @@ Shader "QuestFlight/AirportCoreV4/ContinuousRunway"
                 float lateral = dot(from08, lateralAxis);
                 float normalizedLongitudinal = saturate(longitudinal / max(_RunwayLengthWidth.x, 1.0));
                 float normalizedLateral = lateral / max(_RunwayLengthWidth.y, 1.0);
+                float2 macroUv = float2(
+                    normalizedLongitudinal,
+                    saturate(normalizedLateral + 0.5));
 
                 float2 runwayMeters = float2(longitudinal, lateral);
                 float2 primaryUv = runwayMeters * _WorldTiling;
@@ -102,37 +105,31 @@ Shader "QuestFlight/AirportCoreV4/ContinuousRunway"
                 fixed3 primary = tex2D(_MainTex, primaryUv).rgb;
                 fixed3 secondary = tex2D(_MainTex, secondaryUv).rgb;
 
-                // Treat the photographed asphalt as fine aggregate, not a repeated macro tile.
-                // The low-frequency runway character is analytic in one continuous runway-local
-                // frame, so mesh/lightmap chart boundaries cannot create slabs.
-                half primaryLuma = max(dot(primary, fixed3(0.2126h,0.7152h,0.0722h)), 0.08h);
-                half secondaryLuma = max(dot(secondary, fixed3(0.2126h,0.7152h,0.0722h)), 0.08h);
-                half3 aggregate = lerp(primary / primaryLuma, secondary / secondaryLuma, 0.37h);
+                // Preserve the photographic aggregate signal. Centering both
+                // scales around the measured source mean prevents either tile
+                // from shifting runway exposure while the rotated secondary
+                // sample suppresses visible repetition.
+                const half3 sourceMean = half3(0.4068h, 0.4049h, 0.4033h);
+                half3 aggregate = sourceMean +
+                    (primary - sourceMean) * 0.74h +
+                    (secondary - sourceMean) * 0.26h;
                 half macro = sin(longitudinal * 0.0037h + sin(lateral * 0.071h) * 0.73h) * 0.5h +
                     sin(longitudinal * 0.0089h - lateral * 0.043h + 1.71h) * 0.28h;
-                half3 albedo = half3(0.285h, 0.278h, 0.258h) * (1.0h + macro * 0.055h);
-                albedo *= lerp(half3(1,1,1), aggregate, 0.16h) * _Tint.rgb;
+                half3 albedo = aggregate * (1.0h + macro * 0.022h) * _Tint.rgb;
 
-                half centerWeight = 1.0h - smoothstep(0.10h, 0.44h, abs(normalizedLateral));
-                half touchdown08 = 1.0h - smoothstep(0.0h, 0.13h, abs(normalizedLongitudinal - 0.18h));
-                half touchdown26 = 1.0h - smoothstep(0.0h, 0.13h, abs(normalizedLongitudinal - 0.82h));
-                half rubber = centerWeight * max(touchdown08, touchdown26) * 0.20h;
-                half patchField = sin(longitudinal * 0.021h + sin(lateral * 0.31h) * 1.9h) *
-                    sin(longitudinal * 0.013h - lateral * 0.17h + 0.8h);
-                half repairs = smoothstep(0.86h, 0.97h, patchField) * 0.07h;
-                half sparseJoint = 1.0h - smoothstep(0.018h, 0.055h,
-                    abs(sin(longitudinal * 0.0127h + sin(longitudinal * 0.0031h) * 0.7h)));
-                sparseJoint *= smoothstep(0.78h, 0.96h,
-                    sin(longitudinal * 0.0049h + lateral * 0.091h) * 0.5h + 0.5h) * 0.08h;
-                half edgeDirt = smoothstep(0.34h, 0.49h, abs(normalizedLateral));
-                albedo *= 1.0h - rubber - sparseJoint;
-                albedo = lerp(albedo, albedo * half3(0.86h,0.83h,0.75h), edgeDirt * 0.24h);
-                albedo = lerp(albedo, albedo * 0.93h, repairs);
-
-                half3 mrao = tex2D(_MRAOTex, primaryUv).rgb;
-                half roughness = saturate(lerp(0.74h, mrao.g, 0.24h) - rubber * 0.20h +
-                    repairs * 0.08h + edgeDirt * 0.08h);
-                half ao = lerp(0.72, 1.0, mrao.b);
+                // This compact, runway-length map is sampled once in the
+                // unique local frame: R tire polish, G roughness, B repairs and
+                // edge weathering. It replaces the former repeating analytic
+                // patch/joint waves without adding a texture or material.
+                half3 runwaySurface = tex2D(_MRAOTex, macroUv).rgb;
+                half tirePolish = runwaySurface.r;
+                half roughness = runwaySurface.g;
+                half repairs = runwaySurface.b;
+                albedo *= 1.0h - tirePolish * 0.105h;
+                albedo = lerp(
+                    albedo,
+                    albedo * half3(0.86h, 0.85h, 0.82h),
+                    repairs * 0.18h);
                 half3 tangentNormal = UnpackNormal(tex2D(_NormalTex, primaryUv));
                 tangentNormal.xy *= _NormalStrength;
                 tangentNormal = normalize(tangentNormal);
@@ -149,7 +146,7 @@ Shader "QuestFlight/AirportCoreV4/ContinuousRunway"
                 half ndotl = saturate(dot(normal, normalize(_WorldSpaceLightPos0.xyz)));
                 half3 irradiance = saturate(max(ShadeSH9(half4(normal, 1.0)), 0.0h) * 0.35h +
                     _LightColor0.rgb * (0.08h + ndotl * 0.55h));
-                half3 color = albedo * irradiance * ao;
+                half3 color = albedo * irradiance;
                 half3 viewDirection = normalize(_WorldSpaceCameraPos - input.worldPosition);
                 half3 halfDirection = normalize(normalize(_WorldSpaceLightPos0.xyz) + viewDirection);
                 half specular = pow(saturate(dot(normal, halfDirection)), lerp(42.0, 5.0, roughness));

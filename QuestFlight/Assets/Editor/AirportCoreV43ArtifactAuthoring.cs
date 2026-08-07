@@ -142,8 +142,8 @@ namespace QuestFlight.Editor
             material.SetVector("_RunwayOrigin", new Vector4(origin.x, origin.y, 0f, 0f));
             material.SetVector("_RunwayAxis", new Vector4(axis.x, axis.y, 0f, 0f));
             material.SetVector("_RunwayLengthWidth", new Vector4((end - origin).magnitude, 22.86f, 0f, 0f));
-            material.SetFloat("_WorldTiling", 0.09f);
-            material.SetFloat("_SecondaryTiling", 0.031f);
+            material.SetFloat("_WorldTiling", 0.18f);
+            material.SetFloat("_SecondaryTiling", 0.047f);
             material.enableInstancing = true;
             EditorUtility.SetDirty(material);
             return material;

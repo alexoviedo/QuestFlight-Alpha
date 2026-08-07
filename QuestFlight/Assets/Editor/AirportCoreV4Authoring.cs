@@ -196,11 +196,11 @@ namespace QuestFlight.Editor
             ConfigureTexture("Assets/Production/Environment/AirportCoreV4/CleanPlate/AirportCoreOriginalShadowMask.png",
                 false, false, 512, 8);
             ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_Albedo.png",
-                true, false, 512, 6, TextureWrapMode.Repeat);
+                true, false, 1024, 6, TextureWrapMode.Repeat);
             ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_Normal.png",
-                false, true, 512, 6, TextureWrapMode.Repeat);
+                false, true, 1024, 6, TextureWrapMode.Repeat);
             ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_MRAO.png",
-                false, false, 512, 6, TextureWrapMode.Repeat);
+                false, false, 1024, 6, TextureWrapMode.Clamp);
             ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_WaveA_NM.png",
                 false, true, 256, 6, TextureWrapMode.Repeat);
             ConfigureTexture("Assets/Production/Environment/AirportCoreV4/Water/Textures/AirportCoreReservoir_WaveB_NM.png",
@@ -386,8 +386,8 @@ namespace QuestFlight.Editor
             material.SetVector("_RunwayOrigin", new Vector4(origin.x, origin.y, 0f, 0f));
             material.SetVector("_RunwayAxis", new Vector4(axis.x, axis.y, 0f, 0f));
             material.SetVector("_RunwayLengthWidth", new Vector4((end - origin).magnitude, 22.86f, 0f, 0f));
-            material.SetFloat("_WorldTiling", 0.09f);
-            material.SetFloat("_SecondaryTiling", 0.031f);
+            material.SetFloat("_WorldTiling", 0.18f);
+            material.SetFloat("_SecondaryTiling", 0.047f);
             EditorUtility.SetDirty(material);
             return material;
         }

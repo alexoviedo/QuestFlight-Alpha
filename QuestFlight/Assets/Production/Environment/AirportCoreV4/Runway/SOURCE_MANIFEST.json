@@ -1,101 +1,102 @@
 {
+  "schemaVersion": 2,
+  "status": "PHOTOREAL_RUNWAY_MATERIAL_INSPECTED_AND_ANDROID_BUILT; AGGREGATE_GATES_RETAIN_PREEXISTING_OVR_COCKPIT_BLOCKERS",
+  "appearanceAuthority": {
+    "airport": "Boulder Municipal Airport (KBDU)",
+    "runway": "08/26",
+    "surface": "asphalt",
+    "condition": "excellent",
+    "dimensionsFeet": [4100, 75],
+    "visualConclusion": "Maintained neutral-gray fine aggregate with restrained wear; no warm-brown base, exaggerated damage, or repeating slab pattern.",
+    "references": [
+      "https://bouldercolorado.gov/government/departments/airport",
+      "https://bouldercolorado.gov/sites/default/files/styles/image_888x597/public/2024-07/airport-summer-2023.jpg",
+      "https://stories.opengov.com/cityofboulderco/uploads/5eb25ae7155c-BDU_from_Above.jfif",
+      "https://www.aopa.org/Kneeboard/Kneeboard/GeneratePdf?airportId=KBDU"
+    ],
+    "referenceImagesCommitted": false
+  },
+  "generatedSource": {
+    "path": "tools/kbdu_runway_photoreal/sources/KBDU_Runway_Asphalt_GeneratedSource.png",
+    "bytes": 3308293,
+    "sha256": "c8c239b1e8024a2296ca7e9fb158949922a7f6528bda41c8728de9c19bc34fa0",
+    "creator": "OpenAI built-in image generation",
+    "license": "Project-generated source; no third-party texture pixels",
+    "promptRecord": "tools/kbdu_runway_photoreal/SOURCE_PROMPT.md"
+  },
+  "compiler": {
+    "path": "tools/kbdu_runway_photoreal/generate_runway_material.py",
+    "bytes": 7314,
+    "sha256": "e08f0a794be507acb8a9d46cb0a52cde6fdc503215bef5407b12a5251a054da1",
+    "seed": 20260807,
+    "operations": [
+      "center crop and deterministic seamless-edge blend",
+      "neutral-gray KBDU appearance grade",
+      "periodic tangent-space aggregate normal derivation",
+      "unique runway-length tire-polish, roughness, repair, and edge-weathering compilation"
+    ]
+  },
   "contract": {
-    "alternatingMacroBlocks": false,
-    "colliderChanges": false,
-    "continuousBase": true,
     "geometryChanges": false,
-    "instancing": true,
+    "colliderChanges": false,
     "markingAlignmentChanges": false,
-    "opaque": true
+    "additionalRenderers": 0,
+    "additionalMaterials": 0,
+    "additionalTextureSamplers": 0,
+    "transparentPasses": 0,
+    "instancing": true,
+    "opaque": true,
+    "continuousRunwayLocalCoordinates": true,
+    "lightmapDependency": false
   },
-  "estimatedAndroidResidentBytes": 2505152,
-  "featureChannels": {
-    "a": "edge dirt",
-    "b": "cracks/joints",
-    "g": "repairs",
-    "r": "rubber deposition"
-  },
-  "license": "CC0-1.0 source derivative plus project-authored procedural masks",
-  "orthophotoMedianLuma": 145.0189971923828,
-  "orthophotoReferenceSampleEnuMeters": [
-    -650.0,
-    -80.0,
-    650.0,
-    25.0
-  ],
+  "estimatedAndroidResidentBytes": 1327872,
   "outputs": [
     {
-      "bytes": 10705622,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_Albedo.png",
-      "sha256": "211181fcbad546c1211dc350baa35d4a7f056e205a4c108fc218318fa42f22a5"
+      "bytes": 1737784,
+      "sha256": "783374ae70e5e617073d47f5e65c13004ad903880887d8bde25a057668e9aef9",
+      "sourceDimensions": [1024, 1024],
+      "android": "1024 ASTC 6x6, sRGB, mipmapped, trilinear, anisotropy 8, repeat"
     },
     {
-      "bytes": 9357865,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_Normal.png",
-      "sha256": "a367c62373ff28a63be87ed2b87a17b740490f81ddc6745d8479b8db5b4ef447"
+      "bytes": 1696976,
+      "sha256": "a13e46aca7853445206b80616f3f53ad7a0c672ee3addeff1b454a43540d4c82",
+      "sourceDimensions": [1024, 1024],
+      "android": "1024 ASTC 6x6, tangent normal, mipmapped, trilinear, anisotropy 8, repeat"
     },
     {
-      "bytes": 7685293,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreRunway_MRAO.png",
-      "sha256": "5307c70d92f24ed46b4d9cd58adb9aa9ac0c5237735cd4ac0b7681275703f920"
+      "bytes": 81124,
+      "sha256": "71e8a5b3732fe3c7b52cd9c1d7c1f5b6152236a8500cc5c385f12c56e2027d79",
+      "sourceDimensions": [2048, 256],
+      "channels": {
+        "r": "tire polish and wear",
+        "g": "perceptual roughness",
+        "b": "repairs and edge weathering"
+      },
+      "android": "1024x128 ASTC 6x6, linear, mipmapped, trilinear, anisotropy 8, clamp"
     },
     {
-      "bytes": 8479,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.shader",
-      "sha256": "8dccfe21818f5cbc63fb0b08584311e830e2c6ee337ab46e7eee6d5a18a11e2d"
+      "bytes": 7746,
+      "sha256": "838788c9cf7987f5bc8ff30ea8c0e150d331ce6480157533ec45a8dbda8c3728"
     },
     {
-      "bytes": 1560,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.mat",
-      "sha256": "1adf1f134dab34af8b91cb513350b7c76e152b820841aa391094789ecff19aff"
+      "bytes": 1560,
+      "sha256": "f8197911d6ecb8e59f8690377720db7e24e3cf9c7da64acd44d2f293bddf491a"
     },
     {
-      "bytes": 1001,
       "path": "QuestFlight/Assets/Production/Environment/AirportCoreV4/Runway/INTEGRATION_CONTRACT.md",
-      "sha256": "4437515912b98ea6a16dbee3c445735f6b01e74b0145820794d2916b692e145b"
+      "bytes": 1585,
+      "sha256": "20e1bcb8b25a5927ef379d5c6a4661430f67bf5abbf8431311e0b8db51dbe71b"
     }
   ],
-  "rawSource": [
-    {
-      "assetId": "asphalt_02",
-      "bytes": 3075676,
-      "externalFile": "asphalt_02_diffuse_2k.jpg",
-      "officialMd5": "336af399fd98a39ab986d8b3bf73b4ff",
-      "resolution": "2k",
-      "semantic": "diffuse",
-      "sha256": "28f5ba8690553f192c0e5e1a5ff40f34765b4b93f4cc7059b1a3e9c795b6c28c",
-      "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_diff_2k.jpg"
-    },
-    {
-      "assetId": "asphalt_02",
-      "bytes": 4943950,
-      "externalFile": "asphalt_02_normalOpenGl_2k.jpg",
-      "officialMd5": "77ebd1cc0b020ccaa1c6b58f103d1f75",
-      "resolution": "2k",
-      "semantic": "normalOpenGl",
-      "sha256": "ffe49db71a0fd34c1e259625df66a302a237597d6ef655307987ec4e45bc6f21",
-      "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_nor_gl_2k.jpg"
-    },
-    {
-      "assetId": "asphalt_02",
-      "bytes": 1299186,
-      "externalFile": "asphalt_02_arm_2k.jpg",
-      "officialMd5": "152c0fb79ad6f33040b79779fea98664",
-      "resolution": "2k",
-      "semantic": "arm",
-      "sha256": "ed70e88640e4ed51cf1c3e57cb20db26983599b20b867c2526439e3a2c849fea",
-      "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_arm_2k.jpg"
-    }
-  ],
-  "schemaVersion": 1,
-  "source": "Poly Haven asphalt_02 2K CC0 plus project-authored continuous runway-local shading",
-  "sourceLumaScale": 1.35,
-  "v431Correction": {
-    "bandAnalyzerThreshold": 0.1,
-    "diagnosis": "The constant-unlit isolation mode retained the bands. Mesh-to-terrain comparison found 52 of 106 runway vertices below terrain with signed clearance from -0.005092144 m to +0.004401267 m; exactly one pavement renderer, one marking renderer, no lightmap, no vertex colors, and no duplicate renderer were active.",
-    "runtimeChange": "Bounded opaque depth bias (Offset -1, -1) in the existing single pavement pass; no geometry, collider, transform, material, texture, or draw-count change.",
-    "finalPeakToTrough": 0.0949,
-    "baselinePeakToTrough": 0.3206
-  },
-  "status": "V4_3_1_RUNWAY_VISUAL_GATE_PASSED_FRAME_DEBUGGER_REPLAY_GATE_BLOCKED"
+  "preservedV431DepthCorrection": {
+    "diagnosis": "One pavement renderer and one marking renderer; 52 of 106 runway vertices crossed the terrain over a signed clearance range of -0.005092144 m to +0.004401267 m.",
+    "runtimeContract": "The existing bounded opaque Offset -1,-1 remains; geometry, collider, transform, markings, material count, and draw count are unchanged.",
+    "finalBandAnalyzerPeakToTrough": 0.0949,
+    "threshold": 0.1
+  }
 }
