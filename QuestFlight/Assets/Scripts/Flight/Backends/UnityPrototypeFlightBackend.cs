@@ -73,13 +73,25 @@ namespace QuestFlightLab.Flight.Backends
                 initialConditions.headingDegrees,
                 initialConditions.pitchDegrees,
                 initialConditions.bankDegrees);
-            Vector3 velocity = rotation * Vector3.forward *
-                               (float)(initialConditions.calibratedAirspeedKnots * FlightFrameConversions.KnotsToMetersPerSecond);
+            float speedMetersPerSecond = (float)(
+                initialConditions.calibratedAirspeedKnots *
+                FlightFrameConversions.KnotsToMetersPerSecond);
+            float flightPathRadians = (float)(
+                initialConditions.flightPathAngleDegrees * Mathf.Deg2Rad);
+            float headingRadians = (float)(
+                initialConditions.headingDegrees * Mathf.Deg2Rad);
+            float horizontalSpeed = speedMetersPerSecond *
+                                    Mathf.Cos(flightPathRadians);
+            Vector3 velocity = new Vector3(
+                horizontalSpeed * Mathf.Sin(headingRadians),
+                speedMetersPerSecond * Mathf.Sin(flightPathRadians),
+                horizontalSpeed * Mathf.Cos(headingRadians));
             _context.unityPrototype.groundHeightMeters = (float)(
                 initialConditions.terrainElevationMslMeters - _context.localOrigin.altitudeMslMeters + 1.25);
             _context.unityPrototype.SetStateForTest(position, rotation.eulerAngles, velocity);
             _simulationTime = 0.0;
             CaptureState();
+            LastError = string.Empty;
             return true;
         }
 
@@ -143,6 +155,16 @@ namespace QuestFlightLab.Flight.Backends
                 : _context.unityPrototype.state;
             Vector3 velocity = legacy != null ? legacy.velocityWorld : Vector3.zero;
             GeodeticReference geodetic = FlightFrameConversions.UnityToGeodetic(root.position, _context.localOrigin);
+            // Unity's positive local-Z roll is left-wing-down, whereas the
+            // backend-neutral aviation contract is positive right-wing-down.
+            // SimpleAircraftPhysics deliberately retains Unity signs for its
+            // legacy presentation state, so normalize only at this adapter.
+            double aviationBankDegrees = -(
+                legacy != null
+                    ? legacy.bankDeg
+                    : AircraftState.NormalizeAngle(root.eulerAngles.z));
+            double aviationSideslipDegrees =
+                ComputeAviationSideslipDegrees(root, velocity);
             CurrentState = new FlightDynamicsState
             {
                 simulationTimeSeconds = _simulationTime,
@@ -155,9 +177,9 @@ namespace QuestFlightLab.Flight.Backends
                 verticalSpeedFeetPerMinute = legacy != null ? legacy.verticalSpeedFpm : velocity.y * AircraftUnitConversions.MetersPerSecondToFeetPerMinute,
                 headingDegrees = legacy != null ? legacy.headingDeg : root.eulerAngles.y,
                 pitchDegrees = legacy != null ? legacy.pitchDeg : -AircraftState.NormalizeAngle(root.eulerAngles.x),
-                bankDegrees = legacy != null ? legacy.bankDeg : AircraftState.NormalizeAngle(root.eulerAngles.z),
+                bankDegrees = aviationBankDegrees,
                 angleOfAttackDegrees = legacy != null ? legacy.angleOfAttackDeg : 0.0,
-                sideslipDegrees = legacy != null ? legacy.slipSkid : 0.0,
+                sideslipDegrees = aviationSideslipDegrees,
                 engineRpm = legacy != null ? legacy.engineRpm : 0.0,
                 loadFactorG = legacy != null ? legacy.loadFactorG : 1.0,
                 weightOnWheels = legacy != null && legacy.onGround,
@@ -166,6 +188,34 @@ namespace QuestFlightLab.Flight.Backends
                 velocityUnityMetersPerSecond = velocity,
                 angularVelocityBodyDegreesPerSecond = legacy != null ? legacy.angularVelocityDeg : Vector3.zero
             };
+        }
+
+        /// <summary>
+        /// Converts the prototype's world velocity to conventional body-axis
+        /// sideslip beta in degrees. The legacy AircraftState.slipSkid field
+        /// remains a normalized slip-ball presentation value and is not a beta
+        /// angle.
+        /// </summary>
+        public static double ComputeAviationSideslipDegrees(
+            Transform aircraftRoot,
+            Vector3 velocityWorldMetersPerSecond)
+        {
+            if (aircraftRoot == null)
+                return 0.0;
+
+            float speed = velocityWorldMetersPerSecond.magnitude;
+            if (speed < 0.1f)
+                return 0.0;
+
+            Vector3 bodyVelocity =
+                aircraftRoot.InverseTransformDirection(
+                    velocityWorldMetersPerSecond);
+            float normalizedRightVelocity = Mathf.Clamp(
+                bodyVelocity.x / speed,
+                -1f,
+                1f);
+            return Math.Asin(normalizedRightVelocity) *
+                   FlightFrameConversions.RadiansToDegrees;
         }
     }
 }

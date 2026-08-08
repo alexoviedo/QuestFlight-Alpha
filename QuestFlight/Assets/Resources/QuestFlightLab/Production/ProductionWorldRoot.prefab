@@ -198,6 +198,7 @@ GameObject:
   - component: {fileID: 9105462521216613047}
   - component: {fileID: 1171423066720843826}
   - component: {fileID: 5025774026687160251}
+  - component: {fileID: 4392029217008093521}
   m_Layer: 0
   m_Name: ProductionInputRoot
   m_TagString: Untagged
@@ -265,6 +266,9 @@ MonoBehaviour:
   throttleRatePerSecond: 0.35
   trimRatePerSecond: 0.35
   flapStep: 0.25
+  guidanceReacquisitionRatePerSecond: 1.25
+  manualEngineAxisDeadzone: 0.08
+  manualThrottleHoldSeconds: 1.25
 --- !u!114 &5025774026687160251
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -280,11 +284,27 @@ MonoBehaviour:
   productInput: {fileID: 1171423066720843826}
   deterministicInput: {fileID: 9105462521216613047}
   flightCoordinator: {fileID: 742791276885309778}
+  routeProfile: {fileID: 11400000, guid: f3ef2c193b64693478841b149d4ec8d2, type: 2}
   autoStartDemo: 1
-  loopDurationSeconds: 72
   runwayHeadingGain: 0.025
   runwayCrossTrackGain: 0.015
   maximumRunwayRudder: 0.14
+--- !u!114 &4392029217008093521
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3972055758679815465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1d48a0726dd4cbeadab88dd738fd0f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Training.FlightLessonV1.FlightLessonRecoveryRuntimeAdapter
+  demoPilot: {fileID: 5025774026687160251}
+  productInput: {fileID: 1171423066720843826}
+  flightCoordinator: {fileID: 742791276885309778}
+  terrainSurface: {fileID: 11400000, guid: b2b2be77d482f4c4c8fb5ceb35614891, type: 2}
 --- !u!1 &3983972066274778650
 GameObject:
   m_ObjectHideFlags: 0

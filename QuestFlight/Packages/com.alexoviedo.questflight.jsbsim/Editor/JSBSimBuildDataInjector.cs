@@ -15,7 +15,7 @@ namespace AlexOviedo.QuestFlight.JSBSim.Editor
     public sealed class JSBSimBuildDataInjector : IPreprocessBuildWithReport, IPostprocessBuildWithReport
     {
         private const string OwnershipMarker = ".questflight_jsbsim_package_injection";
-        private const string MarkerContents = "com.alexoviedo.questflight.jsbsim/0.1.0";
+        private const string MarkerContents = "com.alexoviedo.questflight.jsbsim/0.2.0";
 
         public int callbackOrder => -1000;
 

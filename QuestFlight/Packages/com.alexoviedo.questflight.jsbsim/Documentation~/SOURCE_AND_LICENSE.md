@@ -25,6 +25,12 @@ The libraries remain replaceable shared objects. The package imports only the
 native ABI, bounded C172 runtime data, and provenance; it does not import R&D
 scenes, runtime coordinators, debug overlays, or training systems.
 
+The `c172x` aircraft XML is a separate model payload. Its own header declares
+GPL and includes an upstream non-sale statement. QuestFlight's model derivative
+therefore remains development-only pending a provenance/license decision; the
+package does not characterize that model payload as LGPL. See
+`C172P_MODEL_CONFIGURATION.md` and `FLIGHT_DYNAMICS_MODEL_PROVENANCE.json`.
+
 Passing the software promotion gate does not establish Quest performance,
 certified fidelity, FAA approval, or training credit. Physical Quest timing and
 handling evidence is still required before native JSBSim can be considered for

@@ -1,6 +1,13 @@
 # T2 QuestFlight
 
-T2 QuestFlight is a private, early product vertical slice for standalone Meta Quest 3. It contains one explicitly authored C172-style cockpit/aircraft presentation, one KBDU-inspired environment, one Unity prototype flight authority, viewpoint calibration, deterministic demo/input support, and focused visual/performance validation.
+T2 QuestFlight is a private alpha vertical slice for standalone Meta Quest 3. It contains one explicitly authored C172-style cockpit/aircraft presentation, one KBDU-inspired environment, one Unity prototype flight authority, viewpoint calibration, mixed Meta hand/Touch interaction, and a guided reservoir demonstration route.
+
+## Alpha download
+
+The headset-accepted private alpha is published as the GitHub prerelease
+`v0.1.0-alpha.1`. Authorized testers can download the APK and its checksum from
+the repository's Releases page. Installation and launch instructions are in
+[`docs/ALPHA_INSTALLATION.md`](docs/ALPHA_INSTALLATION.md).
 
 ## Current playable scope
 
@@ -10,13 +17,15 @@ T2 QuestFlight is a private, early product vertical slice for standalone Meta Qu
 - on the current feature candidate, 9,692 OSM-footprint context buildings in 16 offline batches, existing hero vegetation, terrain-map canopy shading, and one bounded fixed-world Tier-2 grove batch for rounded canopy volume;
 - one CC0 photographic HDR sky and a single directional sun; reservoir and minor-water effects are deliberately deferred to an orthophoto-only presentation;
 - cockpit and external aircraft views with limited control-surface animation;
-- Touch-based seat calibration and standard gamepad/deterministic input;
+- mixed Meta hand/Touch cockpit interaction, Touch flight controls, and standard
+  gamepad support;
+- a guided takeoff, reservoir overflight, return, approach, and recovery loop;
 - standalone Quest 3 build target.
 
-The project has no training lessons, USB2BLE/HOTAS dependency, Gaussian splats,
-native release flight authority, or legacy runtime scene repair. Native
-flight-dynamics work is frozen and out of scope for this environment milestone;
-the Unity prototype remains authoritative.
+The project has no USB2BLE/HOTAS dependency, Gaussian splats, native release
+flight authority, or legacy runtime scene repair. The Unity prototype remains
+the sole release authority; native JSBSim remains an unpromoted development
+backend.
 
 ## Open and validate
 

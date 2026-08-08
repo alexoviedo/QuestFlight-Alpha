@@ -76,11 +76,16 @@ namespace QuestFlight.Editor
                     TriangleCount(sourceFilter.sharedMesh) == 212,
                 "The stopped propeller no longer matches its audited source topology.");
 
-            Transform blur = sourceFilter.transform.Find(BlurName);
+            Transform[] authoredBlurTransforms = root
+                .GetComponentsInChildren<Transform>(true)
+                .Where(item => item.name == BlurName)
+                .ToArray();
+            Require(authoredBlurTransforms.Length <= 1,
+                "At most one authored propeller blur disc may exist before authoring.");
+            Transform blur = authoredBlurTransforms.SingleOrDefault();
             if (blur == null)
             {
                 blur = new GameObject(BlurName).transform;
-                blur.SetParent(sourceFilter.transform, false);
             }
 
             MeshFilter blurFilter = RequireOrAddSingle<MeshFilter>(blur.gameObject);
@@ -103,8 +108,18 @@ namespace QuestFlight.Editor
             float diameter = sourceBounds.size.y;
             Require(diameter > 0f && sourceBounds.size.y > sourceBounds.size.x,
                 "The audited propeller must retain dominant mesh-local Y blade span.");
+            // Establish the canonical mesh-local pose first, then preserve that
+            // exact world pose while moving the runtime derivative outside the
+            // frozen imported-source subtree. Keeping the blur under the source
+            // made the source audit see a second MeshFilter and invalidated its
+            // read-only topology contract.
+            blur.SetParent(sourceFilter.transform, false);
             blur.SetLocalPositionAndRotation(sourceBounds.center, Quaternion.identity);
             blur.localScale = new Vector3(diameter, diameter, 1f);
+            Transform authoredParent = propeller.parent;
+            Require(authoredParent != null && !authoredParent.IsChildOf(propeller),
+                "The propeller blur requires an authored parent outside the frozen source subtree.");
+            blur.SetParent(authoredParent, true);
             GameObjectUtility.SetStaticEditorFlags(blur.gameObject,
                 (StaticEditorFlags)0);
 
@@ -166,17 +181,35 @@ namespace QuestFlight.Editor
                     .GetComponentsInChildren<MeshFilter>(true)
                     .Single(filter => filter != blurFilter);
                 MeshRenderer stoppedRenderer = sourceFilter.GetComponent<MeshRenderer>();
-                Require(blur.parent == sourceFilter.transform &&
-                        blur.localRotation == Quaternion.identity,
-                    "The blur disc must stay fixed in the audited mesh-local XY propeller plane.");
+                Transform authoredParent = propeller.parent;
+                Require(authoredParent != null &&
+                        blur.parent == authoredParent &&
+                        !blur.IsChildOf(propeller),
+                    "The blur disc must remain outside the frozen propeller source subtree.");
                 float diameter = sourceFilter.sharedMesh.bounds.size.y;
+                Vector3 expectedWorldPosition =
+                    sourceFilter.transform.TransformPoint(
+                        sourceFilter.sharedMesh.bounds.center);
+                Quaternion expectedWorldRotation = sourceFilter.transform.rotation;
+                Vector3 expectedWorldScale = Vector3.Scale(
+                    sourceFilter.transform.lossyScale,
+                    new Vector3(diameter, diameter, 1f));
                 Require(Vector3.Distance(
-                            blur.localPosition,
-                            sourceFilter.sharedMesh.bounds.center) < 0.00001f &&
-                        Mathf.Abs(blur.localScale.x - diameter) < 0.00001f &&
-                        Mathf.Abs(blur.localScale.y - diameter) < 0.00001f &&
-                        Mathf.Abs(blur.localScale.z - 1f) < 0.00001f,
-                    "The blur disc no longer matches the audited propeller center and diameter.");
+                            blur.position,
+                            expectedWorldPosition) < 0.00001f &&
+                        Quaternion.Angle(
+                            blur.rotation,
+                            expectedWorldRotation) < 0.001f &&
+                        Mathf.Abs(
+                            Mathf.Abs(blur.lossyScale.x) -
+                            Mathf.Abs(expectedWorldScale.x)) < 0.00001f &&
+                        Mathf.Abs(
+                            Mathf.Abs(blur.lossyScale.y) -
+                            Mathf.Abs(expectedWorldScale.y)) < 0.00001f &&
+                        Mathf.Abs(
+                            Mathf.Abs(blur.lossyScale.z) -
+                            Mathf.Abs(expectedWorldScale.z)) < 0.00001f,
+                    "The blur disc no longer matches the audited propeller world pose and diameter.");
                 Require(blurFilter.sharedMesh != null &&
                         blurFilter.sharedMesh.vertexCount == 4 &&
                         TriangleCount(blurFilter.sharedMesh) == 2 &&

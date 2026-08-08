@@ -7,6 +7,7 @@ using QuestFlightLab.Flight;
 using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Input;
 using QuestFlightLab.Runtime;
+using QuestFlightLab.Training.FlightLessonV1;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -24,16 +25,58 @@ namespace QuestFlight.Editor
             "Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab";
         private const string AircraftPrefabPath =
             "Assets/Production/Prefabs/ProductionC172AircraftRig.prefab";
+        private const string FlightConfigPath =
+            "Assets/Resources/C172StyleAircraftConfig.asset";
+        private const string FlightLessonRouteProfilePath =
+            "Assets/Production/Profiles/KBDU_ExtendedReservoirLessonV1.asset";
+        private const string TerrainSurfacePath =
+            "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_ProductionTerrainSurfaceV2.asset";
 
         [MenuItem("QuestFlight/Product/Reauthor Extracted Production Scene")]
         public static void Reauthor()
         {
+            ReauthorFlightConfig();
+            ReauthorFlightLessonRouteProfile();
             ReauthorAircraftPrefab();
             ReauthorEnvironmentPrefab();
             ReauthorWorldPrefab();
             ValidateAndSaveScene();
             AssetDatabase.SaveAssets();
-            Debug.Log("[QuestFlight][Reauthor] Product input, demo, attribution, evidence, environment probe, and sole Unity authority are serialized.");
+            Debug.Log("[QuestFlight][Reauthor] Product input, reservoir lesson, terrain-aware recovery, attribution, evidence, environment probe, and sole Unity authority are serialized.");
+        }
+
+        private static void ReauthorFlightConfig()
+        {
+            C172StyleAircraftConfig config =
+                AssetDatabase.LoadAssetAtPath<C172StyleAircraftConfig>(FlightConfigPath);
+            Require(config != null, "The production C172 flight configuration is missing.");
+
+            // Touch every active nested contract so Unity serializes the effective values and
+            // strips the retired duplicate scalar fields on save. This does not retune physics.
+            Require(config.Speeds != null && config.Aero != null && config.Engine != null &&
+                    config.Control != null && config.Gear != null && config.Training != null,
+                "The production C172 flight configuration contains an invalid nested group.");
+            EditorUtility.SetDirty(config);
+        }
+
+        private static void ReauthorFlightLessonRouteProfile()
+        {
+            FlightLessonRouteProfile profile =
+                AssetDatabase.LoadAssetAtPath<FlightLessonRouteProfile>(
+                    FlightLessonRouteProfilePath);
+            if (profile == null)
+            {
+                profile = ScriptableObject.CreateInstance<FlightLessonRouteProfile>();
+                profile.name = "KBDU_ExtendedReservoirLessonV1";
+                AssetDatabase.CreateAsset(profile, FlightLessonRouteProfilePath);
+            }
+
+            FlightLessonRouteDefinition definition =
+                KbduExtendedReservoirLesson.CreateDefinition();
+            Require(definition.TryValidate(out string failure),
+                "The authored KBDU reservoir lesson is invalid: " + failure);
+            profile.SetDefinitionForAuthoring(definition);
+            EditorUtility.SetDirty(profile);
         }
 
         public static void ReauthorBatch()
@@ -134,6 +177,17 @@ namespace QuestFlight.Editor
                 ProductDemoPilot demo = inputRoot.GetComponent<ProductDemoPilot>();
                 if (demo == null) demo = inputRoot.gameObject.AddComponent<ProductDemoPilot>();
 
+                FlightLessonRouteProfile routeProfile =
+                    AssetDatabase.LoadAssetAtPath<FlightLessonRouteProfile>(
+                        FlightLessonRouteProfilePath);
+                ProductionTerrainSurfaceAsset terrainSurface =
+                    AssetDatabase.LoadAssetAtPath<ProductionTerrainSurfaceAsset>(
+                        TerrainSurfacePath);
+                Require(routeProfile != null,
+                    "The authored KBDU reservoir lesson profile is missing.");
+                Require(terrainSurface != null,
+                    "The authored production terrain surface is missing.");
+
                 ProductAttribution attribution = root.GetComponent<ProductAttribution>();
                 if (attribution == null) attribution = root.AddComponent<ProductAttribution>();
                 QuestTemporalVisualGateRecorder recorder = root.GetComponent<QuestTemporalVisualGateRecorder>();
@@ -146,6 +200,17 @@ namespace QuestFlight.Editor
                 FlightDynamicsCoordinator coordinator = RequireOne<FlightDynamicsCoordinator>(root);
                 demo.ConfigureAuthoredSources(productInput, deterministic, coordinator);
                 demo.ConfigureAuthoredAutoStart(true);
+                demo.ConfigureRouteProfileForAuthoring(routeProfile);
+
+                FlightLessonRecoveryRuntimeAdapter recovery =
+                    inputRoot.GetComponent<FlightLessonRecoveryRuntimeAdapter>();
+                if (recovery == null)
+                    recovery = inputRoot.gameObject.AddComponent<FlightLessonRecoveryRuntimeAdapter>();
+                recovery.ConfigureAuthoredReferences(
+                    demo,
+                    productInput,
+                    coordinator,
+                    terrainSurface);
                 SimpleAircraftPhysics prototype = RequireOne<SimpleAircraftPhysics>(root);
                 AircraftState state = RequireOne<AircraftState>(root);
                 AircraftReferenceFrameRig rig = RequireOne<AircraftReferenceFrameRig>(root);
@@ -170,6 +235,7 @@ namespace QuestFlight.Editor
                 MarkNestedOverride(animator);
                 EditorUtility.SetDirty(productInput);
                 EditorUtility.SetDirty(demo);
+                EditorUtility.SetDirty(recovery);
                 EditorUtility.SetDirty(attribution);
                 EditorUtility.SetDirty(recorder);
 
@@ -189,6 +255,16 @@ namespace QuestFlight.Editor
                 "Exactly one ProductDemoPilot must be serialized.");
             Require(saved.GetComponentsInChildren<ProductControlInput>(true).Length == 1,
                 "Exactly one ProductControlInput must be serialized.");
+            FlightLessonRecoveryRuntimeAdapter[] recoveryAdapters =
+                saved.GetComponentsInChildren<FlightLessonRecoveryRuntimeAdapter>(true);
+            Require(recoveryAdapters.Length == 1,
+                "Exactly one FlightLessonRecoveryRuntimeAdapter must be serialized.");
+            Require(recoveryAdapters[0].HasAuthoredReferences(out string recoveryFailure),
+                "The serialized recovery adapter is invalid: " + recoveryFailure);
+            ProductDemoPilot savedDemo =
+                saved.GetComponentInChildren<ProductDemoPilot>(true);
+            Require(savedDemo != null && savedDemo.AuthoredRouteProfile != null,
+                "The serialized demo pilot must reference the authored lesson profile.");
             Require(saved.GetComponents<QuestTemporalVisualGateRecorder>().Length == 1,
                 "Exactly one temporal gate recorder must be serialized on ProductionWorldRoot.");
         }

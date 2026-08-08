@@ -13,6 +13,12 @@ namespace AlexOviedo.QuestFlight.JSBSim
         public const int ExpectedApiVersion = 1;
         public const string PinnedVersion = "1.3.1";
         public const string PinnedRevision = "3b25f25e49b42d0489c04ac805674fc1450ca579";
+        public const string PinnedAircraftModel = "c172x";
+        public const string PinnedModelConfiguration = "qfl-c172p-training-2054-v1";
+        public const double PinnedEmptyWeightPounds = 1454.0;
+        public const double PinnedOccupantWeightPounds = 340.0;
+        public const double PinnedFuelWeightPounds = 260.0;
+        public const double PinnedInitialWeightPounds = 2054.0;
 
         private IntPtr _instance;
         private NativeControls _controls;
@@ -21,6 +27,9 @@ namespace AlexOviedo.QuestFlight.JSBSim
         public bool IsInitialized => _instance != IntPtr.Zero;
         public string LastError { get; private set; } = string.Empty;
         public JSBSimNativeState State { get; private set; }
+        public JSBSimNativeInitialConditions ConfiguredInitialConditions { get; private set; }
+        public JSBSimNativeControls AppliedControls { get; private set; }
+        public JSBSimNativeAtmosphere AppliedAtmosphere { get; private set; }
 
         public static bool TryProbe(out string error)
         {
@@ -51,7 +60,7 @@ namespace AlexOviedo.QuestFlight.JSBSim
 #endif
         }
 
-        public bool Initialize(string dataRoot, string aircraftName = "c172x")
+        public bool Initialize(string dataRoot, string aircraftName = PinnedAircraftModel)
         {
             Dispose();
             if (!TryProbe(out string probeError)) return Fail(probeError);
@@ -86,7 +95,8 @@ namespace AlexOviedo.QuestFlight.JSBSim
         public bool Reset(JSBSimNativeInitialConditions initialConditions)
         {
             if (!RequireInitialized()) return false;
-            _controls = InitialControls(initialConditions.engineRunning != 0);
+            ConfiguredInitialConditions = initialConditions;
+            SetControls(InitialControls(initialConditions.engineRunning != 0));
             NativeInitialConditions native = new NativeInitialConditions
             {
                 latitudeDegrees = initialConditions.latitudeDegrees,
@@ -116,23 +126,37 @@ namespace AlexOviedo.QuestFlight.JSBSim
         /// </summary>
         public void SetControls(JSBSimNativeControls controls)
         {
-            _controls = new NativeControls
+            AppliedControls = new JSBSimNativeControls
             {
                 aileron = Clamp(controls.aileron, -1.0, 1.0),
-                elevator = -Clamp(controls.elevatorNoseUp, -1.0, 1.0),
-                rudder = -Clamp(controls.rudderYawRight, -1.0, 1.0),
+                elevatorNoseUp = Clamp(controls.elevatorNoseUp, -1.0, 1.0),
+                rudderYawRight = Clamp(controls.rudderYawRight, -1.0, 1.0),
                 throttle = Clamp(controls.throttle, 0.0, 1.0),
                 mixture = Clamp(controls.mixture, 0.0, 1.0),
                 carbHeat = Clamp(controls.carbHeat, 0.0, 1.0),
-                elevatorTrim = -Clamp(controls.elevatorTrimNoseUp, -1.0, 1.0),
+                elevatorTrimNoseUp = Clamp(controls.elevatorTrimNoseUp, -1.0, 1.0),
                 flaps = Clamp(controls.flaps, 0.0, 1.0),
                 leftBrake = Clamp(controls.leftBrake, 0.0, 1.0),
                 rightBrake = Clamp(controls.rightBrake, 0.0, 1.0)
+            };
+            _controls = new NativeControls
+            {
+                aileron = AppliedControls.aileron,
+                elevator = -AppliedControls.elevatorNoseUp,
+                rudder = -AppliedControls.rudderYawRight,
+                throttle = AppliedControls.throttle,
+                mixture = AppliedControls.mixture,
+                carbHeat = AppliedControls.carbHeat,
+                elevatorTrim = -AppliedControls.elevatorTrimNoseUp,
+                flaps = AppliedControls.flaps,
+                leftBrake = AppliedControls.leftBrake,
+                rightBrake = AppliedControls.rightBrake
             };
         }
 
         public void SetAtmosphere(JSBSimNativeAtmosphere atmosphere)
         {
+            AppliedAtmosphere = atmosphere;
             _atmosphere = new NativeAtmosphere
             {
                 windNorthFeetPerSecond = atmosphere.windNorthFeetPerSecond,
@@ -220,9 +244,9 @@ namespace AlexOviedo.QuestFlight.JSBSim
             return Math.Max(minimum, Math.Min(maximum, value));
         }
 
-        private static NativeControls InitialControls(bool engineRunning)
+        private static JSBSimNativeControls InitialControls(bool engineRunning)
         {
-            return new NativeControls
+            return new JSBSimNativeControls
             {
                 throttle = engineRunning ? 0.10 : 0.0,
                 mixture = engineRunning ? 1.0 : 0.0

@@ -48,7 +48,10 @@ namespace T2.QuestFlight.Editor
                 ["Assets/Scripts/Runtime/QuestTemporalVisualGateRecorder.cs"] = "approved_product_cleaned",
                 ["Assets/Scripts/Environment/AirportParkingStandManifest.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Environment/ProductionPlacementManifest.cs"] = "approved_product_authored",
-                ["Assets/Scripts/Environment/ProductionTerrainSurfaceAsset.cs"] = "approved_product_authored"
+                ["Assets/Scripts/Environment/ProductionTerrainSurfaceAsset.cs"] = "approved_product_authored",
+                ["Assets/Production/Profiles/KBDU_ExtendedReservoirLessonV1.asset"] = "approved_product_authored",
+                ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRecoveryRuntimeAdapter.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRouteProfile.cs"] = "approved_product_authored"
             };
 
         [MenuItem("T2 Quest Flight/Validation/Export Production Dependency Closure")]
@@ -147,15 +150,15 @@ namespace T2.QuestFlight.Editor
                 return "unity_package_dependency";
             }
 
+            if (ProductCleanedOverrides.TryGetValue(assetPath, out string cleanedClassification))
+            {
+                return cleanedClassification;
+            }
+
             if (ForbiddenFragments.Any(fragment =>
                     assetPath.IndexOf(fragment, StringComparison.OrdinalIgnoreCase) >= 0))
             {
                 return "excluded_legacy_dependency";
-            }
-
-            if (ProductCleanedOverrides.TryGetValue(assetPath, out string cleanedClassification))
-            {
-                return cleanedClassification;
             }
 
             ManifestEntry gated = (manifest.rights_gated_entries ?? Array.Empty<ManifestEntry>())

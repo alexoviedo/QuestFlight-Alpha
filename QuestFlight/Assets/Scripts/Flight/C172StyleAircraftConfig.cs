@@ -38,6 +38,8 @@ namespace QuestFlightLab.Flight
         public float flapLiftBonus = 0.54f;
         public float flapDragBonus = 0.18f;
         public float sideSlipDragFactor = 0.048f;
+        [Tooltip("Magnitude of the stabilizing side-force derivative CY_beta per radian; applied opposite body-axis sideslip.")]
+        public float sideForceCoefficientPerBetaRad = 0.55f;
     }
 
     [System.Serializable]
@@ -121,70 +123,14 @@ namespace QuestFlightLab.Flight
         public LandingGearConfig landingGear = new LandingGearConfig();
         public TrainingReferenceTargets trainingTargets = new TrainingReferenceTargets();
 
-        [Header("Approximate C172-style reference values")]
+        [Header("Airframe geometry and legacy mass fallback")]
         public float massKg = 1111f;
         public float wingAreaM2 = 16.2f;
         public float wingSpanM = 11.0f;
         public float aspectRatio = 7.45f;
-        public float stallSpeedCleanKts = 48f;
-        public float stallSpeedLandingKts = 40f;
-        public float cruiseSpeedKts = 105f;
-        public float bestAngleClimbSpeedKts = 62f;
-        public float rotationSpeedKts = 55f;
-        public float bestClimbSpeedKts = 74f;
-        public float maxFlapExtendedSpeedKts = 85f;
-        public float neverExceedSpeedKts = 163f;
 
-        [Header("Prototype engine and propeller")]
-        public float maxEnginePowerHp = 180f;
-        public float propEfficiency = 0.74f;
-        public float staticThrustNewtons = 3550f;
-        public float maxThrustNewtons = 4050f;
-        public float idleRpm = 700f;
-        public float maxRpm = 2700f;
-        public float carbHeatPowerLoss = 0.08f;
-        public float minimumMixturePower = 0.35f;
-
-        [Header("Prototype aerodynamics")]
-        public float airDensityKgM3 = 1.0f;
-        public float zeroLiftAoADeg = -2f;
-        public float criticalAoADeg = 15f;
-        public float liftCoefficientBase = 0.44f;
-        public float liftCurveSlopePerRad = 5.14f;
-        public float maximumLiftCoefficient = 1.50f;
-        public float postStallLiftMultiplier = 0.55f;
-        public float elevatorAoAAuthorityDeg = 7.5f;
-        public float trimAoAAuthorityDeg = 4.5f;
-        public float flapLiftBonus = 0.54f;
-        public float dragCoefficientBase = 0.038f;
-        public float inducedDragFactor = 0.058f;
-        public float flapDragBonus = 0.18f;
-        public float sideSlipDragFactor = 0.048f;
-
-        [Header("Prototype controls and stability")]
-        public float pitchRateMaxDegPerSec = 36f;
-        public float rollRateMaxDegPerSec = 62f;
-        public float yawRateMaxDegPerSec = 27f;
-        public float pitchDamping = 2.65f;
-        public float rollDamping = 2.75f;
-        public float yawDamping = 2.3f;
-        public float pitchAttitudeStability = 1.0f;
-        public float rollAttitudeStability = 0.5f;
-        public float maxPrototypePitchDeg = 24f;
-        public float maxPrototypeBankDeg = 58f;
-        public float coordinatedTurnCoupling = 0.84f;
-        public float flapPitchMomentDegPerSec = -7f;
-
-        [Header("Prototype flaps and trim")]
+        [Header("Discrete flap detents")]
         public float[] flapSettingsDeg = { 0f, 10f, 20f, 30f };
-        public float maxTrim = 1f;
-
-        [Header("Prototype ground handling")]
-        public float runwayFrictionCoefficient = 0.035f;
-        public float lateralGroundFriction = 2.7f;
-        public float brakeStrengthNewtons = 6500f;
-        public float nosewheelSteerDegPerSec = 22f;
-        public float groundEffectHeightM = 4f;
 
         public C172ReferenceSpeeds Speeds => referenceSpeeds ??= new C172ReferenceSpeeds();
         public AeroCoefficients Aero => aero ??= new AeroCoefficients();
@@ -201,13 +147,6 @@ namespace QuestFlightLab.Flight
             config.wingAreaM2 = 16.2f;
             config.wingSpanM = 11.0f;
             config.aspectRatio = 7.45f;
-            config.stallSpeedCleanKts = config.Speeds.stallCleanKts;
-            config.stallSpeedLandingKts = config.Speeds.stallLandingKts;
-            config.rotationSpeedKts = config.Speeds.rotationKts;
-            config.bestAngleClimbSpeedKts = config.Speeds.bestAngleClimbKts;
-            config.bestClimbSpeedKts = config.Speeds.bestRateClimbKts;
-            config.maxFlapExtendedSpeedKts = config.Speeds.maxFlapExtendedKts;
-            config.neverExceedSpeedKts = config.Speeds.neverExceedKts;
             return config;
         }
     }

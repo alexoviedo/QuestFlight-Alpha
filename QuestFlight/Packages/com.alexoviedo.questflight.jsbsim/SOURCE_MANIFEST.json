@@ -1,14 +1,36 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "package": "com.alexoviedo.questflight.jsbsim",
-  "packageVersion": "0.1.0",
+  "packageVersion": "0.2.0",
   "upstream": {
     "name": "JSBSim",
     "version": "1.3.1",
     "revision": "3b25f25e49b42d0489c04ac805674fc1450ca579",
     "repository": "https://github.com/JSBSim-Team/jsbsim.git",
-    "license": "GNU LGPL-2.1-or-later",
-    "licenseFile": "RuntimeData/JSBSim-1.3.1/COPYING.txt"
+    "libraryLicense": "GNU LGPL-2.1-or-later",
+    "libraryLicenseFile": "RuntimeData/JSBSim-1.3.1/COPYING.txt"
+  },
+  "aircraftModel": {
+    "path": "RuntimeData/JSBSim-1.3.1/aircraft/c172x/c172x.xml",
+    "target": "1982 Cessna 172P approximation",
+    "configurationId": "qfl-c172p-training-2054-v1",
+    "upstreamSha256": "e45326e2e1aa12df7f73cd7a62b3a00ac818625e0999d10687607a0115764bc9",
+    "derivativeSha256": "e3b074b539dd119c36bfd96881762256a16ece7476c3ff07c780a6ced8def686",
+    "initialWeightPounds": 2054.0,
+    "normalCategoryMaximumWeightPounds": 2400.0,
+    "declaredLicense": "GPL",
+    "additionalUpstreamStatement": "model is not to be sold",
+    "distributionStatus": "DEVELOPMENT_ONLY_PENDING_LICENSE_PROVENANCE_RESOLUTION",
+    "changes": [
+      "two symmetric 170 lb front-seat occupants",
+      "rear occupants, baggage, and off-center PesticideBomb test point mass removed",
+      "two symmetric 130 lb fuel tanks retained",
+      "embedded CSV output and unused output.xml removed"
+    ]
+  },
+  "modelProvenance": {
+    "path": "FLIGHT_DYNAMICS_MODEL_PROVENANCE.json",
+    "sha256": "f1dcf90df3c4974905a9f436c4787c0fd6694001cfcec6020e8256d481eb4e41"
   },
   "wrapperSource": {
     "repository": "alexoviedo/T2-QuestFlightLab",
@@ -24,6 +46,22 @@
     "buildInputTextLineEndings": "CRLF",
     "canonicalSourceTextLineEndings": "LF",
     "license": "Project-owned"
+  },
+  "abi": {
+    "version": 1,
+    "binariesChangedForModelDerivative": false,
+    "managedDiagnostics": [
+      "configured initial conditions",
+      "clamped submitted controls",
+      "submitted atmosphere",
+      "bounded native state"
+    ],
+    "notExposed": [
+      "actual control-surface positions",
+      "forces and moments",
+      "mass, CG, and fuel state",
+      "in-flight terrain updates"
+    ]
   },
   "build": {
     "windowsArchitecture": "x86_64",
@@ -59,13 +97,13 @@
     }
   ],
   "runtimeData": [
-    { "path": "runtime_manifest.txt", "sha256": "262d6063bb853d48ac91e444923d1a0e7a168a5857c5d084b117fbead9303da9" },
+    { "path": "runtime_manifest.txt", "sha256": "b35b9e714eee00324673ea699e65045d4dbfd8752de5490f79918b0c62c55c3f" },
+    { "path": "runtime_hashes.sha256", "sha256": "259ca5470ab474972bcb9d97cbff39ff5742b30c16cedb4cd9263a5b91d0dbe4" },
     { "path": "COPYING.txt", "sha256": "1e7e6bae5a5bde32f1ae5a7c37a082d1ab03cf89354f7f936ac40be9e39a6531" },
-    { "path": "SOURCE_REVISION.txt", "sha256": "6c33a6c7fac3726367d0c945d8f250ddd2f30637d5129b49897250ead7c0e580" },
+    { "path": "SOURCE_REVISION.txt", "sha256": "1d02aaa47307f8d4afa7aa196b217907127427a0e2ad01d36d8f1b8e20920d25" },
     { "path": "aircraft/c172x/c172ap.xml", "sha256": "5701dc97feb738b842fe27c3b438537303e9b260907366355fe1edb7f1f6b173" },
-    { "path": "aircraft/c172x/c172x.xml", "sha256": "e45326e2e1aa12df7f73cd7a62b3a00ac818625e0999d10687607a0115764bc9" },
+    { "path": "aircraft/c172x/c172x.xml", "sha256": "e3b074b539dd119c36bfd96881762256a16ece7476c3ff07c780a6ced8def686" },
     { "path": "aircraft/c172x/elevator_doublet_init.xml", "sha256": "c8492d24146f9538c16e28663fdca6d04e83fa78ba71b8eb5b4e975b412d676f" },
-    { "path": "aircraft/c172x/output.xml", "sha256": "93ecba95fa1bfd7e4670c712e36f3e5bfa34319e6d18c408516cf2ca33eac840" },
     { "path": "aircraft/c172x/reset00.xml", "sha256": "3934529d480fc8a69038b412824f657671ccb7f257d6f01412f389df57eac29a" },
     { "path": "aircraft/c172x/reset01.xml", "sha256": "0f6276aaf053f32c68132d89f415bb0ac543efe1c6904429a1ac57befe190102" },
     { "path": "aircraft/c172x/reset_at_rest.xml", "sha256": "f82ca5cbb5f7f556229bf84f1f72c9440f7cd5a3e60c2ed95dfb1afa2e885d27" },
@@ -75,13 +113,12 @@
     { "path": "systems/GNCUtilities.xml", "sha256": "beceb4621d17f9ad25081d9c11a6b9494ec3d8b2d124da35ffeb9f259d6071ed" }
   ],
   "promotionGate": {
-    "scenariosTotal": "11/11",
-    "criticalScenarios": "10/10",
-    "nonfiniteState": false,
-    "steadyStateManagedAllocations": 0,
-    "windowsTimingGate": "PASS",
-    "androidArm64Build": "PASS",
-    "android16KbElfLoadAlignment": "PASS",
-    "questHardwareTimingAndHandling": "NOT_YET_MEASURED"
+    "softwareScenarios": "REQUIRED_RERUN_AFTER_MODEL_DATA_CHANGE",
+    "steadyStateManagedAllocations": "REQUIRED_RERUN",
+    "windowsNativeSmoke": "PASS_1_SECOND_RESET_ADVANCE_120_HZ",
+    "androidArm64Build": "REQUIRED_RERUN",
+    "android16KbElfLoadAlignment": "UNCHANGED_BINARIES_PREVIOUSLY_PASS",
+    "questHardwareTimingAndHandling": "NOT_MEASURED",
+    "nativePromotionEligible": false
   }
 }

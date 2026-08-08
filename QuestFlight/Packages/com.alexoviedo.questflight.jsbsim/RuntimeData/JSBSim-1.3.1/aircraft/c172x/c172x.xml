@@ -58,6 +58,14 @@
         </location>
     </metrics>
     <mass_balance>
+        <!--
+          QuestFlight diagnostic training load (model derivative 1):
+          1454 lb empty + two 170 lb front-seat occupants + two symmetric
+          130 lb full fuel tanks = 2054 lb. Rear occupants, baggage, and the
+          upstream PesticideBomb test point mass are intentionally absent.
+          This deterministic, laterally symmetric load is for open-loop model
+          evaluation; it is not an operational weight-and-balance calculation.
+        -->
         <ixx unit="SLUG*FT2"> 948.0 </ixx>
         <iyy unit="SLUG*FT2"> 1346.0 </iyy>
         <izz unit="SLUG*FT2"> 1967.0 </izz>
@@ -69,7 +77,7 @@
             <z> 36.5 </z>
         </location>
         <pointmass name="PILOT">
-            <weight unit="LBS">190.0</weight>
+            <weight unit="LBS">170.0</weight>
             <location unit="IN">
                 <x> 36.0 </x>
                 <y> -14.0 </y>
@@ -77,43 +85,11 @@
             </location>
         </pointmass>
         <pointmass name="CO-PILOT">
-            <weight unit="LBS">140.0</weight>
+            <weight unit="LBS">170.0</weight>
             <location unit="IN">
                 <x> 36.0 </x>
                 <y> 14.0 </y>
                 <z> 24.0 </z>
-            </location>
-        </pointmass>
-        <pointmass name="PASSENGER 1">
-            <weight unit="LBS">130.0</weight>
-            <location unit="IN">
-                <x> 60.0 </x>
-                <y> -14.0 </y>
-                <z> 24.0 </z>
-            </location>
-        </pointmass>
-        <pointmass name="PASSENGER 2">
-            <weight unit="LBS">106.0</weight>
-            <location unit="IN">
-                <x> 60.0 </x>
-                <y> 14.0 </y>
-                <z> 24.0 </z>
-            </location>
-        </pointmass>
-        <pointmass name="LUGGAGE">
-            <weight unit="LBS">120.0</weight>
-            <location unit="IN">
-                <x> 95.0 </x>
-                <y>  0.0 </y>
-                <z> 24.0 </z>
-            </location>
-        </pointmass>
-        <pointmass name="PesticideBomb">
-            <weight unit="LBS">80.0</weight>
-            <location unit="IN">
-                <x>  41.0 </x>
-                <y> 144.0 </y>
-                <z> 36.0 </z>
             </location>
         </pointmass>
     </mass_balance>
@@ -1218,27 +1194,6 @@
 <!--
     <input port="1137"/>
 -->
-
-    <output name="JSBout172B.csv" type="CSV" rate="10">
-        <rates> ON             </rates>
-        <velocities> ON        </velocities>
-        <position> ON          </position>
-        <atmosphere> OFF       </atmosphere>
-        <fcs> ON               </fcs>
-        <ground_reactions> OFF </ground_reactions>
-        <propulsion> ON       </propulsion>
-        <simulation> ON        </simulation>
-        <massprops> ON        </massprops>
-        <forces> OFF           </forces>
-        <moments> OFF          </moments>
-        <aerosurfaces> OFF      </aerosurfaces>
-        <property> position/vrp-gc-latitude_deg </property>
-        <property> position/vrp-longitude_deg   </property>
-        <property> position/vrp-radius-ft       </property>
-        <function name="velocities/pi-deg_sec">
-          <todegrees> <p> velocities/pi-rad_sec </p> </todegrees>
-        </function>
-    </output>
 
 <!---
     <output name="localhost" type="SOCKET" port="1138" rate="20">

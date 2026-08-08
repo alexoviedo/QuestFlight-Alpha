@@ -1,0 +1,21 @@
+{
+  "name": "AlexOviedo.QuestFlight.JSBSim.Tests",
+  "rootNamespace": "AlexOviedo.QuestFlight.JSBSim.Tests",
+  "references": [
+    "AlexOviedo.QuestFlight.JSBSim"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

@@ -1,5 +1,6 @@
 #if UNITY_INCLUDE_TESTS
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using QuestFlightLab.Aircraft;
 using QuestFlightLab.Flight;
@@ -7,6 +8,7 @@ using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Input;
 using QuestFlightLab.Runtime;
 using QuestFlightLab.Environment;
+using QuestFlightLab.Training.FlightLessonV1;
 using QuestFlight.Product;
 using UnityEngine;
 
@@ -114,6 +116,150 @@ namespace QuestFlightLab.Tests.PlayMode
         }
 
         [Test]
+        public void AuthoredFlightLessonRecoverySuppressesResetsRestoresAndReenables()
+        {
+            Transform world = LoadProductionWorld();
+            ProductDemoPilot demo = ComponentsInWorld<ProductDemoPilot>(world).Single();
+            ProductControlInput input = ComponentsInWorld<ProductControlInput>(world).Single();
+            FlightDynamicsCoordinator coordinator =
+                ComponentsInWorld<FlightDynamicsCoordinator>(world).Single();
+            FlightLessonRecoveryRuntimeAdapter recovery =
+                ComponentsInWorld<FlightLessonRecoveryRuntimeAdapter>(world).Single();
+
+            Assert.That(recovery.HasAuthoredReferences(out string referenceFailure),
+                Is.True, referenceFailure);
+            Assert.That(recovery.AuthoredDemoPilot, Is.SameAs(demo));
+            Assert.That(recovery.AuthoredProductInput, Is.SameAs(input));
+            Assert.That(recovery.AuthoredFlightCoordinator, Is.SameAs(coordinator));
+
+            Assert.That(coordinator.InitializeSelectedBackend(), Is.True,
+                coordinator.LastError);
+            demo.StartDemo();
+            InvokeUnityMessage(recovery, "Start");
+            Assert.That(coordinator.IsInitialized, Is.True, coordinator.LastError);
+            Assert.That(demo.IsRunning, Is.True);
+            Assert.That(recovery.RecoveryPhase, Is.EqualTo(FlightLessonRecoveryPhase.Idle));
+            Assert.That(input.TryBeginTouchOverride(
+                ProductTouchControlChannel.PilotYoke,
+                41001,
+                0.35f,
+                -0.2f), Is.True);
+            Assert.That(input.ActiveTouchOverrideCount, Is.EqualTo(1));
+
+            ProductionTerrainSurfaceAsset terrain = recovery.AuthoredTerrainSurface;
+            const float outsideLessonEastMeters = 9500f;
+            const float outsideLessonNorthMeters = 0f;
+            Assert.That(terrain.TrySample(
+                outsideLessonEastMeters,
+                outsideLessonNorthMeters,
+                out ProductionTerrainSample outsideTerrain), Is.True);
+
+            GeodeticReference origin = GeodeticReference.Kbdu;
+            Vector3 outsidePosition = new Vector3(
+                outsideLessonEastMeters,
+                outsideTerrain.heightMeters + 300f,
+                outsideLessonNorthMeters);
+            GeodeticReference outsideGeodetic =
+                FlightFrameConversions.UnityToGeodetic(outsidePosition, origin);
+            GeodeticReference outsideTerrainGeodetic =
+                FlightFrameConversions.UnityToGeodetic(
+                    new Vector3(
+                        outsideLessonEastMeters,
+                        outsideTerrain.heightMeters,
+                        outsideLessonNorthMeters),
+                    origin);
+            FlightDynamicsInitialConditions lessonAreaExit =
+                new FlightDynamicsInitialConditions
+                {
+                    latitudeDegrees = outsideGeodetic.latitudeDegrees,
+                    longitudeDegrees = outsideGeodetic.longitudeDegrees,
+                    altitudeMslMeters = outsideGeodetic.altitudeMslMeters,
+                    terrainElevationMslMeters = outsideTerrainGeodetic.altitudeMslMeters,
+                    calibratedAirspeedKnots = 80d,
+                    headingDegrees = 90d,
+                    pitchDegrees = 0d,
+                    bankDegrees = 0d,
+                    flightPathAngleDegrees = 0d,
+                    engineRunning = true
+                };
+            Assert.That(coordinator.TryResetToInitialConditions(lessonAreaExit),
+                Is.True, coordinator.LastError);
+
+            bool sawFadingOut = false;
+            bool sawAwaitingReset = false;
+            bool sawStabilizing = false;
+            bool sawFadingIn = false;
+            bool sawSuppression = false;
+            bool sawLeaseCancellation = false;
+            bool verifiedCheckpointReset = false;
+            bool recoveryStarted = false;
+            FlightLessonRouteDefinition route = demo.RouteDefinition;
+            FlightLessonRecoveryCheckpoint expectedCheckpoint =
+                route.recoveryCheckpoints[0];
+
+            const int recoveryFixedFrameLimit = 360;
+            for (int frame = 0; frame < recoveryFixedFrameLimit; frame++)
+            {
+                InvokeUnityMessage(recovery, "FixedUpdate");
+
+                FlightLessonRecoveryPhase phase = recovery.RecoveryPhase;
+                recoveryStarted |= phase != FlightLessonRecoveryPhase.Idle;
+                sawFadingOut |= phase == FlightLessonRecoveryPhase.FadingOut;
+                sawAwaitingReset |= phase == FlightLessonRecoveryPhase.AwaitingAuthoritativeReset;
+                sawStabilizing |= phase == FlightLessonRecoveryPhase.Stabilizing;
+                sawFadingIn |= phase == FlightLessonRecoveryPhase.FadingIn;
+                sawSuppression |= input.FlightLessonInputSuppressed &&
+                                  demo.GuidanceSuppressed;
+                sawLeaseCancellation |= input.ActiveTouchOverrideCount == 0;
+
+                if (!verifiedCheckpointReset &&
+                    phase == FlightLessonRecoveryPhase.Stabilizing)
+                {
+                    FlightDynamicsInitialConditions reset =
+                        coordinator.LastResetInitialConditions;
+                    Vector3 resetPosition = FlightFrameConversions.GeodeticToUnity(
+                        reset.latitudeDegrees,
+                        reset.longitudeDegrees,
+                        reset.altitudeMslMeters,
+                        origin);
+                    Assert.That(resetPosition.x,
+                        Is.EqualTo(expectedCheckpoint.positionUnityMeters.x).Within(0.1f));
+                    Assert.That(resetPosition.z,
+                        Is.EqualTo(expectedCheckpoint.positionUnityMeters.z).Within(0.1f));
+                    Assert.That(reset.calibratedAirspeedKnots,
+                        Is.EqualTo(expectedCheckpoint.calibratedAirspeedKnots).Within(0.001d));
+                    Assert.That(reset.headingDegrees,
+                        Is.EqualTo(expectedCheckpoint.headingDegreesTrue).Within(0.001d));
+                    Assert.That(demo.ProgressState.currentSegmentIndex,
+                        Is.EqualTo(expectedCheckpoint.resumeSegmentIndex));
+                    verifiedCheckpointReset = true;
+                }
+
+                if (recoveryStarted &&
+                    phase == FlightLessonRecoveryPhase.Idle)
+                    break;
+            }
+
+            Assert.That(sawFadingOut, Is.True);
+            Assert.That(sawAwaitingReset, Is.True);
+            Assert.That(sawStabilizing, Is.True);
+            Assert.That(sawFadingIn, Is.True);
+            Assert.That(sawSuppression, Is.True);
+            Assert.That(sawLeaseCancellation, Is.True);
+            Assert.That(verifiedCheckpointReset, Is.True);
+            Assert.That(recovery.RecoveryPhase, Is.EqualTo(FlightLessonRecoveryPhase.Idle));
+            Assert.That(input.FlightLessonInputSuppressed, Is.False);
+            Assert.That(demo.GuidanceSuppressed, Is.False);
+            Assert.That(demo.IsRunning, Is.True);
+            Assert.That(input.TryBeginTouchOverride(
+                ProductTouchControlChannel.PilotYoke,
+                41002,
+                0f,
+                0f), Is.True,
+                "Cockpit control ownership must be available after the comfort fade completes.");
+        }
+
+        [Test]
         public void VisibilityProfilesAndBackendDrivenAnimationUseAuthoredParts()
         {
             Transform world = LoadProductionWorld();
@@ -165,8 +311,8 @@ namespace QuestFlightLab.Tests.PlayMode
                 "The incomplete frozen three-pedal source must remain replaced " +
                 "by the authored four-pedal renderer.");
             Assert.That(leftAileron.GetComponentsInChildren<Renderer>(true).All(renderer => renderer.enabled), Is.True);
-            Assert.That(staticPropeller.enabled, Is.False,
-                "Cockpit view must hide the static vertical propeller blade that blocks the runway/horizon.");
+            Assert.That(staticPropeller.enabled, Is.True,
+                "The stopped propeller must remain visible from the cockpit; the RPM-driven presentation controller replaces it with the authored blur disc while running.");
             Assert.That(rightWing.enabled, Is.True,
                 "Cockpit view must not hide non-occluding exterior geometry such as the wing.");
 
@@ -204,6 +350,16 @@ namespace QuestFlightLab.Tests.PlayMode
         private static bool HasComponentNamed(Transform world, string typeName) =>
             world.GetComponentsInChildren<MonoBehaviour>(true).Any(component =>
                 component != null && component.GetType().Name == typeName);
+
+        private static void InvokeUnityMessage(MonoBehaviour target, string methodName)
+        {
+            MethodInfo method = target.GetType().GetMethod(
+                methodName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(method, Is.Not.Null,
+                target.GetType().Name + " is missing the expected " + methodName + " lifecycle method.");
+            method.Invoke(target, null);
+        }
 
         private static Bounds MeshBoundsInFrame(Renderer renderer, Transform frame)
         {

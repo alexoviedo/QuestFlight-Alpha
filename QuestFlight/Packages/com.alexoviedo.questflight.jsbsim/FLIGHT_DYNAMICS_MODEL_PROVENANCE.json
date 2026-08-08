@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "configurationId": "qfl-c172p-training-2054-v1",
+  "status": "DEVELOPMENT_DIAGNOSTIC_ONLY",
+  "aircraft": {
+    "target": "1982 Cessna 172P approximation",
+    "jsbsimModel": "c172x",
+    "upstreamVersion": "1.3.1",
+    "upstreamRevision": "3b25f25e49b42d0489c04ac805674fc1450ca579",
+    "upstreamModelSha256": "e45326e2e1aa12df7f73cd7a62b3a00ac818625e0999d10687607a0115764bc9",
+    "derivativeModelSha256": "e3b074b539dd119c36bfd96881762256a16ece7476c3ff07c780a6ced8def686"
+  },
+  "initialLoadPounds": {
+    "emptyAircraft": 1454.0,
+    "leftFrontOccupant": 170.0,
+    "rightFrontOccupant": 170.0,
+    "leftFuel": 130.0,
+    "rightFuel": 130.0,
+    "total": 2054.0
+  },
+  "removedUpstreamDefaults": [
+    "PASSENGER 1 (130 lb)",
+    "PASSENGER 2 (106 lb)",
+    "LUGGAGE (120 lb)",
+    "PesticideBomb (80 lb at y=144 in)",
+    "JSBout172B.csv output declaration"
+  ],
+  "nativeAbi": {
+    "version": 1,
+    "binariesChanged": false,
+    "availableDiagnostics": [
+      "configured initial conditions including initial terrain elevation",
+      "clamped controls submitted to native ABI",
+      "atmosphere submitted to native ABI",
+      "bounded state vector"
+    ],
+    "missingDiagnosticsRequiringVersionedRebuild": [
+      "actual control-surface positions",
+      "body/aerodynamic/propulsive forces and moments",
+      "mass, center of gravity, and fuel state",
+      "in-flight terrain elevation updates"
+    ]
+  },
+  "license": {
+    "jsbsimLibrary": "GNU LGPL-2.1-or-later",
+    "aircraftFileDeclaration": "GPL",
+    "aircraftFileAdditionalStatement": "upstream file states model is not to be sold",
+    "resolution": "UNRESOLVED_PRODUCT_DISTRIBUTION_BLOCKER"
+  },
+  "promotion": {
+    "unityPrototypeRemainsReleaseAuthority": true,
+    "softwareScenarios": "REQUIRED_RERUN_AFTER_MODEL_DATA_CHANGE",
+    "questHandlingAndTiming": "NOT_MEASURED",
+    "nativePromotionEligible": false
+  }
+}

@@ -1,5 +1,26 @@
 # Known limitations
 
+## QuestFlight 0.1.0 Alpha 1
+
+- This is a private, sideloaded Quest 3 alpha checkpoint for invited friends,
+  not a public store release or a production-readiness claim.
+- The Unity prototype remains the sole flight authority. Its guided reservoir
+  route, aerodynamic response, systems behavior, and recovery logic are useful
+  for demonstration and iteration but are not certified C172 fidelity.
+- The accepted worn smoke found the current experience shareable and the final
+  unattended takeoff run passed the former recovery-cut point. The exact alpha
+  APK has not completed three long-duration Quest timing, thermal, stale-frame,
+  tear, or steady-state allocation measurements.
+- The scene retains the static planning-budget debt documented below. A
+  satisfactory worn smoke does not establish sustained 72 Hz performance.
+- Meta hand and Touch interaction is supported for represented cockpit controls;
+  unrepresented or visually merged controls remain static. Xbox/gamepad support
+  has not received the same recent worn acceptance as hand and Touch input.
+- Distribution remains private because the repository and GitHub Release are
+  private. Testers require explicit GitHub repository access before downloading.
+- This alpha is not FAA approved, is not for navigation, provides no legal
+  training credit, and makes no certified-fidelity or final-photorealism claim.
+
 ## Standalone Quest cleanup checkpoint
 
 - The 2026-08-07 cleanup checkpoint preserves the user-accepted mixed Meta OVR

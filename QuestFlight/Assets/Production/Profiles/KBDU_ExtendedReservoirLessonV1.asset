@@ -1,0 +1,286 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d977110fd901fd3478747dca3e53d103, type: 3}
+  m_Name: KBDU_ExtendedReservoirLessonV1
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Training.FlightLessonV1.FlightLessonRouteProfile
+  definition:
+    schemaVersion: 1.0
+    lessonId: kbdu_extended_reservoir_v1
+    displayName: KBDU Extended Reservoir Guided Lesson
+    operationalDisclaimer: Extended training route, not a standard traffic pattern,
+      not an official procedure, and not for navigation or training credit.
+    provenanceUrls:
+    - https://bouldercolorado.gov/sites/default/files/2021-01/noise-abatement-procedures-traffic-patterns.pdf
+    - https://bouldercolorado.gov/services/aircraft-noise
+    officialOperatingFacts:
+    - 'Traffic-pattern altitude: 6300 feet MSL.'
+    - Do not begin the first turn below 5800 feet MSL.
+    - Runway 08 uses left traffic.
+    - Keep the downwind leg south of Jay Road.
+    initialRecoveryCheckpointIndex: 0
+    waypoints:
+    - id: runway_08_start
+      positionUnityMeters: {x: -629.8, y: 0, z: -30.7}
+      altitudeMslFeet: 5289
+      calibratedAirspeedKnots: 55
+      captureRadiusMeters: 90
+    - id: departure_turn_gate
+      positionUnityMeters: {x: 900, y: 0, z: -30}
+      altitudeMslFeet: 6000
+      calibratedAirspeedKnots: 74
+      captureRadiusMeters: 180
+    - id: climb_northeast
+      positionUnityMeters: {x: 2000, y: 0, z: 1700}
+      altitudeMslFeet: 6800
+      calibratedAirspeedKnots: 85
+      captureRadiusMeters: 260
+    - id: reservoir_entry
+      positionUnityMeters: {x: 1400, y: 0, z: 3500}
+      altitudeMslFeet: 7500
+      calibratedAirspeedKnots: 95
+      captureRadiusMeters: 300
+    - id: reservoir_overlook
+      positionUnityMeters: {x: 251.5, y: 0, z: 4308.25}
+      altitudeMslFeet: 7500
+      calibratedAirspeedKnots: 95
+      captureRadiusMeters: 350
+    - id: reservoir_exit
+      positionUnityMeters: {x: -900, y: 0, z: 4000}
+      altitudeMslFeet: 7400
+      calibratedAirspeedKnots: 95
+      captureRadiusMeters: 300
+    - id: return_transition
+      positionUnityMeters: {x: 2100, y: 0, z: 2200}
+      altitudeMslFeet: 6800
+      calibratedAirspeedKnots: 92
+      captureRadiusMeters: 300
+    - id: downwind_entry
+      positionUnityMeters: {x: 1500, y: 0, z: 1500}
+      altitudeMslFeet: 6300
+      calibratedAirspeedKnots: 90
+      captureRadiusMeters: 220
+    - id: downwind_end
+      positionUnityMeters: {x: -1500, y: 0, z: 1500}
+      altitudeMslFeet: 6300
+      calibratedAirspeedKnots: 85
+      captureRadiusMeters: 220
+    - id: base_end
+      positionUnityMeters: {x: -1750, y: 0, z: 300}
+      altitudeMslFeet: 5900
+      calibratedAirspeedKnots: 75
+      captureRadiusMeters: 180
+    - id: final_intercept
+      positionUnityMeters: {x: -1800, y: 0, z: -30}
+      altitudeMslFeet: 5700
+      calibratedAirspeedKnots: 70
+      captureRadiusMeters: 160
+    - id: runway_threshold
+      positionUnityMeters: {x: -630, y: 0, z: -30}
+      altitudeMslFeet: 5300
+      calibratedAirspeedKnots: 65
+      captureRadiusMeters: 100
+    - id: rollout
+      positionUnityMeters: {x: 350, y: 0, z: -30}
+      altitudeMslFeet: 5289
+      calibratedAirspeedKnots: 35
+      captureRadiusMeters: 120
+    segments:
+    - id: departure
+      kind: 0
+      geometry: 0
+      startWaypointIndex: 0
+      endWaypointIndex: 1
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 180
+      maximumBankDegrees: 8
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 250
+      recoveryCheckpointOnCompletion: 1
+    - id: climb_to_reservoir
+      kind: 1
+      geometry: 0
+      startWaypointIndex: 1
+      endWaypointIndex: 2
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 240
+      maximumBankDegrees: 18
+      maximumClimbRateFeetPerMinute: 650
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: reservoir_entry
+      kind: 1
+      geometry: 0
+      startWaypointIndex: 2
+      endWaypointIndex: 3
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 300
+      maximumBankDegrees: 22
+      maximumClimbRateFeetPerMinute: 600
+      completionAltitudeToleranceFeet: 300
+      recoveryCheckpointOnCompletion: 2
+    - id: reservoir_overflight
+      kind: 3
+      geometry: 0
+      startWaypointIndex: 3
+      endWaypointIndex: 4
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 320
+      maximumBankDegrees: 20
+      maximumClimbRateFeetPerMinute: 400
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: reservoir_exit
+      kind: 3
+      geometry: 0
+      startWaypointIndex: 4
+      endWaypointIndex: 5
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 320
+      maximumBankDegrees: 20
+      maximumClimbRateFeetPerMinute: 400
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: return
+      kind: 4
+      geometry: 0
+      startWaypointIndex: 5
+      endWaypointIndex: 6
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 350
+      maximumBankDegrees: 25
+      maximumClimbRateFeetPerMinute: 500
+      completionAltitudeToleranceFeet: 350
+      recoveryCheckpointOnCompletion: 3
+    - id: pattern_entry
+      kind: 5
+      geometry: 0
+      startWaypointIndex: 6
+      endWaypointIndex: 7
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 250
+      maximumBankDegrees: 20
+      maximumClimbRateFeetPerMinute: 500
+      completionAltitudeToleranceFeet: 250
+      recoveryCheckpointOnCompletion: 4
+    - id: downwind
+      kind: 6
+      geometry: 0
+      startWaypointIndex: 7
+      endWaypointIndex: 8
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 220
+      maximumBankDegrees: 18
+      maximumClimbRateFeetPerMinute: 400
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: base
+      kind: 7
+      geometry: 0
+      startWaypointIndex: 8
+      endWaypointIndex: 9
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 180
+      maximumBankDegrees: 20
+      maximumClimbRateFeetPerMinute: 500
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: final_turn
+      kind: 8
+      geometry: 0
+      startWaypointIndex: 9
+      endWaypointIndex: 10
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 140
+      maximumBankDegrees: 15
+      maximumClimbRateFeetPerMinute: 450
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: final
+      kind: 8
+      geometry: 0
+      startWaypointIndex: 10
+      endWaypointIndex: 11
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 120
+      maximumBankDegrees: 10
+      maximumClimbRateFeetPerMinute: 400
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: rollout
+      kind: 9
+      geometry: 0
+      startWaypointIndex: 11
+      endWaypointIndex: 12
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 80
+      maximumBankDegrees: 6
+      maximumClimbRateFeetPerMinute: 300
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    recoveryCheckpoints:
+    - id: runway_08_restart
+      resumeSegmentIndex: 0
+      positionUnityMeters: {x: -629.8, y: 0, z: -30.7}
+      altitudeMslFeet: 5292.1
+      calibratedAirspeedKnots: 0
+      headingDegreesTrue: 90
+      pitchDegrees: 0
+      bankDegrees: 0
+      engineRunning: 1
+    - id: departure_climb
+      resumeSegmentIndex: 1
+      positionUnityMeters: {x: 1200, y: 0, z: 350}
+      altitudeMslFeet: 6200
+      calibratedAirspeedKnots: 80
+      headingDegreesTrue: 35
+      pitchDegrees: 5
+      bankDegrees: 0
+      engineRunning: 1
+    - id: reservoir_cruise
+      resumeSegmentIndex: 3
+      positionUnityMeters: {x: 1400, y: 0, z: 3500}
+      altitudeMslFeet: 7500
+      calibratedAirspeedKnots: 95
+      headingDegreesTrue: 305
+      pitchDegrees: 0
+      bankDegrees: 0
+      engineRunning: 1
+    - id: return_cruise
+      resumeSegmentIndex: 6
+      positionUnityMeters: {x: 2100, y: 0, z: 2200}
+      altitudeMslFeet: 6800
+      calibratedAirspeedKnots: 92
+      headingDegreesTrue: 215
+      pitchDegrees: 0
+      bankDegrees: 0
+      engineRunning: 1
+    - id: pattern_downwind
+      resumeSegmentIndex: 7
+      positionUnityMeters: {x: 1500, y: 0, z: 1500}
+      altitudeMslFeet: 6300
+      calibratedAirspeedKnots: 90
+      headingDegreesTrue: 270
+      pitchDegrees: 0
+      bankDegrees: 0
+      engineRunning: 1

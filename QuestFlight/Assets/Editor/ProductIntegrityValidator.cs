@@ -117,6 +117,25 @@ namespace QuestFlight.Editor
             "HOTAS"
         };
 
+        private static readonly string[] ApprovedFlightLessonAssetPrefixes =
+        {
+            "Assets/Scripts/Training/FlightLessonV1/",
+            "Assets/Editor/Tests/Training/FlightLessonV1/"
+        };
+
+        private static readonly HashSet<string> ApprovedFlightLessonDirectoryAssets =
+            new HashSet<string>(StringComparer.Ordinal)
+            {
+                "Assets/Scripts/Training",
+                "Assets/Scripts/Training/FlightLessonV1",
+                "Assets/Scripts/Training.meta",
+                "Assets/Scripts/Training/FlightLessonV1.meta",
+                "Assets/Editor/Tests/Training",
+                "Assets/Editor/Tests/Training/FlightLessonV1",
+                "Assets/Editor/Tests/Training.meta",
+                "Assets/Editor/Tests/Training/FlightLessonV1.meta"
+            };
+
         private static readonly HashSet<string> ApprovedJsbsimProductAssets =
             new HashSet<string>(StringComparer.Ordinal)
             {
@@ -314,8 +333,13 @@ namespace QuestFlight.Editor
             report.assetCount = assets.Length;
             foreach (string path in assets)
             foreach (string token in ForbiddenAssetPathTokens)
+            {
+                if (string.Equals(token, "Training", StringComparison.Ordinal) &&
+                    IsApprovedFlightLessonAsset(path))
+                    continue;
                 if (path.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0)
                     report.failures.Add($"excluded R&D asset is present: {path} ({token})");
+            }
             foreach (string path in assets.Where(path =>
                          path.IndexOf("JSBSim", StringComparison.OrdinalIgnoreCase) >= 0 &&
                          !ApprovedJsbsimProductAssets.Contains(path)))
@@ -339,6 +363,13 @@ namespace QuestFlight.Editor
                         report.failures.Add($"unresolved GUID {guid} referenced by {path}");
                 }
             }
+        }
+
+        private static bool IsApprovedFlightLessonAsset(string path)
+        {
+            if (ApprovedFlightLessonDirectoryAssets.Contains(path)) return true;
+            return ApprovedFlightLessonAssetPrefixes.Any(prefix =>
+                path.StartsWith(prefix, StringComparison.Ordinal));
         }
 
         private static bool IsTextSerializedUnityAsset(string path)

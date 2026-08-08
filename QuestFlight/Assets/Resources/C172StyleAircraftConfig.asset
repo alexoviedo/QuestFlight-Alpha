@@ -12,60 +12,97 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94e06aef029fa324fa7b095eea470c77, type: 3}
   m_Name: C172StyleAircraftConfig
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.C172StyleAircraftConfig
+  referenceSpeeds:
+    maxGrossWeightLb: 2550
+    maxGrossWeightKg: 1157
+    stallCleanKts: 48
+    stallLandingKts: 40
+    rotationKts: 55
+    bestAngleClimbKts: 62
+    bestRateClimbKts: 74
+    normalClimbKts: 79
+    bestGlideKts: 68
+    approachKts: 65
+    maxFlapExtendedKts: 85
+    neverExceedKts: 163
+    cruiseKts: 105
+  aero:
+    airDensityKgM3: 1
+    zeroLiftAoADeg: -2
+    liftCoefficientBase: 0.44
+    liftCurveSlopePerRad: 5.14
+    maximumLiftCoefficientClean: 1.55
+    maximumLiftCoefficientLanding: 1.92
+    stallWarningAoADeg: 12
+    stallBreakAoADeg: 15.5
+    stallWarningSpeedMarginKts: 5
+    postStallLiftMultiplier: 0.52
+    dragCoefficientBase: 0.038
+    inducedDragFactor: 0.058
+    flapLiftBonus: 0.54
+    flapDragBonus: 0.18
+    sideSlipDragFactor: 0.048
+    sideForceCoefficientPerBetaRad: 0.55
+  engine:
+    maxEnginePowerHp: 180
+    propEfficiency: 0.74
+    staticThrustNewtons: 3550
+    maxThrustNewtons: 4050
+    idleRpm: 700
+    maxRpm: 2700
+    carbHeatPowerLoss: 0.08
+    minimumMixturePower: 0.35
+    climbPowerScalar: 0.91
+  controls:
+    elevatorAoAAuthorityDeg: 7
+    trimAoAAuthorityDeg: 5
+    pitchRateMaxDegPerSec: 36
+    rollRateMaxDegPerSec: 62
+    yawRateMaxDegPerSec: 27
+    pitchDamping: 2.65
+    rollDamping: 2.75
+    yawDamping: 2.3
+    pitchAttitudeStability: 1
+    rollAttitudeStability: 0.5
+    maxPrototypePitchDeg: 24
+    maxPrototypeBankDeg: 58
+    coordinatedTurnCoupling: 0.84
+    flapPitchMomentDegPerSec: -7
+    maxTrim: 1
+  landingGear:
+    runwayFrictionCoefficient: 0.036
+    lateralGroundFriction: 3
+    brakeStrengthNewtons: 7000
+    nosewheelSteerDegPerSec: 24
+    groundEffectHeightM: 4
+    centerlineWarningMeters: 8
+    takeoffGroundRollTargetFt: 960
+  trainingTargets:
+    takeoffHeadingDeg: 78
+    climbAirspeedToleranceKts: 10
+    climbRateTargetFpm: 500
+    minimumPositiveClimbFpm: 150
+    shallowTurnBankTargetDeg: 15
+    shallowTurnBankLimitDeg: 30
+    stallRecoveryMinimumAltitudeFt: 1200
+    patternHeadingChangeDeg: 70
+    finalApproachTargetKts: 65
+    finalApproachSpeedHighToleranceKts: 10
+    finalApproachSpeedLowToleranceKts: 5
+    stableApproachGateAglFt: 300
+    approachDescentRateTargetFpm: -650
+    approachDescentRateMinFpm: -1000
+    approachDescentRateMaxFpm: -300
+    finalApproachBankLimitDeg: 15
+    glidePathTargetDeg: 3
+    goAroundPitchTargetDeg: 7
+    goAroundMinimumPositiveClimbFpm: 100
   massKg: 1157
   wingAreaM2: 16.2
   wingSpanM: 11
   aspectRatio: 7.45
-  stallSpeedCleanKts: 48
-  stallSpeedLandingKts: 40
-  cruiseSpeedKts: 105
-  bestAngleClimbSpeedKts: 62
-  rotationSpeedKts: 55
-  bestClimbSpeedKts: 74
-  maxFlapExtendedSpeedKts: 85
-  neverExceedSpeedKts: 163
-  maxEnginePowerHp: 180
-  propEfficiency: 0.74
-  staticThrustNewtons: 3550
-  maxThrustNewtons: 4050
-  idleRpm: 700
-  maxRpm: 2700
-  carbHeatPowerLoss: 0.08
-  minimumMixturePower: 0.35
-  airDensityKgM3: 1
-  zeroLiftAoADeg: -2
-  criticalAoADeg: 15
-  liftCoefficientBase: 0.44
-  liftCurveSlopePerRad: 5.14
-  maximumLiftCoefficient: 1.5
-  postStallLiftMultiplier: 0.55
-  elevatorAoAAuthorityDeg: 7.5
-  trimAoAAuthorityDeg: 4.5
-  flapLiftBonus: 0.54
-  dragCoefficientBase: 0.038
-  inducedDragFactor: 0.058
-  flapDragBonus: 0.18
-  sideSlipDragFactor: 0.048
-  pitchRateMaxDegPerSec: 36
-  rollRateMaxDegPerSec: 62
-  yawRateMaxDegPerSec: 27
-  pitchDamping: 2.65
-  rollDamping: 2.75
-  yawDamping: 2.3
-  pitchAttitudeStability: 1
-  rollAttitudeStability: 0.5
-  maxPrototypePitchDeg: 24
-  maxPrototypeBankDeg: 58
-  coordinatedTurnCoupling: 0.84
-  flapPitchMomentDegPerSec: -7
   flapSettingsDeg:
   - 0
   - 10
   - 20
   - 30
-  maxTrim: 1
-  runwayFrictionCoefficient: 0.036
-  lateralGroundFriction: 3
-  brakeStrengthNewtons: 7000
-  nosewheelSteerDegPerSec: 24
-  groundEffectHeightM: 4

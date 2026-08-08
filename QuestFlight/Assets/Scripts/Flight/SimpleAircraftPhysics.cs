@@ -6,6 +6,8 @@ namespace QuestFlightLab.Flight
 {
     public class SimpleAircraftPhysics : MonoBehaviour
     {
+        private const float LiftoffExcessForceFraction = 0.05f;
+        private const float LiftoffMinimumPitchDegrees = 2f;
         public ProductControlInput controls;
         public AircraftState state;
         public C172StyleAircraftConfig config;
@@ -112,6 +114,7 @@ namespace QuestFlightLab.Flight
             if (stall) liftCoefficient *= Mathf.Lerp(1f, aero.postStallLiftMultiplier, Mathf.Max(0.45f, stallIntensity));
 
             float sideSlip = Mathf.Clamp(localVelocity.x / Mathf.Max(1f, speed), -1f, 1f);
+            float betaRad = Mathf.Asin(sideSlip);
             float dragCoefficient = aero.dragCoefficientBase
                                     + aero.inducedDragFactor * liftCoefficient * liftCoefficient
                                     + flapFraction * aero.flapDragBonus
@@ -123,10 +126,20 @@ namespace QuestFlightLab.Flight
                 : 0f;
             Vector3 lift = transform.up * (q * config.wingAreaM2 * liftCoefficient * (1f + groundEffect));
             Vector3 drag = speed > 0.01f ? -_velocityWorld.normalized * (q * config.wingAreaM2 * dragCoefficient) : Vector3.zero;
+            // The original prototype had drag from sideslip but no lateral
+            // aerodynamic force, allowing the aircraft to translate sideways
+            // indefinitely. Apply the C172-style stabilizing CY_beta derivative
+            // opposite beta. Limit the linear derivative to the source model's
+            // documented +/-20 degree table range.
+            float boundedBetaRad = Mathf.Clamp(betaRad, -0.349f, 0.349f);
+            Vector3 sideForce = transform.right *
+                                (-q * config.wingAreaM2 *
+                                 aero.sideForceCoefficientPerBetaRad *
+                                 boundedBetaRad);
             Vector3 thrust = transform.forward * ComputeThrustNewtons(c, speed);
             Vector3 gravity = Physics.gravity * mass;
 
-            Vector3 force = lift + drag + thrust + gravity;
+            Vector3 force = lift + drag + sideForce + thrust + gravity;
 
             if (state.onGround)
             {
@@ -149,6 +162,26 @@ namespace QuestFlightLab.Flight
                 }
             }
 
+            bool supportedGroundContact = state.onGround;
+            bool aerodynamicLiftoff = supportedGroundContact &&
+                state.airspeedKts >= speeds.rotationKts - 2f &&
+                state.pitchDeg >= LiftoffMinimumPitchDegrees &&
+                force.y >= mass * 9.81f * LiftoffExcessForceFraction;
+
+            // The runway supplies whatever upward normal force is necessary while
+            // the wheels are loaded. Do not inject an artificial climb velocity:
+            // contact is released only after the authored rotation attitude and
+            // aerodynamic force can sustain a positive departure.
+            if (supportedGroundContact && !aerodynamicLiftoff)
+            {
+                force.y = 0f;
+                _velocityWorld.y = 0f;
+                transform.position = new Vector3(
+                    transform.position.x,
+                    groundHeightMeters,
+                    transform.position.z);
+            }
+
             _velocityWorld += force / mass * dt;
 
             float airAuthority = Mathf.InverseLerp(22f, 75f, state.airspeedKts);
@@ -158,7 +191,9 @@ namespace QuestFlightLab.Flight
             float coordinatedYaw = 0f;
             if (speed > 8f)
             {
-                coordinatedYaw = Mathf.Sin(-bankDeg * Mathf.Deg2Rad) * 9.81f / speed * Mathf.Rad2Deg * control.coordinatedTurnCoupling;
+                coordinatedYaw = Mathf.Sin(-bankDeg * Mathf.Deg2Rad) *
+                                 9.81f / speed * Mathf.Rad2Deg *
+                                 control.coordinatedTurnCoupling;
             }
 
             Vector3 localAngularTarget = new Vector3(
@@ -204,8 +239,15 @@ namespace QuestFlightLab.Flight
 
             if (state.onGround)
             {
-                bool canRotate = state.airspeedKts > speeds.rotationKts - 4f && c.elevator > 0.15f;
-                localAngularTarget.x = canRotate ? -c.elevator * 10f : 0f;
+                bool canRotate = state.airspeedKts >= speeds.rotationKts - 4f &&
+                                 c.elevator >= 0.08f;
+                localAngularTarget.x = canRotate
+                    ? Mathf.Clamp(
+                        -c.elevator * control.pitchRateMaxDegPerSec *
+                        Mathf.Max(authority, 0.35f),
+                        -12f,
+                        0f)
+                    : 0f;
                 localAngularTarget.z = 0f;
             }
 
@@ -229,15 +271,20 @@ namespace QuestFlightLab.Flight
                 float pitch = AircraftState.NormalizeAngle(transform.eulerAngles.x);
                 pitch = Mathf.Clamp(pitch, -9f, 1.5f);
                 transform.rotation = Quaternion.Euler(pitch, transform.eulerAngles.y, 0f);
-                if (state.airspeedKts > speeds.rotationKts && c.elevator > 0.25f)
-                {
-                    _velocityWorld.y = Mathf.Max(_velocityWorld.y, 1.6f + c.elevator * 2.8f);
-                }
             }
 
             transform.position += _velocityWorld * dt;
 
-            if (transform.position.y <= groundHeightMeters)
+            if (supportedGroundContact && !aerodynamicLiftoff)
+            {
+                transform.position = new Vector3(
+                    transform.position.x,
+                    groundHeightMeters,
+                    transform.position.z);
+                _velocityWorld.y = 0f;
+                state.onGround = true;
+            }
+            else if (transform.position.y <= groundHeightMeters && _velocityWorld.y <= 0f)
             {
                 transform.position = new Vector3(transform.position.x, groundHeightMeters, transform.position.z);
                 if (_velocityWorld.y < 0f) _velocityWorld.y = 0f;
@@ -263,8 +310,10 @@ namespace QuestFlightLab.Flight
                         ? speeds.bestRateClimbKts
                         : speeds.bestGlideKts;
             state.targetSpeedErrorKts = state.airspeedKts - state.referenceSpeedKts;
-            state.engineRpm = Mathf.Lerp(engine.idleRpm, engine.maxRpm, Mathf.Clamp01(c.throttle));
             state.powerPercent = ComputePowerPercent(c);
+            state.engineRpm = state.powerPercent > 0.01f
+                ? Mathf.Lerp(engine.idleRpm, engine.maxRpm, Mathf.Clamp01(c.throttle))
+                : 0f;
             state.flapDegrees = flapDeg;
             state.trimPercent = trim;
             state.loadFactorG = Mathf.Clamp(lift.magnitude / Mathf.Max(1f, mass * 9.81f), 0f, 4f);
@@ -294,7 +343,7 @@ namespace QuestFlightLab.Flight
         {
             EnginePropModelConfig engine = config.Engine;
             float throttle = Mathf.Clamp01(c.throttle);
-            float mixture = Mathf.Lerp(engine.minimumMixturePower, 1f, Mathf.Clamp01(c.mixture));
+            float mixture = ComputeMixturePower(c.mixture, engine);
             float carbHeat = 1f - Mathf.Clamp01(c.carbHeat) * engine.carbHeatPowerLoss;
             float powerW = engine.maxEnginePowerHp * AircraftUnitConversions.HorsepowerToWatts * throttle * mixture * carbHeat;
             float propThrust = powerW * engine.propEfficiency / Mathf.Max(14f, speedMps);
@@ -305,9 +354,22 @@ namespace QuestFlightLab.Flight
         private float ComputePowerPercent(AircraftControlState c)
         {
             EnginePropModelConfig engine = config.Engine;
-            float mixture = Mathf.Lerp(engine.minimumMixturePower, 1f, Mathf.Clamp01(c.mixture));
+            float mixture = ComputeMixturePower(c.mixture, engine);
             float carbHeat = 1f - Mathf.Clamp01(c.carbHeat) * engine.carbHeatPowerLoss;
             return Mathf.Clamp01(c.throttle * mixture * carbHeat) * 100f;
+        }
+
+        private static float ComputeMixturePower(
+            float normalizedMixture,
+            EnginePropModelConfig engine)
+        {
+            float mixture = Mathf.Clamp01(normalizedMixture);
+            if (mixture <= 0.02f)
+                return 0f;
+            return Mathf.Lerp(
+                engine.minimumMixturePower,
+                1f,
+                Mathf.InverseLerp(0.02f, 1f, mixture));
         }
 
         public float GetFlapDegrees(float normalizedFlaps)

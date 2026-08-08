@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -17,6 +18,7 @@ namespace AlexOviedo.QuestFlight.JSBSim
         public const string PackageName = "com.alexoviedo.questflight.jsbsim";
         public const string DataFolderName = "JSBSim-1.3.1";
         public const string RuntimeManifestFileName = "runtime_manifest.txt";
+        public const string RuntimeHashesFileName = "runtime_hashes.sha256";
         private const string SourceRevisionFileName = "SOURCE_REVISION.txt";
 
         public static string EditorPackageDataRoot => Path.GetFullPath(Path.Combine(
@@ -148,6 +150,9 @@ namespace AlexOviedo.QuestFlight.JSBSim
                 }
             }
 
+            if (!ValidateHashes(dataRoot, paths, out error))
+                return false;
+
             string sourceRevisionPath = Path.Combine(dataRoot, SourceRevisionFileName);
             string sourceRevision = File.ReadAllText(sourceRevisionPath);
             if (sourceRevision.IndexOf(JSBSimNativeSession.PinnedRevision, StringComparison.Ordinal) < 0)
@@ -163,6 +168,7 @@ namespace AlexOviedo.QuestFlight.JSBSim
         private static bool TryParseManifest(string manifest, out List<string> paths, out string error)
         {
             paths = new List<string>();
+            HashSet<string> uniquePaths = new HashSet<string>(StringComparer.Ordinal);
             string[] lines = (manifest ?? string.Empty).Split(new[] { '\r', '\n' },
                 StringSplitOptions.RemoveEmptyEntries);
             foreach (string raw in lines)
@@ -175,16 +181,134 @@ namespace AlexOviedo.QuestFlight.JSBSim
                     error = "Unsafe path in JSBSim runtime manifest: " + path;
                     return false;
                 }
+                if (!uniquePaths.Add(path))
+                {
+                    error = "Duplicate path in JSBSim runtime manifest: " + path;
+                    return false;
+                }
                 paths.Add(path);
             }
 
-            if (paths.Count == 0 || !paths.Contains(SourceRevisionFileName))
+            if (paths.Count == 0 || !paths.Contains(SourceRevisionFileName) ||
+                !paths.Contains(RuntimeHashesFileName))
             {
-                error = "JSBSim runtime manifest is empty or omits source provenance.";
+                error = "JSBSim runtime manifest is empty or omits provenance/integrity data.";
                 return false;
             }
             error = string.Empty;
             return true;
+        }
+
+        private static bool ValidateHashes(string dataRoot, IReadOnlyList<string> manifestPaths, out string error)
+        {
+            string hashesPath = Path.Combine(dataRoot, RuntimeHashesFileName);
+            if (!File.Exists(hashesPath))
+            {
+                error = "JSBSim runtime hash manifest is absent: " + hashesPath;
+                return false;
+            }
+
+            if (!TryParseHashes(File.ReadAllText(hashesPath), out Dictionary<string, string> hashes, out error))
+                return false;
+
+            HashSet<string> required = new HashSet<string>(StringComparer.Ordinal)
+            {
+                RuntimeManifestFileName
+            };
+            foreach (string relativePath in manifestPaths)
+            {
+                if (!string.Equals(relativePath, RuntimeHashesFileName, StringComparison.Ordinal))
+                    required.Add(relativePath);
+            }
+
+            if (hashes.Count != required.Count)
+            {
+                error = "JSBSim runtime hash manifest does not describe the exact runtime payload.";
+                return false;
+            }
+
+            foreach (string relativePath in required)
+            {
+                if (!hashes.TryGetValue(relativePath, out string expected))
+                {
+                    error = "JSBSim runtime hash manifest omits: " + relativePath;
+                    return false;
+                }
+
+                string filePath = SafeDestination(dataRoot, relativePath);
+                if (filePath == null || !File.Exists(filePath))
+                {
+                    error = "JSBSim runtime hash target is absent: " + relativePath;
+                    return false;
+                }
+
+                string actual = Sha256(filePath);
+                if (!string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
+                {
+                    error = "JSBSim runtime hash mismatch: " + relativePath;
+                    return false;
+                }
+            }
+
+            error = string.Empty;
+            return true;
+        }
+
+        private static bool TryParseHashes(string contents, out Dictionary<string, string> hashes, out string error)
+        {
+            hashes = new Dictionary<string, string>(StringComparer.Ordinal);
+            string[] lines = (contents ?? string.Empty).Split(new[] { '\r', '\n' },
+                StringSplitOptions.RemoveEmptyEntries);
+            foreach (string raw in lines)
+            {
+                string line = raw.Trim();
+                int separator = line.IndexOf(' ');
+                if (separator <= 0)
+                {
+                    error = "Malformed JSBSim runtime hash entry: " + line;
+                    return false;
+                }
+
+                string hash = line.Substring(0, separator).Trim().ToLowerInvariant();
+                string path = line.Substring(separator).Trim().Replace('\\', '/');
+                if (!IsSha256(hash) || SafeDestination(".", path) == null || hashes.ContainsKey(path))
+                {
+                    error = "Invalid or duplicate JSBSim runtime hash entry: " + path;
+                    return false;
+                }
+                hashes.Add(path, hash);
+            }
+
+            if (hashes.Count == 0)
+            {
+                error = "JSBSim runtime hash manifest is empty.";
+                return false;
+            }
+
+            error = string.Empty;
+            return true;
+        }
+
+        private static bool IsSha256(string value)
+        {
+            if (value == null || value.Length != 64) return false;
+            foreach (char character in value)
+            {
+                bool digit = character >= '0' && character <= '9';
+                bool lowerHex = character >= 'a' && character <= 'f';
+                if (!digit && !lowerHex) return false;
+            }
+            return true;
+        }
+
+        private static string Sha256(string path)
+        {
+            using (SHA256 sha = SHA256.Create())
+            using (FileStream stream = File.OpenRead(path))
+            {
+                return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", string.Empty)
+                    .ToLowerInvariant();
+            }
         }
 
         private static string SafeDestination(string root, string relativePath)

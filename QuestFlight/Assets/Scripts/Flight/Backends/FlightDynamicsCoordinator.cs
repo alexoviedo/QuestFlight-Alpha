@@ -248,13 +248,34 @@ namespace QuestFlightLab.Flight.Backends
         {
             if (!IsInitialized) return Fail("Cannot reset flight dynamics before backend initialization.");
             if (!_hasConfiguredInitialConditions) RefreshConfiguredInitialConditions();
-            if (!_backend.Reset(_configuredInitialConditions))
+            return ResetToInitialConditions(_configuredInitialConditions, true);
+        }
+
+        /// <summary>
+        /// Applies a caller-provided recovery state through the one active backend and the
+        /// existing authority lease. This is the only supported in-flight recovery seam;
+        /// callers must not move the simulation root, presentation root, XR Origin, or camera.
+        /// </summary>
+        public bool TryResetToInitialConditions(in FlightDynamicsInitialConditions initialConditions)
+        {
+            if (!IsInitialized) return Fail("Cannot reset flight dynamics before backend initialization.");
+            if (!InitialConditionsAreFinite(initialConditions))
+                return Fail("Recovery initial conditions contain a non-finite value.");
+            return ResetToInitialConditions(initialConditions, false);
+        }
+
+        private bool ResetToInitialConditions(
+            in FlightDynamicsInitialConditions initialConditions,
+            bool allowConfiguredNativeFallback)
+        {
+            if (!_backend.Reset(initialConditions))
             {
-                if (_backend.Kind == FlightDynamicsBackendKind.JSBSimNativeDevelopment &&
+                if (allowConfiguredNativeFallback &&
+                    _backend.Kind == FlightDynamicsBackendKind.JSBSimNativeDevelopment &&
                     TryRuntimeFallback(_backend.LastError)) return true;
                 return Fail(_backend.LastError);
             }
-            LastResetInitialConditions = _configuredInitialConditions;
+            LastResetInitialConditions = initialConditions;
             ApplyControls(NeutralIdleControls);
             _currentState = _backend.CurrentState;
             _previousState = _currentState;
@@ -263,6 +284,24 @@ namespace QuestFlightLab.Flight.Backends
             ApplyLegacyState(_currentState);
             return true;
         }
+
+        private static bool InitialConditionsAreFinite(in FlightDynamicsInitialConditions value)
+        {
+            return IsFinite(value.latitudeDegrees) &&
+                   IsFinite(value.longitudeDegrees) &&
+                   IsFinite(value.altitudeMslMeters) &&
+                   IsFinite(value.terrainElevationMslMeters) &&
+                   IsFinite(value.calibratedAirspeedKnots) &&
+                   IsFinite(value.headingDegrees) &&
+                   IsFinite(value.pitchDegrees) &&
+                   IsFinite(value.bankDegrees) &&
+                   IsFinite(value.flightPathAngleDegrees) &&
+                   value.calibratedAirspeedKnots >= 0d &&
+                   value.altitudeMslMeters >= value.terrainElevationMslMeters;
+        }
+
+        private static bool IsFinite(double value) =>
+            !double.IsNaN(value) && !double.IsInfinity(value);
 
         private bool TryInitializeBackend(
             IFlightDynamicsBackend candidate,

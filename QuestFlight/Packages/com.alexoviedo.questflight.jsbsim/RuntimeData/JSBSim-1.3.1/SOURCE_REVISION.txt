@@ -2,3 +2,9 @@ JSBSim 1.3.1
 revision=3b25f25e49b42d0489c04ac805674fc1450ca579
 source=https://github.com/JSBSim-Team/jsbsim.git
 license=GNU LGPL-2.1-or-later
+aircraft_model=c172x (1982 Cessna 172P approximation)
+aircraft_model_derivative=qfl-c172p-training-2054-v1
+aircraft_model_source_sha256=e45326e2e1aa12df7f73cd7a62b3a00ac818625e0999d10687607a0115764bc9
+aircraft_model_changes=symmetric two-occupant training load; no rear occupants, baggage, or PesticideBomb test payload; embedded CSV output disabled
+aircraft_model_declared_license=GPL; upstream note also states not to be sold
+aircraft_model_distribution_status=development-only pending license/provenance resolution

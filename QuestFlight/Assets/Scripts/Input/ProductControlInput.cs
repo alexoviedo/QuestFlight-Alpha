@@ -1,4 +1,5 @@
 using QuestFlightLab.Runtime;
+using QuestFlightLab.Training.FlightLessonV1;
 using UnityEngine;
 
 namespace QuestFlightLab.Input
@@ -35,10 +36,17 @@ namespace QuestFlightLab.Input
         [SerializeField, Min(0.05f)] private float throttleRatePerSecond = 0.35f;
         [SerializeField, Min(0.05f)] private float trimRatePerSecond = 0.35f;
         [SerializeField, Range(0.1f, 0.5f)] private float flapStep = 0.25f;
+        [Header("Guided lesson handover")]
+        [SerializeField, Range(0.25f, 4f)] private float guidanceReacquisitionRatePerSecond = 1.25f;
+        [SerializeField, Range(0.01f, 0.25f)] private float manualEngineAxisDeadzone = 0.08f;
+        [SerializeField, Range(0f, 3f)] private float manualThrottleHoldSeconds = 1.25f;
 
         public AircraftControlState Current { get; private set; } = AircraftControlState.Neutral(0.10f);
         public bool Paused { get; private set; }
         public bool DeterministicMode => deterministicMode;
+        public bool FlightLessonGuidanceActive => _flightLessonGuidanceActive;
+        public bool FlightLessonInputSuppressed => _flightLessonInputSuppressed;
+        public int FlightLessonResetVersion => _flightLessonResetVersion;
         public GamepadInputReader AuthoredGamepad => gamepad;
         public DeterministicGamepadInputSource AuthoredDeterministicInput => deterministicInput;
         public bool HasAuthoredSources => gamepad != null && deterministicInput != null;
@@ -71,16 +79,62 @@ namespace QuestFlightLab.Input
         private float _baseElevator;
         private float _baseThrottle = 0.10f;
         private float _baseMixture = 1f;
+        private FlightLessonControlCommand _flightLessonGuidance;
+        private bool _flightLessonGuidanceActive;
+        private bool _flightLessonInputSuppressed;
+        private int _flightLessonResetVersion;
+        private float _aileronGuidanceBlend = 1f;
+        private float _elevatorGuidanceBlend = 1f;
+        private float _rudderGuidanceBlend = 1f;
+        private float _throttleGuidanceBlend = 1f;
+        private float _mixtureGuidanceBlend = 1f;
+        private float _aileronReacquireFrom;
+        private float _elevatorReacquireFrom;
+        private float _rudderReacquireFrom;
+        private float _throttleReacquireFrom = 0.10f;
+        private float _mixtureReacquireFrom = 1f;
+        private float _manualThrottleOwnedUntil;
+        private bool _trimManuallyOwned;
+        private bool _flapsManuallyOwned;
 
         public bool CanAcceptTouchOverrides =>
             enabled &&
             gameObject.activeInHierarchy &&
+            !_flightLessonInputSuppressed &&
             HasAuthoredSources;
 
         public int ActiveTouchOverrideCount =>
             (_touchYoke.active ? 1 : 0) +
             (_touchThrottle.active ? 1 : 0) +
             (_touchMixture.active ? 1 : 0);
+
+        /// <summary>
+        /// Builds a recovery-only snapshot of every input stage that can replace or
+        /// attenuate lesson guidance. This is intentionally called only after a
+        /// classified failure so the production update loop remains allocation-free.
+        /// </summary>
+        public string BuildFlightLessonFailureDiagnostic()
+        {
+            GamepadInputSnapshot snapshot = gamepad != null
+                ? gamepad.Current
+                : null;
+            string device = snapshot != null && snapshot.connected
+                ? $"{snapshot.displayName}/{snapshot.product}/{snapshot.layout}"
+                : "disconnected";
+            return
+                $"Input[Device={device} " +
+                $"Axes=L({snapshot?.leftStickX ?? 0f:F3},{snapshot?.leftStickY ?? 0f:F3}) " +
+                $"R({snapshot?.rightStickX ?? 0f:F3},{snapshot?.rightStickY ?? 0f:F3}) " +
+                $"Triggers=({snapshot?.leftTrigger ?? 0f:F3},{snapshot?.rightTrigger ?? 0f:F3}) " +
+                $"Guidance=A{_flightLessonGuidance.aileron:F3}/E{_flightLessonGuidance.elevator:F3}/" +
+                $"R{_flightLessonGuidance.rudder:F3}/T{_flightLessonGuidance.throttle:F3} " +
+                $"Blend=A{_aileronGuidanceBlend:F3}/E{_elevatorGuidanceBlend:F3}/" +
+                $"R{_rudderGuidanceBlend:F3}/T{_throttleGuidanceBlend:F3} " +
+                $"AccumulatorThrottle={_throttle:F3} ManualThrottleUntil={_manualThrottleOwnedUntil:F3} " +
+                $"Touch=Y{_touchYoke.active}({ _touchYoke.primary:F3},{_touchYoke.secondary:F3})/" +
+                $"T{_touchThrottle.active}({_touchThrottle.primary:F3})/" +
+                $"M{_touchMixture.active}({_touchMixture.primary:F3})]";
+        }
 
         public void ConfigureAuthoredSources(
             GamepadInputReader authoredGamepad,
@@ -91,6 +145,72 @@ namespace QuestFlightLab.Input
         }
 
         public void SetDeterministicMode(bool enabled) => deterministicMode = enabled;
+
+        /// <summary>
+        /// Supplies backend-neutral lesson guidance without replacing the product input
+        /// boundary. Gamepad input is still sampled, and Touch/hand/controller leases are
+        /// applied after shared-control mixing so an owned cockpit control stays authoritative.
+        /// </summary>
+        public void SetFlightLessonGuidance(
+            bool enabled,
+            in FlightLessonControlCommand command)
+        {
+            _flightLessonGuidance = command;
+            if (_flightLessonGuidanceActive == enabled)
+                return;
+
+            _flightLessonGuidanceActive = enabled;
+            ResetFlightLessonHandoverState();
+        }
+
+        public void DisableFlightLessonGuidance()
+        {
+            _flightLessonGuidanceActive = false;
+            ResetFlightLessonHandoverState();
+        }
+
+        /// <summary>
+        /// Recovery-only safety gate. Suppression releases every interaction lease and
+        /// publishes neutral controls without disabling or reconfiguring any input device.
+        /// </summary>
+        public void SetFlightLessonInputSuppressed(bool suppressed)
+        {
+            if (_flightLessonInputSuppressed == suppressed)
+                return;
+            if (suppressed)
+                ReleaseAllTouchOverrides();
+            _flightLessonInputSuppressed = suppressed;
+            ResetFlightLessonHandoverState();
+            if (suppressed)
+                Current.SetNeutral(Mathf.Clamp01(defaultThrottle));
+        }
+
+        public int ReleaseAllTouchOverrides()
+        {
+            int released = 0;
+            if (_touchYoke.active)
+            {
+                ReleaseTouchOverride(
+                    ProductTouchControlChannel.PilotYoke,
+                    ref _touchYoke);
+                released++;
+            }
+            if (_touchThrottle.active)
+            {
+                ReleaseTouchOverride(
+                    ProductTouchControlChannel.Throttle,
+                    ref _touchThrottle);
+                released++;
+            }
+            if (_touchMixture.active)
+            {
+                ReleaseTouchOverride(
+                    ProductTouchControlChannel.Mixture,
+                    ref _touchMixture);
+                released++;
+            }
+            return released;
+        }
 
         /// <summary>
         /// Begins an owner-checked override for one represented cockpit
@@ -173,8 +293,7 @@ namespace QuestFlightLab.Input
             if (!state.active || state.ownerToken != ownerToken)
                 return false;
 
-            state = default;
-            RestoreBaseForChannel(channel);
+            ReleaseTouchOverride(channel, ref state);
             return true;
         }
 
@@ -187,25 +306,25 @@ namespace QuestFlightLab.Input
             if (_touchYoke.active &&
                 _touchYoke.ownerToken == ownerToken)
             {
-                _touchYoke = default;
-                RestoreBaseForChannel(
-                    ProductTouchControlChannel.PilotYoke);
+                ReleaseTouchOverride(
+                    ProductTouchControlChannel.PilotYoke,
+                    ref _touchYoke);
                 released++;
             }
             if (_touchThrottle.active &&
                 _touchThrottle.ownerToken == ownerToken)
             {
-                _touchThrottle = default;
-                RestoreBaseForChannel(
-                    ProductTouchControlChannel.Throttle);
+                ReleaseTouchOverride(
+                    ProductTouchControlChannel.Throttle,
+                    ref _touchThrottle);
                 released++;
             }
             if (_touchMixture.active &&
                 _touchMixture.ownerToken == ownerToken)
             {
-                _touchMixture = default;
-                RestoreBaseForChannel(
-                    ProductTouchControlChannel.Mixture);
+                ReleaseTouchOverride(
+                    ProductTouchControlChannel.Mixture,
+                    ref _touchMixture);
                 released++;
             }
             return released;
@@ -261,6 +380,7 @@ namespace QuestFlightLab.Input
                 return false;
 
             _flaps = Mathf.Clamp01(normalizedValue);
+            _flapsManuallyOwned = true;
             Current.flaps = _flaps;
             return true;
         }
@@ -286,12 +406,25 @@ namespace QuestFlightLab.Input
 
         private void Update()
         {
-            bool useDeterministic = deterministicMode && deterministicInput != null && deterministicInput.isActiveAndEnabled;
+            bool useDeterministic = deterministicMode &&
+                                    !_flightLessonGuidanceActive &&
+                                    deterministicInput != null &&
+                                    deterministicInput.isActiveAndEnabled;
             if (gamepad == null)
                 _disconnectedFallback.SetDisconnected(Time.unscaledTime, 0f);
             GamepadInputSnapshot snapshot = useDeterministic
                 ? deterministicInput.Current
                 : gamepad != null ? gamepad.Current : _disconnectedFallback;
+
+            if (_flightLessonInputSuppressed)
+            {
+                Current.SetNeutral(Mathf.Clamp01(defaultThrottle));
+                _previousButtonWest = snapshot.buttonWest;
+                _previousButtonNorth = snapshot.buttonNorth;
+                _previousButtonEast = snapshot.buttonEast;
+                _previousStartButton = snapshot.startButton;
+                return;
+            }
 
             if (useDeterministic)
             {
@@ -314,10 +447,19 @@ namespace QuestFlightLab.Input
             bool pause = WasPressed(snapshot.startButton, _previousStartButton);
             if (flapDown) _flaps = Mathf.Clamp01(_flaps + flapStep);
             if (flapUp) _flaps = Mathf.Clamp01(_flaps - flapStep);
-            if (reset) _resetQueued = true;
+            if (flapDown || flapUp) _flapsManuallyOwned = true;
+            if (Mathf.Abs(snapshot.dpadY) > 0.01f) _trimManuallyOwned = true;
+            if (reset)
+            {
+                _resetQueued = true;
+                _flightLessonResetVersion++;
+                ResetFlightLessonHandoverState();
+            }
             if (pause) Paused = !Paused;
 
             MapSnapshotInto(snapshot, invertElevator, _throttle, _trim, _flaps, _mixture, _carbHeat, Current);
+            if (_flightLessonGuidanceActive)
+                ApplyFlightLessonGuidance(snapshot, Time.unscaledTime, Time.unscaledDeltaTime, Current);
             CaptureBaseControls(Current);
             ReleaseStaleTouchOverrides(Time.unscaledTime);
             ApplyTouchOverrides(Current);
@@ -516,6 +658,217 @@ namespace QuestFlightLab.Input
             }
         }
 
+        private void ReleaseTouchOverride(
+            ProductTouchControlChannel channel,
+            ref TouchOverrideState state)
+        {
+            if (_flightLessonGuidanceActive)
+            {
+                switch (channel)
+                {
+                    case ProductTouchControlChannel.PilotYoke:
+                        _aileronReacquireFrom = state.primary;
+                        _elevatorReacquireFrom = state.secondary;
+                        _aileronGuidanceBlend = 0f;
+                        _elevatorGuidanceBlend = 0f;
+                        Current.aileron = state.primary;
+                        Current.elevator = state.secondary;
+                        break;
+                    case ProductTouchControlChannel.Throttle:
+                        _throttleReacquireFrom = state.primary;
+                        _throttleGuidanceBlend = 0f;
+                        _manualThrottleOwnedUntil = Time.unscaledTime;
+                        Current.throttle = state.primary;
+                        break;
+                    case ProductTouchControlChannel.Mixture:
+                        _mixtureReacquireFrom = state.primary;
+                        _mixtureGuidanceBlend = 0f;
+                        Current.mixture = state.primary;
+                        break;
+                }
+            }
+            state = default;
+            if (!_flightLessonGuidanceActive)
+                RestoreBaseForChannel(channel);
+        }
+
+        private void ApplyFlightLessonGuidance(
+            GamepadInputSnapshot snapshot,
+            float unscaledTime,
+            float deltaTime,
+            AircraftControlState controls)
+        {
+            if (controls == null)
+                return;
+
+            bool manualPrimaryAvailable = snapshot != null && snapshot.connected;
+            FlightLessonControlCommand manual = ToFlightLessonCommand(controls);
+            FlightLessonControlCommand guidance = _flightLessonGuidance;
+            FlightLessonAssistanceMixSettings mixSettings =
+                FlightLessonAssistanceMixSettings.Default;
+            float reacquisitionStep = Mathf.Max(0.01f, guidanceReacquisitionRatePerSecond) *
+                                      Mathf.Max(0f, deltaTime);
+
+            PrepareGuidedAxis(
+                manual.aileron,
+                guidance.aileron,
+                manualPrimaryAvailable,
+                mixSettings,
+                reacquisitionStep,
+                ref _aileronReacquireFrom,
+                ref _aileronGuidanceBlend,
+                out guidance.aileron);
+            PrepareGuidedAxis(
+                manual.elevator,
+                guidance.elevator,
+                manualPrimaryAvailable,
+                mixSettings,
+                reacquisitionStep,
+                ref _elevatorReacquireFrom,
+                ref _elevatorGuidanceBlend,
+                out guidance.elevator);
+            PrepareGuidedAxis(
+                manual.rudder,
+                guidance.rudder,
+                manualPrimaryAvailable,
+                mixSettings,
+                reacquisitionStep,
+                ref _rudderReacquireFrom,
+                ref _rudderGuidanceBlend,
+                out guidance.rudder);
+
+            bool throttleMoved = snapshot != null &&
+                                 Mathf.Abs(snapshot.rightStickY) >=
+                                 Mathf.Max(0.01f, manualEngineAxisDeadzone);
+            if (throttleMoved)
+            {
+                _manualThrottleOwnedUntil = unscaledTime +
+                                            Mathf.Max(0f, manualThrottleHoldSeconds);
+                _throttleReacquireFrom = manual.throttle;
+                _throttleGuidanceBlend = 0f;
+            }
+            bool throttleOwned = throttleMoved || unscaledTime < _manualThrottleOwnedUntil;
+            if (!throttleOwned)
+            {
+                _throttleGuidanceBlend = Mathf.MoveTowards(
+                    _throttleGuidanceBlend,
+                    1f,
+                    reacquisitionStep);
+                guidance.throttle = Mathf.Lerp(
+                    _throttleReacquireFrom,
+                    guidance.throttle,
+                    _throttleGuidanceBlend);
+            }
+
+            _mixtureGuidanceBlend = Mathf.MoveTowards(
+                _mixtureGuidanceBlend,
+                1f,
+                reacquisitionStep);
+            guidance.mixture = Mathf.Lerp(
+                _mixtureReacquireFrom,
+                guidance.mixture,
+                _mixtureGuidanceBlend);
+
+            FlightLessonPlayerInput player = new FlightLessonPlayerInput
+            {
+                command = manual,
+                primaryAxesAvailable = manualPrimaryAvailable,
+                throttleOwned = throttleOwned,
+                mixtureOwned = false,
+                trimOwned = _trimManuallyOwned,
+                flapsOwned = _flapsManuallyOwned,
+                brakesOwned = manual.leftToeBrake > 0.01f ||
+                              manual.rightToeBrake > 0.01f
+            };
+            FlightLessonControlCommand mixed = FlightLessonAssistanceMixer.Mix(
+                guidance,
+                player,
+                mixSettings);
+            CopyFlightLessonCommandInto(mixed, controls);
+        }
+
+        private static void PrepareGuidedAxis(
+            float manual,
+            float guidance,
+            bool manualAvailable,
+            in FlightLessonAssistanceMixSettings settings,
+            float reacquisitionStep,
+            ref float reacquireFrom,
+            ref float blend,
+            out float preparedGuidance)
+        {
+            float authority = manualAvailable
+                ? FlightLessonAssistanceMixer.PlayerAuthority(manual, settings)
+                : 0f;
+            if (authority > 0.001f)
+            {
+                reacquireFrom = Mathf.Lerp(
+                    guidance,
+                    Mathf.Clamp(manual, -1f, 1f),
+                    authority);
+                blend = 0f;
+                preparedGuidance = guidance;
+            }
+            else
+            {
+                blend = Mathf.MoveTowards(blend, 1f, reacquisitionStep);
+                preparedGuidance = Mathf.Lerp(reacquireFrom, guidance, blend);
+            }
+        }
+
+        public static FlightLessonControlCommand ToFlightLessonCommand(
+            AircraftControlState controls)
+        {
+            if (controls == null)
+                return default;
+            return new FlightLessonControlCommand
+            {
+                aileron = controls.aileron,
+                elevator = controls.elevator,
+                rudder = controls.rudder,
+                throttle = controls.throttle,
+                mixture = controls.mixture,
+                trim = controls.trim,
+                flaps = controls.flaps,
+                leftToeBrake = controls.leftToeBrake,
+                rightToeBrake = controls.rightToeBrake
+            };
+        }
+
+        public static void CopyFlightLessonCommandInto(
+            in FlightLessonControlCommand command,
+            AircraftControlState controls)
+        {
+            if (controls == null)
+                return;
+            controls.aileron = Mathf.Clamp(command.aileron, -1f, 1f);
+            controls.elevator = Mathf.Clamp(command.elevator, -1f, 1f);
+            controls.rudder = Mathf.Clamp(command.rudder, -1f, 1f);
+            controls.throttle = Mathf.Clamp01(command.throttle);
+            controls.mixture = Mathf.Clamp01(command.mixture);
+            controls.trim = Mathf.Clamp(command.trim, -1f, 1f);
+            controls.flaps = Mathf.Clamp01(command.flaps);
+            controls.leftToeBrake = Mathf.Clamp01(command.leftToeBrake);
+            controls.rightToeBrake = Mathf.Clamp01(command.rightToeBrake);
+        }
+
+        private void ResetFlightLessonHandoverState()
+        {
+            _aileronGuidanceBlend = 1f;
+            _elevatorGuidanceBlend = 1f;
+            _rudderGuidanceBlend = 1f;
+            _throttleGuidanceBlend = 1f;
+            _mixtureGuidanceBlend = 1f;
+            _aileronReacquireFrom = Current != null ? Current.aileron : 0f;
+            _elevatorReacquireFrom = Current != null ? Current.elevator : 0f;
+            _rudderReacquireFrom = Current != null ? Current.rudder : 0f;
+            _throttleReacquireFrom = Current != null ? Current.throttle : defaultThrottle;
+            _mixtureReacquireFrom = Current != null ? Current.mixture : 1f;
+            _manualThrottleOwnedUntil = 0f;
+            _trimManuallyOwned = false;
+            _flapsManuallyOwned = false;
+        }
+
         private void ReleaseStaleTouchOverrides(
             float unscaledTime)
         {
@@ -526,27 +879,27 @@ namespace QuestFlightLab.Input
                 _touchYoke.lastRefreshUnscaledTime >
                 TouchOverrideLeaseTimeoutSeconds)
             {
-                _touchYoke = default;
-                RestoreBaseForChannel(
-                    ProductTouchControlChannel.PilotYoke);
+                ReleaseTouchOverride(
+                    ProductTouchControlChannel.PilotYoke,
+                    ref _touchYoke);
             }
             if (_touchThrottle.active &&
                 unscaledTime -
                 _touchThrottle.lastRefreshUnscaledTime >
                 TouchOverrideLeaseTimeoutSeconds)
             {
-                _touchThrottle = default;
-                RestoreBaseForChannel(
-                    ProductTouchControlChannel.Throttle);
+                ReleaseTouchOverride(
+                    ProductTouchControlChannel.Throttle,
+                    ref _touchThrottle);
             }
             if (_touchMixture.active &&
                 unscaledTime -
                 _touchMixture.lastRefreshUnscaledTime >
                 TouchOverrideLeaseTimeoutSeconds)
             {
-                _touchMixture = default;
-                RestoreBaseForChannel(
-                    ProductTouchControlChannel.Mixture);
+                ReleaseTouchOverride(
+                    ProductTouchControlChannel.Mixture,
+                    ref _touchMixture);
             }
         }
 
