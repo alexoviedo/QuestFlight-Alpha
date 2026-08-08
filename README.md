@@ -2,12 +2,15 @@
 
 T2 QuestFlight is a private alpha vertical slice for standalone Meta Quest 3. It contains one explicitly authored C172-style cockpit/aircraft presentation, one KBDU-inspired environment, one Unity prototype flight authority, viewpoint calibration, mixed Meta hand/Touch interaction, and a guided reservoir demonstration route.
 
-## Alpha download
+## Alpha distribution
 
-The headset-accepted private alpha is published as the GitHub prerelease
-`v0.1.0-alpha.1`. Authorized testers can download the APK and its checksum from
-the repository's Releases page. Installation and launch instructions are in
-[`docs/ALPHA_INSTALLATION.md`](docs/ALPHA_INSTALLATION.md).
+The headset-accepted private alpha is tagged `v0.1.0-alpha.1`. Friends should
+install it through the private Meta Alpha release-channel invitation, which
+does not require GitHub, developer mode, a PC, or ADB. The private GitHub
+prerelease remains a maintainer fallback. Tester and maintainer instructions
+are in [`docs/ALPHA_INSTALLATION.md`](docs/ALPHA_INSTALLATION.md), and the
+release-signing/channel procedure is in
+[`docs/META_ALPHA_DISTRIBUTION.md`](docs/META_ALPHA_DISTRIBUTION.md).
 
 ## Current playable scope
 

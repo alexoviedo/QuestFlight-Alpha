@@ -22,6 +22,26 @@ The exact release asset was installed successfully on the connected Quest 3.
 Android reported version name `0.1.0-alpha.1` and version code `1`, and the
 launcher activity started successfully.
 
+## Meta Alpha distribution candidate
+
+A second APK was built from the same Alpha product source with a permanent,
+developer-owned Android release certificate for Meta release-channel delivery.
+It does not change runtime product content.
+
+- Candidate: `QuestFlight-0.1.0-alpha.1-Meta-Quest3.apk`
+- Bytes: `174,634,793`
+- SHA-256: `f3e5c2178f64f02b98424f5c4a61b13dcc728cab61c9b4cb82eb2425a35393f5`
+- Android signing: v2 PASS; one 4096-bit RSA signer
+- Certificate SHA-256: `2a505f05bdfa94a3934689140efd1fe907d5aed611fad5962b3b8b9b46709a21`
+- Custom signing recorded by Unity build evidence: `true`
+- Meta Dashboard upload/channel status: pending authenticated dashboard access
+
+The signing keystore and credentials remain outside Git under Alex's restricted
+user profile. Both files must be backed up together; losing either prevents
+future updates under the same Android application identity. The prior
+debug-signed APK cannot be updated in place by this release-signed APK and must
+be uninstalled before switching Alex's headset to Meta-channel delivery.
+
 ## Accepted checkpoint
 
 Alex's final worn review accepted the current experience as suitable to share
@@ -95,6 +115,10 @@ That directory contains the pre-release Git bundle and patches, full test XML,
 dependency and integrity logs, 97 full-resolution QA views and contact sheets,
 the static-budget report, build log/manifest, immutable APK, and checksum.
 
+The release-signed Meta candidate and signature evidence are under:
+
+`C:\Users\ovied\Dev\T2\T2-QuestFlight-product-artifacts\meta_alpha_distribution_20260807_205631`
+
 ## Remaining limitations
 
 - The static Quest planning budget is exceeded on every tracked aggregate
@@ -104,4 +128,5 @@ the static-budget report, build log/manifest, immutable APK, and checksum.
 - Flight dynamics, systems, and recovery behavior remain prototype-level.
 - Visual fidelity remains uneven outside the authored hero areas.
 - Some cockpit controls are visually merged or unrepresented and remain static.
-- Private GitHub access and sideloading are required.
+- Private GitHub access and sideloading remain required until the signed Meta
+  candidate is uploaded and its Alpha-channel invitation is enabled.

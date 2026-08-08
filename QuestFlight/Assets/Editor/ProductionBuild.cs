@@ -22,6 +22,9 @@ namespace QuestFlight.Editor
             ProductIntegrityReport integrity = ProductIntegrityValidator.Validate();
             if (!integrity.passed) throw new InvalidOperationException(integrity.ToString());
 
+            AndroidSigningState signingState = AndroidSigningState.Capture();
+            bool customSigning = ConfigureAndroidSigningFromEnvironment();
+
             string apkPath = Path.GetFullPath(ApkRelativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(apkPath) ?? "Builds/Android");
             bool development = string.Equals(
@@ -67,9 +70,10 @@ namespace QuestFlight.Editor
                 // Restore the exact serialized objects (including their local file
                 // IDs) so batch builds cannot mutate tracked ProjectSettings.
                 PlayerSettings.SetPreloadedAssets(authoredPreloadedAssets);
+                signingState.Restore();
                 AssetDatabase.SaveAssets();
             }
-            WriteBuildEvidence(report, apkPath, development, integrity);
+            WriteBuildEvidence(report, apkPath, development, customSigning, integrity);
             if (report.summary.result != BuildResult.Succeeded)
                 throw new InvalidOperationException(
                     $"Quest product build failed: {report.summary.result}; errors={report.summary.totalErrors}");
@@ -125,6 +129,7 @@ namespace QuestFlight.Editor
             BuildReport buildReport,
             string apkPath,
             bool development,
+            bool customSigning,
             ProductIntegrityReport integrity)
         {
             GraphicsDeviceType[] graphicsApis = PlayerSettings.GetGraphicsAPIs(BuildTarget.Android);
@@ -136,6 +141,7 @@ namespace QuestFlight.Editor
                 scene = ProductProjectConfigurator.ProductionScenePath,
                 apkPath = apkPath,
                 developmentBuild = development,
+                customSigning = customSigning,
                 buildResult = buildReport.summary.result.ToString(),
                 totalErrors = buildReport.summary.totalErrors,
                 totalWarnings = buildReport.summary.totalWarnings,
@@ -162,6 +168,7 @@ namespace QuestFlight.Editor
             public string scene;
             public string apkPath;
             public bool developmentBuild;
+            public bool customSigning;
             public string buildResult;
             public int totalErrors;
             public int totalWarnings;
@@ -175,6 +182,79 @@ namespace QuestFlight.Editor
             public int msaa;
             public string openXrRenderMode;
             public string integrity;
+        }
+
+        private static bool ConfigureAndroidSigningFromEnvironment()
+        {
+            string keystorePath = Environment.GetEnvironmentVariable("QUESTFLIGHT_ANDROID_KEYSTORE_PATH");
+            string keystorePassword = Environment.GetEnvironmentVariable("QUESTFLIGHT_ANDROID_KEYSTORE_PASSWORD");
+            string keyAlias = Environment.GetEnvironmentVariable("QUESTFLIGHT_ANDROID_KEYALIAS");
+            string keyAliasPassword = Environment.GetEnvironmentVariable("QUESTFLIGHT_ANDROID_KEYALIAS_PASSWORD");
+            bool requireReleaseSigning = string.Equals(
+                Environment.GetEnvironmentVariable("QUESTFLIGHT_REQUIRE_RELEASE_SIGNING"),
+                "1",
+                StringComparison.Ordinal);
+
+            bool anySigningValue = !string.IsNullOrWhiteSpace(keystorePath) ||
+                !string.IsNullOrWhiteSpace(keystorePassword) ||
+                !string.IsNullOrWhiteSpace(keyAlias) ||
+                !string.IsNullOrWhiteSpace(keyAliasPassword);
+            if (!anySigningValue)
+            {
+                if (requireReleaseSigning)
+                    throw new InvalidOperationException(
+                        "Release signing is required, but no Android signing environment was supplied.");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(keystorePath) ||
+                string.IsNullOrWhiteSpace(keystorePassword) ||
+                string.IsNullOrWhiteSpace(keyAlias) ||
+                string.IsNullOrWhiteSpace(keyAliasPassword))
+                throw new InvalidOperationException(
+                    "Android signing configuration is incomplete. Supply the keystore path, " +
+                    "keystore password, key alias, and key-alias password together.");
+
+            string fullKeystorePath = Path.GetFullPath(keystorePath);
+            if (!File.Exists(fullKeystorePath))
+                throw new FileNotFoundException("Android release keystore was not found.", fullKeystorePath);
+
+            PlayerSettings.Android.useCustomKeystore = true;
+            PlayerSettings.Android.keystoreName = fullKeystorePath;
+            PlayerSettings.Android.keystorePass = keystorePassword;
+            PlayerSettings.Android.keyaliasName = keyAlias;
+            PlayerSettings.Android.keyaliasPass = keyAliasPassword;
+            return true;
+        }
+
+        private sealed class AndroidSigningState
+        {
+            private bool useCustomKeystore;
+            private string keystoreName;
+            private string keystorePass;
+            private string keyaliasName;
+            private string keyaliasPass;
+
+            public static AndroidSigningState Capture()
+            {
+                return new AndroidSigningState
+                {
+                    useCustomKeystore = PlayerSettings.Android.useCustomKeystore,
+                    keystoreName = PlayerSettings.Android.keystoreName,
+                    keystorePass = PlayerSettings.Android.keystorePass,
+                    keyaliasName = PlayerSettings.Android.keyaliasName,
+                    keyaliasPass = PlayerSettings.Android.keyaliasPass
+                };
+            }
+
+            public void Restore()
+            {
+                PlayerSettings.Android.useCustomKeystore = useCustomKeystore;
+                PlayerSettings.Android.keystoreName = keystoreName;
+                PlayerSettings.Android.keystorePass = keystorePass;
+                PlayerSettings.Android.keyaliasName = keyaliasName;
+                PlayerSettings.Android.keyaliasPass = keyaliasPass;
+            }
         }
     }
 }
