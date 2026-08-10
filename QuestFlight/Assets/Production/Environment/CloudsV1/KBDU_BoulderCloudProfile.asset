@@ -1,0 +1,116 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37668144d7b87c249a9d06e35edea2b2, type: 3}
+  m_Name: KBDU_BoulderCloudProfile
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.BoulderCloudProfile
+  profileId: KBDU_SUMMER_SCATTERED_V1
+  weatherClass: Front Range fair-weather cumulus
+  airportElevationMslMeters: 1612.6
+  declaredBaseAglMeters: 1450
+  declaredTopAglMeters: 2550
+  coverageFraction: 0.32
+  visibilityMeters: 24000
+  interiorFogColor: {r: 0.76, g: 0.8, b: 0.83, a: 1}
+  interiorFogDensity: 0.026
+  interiorSunIntensityMultiplier: 0.38
+  interiorSkyExposureMultiplier: 0.72
+  volumes:
+  - id: SCATTERED_WNW_01
+    centerLocalMeters: {x: -5100, y: 2180, z: -4300}
+    radiiMeters: {x: 920, y: 520, z: 650}
+    baseMslMeters: 3272.6
+    topMslMeters: 4312.6
+    interiorDensity: 0.78
+  - id: SCATTERED_WNW_02
+    centerLocalMeters: {x: -2500, y: 2030, z: -5050}
+    radiiMeters: {x: 760, y: 460, z: 570}
+    baseMslMeters: 3182.6
+    topMslMeters: 4102.6
+    interiorDensity: 0.78
+  - id: SCATTERED_N_01
+    centerLocalMeters: {x: 350, y: 1930, z: -4700}
+    radiiMeters: {x: 820, y: 430, z: 610}
+    baseMslMeters: 3112.6
+    topMslMeters: 3972.6
+    interiorDensity: 0.78
+  - id: SCATTERED_NE_01
+    centerLocalMeters: {x: 3400, y: 2260, z: -5050}
+    radiiMeters: {x: 1050, y: 560, z: 710}
+    baseMslMeters: 3312.6
+    topMslMeters: 4432.6
+    interiorDensity: 0.78
+  - id: SCATTERED_FAR_NE
+    centerLocalMeters: {x: 6250, y: 2460, z: -3150}
+    radiiMeters: {x: 1180, y: 630, z: 820}
+    baseMslMeters: 3442.6
+    topMslMeters: 4702.6
+    interiorDensity: 0.78
+  - id: SCATTERED_W_01
+    centerLocalMeters: {x: -5600, y: 2470, z: -350}
+    radiiMeters: {x: 1080, y: 610, z: 720}
+    baseMslMeters: 3472.6
+    topMslMeters: 4692.6
+    interiorDensity: 0.78
+  - id: SCATTERED_AIRPORT_W
+    centerLocalMeters: {x: -2750, y: 1880, z: -850}
+    radiiMeters: {x: 700, y: 390, z: 540}
+    baseMslMeters: 3102.6
+    topMslMeters: 3882.6
+    interiorDensity: 0.78
+  - id: SCATTERED_AIRPORT_E
+    centerLocalMeters: {x: 2050, y: 2020, z: -550}
+    radiiMeters: {x: 780, y: 440, z: 610}
+    baseMslMeters: 3192.6
+    topMslMeters: 4072.6
+    interiorDensity: 0.78
+  - id: SCATTERED_E_01
+    centerLocalMeters: {x: 5050, y: 2340, z: 420}
+    radiiMeters: {x: 980, y: 560, z: 690}
+    baseMslMeters: 3392.6
+    topMslMeters: 4512.6
+    interiorDensity: 0.78
+  - id: SCATTERED_FAR_W
+    centerLocalMeters: {x: -6900, y: 2780, z: 1800}
+    radiiMeters: {x: 1350, y: 650, z: 760}
+    baseMslMeters: 3742.6
+    topMslMeters: 5042.6
+    interiorDensity: 0.78
+  - id: SCATTERED_RESERVOIR_W
+    centerLocalMeters: {x: -3200, y: 2150, z: 3350}
+    radiiMeters: {x: 930, y: 540, z: 690}
+    baseMslMeters: 3222.6
+    topMslMeters: 4302.6
+    interiorDensity: 0.78
+  - id: SCATTERED_RESERVOIR
+    centerLocalMeters: {x: -500, y: 1810, z: 4050}
+    radiiMeters: {x: 720, y: 390, z: 520}
+    baseMslMeters: 3032.6
+    topMslMeters: 3812.6
+    interiorDensity: 0.78
+  - id: SCATTERED_SE_01
+    centerLocalMeters: {x: 2500, y: 2210, z: 3550}
+    radiiMeters: {x: 940, y: 520, z: 700}
+    baseMslMeters: 3302.6
+    topMslMeters: 4342.6
+    interiorDensity: 0.78
+  - id: SCATTERED_SE_02
+    centerLocalMeters: {x: 5200, y: 2520, z: 4650}
+    radiiMeters: {x: 1150, y: 650, z: 820}
+    baseMslMeters: 3482.6
+    topMslMeters: 4782.6
+    interiorDensity: 0.78
+  - id: SCATTERED_FAR_S
+    centerLocalMeters: {x: 850, y: 2710, z: 6900}
+    radiiMeters: {x: 1280, y: 640, z: 880}
+    baseMslMeters: 3682.6
+    topMslMeters: 4962.6
+    interiorDensity: 0.78

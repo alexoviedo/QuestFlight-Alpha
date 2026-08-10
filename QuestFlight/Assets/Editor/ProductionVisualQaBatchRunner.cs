@@ -508,6 +508,47 @@ namespace QuestFlightLab.Editor
                 context.originalAircraftRotation * Quaternion.Euler(-3f, 180f, 0f),
                 72f, ViewProfile.Environment));
 
+            BoulderCloudField clouds = context.environment.boulderCloudField == null
+                ? null
+                : context.environment.boulderCloudField.GetComponent<BoulderCloudField>();
+            if (clouds == null || clouds.Profile == null || clouds.Profile.Volumes.Length < 12)
+                throw new InvalidOperationException("Authored Boulder cloud field is unavailable for QA.");
+            Vector3 airportCloud = clouds.transform.TransformPoint(
+                clouds.Profile.Volumes[6].centerLocalMeters);
+            Vector3 groundCloud = clouds.transform.TransformPoint(
+                clouds.Profile.Volumes[0].centerLocalMeters);
+            Vector3 reservoirCloud = clouds.transform.TransformPoint(
+                clouds.Profile.Volumes[11].centerLocalMeters);
+            // Face the parked aircraft toward the authored cloud before taking the
+            // cockpit view. Looking through the airframe from the original runway
+            // heading produced a headliner image instead of cloud evidence.
+            Vector3 groundCloudDirection = Vector3.ProjectOnPlane(
+                groundCloud - context.originalAircraftPosition,
+                Vector3.up).normalized;
+            if (groundCloudDirection.sqrMagnitude < 0.99f)
+                throw new InvalidOperationException("Ground cloud QA direction is degenerate.");
+            SetAircraftPose(
+                context,
+                context.originalAircraftPosition,
+                Quaternion.LookRotation(groundCloudDirection, Vector3.up));
+            Vector3 cloudPilotEye = context.rig.PilotSeatAnchor.position;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "cloud_01_ground_scattered", "Boulder scattered cloud field from KBDU", "cloud",
+                cloudPilotEye, LookAt(cloudPilotEye, groundCloud), 72f, ViewProfile.Cockpit));
+            SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
+            Vector3 cloudPatternCamera = context.runwayMidpoint + new Vector3(-650f, 620f, -420f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "cloud_02_pattern_volume", "Spatial cumulus volume from pattern altitude", "cloud",
+                cloudPatternCamera, LookAt(cloudPatternCamera, airportCloud), 58f, ViewProfile.Environment));
+            Vector3 sunwardCamera = reservoirCloud + new Vector3(-1350f, -250f, -1050f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "cloud_03_sunward_structure", "Cloud structure and restrained silver lining", "cloud",
+                sunwardCamera, LookAt(sunwardCamera, reservoirCloud), 48f, ViewProfile.Environment));
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "cloud_04_inside", "Fly-through cloud visibility transition", "cloud_inside",
+                reservoirCloud, Quaternion.LookRotation(Vector3.forward, Vector3.up),
+                64f, ViewProfile.Environment));
+
             Vector3 nearMidBoundary = context.runwayMidpoint + Vector3.right * 1825f;
             Vector3 nearMidCamera = nearMidBoundary + new Vector3(310f, 430f, -420f);
             Capture(context, report, outputDir, width, height, new ShotDefinition(
@@ -1451,6 +1492,7 @@ namespace QuestFlightLab.Editor
             var qaDirectionalStrengths = new List<float>();
             string path = Path.Combine(outputDir, "screenshots", shot.id + ".png");
             Texture2D texture = null;
+            BoulderCloudField validationCloudField = null;
             try
             {
                 if (shot.profile == ViewProfile.Cockpit) context.visibility?.SetCockpitView();
@@ -1510,6 +1552,15 @@ namespace QuestFlightLab.Editor
 
                 context.camera.transform.SetPositionAndRotation(shot.cameraPosition, shot.cameraRotation);
                 context.camera.fieldOfView = shot.fov;
+                if (shot.category == "cloud_inside")
+                {
+                    validationCloudField = context.environment.boulderCloudField == null
+                        ? null
+                        : context.environment.boulderCloudField.GetComponent<BoulderCloudField>();
+                    if (validationCloudField == null)
+                        throw new InvalidOperationException("Cloud interior QA controller is missing.");
+                    validationCloudField.ApplyAtmosphereForValidation(shot.cameraPosition);
+                }
                 if (shot.profile == ViewProfile.Cockpit)
                 {
                     if (shot.id == "pasv1_24_cockpit_ao_only" ||
@@ -1587,6 +1638,7 @@ namespace QuestFlightLab.Editor
                     environmentHiddenRenderers[index].enabled = environmentHiddenStates[index];
                 if (qaDisabledSunOcclusion != null)
                     qaDisabledSunOcclusion.enabled = qaDisabledSunOcclusionState;
+                validationCloudField?.RestoreAtmosphereForValidation();
                 if (texture != null) Object.DestroyImmediate(texture);
             }
         }

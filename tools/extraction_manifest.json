@@ -376,6 +376,16 @@
   ],
   "product_authored_entries": [
     {
+      "path": "Assets/Scripts/Environment/Clouds/BoulderCloudField.cs",
+      "classification": "approved_product_authored",
+      "reason": "Serialized, allocation-free runtime controller for the bounded KBDU cloud field and fly-through fog response."
+    },
+    {
+      "path": "Assets/Scripts/Environment/Clouds/BoulderCloudProfile.cs",
+      "classification": "approved_product_authored",
+      "reason": "Project-authored deterministic KBDU cloud-volume profile used by the serialized cloud field."
+    },
+    {
       "path": "Assets/Production/Cockpit/Pedals/C172_FourPedalAssembly.asset",
       "classification": "approved_product_authored",
       "reason": "Project-authored four-pedal runtime mesh used by the serialized pilot and copilot rudder/brake presentation."

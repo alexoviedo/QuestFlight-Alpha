@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "assetFamily": "KBDU_BoulderCloudField_V1",
+  "license": "Project-owned",
+  "externalAssetsIncluded": false,
+  "rawDownloadsCommitted": false,
+  "generatedAtlas": {
+    "path": "KBDU_CloudImpostorAtlasV3.png",
+    "generator": "OpenAI image generation",
+    "generatedDate": "2026-08-10",
+    "sha256": "a4bf9047b4427f71e902cb6aa1b5c3ff1296e29f4f5d0dd685be5ecc4548dd82",
+    "runtimeImport": "512 square, mipmapped, streaming, Android ASTC 6x6",
+    "containsThirdPartyPhotography": false
+  },
+  "runtimeTechnique": "one depth-writing alpha-to-coverage batch of center-eye-oriented stereo-stable impostors plus spatial containment-driven existing-fog modulation",
+  "profile": {
+    "id": "KBDU_SUMMER_SCATTERED_V1",
+    "airportElevationMslMeters": 1612.6,
+    "baseAglMeters": 1450.0,
+    "topAglMeters": 2550.0,
+    "coverageFraction": 0.32,
+    "weatherIsLive": false
+  },
+  "sources": [
+    {
+      "authority": "NOAA Aviation Weather Center",
+      "url": "https://aviationweather.gov/data/metar/",
+      "use": "aviation cloud-layer terminology and reporting convention"
+    },
+    {
+      "authority": "NOAA National Centers for Environmental Information",
+      "url": "https://www.ncei.noaa.gov/access/search/data-search/local-climatological-data",
+      "use": "official surface-observation archive source class"
+    },
+    {
+      "authority": "NSF NCAR/UCAR",
+      "url": "https://scied.ucar.edu/learning-zone/clouds/clouds-form-mountains",
+      "use": "Front Range orographic cloud morphology"
+    },
+    {
+      "authority": "NSF NCAR/UCAR",
+      "url": "https://scied.ucar.edu/image/lenticular-clouds",
+      "use": "Boulder lee-wave context; not activated in the default fair-weather preset"
+    },
+    {
+      "authority": "US National Weather Service",
+      "url": "https://www.weather.gov/source/zhu/ZHU_Training_Page/clouds/cloud_development/clouds.htm",
+      "use": "cloud-level and convective-development constraints"
+    }
+  ],
+  "questPolicy": {
+    "maximumDraws": 1,
+    "maximumTriangles": 12000,
+    "maximumMaterials": 1,
+    "transparentBlendSlots": 0,
+    "realtimeCloudCameras": 0,
+    "particles": 0,
+    "perEyeBillboards": false,
+    "steadyStateManagedAllocation": "none by design"
+  }
+}

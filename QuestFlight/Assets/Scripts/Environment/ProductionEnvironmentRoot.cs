@@ -42,6 +42,7 @@ namespace QuestFlightLab.Environment
         public Transform trafficRoot;
         public Transform airportPerimeterFence;
         public Transform airportNearFieldDetail;
+        public Transform boulderCloudField;
         [Tooltip("OrthophotoMaskedReflection keeps water terrain-owned and adds a bounded reflection response through the shared terrain material.")]
         public ProductionWaterPresentationMode waterPresentationMode =
             ProductionWaterPresentationMode.AuthoredSurface;
@@ -200,6 +201,24 @@ namespace QuestFlightLab.Environment
                     failures.Add(
                         "airport near-field detail contract failed: " +
                         nearFieldReport);
+                }
+            }
+            Require(boulderCloudField != null,
+                "BoulderCloudFieldRoot is not bound", failures);
+            Require(boulderCloudField == null ||
+                    boulderCloudField.GetComponentsInChildren<BoulderCloudField>(true).Length == 1,
+                "Boulder cloud field must contain exactly one authored field controller", failures);
+            if (boulderCloudField != null)
+            {
+                BoulderCloudField clouds =
+                    boulderCloudField.GetComponentInChildren<BoulderCloudField>(true);
+                if (clouds == null)
+                {
+                    failures.Add("Boulder cloud field controller is missing");
+                }
+                else if (!clouds.TryValidate(out string cloudReport))
+                {
+                    failures.Add("Boulder cloud field contract failed: " + cloudReport);
                 }
             }
             Require(nearTerrainMeshes != null && nearTerrainMeshes.Length == 2 && nearTerrainMeshes.All(HasMesh),
