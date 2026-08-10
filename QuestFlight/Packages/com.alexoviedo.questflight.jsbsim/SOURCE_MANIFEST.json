@@ -37,7 +37,7 @@
   },
   "wrapperSource": {
     "repository": "alexoviedo/T2-QuestFlight",
-    "frozenCommit": "UNCOMMITTED_CANDIDATE",
+    "frozenCommit": "9618464b80986e0d442f8907b8de6a841daf1a25",
     "headerPath": "tools/native/jsbsim_bridge/include/qfl_jsbsim_native.h",
     "headerBuildInputSha256": "b9aef08b3152532aa2490fb2d1e728def447899271156b9daa1d85e3bd09b32d",
     "headerCanonicalLfSha256": "b9aef08b3152532aa2490fb2d1e728def447899271156b9daa1d85e3bd09b32d",
