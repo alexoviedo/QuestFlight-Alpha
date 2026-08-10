@@ -1,14 +1,15 @@
 {
-  "schemaVersion": 1,
-  "configurationId": "qfl-c172p-training-2054-v1",
-  "status": "DEVELOPMENT_DIAGNOSTIC_ONLY",
+  "schemaVersion": 2,
+  "configurationId": "qfl-c172p-private-fidelity-v2",
+  "status": "PRIVATE_NATIVE_PROMOTION_CANDIDATE",
   "aircraft": {
     "target": "1982 Cessna 172P approximation",
     "jsbsimModel": "c172x",
     "upstreamVersion": "1.3.1",
     "upstreamRevision": "3b25f25e49b42d0489c04ac805674fc1450ca579",
     "upstreamModelSha256": "e45326e2e1aa12df7f73cd7a62b3a00ac818625e0999d10687607a0115764bc9",
-    "derivativeModelSha256": "e3b074b539dd119c36bfd96881762256a16ece7476c3ff07c780a6ced8def686"
+    "derivativeModelSha256": "3b108d50323fc1d27437ac619990fd00abcfeff5e58034bdebf266a8fedcb54e",
+    "autopilotSystemSha256": "3d47700e3c8d63eea0c80e64378d8ae073a28048f892f005b3215dfc85b7bdd2"
   },
   "initialLoadPounds": {
     "emptyAircraft": 1454.0,
@@ -26,30 +27,33 @@
     "JSBout172B.csv output declaration"
   ],
   "nativeAbi": {
-    "version": 1,
-    "binariesChanged": false,
+    "version": 2,
+    "binariesChanged": true,
     "availableDiagnostics": [
-      "configured initial conditions including initial terrain elevation",
-      "clamped controls submitted to native ABI",
-      "atmosphere submitted to native ABI",
-      "bounded state vector"
-    ],
-    "missingDiagnosticsRequiringVersionedRebuild": [
-      "actual control-surface positions",
-      "body/aerodynamic/propulsive forces and moments",
-      "mass, center of gravity, and fuel state",
-      "in-flight terrain elevation updates"
+      "configured initial conditions and continuously updated terrain elevation",
+      "clamped controls and atmosphere submitted to the native ABI",
+      "actual control-surface and nosewheel positions",
+      "body, aerodynamic, propulsion, and gear forces and moments",
+      "mass, center of gravity, fuel, compression, and weight-on-wheels state",
+      "longitudinal and full trim"
     ]
   },
+  "modelCorrections": [
+    "symmetric front-seat and fuel loading with explicit rear-seat and baggage stations",
+    "rudder-linked nosewheel command preserved when the roll autopilot is inactive",
+    "explicit C172 rudder-to-nosewheel sign conversion in the JSBSim control system"
+  ],
   "license": {
     "jsbsimLibrary": "GNU LGPL-2.1-or-later",
     "aircraftFileDeclaration": "GPL",
     "aircraftFileAdditionalStatement": "upstream file states model is not to be sold",
-    "resolution": "UNRESOLVED_PRODUCT_DISTRIBUTION_BLOCKER"
+    "resolution": "PRIVATE_PERSONAL_USE_ONLY_NOT_FOR_REDISTRIBUTION"
   },
   "promotion": {
     "unityPrototypeRemainsReleaseAuthority": true,
-    "softwareScenarios": "REQUIRED_RERUN_AFTER_MODEL_DATA_CHANGE",
+    "softwareScenarios": "PASS_NO_FAIL_OR_ERROR_24_SCENARIO_NATIVE_PROTOTYPE_MATRIX_2026-08-09",
+    "windowsNativeSmoke": "PASS",
+    "androidArm64BuildAnd16KbAlignment": "PASS",
     "questHandlingAndTiming": "NOT_MEASURED",
     "nativePromotionEligible": false
   }

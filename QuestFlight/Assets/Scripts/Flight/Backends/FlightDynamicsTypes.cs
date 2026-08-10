@@ -1,4 +1,5 @@
 using System;
+using QuestFlightLab.Environment;
 using QuestFlightLab.Runtime;
 using UnityEngine;
 
@@ -183,6 +184,7 @@ namespace QuestFlightLab.Flight.Backends
         public Transform simulationRoot;
         public AircraftState aircraftState;
         public SimpleAircraftPhysics unityPrototype;
+        public ProductionTerrainSurfaceAsset terrainSurface;
         public GeodeticReference localOrigin = GeodeticReference.Kbdu;
         public double fixedDeltaTimeSeconds = 1.0 / 120.0;
     }

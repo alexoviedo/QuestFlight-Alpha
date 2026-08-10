@@ -70930,6 +70930,7 @@ MonoBehaviour:
   unityPrototype: {fileID: 1423655655211657218}
   authoritativeRigidbody: {fileID: 1573695374297373189}
   controls: {fileID: 0}
+  terrainSurface: {fileID: 11400000, guid: b2b2be77d482f4c4c8fb5ceb35614891, type: 2}
   initialConditionProvider: {fileID: 6090694490867546566}
   simulationRateHz: 120
   maxStepsPerFixedUpdate: 8

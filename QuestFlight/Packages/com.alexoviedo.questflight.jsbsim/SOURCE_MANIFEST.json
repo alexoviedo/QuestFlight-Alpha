@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "package": "com.alexoviedo.questflight.jsbsim",
-  "packageVersion": "0.2.0",
+  "packageVersion": "0.3.0",
   "upstream": {
     "name": "JSBSim",
     "version": "1.3.1",
@@ -13,54 +13,53 @@
   "aircraftModel": {
     "path": "RuntimeData/JSBSim-1.3.1/aircraft/c172x/c172x.xml",
     "target": "1982 Cessna 172P approximation",
-    "configurationId": "qfl-c172p-training-2054-v1",
+    "configurationId": "qfl-c172p-private-fidelity-v2",
     "upstreamSha256": "e45326e2e1aa12df7f73cd7a62b3a00ac818625e0999d10687607a0115764bc9",
-    "derivativeSha256": "e3b074b539dd119c36bfd96881762256a16ece7476c3ff07c780a6ced8def686",
+    "derivativeSha256": "3b108d50323fc1d27437ac619990fd00abcfeff5e58034bdebf266a8fedcb54e",
     "initialWeightPounds": 2054.0,
     "normalCategoryMaximumWeightPounds": 2400.0,
     "declaredLicense": "GPL",
     "additionalUpstreamStatement": "model is not to be sold",
-    "distributionStatus": "DEVELOPMENT_ONLY_PENDING_LICENSE_PROVENANCE_RESOLUTION",
+    "distributionStatus": "PRIVATE_PERSONAL_USE_ONLY_NOT_FOR_REDISTRIBUTION",
     "changes": [
-      "two symmetric 170 lb front-seat occupants",
-      "rear occupants, baggage, and off-center PesticideBomb test point mass removed",
+      "two symmetric 170 lb front-seat occupants by default",
+      "zero-default rear-seat and baggage stations exposed to the native ABI",
+      "off-center PesticideBomb test point mass removed",
       "two symmetric 130 lb fuel tanks retained",
-      "embedded CSV output and unused output.xml removed"
+      "embedded CSV output and unused output.xml removed",
+      "autopilot-off steering selector preserves the rudder-linked pilot command",
+      "rudder-to-nosewheel sign conversion is explicit in the JSBSim FCS"
     ]
   },
   "modelProvenance": {
     "path": "FLIGHT_DYNAMICS_MODEL_PROVENANCE.json",
-    "sha256": "f1dcf90df3c4974905a9f436c4787c0fd6694001cfcec6020e8256d481eb4e41"
+    "sha256": "5dba43ee43db9f36cddb6af50710700d4ee986bdbba1aa7651822b5c31600ad2"
   },
   "wrapperSource": {
-    "repository": "alexoviedo/T2-QuestFlightLab",
-    "frozenCommit": "cd4131fa7732a6db2d7387921dfef33e2c206970",
-    "headerPath": "native/jsbsim_bridge/include/qfl_jsbsim_native.h",
-    "headerBuildInputSha256": "1d091f3d924bd4fd086579045416a51e778dbef1445c7ccc70d0268833259d0d",
-    "headerCanonicalLfSha256": "ec15d8aeff0873bb13f40bdeef06ad2e396a33cd1c9b697b966d8b121244e38a",
-    "headerGitBlobSha1": "a0bc63ac24163a5ce600cf861a0151e94c1164c2",
-    "implementationPath": "native/jsbsim_bridge/src/qfl_jsbsim_native.cpp",
-    "implementationBuildInputSha256": "4d7fa9207bd4338cd2d89db8acef51cdbce10a20a948f8b58c88def1359b6931",
-    "implementationCanonicalLfSha256": "4f3d45296baad9875994cb8bff84e9e47bea0092c734c58ea3bf8570b934ad3d",
-    "implementationGitBlobSha1": "30bf77bef347b8e4bf6d15ba9b9bee8514f830f9",
-    "buildInputTextLineEndings": "CRLF",
+    "repository": "alexoviedo/T2-QuestFlight",
+    "frozenCommit": "UNCOMMITTED_CANDIDATE",
+    "headerPath": "tools/native/jsbsim_bridge/include/qfl_jsbsim_native.h",
+    "headerBuildInputSha256": "b9aef08b3152532aa2490fb2d1e728def447899271156b9daa1d85e3bd09b32d",
+    "headerCanonicalLfSha256": "b9aef08b3152532aa2490fb2d1e728def447899271156b9daa1d85e3bd09b32d",
+    "implementationPath": "tools/native/jsbsim_bridge/src/qfl_jsbsim_native.cpp",
+    "implementationBuildInputSha256": "b85f5d010b4bc069f70c00435c5b8f75b0939abaac9c3c6aa4423ccf0efe54ec",
+    "implementationCanonicalLfSha256": "b85f5d010b4bc069f70c00435c5b8f75b0939abaac9c3c6aa4423ccf0efe54ec",
+    "buildInputTextLineEndings": "LF",
     "canonicalSourceTextLineEndings": "LF",
     "license": "Project-owned"
   },
   "abi": {
-    "version": 1,
-    "binariesChangedForModelDerivative": false,
+    "version": 2,
+    "binariesChangedForModelDerivative": true,
     "managedDiagnostics": [
       "configured initial conditions",
       "clamped submitted controls",
       "submitted atmosphere",
-      "bounded native state"
-    ],
-    "notExposed": [
       "actual control-surface positions",
       "forces and moments",
       "mass, CG, and fuel state",
-      "in-flight terrain updates"
+      "in-flight terrain updates",
+      "longitudinal and full trim"
     ]
   },
   "build": {
@@ -78,46 +77,46 @@
     {
       "path": "Runtime/Plugins/Windows/x86_64/JSBSim.dll",
       "bytes": 2007040,
-      "sha256": "9f80c6af748ede9c0addff022ce78337dfa2930046e3a8cfe155cc610b942bc7"
+      "sha256": "eeb8852bf7aabb33ab2f4527a3a48cc10b952a248e308804803399cc75de5e85"
     },
     {
       "path": "Runtime/Plugins/Windows/x86_64/qfl_jsbsim_native.dll",
-      "bytes": 37888,
-      "sha256": "5ee4ccd81cc296a946c843cacf0ea5ab0d132c78c3dba3c9056eeddb612c83d4"
+      "bytes": 54272,
+      "sha256": "78bea2ff25aae003e8f866cd32c9b99fb0346ab29dc25a9e368c3465744f8c5b"
     },
     {
       "path": "Runtime/Plugins/Android/arm64-v8a/libJSBSim.so",
       "bytes": 2446528,
-      "sha256": "38c2fe56ba86568763caab81d62a4e3096d4b8fd2222d19ee824934fbc4af8a1"
+      "sha256": "1f15983e3fcff3a8dfa44180c5beb6ea7b490cb88d831214ed858babc81cac83"
     },
     {
       "path": "Runtime/Plugins/Android/arm64-v8a/libqfl_jsbsim_native.so",
-      "bytes": 49000,
-      "sha256": "bf5f10df987a2411e0889b307eca4cd7fe08feef3c1427bfc1da7ce098162bb5"
+      "bytes": 59144,
+      "sha256": "432ce6b14b0c3d9b5fc36ae3362937ca9dd3687d59830d71c3da7c84a31f1f6c"
     }
   ],
   "runtimeData": [
     { "path": "runtime_manifest.txt", "sha256": "b35b9e714eee00324673ea699e65045d4dbfd8752de5490f79918b0c62c55c3f" },
-    { "path": "runtime_hashes.sha256", "sha256": "259ca5470ab474972bcb9d97cbff39ff5742b30c16cedb4cd9263a5b91d0dbe4" },
+    { "path": "runtime_hashes.sha256", "sha256": "fd0b7bedd3cddd814fc42b587a186d925571b7fd4d936304f1fa82daa0f2715d" },
     { "path": "COPYING.txt", "sha256": "1e7e6bae5a5bde32f1ae5a7c37a082d1ab03cf89354f7f936ac40be9e39a6531" },
     { "path": "SOURCE_REVISION.txt", "sha256": "1d02aaa47307f8d4afa7aa196b217907127427a0e2ad01d36d8f1b8e20920d25" },
     { "path": "aircraft/c172x/c172ap.xml", "sha256": "5701dc97feb738b842fe27c3b438537303e9b260907366355fe1edb7f1f6b173" },
-    { "path": "aircraft/c172x/c172x.xml", "sha256": "e3b074b539dd119c36bfd96881762256a16ece7476c3ff07c780a6ced8def686" },
+    { "path": "aircraft/c172x/c172x.xml", "sha256": "3b108d50323fc1d27437ac619990fd00abcfeff5e58034bdebf266a8fedcb54e" },
     { "path": "aircraft/c172x/elevator_doublet_init.xml", "sha256": "c8492d24146f9538c16e28663fdca6d04e83fa78ba71b8eb5b4e975b412d676f" },
     { "path": "aircraft/c172x/reset00.xml", "sha256": "3934529d480fc8a69038b412824f657671ccb7f257d6f01412f389df57eac29a" },
     { "path": "aircraft/c172x/reset01.xml", "sha256": "0f6276aaf053f32c68132d89f415bb0ac543efe1c6904429a1ac57befe190102" },
     { "path": "aircraft/c172x/reset_at_rest.xml", "sha256": "f82ca5cbb5f7f556229bf84f1f72c9440f7cd5a3e60c2ed95dfb1afa2e885d27" },
     { "path": "engine/eng_io320.xml", "sha256": "db88f862cdd9e2d267199543b0a8a88f46f7f0be946539ae4f8977dd6f6200d2" },
     { "path": "engine/prop_75in2f.xml", "sha256": "dec029a5bf92fbcf45a2d71c15d8b2392f26f330a1672fa2f8267ff09a114a50" },
-    { "path": "systems/Autopilot.xml", "sha256": "0e202d392c387dea4f943959dfb4a01c9198e898bc55056c3fa7beb2d0f9b6e7" },
+    { "path": "systems/Autopilot.xml", "sha256": "3d47700e3c8d63eea0c80e64378d8ae073a28048f892f005b3215dfc85b7bdd2" },
     { "path": "systems/GNCUtilities.xml", "sha256": "beceb4621d17f9ad25081d9c11a6b9494ec3d8b2d124da35ffeb9f259d6071ed" }
   ],
   "promotionGate": {
-    "softwareScenarios": "REQUIRED_RERUN_AFTER_MODEL_DATA_CHANGE",
+    "softwareScenarios": "PASS_NO_FAIL_OR_ERROR_24_SCENARIO_NATIVE_PROTOTYPE_MATRIX_2026-08-09",
     "steadyStateManagedAllocations": "REQUIRED_RERUN",
-    "windowsNativeSmoke": "PASS_1_SECOND_RESET_ADVANCE_120_HZ",
-    "androidArm64Build": "REQUIRED_RERUN",
-    "android16KbElfLoadAlignment": "UNCHANGED_BINARIES_PREVIOUSLY_PASS",
+    "windowsNativeSmoke": "PASS_ABI2_TRIM_20_SECOND_120_HZ_AND_MODEL_SCHEDULED_NOSEWHEEL_STEERING",
+    "androidArm64Build": "PASS_BUILD_AND_ELF_INSPECTION",
+    "android16KbElfLoadAlignment": "PASS_REBUILT_NDK_R27",
     "questHardwareTimingAndHandling": "NOT_MEASURED",
     "nativePromotionEligible": false
   }

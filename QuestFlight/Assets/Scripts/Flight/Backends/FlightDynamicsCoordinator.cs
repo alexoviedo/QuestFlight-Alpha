@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using AlexOviedo.QuestFlight.JSBSim;
+using QuestFlightLab.Environment;
 using QuestFlightLab.Input;
 using QuestFlightLab.Runtime;
 using UnityEngine;
@@ -25,6 +26,8 @@ namespace QuestFlightLab.Flight.Backends
         public SimpleAircraftPhysics unityPrototype;
         public Rigidbody authoritativeRigidbody;
         public ProductControlInput controls;
+        [Tooltip("Offline-authored ENU terrain authority used by physical ground contact. No runtime raycasts or hierarchy discovery.")]
+        public ProductionTerrainSurfaceAsset terrainSurface;
 
         [Header("Authored initial conditions")]
         public FlightDynamicsInitialConditionProvider initialConditionProvider;
@@ -94,7 +97,7 @@ namespace QuestFlightLab.Flight.Backends
         {
             if (simulationRoot == null || presentationRoot == null || aircraftState == null ||
                 unityPrototype == null || authoritativeRigidbody == null || controls == null ||
-                initialConditionProvider == null)
+                initialConditionProvider == null || terrainSurface == null)
             {
                 error = "All flight-authority references must be serialized in the product prefab.";
                 return false;
@@ -347,6 +350,7 @@ namespace QuestFlightLab.Flight.Backends
                 simulationRoot = simulationRoot,
                 aircraftState = aircraftState,
                 unityPrototype = unityPrototype,
+                terrainSurface = terrainSurface,
                 localOrigin = GeodeticReference.Kbdu,
                 fixedDeltaTimeSeconds = fixedStep
             };

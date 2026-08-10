@@ -181,8 +181,23 @@
       </test>
     </switch>
 
+    <!-- JSBSim's aerodynamic rudder command and positive nose-wheel angle use
+         opposite signs for this C172.  Convert once in the aircraft system so
+         airborne and ground response agree on the pilot's pedal direction. -->
+    <pure_gain name="fcs/pilot-steer-command">
+      <input>fcs/rudder-cmd-norm</input>
+      <gain>-1.0</gain>
+      <clipto>
+        <min>-1.0</min>
+        <max>1.0</max>
+      </clipto>
+    </pure_gain>
+
     <switch name="ap/roll-command-selector-steering">
-      <default value="0.0"/>
+      <!-- Preserve the pilot's rudder-linked nose-wheel command whenever the
+           roll autopilot is not actively steering on the ground.  The former
+           zero default overwrote fcs/steer-cmd-norm every simulation frame. -->
+      <default value="fcs/pilot-steer-command"/>
       <test value="ap/roll-cmd-norm-output">
         ap/roll-control-autopilot-on == 1
         gear/unit[0]/WOW == 1

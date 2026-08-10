@@ -103,6 +103,12 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
             FlightScenarioEvidence target,
             bool wrapAngle = false)
         {
+            RunResult neutral = Run(
+                backend,
+                scenario + "/" + name + "_neutral_reference",
+                FlightScenarioInitialState.Airborne(),
+                3.0,
+                (time, state) => AxisControls(axis, 0f));
             RunResult positive = Run(
                 backend,
                 scenario + "/" + name + "_positive",
@@ -115,7 +121,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 FlightScenarioInitialState.Airborne(),
                 3.0,
                 (time, state) => AxisControls(axis, time >= 1.0 && time < 2.0 ? -0.35f : 0f));
-            if (!positive.ok || !negative.ok)
+            if (!neutral.ok || !positive.ok || !negative.ok)
             {
                 target.metrics.Add(FlightEvidenceMetric.Classified(
                     name + "_sign",
@@ -126,12 +132,13 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
 
             FlightDynamicsState positivePulse = positive.StateNear(2.0);
             FlightDynamicsState negativePulse = negative.StateNear(2.0);
+            FlightDynamicsState neutralPulse = neutral.StateNear(2.0);
             double positiveDelta = wrapAngle
-                ? DeltaAngle(observed(positive.start), observed(positivePulse))
-                : observed(positivePulse) - observed(positive.start);
+                ? DeltaAngle(observed(neutralPulse), observed(positivePulse))
+                : observed(positivePulse) - observed(neutralPulse);
             double negativeDelta = wrapAngle
-                ? DeltaAngle(observed(negative.start), observed(negativePulse))
-                : observed(negativePulse) - observed(negative.start);
+                ? DeltaAngle(observed(neutralPulse), observed(negativePulse))
+                : observed(negativePulse) - observed(neutralPulse);
             double signedMinimum = FlightDynamicsAcceptanceContract.MinimumControlResponseDegrees;
             target.metrics.Add(FlightEvidenceMetric.Bounded(
                 name + "_positive_response",
@@ -154,19 +161,32 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 symmetry,
                 "ratio",
                 0.0,
-                0.35));
+                0.35,
+                "Pulse response is measured against a matched neutral trajectory so natural trim drift is not misclassified as control asymmetry."));
         }
 
         private FlightScenarioEvidence NeutralTrim(IFlightDynamicsTraceBackend backend)
         {
             const string id = "neutral_trim";
             FlightScenarioEvidence result = Scenario(id, backend);
-            RunResult run = Run(
-                backend,
-                id,
-                FlightScenarioInitialState.Airborne(),
-                20.0,
-                (time, state) => Controls(throttle: 0.55f));
+            RunResult run;
+            if (backend.SupportsTrim)
+            {
+                run = RunTrimmed(
+                    backend,
+                    id,
+                    FlightScenarioInitialState.Airborne(),
+                    20.0);
+            }
+            else
+            {
+                run = Run(
+                    backend,
+                    id,
+                    FlightScenarioInitialState.Airborne(),
+                    20.0,
+                    (time, state) => Controls(throttle: 0.55f));
+            }
             if (!run.ok) return Error(result, backend.LastError);
             result.metrics.Add(FlightEvidenceMetric.Bounded(
                 "neutral_bank_drift",
@@ -188,9 +208,15 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 FlightDynamicsAcceptanceContract.MaximumNeutralVerticalSpeedFpm,
                 "Broad engineering bound only; a weight/CG/atmosphere-specific trim target remains unproven."));
             result.metrics.Add(FlightEvidenceMetric.Classified(
-                "trim_point_fidelity",
+                "trim_solver",
+                backend.SupportsTrim ? FlightEvidenceStatus.Pass : FlightEvidenceStatus.Unsupported,
+                backend.SupportsTrim
+                    ? "The unchanged native candidate solved and held a longitudinal trim state at the configured loading and atmosphere."
+                    : "This backend has no exposed trim solver."));
+            result.metrics.Add(FlightEvidenceMetric.Classified(
+                "trim_point_reference_fidelity",
                 FlightEvidenceStatus.Unproven,
-                "No pinned weight, CG, density altitude, and power-specific C172 trim reference is serialized yet."));
+                "The solver result is deterministic, but an independently sourced weight/CG/density-altitude/power-specific C172P trim reference is not yet pinned."));
             result.ResolveStatus();
             return result;
         }
@@ -258,7 +284,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 run.StateNear(8.0).headingDegrees,
                 run.end.headingDegrees)) / 4.0;
             double meanBank = run.MeanAbsoluteBank(8.0, 12.0);
-            double meanSpeedMps = Math.Max(1.0, run.MeanSpeedKnots(8.0, 12.0) *
+            double meanSpeedMps = Math.Max(1.0, run.MeanTrueSpeedKnots(8.0, 12.0) *
                 FlightFrameConversions.KnotsToMetersPerSecond);
             double expectedRate = Math.Abs(9.80665 * Math.Tan(meanBank * Math.PI / 180.0) /
                                            meanSpeedMps * 180.0 / Math.PI);
@@ -269,7 +295,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 "ratio",
                 0.0,
                 FlightDynamicsAcceptanceContract.MaximumTurnRateRelativeError,
-                "Compared with g*tan(bank)/true-speed approximation; calibrated airspeed is used because true airspeed is not exposed."));
+                "Compared with g*tan(bank)/true-airspeed using native diagnostics; prototype evidence falls back to calibrated airspeed because that backend has no independent TAS output."));
             result.ResolveStatus();
             return result;
         }
@@ -306,7 +332,14 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 run.end.calibratedAirspeedKnots - run.MinimumSpeedKnots(),
                 "kt",
                 5.0,
-                100.0));
+                double.MaxValue,
+                "Recovery must regain energy; an arbitrary upper bound is not a valid substitute for a pinned maneuver and overspeed contract."));
+            result.metrics.Add(FlightEvidenceMetric.Classified(
+                "recovery_final_speed",
+                FlightEvidenceStatus.Unproven,
+                "Recorded separately for the future maneuver/overspeed contract; it is not used to tune the aircraft model to an invented cap.",
+                run.end.calibratedAirspeedKnots,
+                "kt"));
             result.ResolveStatus();
             return result;
         }
@@ -442,11 +475,11 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
             RunResult run = Run(
                 backend,
                 id,
-                FlightScenarioInitialState.Airborne(70.0, 150.0, flightPathAngleDegrees: -3.0),
-                60.0,
+                FlightScenarioInitialState.Airborne(70.0, 95.0, flightPathAngleDegrees: -3.0),
+                75.0,
                 (time, state) => Controls(
-                    elevator: time < 52.0 ? 0.04f : 0.22f,
-                    throttle: time < 52.0 ? 0.24f : 0.05f,
+                    elevator: time < 65.0 ? 0.04f : 0.22f,
+                    throttle: time < 65.0 ? 0.24f : 0.05f,
                     flaps: 0.67f));
             if (!run.ok) return Error(result, backend.LastError);
             if (!run.TryTouchdown(out FlightTraceSample touchdown))
@@ -471,7 +504,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                     ? FlightEvidenceStatus.Unproven
                     : FlightEvidenceStatus.Unsupported,
                 backend.SupportsPhysicalGroundContact
-                    ? "The backend reports weight-on-wheels, but gear-load/suspension/tire evidence is not exposed by the public state contract."
+                    ? "The native trace records three-wheel compression and aggregate gear force; a landing-load acceptance envelope is not yet pinned."
                     : "The prototype uses a single ground-height clamp, not three-wheel contact dynamics."));
             result.ResolveStatus();
             return result;
@@ -485,14 +518,20 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 backend,
                 id + "/right",
                 FlightScenarioInitialState.Ground(),
-                10.0,
-                (time, state) => Controls(rudder: 0.35f, throttle: 0.30f));
+                12.0,
+                (time, state) => Controls(
+                    rudder: 0.8f,
+                    throttle: 0.35f,
+                    rightBrake: 0.15f));
             RunResult left = Run(
                 backend,
                 id + "/left",
                 FlightScenarioInitialState.Ground(),
-                10.0,
-                (time, state) => Controls(rudder: -0.35f, throttle: 0.30f));
+                12.0,
+                (time, state) => Controls(
+                    rudder: -0.8f,
+                    throttle: 0.35f,
+                    leftBrake: 0.15f));
             if (!right.ok || !left.ok) return Error(result, backend.LastError);
             double rightHeading = DeltaAngle(right.start.headingDegrees, right.end.headingDegrees);
             double leftHeading = DeltaAngle(left.start.headingDegrees, left.end.headingDegrees);
@@ -516,25 +555,88 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 "ratio",
                 0.0,
                 0.35));
+            if (backend.SupportsNoseWheelSteeringDiagnostics)
+            {
+                result.metrics.Add(FlightEvidenceMetric.Bounded(
+                    "right_nosewheel_command",
+                    right.MaximumNoseGearSteeringDegrees(),
+                    "deg",
+                    7.5,
+                    10.1,
+                    "Full-right pedal input must reach the C172 model's ten-degree nosewheel steering authority."));
+                result.metrics.Add(FlightEvidenceMetric.Bounded(
+                    "left_nosewheel_command",
+                    -left.MinimumNoseGearSteeringDegrees(),
+                    "deg",
+                    7.5,
+                    10.1,
+                    "Full-left pedal input must reach the C172 model's ten-degree nosewheel steering authority."));
+            }
+            else
+            {
+                result.metrics.Add(FlightEvidenceMetric.Classified(
+                    "nosewheel_steering_diagnostics",
+                    FlightEvidenceStatus.Unsupported,
+                    "The prototype backend has no independent landing-gear steering state."));
+            }
             result.ResolveStatus();
             return result;
         }
 
-        private static FlightScenarioEvidence MassCgMatrix(IFlightDynamicsTraceBackend backend)
+        private FlightScenarioEvidence MassCgMatrix(IFlightDynamicsTraceBackend backend)
         {
             FlightScenarioEvidence result = Scenario("mass_cg_matrix", backend);
+            if (!backend.SupportsMassAndCg)
+            {
+                result.metrics.Add(FlightEvidenceMetric.Classified(
+                    "mass_and_cg_matrix",
+                    FlightEvidenceStatus.Unsupported,
+                    "The backend cannot configure or report aircraft loading."));
+                result.ResolveStatus();
+                return result;
+            }
+
+            FlightScenarioMassConfiguration forward = new FlightScenarioMassConfiguration
+            {
+                pilotPounds = 200.0,
+                copilotPounds = 170.0,
+                leftFuelPounds = 130.0,
+                rightFuelPounds = 130.0
+            };
+            FlightScenarioMassConfiguration aft = new FlightScenarioMassConfiguration
+            {
+                pilotPounds = 170.0,
+                rearLeftPounds = 150.0,
+                rearRightPounds = 150.0,
+                baggagePounds = 35.0,
+                leftFuelPounds = 80.0,
+                rightFuelPounds = 80.0
+            };
+            if (!TryMeasureLoading(backend, forward, out double forwardWeight, out double forwardCg) ||
+                !TryMeasureLoading(backend, aft, out double aftWeight, out double aftCg))
+                return Error(result, backend.LastError);
+
+            double forwardEmpty = forwardWeight - forward.PayloadAndFuelPounds;
+            double aftEmpty = aftWeight - aft.PayloadAndFuelPounds;
+            result.metrics.Add(FlightEvidenceMetric.Bounded(
+                "empty_weight_accounting_delta",
+                Math.Abs(forwardEmpty - aftEmpty),
+                "lb",
+                0.0,
+                0.5,
+                "Changing stations must not change the inferred empty-aircraft weight."));
+            result.metrics.Add(FlightEvidenceMetric.Bounded(
+                "aft_loading_cg_shift",
+                aftCg - forwardCg,
+                "in",
+                1.0,
+                20.0,
+                "Moving payload from the front stations to rear/baggage stations must move CG aft without directly editing CG."));
             result.metrics.Add(FlightEvidenceMetric.Classified(
-                "mass_matrix",
-                backend.SupportsMassAndCg ? FlightEvidenceStatus.Unproven : FlightEvidenceStatus.Unsupported,
-                backend.SupportsMassAndCg
-                    ? "Backend support is present, but the matrix is not implemented in this contract revision."
-                    : "The public backend interface cannot set aircraft mass/loading."));
-            result.metrics.Add(FlightEvidenceMetric.Classified(
-                "cg_matrix",
-                backend.SupportsMassAndCg ? FlightEvidenceStatus.Unproven : FlightEvidenceStatus.Unsupported,
-                backend.SupportsMassAndCg
-                    ? "Backend support is present, but the matrix is not implemented in this contract revision."
-                    : "The public backend interface cannot set center of gravity."));
+                "operational_weight_and_balance_envelope",
+                FlightEvidenceStatus.Unproven,
+                "The station mechanics are proven, but this evidence does not yet authorize either loading against an independently pinned C172P operational envelope."));
+            backend.ConfigureMass(FlightScenarioMassConfiguration.Default);
             result.ResolveStatus();
             return result;
         }
@@ -574,6 +676,43 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
             return result;
         }
 
+        private static bool TryMeasureLoading(
+            IFlightDynamicsTraceBackend backend,
+            FlightScenarioMassConfiguration loading,
+            out double weightPounds,
+            out double cgXInches)
+        {
+            weightPounds = 0.0;
+            cgXInches = 0.0;
+            if (!backend.ConfigureMass(loading) ||
+                !backend.Reset(FlightScenarioInitialState.Airborne()))
+                return false;
+            weightPounds = backend.WeightPounds;
+            cgXInches = backend.CgXInches;
+            return !double.IsNaN(weightPounds) && !double.IsInfinity(weightPounds) &&
+                   !double.IsNaN(cgXInches) && !double.IsInfinity(cgXInches);
+        }
+
+        private RunResult RunTrimmed(
+            IFlightDynamicsTraceBackend backend,
+            string scenario,
+            FlightScenarioInitialState initial,
+            double durationSeconds)
+        {
+            if (backend.SupportsWind) backend.SetWind(0.0, 0.0, 0.0);
+            if (backend.SupportsMassAndCg &&
+                !backend.ConfigureMass(FlightScenarioMassConfiguration.Default))
+                return new RunResult();
+            if (!backend.Reset(initial) || !backend.TryTrim(out AircraftControlState trimmed))
+                return new RunResult();
+            return RunFromCurrent(
+                backend,
+                scenario,
+                durationSeconds,
+                (time, state) => trimmed,
+                trimmed);
+        }
+
         private RunResult Run(
             IFlightDynamicsTraceBackend backend,
             string scenario,
@@ -584,12 +723,39 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         {
             if (!preserveWind && backend.SupportsWind)
                 backend.SetWind(0.0, 0.0, 0.0);
+            if (backend.SupportsMassAndCg &&
+                !backend.ConfigureMass(FlightScenarioMassConfiguration.Default))
+                return new RunResult();
+            if (!backend.Reset(initial)) return new RunResult();
+            return RunFromCurrent(
+                backend,
+                scenario,
+                durationSeconds,
+                schedule,
+                AircraftControlState.Neutral());
+        }
+
+        private RunResult RunFromCurrent(
+            IFlightDynamicsTraceBackend backend,
+            string scenario,
+            double durationSeconds,
+            Func<double, FlightDynamicsState, AircraftControlState> schedule,
+            AircraftControlState initialControls)
+        {
             RunResult run = new RunResult();
-            if (!backend.Reset(initial)) return run;
             run.ok = true;
             run.start = backend.State;
-            run.states.Add(new TimedState(0.0, backend.State, DerivedBeta(backend.State)));
-            AddTrace(backend.Id, scenario, AircraftControlState.Neutral(), backend.State, 0.0);
+            run.states.Add(new TimedState(
+                0.0,
+                backend.State,
+                DerivedBeta(backend.State),
+                backend.TrueAirspeedKnots,
+                backend.WeightPounds,
+                backend.CgXInches,
+                backend.GearVerticalForcePounds,
+                backend.GearCompressionFeet,
+                backend.NoseGearSteeringDegrees));
+            AddTrace(backend, scenario, initialControls, 0.0);
 
             int steps = Mathf.CeilToInt((float)(durationSeconds / Step));
             int traceStride = 12;
@@ -606,8 +772,17 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 if (index % traceStride == 0 || index == steps)
                 {
                     double beta = DerivedBeta(backend.State);
-                    run.states.Add(new TimedState(time, backend.State, beta));
-                    AddTrace(backend.Id, scenario, controls, backend.State, time, beta);
+                    run.states.Add(new TimedState(
+                        time,
+                        backend.State,
+                        beta,
+                        backend.TrueAirspeedKnots,
+                        backend.WeightPounds,
+                        backend.CgXInches,
+                        backend.GearVerticalForcePounds,
+                        backend.GearCompressionFeet,
+                        backend.NoseGearSteeringDegrees));
+                    AddTrace(backend, scenario, controls, time, beta);
                 }
             }
             run.end = backend.State;
@@ -615,16 +790,16 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         }
 
         private void AddTrace(
-            string backend,
+            IFlightDynamicsTraceBackend backend,
             string scenario,
             AircraftControlState controls,
-            FlightDynamicsState state,
             double time,
             double? derivedBeta = null)
         {
+            FlightDynamicsState state = backend.State;
             _trace.Add(new FlightTraceSample
             {
-                backend = backend,
+                backend = backend.Id,
                 scenario = scenario,
                 timeSeconds = time,
                 aileron = controls.aileron,
@@ -633,6 +808,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 throttle = controls.throttle,
                 flaps = controls.flaps,
                 airspeedKnots = state.calibratedAirspeedKnots,
+                trueAirspeedKnots = backend.TrueAirspeedKnots,
                 altitudeAglMeters = state.altitudeAglMeters,
                 verticalSpeedFeetPerMinute = state.verticalSpeedFeetPerMinute,
                 headingDegrees = state.headingDegrees,
@@ -641,7 +817,12 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 angleOfAttackDegrees = state.angleOfAttackDegrees,
                 sideslipDegrees = derivedBeta ?? DerivedBeta(state),
                 yawRateDegreesPerSecond = state.angularVelocityBodyDegreesPerSecond.y,
-                weightOnWheels = state.weightOnWheels
+                weightOnWheels = state.weightOnWheels,
+                weightPounds = backend.WeightPounds,
+                cgXInches = backend.CgXInches,
+                gearVerticalForcePounds = backend.GearVerticalForcePounds,
+                gearCompressionFeet = backend.GearCompressionFeet,
+                noseGearSteeringDegrees = backend.NoseGearSteeringDegrees
             });
         }
 
@@ -668,7 +849,9 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
             float rudder = 0f,
             float throttle = 0.10f,
             float mixture = 1f,
-            float flaps = 0f)
+            float flaps = 0f,
+            float leftBrake = 0f,
+            float rightBrake = 0f)
         {
             return new AircraftControlState
             {
@@ -677,7 +860,9 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 rudder = rudder,
                 throttle = throttle,
                 mixture = mixture,
-                flaps = flaps
+                flaps = flaps,
+                leftToeBrake = leftBrake,
+                rightToeBrake = rightBrake
             };
         }
 
@@ -734,12 +919,33 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
             public readonly double time;
             public readonly FlightDynamicsState state;
             public readonly double beta;
+            public readonly double trueAirspeedKnots;
+            public readonly double weightPounds;
+            public readonly double cgXInches;
+            public readonly double gearVerticalForcePounds;
+            public readonly double gearCompressionFeet;
+            public readonly double noseGearSteeringDegrees;
 
-            public TimedState(double time, FlightDynamicsState state, double beta)
+            public TimedState(
+                double time,
+                FlightDynamicsState state,
+                double beta,
+                double trueAirspeedKnots,
+                double weightPounds,
+                double cgXInches,
+                double gearVerticalForcePounds,
+                double gearCompressionFeet,
+                double noseGearSteeringDegrees)
             {
                 this.time = time;
                 this.state = state;
                 this.beta = beta;
+                this.trueAirspeedKnots = trueAirspeedKnots;
+                this.weightPounds = weightPounds;
+                this.cgXInches = cgXInches;
+                this.gearVerticalForcePounds = gearVerticalForcePounds;
+                this.gearCompressionFeet = gearCompressionFeet;
+                this.noseGearSteeringDegrees = noseGearSteeringDegrees;
             }
         }
 
@@ -782,6 +988,9 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
             public double MeanSpeedKnots(double from, double to) =>
                 Aggregate(from, to, item => item.state.calibratedAirspeedKnots, false);
 
+            public double MeanTrueSpeedKnots(double from, double to) =>
+                Aggregate(from, to, item => item.trueAirspeedKnots, false);
+
             public double MeanVerticalSpeed(double from, double to) =>
                 Aggregate(from, to, item => item.state.verticalSpeedFeetPerMinute, false);
 
@@ -793,6 +1002,17 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 double minimum = double.MaxValue;
                 foreach (TimedState item in states)
                     minimum = Math.Min(minimum, item.state.calibratedAirspeedKnots);
+                return minimum == double.MaxValue ? 0.0 : minimum;
+            }
+
+            public double MaximumNoseGearSteeringDegrees() =>
+                Aggregate(0.0, double.MaxValue, item => item.noseGearSteeringDegrees, true);
+
+            public double MinimumNoseGearSteeringDegrees()
+            {
+                double minimum = double.MaxValue;
+                foreach (TimedState item in states)
+                    minimum = Math.Min(minimum, item.noseGearSteeringDegrees);
                 return minimum == double.MaxValue ? 0.0 : minimum;
             }
 
@@ -863,6 +1083,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 {
                     timeSeconds = item.time,
                     airspeedKnots = item.state.calibratedAirspeedKnots,
+                    trueAirspeedKnots = item.trueAirspeedKnots,
                     altitudeAglMeters = item.state.altitudeAglMeters,
                     verticalSpeedFeetPerMinute = item.state.verticalSpeedFeetPerMinute,
                     headingDegrees = item.state.headingDegrees,
@@ -871,7 +1092,12 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                     angleOfAttackDegrees = item.state.angleOfAttackDegrees,
                     sideslipDegrees = item.beta,
                     yawRateDegreesPerSecond = item.state.angularVelocityBodyDegreesPerSecond.y,
-                    weightOnWheels = item.state.weightOnWheels
+                    weightOnWheels = item.state.weightOnWheels,
+                    weightPounds = item.weightPounds,
+                    cgXInches = item.cgXInches,
+                    gearVerticalForcePounds = item.gearVerticalForcePounds,
+                    gearCompressionFeet = item.gearCompressionFeet,
+                    noseGearSteeringDegrees = item.noseGearSteeringDegrees
                 };
             }
         }

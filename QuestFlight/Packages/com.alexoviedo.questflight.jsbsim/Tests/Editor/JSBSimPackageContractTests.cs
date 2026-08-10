@@ -33,7 +33,7 @@ namespace AlexOviedo.QuestFlight.JSBSim.Tests
         }
 
         [Test]
-        public void C172PTrainingLoadIsExplicitSymmetricAndWithinNormalCategoryMaximum()
+        public void C172PPrivateLoadStationsAreExplicitSymmetricAndConfigurable()
         {
             XDocument document = LoadAircraftDocument();
             XElement massBalance = document.Root.Element("mass_balance");
@@ -43,16 +43,16 @@ namespace AlexOviedo.QuestFlight.JSBSim.Tests
 
             XElement[] pointMasses = massBalance.Elements("pointmass").ToArray();
             Assert.That(pointMasses.Select(element => (string)element.Attribute("name")),
-                Is.EquivalentTo(new[] { "PILOT", "CO-PILOT" }));
+                Is.EquivalentTo(new[] { "PILOT", "CO-PILOT", "REAR-LEFT", "REAR-RIGHT", "BAGGAGE" }));
             Assert.That(pointMasses.Sum(element => Number(element.Element("weight"))),
-                Is.EqualTo(JSBSimNativeSession.PinnedOccupantWeightPounds));
+                Is.EqualTo(340.0));
             Assert.That(pointMasses.Sum(element => Number(element.Element("weight")) *
                 Number(element.Element("location").Element("y"))), Is.EqualTo(0.0).Within(0.001));
 
             XElement[] tanks = document.Root.Element("propulsion").Elements("tank").ToArray();
             Assert.That(tanks, Has.Length.EqualTo(2));
             Assert.That(tanks.Sum(element => Number(element.Element("contents"))),
-                Is.EqualTo(JSBSimNativeSession.PinnedFuelWeightPounds));
+                Is.EqualTo(260.0));
             Assert.That(tanks.Sum(element => Number(element.Element("contents")) *
                 Number(element.Element("location").Element("y"))), Is.EqualTo(0.0).Within(0.001));
 
@@ -96,7 +96,7 @@ namespace AlexOviedo.QuestFlight.JSBSim.Tests
         }
 
         [Test]
-        public void NativeAbiVersionOneProbesOnWindowsEditor()
+        public void NativeAbiVersionTwoProbesOnWindowsEditor()
         {
 #if UNITY_EDITOR_WIN
             Assert.That(JSBSimNativeSession.TryProbe(out string error), Is.True, error);
@@ -112,6 +112,8 @@ namespace AlexOviedo.QuestFlight.JSBSim.Tests
             using (JSBSimNativeSession session = new JSBSimNativeSession())
             {
                 Assert.That(session.Initialize(JSBSimRuntimeData.EditorPackageDataRoot), Is.True,
+                    session.LastError);
+                Assert.That(session.SetMassConfiguration(JSBSimNativeSession.DefaultMass), Is.True,
                     session.LastError);
                 JSBSimNativeInitialConditions initial = new JSBSimNativeInitialConditions
                 {
@@ -136,9 +138,41 @@ namespace AlexOviedo.QuestFlight.JSBSim.Tests
                 Assert.That(session.ConfiguredInitialConditions.terrainElevationMslFeet,
                     Is.EqualTo(initial.terrainElevationMslFeet));
                 Assert.That(session.AppliedControls.throttle, Is.EqualTo(0.2));
+                Assert.That(session.Diagnostics.weightPounds,
+                    Is.EqualTo(JSBSimNativeSession.PinnedInitialWeightPounds).Within(1.0));
+                Assert.That(session.Diagnostics.densitySlugsPerCubicFoot, Is.GreaterThan(0.0));
             }
 #else
             Assert.Ignore("Native package execution is scoped to the Windows editor and Android ARM64 player.");
+#endif
+        }
+
+        [Test]
+        public void NativePinnedModelProducesAValidLongitudinalTrim()
+        {
+#if UNITY_EDITOR_WIN
+            using (JSBSimNativeSession session = new JSBSimNativeSession())
+            {
+                Assert.That(session.Initialize(JSBSimRuntimeData.EditorPackageDataRoot), Is.True,
+                    session.LastError);
+                Assert.That(session.Reset(new JSBSimNativeInitialConditions
+                {
+                    latitudeDegrees = 40.03936527,
+                    longitudeDegrees = -105.22608958,
+                    altitudeMslFeet = 6288.0,
+                    terrainElevationMslFeet = 5288.0,
+                    calibratedAirspeedKnots = 90.0,
+                    headingDegrees = 89.972,
+                    engineRunning = 1
+                }), Is.True, session.LastError);
+                Assert.That(session.Trim(JSBSimNativeTrimRequest.StandardLongitudinal,
+                    out JSBSimNativeTrimResult trim), Is.True, session.LastError);
+                Assert.That(trim.success, Is.EqualTo(1));
+                Assert.That(trim.throttle, Is.InRange(0.0, 1.0));
+                Assert.That(trim.elevatorNoseUp, Is.InRange(-1.0, 1.0));
+            }
+#else
+            Assert.Ignore("Native package execution is scoped to Windows editor and Android ARM64.");
 #endif
         }
 

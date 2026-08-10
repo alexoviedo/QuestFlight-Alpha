@@ -59,12 +59,11 @@
     </metrics>
     <mass_balance>
         <!--
-          QuestFlight diagnostic training load (model derivative 1):
-          1454 lb empty + two 170 lb front-seat occupants + two symmetric
-          130 lb full fuel tanks = 2054 lb. Rear occupants, baggage, and the
-          upstream PesticideBomb test point mass are intentionally absent.
-          This deterministic, laterally symmetric load is for open-loop model
-          evaluation; it is not an operational weight-and-balance calculation.
+          QuestFlight private fidelity load contract (model derivative 2).
+          Front occupants default to 170 lb each and rear/baggage stations
+          default to zero. The ABI configures all five stations and both fuel
+          tanks before RunIC. The upstream PesticideBomb test point mass remains
+          intentionally absent. This is not an operational W&B calculation.
         -->
         <ixx unit="SLUG*FT2"> 948.0 </ixx>
         <iyy unit="SLUG*FT2"> 1346.0 </iyy>
@@ -89,6 +88,30 @@
             <location unit="IN">
                 <x> 36.0 </x>
                 <y> 14.0 </y>
+                <z> 24.0 </z>
+            </location>
+        </pointmass>
+        <pointmass name="REAR-LEFT">
+            <weight unit="LBS">0.0</weight>
+            <location unit="IN">
+                <x> 60.0 </x>
+                <y> -14.0 </y>
+                <z> 24.0 </z>
+            </location>
+        </pointmass>
+        <pointmass name="REAR-RIGHT">
+            <weight unit="LBS">0.0</weight>
+            <location unit="IN">
+                <x> 60.0 </x>
+                <y> 14.0 </y>
+                <z> 24.0 </z>
+            </location>
+        </pointmass>
+        <pointmass name="BAGGAGE">
+            <weight unit="LBS">0.0</weight>
+            <location unit="IN">
+                <x> 95.0 </x>
+                <y> 0.0 </y>
                 <z> 24.0 </z>
             </location>
         </pointmass>

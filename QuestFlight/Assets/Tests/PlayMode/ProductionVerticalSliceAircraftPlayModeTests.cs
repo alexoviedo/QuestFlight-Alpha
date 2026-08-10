@@ -79,10 +79,14 @@ namespace QuestFlightLab.Tests.PlayMode
             Assert.That(coordinator.initialConditionProvider.spawnTransform, Is.EqualTo(rig.transform));
             Assert.That(coordinator.initialConditionProvider.derivePositionFromSpawnTransform, Is.True);
             Assert.That(coordinator.initialConditionProvider.deriveHeadingFromSpawnTransform, Is.True);
+            ProductionEnvironmentRoot authoredEnvironment =
+                ComponentsInWorld<ProductionEnvironmentRoot>(world).Single();
+            Assert.That(coordinator.terrainSurface,
+                Is.SameAs(authoredEnvironment.authoritativeTerrainSurface));
             Assert.That(ComponentsInWorld<SimpleAircraftPhysics>(world), Has.Length.EqualTo(1));
 
             Assert.That(coordinator.InitializeSelectedBackend(), Is.True, coordinator.LastError);
-            ProductionEnvironmentRoot environment = ComponentsInWorld<ProductionEnvironmentRoot>(world).Single();
+            ProductionEnvironmentRoot environment = authoredEnvironment;
             Vector3 expectedSpawn = environment.transform.TransformPoint(Vector3.Lerp(
                 environment.runway08EndLocal,
                 environment.runway26EndLocal,

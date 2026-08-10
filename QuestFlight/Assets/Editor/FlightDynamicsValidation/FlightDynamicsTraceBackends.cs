@@ -50,15 +50,49 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         }
     }
 
+    internal struct FlightScenarioMassConfiguration
+    {
+        public double pilotPounds;
+        public double copilotPounds;
+        public double rearLeftPounds;
+        public double rearRightPounds;
+        public double baggagePounds;
+        public double leftFuelPounds;
+        public double rightFuelPounds;
+
+        public double PayloadAndFuelPounds =>
+            pilotPounds + copilotPounds + rearLeftPounds + rearRightPounds +
+            baggagePounds + leftFuelPounds + rightFuelPounds;
+
+        public static FlightScenarioMassConfiguration Default =>
+            new FlightScenarioMassConfiguration
+            {
+                pilotPounds = 170.0,
+                copilotPounds = 170.0,
+                leftFuelPounds = 130.0,
+                rightFuelPounds = 130.0
+            };
+    }
+
     internal interface IFlightDynamicsTraceBackend : IDisposable
     {
         string Id { get; }
         bool SupportsWind { get; }
         bool SupportsMassAndCg { get; }
+        bool SupportsTrim { get; }
         bool SupportsPhysicalGroundContact { get; }
+        bool SupportsNoseWheelSteeringDiagnostics { get; }
         string LastError { get; }
         FlightDynamicsState State { get; }
+        double TrueAirspeedKnots { get; }
+        double WeightPounds { get; }
+        double CgXInches { get; }
+        double GearVerticalForcePounds { get; }
+        double GearCompressionFeet { get; }
+        double NoseGearSteeringDegrees { get; }
+        bool ConfigureMass(FlightScenarioMassConfiguration configuration);
         bool Reset(FlightScenarioInitialState initialState);
+        bool TryTrim(out AircraftControlState controls);
         void SetControls(AircraftControlState controls);
         bool SetWind(double northMetersPerSecond, double eastMetersPerSecond, double downMetersPerSecond);
         bool Step(double fixedDeltaTimeSeconds);
@@ -102,9 +136,25 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         public string Id => "UnityPrototype";
         public bool SupportsWind => false;
         public bool SupportsMassAndCg => false;
+        public bool SupportsTrim => false;
         public bool SupportsPhysicalGroundContact => false;
+        public bool SupportsNoseWheelSteeringDiagnostics => false;
         public string LastError { get; private set; } = string.Empty;
         public FlightDynamicsState State => _backend.CurrentState;
+        public double TrueAirspeedKnots => State.calibratedAirspeedKnots;
+        public double WeightPounds => double.NaN;
+        public double CgXInches => double.NaN;
+        public double GearVerticalForcePounds => double.NaN;
+        public double GearCompressionFeet => double.NaN;
+        public double NoseGearSteeringDegrees => double.NaN;
+
+        public bool ConfigureMass(FlightScenarioMassConfiguration configuration) => false;
+
+        public bool TryTrim(out AircraftControlState controls)
+        {
+            controls = null;
+            return false;
+        }
 
         public bool Reset(FlightScenarioInitialState initialState)
         {
@@ -180,11 +230,63 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
 
         public string Id => "JSBSimNativeDevelopment";
         public bool SupportsWind => true;
-        public bool SupportsMassAndCg => false;
+        public bool SupportsMassAndCg => true;
+        public bool SupportsTrim => true;
         public bool SupportsPhysicalGroundContact => true;
+        public bool SupportsNoseWheelSteeringDiagnostics => true;
         public string LastError { get; private set; } = string.Empty;
         public FlightDynamicsState State { get; private set; }
+        public double TrueAirspeedKnots => _session.Diagnostics.trueAirspeedKnots;
+        public double WeightPounds => _session.Diagnostics.weightPounds;
+        public double CgXInches => _session.Diagnostics.cgXInches;
+        public double GearVerticalForcePounds => _session.Diagnostics.gearForceZPounds;
+        public double GearCompressionFeet =>
+            _session.Diagnostics.gear0CompressionFeet +
+            _session.Diagnostics.gear1CompressionFeet +
+            _session.Diagnostics.gear2CompressionFeet;
+        public double NoseGearSteeringDegrees => _session.Diagnostics.gear0SteeringDegrees;
         public bool IsAvailable => _session.IsInitialized;
+
+        public bool ConfigureMass(FlightScenarioMassConfiguration configuration)
+        {
+            bool configured = _session.SetMassConfiguration(new JSBSimNativeMassConfiguration
+            {
+                pilotPounds = configuration.pilotPounds,
+                copilotPounds = configuration.copilotPounds,
+                rearLeftPounds = configuration.rearLeftPounds,
+                rearRightPounds = configuration.rearRightPounds,
+                baggagePounds = configuration.baggagePounds,
+                leftFuelPounds = configuration.leftFuelPounds,
+                rightFuelPounds = configuration.rightFuelPounds
+            });
+            LastError = configured ? string.Empty : _session.LastError;
+            return configured;
+        }
+
+        public bool TryTrim(out AircraftControlState controls)
+        {
+            controls = null;
+            if (!_session.Trim(
+                    JSBSimNativeTrimRequest.StandardFull,
+                    out JSBSimNativeTrimResult trim))
+            {
+                LastError = _session.LastError;
+                return false;
+            }
+
+            controls = new AircraftControlState
+            {
+                aileron = (float)trim.aileron,
+                elevator = (float)trim.elevatorNoseUp,
+                rudder = (float)trim.rudderYawRight,
+                throttle = (float)trim.throttle,
+                mixture = 1f,
+                trim = (float)trim.elevatorTrimNoseUp
+            };
+            CaptureState();
+            LastError = string.Empty;
+            return true;
+        }
 
         public bool Reset(FlightScenarioInitialState initialState)
         {

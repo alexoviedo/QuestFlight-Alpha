@@ -75,6 +75,7 @@ namespace QuestFlightLab.Tests.EditMode
                     touchControllers[0];
 
                 Assert.That(coordinator.controls, Is.SameAs(input));
+                Assert.That(coordinator.terrainSurface, Is.Not.Null);
                 Assert.That(bridge.Coordinator, Is.SameAs(coordinator));
                 Assert.That(bridge.InputAuthority, Is.SameAs(input));
                 Assert.That(touch.CommandConsumer, Is.SameAs(bridge));

@@ -1,8 +1,8 @@
 {
   "name": "com.alexoviedo.questflight.jsbsim",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "displayName": "QuestFlight JSBSim Native",
-  "description": "Pinned, integrity-checked JSBSim native diagnostic runtime for QuestFlight development-gated flight dynamics.",
+  "description": "Pinned, integrity-checked JSBSim native candidate with trim and flight-dynamics telemetry for QuestFlight's private fidelity gate.",
   "unity": "6000.3",
   "license": "See LICENSE.md and RuntimeData/JSBSim-1.3.1/COPYING.txt",
   "dependencies": {

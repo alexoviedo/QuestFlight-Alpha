@@ -76,7 +76,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         private static string BuildCsv(IReadOnlyList<FlightTraceSample> trace)
         {
             StringBuilder csv = new StringBuilder(Math.Max(2048, trace.Count * 180));
-            csv.AppendLine("backend,scenario,time_s,aileron,elevator,rudder,throttle,flaps,airspeed_kt,altitude_agl_m,vertical_speed_fpm,heading_deg,pitch_deg,bank_deg,aoa_deg,beta_deg,yaw_rate_deg_s,weight_on_wheels");
+            csv.AppendLine("backend,scenario,time_s,aileron,elevator,rudder,throttle,flaps,calibrated_airspeed_kt,true_airspeed_kt,altitude_agl_m,vertical_speed_fpm,heading_deg,pitch_deg,bank_deg,aoa_deg,beta_deg,yaw_rate_deg_s,weight_on_wheels,weight_lb,cg_x_in,gear_vertical_force_lb,gear_compression_ft,nose_gear_steering_deg");
             foreach (FlightTraceSample sample in trace)
             {
                 AppendCsv(csv, sample.backend);
@@ -88,6 +88,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 AppendCsv(csv, sample.throttle);
                 AppendCsv(csv, sample.flaps);
                 AppendCsv(csv, sample.airspeedKnots);
+                AppendCsv(csv, sample.trueAirspeedKnots);
                 AppendCsv(csv, sample.altitudeAglMeters);
                 AppendCsv(csv, sample.verticalSpeedFeetPerMinute);
                 AppendCsv(csv, sample.headingDegrees);
@@ -96,7 +97,12 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 AppendCsv(csv, sample.angleOfAttackDegrees);
                 AppendCsv(csv, sample.sideslipDegrees);
                 AppendCsv(csv, sample.yawRateDegreesPerSecond);
-                csv.Append(sample.weightOnWheels ? "true" : "false").AppendLine();
+                csv.Append(sample.weightOnWheels ? "true," : "false,");
+                AppendCsv(csv, sample.weightPounds);
+                AppendCsv(csv, sample.cgXInches);
+                AppendCsv(csv, sample.gearVerticalForcePounds);
+                AppendCsv(csv, sample.gearCompressionFeet);
+                csv.Append(sample.noseGearSteeringDegrees.ToString("R", CultureInfo.InvariantCulture)).AppendLine();
             }
             return csv.ToString();
         }

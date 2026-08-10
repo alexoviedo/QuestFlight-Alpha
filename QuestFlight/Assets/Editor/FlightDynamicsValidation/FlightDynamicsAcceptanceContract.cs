@@ -139,6 +139,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         public float throttle;
         public float flaps;
         public double airspeedKnots;
+        public double trueAirspeedKnots;
         public double altitudeAglMeters;
         public double verticalSpeedFeetPerMinute;
         public double headingDegrees;
@@ -148,6 +149,11 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         public double sideslipDegrees;
         public double yawRateDegreesPerSecond;
         public bool weightOnWheels;
+        public double weightPounds;
+        public double cgXInches;
+        public double gearVerticalForcePounds;
+        public double gearCompressionFeet;
+        public double noseGearSteeringDegrees;
     }
 
     [Serializable]
@@ -185,7 +191,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
 
     public static class FlightDynamicsAcceptanceContract
     {
-        public const string ContractVersion = "questflight-flight-dynamics-evidence-v1";
+        public const string ContractVersion = "questflight-flight-dynamics-evidence-v2";
         public const double FixedStepSeconds = 1.0 / 120.0;
         // Matches FlightDynamicsInitialConditions.KbduRunway and the serialized
         // production spawn datum. This is CG/reference-point AGL, not an

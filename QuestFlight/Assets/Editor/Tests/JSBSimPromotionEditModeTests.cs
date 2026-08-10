@@ -18,13 +18,13 @@ namespace QuestFlightLab.Tests.EditMode
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Runtime/Plugins/Windows/x86_64/JSBSim.dll"] =
-                    "9f80c6af748ede9c0addff022ce78337dfa2930046e3a8cfe155cc610b942bc7",
+                    "eeb8852bf7aabb33ab2f4527a3a48cc10b952a248e308804803399cc75de5e85",
                 ["Runtime/Plugins/Windows/x86_64/qfl_jsbsim_native.dll"] =
-                    "5ee4ccd81cc296a946c843cacf0ea5ab0d132c78c3dba3c9056eeddb612c83d4",
+                    "78bea2ff25aae003e8f866cd32c9b99fb0346ab29dc25a9e368c3465744f8c5b",
                 ["Runtime/Plugins/Android/arm64-v8a/libJSBSim.so"] =
-                    "38c2fe56ba86568763caab81d62a4e3096d4b8fd2222d19ee824934fbc4af8a1",
+                    "1f15983e3fcff3a8dfa44180c5beb6ea7b490cb88d831214ed858babc81cac83",
                 ["Runtime/Plugins/Android/arm64-v8a/libqfl_jsbsim_native.so"] =
-                    "bf5f10df987a2411e0889b307eca4cd7fe08feef3c1427bfc1da7ce098162bb5"
+                    "432ce6b14b0c3d9b5fc36ae3362937ca9dd3687d59830d71c3da7c84a31f1f6c"
             };
 
         [Test]

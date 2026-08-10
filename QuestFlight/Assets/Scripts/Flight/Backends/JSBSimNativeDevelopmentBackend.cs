@@ -1,5 +1,7 @@
 using AlexOviedo.QuestFlight.JSBSim;
+using QuestFlightLab.Environment;
 using QuestFlightLab.Runtime;
+using UnityEngine;
 
 namespace QuestFlightLab.Flight.Backends
 {
@@ -36,6 +38,8 @@ namespace QuestFlightLab.Flight.Backends
                 : LastError);
             if (context == null || context.simulationRoot == null || context.aircraftState == null)
                 return Fail("Native JSBSim requires the authored simulation root and AircraftState.");
+            if (context.terrainSurface == null)
+                return Fail("Native JSBSim requires the serialized production terrain surface.");
             if (!JSBSimRuntimeData.ValidateDataRoot(_dataRoot, out string dataError))
                 return Fail(dataError);
 
@@ -52,12 +56,18 @@ namespace QuestFlightLab.Flight.Backends
         public bool Reset(FlightDynamicsInitialConditions initialConditions)
         {
             if (!RequireInitialized()) return false;
+            if (!TryTerrainElevationAt(
+                    initialConditions.latitudeDegrees,
+                    initialConditions.longitudeDegrees,
+                    initialConditions.altitudeMslMeters,
+                    out double terrainElevationMslMeters))
+                return false;
             JSBSimNativeInitialConditions native = new JSBSimNativeInitialConditions
             {
                 latitudeDegrees = initialConditions.latitudeDegrees,
                 longitudeDegrees = initialConditions.longitudeDegrees,
                 altitudeMslFeet = initialConditions.altitudeMslMeters * FlightFrameConversions.MetersToFeet,
-                terrainElevationMslFeet = initialConditions.terrainElevationMslMeters * FlightFrameConversions.MetersToFeet,
+                terrainElevationMslFeet = terrainElevationMslMeters * FlightFrameConversions.MetersToFeet,
                 calibratedAirspeedKnots = initialConditions.calibratedAirspeedKnots,
                 headingDegrees = initialConditions.headingDegrees,
                 pitchDegrees = initialConditions.pitchDegrees,
@@ -100,8 +110,39 @@ namespace QuestFlightLab.Flight.Backends
         public bool Advance(double fixedDeltaTimeSeconds)
         {
             if (!RequireInitialized()) return false;
+            if (!TryTerrainElevationAt(
+                    CurrentState.latitudeDegrees,
+                    CurrentState.longitudeDegrees,
+                    CurrentState.altitudeMslMeters,
+                    out double terrainElevationMslMeters) ||
+                !_session.SetTerrainElevation(
+                    terrainElevationMslMeters * FlightFrameConversions.MetersToFeet))
+                return Fail(string.IsNullOrWhiteSpace(_session.LastError)
+                    ? "Could not update JSBSim from the authored terrain surface."
+                    : _session.LastError);
             if (!_session.Advance(fixedDeltaTimeSeconds)) return Fail(_session.LastError);
             return CaptureState();
+        }
+
+        private bool TryTerrainElevationAt(
+            double latitudeDegrees,
+            double longitudeDegrees,
+            double altitudeMslMeters,
+            out double terrainElevationMslMeters)
+        {
+            terrainElevationMslMeters = 0.0;
+            Vector3 enu = FlightFrameConversions.GeodeticToUnity(
+                latitudeDegrees,
+                longitudeDegrees,
+                altitudeMslMeters,
+                _context.localOrigin);
+            if (!_context.terrainSurface.TrySample(
+                    enu.x,
+                    enu.z,
+                    out ProductionTerrainSample sample))
+                return Fail($"Authored terrain has no sample at ENU ({enu.x:0.###}, {enu.z:0.###}) m.");
+            terrainElevationMslMeters = _context.localOrigin.altitudeMslMeters + sample.heightMeters;
+            return true;
         }
 
         public void Dispose()
