@@ -212,3 +212,19 @@ The airport corridor is a reference-faithful procedural approximation rather tha
 - Worn Quest visual acceptance reached 9/10 for visibility, continuity, color,
   and stability. No physical Quest timing/thermal acceptance was run for the
   exact fence APK; visual acceptance does not establish performance.
+
+## Boulder Cloud Field V1
+
+- The default profile is one authored `KBDU_SUMMER_SCATTERED_V1` fair-weather
+  presentation, not live weather or a reconstruction of a particular day.
+- Clouds are stereo-stable cutout impostors plus bounded interior atmosphere
+  modulation. They are not literal volumetric density fields: fly-through
+  visibility is an ellipsoid-driven fog/sun/sky transition rather than sampled
+  three-dimensional vapor.
+- The final cloud delta is one renderer/draw, 30 selected and serialized
+  triangles, one material, and one maximum-512-square ASTC atlas. The aggregate
+  Visual QA planning gate already failed before clouds at 78 draws and 675,835
+  visible triangles; the cloud candidate records 79 draws and 675,865 triangles.
+- A live Meta XR Simulator stereo pair was inspected, but the aggregate gate is
+  `BLOCKED_MISSING_RECORDED_REPLAYS`. No physical Quest timing, thermal,
+  stale/tear, comfort, or worn visual acceptance is claimed for the cloud APK.

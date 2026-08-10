@@ -596,3 +596,16 @@ reference photograph is committed, redistributed, or sampled into runtime
 textures. The four fixed meshes, fence material/shader logic, authoring code,
 and tests are project-authored. Exact public URLs and hashes are recorded in
 `docs/KBDU_AIRPORT_PERIMETER_FENCE.md` and the milestone evidence.
+
+### Boulder Cloud Field V1
+
+The cloud meshes, shader, material, placement profile, and authoring code are
+project-authored. `KBDU_CloudImpostorAtlasV3.png` was generated specifically
+for this project with OpenAI image generation on 2026-08-10; it contains no
+downloaded photograph, model, logo, or watermark. The committed PNG has
+SHA-256 `a4bf9047b4427f71e902cb6aa1b5c3ff1296e29f4f5d0dd685be5ecc4548dd82`
+and is imported as a maximum-512-square, mipmapped, streaming Android ASTC 6x6
+runtime texture. Prompt, tool, source URLs, runtime policy, and license record
+are preserved in `Assets/Production/Environment/CloudsV1/SOURCE_AND_LICENSE.md`
+and `SOURCE_MANIFEST.json`. No raw download or third-party cloud photography is
+committed.

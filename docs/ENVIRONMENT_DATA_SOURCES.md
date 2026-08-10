@@ -140,3 +140,14 @@ required genuine recordings are absent: `cockpit_neutral`, `head_pan`,
 `takeoff_roll`, `rotation_climb`, `shallow_turns`, and `final_approach`.
 Captures, builds, and APKs remain external; their paths and the complete gate
 record are in the linked evidence document above.
+
+## Boulder cloud references
+
+The authored fair-weather cloud profile uses official meteorological references
+only as morphology, altitude, and terminology constraints; it is not live
+weather. Sources are NOAA Aviation Weather Center METAR data, NOAA/NCEI Local
+Climatological Data, NSF NCAR/UCAR mountain-cloud and lenticular-cloud guidance,
+and National Weather Service cloud-development training. The exact URLs and
+roles are pinned in
+`Assets/Production/Environment/CloudsV1/SOURCE_MANIFEST.json`. No observation
+record, third-party photograph, or raw weather download is committed.

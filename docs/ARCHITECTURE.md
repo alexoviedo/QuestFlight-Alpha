@@ -8,7 +8,8 @@ ProductionWorldRoot
 │   ├── OSM-footprint building batches, authored hero objects, and parked-aircraft HLOD
 │   ├── Terrain-owned far canopy, four fixed semantic-grove batches, and orthophoto-only water
 │   ├── Bounded instanced runway-side grass and one combined airport-detail mesh
-│   └── Bounded aircraft/runway blob shadow
+│   ├── Bounded aircraft/runway blob shadow
+│   └── One-batch, center-eye-oriented KBDU cloud impostor field
 ├── ProductionInputRoot
 ├── AircraftSimulationRoot (one Unity prototype authority, CG pivot)
 │   ├── CenterOfGravityReference
@@ -42,7 +43,7 @@ Visible environment geometry uses one product-local WGS84 AEQD east-north-up coo
 
 On Environment Reconstruction V2, `IProductionTerrainSurface` is the single query contract for height, normal, terrain zone, imagery UV, land-cover, runway/apron, water, and footprint-plane data. `ProductionPlacementManifest` serializes every grounded building, vegetation instance, parked aircraft, and represented water feature. Authoring and validation consume these assets; runtime code does not rebuild the world or repair its hierarchy.
 
-Lighting is one directional sun plus a CC0 photographic HDR sky used for skybox and ambient lighting. The current feature candidate adds static, imagery-aware global and bounded airport reflection textures without a runtime probe render; this foundation is not yet visually accepted. Reservoir and minor-water renderers/material bindings remain inactive and the photographed orthophoto is the only water presentation. A bounded authored blob shadow supplies runway contact without a realtime aircraft shadow map. Volumetric clouds and screen-space atmosphere effects are excluded.
+Lighting is one directional sun plus a CC0 photographic HDR sky used for skybox and ambient lighting. The current feature candidate adds static, imagery-aware global and bounded airport reflection textures without a runtime probe render; this foundation is not yet visually accepted. Reservoir and minor-water renderers/material bindings remain inactive and the photographed orthophoto is the only water presentation. A bounded authored blob shadow supplies runway contact without a realtime aircraft shadow map. `BoulderCloudFieldRoot` adds 15 authored fair-weather cumulus volumes in one 30-triangle, one-material render batch. Its vertex shader derives one shared center-eye orientation for both eyes; it does not rotate per eye, run a cloud camera, use particles, or use a transparent blend pass. Entering an authored ellipsoid smoothly modulates the existing fog, sky exposure, and sun intensity without moving the XR camera or constructing hierarchy. Literal volumetric clouds and screen-space atmosphere effects remain excluded.
 
 The accepted-baseline planning gate fails closed above 120 draw calls, 600,000 visible triangles, 25 visible materials, 180 MiB of estimated texture memory, or three transparent material slots. Mipmapped ASTC textures, bounded effects, fixed terrain, and no steady-state runtime hierarchy construction keep the budget predictable. Visual-QA capture counts are milestone-specific (81 views on the current feature candidate); Editor QA and static inventory complement—without replacing—the physical-headset gate.
 

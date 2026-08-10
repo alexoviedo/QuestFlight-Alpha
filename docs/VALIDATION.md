@@ -469,3 +469,26 @@ estimated residency for its three Android textures is 1,327,872 bytes, a
 still blocked by pre-existing accepted-branch cockpit/OVR dependency, hierarchy,
 magnetic-compass QA, and missing recorded-replay issues. See
 `docs/evidence/KBDU_RUNWAY_PHOTOREAL_MATERIAL_V1_2026-08-07.md` for exact evidence.
+
+## Boulder Cloud Field V1
+
+- Product integrity: PASS; 1,299 assets, 1,904 scene objects, 120 renderers,
+  784,799/800,000 serialized triangles, and 36 materials.
+- Dependency closure: PASS; 580 dependencies, 386 approved, 194 package, zero
+  rejected, and zero unknown.
+- EditMode: PASS 303/303. PlayMode: PASS 10/10.
+- Final Visual QA: four dedicated cloud views captured and inspected. Three
+  pass the generic machine thresholds; the cockpit cloud view inherits the
+  existing 668,039-triangle warning. Aggregate status remains
+  `FAIL_MACHINE_QA`: 79 maximum draws and 675,865 maximum visible triangles,
+  versus the pre-cloud failure at 78 and 675,835.
+- Meta XR Simulator: a live Quest 3-profile single-pass stereo pair was
+  captured and inspected with matching cloud orientation in both eyes. The
+  aggregate result is `BLOCKED_MISSING_RECORDED_REPLAYS`; all ten required VRS
+  replay files remain absent.
+- Android ARM64/Vulkan/OpenXR release-style build: PASS; 174,747,481 bytes,
+  SHA-256 `37af3ab6049da78cd73915ab11382fa278c6806fb4fa663160b4d54517ea5315`.
+
+These are development/build results, not physical Quest performance or literal
+photorealism acceptance. Exact evidence is in
+`docs/evidence/BOULDER_CLOUDS_V1_2026-08-10.md`.
