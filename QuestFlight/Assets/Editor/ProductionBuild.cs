@@ -39,9 +39,7 @@ namespace QuestFlight.Editor
                 Environment.GetEnvironmentVariable("QUESTFLIGHT_ENABLE_NATIVE_JSBSIM"),
                 "1",
                 StringComparison.Ordinal);
-            if (forceUnityPrototype && enableNativeJsbsim)
-                throw new InvalidOperationException(
-                    "Unity-prototype forcing and native-JSBSim opt-in are mutually exclusive.");
+            ValidateBackendBuildFlags(development, forceUnityPrototype, enableNativeJsbsim);
             BuildOptions buildOptions = development
                 ? BuildOptions.Development | BuildOptions.AllowDebugging | BuildOptions.ConnectWithProfiler
                 : BuildOptions.None;
@@ -81,6 +79,20 @@ namespace QuestFlight.Editor
             Debug.Log(
                 $"[QuestFlight][Build] SUCCESS apk={apkPath}; bytes={report.summary.totalSize}; " +
                 $"duration={report.summary.totalTime}; development={development}");
+        }
+
+        public static void ValidateBackendBuildFlags(
+            bool development,
+            bool forceUnityPrototype,
+            bool enableNativeJsbsim)
+        {
+            if (forceUnityPrototype && enableNativeJsbsim)
+                throw new InvalidOperationException(
+                    "Unity-prototype forcing and native-JSBSim opt-in are mutually exclusive.");
+            if (enableNativeJsbsim && !development)
+                throw new InvalidOperationException(
+                    "Native JSBSim requires a development build because the runtime authority " +
+                    "is deliberately compile-gated out of release-style products.");
         }
 
         private static void ValidateCompiledProductShaders()

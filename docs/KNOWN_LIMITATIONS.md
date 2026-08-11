@@ -228,3 +228,15 @@ The airport corridor is a reference-faithful procedural approximation rather tha
 - A live Meta XR Simulator stereo pair was inspected, but the aggregate gate is
   `BLOCKED_MISSING_RECORDED_REPLAYS`. No physical Quest timing, thermal,
   stale/tear, comfort, or worn visual acceptance is claimed for the cloud APK.
+- The 2026-08-11 correction replaces the RGB/luminance-key atlas with a pinned
+  straight-alpha derivative, preserves alpha coverage through Android mips,
+  clamps atlas sampling, expands serialized bounds to the true card radius, and
+  calibrates clouds to the authored sun/sky. Machine captures no longer show the
+  former charcoal card border, but exact-APK worn visual acceptance remains
+  pending.
+- The earlier cloud APK used the Unity prototype backend whereas the accepted
+  handling candidate used native JSBSim. The correction build is explicitly a
+  development/native comparison build. This does not promote native JSBSim to
+  shipping authority and does not establish stall, slip, spin, or recovery
+  fidelity; current structural flight evidence contains unproven and unsupported
+  items.

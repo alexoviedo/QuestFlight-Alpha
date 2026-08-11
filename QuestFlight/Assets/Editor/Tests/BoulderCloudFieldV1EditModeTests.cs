@@ -73,6 +73,8 @@ namespace QuestFlightLab.Editor.Tests
             StringAssert.Contains("AlphaToMask On", shader);
             StringAssert.Contains("ZWrite On", shader);
             StringAssert.Contains("Blend Off", shader);
+            StringAssert.Contains("clip(atlas.a - _CoverageCutoff)", shader);
+            StringAssert.DoesNotContain("clip(luminance", shader);
             StringAssert.DoesNotContain("GrabPass", shader);
         }
 
@@ -83,11 +85,39 @@ namespace QuestFlightLab.Editor.Tests
             Assert.That(importer, Is.Not.Null);
             Assert.That(importer.mipmapEnabled, Is.True);
             Assert.That(importer.streamingMipmaps, Is.True);
-            Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Repeat));
+            Assert.That(importer.DoesSourceTextureHaveAlpha(), Is.True);
+            Assert.That(importer.alphaSource, Is.EqualTo(TextureImporterAlphaSource.FromInput));
+            Assert.That(importer.alphaIsTransparency, Is.True);
+            Assert.That(importer.mipMapsPreserveCoverage, Is.True);
+            Assert.That(importer.alphaTestReferenceValue, Is.EqualTo(0.02f).Within(0.001f));
+            Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));
             TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
             Assert.That(android.overridden, Is.True);
             Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_6x6));
             Assert.That(android.maxTextureSize, Is.LessThanOrEqualTo(512));
+        }
+
+        [Test]
+        public void CloudMeshBoundsContainEveryShaderExpandedBillboard()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                ProductionEnvironmentRoot.PrefabAssetPath);
+            BoulderCloudField field = prefab.GetComponent<ProductionEnvironmentRoot>()
+                .boulderCloudField.GetComponent<BoulderCloudField>();
+            MeshFilter filter = field.GetComponentInChildren<MeshFilter>(true);
+            Assert.That(filter, Is.Not.Null);
+            Bounds bounds = filter.sharedMesh.bounds;
+            foreach (BoulderCloudProfile.Volume volume in field.Profile.Volumes)
+            {
+                float halfWidth = Mathf.Max(volume.radiiMeters.x, volume.radiiMeters.z);
+                float cornerRadius = Mathf.Sqrt(
+                    halfWidth * halfWidth + volume.radiiMeters.y * volume.radiiMeters.y);
+                Vector3 expansion = Vector3.one * cornerRadius;
+                Assert.That(bounds.Contains(volume.centerLocalMeters - expansion), Is.True,
+                    volume.id + " minimum shader-expanded corner is outside CPU bounds.");
+                Assert.That(bounds.Contains(volume.centerLocalMeters + expansion), Is.True,
+                    volume.id + " maximum shader-expanded corner is outside CPU bounds.");
+            }
         }
 
         [Test]

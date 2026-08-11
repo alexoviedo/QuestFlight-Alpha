@@ -67,6 +67,17 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
+        public void NativeJsbsimBuildIdentityCannotSilentlyDegradeToReleasePrototype()
+        {
+            Assert.DoesNotThrow(() =>
+                ProductionBuild.ValidateBackendBuildFlags(true, false, true));
+            Assert.Throws<InvalidOperationException>(() =>
+                ProductionBuild.ValidateBackendBuildFlags(false, false, true));
+            Assert.Throws<InvalidOperationException>(() =>
+                ProductionBuild.ValidateBackendBuildFlags(true, true, true));
+        }
+
+        [Test]
         public void EveryQualityLevelUsesFourTimesMsaa()
         {
             int original = QualitySettings.GetQualityLevel();

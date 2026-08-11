@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 
-CONTRACT_VERSION = "questflight-flight-dynamics-evidence-v1"
+CONTRACT_VERSION = "questflight-flight-dynamics-evidence-v2"
 VALID_STATUSES = {"Pass", "Fail", "Unsupported", "Unproven", "Error"}
 REQUIRED_PROTOTYPE_SCENARIOS = {
     "control_sign_pulse_doublet",

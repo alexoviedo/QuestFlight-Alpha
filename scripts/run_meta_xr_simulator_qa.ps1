@@ -97,6 +97,19 @@ function Get-OpenXrRegistrySnapshot {
     }
 }
 
+function Get-Sha256File {
+    param([Parameter(Mandatory = $true)][string]$LiteralPath)
+    $stream = [IO.File]::OpenRead($LiteralPath)
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        return ([BitConverter]::ToString($sha.ComputeHash($stream))).Replace('-', '')
+    }
+    finally {
+        $sha.Dispose()
+        $stream.Dispose()
+    }
+}
+
 function Set-RegistryOpenXrRuntime {
     param(
         [Microsoft.Win32.RegistryView]$View,
@@ -471,7 +484,7 @@ $installation = Get-MetaXrSimulatorInstallation
 $runtimeBefore = Get-OpenXrRegistrySnapshot
 $persistentPath = Join-Path $env:APPDATA "MetaXR\MetaXrSimulator\persistent_data.json"
 $persistentInitiallyExisted = Test-Path -LiteralPath $persistentPath -PathType Leaf
-$persistentInitialHash = if ($persistentInitiallyExisted) { (Get-FileHash -LiteralPath $persistentPath -Algorithm SHA256).Hash } else { $null }
+$persistentInitialHash = if ($persistentInitiallyExisted) { Get-Sha256File -LiteralPath $persistentPath } else { $null }
 $sessionRuns = @()
 $missingRecordings = @()
 $copiedReplays = @()
@@ -539,7 +552,7 @@ finally {
     $runtimeRestoration = Restore-MetaOpenXrRuntimeSnapshot -Snapshot $runtimeBefore -Installation $installation
     $runtimeAfter = $runtimeRestoration.afterRestore
     $persistentAfterExists = Test-Path -LiteralPath $persistentPath -PathType Leaf
-    $persistentAfterHash = if ($persistentAfterExists) { (Get-FileHash -LiteralPath $persistentPath -Algorithm SHA256).Hash } else { $null }
+    $persistentAfterHash = if ($persistentAfterExists) { Get-Sha256File -LiteralPath $persistentPath } else { $null }
     $runtimePreserved = [bool]$runtimeRestoration.succeeded
     $persistentRestored = $persistentInitiallyExisted -eq $persistentAfterExists -and $persistentInitialHash -eq $persistentAfterHash
     if (-not $runtimePreserved) { $classification = "FAIL_SIMULATOR_STATE_RESTORATION" }

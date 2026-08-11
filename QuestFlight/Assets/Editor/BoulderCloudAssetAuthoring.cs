@@ -169,10 +169,12 @@ namespace QuestFlightLab.Editor
             importer.textureType = TextureImporterType.Default;
             importer.sRGBTexture = true;
             importer.alphaSource = TextureImporterAlphaSource.FromInput;
-            importer.alphaIsTransparency = false;
+            importer.alphaIsTransparency = true;
             importer.mipmapEnabled = true;
+            importer.mipMapsPreserveCoverage = true;
+            importer.alphaTestReferenceValue = 0.02f;
             importer.streamingMipmaps = true;
-            importer.wrapMode = TextureWrapMode.Repeat;
+            importer.wrapMode = TextureWrapMode.Clamp;
             importer.filterMode = FilterMode.Trilinear;
             importer.anisoLevel = 2;
             importer.textureCompression = TextureImporterCompression.CompressedHQ;
@@ -203,9 +205,11 @@ namespace QuestFlightLab.Editor
             material.name = "KBDU_BoulderCloudShell";
             material.shader = shader;
             material.SetTexture("_CloudAtlas", detail);
-            material.SetColor("_CloudTint", new Color(0.96f, 0.98f, 1f, 1f));
-            material.SetFloat("_CoverageCutoff", 0.075f);
-            material.SetFloat("_EdgeSoftness", 0.14f);
+            material.SetColor("_CloudTint", new Color(0.84f, 0.87f, 0.91f, 1f));
+            material.SetFloat("_CoverageCutoff", 0.02f);
+            material.SetFloat("_EdgeSoftness", 0.55f);
+            material.SetFloat("_AmbientGain", 0.72f);
+            material.SetFloat("_SunGain", 0.16f);
             material.enableInstancing = false;
             material.renderQueue = (int)RenderQueue.AlphaTest + 20;
             EditorUtility.SetDirty(material);
@@ -248,7 +252,15 @@ namespace QuestFlightLab.Editor
             mesh.SetUVs(1, billboardCorners);
             mesh.SetUVs(2, billboardHalfSizes);
             mesh.SetTriangles(indices, 0, true);
-            mesh.RecalculateBounds();
+            Bounds expandedBounds = CalculateExpandedBounds(definitions, sector);
+            SubMeshDescriptor subMesh = mesh.GetSubMesh(0);
+            subMesh.bounds = expandedBounds;
+            mesh.SetSubMesh(
+                0,
+                subMesh,
+                MeshUpdateFlags.DontRecalculateBounds |
+                MeshUpdateFlags.DontValidateIndices);
+            mesh.bounds = expandedBounds;
             mesh.UploadMeshData(true);
             string path = $"{Generated}/KBDU_BoulderCloudSector_{sector}.asset";
             Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
@@ -264,6 +276,43 @@ namespace QuestFlightLab.Editor
                 EditorUtility.SetDirty(existing);
             }
             return existing;
+        }
+
+        private static Bounds CalculateExpandedBounds(
+            IEnumerable<CloudDefinition> definitions,
+            int sector)
+        {
+            bool initialized = false;
+            Vector3 minimum = Vector3.zero;
+            Vector3 maximum = Vector3.zero;
+            foreach (CloudDefinition definition in definitions.Where(item =>
+                         RuntimeSectorCount == 1 || item.sector == sector))
+            {
+                float halfWidth = Mathf.Max(definition.radii.x, definition.radii.z);
+                float halfHeight = definition.radii.y;
+                // The vertex shader may rotate both billboard axes onto any
+                // world axis.  A sphere around all four expanded corners is a
+                // conservative CPU-side AABB for every camera orientation.
+                float cornerRadius = Mathf.Sqrt(
+                    halfWidth * halfWidth + halfHeight * halfHeight);
+                Vector3 expansion = Vector3.one * cornerRadius;
+                Vector3 itemMinimum = definition.center - expansion;
+                Vector3 itemMaximum = definition.center + expansion;
+                if (!initialized)
+                {
+                    minimum = itemMinimum;
+                    maximum = itemMaximum;
+                    initialized = true;
+                }
+                else
+                {
+                    minimum = Vector3.Min(minimum, itemMinimum);
+                    maximum = Vector3.Max(maximum, itemMaximum);
+                }
+            }
+            if (!initialized)
+                throw new InvalidOperationException("Cannot build empty cloud-sector bounds.");
+            return new Bounds((minimum + maximum) * 0.5f, maximum - minimum);
         }
 
         private static void AppendImpostorCloud(
@@ -351,20 +400,36 @@ namespace QuestFlightLab.Editor
                 if (contract == null)
                     throw new InvalidOperationException("Production environment contract is missing.");
                 Transform existing = environment.transform.Find(CloudRootName);
-                if (existing != null)
-                    UnityEngine.Object.DestroyImmediate(existing.gameObject);
-
-                GameObject rootObject = new GameObject(CloudRootName);
-                rootObject.transform.SetParent(environment.transform, false);
-                BoulderCloudField field = rootObject.AddComponent<BoulderCloudField>();
+                GameObject rootObject = existing == null
+                    ? new GameObject(CloudRootName)
+                    : existing.gameObject;
+                if (existing == null)
+                    rootObject.transform.SetParent(environment.transform, false);
+                rootObject.transform.SetLocalPositionAndRotation(
+                    Vector3.zero,
+                    Quaternion.identity);
+                rootObject.transform.localScale = Vector3.one;
+                BoulderCloudField field = rootObject.GetComponent<BoulderCloudField>() ??
+                                          rootObject.AddComponent<BoulderCloudField>();
                 MeshRenderer[] renderers = new MeshRenderer[sectorMeshes.Length];
                 for (int sector = 0; sector < sectorMeshes.Length; sector++)
                 {
-                    GameObject child = new GameObject($"CloudSector_{sector}");
-                    child.transform.SetParent(rootObject.transform, false);
-                    MeshFilter filter = child.AddComponent<MeshFilter>();
+                    string childName = $"CloudSector_{sector}";
+                    Transform existingChild = rootObject.transform.Find(childName);
+                    GameObject child = existingChild == null
+                        ? new GameObject(childName)
+                        : existingChild.gameObject;
+                    if (existingChild == null)
+                        child.transform.SetParent(rootObject.transform, false);
+                    child.transform.SetLocalPositionAndRotation(
+                        Vector3.zero,
+                        Quaternion.identity);
+                    child.transform.localScale = Vector3.one;
+                    MeshFilter filter = child.GetComponent<MeshFilter>() ??
+                                        child.AddComponent<MeshFilter>();
                     filter.sharedMesh = sectorMeshes[sector];
-                    MeshRenderer renderer = child.AddComponent<MeshRenderer>();
+                    MeshRenderer renderer = child.GetComponent<MeshRenderer>() ??
+                                            child.AddComponent<MeshRenderer>();
                     renderer.sharedMaterial = material;
                     renderer.shadowCastingMode = ShadowCastingMode.Off;
                     renderer.receiveShadows = false;
@@ -372,6 +437,15 @@ namespace QuestFlightLab.Editor
                     renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
                     renderer.allowOcclusionWhenDynamic = false;
                     renderers[sector] = renderer;
+                }
+                for (int index = rootObject.transform.childCount - 1; index >= 0; index--)
+                {
+                    Transform child = rootObject.transform.GetChild(index);
+                    if (!child.name.StartsWith("CloudSector_", StringComparison.Ordinal))
+                        continue;
+                    if (renderers.Any(renderer => renderer != null && renderer.transform == child))
+                        continue;
+                    UnityEngine.Object.DestroyImmediate(child.gameObject);
                 }
                 TextAsset manifest = AssetDatabase.LoadAssetAtPath<TextAsset>(ManifestPath);
                 if (manifest == null)

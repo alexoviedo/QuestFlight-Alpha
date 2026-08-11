@@ -6,10 +6,12 @@
   "rawDownloadsCommitted": false,
   "generatedAtlas": {
     "path": "KBDU_CloudImpostorAtlasV3.png",
-    "generator": "OpenAI image generation",
+    "generator": "OpenAI image generation plus deterministic project-owned RGBA matte/color-dilation compiler",
     "generatedDate": "2026-08-10",
-    "sha256": "a4bf9047b4427f71e902cb6aa1b5c3ff1296e29f4f5d0dd685be5ecc4548dd82",
-    "runtimeImport": "512 square, mipmapped, streaming, Android ASTC 6x6",
+    "originalRgbSha256": "a4bf9047b4427f71e902cb6aa1b5c3ff1296e29f4f5d0dd685be5ecc4548dd82",
+    "sha256": "712ee9dfc6dc1a56619d1c54111831937dbabec7a4f1daaffbc23f0ca635ab1a",
+    "derivativeTool": "tools/clouds/build_cloud_rgba_atlas.py",
+    "runtimeImport": "straight-alpha RGBA, protected 2x2 cell gutters, color-dilated and neutral-vapor-lifted transparent edge, maximum 512 square, coverage-preserving mipmaps, streaming, clamp, Android ASTC 6x6",
     "containsThirdPartyPhotography": false
   },
   "runtimeTechnique": "one depth-writing alpha-to-coverage batch of center-eye-oriented stereo-stable impostors plus spatial containment-driven existing-fog modulation",

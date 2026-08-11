@@ -14,6 +14,12 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if (-not (Test-Path -LiteralPath $UnityExe)) { throw "Unity not found: $UnityExe" }
 if (-not (Test-Path -LiteralPath $ProjectPath)) { throw "Project not found: $ProjectPath" }
+if ($EnableNativeJsbsim -and -not $Development) {
+  throw '-EnableNativeJsbsim requires -Development; native JSBSim is compile-gated out of release-style builds.'
+}
+if ($EnableNativeJsbsim -and $ForceUnityPrototype) {
+  throw '-EnableNativeJsbsim and -ForceUnityPrototype are mutually exclusive.'
+}
 
 function Get-Sha256Hex {
   param([Parameter(Mandatory = $true)][string]$LiteralPath)

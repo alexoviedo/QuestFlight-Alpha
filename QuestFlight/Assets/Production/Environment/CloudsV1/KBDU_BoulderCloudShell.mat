@@ -29,9 +29,11 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _CoverageCutoff: 0.075
-    - _EdgeSoftness: 0.14
+    - _AmbientGain: 0.72
+    - _CoverageCutoff: 0.02
+    - _EdgeSoftness: 0.55
+    - _SunGain: 0.16
     m_Colors:
-    - _CloudTint: {r: 0.96, g: 0.98, b: 1, a: 1}
+    - _CloudTint: {r: 0.84, g: 0.87, b: 0.91, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

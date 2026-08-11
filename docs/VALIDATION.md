@@ -492,3 +492,22 @@ magnetic-compass QA, and missing recorded-replay issues. See
 These are development/build results, not physical Quest performance or literal
 photorealism acceptance. Exact evidence is in
 `docs/evidence/BOULDER_CLOUDS_V1_2026-08-10.md`.
+
+### 2026-08-11 correction candidate
+
+- Deterministic RGBA atlas SHA-256:
+  `712ee9dfc6dc1a56619d1c54111831937dbabec7a4f1daaffbc23f0ca635ab1a`.
+- EditMode: PASS 305/305; PlayMode: PASS 10/10; Python evidence tests:
+  PASS 3/3.
+- Full-resolution dedicated cloud QA: inspected; black card borders absent and
+  cloud/sky balance improved. Aggregate Visual QA still fails only its inherited
+  38/29 generic material-planning target.
+- Meta XR live stereo: matching cloud silhouettes in both eyes; aggregate
+  `BLOCKED_MISSING_RECORDED_REPLAYS`.
+- Native/development Android build: PASS; 301,748,868 bytes; SHA-256
+  `5d6fdef693b99f11877447bf07c395a9ffe84d397ab9f8389d826441e0090c2c`.
+- Installed Quest runtime backend identity and the reported stall/slip behavior
+  require the pending worn launch; no handling or hardware-performance pass is
+  inferred from build flags.
+
+See `docs/evidence/BOULDER_CLOUDS_V1_CORRECTION_2026-08-11.md`.
