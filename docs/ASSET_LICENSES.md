@@ -609,3 +609,14 @@ runtime texture. Prompt, tool, source URLs, runtime policy, and license record
 are preserved in `Assets/Production/Environment/CloudsV1/SOURCE_AND_LICENSE.md`
 and `SOURCE_MANIFEST.json`. No raw download or third-party cloud photography is
 committed.
+
+### Golden Eagle thermal cue
+
+The bounded soaring-raptor derivative uses `Hawk Lp Rigged` by Sherkiz from
+[Poly Pizza](https://poly.pizza/m/RkN6MEbP6g), published under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The raw GLB remains
+external. Blender 5.1.2 normalizes it to a 2.1 m wingspan, removes an unused
+helper mesh, preserves the `Fly` animation, and produces one skinned renderer,
+one material, and one optimized atlas. Exact source/derivative hashes and the
+change notice are recorded in
+`Assets/Production/Environment/Wildlife/SOURCE_MANIFEST.json`.

@@ -511,3 +511,20 @@ photorealism acceptance. Exact evidence is in
   inferred from build flags.
 
 See `docs/evidence/BOULDER_CLOUDS_V1_CORRECTION_2026-08-11.md`.
+
+## Golden Eagle thermal V1
+
+- EditMode: PASS 308/308; PlayMode: PASS 10/10.
+- Product dependency closure: PASS with zero rejected/unknown dependencies.
+- Dedicated wildlife QA: PASS for close and route-context views. Aggregate QA
+  retains inherited 80/75 draw, 675,865/650,000 triangle, and 38/29 material
+  planning failures.
+- Release Android build: PASS, 175,246,444 bytes, SHA-256
+  `5d705682983ee6845bad8af1c2686eb82658538fc1b1bbad2059d26e312f430d`.
+- Native development Android build: PASS, 301,770,701 bytes, SHA-256
+  `fac5d6ab050a6db6e8fed9a4ddde3c31ab726a8af0ad8a7fcd9c9c4ac3c3de13`.
+- Quest install: PASS; unattended cold launch
+  `BLOCKED_STARTUP_INPUT_FOCUS_ANR`. No physical timing or worn acceptance is
+  inferred.
+
+Exact evidence: `docs/evidence/GOLDEN_EAGLE_THERMAL_V1_2026-08-11.md`.

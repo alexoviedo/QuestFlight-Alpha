@@ -222,3 +222,16 @@ privacy slats with a galvanized diamond pattern. The complete 4.27 km perimeter
 is 252 triangles and at most four draws. It adds one material but no texture,
 collider, realtime shadow, LOD group, runtime callback, or hierarchy
 construction.
+
+## Golden Eagle and shared thermal
+
+`ProductionEnvironmentRoot/WildlifeRoot` owns one serialized
+`GoldenEagleThermalRoot`. The bird has one skinned renderer and follows one
+deterministic orbit around a shared `ThermalFieldProfile`; runtime code does not
+construct, discover, or repair hierarchy.
+
+The release coordinator still requests `UnityPrototype`. Only an explicitly
+compiled native-development build samples the thermal at the authoritative
+aircraft position and submits vertical wind through the existing JSBSim
+atmosphere ABI. This preserves one flight authority and does not layer an
+unvalidated Unity force onto the release prototype.
