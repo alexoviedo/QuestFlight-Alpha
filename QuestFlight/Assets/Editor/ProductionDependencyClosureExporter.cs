@@ -49,6 +49,8 @@ namespace T2.QuestFlight.Editor
                 ["Assets/Scripts/Environment/AirportParkingStandManifest.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Environment/ProductionPlacementManifest.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Environment/ProductionTerrainSurfaceAsset.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Environment/GoldenEagleThermalSoaring.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Environment/ThermalFieldProfile.cs"] = "approved_product_authored",
                 ["Assets/Production/Profiles/KBDU_ExtendedReservoirLessonV1.asset"] = "approved_product_authored",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRecoveryRuntimeAdapter.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRouteProfile.cs"] = "approved_product_authored"

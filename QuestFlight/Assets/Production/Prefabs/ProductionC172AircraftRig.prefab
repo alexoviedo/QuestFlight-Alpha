@@ -70931,6 +70931,7 @@ MonoBehaviour:
   authoritativeRigidbody: {fileID: 1573695374297373189}
   controls: {fileID: 0}
   terrainSurface: {fileID: 11400000, guid: b2b2be77d482f4c4c8fb5ceb35614891, type: 2}
+  thermalField: {fileID: 11400000, guid: 761b448f5833d39478ae16e2d2544352, type: 2}
   initialConditionProvider: {fileID: 6090694490867546566}
   simulationRateHz: 120
   maxStepsPerFixedUpdate: 8

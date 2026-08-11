@@ -27,7 +27,7 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 97;
+        private const int RequiredShotCount = 99;
         private const int DrawCallTarget = 75;
         private const long VisibleTriangleTarget = 650000L;
         // The headset-accepted readout/lens baseline is 29 materials (artifact
@@ -548,6 +548,25 @@ namespace QuestFlightLab.Editor
                 "cloud_04_inside", "Fly-through cloud visibility transition", "cloud_inside",
                 reservoirCloud, Quaternion.LookRotation(Vector3.forward, Vector3.up),
                 64f, ViewProfile.Environment));
+
+            GoldenEagleThermalSoaring eagle = context.environment.goldenEagleThermalSoaring;
+            if (eagle == null)
+                throw new InvalidOperationException("Authored Golden Eagle is unavailable for QA.");
+            Renderer eagleRenderer = eagle.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            if (eagleRenderer == null)
+                throw new InvalidOperationException("Authored Golden Eagle has no skinned renderer for QA.");
+            Vector3 eagleTarget = eagleRenderer.bounds.center;
+            Vector3 eagleForward = Vector3.ProjectOnPlane(eagle.transform.forward, Vector3.up).normalized;
+            if (eagleForward.sqrMagnitude < 0.99f) eagleForward = Vector3.forward;
+            Vector3 eagleRight = Vector3.Cross(Vector3.up, eagleForward).normalized;
+            Vector3 eagleCloseCamera = eagleTarget - eagleForward * 7.5f + eagleRight * 5f + Vector3.up * 2f;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "wildlife_01_golden_eagle_close", "Animated Golden Eagle close oblique", "wildlife",
+                eagleCloseCamera, LookAt(eagleCloseCamera, eagleTarget), 36f, ViewProfile.Environment));
+            Vector3 eagleContextCamera = eagleTarget - eagleForward * 42f - eagleRight * 24f + Vector3.up * 15f;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "wildlife_02_thermal_route_context", "Golden Eagle thermal cue on the reservoir lesson route", "wildlife",
+                eagleContextCamera, LookAt(eagleContextCamera, eagleTarget), 42f, ViewProfile.Environment));
 
             Vector3 nearMidBoundary = context.runwayMidpoint + Vector3.right * 1825f;
             Vector3 nearMidCamera = nearMidBoundary + new Vector3(310f, 430f, -420f);

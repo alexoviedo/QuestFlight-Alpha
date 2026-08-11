@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "asset_id": "golden_eagle_thermal_v1",
+  "runtime_species_presentation": "Golden Eagle (Aquila chrysaetos)",
+  "source_model": {
+    "title": "Hawk Lp Rigged",
+    "author": "Sherkiz",
+    "catalog_url": "https://poly.pizza/m/RkN6MEbP6g",
+    "download_url": "https://static.poly.pizza/2a7aca61-a8f6-45f6-950e-003d4bfcab45.glb",
+    "resource_id": "2a7aca61-a8f6-45f6-950e-003d4bfcab45",
+    "downloaded_utc": "2026-08-11T21:51:00Z",
+    "license": "Creative Commons Attribution 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "raw_file_policy": "External artifact only; not committed",
+    "raw_sha256": "32FEBB3138447862039B77D67C62ED02F6B028362532755D239856EE4FEE25B8",
+    "raw_bytes": 866000
+  },
+  "derivative": {
+    "generator": "tools/bird/author_golden_eagle.py",
+    "blender_version": "5.1.2",
+    "changes": [
+      "normalized to a 2.1 metre wingspan",
+      "preserved and renamed the source flight animation",
+      "removed the unused unrigged helper mesh",
+      "derived a brown and gold atlas/tint for Golden Eagle presentation",
+      "consolidated runtime presentation to one skinned renderer and one material"
+    ],
+    "fbx_sha256": "C1117D455581E79475CA5F3DDE005ADD45CAA7385FB4682237EA9DD27194BBFE",
+    "texture_sha256": "9D259AF41DEB071A144E64154C1E06E62BA60DCFAD8348F8F260DD26BFA6FAE5",
+    "blend_sha256": "D5E54B0780BB34B7862B40A1394B9EDD7232361A4E2033710F09355A01AE3463"
+  },
+  "runtime_contract": {
+    "bird_count": 1,
+    "skinned_renderers": 1,
+    "materials": 1,
+    "texture_atlas": "1024x1024 ASTC 6x6 on Android",
+    "source_triangles": 10036,
+    "animation_clips": ["Fly"],
+    "realtime_shadows": false,
+    "thermal_profile": "KBDU_SunlitFieldThermal01"
+  },
+  "ecology_references": [
+    "https://cpw.state.co.us/species/golden-eagle",
+    "https://www.allaboutbirds.org/guide/Golden_Eagle/overview"
+  ],
+  "training_reference": "https://www.faa.gov/sites/faa.gov/files/pilots/pilot_handbook.pdf",
+  "claims": "A bounded visual and aerodynamic training cue; not an ecological population model and not certified training data."
+}

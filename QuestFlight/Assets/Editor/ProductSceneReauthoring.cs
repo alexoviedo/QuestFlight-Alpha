@@ -31,6 +31,8 @@ namespace QuestFlight.Editor
             "Assets/Production/Profiles/KBDU_ExtendedReservoirLessonV1.asset";
         private const string TerrainSurfacePath =
             "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_ProductionTerrainSurfaceV2.asset";
+        private const string ThermalFieldProfilePath =
+            "Assets/Production/Environment/Wildlife/Profiles/KBDU_SunlitFieldThermal01.asset";
 
         [MenuItem("QuestFlight/Product/Reauthor Extracted Production Scene")]
         public static void Reauthor()
@@ -108,9 +110,12 @@ namespace QuestFlight.Editor
                 FlightDynamicsCoordinator coordinator = RequireOne<FlightDynamicsCoordinator>(root);
                 FlightDynamicsInitialConditionProvider initial = RequireOne<FlightDynamicsInitialConditionProvider>(root);
                 AircraftReferenceFrameRig rig = RequireOne<AircraftReferenceFrameRig>(root);
+                ThermalFieldProfile thermalField =
+                    AssetDatabase.LoadAssetAtPath<ThermalFieldProfile>(ThermalFieldProfilePath);
 
                 Require(body != null, "AircraftSimulationRoot Rigidbody is missing.");
                 Require(rig.ValidateHierarchy(), "Serialized aircraft/XR hierarchy is invalid.");
+                Require(thermalField != null, "The authored thermal field profile is missing.");
                 coordinator.requestedBackend = FlightDynamicsBackendKind.UnityPrototype;
                 coordinator.simulationRoot = root.transform;
                 coordinator.presentationRoot = root.transform;
@@ -119,6 +124,7 @@ namespace QuestFlight.Editor
                 coordinator.authoritativeRigidbody = body;
                 coordinator.controls = null;
                 coordinator.initialConditionProvider = initial;
+                coordinator.thermalField = thermalField;
                 coordinator.simulationRateHz = 120f;
                 prototype.controls = null;
                 prototype.state = state;
@@ -183,10 +189,14 @@ namespace QuestFlight.Editor
                 ProductionTerrainSurfaceAsset terrainSurface =
                     AssetDatabase.LoadAssetAtPath<ProductionTerrainSurfaceAsset>(
                         TerrainSurfacePath);
+                ThermalFieldProfile thermalField =
+                    AssetDatabase.LoadAssetAtPath<ThermalFieldProfile>(ThermalFieldProfilePath);
                 Require(routeProfile != null,
                     "The authored KBDU reservoir lesson profile is missing.");
                 Require(terrainSurface != null,
                     "The authored production terrain surface is missing.");
+                Require(thermalField != null,
+                    "The authored thermal field profile is missing.");
 
                 ProductAttribution attribution = root.GetComponent<ProductAttribution>();
                 if (attribution == null) attribution = root.AddComponent<ProductAttribution>();
@@ -226,6 +236,7 @@ namespace QuestFlight.Editor
                 coordinator.unityPrototype = prototype;
                 coordinator.authoritativeRigidbody = body;
                 coordinator.controls = productInput;
+                coordinator.thermalField = thermalField;
 
                 ProductionAircraftControlAnimator animator = RequireOne<ProductionAircraftControlAnimator>(root);
                 animator.ConfigureControlSources(coordinator, productInput);

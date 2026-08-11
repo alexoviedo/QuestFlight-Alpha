@@ -29953,6 +29953,7 @@ Transform:
   - {fileID: 3825357404968866915}
   - {fileID: 5662829309104963493}
   - {fileID: 4348785178216426893}
+  - {fileID: 4043883064643805654}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3038420041324740316
@@ -29977,6 +29978,9 @@ MonoBehaviour:
   airportPerimeterFence: {fileID: 8359583617304773077}
   airportNearFieldDetail: {fileID: 1214491480071734224}
   boulderCloudField: {fileID: 4348785178216426893}
+  wildlifeRoot: {fileID: 4043883064643805654}
+  goldenEagleThermalSoaring: {fileID: 8440083250096456447}
+  sharedThermalField: {fileID: 11400000, guid: 761b448f5833d39478ae16e2d2544352, type: 2}
   waterPresentationMode: 2
   nearTerrainMeshes:
   - {fileID: 8326111771467180925}
@@ -30033,11 +30037,11 @@ MonoBehaviour:
     bounded derivatives
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
-  bakedRendererCount: 52
+  bakedRendererCount: 53
   bakedTriangleCount: 504094
-  bakedMaterialCount: 11
+  bakedMaterialCount: 12
   bakedTextureCount: 28
-  bakeUtc: 2026-07-28T21:16:34.8898452Z
+  bakeUtc: 2026-08-11T23:04:34.3871234Z
   bakeToolVersion: photoreal_aerial_surface_v1
   validateOnAwake: 1
 --- !u!114 &3275182717276356067
@@ -31132,6 +31136,38 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &7915122612073471966
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4043883064643805654}
+  m_Layer: 0
+  m_Name: WildlifeRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4043883064643805654
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7915122612073471966}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4555064823603969716}
+  m_Father: {fileID: 6492199952949179654}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7955412739098045184
 GameObject:
   m_ObjectHideFlags: 0
@@ -32242,6 +32278,79 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6091097378178239007, guid: 822dc40012e5d9f44b69dd745088fb69, type: 3}
   m_PrefabInstance: {fileID: 4926183014851578319}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &5301013123595594079
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4043883064643805654}
+    m_Modifications:
+    - target: {fileID: 2929666442035644881, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+      propertyPath: m_Name
+      value: GoldenEagleThermalRoot
+      objectReference: {fileID: 0}
+    - target: {fileID: 8549569369814063083, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1805
+      objectReference: {fileID: 0}
+    - target: {fileID: 8549569369814063083, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 515
+      objectReference: {fileID: 0}
+    - target: {fileID: 8549569369814063083, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 2600
+      objectReference: {fileID: 0}
+    - target: {fileID: 8549569369814063083, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8549569369814063083, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8549569369814063083, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8549569369814063083, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8549569369814063083, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8549569369814063083, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8549569369814063083, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+--- !u!4 &4555064823603969716 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8549569369814063083, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+  m_PrefabInstance: {fileID: 5301013123595594079}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8440083250096456447 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4373498428108319648, guid: 97f215f448ffcbd4da815cdf2d1f9bc6, type: 3}
+  m_PrefabInstance: {fileID: 5301013123595594079}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e743def0c687ee640b25ba0744ab7082, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.GoldenEagleThermalSoaring
 --- !u!1001 &7419030580688238694
 PrefabInstance:
   m_ObjectHideFlags: 0

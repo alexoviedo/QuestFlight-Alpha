@@ -28,6 +28,8 @@ namespace QuestFlightLab.Flight.Backends
         public ProductControlInput controls;
         [Tooltip("Offline-authored ENU terrain authority used by physical ground contact. No runtime raycasts or hierarchy discovery.")]
         public ProductionTerrainSurfaceAsset terrainSurface;
+        [Tooltip("Shared authored thermal. Applied only by the opt-in native JSBSim development backend; the release Unity prototype has no wind model.")]
+        public ThermalFieldProfile thermalField;
 
         [Header("Authored initial conditions")]
         public FlightDynamicsInitialConditionProvider initialConditionProvider;
@@ -97,9 +99,14 @@ namespace QuestFlightLab.Flight.Backends
         {
             if (simulationRoot == null || presentationRoot == null || aircraftState == null ||
                 unityPrototype == null || authoritativeRigidbody == null || controls == null ||
-                initialConditionProvider == null || terrainSurface == null)
+                initialConditionProvider == null || terrainSurface == null || thermalField == null)
             {
                 error = "All flight-authority references must be serialized in the product prefab.";
+                return false;
+            }
+            if (!thermalField.IsValid(out string thermalFailure))
+            {
+                error = "The serialized thermal profile is invalid: " + thermalFailure;
                 return false;
             }
             if (simulationRoot != transform || unityPrototype.transform != simulationRoot ||
@@ -366,6 +373,16 @@ namespace QuestFlightLab.Flight.Backends
         {
             if (_backend == null || !_backend.IsInitialized) return false;
             _previousState = _currentState;
+            // Only native JSBSim currently has a validated air-mass input. Keep
+            // the release prototype unchanged rather than layering an ad-hoc
+            // Unity force on top of its legacy model.
+            if (_backend.Kind == FlightDynamicsBackendKind.JSBSimNativeDevelopment)
+            {
+                float updraft = thermalField != null
+                    ? thermalField.SampleUpdraftMetersPerSecond(_currentState.positionUnityMeters)
+                    : 0f;
+                _backend.SetAtmosphere(AtmosphereFromUpdraft(updraft));
+            }
             if (!_backend.Advance(fixedDeltaTimeSeconds))
             {
                 if (_backend.Kind == FlightDynamicsBackendKind.JSBSimNativeDevelopment &&
@@ -376,6 +393,17 @@ namespace QuestFlightLab.Flight.Backends
             ApplyBackendPose(_currentState);
             ApplyLegacyState(_currentState);
             return true;
+        }
+
+        public static FlightDynamicsAtmosphere AtmosphereFromUpdraft(float updraftMetersPerSecond)
+        {
+            return new FlightDynamicsAtmosphere
+            {
+                windNorthMetersPerSecond = 0d,
+                windEastMetersPerSecond = 0d,
+                // Aviation NED uses positive down; a rising air mass is negative down.
+                windDownMetersPerSecond = -Math.Max(0d, updraftMetersPerSecond)
+            };
         }
 
         private bool TryRuntimeFallback(string nativeError)

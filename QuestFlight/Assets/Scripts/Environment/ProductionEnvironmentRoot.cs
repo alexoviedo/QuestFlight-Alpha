@@ -43,6 +43,9 @@ namespace QuestFlightLab.Environment
         public Transform airportPerimeterFence;
         public Transform airportNearFieldDetail;
         public Transform boulderCloudField;
+        public Transform wildlifeRoot;
+        public GoldenEagleThermalSoaring goldenEagleThermalSoaring;
+        public ThermalFieldProfile sharedThermalField;
         [Tooltip("OrthophotoMaskedReflection keeps water terrain-owned and adds a bounded reflection response through the shared terrain material.")]
         public ProductionWaterPresentationMode waterPresentationMode =
             ProductionWaterPresentationMode.AuthoredSurface;
@@ -161,6 +164,17 @@ namespace QuestFlightLab.Environment
             Require(trafficRoot == null ||
                     trafficRoot.GetComponentsInChildren<KbduTrafficRuntime>(true).Length == 1,
                 "TrafficRoot must contain exactly one authored traffic runtime", failures);
+            Require(wildlifeRoot != null, "WildlifeRoot is not bound", failures);
+            Require(goldenEagleThermalSoaring != null,
+                "Golden Eagle thermal cue is not bound", failures);
+            Require(sharedThermalField != null,
+                "Shared JSBSim/wildlife thermal field is not bound", failures);
+            Require(goldenEagleThermalSoaring == null ||
+                    ReferenceEquals(goldenEagleThermalSoaring.thermalField, sharedThermalField),
+                "Golden Eagle and product environment do not share one thermal profile", failures);
+            if (goldenEagleThermalSoaring != null &&
+                !goldenEagleThermalSoaring.HasAuthoredReferences(out string eagleFailure))
+                failures.Add("Golden Eagle contract failed: " + eagleFailure);
             Require(airportPerimeterFence != null,
                 "AirportPerimeterFenceRoot is not bound", failures);
             Require(airportPerimeterFence == null ||
