@@ -1,3 +1,6 @@
+using System;
+using System.Globalization;
+using System.IO;
 using QuestFlight.Product;
 using QuestFlightLab.Environment;
 using QuestFlightLab.Flight.Backends;
@@ -28,6 +31,7 @@ namespace QuestFlightLab.Training.FlightLessonV1
         public FlightDynamicsCoordinator AuthoredFlightCoordinator => flightCoordinator;
         public ProductionTerrainSurfaceAsset AuthoredTerrainSurface => terrainSurface;
         public FlightLessonRecoveryPhase RecoveryPhase => recoveryStateMachine.Phase;
+        public string RecoveryTracePath => recoveryTracePath ?? string.Empty;
         public string LastFailure { get; private set; } = string.Empty;
         public FlightLessonCrashReason LastCrashReason { get; private set; } =
             FlightLessonCrashReason.None;
@@ -36,6 +40,8 @@ namespace QuestFlightLab.Training.FlightLessonV1
             new FlightLessonCrashClassifier();
         private readonly FlightLessonRecoveryStateMachine recoveryStateMachine =
             new FlightLessonRecoveryStateMachine();
+        private readonly FlightLessonRecoveryLivenessGate recoveryLivenessGate =
+            new FlightLessonRecoveryLivenessGate();
 
         private FlightLessonCrashSettings crashSettings;
         private FlightLessonRecoveryTimings recoveryTimings;
@@ -43,6 +49,12 @@ namespace QuestFlightLab.Training.FlightLessonV1
         private bool initialized;
         private bool suppressionApplied;
         private float appliedFadeOpacity = -1f;
+        private bool recoveryVerificationPending;
+        private bool recoveryRetryUsed;
+        private int recoverySequence;
+        private FlightLessonRecoveryRequest pendingRecoveryRequest;
+        private string recoveryTracePath;
+        private bool traceWriteWarningEmitted;
 
         public void ConfigureAuthoredReferences(
             ProductDemoPilot authoredDemoPilot,
@@ -117,6 +129,9 @@ namespace QuestFlightLab.Training.FlightLessonV1
 
             crashSettings = FlightLessonCrashSettings.ConservativeTrainingDefaults;
             recoveryTimings = FlightLessonRecoveryTimings.Default;
+            recoveryTracePath = Path.Combine(
+                Application.persistentDataPath,
+                "questflight_recovery_trace.jsonl");
             RestoreCompositorIdentity();
             referencesValidated = true;
             initialized = false;
@@ -155,6 +170,8 @@ namespace QuestFlightLab.Training.FlightLessonV1
                 if (reason != FlightLessonCrashReason.None)
                 {
                     LastCrashReason = reason;
+                    recoverySequence++;
+                    WriteRecoveryTrace("crash_detected", reason.ToString(), string.Empty);
                     Debug.LogWarning(
                         $"[QuestFlight][Recovery] Trigger={reason} " +
                         $"Position={state.positionUnityMeters:F3} " +
@@ -201,13 +218,72 @@ namespace QuestFlightLab.Training.FlightLessonV1
             SetSuppression(output.suppressPlayerInput);
             SetComfortFade(output.comfortFadeOpacity);
 
-            if (!output.requestAuthoritativeReset)
+            if (output.requestAuthoritativeReset)
+            {
+                pendingRecoveryRequest = output.request;
+                recoveryRetryUsed = false;
+                if (!TryApplyAndBeginVerification(output.request, "initial_reset"))
+                {
+                    recoveryStateMachine.AcknowledgeAuthoritativeReset(false);
+                    FailClosed("The sole flight authority rejected the authored recovery checkpoint.");
+                }
+                return;
+            }
+
+            if (!recoveryVerificationPending ||
+                output.phase != FlightLessonRecoveryPhase.AwaitingAuthoritativeReset)
                 return;
 
-            bool succeeded = TryApplyAuthoritativeRecovery(output.request);
-            recoveryStateMachine.AcknowledgeAuthoritativeReset(succeeded);
-            if (!succeeded)
-                FailClosed("The sole flight authority rejected the authored recovery checkpoint.");
+            FlightLessonRecoveryLivenessStatus status = recoveryLivenessGate.Observe(
+                flightCoordinator.CurrentState,
+                flightCoordinator.enabled,
+                flightCoordinator.IsInitialized,
+                Mathf.Max(0f, Time.fixedUnscaledDeltaTime),
+                out string failure);
+            if (status == FlightLessonRecoveryLivenessStatus.Pending)
+                return;
+
+            if (status == FlightLessonRecoveryLivenessStatus.Passed)
+            {
+                recoveryVerificationPending = false;
+                crashClassifier.Reset(flightCoordinator.CurrentState.weightOnWheels);
+                WriteRecoveryTrace("liveness_passed", string.Empty, string.Empty);
+                recoveryStateMachine.AcknowledgeAuthoritativeReset(true);
+                return;
+            }
+
+            WriteRecoveryTrace("liveness_failed", string.Empty, failure);
+            if (!recoveryRetryUsed)
+            {
+                recoveryRetryUsed = true;
+                if (TryApplyAndBeginVerification(pendingRecoveryRequest, "bounded_retry"))
+                    return;
+                failure = "The bounded recovery retry was rejected by the flight authority.";
+            }
+
+            recoveryVerificationPending = false;
+            recoveryStateMachine.AcknowledgeAuthoritativeReset(false);
+            FailClosed("Recovery checkpoint did not restore a live flight authority: " + failure);
+        }
+
+        private bool TryApplyAndBeginVerification(
+            in FlightLessonRecoveryRequest request,
+            string eventName)
+        {
+            if (!TryApplyAuthoritativeRecovery(request))
+            {
+                WriteRecoveryTrace(eventName + "_rejected", request.reason.ToString(),
+                    flightCoordinator != null ? flightCoordinator.LastError : string.Empty);
+                return false;
+            }
+
+            bool requireMotion = request.checkpoint.calibratedAirspeedKnots > 5f;
+            recoveryLivenessGate.Begin(
+                flightCoordinator.CurrentState,
+                requireMotion);
+            recoveryVerificationPending = true;
+            WriteRecoveryTrace(eventName + "_applied", request.reason.ToString(), string.Empty);
+            return true;
         }
 
         private bool TryApplyAuthoritativeRecovery(in FlightLessonRecoveryRequest request)
@@ -224,14 +300,27 @@ namespace QuestFlightLab.Training.FlightLessonV1
                 return false;
 
             productInput.ReleaseAllTouchOverrides();
-            if (!flightCoordinator.TryResetToInitialConditions(initialConditions))
+            if (!flightCoordinator.TryRecoverToInitialConditions(initialConditions))
                 return false;
 
             if (!demoPilot.RestoreLessonSegment(segmentIndex))
                 return false;
 
-            crashClassifier.Reset(flightCoordinator.CurrentState.weightOnWheels);
+            productInput.PrepareForFlightLessonRecovery(
+                BuildRecoveryHoldCommand(request.checkpoint));
             return true;
+        }
+
+        private static FlightLessonControlCommand BuildRecoveryHoldCommand(
+            in FlightLessonRecoveryCheckpoint checkpoint)
+        {
+            bool airborne = checkpoint.calibratedAirspeedKnots > 5f;
+            return new FlightLessonControlCommand
+            {
+                throttle = checkpoint.engineRunning ? (airborne ? 0.65f : 0.10f) : 0f,
+                mixture = checkpoint.engineRunning ? 1f : 0f,
+                trim = airborne ? 0.05f : 0f
+            };
         }
 
         private void SetSuppression(bool suppressed)
@@ -259,6 +348,7 @@ namespace QuestFlightLab.Training.FlightLessonV1
 
         private void OnDisable()
         {
+            recoveryVerificationPending = false;
             ReleaseRecoverySuppression();
             RestoreCompositorIdentity();
             initialized = false;
@@ -290,6 +380,7 @@ namespace QuestFlightLab.Training.FlightLessonV1
 
         private void FailClosed(string failure)
         {
+            WriteRecoveryTrace("recovery_failed_closed", LastCrashReason.ToString(), failure);
             LastFailure = failure;
             referencesValidated = false;
             ReleaseRecoverySuppression();
@@ -297,6 +388,82 @@ namespace QuestFlightLab.Training.FlightLessonV1
             initialized = false;
             enabled = false;
             Debug.LogError("[QuestFlight][Recovery] " + failure, this);
+        }
+
+        [Serializable]
+        private struct RecoveryTraceRecord
+        {
+            public string utc;
+            public int sequence;
+            public string eventName;
+            public string reason;
+            public string failure;
+            public string phase;
+            public string backend;
+            public bool inputPaused;
+            public bool coordinatorEnabled;
+            public bool coordinatorInitialized;
+            public double simulationTimeSeconds;
+            public Vector3 positionUnityMeters;
+            public Vector3 velocityUnityMetersPerSecond;
+            public double calibratedAirspeedKnots;
+            public double engineRpm;
+            public float throttle;
+            public int consecutiveLivenessSteps;
+        }
+
+        private void WriteRecoveryTrace(
+            string eventName,
+            string reason,
+            string failure)
+        {
+            if (string.IsNullOrEmpty(recoveryTracePath))
+                return;
+
+            try
+            {
+                FlightDynamicsState state = flightCoordinator != null
+                    ? flightCoordinator.CurrentState
+                    : default;
+                RecoveryTraceRecord record = new RecoveryTraceRecord
+                {
+                    utc = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+                    sequence = recoverySequence,
+                    eventName = eventName ?? string.Empty,
+                    reason = reason ?? string.Empty,
+                    failure = failure ?? string.Empty,
+                    phase = recoveryStateMachine.Phase.ToString(),
+                    backend = flightCoordinator != null
+                        ? flightCoordinator.ActiveBackendKind.ToString()
+                        : string.Empty,
+                    inputPaused = productInput != null && productInput.Paused,
+                    coordinatorEnabled = flightCoordinator != null && flightCoordinator.enabled,
+                    coordinatorInitialized = flightCoordinator != null &&
+                                             flightCoordinator.IsInitialized,
+                    simulationTimeSeconds = state.simulationTimeSeconds,
+                    positionUnityMeters = state.positionUnityMeters,
+                    velocityUnityMetersPerSecond = state.velocityUnityMetersPerSecond,
+                    calibratedAirspeedKnots = state.calibratedAirspeedKnots,
+                    engineRpm = state.engineRpm,
+                    throttle = flightCoordinator != null
+                        ? flightCoordinator.LastAppliedControls.throttle
+                        : 0f,
+                    consecutiveLivenessSteps = recoveryLivenessGate.ConsecutiveAdvancingSteps
+                };
+                File.AppendAllText(
+                    recoveryTracePath,
+                    JsonUtility.ToJson(record) + System.Environment.NewLine);
+            }
+            catch (Exception exception)
+            {
+                if (traceWriteWarningEmitted)
+                    return;
+                traceWriteWarningEmitted = true;
+                Debug.LogWarning(
+                    "[QuestFlight][Recovery] Could not write persistent recovery trace: " +
+                    exception.Message,
+                    this);
+            }
         }
 
         public static FlightLessonAircraftSafetyState BuildSafetyState(

@@ -205,6 +205,8 @@ namespace QuestFlightLab.Tests.PlayMode
             for (int frame = 0; frame < recoveryFixedFrameLimit; frame++)
             {
                 InvokeUnityMessage(recovery, "FixedUpdate");
+                Assert.That(coordinator.StepForTest(input.Current, Time.fixedDeltaTime),
+                    Is.True, coordinator.LastError);
 
                 FlightLessonRecoveryPhase phase = recovery.RecoveryPhase;
                 recoveryStarted |= phase != FlightLessonRecoveryPhase.Idle;
@@ -255,6 +257,59 @@ namespace QuestFlightLab.Tests.PlayMode
             Assert.That(input.FlightLessonInputSuppressed, Is.False);
             Assert.That(demo.GuidanceSuppressed, Is.False);
             Assert.That(demo.IsRunning, Is.True);
+
+            // Reproduce the headset failure condition: a later airborne recovery after
+            // the player reduced throttle, with pause and the coordinator's fail-closed
+            // component gate both latched. Recovery must clear both gates and prove the
+            // same backend advances before releasing the fade.
+            Assert.That(demo.RestoreLessonSegment(1), Is.True);
+            Assert.That(coordinator.TryResetToInitialConditions(lessonAreaExit),
+                Is.True, coordinator.LastError);
+            SetAutoProperty(input, nameof(ProductControlInput.Paused), true);
+            input.Current.throttle = 0f;
+            coordinator.enabled = false;
+
+            bool secondRecoveryStarted = false;
+            double secondResetSimulationTime = 0d;
+            Vector3 secondResetPosition = default;
+            for (int frame = 0; frame < recoveryFixedFrameLimit; frame++)
+            {
+                InvokeUnityMessage(recovery, "FixedUpdate");
+                FlightLessonRecoveryPhase phase = recovery.RecoveryPhase;
+                secondRecoveryStarted |= phase != FlightLessonRecoveryPhase.Idle;
+                if (coordinator.enabled)
+                {
+                    Assert.That(coordinator.StepForTest(input.Current, Time.fixedDeltaTime),
+                        Is.True, coordinator.LastError);
+                }
+
+                if (phase == FlightLessonRecoveryPhase.AwaitingAuthoritativeReset &&
+                    coordinator.enabled)
+                {
+                    secondResetSimulationTime = coordinator.CurrentState.simulationTimeSeconds;
+                    secondResetPosition = coordinator.CurrentState.positionUnityMeters;
+                }
+
+                if (secondRecoveryStarted && phase == FlightLessonRecoveryPhase.Idle)
+                    break;
+            }
+
+            Assert.That(secondRecoveryStarted, Is.True);
+            Assert.That(recovery.RecoveryPhase, Is.EqualTo(FlightLessonRecoveryPhase.Idle),
+                recovery.LastFailure);
+            Assert.That(coordinator.enabled, Is.True);
+            Assert.That(input.Paused, Is.False);
+            Assert.That(input.FlightLessonInputSuppressed, Is.False);
+            Assert.That(coordinator.CurrentState.simulationTimeSeconds,
+                Is.GreaterThan(secondResetSimulationTime));
+            Assert.That(Vector3.Distance(
+                    secondResetPosition,
+                    coordinator.CurrentState.positionUnityMeters),
+                Is.GreaterThan(0.05f));
+            Assert.That(coordinator.LastResetInitialConditions.calibratedAirspeedKnots,
+                Is.EqualTo(route.recoveryCheckpoints[1].calibratedAirspeedKnots).Within(0.001d));
+            Assert.That(input.Current.throttle, Is.GreaterThan(0f),
+                "Low throttle at impact must not leave the recovered aircraft frozen.");
             Assert.That(input.TryBeginTouchOverride(
                 ProductTouchControlChannel.PilotYoke,
                 41002,
@@ -363,6 +418,19 @@ namespace QuestFlightLab.Tests.PlayMode
             Assert.That(method, Is.Not.Null,
                 target.GetType().Name + " is missing the expected " + methodName + " lifecycle method.");
             method.Invoke(target, null);
+        }
+
+        private static void SetAutoProperty<T>(
+            object target,
+            string propertyName,
+            T value)
+        {
+            FieldInfo field = target.GetType().GetField(
+                "<" + propertyName + ">k__BackingField",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null,
+                target.GetType().Name + "." + propertyName + " has no backing field.");
+            field.SetValue(target, value);
         }
 
         private static Bounds MeshBoundsInFrame(Renderer renderer, Transform frame)

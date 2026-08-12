@@ -80,8 +80,10 @@ namespace QuestFlightLab.Input
         private float _baseThrottle = 0.10f;
         private float _baseMixture = 1f;
         private FlightLessonControlCommand _flightLessonGuidance;
+        private FlightLessonControlCommand _recoverySuppressedCommand;
         private bool _flightLessonGuidanceActive;
         private bool _flightLessonInputSuppressed;
+        private bool _hasRecoverySuppressedCommand;
         private int _flightLessonResetVersion;
         private float _aileronGuidanceBlend = 1f;
         private float _elevatorGuidanceBlend = 1f;
@@ -182,7 +184,40 @@ namespace QuestFlightLab.Input
             _flightLessonInputSuppressed = suppressed;
             ResetFlightLessonHandoverState();
             if (suppressed)
-                Current.SetNeutral(Mathf.Clamp01(defaultThrottle));
+                PublishSuppressedControls();
+            else
+                _hasRecoverySuppressedCommand = false;
+        }
+
+        /// <summary>
+        /// Atomically clears every input latch that may prevent the sole flight
+        /// authority from advancing after an authored recovery. The command is
+        /// held only while recovery suppression is active; normal lesson mixing
+        /// resumes when suppression is released.
+        /// </summary>
+        public void PrepareForFlightLessonRecovery(
+            in FlightLessonControlCommand recoveryCommand)
+        {
+            ReleaseAllTouchOverrides();
+            Paused = false;
+            _resetQueued = false;
+
+            GamepadInputSnapshot snapshot = gamepad != null
+                ? gamepad.Current
+                : _disconnectedFallback;
+            _previousButtonWest = snapshot != null && snapshot.buttonWest;
+            _previousButtonNorth = snapshot != null && snapshot.buttonNorth;
+            _previousButtonEast = snapshot != null && snapshot.buttonEast;
+            _previousStartButton = snapshot != null && snapshot.startButton;
+
+            _throttle = Mathf.Clamp01(recoveryCommand.throttle);
+            _mixture = Mathf.Clamp01(recoveryCommand.mixture);
+            _trim = Mathf.Clamp(recoveryCommand.trim, -1f, 1f);
+            _flaps = Mathf.Clamp01(recoveryCommand.flaps);
+            _recoverySuppressedCommand = recoveryCommand;
+            _hasRecoverySuppressedCommand = true;
+            ResetFlightLessonHandoverState();
+            PublishSuppressedControls();
         }
 
         public int ReleaseAllTouchOverrides()
@@ -418,7 +453,7 @@ namespace QuestFlightLab.Input
 
             if (_flightLessonInputSuppressed)
             {
-                Current.SetNeutral(Mathf.Clamp01(defaultThrottle));
+                PublishSuppressedControls();
                 _previousButtonWest = snapshot.buttonWest;
                 _previousButtonNorth = snapshot.buttonNorth;
                 _previousButtonEast = snapshot.buttonEast;
@@ -867,6 +902,16 @@ namespace QuestFlightLab.Input
             _manualThrottleOwnedUntil = 0f;
             _trimManuallyOwned = false;
             _flapsManuallyOwned = false;
+        }
+
+        private void PublishSuppressedControls()
+        {
+            if (_hasRecoverySuppressedCommand)
+                CopyFlightLessonCommandInto(
+                    _recoverySuppressedCommand,
+                    Current);
+            else
+                Current.SetNeutral(Mathf.Clamp01(defaultThrottle));
         }
 
         private void ReleaseStaleTouchOverrides(

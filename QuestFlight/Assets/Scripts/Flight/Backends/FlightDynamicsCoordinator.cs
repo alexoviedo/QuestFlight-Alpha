@@ -274,6 +274,21 @@ namespace QuestFlightLab.Flight.Backends
             return ResetToInitialConditions(initialConditions, false);
         }
 
+        /// <summary>
+        /// Recovery-only reset seam. A prior backend step failure disables this
+        /// component to fail closed; an accepted authored checkpoint may revive
+        /// that same initialized authority after its backend successfully resets.
+        /// No backend or product hierarchy is constructed here.
+        /// </summary>
+        public bool TryRecoverToInitialConditions(
+            in FlightDynamicsInitialConditions initialConditions)
+        {
+            if (!TryResetToInitialConditions(initialConditions))
+                return false;
+            enabled = true;
+            return true;
+        }
+
         private bool ResetToInitialConditions(
             in FlightDynamicsInitialConditions initialConditions,
             bool allowConfiguredNativeFallback)
@@ -292,6 +307,7 @@ namespace QuestFlightLab.Flight.Backends
             _accumulator?.Reset();
             ApplyBackendPose(_currentState);
             ApplyLegacyState(_currentState);
+            LastError = string.Empty;
             return true;
         }
 

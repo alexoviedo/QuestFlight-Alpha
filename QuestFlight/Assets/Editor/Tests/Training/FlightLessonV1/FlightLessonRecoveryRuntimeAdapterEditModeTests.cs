@@ -153,6 +153,78 @@ namespace QuestFlightLab.Editor.Tests.Training.FlightLessonV1
         }
 
         [Test]
+        public void RecoveryLivenessRequiresConsecutiveBackendAdvancementAndMotion()
+        {
+            FlightLessonRecoveryLivenessGate gate =
+                new FlightLessonRecoveryLivenessGate();
+            FlightDynamicsState state = LiveState(10d, Vector3.zero, 30f);
+            gate.Begin(state, true);
+
+            for (int step = 1;
+                 step < FlightLessonRecoveryLivenessGate.RequiredConsecutiveSteps;
+                 step++)
+            {
+                state = LiveState(
+                    10d + step * 0.02d,
+                    new Vector3(0f, 0f, step * 0.03f),
+                    30f);
+                Assert.That(gate.Observe(
+                        state,
+                        true,
+                        true,
+                        0.02f,
+                        out string pendingFailure),
+                    Is.EqualTo(FlightLessonRecoveryLivenessStatus.Pending),
+                    pendingFailure);
+            }
+
+            state = LiveState(10.06d, new Vector3(0f, 0f, 0.09f), 30f);
+            Assert.That(gate.Observe(
+                    state,
+                    true,
+                    true,
+                    0.02f,
+                    out string failure),
+                Is.EqualTo(FlightLessonRecoveryLivenessStatus.Passed),
+                failure);
+        }
+
+        [Test]
+        public void RecoveryLivenessRejectsDisabledOrStaticAuthority()
+        {
+            FlightDynamicsState state = LiveState(4d, Vector3.zero, 25f);
+            FlightLessonRecoveryLivenessGate disabledGate =
+                new FlightLessonRecoveryLivenessGate();
+            disabledGate.Begin(state, true);
+            Assert.That(disabledGate.Observe(
+                    state,
+                    false,
+                    true,
+                    0.02f,
+                    out string disabledFailure),
+                Is.EqualTo(FlightLessonRecoveryLivenessStatus.Failed));
+            StringAssert.Contains("disabled", disabledFailure);
+
+            FlightLessonRecoveryLivenessGate staticGate =
+                new FlightLessonRecoveryLivenessGate();
+            staticGate.Begin(state, true);
+            FlightLessonRecoveryLivenessStatus status =
+                FlightLessonRecoveryLivenessStatus.Pending;
+            string failure = string.Empty;
+            for (int i = 0; i < 60 && status == FlightLessonRecoveryLivenessStatus.Pending; i++)
+            {
+                status = staticGate.Observe(
+                    state,
+                    true,
+                    true,
+                    0.02f,
+                    out failure);
+            }
+            Assert.That(status, Is.EqualTo(FlightLessonRecoveryLivenessStatus.Failed));
+            StringAssert.Contains("did not advance", failure);
+        }
+
+        [Test]
         public void RuntimeAdapterContainsNoHierarchyRepairCameraWritesOrPhysicsQueries()
         {
             string path = Path.Combine(
@@ -167,7 +239,31 @@ namespace QuestFlightLab.Editor.Tests.Training.FlightLessonV1
             StringAssert.DoesNotContain(".transform.", source);
             StringAssert.DoesNotContain("Physics.", source);
             StringAssert.Contains("OVRManager.SetColorScaleAndOffset", source);
-            StringAssert.Contains("TryResetToInitialConditions", source);
+            StringAssert.Contains("TryRecoverToInitialConditions", source);
+        }
+
+        private static FlightDynamicsState LiveState(
+            double simulationTimeSeconds,
+            Vector3 position,
+            float forwardVelocityMetersPerSecond)
+        {
+            return new FlightDynamicsState
+            {
+                simulationTimeSeconds = simulationTimeSeconds,
+                latitudeDegrees = 40d,
+                longitudeDegrees = -105d,
+                altitudeMslMeters = 1600d,
+                altitudeAglMeters = 100d,
+                calibratedAirspeedKnots = 60d,
+                groundSpeedKnots = 60d,
+                headingDegrees = 80d,
+                engineRpm = 2200d,
+                loadFactorG = 1d,
+                positionUnityMeters = position,
+                rotationUnity = Quaternion.identity,
+                velocityUnityMetersPerSecond =
+                    new Vector3(0f, 0f, forwardVelocityMetersPerSecond)
+            };
         }
     }
 }

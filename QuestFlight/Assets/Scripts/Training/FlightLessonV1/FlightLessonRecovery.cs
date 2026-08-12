@@ -1,3 +1,4 @@
+using QuestFlightLab.Flight.Backends;
 using UnityEngine;
 
 namespace QuestFlightLab.Training.FlightLessonV1
@@ -80,6 +81,118 @@ namespace QuestFlightLab.Training.FlightLessonV1
             stabilizationSeconds = 0.50f,
             fadeInSeconds = 0.35f
         };
+    }
+
+    public enum FlightLessonRecoveryLivenessStatus
+    {
+        Pending = 0,
+        Passed = 1,
+        Failed = 2
+    }
+
+    /// <summary>
+    /// Verifies that a reset flight authority is actually advancing before the
+    /// comfort fade is released. Placement alone is not recovery success.
+    /// </summary>
+    public sealed class FlightLessonRecoveryLivenessGate
+    {
+        public const int RequiredConsecutiveSteps = 3;
+        public const float TimeoutSeconds = 1f;
+        private const double MinimumTimeAdvanceSeconds = 0.000001d;
+        private const float MinimumMotionMeters = 0.05f;
+        private const float MinimumVelocityMetersPerSecond = 1f;
+
+        private FlightDynamicsState baseline;
+        private double lastSimulationTime;
+        private float elapsedSeconds;
+        private int consecutiveAdvancingSteps;
+        private bool requiresMotion;
+        private bool active;
+
+        public bool IsActive => active;
+        public int ConsecutiveAdvancingSteps => consecutiveAdvancingSteps;
+        public float ElapsedSeconds => elapsedSeconds;
+
+        public void Begin(
+            in FlightDynamicsState resetState,
+            bool requireAuthoritativeMotion)
+        {
+            baseline = resetState;
+            lastSimulationTime = resetState.simulationTimeSeconds;
+            elapsedSeconds = 0f;
+            consecutiveAdvancingSteps = 0;
+            requiresMotion = requireAuthoritativeMotion;
+            active = true;
+        }
+
+        public FlightLessonRecoveryLivenessStatus Observe(
+            in FlightDynamicsState state,
+            bool authorityEnabled,
+            bool authorityInitialized,
+            float deltaTimeSeconds,
+            out string failure)
+        {
+            failure = string.Empty;
+            if (!active)
+            {
+                failure = "Recovery liveness verification was not started.";
+                return FlightLessonRecoveryLivenessStatus.Failed;
+            }
+
+            elapsedSeconds += Mathf.Max(0f, deltaTimeSeconds);
+            if (!authorityEnabled)
+            {
+                active = false;
+                failure = "The flight-authority component disabled before recovery advanced.";
+                return FlightLessonRecoveryLivenessStatus.Failed;
+            }
+            if (!authorityInitialized)
+            {
+                active = false;
+                failure = "The flight-dynamics backend became uninitialized during recovery.";
+                return FlightLessonRecoveryLivenessStatus.Failed;
+            }
+            if (!state.IsFinite)
+            {
+                active = false;
+                failure = "The flight-dynamics backend produced non-finite recovery state.";
+                return FlightLessonRecoveryLivenessStatus.Failed;
+            }
+
+            bool timeAdvanced =
+                state.simulationTimeSeconds >
+                lastSimulationTime + MinimumTimeAdvanceSeconds;
+            bool velocityValid = !requiresMotion ||
+                                 state.velocityUnityMetersPerSecond.magnitude >=
+                                 MinimumVelocityMetersPerSecond;
+            consecutiveAdvancingSteps = timeAdvanced && velocityValid
+                ? consecutiveAdvancingSteps + 1
+                : 0;
+            if (timeAdvanced)
+                lastSimulationTime = state.simulationTimeSeconds;
+
+            bool moved = !requiresMotion ||
+                         Vector3.Distance(
+                             baseline.positionUnityMeters,
+                             state.positionUnityMeters) >=
+                         MinimumMotionMeters;
+            if (consecutiveAdvancingSteps >= RequiredConsecutiveSteps && moved)
+            {
+                active = false;
+                return FlightLessonRecoveryLivenessStatus.Passed;
+            }
+
+            if (elapsedSeconds >= TimeoutSeconds)
+            {
+                active = false;
+                failure = timeAdvanced
+                    ? "Recovery state advanced in time but did not demonstrate authoritative motion."
+                    : "Recovery simulation time did not advance before the liveness timeout.";
+                return FlightLessonRecoveryLivenessStatus.Failed;
+            }
+
+            return FlightLessonRecoveryLivenessStatus.Pending;
+        }
     }
 
     public sealed class FlightLessonRecoveryStateMachine
