@@ -623,3 +623,15 @@ feather-scale normal and roughness response while retaining one skinned
 renderer and one material. Exact source/derivative hashes and the
 change notice are recorded in
 `Assets/Production/Environment/Wildlife/SOURCE_MANIFEST.json`.
+
+### C172 cockpit soundscape V1
+
+The engine-start, idle, cruise, and high-prop layers are optimized derivatives
+of `1964 Cessna 172E - Interior - Start, Idle, Takeoff, Flight` by JLWSound,
+published under CC0 1.0 at
+[Freesound](https://freesound.org/people/JLWSound/sounds/322321/). The raw
+recording remains external. The wind, ground-roll, flap-motor, stall-horn,
+switch-click, and touchdown cues are deterministic project-authored synthesis.
+Exact raw/output hashes, segment timings, and processing settings are recorded
+in `Assets/Production/Audio/C172/Clips/SOURCE_MANIFEST.json`; the reproducible
+compiler is `tools/audio/prepare_c172_audio.py`.

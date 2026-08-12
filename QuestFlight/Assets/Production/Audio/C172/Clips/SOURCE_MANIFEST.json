@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "tools/audio/prepare_c172_audio.py",
+  "source": {
+    "title": "1964 Cessna 172E - Interior - Start, Idle, Takeoff, Flight",
+    "author": "JLWSound",
+    "page": "https://freesound.org/people/JLWSound/sounds/322321/",
+    "download": "https://cdn.freesound.org/previews/322/322321_2489703-lq.mp3",
+    "license": "CC0 1.0",
+    "rawSha256": "c7494eba6878dbde3092e1180edff96d263154c091bfb043c8f490dcb3571b3e",
+    "rawCommitted": false
+  },
+  "processing": {
+    "sampleRate": 48000,
+    "seed": 17208,
+    "engineSegmentsSeconds": {
+      "start": [
+        447,
+        465
+      ],
+      "idle": [
+        600,
+        612
+      ],
+      "propHigh": [
+        820,
+        830
+      ],
+      "cruise": [
+        880,
+        892
+      ]
+    },
+    "notes": "Engine layers are edited from the real recording; auxiliary cues are deterministic project-authored synthesis."
+  },
+  "outputs": [
+    {
+      "path": "C172_Engine_Start.wav",
+      "sha256": "4bce2a5020f15d31c0fbb1261ca0d7282e62b0501883ac9d9036b0d7eb9eefdf",
+      "sampleRate": 48000,
+      "channels": 2
+    },
+    {
+      "path": "C172_Engine_Idle_Loop.wav",
+      "sha256": "33ac0ae8819d54052bc76412ce33a93ec3b83f13600d13c924626d426f9fb77b",
+      "sampleRate": 48000,
+      "channels": 2
+    },
+    {
+      "path": "C172_Engine_Cruise_Loop.wav",
+      "sha256": "e77925df40778652c387940844bb7a4916d8e8bc0a12e46fc1f9cdac5996854f",
+      "sampleRate": 48000,
+      "channels": 2
+    },
+    {
+      "path": "C172_Propeller_High_Loop.wav",
+      "sha256": "24bd7040cd5a35586ed4a12ed37e33b696dd47e40ea97f0c868e721e1521d512",
+      "sampleRate": 48000,
+      "channels": 2
+    },
+    {
+      "path": "C172_Wind_Low_Loop.wav",
+      "sha256": "d504839c35790cfae937913c68a12cca84d7aa0355ff8e1385cbc73b83288623",
+      "sampleRate": 48000,
+      "channels": 2
+    },
+    {
+      "path": "C172_Wind_High_Loop.wav",
+      "sha256": "7b22ead90f49ab03292bd757e147ca52740d6b97cfd5ed3886b2509eae12e2c5",
+      "sampleRate": 48000,
+      "channels": 2
+    },
+    {
+      "path": "C172_Ground_Roll_Loop.wav",
+      "sha256": "a813d1ff5cfd4eed2a178b0b55c09112f36d6403bdbc7e957e826ef25644ddac",
+      "sampleRate": 48000,
+      "channels": 2
+    },
+    {
+      "path": "C172_Flap_Motor_Loop.wav",
+      "sha256": "c9d127bfa31f5d1ffadf91e8752a44d5581cebcc87113284663ae689907adae3",
+      "sampleRate": 48000,
+      "channels": 2
+    },
+    {
+      "path": "C172_Stall_Horn_Loop.wav",
+      "sha256": "bafe074aa6efb213479d28cd5b656a4a69bb1fef845a56f31153b80e75163865",
+      "sampleRate": 48000,
+      "channels": 2
+    },
+    {
+      "path": "C172_Switch_Click.wav",
+      "sha256": "4f923f5e722daef3b056801337c7ed95c7a467d45865b1877696639c4b5d8b38",
+      "sampleRate": 48000,
+      "channels": 2
+    },
+    {
+      "path": "C172_Touchdown.wav",
+      "sha256": "794f01814a755bb02bc48bfd379a83b9a0ad31745e923ce3e58ca86e2280b120",
+      "sampleRate": 48000,
+      "channels": 2
+    }
+  ]
+}

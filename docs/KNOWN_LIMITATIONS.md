@@ -258,3 +258,18 @@ The airport corridor is a reference-faithful procedural approximation rather tha
   behavioral or population simulation.
 - Exact-APK worn visual acceptance and physical Quest timing/thermal evidence
   remain pending.
+
+## C172 cockpit soundscape V1
+
+- The current soundscape is a first authored cockpit mix, not a calibrated
+  psychoacoustic or certified C172 recording. Engine layers derive from a real
+  CC0 1964 C172E interior recording, while auxiliary cues are project-authored.
+- The pilot presentation intentionally approximates an aviation-headset mix:
+  engine/propeller and wind remain audible but controlled. It does not model a
+  specific ANR headset, airframe transfer function, or measured sound pressure.
+- No fabricated ATC dialogue is included. KBDU radio/CTAF, intercom speech,
+  traffic, wildlife, and weather event audio remain future authored content.
+- The bounded implementation owns eight continuous and two pooled one-shot
+  sources. Physical Quest loudness, comfort, 72 Hz timing, and thermal impact
+  require worn hardware acceptance of the exact APK and are not inferred from
+  EditMode or build results.

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af4b52737c507924a836c8a6f7e4f62d, type: 3}
+  m_Name: ProductionC172AudioProfile
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Audio.ProductionC172AudioProfile
+  engineStart: {fileID: 8300000, guid: 226ef8cfce6b73a4d99ea98c2c1adc0d, type: 3}
+  engineIdleLoop: {fileID: 8300000, guid: 9795ba3a5680f8a4b8d7ebe303943fc0, type: 3}
+  engineCruiseLoop: {fileID: 8300000, guid: d3566e971e71c0748b5bd9578f9858af, type: 3}
+  propellerHighLoop: {fileID: 8300000, guid: 62e3d8da305934848b7119976ad436a5, type: 3}
+  windLowLoop: {fileID: 8300000, guid: 1f906dbc6d5ea6a43b23959f1300c7f5, type: 3}
+  windHighLoop: {fileID: 8300000, guid: be02925559a49bd43b65a114b44b551d, type: 3}
+  groundRollLoop: {fileID: 8300000, guid: 2d84aae4431f8c04cb454c8284af8145, type: 3}
+  flapMotorLoop: {fileID: 8300000, guid: c36743c2efabbce43aab3098dad49ea4, type: 3}
+  stallHornLoop: {fileID: 8300000, guid: 55df6c90664ee1745afa3906a0291b1f, type: 3}
+  switchClick: {fileID: 8300000, guid: 0898df9cc88e1a84cb71933dcee41835, type: 3}
+  touchdown: {fileID: 8300000, guid: 85c50ca3fdb0a9644bf163bac4c4ba29, type: 3}
+  idleRpm: 650
+  maximumRpm: 2700
+  windFullScaleKnots: 125
+  groundRollFullScaleKnots: 55
+  stallHornStartAoADegrees: 11.5
+  stallHornFullAoADegrees: 16
