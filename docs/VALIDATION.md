@@ -528,3 +528,15 @@ See `docs/evidence/BOULDER_CLOUDS_V1_CORRECTION_2026-08-11.md`.
   inferred.
 
 Exact evidence: `docs/evidence/GOLDEN_EAGLE_THERMAL_V1_2026-08-11.md`.
+
+### 2026-08-12 animated-eagle correction
+
+- Replaced the rejected rigid generic-hawk presentation with the CC BY 4.0
+  `Animated Eagle` derivative documented in the wildlife source manifest.
+- Unity imports 870 animation bindings; deterministic skinned-mesh tests prove
+  visible wing deformation through the authored prefab.
+- Focused Golden Eagle EditMode: PASS 5/5. Full EditMode: PASS 311/311.
+- Five full-resolution wildlife views were inspected, including distinct
+  upstroke and extended-wing poses plus seated-pilot discoverability.
+- Aggregate Visual QA retains inherited whole-scene budget failures. Build and
+  worn exact-APK results must be recorded after completion.

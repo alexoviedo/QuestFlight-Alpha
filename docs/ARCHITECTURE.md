@@ -226,9 +226,11 @@ construction.
 ## Golden Eagle and shared thermal
 
 `ProductionEnvironmentRoot/WildlifeRoot` owns one serialized
-`GoldenEagleThermalRoot`. The bird has one skinned renderer and follows one
-deterministic orbit around a shared `ThermalFieldProfile`; runtime code does not
-construct, discover, or repair hierarchy.
+`GoldenEagleThermalRoot`. The bird has one skinned renderer. Its first lesson
+encounter follows an authored fixed-world cubic path at bounded airspeed, then
+joins a deterministic orbit around a shared `ThermalFieldProfile`. It uses
+explicit flap, soar, bank, and glide-transition clips; runtime code does not
+construct, discover, repair, or camera-parent hierarchy.
 
 The release coordinator still requests `UnityPrototype`. Only an explicitly
 compiled native-development build samples the thermal at the authoritative

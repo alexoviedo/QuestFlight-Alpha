@@ -27,7 +27,7 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 99;
+        private const int RequiredShotCount = 100;
         private const int DrawCallTarget = 75;
         private const long VisibleTriangleTarget = 650000L;
         // The headset-accepted readout/lens baseline is 29 materials (artifact
@@ -563,10 +563,87 @@ namespace QuestFlightLab.Editor
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "wildlife_01_golden_eagle_close", "Animated Golden Eagle close oblique", "wildlife",
                 eagleCloseCamera, LookAt(eagleCloseCamera, eagleTarget), 36f, ViewProfile.Environment));
+
+            Animator eagleAnimator = eagle.GetComponentInChildren<Animator>(true);
+            AnimationClip flapClip = eagleAnimator.runtimeAnimatorController.animationClips
+                .FirstOrDefault(clip => clip.name.EndsWith("FlapLoop", StringComparison.Ordinal));
+            if (flapClip == null)
+                throw new InvalidOperationException("Golden Eagle FlapLoop is unavailable for QA.");
+            GameObject eagleModelSource = AssetDatabase.LoadAssetAtPath<GameObject>(
+                GoldenEagleThermalAuthoring.ModelPath);
+            if (eagleModelSource == null)
+                throw new InvalidOperationException("Golden Eagle model source is unavailable for QA.");
+            GameObject eaglePoseModel = UnityEngine.Object.Instantiate(eagleModelSource);
+            eaglePoseModel.name = "GoldenEaglePoseProof";
+            eaglePoseModel.transform.SetParent(eagle.transform, false);
+            SkinnedMeshRenderer eaglePoseRenderer =
+                eaglePoseModel.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            if (eaglePoseRenderer == null)
+                throw new InvalidOperationException("Golden Eagle pose-proof renderer is unavailable for QA.");
+            eaglePoseRenderer.sharedMaterial = eagleRenderer.sharedMaterial;
+            eagleRenderer.enabled = false;
+            eagleAnimator.enabled = false;
+            flapClip.SampleAnimation(eaglePoseModel, 0.10f);
+            eagleTarget = eaglePoseRenderer.bounds.center;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "wildlife_01a_flap_up", "Golden Eagle articulated wingbeat: raised phase", "wildlife",
+                eagleCloseCamera, LookAt(eagleCloseCamera, eagleTarget), 36f, ViewProfile.Environment));
+            UnityEngine.Object.DestroyImmediate(eaglePoseModel);
+            eaglePoseModel = UnityEngine.Object.Instantiate(eagleModelSource);
+            eaglePoseModel.name = "GoldenEaglePoseProof";
+            eaglePoseModel.transform.SetParent(eagle.transform, false);
+            eaglePoseRenderer = eaglePoseModel.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            eaglePoseRenderer.sharedMaterial = eagleRenderer.sharedMaterial;
+            flapClip.SampleAnimation(eaglePoseModel, 0.70f);
+            eagleTarget = eaglePoseRenderer.bounds.center;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "wildlife_01b_flap_extended", "Golden Eagle articulated wingbeat: extended phase", "wildlife",
+                eagleCloseCamera, LookAt(eagleCloseCamera, eagleTarget), 36f, ViewProfile.Environment));
+            UnityEngine.Object.DestroyImmediate(eaglePoseModel);
+            eagleRenderer.enabled = true;
+            eagleAnimator.enabled = true;
             Vector3 eagleContextCamera = eagleTarget - eagleForward * 42f - eagleRight * 24f + Vector3.up * 15f;
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "wildlife_02_thermal_route_context", "Golden Eagle thermal cue on the reservoir lesson route", "wildlife",
                 eagleContextCamera, LookAt(eagleContextCamera, eagleTarget), 42f, ViewProfile.Environment));
+
+            // Prove discoverability from the actual seated viewpoint. This pose
+            // reproduces the first control points of the runtime's fixed-world
+            // route; unlike the old QA shot it does not put the bird over the
+            // thermal and claim that the aircraft-relative choreography ran.
+            Vector3 encounterDirection = eagle.encounterApproachDirection.normalized;
+            Vector3 encounterAircraft = new Vector3(
+                eagle.thermalField.centerUnityMeters.x - encounterDirection.x * 35f,
+                568f,
+                eagle.thermalField.centerUnityMeters.z - encounterDirection.z * 35f);
+            Quaternion encounterAircraftRotation =
+                Quaternion.LookRotation(encounterDirection, Vector3.up);
+            Vector3 originalEaglePosition = eagle.transform.position;
+            Quaternion originalEagleRotation = eagle.transform.rotation;
+            SetAircraftPose(context, encounterAircraft, encounterAircraftRotation);
+            Vector3 encounterRight = Vector3.Cross(Vector3.up, encounterDirection).normalized;
+            Vector3 encounterEaglePosition = encounterAircraft +
+                encounterDirection * eagle.encounterForwardOffsetMeters -
+                encounterRight * eagle.encounterLateralOffsetMeters +
+                Vector3.up * eagle.encounterVerticalSeparationMeters;
+            Vector3 encounterControlOne = encounterEaglePosition +
+                encounterDirection * 105f +
+                encounterRight * (eagle.encounterLateralOffsetMeters * 2.5f) +
+                Vector3.up * 6f;
+            eagle.transform.SetPositionAndRotation(
+                encounterEaglePosition,
+                Quaternion.LookRotation(encounterControlOne - encounterEaglePosition, Vector3.up));
+            Vector3 encounterPilotEye = context.rig.PilotSeatAnchor.position;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "wildlife_03_pilot_encounter",
+                "Golden Eagle discoverability from the reservoir-route pilot view",
+                "cockpit",
+                encounterPilotEye,
+                encounterAircraftRotation,
+                64f,
+                ViewProfile.Cockpit));
+            eagle.transform.SetPositionAndRotation(originalEaglePosition, originalEagleRotation);
+            SetAircraftPose(context, context.originalAircraftPosition, context.originalAircraftRotation);
 
             Vector3 nearMidBoundary = context.runwayMidpoint + Vector3.right * 1825f;
             Vector3 nearMidCamera = nearMidBoundary + new Vector3(310f, 430f, -420f);

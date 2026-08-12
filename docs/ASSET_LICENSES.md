@@ -612,11 +612,14 @@ committed.
 
 ### Golden Eagle thermal cue
 
-The bounded soaring-raptor derivative uses `Hawk Lp Rigged` by Sherkiz from
-[Poly Pizza](https://poly.pizza/m/RkN6MEbP6g), published under
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The raw GLB remains
-external. Blender 5.1.2 normalizes it to a 2.1 m wingspan, removes an unused
-helper mesh, preserves the `Fly` animation, and produces one skinned renderer,
-one material, and one optimized atlas. Exact source/derivative hashes and the
+The bounded soaring-raptor derivative uses `Animated Eagle` by Clement Abai /
+Asim3d from [Sketchfab](https://sketchfab.com/3d-models/animated-eagle-de73b663acbc426e8e6c107fd25e08cd),
+published under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+The raw glTF remains external. Blender 5.1.2 normalizes its measured
+extended-wing pose to a 2.1 m wingspan, preserves the complete 208-frame flight
+animation, and authors soar, bank, and transition clips. Project-owned offline
+derivatives recolor the bald-eagle head/tail islands and add restrained
+feather-scale normal and roughness response while retaining one skinned
+renderer and one material. Exact source/derivative hashes and the
 change notice are recorded in
 `Assets/Production/Environment/Wildlife/SOURCE_MANIFEST.json`.

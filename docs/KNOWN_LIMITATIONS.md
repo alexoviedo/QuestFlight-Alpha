@@ -243,14 +243,18 @@ The airport corridor is a reference-faithful procedural approximation rather tha
 
 ## Golden Eagle thermal V1
 
-- The visible bird is a rights-recorded, low-poly generic hawk derivative used
-  as a Golden Eagle/soaring cue; it is not a species-accurate ecological model.
-- There is one deterministic fair-weather orbit and one thermal. Bird strikes,
+- The visible bird is a rights-recorded, low-poly animated eagle derivative
+  recolored for a Golden Eagle/soaring cue; it is not a species-accurate
+  ecological model.
+- There is one fixed-world lesson encounter, one deterministic fair-weather
+  orbit, and one thermal. Bird strikes,
   flocking, random weather, and a broad thermal field are out of scope.
 - Release builds retain the Unity prototype backend and therefore do not apply
   the thermal aerodynamically. Only the opt-in native development build submits
   the shared updraft through JSBSim; native promotion remains incomplete at
   3 passed and 9 unproven scenarios.
-- The unattended Quest cold launch logged an input-focus ANR while the headset
-  was not worn. No worn visual, thermal-feel, frame-time, thermal, comfort, or
-  performance acceptance is claimed for the exact APK.
+- The replacement preserves a real skinned 208-frame wingbeat and adds explicit
+  soar/bank/transition states. It remains one deterministic training cue, not a
+  behavioral or population simulation.
+- Exact-APK worn visual acceptance and physical Quest timing/thermal evidence
+  remain pending.

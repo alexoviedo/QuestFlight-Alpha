@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using QuestFlightLab.Environment;
 using QuestFlightLab.Flight.Backends;
+using QuestFlight.Product;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -18,6 +19,8 @@ namespace QuestFlightLab.Editor
         public const string Root = "Assets/Production/Environment/Wildlife";
         public const string ModelPath = Root + "/Models/GoldenEagle_Quest.fbx";
         public const string TexturePath = Root + "/Textures/GoldenEagle_Albedo.png";
+        public const string NormalPath = Root + "/Textures/GoldenEagle_Normal.png";
+        public const string PackedPath = Root + "/Textures/GoldenEagle_MetallicSmoothness.png";
         public const string MaterialPath = Root + "/Materials/GoldenEagle_Quest.mat";
         public const string ControllerPath = Root + "/GoldenEagle_Flight.controller";
         public const string ProfilePath = Root + "/Profiles/KBDU_SunlitFieldThermal01.asset";
@@ -51,7 +54,9 @@ namespace QuestFlightLab.Editor
         {
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             AssetDatabase.DeleteAsset(BlenderBackupPath);
-            ConfigureTexture();
+            ConfigureTexture(TexturePath, false, true);
+            ConfigureTexture(NormalPath, true, false);
+            ConfigureTexture(PackedPath, false, false);
             ConfigureModel();
             ThermalFieldProfile profile = BuildThermalProfile();
             Material material = BuildMaterial();
@@ -67,13 +72,13 @@ namespace QuestFlightLab.Editor
             if (exitWhenComplete) EditorApplication.Exit(0);
         }
 
-        private static void ConfigureTexture()
+        private static void ConfigureTexture(string path, bool normalMap, bool srgb)
         {
-            AssetDatabase.ImportAsset(TexturePath, ImportAssetOptions.ForceSynchronousImport);
-            TextureImporter importer = AssetImporter.GetAtPath(TexturePath) as TextureImporter;
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
             Require(importer != null, "Golden Eagle texture importer is missing.");
-            importer.textureType = TextureImporterType.Default;
-            importer.sRGBTexture = true;
+            importer.textureType = normalMap ? TextureImporterType.NormalMap : TextureImporterType.Default;
+            importer.sRGBTexture = srgb;
             importer.mipmapEnabled = true;
             importer.streamingMipmaps = true;
             importer.wrapMode = TextureWrapMode.Clamp;
@@ -107,6 +112,13 @@ namespace QuestFlightLab.Editor
             importer.isReadable = false;
             importer.materialImportMode = ModelImporterMaterialImportMode.None;
             importer.optimizeGameObjects = false;
+            ModelImporterClipAnimation[] clips = importer.defaultClipAnimations;
+            foreach (ModelImporterClipAnimation clip in clips)
+            {
+                clip.loopTime = !clip.name.Contains("GlideTransition", StringComparison.Ordinal);
+                clip.loopPose = clip.loopTime;
+            }
+            importer.clipAnimations = clips;
             importer.SaveAndReimport();
         }
 
@@ -147,9 +159,16 @@ namespace QuestFlightLab.Editor
             material.name = "GoldenEagle_Quest";
             material.shader = RequireShader("Standard");
             material.SetTexture("_MainTex", LoadRequired<Texture2D>(TexturePath));
-            material.SetColor("_Color", new Color(0.72f, 0.58f, 0.42f, 1f));
+            material.SetTexture("_BumpMap", LoadRequired<Texture2D>(NormalPath));
+            material.SetTexture("_MetallicGlossMap", LoadRequired<Texture2D>(PackedPath));
+            // Preserve the source atlas' natural feather contrast. The previous
+            // brown multiplier made the shaded underside merge into the ground.
+            material.SetColor("_Color", new Color(0.95f, 0.92f, 0.86f, 1f));
             material.SetFloat("_Metallic", 0f);
-            material.SetFloat("_Glossiness", 0.18f);
+            material.SetFloat("_Glossiness", 0.35f);
+            material.SetFloat("_GlossMapScale", 1f);
+            material.EnableKeyword("_NORMALMAP");
+            material.EnableKeyword("_METALLICGLOSSMAP");
             material.enableInstancing = false;
             EditorUtility.SetDirty(material);
             return material;
@@ -157,17 +176,31 @@ namespace QuestFlightLab.Editor
 
         private static RuntimeAnimatorController BuildAnimatorController()
         {
-            AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(ModelPath)
+            AnimationClip[] clips = AssetDatabase.LoadAllAssetsAtPath(ModelPath)
                 .OfType<AnimationClip>()
-                .FirstOrDefault(candidate => !candidate.name.StartsWith("__preview__", StringComparison.Ordinal));
-            Require(clip != null, "Golden Eagle source has no imported flight animation.");
+                .Where(candidate => !candidate.name.StartsWith("__preview__", StringComparison.Ordinal))
+                .ToArray();
+            AnimationClip RequireClip(string name)
+            {
+                AnimationClip value = clips.FirstOrDefault(candidate =>
+                    candidate.name.EndsWith(name, StringComparison.Ordinal));
+                Require(value != null, $"Golden Eagle source is missing {name}.");
+                return value;
+            }
 
             AssetDatabase.DeleteAsset(ControllerPath);
             AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
-            AnimatorState state = controller.layers[0].stateMachine.AddState("Fly");
-            state.motion = clip;
-            state.speed = 1f;
-            controller.layers[0].stateMachine.defaultState = state;
+            AnimatorStateMachine machine = controller.layers[0].stateMachine;
+            AnimatorState soar = machine.AddState("SoarIdle");
+            soar.motion = RequireClip("SoarIdle");
+            soar.speed = 1f;
+            machine.defaultState = soar;
+            foreach (string stateName in new[] { "FlapLoop", "BankLeft", "BankRight", "GlideTransition" })
+            {
+                AnimatorState state = machine.AddState(stateName);
+                state.motion = RequireClip(stateName);
+                state.speed = 1f;
+            }
             EditorUtility.SetDirty(controller);
             return controller;
         }
@@ -188,7 +221,7 @@ namespace QuestFlightLab.Editor
                 if (animator == null) animator = visual.AddComponent<Animator>();
                 animator.runtimeAnimatorController = controller;
                 animator.applyRootMotion = false;
-                animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+                animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
                 animator.updateMode = AnimatorUpdateMode.Normal;
 
                 SkinnedMeshRenderer[] renderers = visual.GetComponentsInChildren<SkinnedMeshRenderer>(true);
@@ -204,14 +237,31 @@ namespace QuestFlightLab.Editor
                 behavior.thermalField = profile;
                 behavior.visualRoot = animator.transform;
                 behavior.animator = animator;
-                behavior.orbitRadiusMeters = 105f;
-                behavior.soaringAltitudeUnityMeters = 515f;
-                behavior.airspeedMetersPerSecond = 16f;
+                behavior.orbitRadiusMeters = 55f;
+                // The lesson route is approximately 568 m above the Unity
+                // origin at this crossing. Ten metres of vertical separation
+                // keeps the bird in the upper windshield instead of behind
+                // the cabin roof.
+                behavior.soaringAltitudeUnityMeters = 578f;
+                behavior.airspeedMetersPerSecond = 13.2f;
                 behavior.bankDegrees = 18f;
-                behavior.glidePoseNormalizedTime = 0.25f;
                 behavior.flapIntervalSeconds = 12f;
                 behavior.flapDurationSeconds = 1.4f;
                 behavior.phaseOffsetSeconds = 2.3f;
+                // Arm late on climb_to_reservoir, before the segment handoff,
+                // and place the first silhouette about one degree wide. The
+                // bird therefore resolves naturally out of distance instead
+                // of appearing suddenly at close-pass scale.
+                behavior.encounterStagingDistanceMeters = 1250f;
+                behavior.encounterRouteSegmentIndex = 1;
+                behavior.encounterForwardOffsetMeters = 120f;
+                behavior.encounterLateralOffsetMeters = 22f;
+                behavior.encounterVerticalSeparationMeters = 8f;
+                behavior.encounterGlideSpeedMetersPerSecond = 15f;
+                behavior.encounterGlideDurationSeconds = 7f;
+                behavior.encounterOrbitBlendSeconds = 4f;
+                behavior.encounterApproachDirection =
+                    new Vector3(-0.3162278f, 0f, 0.9486833f);
                 Require(behavior.HasAuthoredReferences(out string failure),
                     "Golden Eagle behavior invalid: " + failure);
 
@@ -277,6 +327,27 @@ namespace QuestFlightLab.Editor
                 coordinators[0].thermalField = profile;
                 EditorUtility.SetDirty(coordinators[0]);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(coordinators[0]);
+
+                GoldenEagleThermalSoaring[] eagles =
+                    root.GetComponentsInChildren<GoldenEagleThermalSoaring>(true);
+                if (eagles.Length > 0)
+                {
+                    Require(eagles.Length == 1,
+                        $"Expected one Golden Eagle in {prefabPath}; found {eagles.Length}.");
+                    Require(coordinators[0].simulationRoot != null,
+                        $"FlightDynamicsCoordinator in {prefabPath} has no serialized simulation root.");
+                    eagles[0].encounterObserver = coordinators[0].simulationRoot;
+                    ProductDemoPilot[] routePilots =
+                        root.GetComponentsInChildren<ProductDemoPilot>(true);
+                    if (routePilots.Length > 0)
+                    {
+                        Require(routePilots.Length == 1,
+                            $"Expected at most one ProductDemoPilot in {prefabPath}; found {routePilots.Length}.");
+                        eagles[0].encounterRoutePilot = routePilots[0];
+                    }
+                    EditorUtility.SetDirty(eagles[0]);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(eagles[0]);
+                }
                 PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
             }
             finally

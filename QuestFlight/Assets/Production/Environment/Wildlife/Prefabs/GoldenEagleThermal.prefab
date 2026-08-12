@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 2929666442035644881}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1805, y: 515, z: 2600}
+  m_LocalPosition: {x: 1755, y: 578, z: 2600}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -48,14 +48,24 @@ MonoBehaviour:
   thermalField: {fileID: 11400000, guid: 761b448f5833d39478ae16e2d2544352, type: 2}
   visualRoot: {fileID: 1263545623546643101}
   animator: {fileID: 9122769999287821512}
-  orbitRadiusMeters: 105
-  soaringAltitudeUnityMeters: 515
-  airspeedMetersPerSecond: 16
+  encounterObserver: {fileID: 0}
+  encounterRoutePilot: {fileID: 0}
+  encounterRouteSegmentIndex: 1
+  orbitRadiusMeters: 55
+  soaringAltitudeUnityMeters: 578
+  airspeedMetersPerSecond: 13.2
   bankDegrees: 18
-  glidePoseNormalizedTime: 0.25
   flapIntervalSeconds: 12
   flapDurationSeconds: 1.4
   phaseOffsetSeconds: 2.3
+  encounterStagingDistanceMeters: 1250
+  encounterForwardOffsetMeters: 120
+  encounterLateralOffsetMeters: 22
+  encounterVerticalSeparationMeters: 8
+  encounterGlideSpeedMetersPerSecond: 15
+  encounterGlideDurationSeconds: 7
+  encounterOrbitBlendSeconds: 4
+  encounterApproachDirection: {x: -0.3162278, y: 0, z: 0.9486833}
 --- !u!1001 &1586319789717071222
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -149,7 +159,7 @@ Animator:
   m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: c1aee72dca6c8fc44918535a982dcd60, type: 2}
-  m_CullingMode: 1
+  m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
