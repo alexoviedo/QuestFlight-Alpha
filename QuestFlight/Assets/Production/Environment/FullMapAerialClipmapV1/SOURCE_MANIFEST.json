@@ -1,0 +1,91 @@
+{
+  "schema": "questflight.full-map-aerial-clipmap-v1.source-manifest.v1",
+  "label": "KBDU aircraft-centered full-map 2020 aerial clipmap",
+  "purpose": "Visual context for a personal standalone Quest 3 flight simulator; not current navigation imagery.",
+  "source": {
+    "publisher": "City of Boulder",
+    "producer": "Pictometry International",
+    "title": "2020 Imagery",
+    "acquisition_period": "Spring and Summer 2020",
+    "arcgis_item_id": "22b7c93a74394696824258f807f345ba",
+    "item_metadata_url": "https://www.arcgis.com/sharing/rest/content/items/22b7c93a74394696824258f807f345ba?f=json",
+    "service_url": "https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer",
+    "published_pixel_size_meters": 0.2286,
+    "license": "CC0-1.0",
+    "license_policy_url": "https://bouldercolorado.gov/services/open-data",
+    "access": "public"
+  },
+  "coordinate_contract": {
+    "frame": "WGS84 azimuthal equidistant centered on KBDU; Unity +X=east, +Z=north",
+    "origin_latitude_degrees": 40.03936527,
+    "origin_longitude_degrees": -105.22608958,
+    "origin_elevation_msl_meters": 1611.7824,
+    "local_bounds_meters": [-12000.0, -12000.0, 12000.0, 12000.0]
+  },
+  "offline_derivatives": {
+    "policy": "Raw exports and the complete generated page pyramid remain outside Git. Rebuildable Android AssetBundles are generated into ignored StreamingAssets for local builds.",
+    "page_count": 1873,
+    "authoring_page_bytes": 3140779477,
+    "page_manifest_sha256": "98129cbf175c218d63d04365883fb670cda6daddf07fccfeb047581047e7ea6a",
+    "page_audit_sha256": "712b5b06e56a91174d54cfe4697cb29c545e18129b3b2c7296d76615d21838b5",
+    "config_sha256": "f6ec84d80633a492cd7c8547f9e655b41a0f7c199389caa3274a2a2f9811c7ea",
+    "generator_sha256": "6e0a2179fbba0c08f576370f4a2060b830386d8c311661f21acfb3abc381ac25",
+    "validator_sha256": "032a2931cc9c9c6da21460014957d45699f11ad4e3c9c1d830d0f3abe6815e31"
+  },
+  "tiers": {
+    "high": {
+      "page_count": 1296,
+      "grid": [36, 36],
+      "page_pixels": 2048,
+      "gutter_pixels": 16,
+      "inner_page_meters": 672.0,
+      "meters_per_texel": 0.3333333333333333,
+      "runtime_window": [3, 3],
+      "android_format": "ASTC_10x10"
+    },
+    "medium": {
+      "page_count": 576,
+      "grid": [24, 24],
+      "page_pixels": 1024,
+      "gutter_pixels": 8,
+      "inner_page_meters": 1008.0,
+      "meters_per_texel": 1.0,
+      "runtime_window": [3, 3],
+      "android_format": "ASTC_10x10"
+    },
+    "global": {
+      "page_count": 1,
+      "page_pixels": 4096,
+      "meters_per_texel": 5.859375,
+      "android_format": "ASTC_10x10"
+    }
+  },
+  "runtime_contract": {
+    "owner": "QuestFlightLab.Environment.AircraftCenteredAerialClipmapController",
+    "selection": "Aircraft-centered fixed 3x3 high and medium page windows over one full-map fallback",
+    "atomic_swap": "Separate active and staging Texture2DArray objects prevent partial page-window presentation",
+    "active_and_staging_bytes": 23889952,
+    "active_and_staging_mib": 22.783233642578125,
+    "network_required_at_runtime": false,
+    "runtime_hierarchy_construction": false,
+    "camera_transform_ownership": false,
+    "legacy_fixed_pyramid_policy": "Startup fallback only; explicit legacy mip requests are released after all three clipmap tiers are ready."
+  },
+  "audit": {
+    "page_completeness": "PASS 1873/1873",
+    "high_seam_comparisons": 2520,
+    "high_mean_absolute_rgb": 2.4265123215932696,
+    "high_p95_of_mean_absolute_rgb": 3.4523188273111978,
+    "medium_seam_comparisons": 1104,
+    "medium_mean_absolute_rgb": 2.1449854569734583,
+    "medium_p95_of_mean_absolute_rgb": 2.759499104817708,
+    "visual_review": "Full-map mosaic and airport-centered high-resolution stitch inspected; no independent export-page radiometric blocks were accepted."
+  },
+  "exclusions": [
+    "No raw ArcGIS exports are committed.",
+    "No raw orthophoto is committed.",
+    "No runtime network downloader is included.",
+    "The rejected independently exported 2024 ImageServer candidate is not used because visible page-wise radiometric discontinuities failed the seamless-source requirement.",
+    "This imagery is visual context only and is not current, survey-grade, or suitable for navigation."
+  ]
+}

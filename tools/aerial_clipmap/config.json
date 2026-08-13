@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "label": "KBDU aircraft-centered full-map aerial clipmap v1",
+  "coordinate_frame": "WGS84 azimuthal equidistant centered on KBDU; Unity +X=east, +Z=north",
+  "origin": {
+    "latitude_degrees": 40.03936527,
+    "longitude_degrees": -105.22608958,
+    "elevation_msl_meters": 1611.7824
+  },
+  "local_bounds_meters": [-12000.0, -12000.0, 12000.0, 12000.0],
+  "source": {
+    "id": "city_of_boulder_2020_cached_9inch",
+    "publisher": "City of Boulder",
+    "producer": "Pictometry International",
+    "acquisition_period": "Spring and Summer 2020",
+    "arcgis_item_id": "22b7c93a74394696824258f807f345ba",
+    "item_metadata_url": "https://www.arcgis.com/sharing/rest/content/items/22b7c93a74394696824258f807f345ba?f=json",
+    "service_url": "https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer",
+    "service_metadata_url": "https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer?f=pjson",
+    "export_url": "https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer/export",
+    "native_pixel_size_meters": 0.2286,
+    "license_name": "Creative Commons CC0 1.0 Universal",
+    "license_spdx": "CC0-1.0",
+    "license_policy_url": "https://bouldercolorado.gov/services/open-data",
+    "required_access": "public",
+    "required_service_wkid": 3857,
+    "required_cache_tile_pixels": 256,
+    "required_cache_format": "MIXED",
+    "allowed_network_hosts": [
+      "www.arcgis.com",
+      "gis.bouldercolorado.gov",
+      "bouldercolorado.gov"
+    ]
+  },
+  "processing": {
+    "request_pixels": 2304,
+    "jpeg_quality": 95,
+    "resampling": "lanczos",
+    "network_attempts": 5,
+    "network_timeout_seconds": 180,
+    "network_workers": 4,
+    "user_agent": "QuestFlight personal geospatial build/1.0",
+    "referer": "https://open-data.bouldercolorado.gov/",
+    "maximum_retry_delay_seconds": 30
+  },
+  "tiers": {
+    "high": {
+      "output_pixels": 2048,
+      "gutter_pixels": 16,
+      "meters_per_texel": 0.3333333333333333,
+      "android_astc": "ASTC_10x10",
+      "runtime_grid_size": 3,
+      "bundle_region_cells": 2
+    },
+    "medium": {
+      "output_pixels": 1024,
+      "gutter_pixels": 8,
+      "meters_per_texel": 1.0,
+      "android_astc": "ASTC_10x10",
+      "runtime_grid_size": 3,
+      "bundle_region_cells": 2
+    },
+    "global": {
+      "output_pixels": 4096,
+      "meters_per_texel": 5.859375,
+      "android_astc": "ASTC_10x10"
+    }
+  },
+  "runtime": {
+    "prediction_seconds": 3.0,
+    "high_blend_width_meters": 90.0,
+    "medium_blend_width_meters": 240.0,
+    "maximum_page_load_milliseconds": 250.0,
+    "maximum_active_aerial_texture_bytes": 25165824,
+    "scene_texture_ceiling_bytes": 220200960
+  }
+}

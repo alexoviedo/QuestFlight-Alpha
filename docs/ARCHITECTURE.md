@@ -65,6 +65,22 @@ On `feature/aerial-scenery-recovery-v2`, the active context representation cover
 
 The same recovery adds four 2048² hot-zone ground quadrants at 1.984375 m/texel and one 4096² 12 km fallback at 2.9296875 m/texel, derived from the official public-domain 2019 USGS/USDA NAIP Plus source. World-space selection blends the original near atlas through the quadrants and fallback without runtime hierarchy changes. Mip chains remain resident because a correct custom-UV streaming contract has not been proven. This removes gross repetition at normal flight distances but does not restore source detail at taxi range. This representation is now the tagged standalone scenery development baseline. Machine review remains 5.3/10 while the prior worn smoke was approximately 7/10; neither score is a photorealism, public-release, or final performance claim.
 
+On `feature/full-map-aerial-clipmap-v1`, one serialized
+`AircraftCenteredAerialClipmapController` upgrades the complete 24 km square
+without making sharpness airport-relative. Offline authoring converts the
+official City of Boulder 2020 CC0 imagery into 1,296 high pages at 0.333 m/texel,
+576 medium pages at 1.0 m/texel, and one 5.859 m/texel global fallback. Android
+AssetBundles are self-contained build inputs; the runtime performs no network
+request. The aircraft simulation root selects fixed 3x3 high and medium page
+windows, preloads into staging `Texture2DArray` objects, and atomically swaps a
+complete window. The Main Camera and XR hierarchy are never written or used as
+spatial authority. Active plus staging arrays and the global image consume a
+bounded 23,889,952-byte (22.78 MiB) ASTC planning footprint. The accepted fixed
+pyramid remains visible during startup, then its explicit mip requests are
+released only after all new tiers are ready. This feature changes imagery
+selection, not terrain geometry, collision, buildings, vegetation, water,
+flight physics, or the authored environment hierarchy.
+
 On `feature/photoreal-aerial-surface-v1`, the product uses a hybrid semantic
 surface rather than applying lidar DSM/nDSM to one raised ground mesh.
 `ProductionBareEarthTerrain` is sampled only from the 3DEP DTM;

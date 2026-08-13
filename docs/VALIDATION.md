@@ -15,6 +15,23 @@ Run from the repository root:
 
 `validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current feature candidate captures 81 Visual-QA views; every full-resolution image requires inspection. Historical milestones below retain their original capture counts. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. The accepted-baseline hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. Historical and feature-scoped values below are evidence only.
 
+## Full-map aerial clipmap V1
+
+- source/page validation: PASS 1,873/1,873 pages from City item
+  `22b7c93a74394696824258f807f345ba`;
+- high seams: 2,520 comparisons, 2.427 mean absolute RGB and 3.452 p95 of
+  comparison means; medium seams: 1,104 comparisons, 2.145 mean and 2.759 p95;
+- inspected offline views: full 24 km high-tier mosaic and an airport-centered
+  native high-resolution 3x3 stitch; no export-page radiometric blocking
+  accepted;
+- runtime planning: active and staging 3x3 high/medium arrays plus global
+  fallback total 23,889,952 bytes (22.78 MiB), no runtime network request;
+- Unity, Android build, and physical Quest results are recorded in
+  `docs/evidence/FULL_MAP_AERIAL_CLIPMAP_V1_2026-08-12.md`. Editor Visual QA is
+  a regression check of the startup fallback; the dynamic Android-bundle path
+  requires the physical Quest trace/capture and is not inferred from Editor
+  stills.
+
 ## Cockpit Completion V3
 
 - focused/full EditMode: PASS 239/239;

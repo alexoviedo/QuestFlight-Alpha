@@ -580,6 +580,18 @@ in `tools/kbdu_traffic/traffic_vehicle_derivatives_v1.json` and
 suite. CC0 attribution is retained as provenance and does not imply RGSDev
 endorsement.
 
+### Full-map City of Boulder 2020 aerial clipmap
+
+The full-map page pyramid derives from the City of Boulder `2020 Imagery`
+ArcGIS item `22b7c93a74394696824258f807f345ba`. The service publishes nine-inch
+(0.2286 m) imagery produced by Pictometry International and the City's open-data
+policy applies CC0 1.0 Universal. Raw exports and all 1,873 authoring pages remain
+outside Git. Only project-authored fetch/reprojection/validation code and the
+compact source/hash contract are committed. Locally generated Android
+AssetBundles are ignored build inputs and contain only optimized derivatives.
+The exact URLs, processing tiers, hashes, seam metrics, and exclusions are in
+`Assets/Production/Environment/FullMapAerialClipmapV1/SOURCE_MANIFEST.json`.
+
 ### KBDU airport perimeter fence
 
 The placement authority is derived from OpenStreetMap KBDU aerodrome way

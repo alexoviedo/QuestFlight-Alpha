@@ -4,22 +4,13 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
     {
         _NearAlbedo ("Near 4 km NAIP", 2D) = "gray" {}
         _NearSourceNormal ("Near 1 m DEM source normal (ENU)", 2D) = "gray" {}
-        _RecoveryMidNWAlbedo ("Recovery mid NW 4 km NAIP", 2D) = "gray" {}
-        _RecoveryMidNEAlbedo ("Recovery mid NE 4 km NAIP", 2D) = "gray" {}
-        _RecoveryMidSWAlbedo ("Recovery mid SW 4 km NAIP", 2D) = "gray" {}
-        _RecoveryMidSEAlbedo ("Recovery mid SE 4 km NAIP", 2D) = "gray" {}
         _MidAlbedo ("Mid 12 km NAIP fallback", 2D) = "gray" {}
         _FarAlbedo ("Far 24 km NAIP", 2D) = "gray" {}
         _DetailAlbedo ("CC0 near/mid microdetail", 2D) = "white" {}
         _NearWorldMinInvSize ("Near min XZ / inverse size", Vector) = (-2000,-2000,0.00025,0.00025)
-        _RecoveryMidNWWorldMinInvSize ("Recovery NW min XZ / inverse size", Vector) = (-4032,-32,0.000246063,0.000246063)
-        _RecoveryMidNEWorldMinInvSize ("Recovery NE min XZ / inverse size", Vector) = (-32,-32,0.000246063,0.000246063)
-        _RecoveryMidSWWorldMinInvSize ("Recovery SW min XZ / inverse size", Vector) = (-4032,-4032,0.000246063,0.000246063)
-        _RecoveryMidSEWorldMinInvSize ("Recovery SE min XZ / inverse size", Vector) = (-32,-4032,0.000246063,0.000246063)
         _MidWorldMinInvSize ("Mid min XZ / inverse size", Vector) = (-6000,-6000,0.0000833333,0.0000833333)
         _FarWorldMinInvSize ("Far min XZ / inverse size", Vector) = (-12000,-12000,0.0000416667,0.0000416667)
         _NearBlendStartEnd ("Near to recovery overlap", Vector) = (1800,1980,0,0)
-        _RecoveryBlendStartEnd ("Recovery to mid fallback overlap", Vector) = (3800,4000,0,0)
         _MidBlendStartEnd ("Mid to far overlap", Vector) = (5000,6000,0,0)
         _DetailScale ("Detail world scale", Float) = 0.0666667
         _DetailFadeStartEnd ("Detail camera fade", Vector) = (180,1500,0,0)
@@ -53,6 +44,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
         _FullMapWaterRoughness ("Water reflection roughness", Range(0,1)) = 0.52
         _Tint ("Shared terrain tint", Color) = (1,1,1,1)
         _Roughness ("Roughness", Range(0,1)) = 0.92
+        [HideInInspector] _ClipmapEnabled ("Aircraft-centered aerial clipmap enabled", Float) = 0
         [Enum(Off,0,MacroLevel,1,BlendWeight,2,TexelDensityAndBoundaries,3,FullMapWaterMask,4)]
         _DiagnosticMode ("Terrain diagnostic", Float) = 0
     }
@@ -69,7 +61,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
         {
             Tags { "LightMode"="ForwardBase" }
             CGPROGRAM
-            #pragma target 3.0
+            #pragma target 3.5
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_fog
@@ -80,26 +72,24 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
 
             sampler2D _NearAlbedo;
             sampler2D _NearSourceNormal;
-            sampler2D _RecoveryMidNWAlbedo;
-            sampler2D _RecoveryMidNEAlbedo;
-            sampler2D _RecoveryMidSWAlbedo;
-            sampler2D _RecoveryMidSEAlbedo;
             sampler2D _MidAlbedo;
             sampler2D _FarAlbedo;
+            sampler2D _ClipGlobalAlbedo;
+            UNITY_DECLARE_TEX2DARRAY(_ClipHighAlbedo);
+            UNITY_DECLARE_TEX2DARRAY_NOSAMPLER(_ClipMediumAlbedo);
             sampler2D _DetailAlbedo;
             sampler2D _AirportCoreCleanPlateAlbedo;
             sampler2D _AirportCoreCleanPlateMask;
             sampler2D _FullMapWaterMask;
             float4 _NearWorldMinInvSize;
-            float4 _RecoveryMidNWWorldMinInvSize;
-            float4 _RecoveryMidNEWorldMinInvSize;
-            float4 _RecoveryMidSWWorldMinInvSize;
-            float4 _RecoveryMidSEWorldMinInvSize;
             float4 _MidWorldMinInvSize;
             float4 _FarWorldMinInvSize;
             float4 _NearBlendStartEnd;
-            float4 _RecoveryBlendStartEnd;
             float4 _MidBlendStartEnd;
+            float4 _ClipHighGridMinSize;
+            float4 _ClipMediumGridMinSize;
+            float4 _ClipHighUvScaleOffsetBlend;
+            float4 _ClipMediumUvScaleOffsetBlend;
             float4 _DetailFadeStartEnd;
             float4 _DetailRadiusFadeStartEnd;
             float4 _NearSourceNormalFadeStartEnd;
@@ -117,6 +107,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             half _FullMapWaterRoughness;
             half _Roughness;
             half _DiagnosticMode;
+            half _ClipmapEnabled;
 
             struct appdata
             {
@@ -153,60 +144,39 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 return 1.0 - smoothstep(width, width * 2.0, abs(radius - boundary));
             }
 
-            fixed3 SampleRecoveryTile(
-                sampler2D source,
+            half SampleAircraftCenteredClipmap(
                 float2 world,
-                float4 worldMinInvSize,
-                float2 worldDx,
-                float2 worldDy)
+                float4 gridMinSize,
+                float4 uvScaleOffsetBlend,
+                bool highTier,
+                out fixed3 color)
             {
-                float2 uv = saturate((world - worldMinInvSize.xy) * worldMinInvSize.zw);
-                return tex2Dgrad(
-                    source,
-                    uv,
-                    worldDx * worldMinInvSize.zw,
-                    worldDy * worldMinInvSize.zw).rgb;
-            }
+                color = fixed3(0, 0, 0);
+                float tileSize = gridMinSize.z;
+                float2 pagePosition = (world - gridMinSize.xy) * gridMinSize.w;
+                half inside = step(0.0, pagePosition.x) * step(pagePosition.x, 3.0) *
+                    step(0.0, pagePosition.y) * step(pagePosition.y, 3.0);
+                UNITY_BRANCH if (inside < 0.5h)
+                    return 0.0h;
 
-            fixed3 SampleRecoveryNorth(float2 world, float2 worldDx, float2 worldDy)
-            {
-                UNITY_BRANCH if (world.x <= -32.0)
-                    return SampleRecoveryTile(_RecoveryMidNWAlbedo, world,
-                        _RecoveryMidNWWorldMinInvSize, worldDx, worldDy);
-                UNITY_BRANCH if (world.x >= 32.0)
-                    return SampleRecoveryTile(_RecoveryMidNEAlbedo, world,
-                        _RecoveryMidNEWorldMinInvSize, worldDx, worldDy);
-                fixed3 west = SampleRecoveryTile(_RecoveryMidNWAlbedo, world,
-                    _RecoveryMidNWWorldMinInvSize, worldDx, worldDy);
-                fixed3 east = SampleRecoveryTile(_RecoveryMidNEAlbedo, world,
-                    _RecoveryMidNEWorldMinInvSize, worldDx, worldDy);
-                return lerp(west, east, smoothstep(-32.0, 32.0, world.x));
-            }
-
-            fixed3 SampleRecoverySouth(float2 world, float2 worldDx, float2 worldDy)
-            {
-                UNITY_BRANCH if (world.x <= -32.0)
-                    return SampleRecoveryTile(_RecoveryMidSWAlbedo, world,
-                        _RecoveryMidSWWorldMinInvSize, worldDx, worldDy);
-                UNITY_BRANCH if (world.x >= 32.0)
-                    return SampleRecoveryTile(_RecoveryMidSEAlbedo, world,
-                        _RecoveryMidSEWorldMinInvSize, worldDx, worldDy);
-                fixed3 west = SampleRecoveryTile(_RecoveryMidSWAlbedo, world,
-                    _RecoveryMidSWWorldMinInvSize, worldDx, worldDy);
-                fixed3 east = SampleRecoveryTile(_RecoveryMidSEAlbedo, world,
-                    _RecoveryMidSEWorldMinInvSize, worldDx, worldDy);
-                return lerp(west, east, smoothstep(-32.0, 32.0, world.x));
-            }
-
-            fixed3 SampleRecovery(float2 world, float2 worldDx, float2 worldDy)
-            {
-                UNITY_BRANCH if (world.y <= -32.0)
-                    return SampleRecoverySouth(world, worldDx, worldDy);
-                UNITY_BRANCH if (world.y >= 32.0)
-                    return SampleRecoveryNorth(world, worldDx, worldDy);
-                fixed3 south = SampleRecoverySouth(world, worldDx, worldDy);
-                fixed3 north = SampleRecoveryNorth(world, worldDx, worldDy);
-                return lerp(south, north, smoothstep(-32.0, 32.0, world.y));
+                float2 cell = min(floor(pagePosition), 2.0);
+                float slice = cell.y * 3.0 + cell.x;
+                float2 pageUv = frac(pagePosition) * uvScaleOffsetBlend.xy +
+                    uvScaleOffsetBlend.zz;
+                // Use explicit world-space gradients. frac(pagePosition) is discontinuous at
+                // each array-slice boundary; implicit derivatives there can select an
+                // excessively coarse mip and draw a visible moving line across adjacent pages.
+                float2 pageUvDx = ddx(world) * gridMinSize.w * uvScaleOffsetBlend.xy;
+                float2 pageUvDy = ddy(world) * gridMinSize.w * uvScaleOffsetBlend.xy;
+                color = highTier
+                    ? _ClipHighAlbedo.SampleGrad(
+                        sampler_ClipHighAlbedo, float3(pageUv, slice), pageUvDx, pageUvDy).rgb
+                    : _ClipMediumAlbedo.SampleGrad(
+                        sampler_ClipHighAlbedo, float3(pageUv, slice), pageUvDx, pageUvDy).rgb;
+                float edgeMeters = min(
+                    min(pagePosition.x, 3.0 - pagePosition.x),
+                    min(pagePosition.y, 3.0 - pagePosition.y)) * tileSize;
+                return smoothstep(0.0, max(1.0, uvScaleOffsetBlend.w), edgeMeters);
             }
 
             fixed4 frag(v2f input) : SV_Target
@@ -262,8 +232,6 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 float2 farUvDy = ddy(farUv);
                 half radius = max(abs(world.x), abs(world.y));
                 half nearWeight = 1.0 - smoothstep(_NearBlendStartEnd.x, _NearBlendStartEnd.y, radius);
-                half recoveryWeight = 1.0 - smoothstep(
-                    _RecoveryBlendStartEnd.x, _RecoveryBlendStartEnd.y, radius);
                 half midWeight = 1.0 - smoothstep(_MidBlendStartEnd.x, _MidBlendStartEnd.y, radius);
                 fixed3 macro;
                 UNITY_BRANCH if (radius <= _NearBlendStartEnd.x)
@@ -273,18 +241,8 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 else if (radius < _NearBlendStartEnd.y)
                 {
                     fixed3 nearColor = tex2Dgrad(_NearAlbedo, nearUv, nearUvDx, nearUvDy).rgb;
-                    fixed3 recoveryColor = SampleRecovery(world, worldDx, worldDy);
-                    macro = lerp(recoveryColor, nearColor, nearWeight);
-                }
-                else if (radius <= _RecoveryBlendStartEnd.x)
-                {
-                    macro = SampleRecovery(world, worldDx, worldDy);
-                }
-                else if (radius < _RecoveryBlendStartEnd.y)
-                {
-                    fixed3 recoveryColor = SampleRecovery(world, worldDx, worldDy);
                     fixed3 midColor = tex2Dgrad(_MidAlbedo, midUv, midUvDx, midUvDy).rgb;
-                    macro = lerp(midColor, recoveryColor, recoveryWeight);
+                    macro = lerp(midColor, nearColor, nearWeight);
                 }
                 else if (radius <= _MidBlendStartEnd.x)
                 {
@@ -299,6 +257,20 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 else
                 {
                     macro = tex2Dgrad(_FarAlbedo, farUv, farUvDx, farUvDy).rgb;
+                }
+
+                UNITY_BRANCH if (_ClipmapEnabled > 0.5h)
+                {
+                    macro = tex2Dgrad(_ClipGlobalAlbedo, farUv, farUvDx, farUvDy).rgb;
+                    fixed3 clipColor;
+                    half clipWeight = SampleAircraftCenteredClipmap(
+                        world, _ClipMediumGridMinSize, _ClipMediumUvScaleOffsetBlend,
+                        false, clipColor);
+                    macro = lerp(macro, clipColor, clipWeight);
+                    clipWeight = SampleAircraftCenteredClipmap(
+                        world, _ClipHighGridMinSize, _ClipHighUvScaleOffsetBlend,
+                        true, clipColor);
+                    macro = lerp(macro, clipColor, clipWeight);
                 }
 
                 float2 cleanPlateUv =
@@ -334,10 +306,9 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 half cameraDistance = distance(_WorldSpaceCameraPos, input.worldPosition);
                 half detailWeight = 1.0 - smoothstep(
                     _DetailFadeStartEnd.x, _DetailFadeStartEnd.y, cameraDistance);
-                detailWeight *= 1.0 - smoothstep(
-                    _DetailRadiusFadeStartEnd.x,
-                    _DetailRadiusFadeStartEnd.y,
-                    radius);
+                // This detail is camera-relative rather than airport-relative. The previous
+                // world-radius multiplier silently removed ground relief everywhere outside
+                // the airport corridor even when a high-resolution clipmap page was resident.
                 fixed3 detailMultiplier = fixed3(1,1,1);
                 float2 detailUv = world * _DetailScale;
                 float2 detailUvDx = ddx(detailUv);
@@ -369,23 +340,18 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                             lerp(fixed3(0.16,0.16,0.16), fixed3(0.0,1.0,1.0), waterCoverage),
                             1.0);
                     fixed3 levelColor = lerp(fixed3(0.12,0.32,0.78), fixed3(0.94,0.58,0.08), midWeight);
-                    levelColor = lerp(levelColor, fixed3(0.60,0.18,0.82), recoveryWeight);
                     levelColor = lerp(levelColor, fixed3(0.08,0.72,0.30), nearWeight);
                     if (_DiagnosticMode < 1.5)
                         return fixed4(levelColor, 1.0);
                     half overlap = max(
-                        max(4.0 * nearWeight * (1.0 - nearWeight),
-                            4.0 * recoveryWeight * (1.0 - recoveryWeight)),
+                        4.0 * nearWeight * (1.0 - nearWeight),
                         4.0 * midWeight * (1.0 - midWeight));
                     if (_DiagnosticMode < 2.5)
                         return fixed4(lerp(fixed3(0.03,0.03,0.03), fixed3(1.0,0.12,0.02), overlap), 1.0);
                     half boundary = max(
                         max(BoundaryLine(radius, _NearBlendStartEnd.x), BoundaryLine(radius, _NearBlendStartEnd.y)),
-                        max(
-                            max(BoundaryLine(radius, _RecoveryBlendStartEnd.x),
-                                BoundaryLine(radius, _RecoveryBlendStartEnd.y)),
-                            max(BoundaryLine(radius, _MidBlendStartEnd.x),
-                                BoundaryLine(radius, _MidBlendStartEnd.y))));
+                        max(BoundaryLine(radius, _MidBlendStartEnd.x),
+                            BoundaryLine(radius, _MidBlendStartEnd.y)));
                     return fixed4(lerp(levelColor * 0.62, fixed3(1,1,1), boundary), 1.0);
                 }
 

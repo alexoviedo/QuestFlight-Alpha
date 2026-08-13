@@ -71,28 +71,13 @@ Material:
         m_Texture: {fileID: 2800000, guid: f9d0bb15e0b184658fc8707aec537a96, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _RecoveryMidNEAlbedo:
-        m_Texture: {fileID: 2800000, guid: 5f68a9e25093743a7f819ab3bb05126a, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _RecoveryMidNWAlbedo:
-        m_Texture: {fileID: 2800000, guid: 97c04d162a83f7b25a581bd7b4ab8ebe, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _RecoveryMidSEAlbedo:
-        m_Texture: {fileID: 2800000, guid: b5c87397d1638de087a1dff62e9da408, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _RecoveryMidSWAlbedo:
-        m_Texture: {fileID: 2800000, guid: fef60605d09a177c1ae99bcb8c10f726, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _AerialCanopyColorStrength: 0.44
     - _AerialCanopyHeightQuantumMeters: 0.25
     - _AerialCanopyNormalStrength: 0.36
     - _AirportCoreCleanPlateStrength: 1
+    - _ClipmapEnabled: 0
     - _DetailScale: 0.06666667
     - _DiagnosticMode: 0
     - _FullMapWaterCrestGlintStrength: 0.12
@@ -120,11 +105,6 @@ Material:
     - _NearBlendStartEnd: {r: 1800, g: 1980, b: 0, a: 0}
     - _NearSourceNormalFadeStartEnd: {r: 250, g: 3500, b: 0, a: 0}
     - _NearWorldMinInvSize: {r: -2000, g: -2000, b: 0.00025, a: 0.00025}
-    - _RecoveryBlendStartEnd: {r: 3800, g: 4000, b: 0, a: 0}
-    - _RecoveryMidNEWorldMinInvSize: {r: -32, g: -32, b: 0.000246063, a: 0.000246063}
-    - _RecoveryMidNWWorldMinInvSize: {r: -4032, g: -32, b: 0.000246063, a: 0.000246063}
-    - _RecoveryMidSEWorldMinInvSize: {r: -32, g: -4032, b: 0.000246063, a: 0.000246063}
-    - _RecoveryMidSWWorldMinInvSize: {r: -4032, g: -4032, b: 0.000246063, a: 0.000246063}
     - _Tint: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

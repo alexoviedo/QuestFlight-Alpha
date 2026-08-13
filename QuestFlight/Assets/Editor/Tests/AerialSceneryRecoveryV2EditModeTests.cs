@@ -84,21 +84,13 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void GroundPyramidUsesOfficialBoundedTexturesWithoutAutomaticStreaming()
+        public void GroundPyramidRetainsOfficialFallbackWhileAircraftCenteredClipmapOwnsDetail()
         {
             Material material = AssetDatabase.LoadAssetAtPath<Material>(TerrainMaterialPath);
             Assert.That(material, Is.Not.Null);
             AssertTexture(material, "_NearAlbedo",
                 GroundRoot + "KBDU_City2020_Near4km_8192.jpg",
                 8192, TextureImporterFormat.ASTC_8x8);
-            AssertTexture(material, "_RecoveryMidNWAlbedo", GroundRoot + "KBDU_City2020_MidNW_2048.jpg",
-                2048, TextureImporterFormat.ASTC_6x6);
-            AssertTexture(material, "_RecoveryMidNEAlbedo", GroundRoot + "KBDU_City2020_MidNE_2048.jpg",
-                2048, TextureImporterFormat.ASTC_6x6);
-            AssertTexture(material, "_RecoveryMidSWAlbedo", GroundRoot + "KBDU_City2020_MidSW_2048.jpg",
-                2048, TextureImporterFormat.ASTC_6x6);
-            AssertTexture(material, "_RecoveryMidSEAlbedo", GroundRoot + "KBDU_City2020_MidSE_2048.jpg",
-                2048, TextureImporterFormat.ASTC_6x6);
             AssertTexture(material, "_MidAlbedo", GroundRoot + "KBDU_City2020_MidBase12km_8192.jpg",
                 8192, TextureImporterFormat.ASTC_10x10);
             AssertTexture(material, "_FarAlbedo",
@@ -107,10 +99,12 @@ namespace QuestFlight.Editor.Tests
 
             Assert.That(material.GetVector("_NearBlendStartEnd"),
                 Is.EqualTo(new Vector4(1800f, 1980f, 0f, 0f)));
-            Assert.That(material.GetVector("_RecoveryBlendStartEnd"),
-                Is.EqualTo(new Vector4(3800f, 4000f, 0f, 0f)));
             Assert.That(material.GetVector("_MidBlendStartEnd"),
                 Is.EqualTo(new Vector4(5000f, 6000f, 0f, 0f)));
+
+            string shaderSource = Read(TerrainShaderPath);
+            Assert.That(shaderSource, Does.Contain("SampleAircraftCenteredClipmap"));
+            Assert.That(shaderSource, Does.Not.Contain("sampler2D _RecoveryMid"));
 
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
             ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
@@ -134,7 +128,8 @@ namespace QuestFlight.Editor.Tests
                 .Where(message => string.Equals(message.severity.ToString(), "Error",
                     StringComparison.OrdinalIgnoreCase)), Is.Empty);
             string source = Read(TerrainShaderPath);
-            Assert.That(source, Does.Contain("SampleRecovery"));
+            Assert.That(source, Does.Contain("SampleAircraftCenteredClipmap"));
+            Assert.That(source, Does.Not.Contain("SampleRecovery"));
             Assert.That(source, Does.Not.Contain("KBDUMinorWaterTerrainEffect"));
             Assert.That(source, Does.Not.Contain("_AirportCoreMinorWaterMask"));
 

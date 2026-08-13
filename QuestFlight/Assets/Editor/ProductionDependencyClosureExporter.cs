@@ -51,6 +51,11 @@ namespace T2.QuestFlight.Editor
                 ["Assets/Scripts/Environment/ProductionTerrainSurfaceAsset.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Environment/GoldenEagleThermalSoaring.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Environment/ThermalFieldProfile.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Environment/AircraftCenteredAerialClipmapController.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Audio/ProductionC172AudioController.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Audio/ProductionC172AudioProfile.cs"] = "approved_product_authored",
+                ["Assets/Production/Audio/C172/ProductionC172Audio.mixer"] = "approved_product_authored",
+                ["Assets/Production/Audio/C172/ProductionC172AudioProfile.asset"] = "approved_product_authored",
                 ["Assets/Production/Profiles/KBDU_ExtendedReservoirLessonV1.asset"] = "approved_product_authored",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRecoveryRuntimeAdapter.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRouteProfile.cs"] = "approved_product_authored"
@@ -155,6 +160,11 @@ namespace T2.QuestFlight.Editor
             if (ProductCleanedOverrides.TryGetValue(assetPath, out string cleanedClassification))
             {
                 return cleanedClassification;
+            }
+
+            if (assetPath.StartsWith("Assets/Production/Audio/C172/Clips/", StringComparison.Ordinal))
+            {
+                return "approved_product_authored";
             }
 
             if (ForbiddenFragments.Any(fragment =>

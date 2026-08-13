@@ -96,6 +96,8 @@ namespace QuestFlight.Editor
             "com.unity.modules.particlesystem",
             "com.unity.modules.ui",
             "com.unity.modules.uielements",
+            "com.unity.modules.unitywebrequest",
+            "com.unity.modules.unitywebrequestassetbundle",
             "com.unity.modules.vr",
             "com.unity.modules.xr"
         };

@@ -16,7 +16,7 @@ release-signing/channel procedure is in
 
 - seated cockpit start on the KBDU-inspired runway;
 - taxi, takeoff, climb, shallow-turn, and approach presentation loop;
-- one stable baked terrain/runway environment; the current feature candidate uses a fixed 4 km DTM-only bare-earth mesh and an aligned CC0 City of Boulder near/mid/far orthophoto pyramid;
+- one stable baked terrain/runway environment; the current feature candidate retains fixed bare-earth geometry and adds a self-contained aircraft-centered City of Boulder 2020 aerial clipmap, so 0.333 m/texel high and 1.0 m/texel medium detail can follow the aircraft across the complete 24 km square;
 - on the current feature candidate, 9,692 OSM-footprint context buildings in 16 offline batches, existing hero vegetation, terrain-map canopy shading, and one bounded fixed-world Tier-2 grove batch for rounded canopy volume;
 - one CC0 photographic HDR sky and a single directional sun; reservoir and minor-water effects are deliberately deferred to an orthophoto-only presentation;
 - cockpit and external aircraft views with limited control-surface animation;

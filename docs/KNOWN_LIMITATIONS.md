@@ -1,5 +1,25 @@
 # Known limitations
 
+## Full-map aerial clipmap V1 candidate
+
+- The source is Spring/Summer 2020 visual context, not current or navigable
+  imagery. Vehicles, construction, vegetation, and surface markings can differ
+  from present conditions.
+- The moving high tier is 0.333 m/texel, not the service's 0.2286 m native
+  pixel size. JPEG source/derivative compression and oblique viewing still limit
+  taxi-range detail; no AI hallucination or synthetic upscaling is used.
+- A fixed 3x3 high/medium window follows the aircraft rather than the airport.
+  Its deterministic 22.78 MiB ASTC active/staging/global estimate is not a
+  physical Quest frame-time, memory-residency, thermal, or comfort acceptance.
+- The previous fixed pyramid remains a startup fallback and still exists in the
+  product dependency closure. Its explicit mip requests are released after the
+  full clipmap becomes ready; total installed APK/storage size is therefore
+  higher even though the moving runtime windows are bounded.
+- Terrain geometry, semantic objects, photographed shadows, and clean-plate
+  content were not regenerated. The shared 2020 chronology minimizes—but cannot
+  eliminate—source-image/object discrepancies. This milestone makes no literal
+  photorealism, FAA, navigation, training-credit, or certified-fidelity claim.
+
 ## QuestFlight 0.1.0 Alpha 1
 
 - This is a private, sideloaded Quest 3 alpha checkpoint for invited friends,
