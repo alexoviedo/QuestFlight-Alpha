@@ -6,7 +6,7 @@
 - self-contained Android ARM64, Vulkan, and OpenXR runtime architecture;
 - one C172-style aircraft/cockpit presentation path;
 - one KBDU-inspired authored scene and environment;
-- Unity prototype flight authority;
+- one embedded native JSBSim 1.3.1 C172P flight authority;
 - deterministic demo and standard gamepad input;
 - seat-relative viewpoint calibration;
 - production build, Visual QA, and Quest temporal gates.
@@ -17,10 +17,8 @@
 - training curriculum or training-credit claims;
 - USB2BLE, HOTAS, and hardware-integration experiments;
 - Gaussian splats;
-- native JSBSim as a release default, sidecar process, required-PC service, or
-  second flight authority. The bounded embedded package may run behind the sole
-  coordinator only in Editor/development builds and must fail closed to the
-  Unity prototype;
+- a UnityPrototype flight-dynamics authority, second flight authority, native
+  sidecar process, required-PC flight service, or runtime backend fallback;
 - legacy R&D scenes, runtime repair, procedural fallback world construction, debug HUDs, and verbose evidence overlays;
 - airport/world expansion unrelated to the vertical slice.
 - PCVR, Quest Link, Air Link, Windows shipping builds, remote rendering, and any required-PC product dependency;

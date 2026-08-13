@@ -44,7 +44,7 @@ namespace QuestFlight.Editor
             ReauthorWorldPrefab();
             ValidateAndSaveScene();
             AssetDatabase.SaveAssets();
-            Debug.Log("[QuestFlight][Reauthor] Product input, reservoir lesson, terrain-aware recovery, attribution, evidence, environment probe, and sole Unity authority are serialized.");
+            Debug.Log("[QuestFlight][Reauthor] Product input, reservoir lesson, terrain-aware recovery, attribution, evidence, environment probe, and sole native JSBSim authority are serialized.");
         }
 
         private static void ReauthorFlightConfig()
@@ -104,7 +104,6 @@ namespace QuestFlight.Editor
                     "Aircraft prefab asset root must remain ProductionC172AircraftRig; the authored world instance owns the AircraftSimulationRoot name.");
                 Require(CountMissingScripts(root) == 0, "Aircraft prefab contains missing scripts.");
 
-                SimpleAircraftPhysics prototype = RequireOne<SimpleAircraftPhysics>(root);
                 AircraftState state = RequireOne<AircraftState>(root);
                 Rigidbody body = root.GetComponent<Rigidbody>();
                 FlightDynamicsCoordinator coordinator = RequireOne<FlightDynamicsCoordinator>(root);
@@ -112,24 +111,23 @@ namespace QuestFlight.Editor
                 AircraftReferenceFrameRig rig = RequireOne<AircraftReferenceFrameRig>(root);
                 ThermalFieldProfile thermalField =
                     AssetDatabase.LoadAssetAtPath<ThermalFieldProfile>(ThermalFieldProfilePath);
+                C172StyleAircraftConfig config =
+                    AssetDatabase.LoadAssetAtPath<C172StyleAircraftConfig>(FlightConfigPath);
 
                 Require(body != null, "AircraftSimulationRoot Rigidbody is missing.");
                 Require(rig.ValidateHierarchy(), "Serialized aircraft/XR hierarchy is invalid.");
                 Require(thermalField != null, "The authored thermal field profile is missing.");
-                coordinator.requestedBackend = FlightDynamicsBackendKind.UnityPrototype;
+                Require(config != null, "The authored C172 reference configuration is missing.");
+                coordinator.requestedBackend = FlightDynamicsBackendKind.JSBSimNativeDevelopment;
                 coordinator.simulationRoot = root.transform;
                 coordinator.presentationRoot = root.transform;
                 coordinator.aircraftState = state;
-                coordinator.unityPrototype = prototype;
+                coordinator.aircraftConfiguration = config;
                 coordinator.authoritativeRigidbody = body;
                 coordinator.controls = null;
                 coordinator.initialConditionProvider = initial;
                 coordinator.thermalField = thermalField;
                 coordinator.simulationRateHz = 120f;
-                prototype.controls = null;
-                prototype.state = state;
-
-                EditorUtility.SetDirty(prototype);
                 EditorUtility.SetDirty(coordinator);
                 PrefabUtility.SaveAsPrefabAsset(root, AircraftPrefabPath);
             }
@@ -221,19 +219,18 @@ namespace QuestFlight.Editor
                     productInput,
                     coordinator,
                     terrainSurface);
-                SimpleAircraftPhysics prototype = RequireOne<SimpleAircraftPhysics>(root);
                 AircraftState state = RequireOne<AircraftState>(root);
                 AircraftReferenceFrameRig rig = RequireOne<AircraftReferenceFrameRig>(root);
                 Rigidbody body = rig.GetComponent<Rigidbody>();
                 Require(body != null, "Authored aircraft Rigidbody is missing.");
-
-                prototype.controls = productInput;
-                prototype.state = state;
-                coordinator.requestedBackend = FlightDynamicsBackendKind.UnityPrototype;
+                C172StyleAircraftConfig config =
+                    AssetDatabase.LoadAssetAtPath<C172StyleAircraftConfig>(FlightConfigPath);
+                Require(config != null, "The authored C172 reference configuration is missing.");
+                coordinator.requestedBackend = FlightDynamicsBackendKind.JSBSimNativeDevelopment;
                 coordinator.simulationRoot = rig.transform;
                 coordinator.presentationRoot = rig.transform;
                 coordinator.aircraftState = state;
-                coordinator.unityPrototype = prototype;
+                coordinator.aircraftConfiguration = config;
                 coordinator.authoritativeRigidbody = body;
                 coordinator.controls = productInput;
                 coordinator.thermalField = thermalField;
@@ -241,7 +238,6 @@ namespace QuestFlight.Editor
                 ProductionAircraftControlAnimator animator = RequireOne<ProductionAircraftControlAnimator>(root);
                 animator.ConfigureControlSources(coordinator, productInput);
 
-                MarkNestedOverride(prototype);
                 MarkNestedOverride(coordinator);
                 MarkNestedOverride(animator);
                 EditorUtility.SetDirty(productInput);

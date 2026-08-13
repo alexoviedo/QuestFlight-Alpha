@@ -2,7 +2,7 @@
   "schema_version": 1,
   "source_ref": "cd4131fa7732a6db2d7387921dfef33e2c206970",
   "source_project_prefix": "QuestFlightLab/",
-  "description": "Allowlist for the clean T2-QuestFlight product extraction. The exact verified CC BY 4.0 aircraft payload is rights-gated and native JSBSim is intentionally absent.",
+  "description": "Allowlist for the clean T2-QuestFlight product extraction. The verified CC BY 4.0 aircraft payload is rights-gated; legacy prototype flight dynamics are explicitly excluded and native JSBSim is product-owned outside the frozen R&D extraction.",
   "entries": [
     {
       "source": "QuestFlightLab/Assets/Scenes/ProductionVerticalSlice.unity",
@@ -149,12 +149,6 @@
       "group": "input_physics"
     },
     {
-      "source": "QuestFlightLab/Assets/Scripts/Flight/SimpleAircraftPhysics.cs",
-      "kind": "file",
-      "classification": "approved_production",
-      "group": "input_physics"
-    },
-    {
       "source": "QuestFlightLab/Assets/Scripts/Flight/Backends/IFlightDynamicsBackend.cs",
       "kind": "file",
       "classification": "approved_production",
@@ -192,12 +186,6 @@
     },
     {
       "source": "QuestFlightLab/Assets/Scripts/Flight/Backends/FixedStepAccumulator.cs",
-      "kind": "file",
-      "classification": "approved_production",
-      "group": "input_physics"
-    },
-    {
-      "source": "QuestFlightLab/Assets/Scripts/Flight/Backends/UnityPrototypeFlightBackend.cs",
       "kind": "file",
       "classification": "approved_production",
       "group": "input_physics"
@@ -728,6 +716,8 @@
       "Training",
       "PlaytestHud",
       "JSBSim",
+      "SimpleAircraftPhysics",
+      "UnityPrototypeFlightBackend",
       "FlightDynamicsRuntimeBootstrap",
       "FlightBackendSelector",
       "EditorSidecar",

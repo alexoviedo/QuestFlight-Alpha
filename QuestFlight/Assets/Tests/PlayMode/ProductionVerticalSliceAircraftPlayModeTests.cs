@@ -71,8 +71,8 @@ namespace QuestFlightLab.Tests.PlayMode
             demo.StopDemo();
 
             FlightDynamicsCoordinator coordinator = ComponentsInWorld<FlightDynamicsCoordinator>(world).Single();
-            Assert.That(coordinator.requestedBackend, Is.EqualTo(FlightDynamicsBackendKind.UnityPrototype));
-            Assert.That(coordinator.preferNativeInDevelopment, Is.True);
+            Assert.That(coordinator.requestedBackend,
+                Is.EqualTo(FlightDynamicsBackendKind.JSBSimNativeDevelopment));
             Assert.That(coordinator.simulationRoot, Is.EqualTo(rig.transform));
             Assert.That(coordinator.presentationRoot, Is.EqualTo(rig.transform));
             Assert.That(coordinator.initialConditionProvider, Is.Not.Null);
@@ -83,7 +83,8 @@ namespace QuestFlightLab.Tests.PlayMode
                 ComponentsInWorld<ProductionEnvironmentRoot>(world).Single();
             Assert.That(coordinator.terrainSurface,
                 Is.SameAs(authoredEnvironment.authoritativeTerrainSurface));
-            Assert.That(ComponentsInWorld<SimpleAircraftPhysics>(world), Has.Length.EqualTo(1));
+            Assert.That(ComponentsInWorld<MonoBehaviour>(world).Any(component =>
+                component != null && component.GetType().Name == "SimpleAircraftPhysics"), Is.False);
 
             Assert.That(coordinator.InitializeSelectedBackend(), Is.True, coordinator.LastError);
             ProductionEnvironmentRoot environment = authoredEnvironment;

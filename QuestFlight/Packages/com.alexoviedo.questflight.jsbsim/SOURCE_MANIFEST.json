@@ -33,7 +33,7 @@
   },
   "modelProvenance": {
     "path": "FLIGHT_DYNAMICS_MODEL_PROVENANCE.json",
-    "sha256": "5dba43ee43db9f36cddb6af50710700d4ee986bdbba1aa7651822b5c31600ad2"
+    "sha256": "2bbd5cdf9e65acfbb8c69801636b43bd64a6e5dcae784533cbf1b31727ad8109"
   },
   "wrapperSource": {
     "repository": "alexoviedo/T2-QuestFlight",
@@ -112,12 +112,14 @@
     { "path": "systems/GNCUtilities.xml", "sha256": "beceb4621d17f9ad25081d9c11a6b9494ec3d8b2d124da35ffeb9f259d6071ed" }
   ],
   "promotionGate": {
-    "softwareScenarios": "PASS_NO_FAIL_OR_ERROR_24_SCENARIO_NATIVE_PROTOTYPE_MATRIX_2026-08-09",
-    "steadyStateManagedAllocations": "REQUIRED_RERUN",
+    "authority": "NATIVE_JSBSIM_ONLY_FAIL_CLOSED_NO_UNITY_PROTOTYPE",
+    "softwareScenarios": "NO_FAIL_OR_ERROR_12_SCENARIO_NATIVE_ONLY_RUN_3_PASS_9_UNPROVEN_2026-08-13",
+    "steadyStateManagedAllocations": "NOT_MEASURED_FOR_EXACT_APK",
     "windowsNativeSmoke": "PASS_ABI2_TRIM_20_SECOND_120_HZ_AND_MODEL_SCHEDULED_NOSEWHEEL_STEERING",
     "androidArm64Build": "PASS_BUILD_AND_ELF_INSPECTION",
     "android16KbElfLoadAlignment": "PASS_REBUILT_NDK_R27",
-    "questHardwareTimingAndHandling": "NOT_MEASURED",
-    "nativePromotionEligible": false
+    "questHardwareTimingAndHandling": "WORN_HANDLING_SMOKE_ACCEPTED_2026-08-13_LONG_DURATION_TIMING_NOT_MEASURED",
+    "nativePromotionEligible": true,
+    "fidelityAcceptanceComplete": false
   }
 }

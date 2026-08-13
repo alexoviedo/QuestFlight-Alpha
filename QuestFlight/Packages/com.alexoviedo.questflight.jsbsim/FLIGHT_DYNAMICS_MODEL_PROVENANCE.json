@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "configurationId": "qfl-c172p-private-fidelity-v2",
-  "status": "PRIVATE_NATIVE_PROMOTION_CANDIDATE",
+  "status": "PRIVATE_NATIVE_SOLE_PRODUCT_AUTHORITY",
   "aircraft": {
     "target": "1982 Cessna 172P approximation",
     "jsbsimModel": "c172x",
@@ -50,11 +50,13 @@
     "resolution": "PRIVATE_PERSONAL_USE_ONLY_NOT_FOR_REDISTRIBUTION"
   },
   "promotion": {
-    "unityPrototypeRemainsReleaseAuthority": true,
-    "softwareScenarios": "PASS_NO_FAIL_OR_ERROR_24_SCENARIO_NATIVE_PROTOTYPE_MATRIX_2026-08-09",
+    "soleProductAuthority": true,
+    "unityPrototypeAvailable": false,
+    "softwareScenarios": "NO_FAIL_OR_ERROR_12_SCENARIO_NATIVE_ONLY_RUN_3_PASS_9_UNPROVEN_2026-08-13",
     "windowsNativeSmoke": "PASS",
     "androidArm64BuildAnd16KbAlignment": "PASS",
-    "questHandlingAndTiming": "NOT_MEASURED",
-    "nativePromotionEligible": false
+    "questHandlingAndTiming": "WORN_HANDLING_SMOKE_ACCEPTED_2026-08-13_LONG_DURATION_TIMING_NOT_MEASURED",
+    "nativePromotionEligible": true,
+    "fidelityAcceptanceComplete": false
   }
 }

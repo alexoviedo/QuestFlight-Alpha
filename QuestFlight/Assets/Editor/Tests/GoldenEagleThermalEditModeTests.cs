@@ -87,10 +87,9 @@ namespace QuestFlightLab.Editor.Tests
             FlightDynamicsCoordinator coordinator =
                 aircraft.GetComponentInChildren<FlightDynamicsCoordinator>(true);
             Assert.That(coordinator.thermalField, Is.SameAs(profile));
-            Assert.That(coordinator.requestedBackend, Is.EqualTo(FlightDynamicsBackendKind.UnityPrototype),
-                "The release product must retain the Unity prototype authority until native promotion passes.");
-            Assert.That(coordinator.preferNativeInDevelopment, Is.True,
-                "Development builds should opt into the native JSBSim thermal path.");
+            Assert.That(coordinator.requestedBackend,
+                Is.EqualTo(FlightDynamicsBackendKind.JSBSimNativeDevelopment),
+                "The product must always use native JSBSim.");
 
             GameObject world = AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab");

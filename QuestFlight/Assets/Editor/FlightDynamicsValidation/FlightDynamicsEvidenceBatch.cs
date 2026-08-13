@@ -12,14 +12,14 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
     {
         public const string ArtifactEnvironmentVariable = "QUESTFLIGHT_FLIGHT_DYNAMICS_ARTIFACT_DIR";
 
-        [MenuItem("QuestFlight/Validation/Flight Dynamics Evidence (Prototype + Native)")]
+        [MenuItem("QuestFlight/Validation/Flight Dynamics Evidence (Native JSBSim)")]
         public static void RunBatch()
         {
             string artifactDirectory = ResolveArtifactDirectory();
             Directory.CreateDirectory(artifactDirectory);
 
             FlightDynamicsScenarioSuiteRunner runner = new FlightDynamicsScenarioSuiteRunner();
-            FlightDynamicsEvidenceSuite suite = runner.RunPrototypeAndNative();
+            FlightDynamicsEvidenceSuite suite = runner.RunNativeOnly();
             WriteSuite(artifactDirectory, suite, runner.Trace);
 
             Debug.Log(string.Format(

@@ -496,10 +496,15 @@ namespace QuestFlight.Editor
                     $"exactly one enabled FlightDynamicsCoordinator authority is required, found {coordinators.Length}", report);
                 if (coordinators.Length == 1)
                 {
-                    Require(coordinators[0].requestedBackend == FlightDynamicsBackendKind.UnityPrototype,
-                        "the sole coordinator must request UnityPrototypeFlightBackend", report);
-                    Require(coordinators[0].preferNativeInDevelopment,
-                        "the sole coordinator must serialize the development-only native JSBSim preference", report);
+                    Require(coordinators[0].requestedBackend == FlightDynamicsBackendKind.JSBSimNativeDevelopment,
+                        "the sole coordinator must request native JSBSim", report);
+                    Require(coordinators[0].aircraftConfiguration != null,
+                        "the sole coordinator must serialize its C172 reference configuration", report);
+                    int prototypes = behaviours.Count(behaviour => behaviour != null &&
+                        string.Equals(behaviour.GetType().Name, "SimpleAircraftPhysics",
+                            StringComparison.Ordinal));
+                    Require(prototypes == 0,
+                        $"the product dependency must contain no UnityPrototype physics component, found {prototypes}", report);
                     Require(coordinators[0].HasAuthoredReferences(out string authorityBindingError),
                         "flight-authority references are not fully serialized: " + authorityBindingError, report);
                 }

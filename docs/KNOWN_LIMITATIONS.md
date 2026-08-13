@@ -24,9 +24,11 @@
 
 - This is a private, sideloaded Quest 3 alpha checkpoint for invited friends,
   not a public store release or a production-readiness claim.
-- The Unity prototype remains the sole flight authority. Its guided reservoir
-  route, aerodynamic response, systems behavior, and recovery logic are useful
-  for demonstration and iteration but are not certified C172 fidelity.
+- The current native JSBSim 1.3.1 C172P derivative is the sole flight authority.
+  Its guided reservoir route, aerodynamic response, systems behavior, and
+  recovery logic remain private-development behavior, not certified C172
+  fidelity. The exact native-only Quest APK still needs handling and timing
+  acceptance.
 - The accepted worn smoke found the current experience shareable and the final
   unattended takeoff run passed the former recovery-cut point. The exact alpha
   APK has not completed three long-duration Quest timing, thermal, stale-frame,
@@ -171,7 +173,7 @@
 - Human evidence found no significant discomfort or nausea. The default viewpoint still required a very small physical step backward. Mountain boundaries aliased; ground shimmer and resolution transitions remained; near terrain and object integration looked geometric; water was stable but synthetic and hard-edged; runway and buildings lacked realism; nearby context was incomplete; repeated low-poly trees were conspicuous; and parked aircraft had incorrect positions, approximately 90-degree orientation errors, and ground penetration. Viewpoint calibration was not tested because the expected interaction was not clearly presented.
 - The earlier 72.55 FPS headset baseline belongs to a prior APK and cannot be applied to this rebuilt environment. No standalone failure is claimed without measurements from the exact current APK.
 - The historical PCVR recommendation followed an earlier visual-score precondition, not a measured standalone hardware failure. That evidence is preserved in its original milestone record, but the recommendation is superseded and is not an allowed product outcome.
-- The Unity prototype flight backend remains authoritative and is not a certified or final C172 flight model. JSBSim was frozen and out of scope for this milestone; no JSBSim change, promotion, integration, or authority change is claimed here.
+- That historical environment checkpoint used the retired Unity prototype flight backend and is not current handling evidence. Native JSBSim is now the sole product authority, but it is not a certified or final C172 flight model.
 - Several cockpit controls lack separable pivots and remain static. Aircraft and cockpit remodeling were outside this environment milestone.
 - Compatibility beyond the tested Quest 3, Unity, Android ARM64, Vulkan, and OpenXR configuration is not claimed. The APK remains external build output and is not committed; store distribution still requires production signing and release-channel validation.
 - PCVR, Quest Link, Air Link, remote rendering, Windows shipping builds, and required-PC runtime dependencies are out of scope and are not fallback product strategies. The current decision is **NARROW STANDALONE QUEST SCOPE**, not STOP and not PCVR.
@@ -254,12 +256,11 @@ The airport corridor is a reference-faithful procedural approximation rather tha
   calibrates clouds to the authored sun/sky. Machine captures no longer show the
   former charcoal card border, but exact-APK worn visual acceptance remains
   pending.
-- The earlier cloud APK used the Unity prototype backend whereas the accepted
-  handling candidate used native JSBSim. The correction build is explicitly a
-  development/native comparison build. This does not promote native JSBSim to
-  shipping authority and does not establish stall, slip, spin, or recovery
-  fidelity; current structural flight evidence contains unproven and unsupported
-  items.
+- The earlier cloud APK used the now-retired Unity prototype backend; that
+  historical result is not current flight evidence. Native JSBSim is now the
+  sole authority, but this does not establish stall, slip, spin, or recovery
+  fidelity; nine current native scenarios remain unproven pending independent
+  condition-specific C172P envelopes.
 
 ## Golden Eagle thermal V1
 
@@ -269,10 +270,10 @@ The airport corridor is a reference-faithful procedural approximation rather tha
 - There is one fixed-world lesson encounter, one deterministic fair-weather
   orbit, and one thermal. Bird strikes,
   flocking, random weather, and a broad thermal field are out of scope.
-- Release builds retain the Unity prototype backend and therefore do not apply
-  the thermal aerodynamically. Only the opt-in native development build submits
-  the shared updraft through JSBSim; native promotion remains incomplete at
-  3 passed and 9 unproven scenarios.
+- Release builds use native JSBSim and submit the shared updraft through its
+  atmosphere ABI. The current native evidence remains incomplete at three
+  passed and nine unproven scenarios; the thermal cue is not proof of modeled
+  convective-weather or soaring fidelity.
 - The replacement preserves a real skinned 208-frame wingbeat and adds explicit
   soar/bank/transition states. It remains one deterministic training cue, not a
   behavioral or population simulation.

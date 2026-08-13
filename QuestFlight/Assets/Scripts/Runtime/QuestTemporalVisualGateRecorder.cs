@@ -401,9 +401,11 @@ namespace QuestFlightLab.Runtime
             FlightDynamicsCoordinator[] coordinators = FindObjectsByType<FlightDynamicsCoordinator>(
                 FindObjectsInactive.Include,
                 FindObjectsSortMode.None);
-            if (coordinators.Length != 1 || coordinators[0].requestedBackend != FlightDynamicsBackendKind.UnityPrototype)
+            if (coordinators.Length != 1 ||
+                coordinators[0].requestedBackend != FlightDynamicsBackendKind.JSBSimNativeDevelopment ||
+                coordinators[0].ActiveBackendKind != FlightDynamicsBackendKind.JSBSimNativeDevelopment)
             {
-                status = "Exactly one Unity prototype coordinator is required.";
+                status = "Exactly one active native JSBSim coordinator is required.";
                 return false;
             }
             MonoBehaviour[] behaviours = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -720,7 +722,7 @@ namespace QuestFlightLab.Runtime
                 authoredProductionHierarchyValid = production?.AircraftRig != null && production.AircraftRig.ValidateHierarchy(),
                 productionEnvironmentContractValid = true,
                 legacyRuntimeRepairAbsent = true,
-                authoritativePhysicsBackend = FlightDynamicsBackendKind.UnityPrototype.ToString(),
+                authoritativePhysicsBackend = FlightDynamicsBackendKind.JSBSimNativeDevelopment.ToString(),
                 readinessPrerequisitesMet = true,
                 readinessStatus = readiness,
                 readinessWaitSeconds = readinessSeconds,

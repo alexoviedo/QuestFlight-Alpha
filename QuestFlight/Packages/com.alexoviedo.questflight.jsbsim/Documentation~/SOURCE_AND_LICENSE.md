@@ -27,11 +27,12 @@ scenes, runtime coordinators, debug overlays, or training systems.
 
 The `c172x` aircraft XML is a separate model payload. Its own header declares
 GPL and includes an upstream non-sale statement. QuestFlight's model derivative
-therefore remains development-only pending a provenance/license decision; the
-package does not characterize that model payload as LGPL. See
+is therefore restricted to the owner's private personal-use product; the
+package does not characterize that model payload as LGPL or claim public or
+commercial redistribution rights. See
 `C172P_MODEL_CONFIGURATION.md` and `FLIGHT_DYNAMICS_MODEL_PROVENANCE.json`.
 
-Passing the software promotion gate does not establish Quest performance,
-certified fidelity, FAA approval, or training credit. Physical Quest timing and
-handling evidence is still required before native JSBSim can be considered for
-a release default.
+Native JSBSim is the sole product authority, but that architecture decision does
+not establish Quest performance, certified fidelity, FAA approval, or training
+credit. Physical Quest timing and handling evidence remains required for the
+exact APK.

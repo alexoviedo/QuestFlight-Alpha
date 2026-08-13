@@ -28,26 +28,18 @@ namespace QuestFlightLab.Tests.EditMode
             };
 
         [Test]
-        public void ReleasePolicyAlwaysResolvesToUnityPrototype()
+        public void ProductCoordinatorDefaultsToNativeJsbsim()
         {
-            foreach (FlightDynamicsBackendKind request in Enum.GetValues(typeof(FlightDynamicsBackendKind)))
+            UnityEngine.GameObject target = new UnityEngine.GameObject("NativeCoordinator");
+            try
             {
-                Assert.That(FlightDynamicsCoordinator.ResolveEffectiveBackend(request, false, false),
-                    Is.EqualTo(FlightDynamicsBackendKind.UnityPrototype));
-                Assert.That(FlightDynamicsCoordinator.ResolveEffectiveBackend(request, true, false),
-                    Is.EqualTo(FlightDynamicsBackendKind.UnityPrototype));
+                Assert.That(target.AddComponent<FlightDynamicsCoordinator>().requestedBackend,
+                    Is.EqualTo(FlightDynamicsBackendKind.JSBSimNativeDevelopment));
             }
-        }
-
-        [Test]
-        public void EditorPolicyUsesNativeOnlyWhenDevelopmentPreferenceAllowsIt()
-        {
-            Assert.That(FlightDynamicsCoordinator.ResolveEffectiveBackend(
-                    FlightDynamicsBackendKind.UnityPrototype, true, true),
-                Is.EqualTo(FlightDynamicsBackendKind.JSBSimNativeDevelopment));
-            Assert.That(FlightDynamicsCoordinator.ResolveEffectiveBackend(
-                    FlightDynamicsBackendKind.UnityPrototype, false, true),
-                Is.EqualTo(FlightDynamicsBackendKind.UnityPrototype));
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(target);
+            }
         }
 
         [Test]

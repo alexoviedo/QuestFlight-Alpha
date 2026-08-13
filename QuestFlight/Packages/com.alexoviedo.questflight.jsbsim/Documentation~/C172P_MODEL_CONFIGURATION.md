@@ -5,11 +5,11 @@
 The native diagnostic target is the JSBSim `c172x` approximation of a 1982
 Cessna 172P, from JSBSim 1.3.1 revision
 `3b25f25e49b42d0489c04ac805674fc1450ca579`. It is identified in code as
-`qfl-c172p-training-2054-v1`. The aerodynamic, engine, propeller, landing-gear,
+`qfl-c172p-private-fidelity-v2`. The aerodynamic, engine, propeller, landing-gear,
 and flight-control definitions remain those of the pinned upstream model.
 
-This is a development diagnostic model, not a certified aircraft model and not
-a claim of flight-training fidelity.
+This is the private product's sole flight model, not a certified aircraft model
+and not a claim of flight-training fidelity.
 
 ## Deterministic load
 
@@ -40,23 +40,21 @@ The active 10 Hz `JSBout172B.csv` block and its unused standalone output file
 are removed. The wrapper already disables JSBSim input/output, but eliminating
 the declarations makes the no-file-I/O contract explicit and deterministic.
 
-ABI v1 exposes reset conditions, requested controls, atmosphere, and a bounded
-state vector. The managed wrapper now exposes the clamped controls and
-atmosphere actually submitted to ABI v1 plus the configured initial conditions.
-ABI v1 does **not** expose actual control-surface positions, forces, moments,
-mass/CG, fuel state, or an in-flight terrain update. Those values must not be
-inferred from commands. Adding them requires a versioned native ABI rebuild and
-fresh Windows/Android scenario evidence.
+ABI v2 exposes reset conditions, requested controls, atmosphere, a bounded state
+vector, actual control-surface and nosewheel positions, component forces and
+moments, mass/CG and fuel state, gear compression and weight-on-wheels state,
+in-flight terrain elevation, and trim. The managed owner also exposes the
+clamped controls and atmosphere actually submitted to the native ABI.
 
 ## Integrity and promotion status
 
 Every extracted runtime file is SHA-256 checked at preparation time. Native ABI
-version remains 1 and the binary hashes are unchanged. A Windows package-owned
-smoke loaded the derivative, reset it, and advanced 120 fixed steps at 120 Hz
-with finite state. Changing model data still invalidates the broader earlier
-scenario claims: the 11-scenario software gate, allocation gate, Android build,
-and physical Quest handling/timing gate must be rerun on the unchanged candidate
-before any promotion decision.
+version 2 and all binary hashes are pinned. The 2026-08-13 native-only scenario
+run executed 12 scenarios with no failures or errors: three passed every defined
+bound and nine remain honestly `Unproven` pending independent, condition-specific
+C172P envelopes. The Android ARM64 build and 16 KiB alignment pass. Exact-APK
+physical Quest handling, timing, thermals, stale/tear, and allocations remain
+unmeasured.
 
 ## Sources and license status
 
@@ -69,4 +67,4 @@ JSBSim's engine/library is LGPL-2.1-or-later. The `c172x.xml` file separately
 declares GPL and contains an upstream non-sale statement. That discrepancy is
 an unresolved product-distribution blocker. The derivative may be used only as
 a private development diagnostic until the project owner resolves it; no
-commercial/release eligibility is claimed.
+public/commercial redistribution eligibility is claimed.

@@ -80,9 +80,9 @@ try {
   if ($extractorExit -ne 3) { throw "Expected frozen-source closure exit 3; got $extractorExit" }
   $comparison = Get-Content -LiteralPath (Join-Path $dryRun 'allowlist_comparison.json') -Raw | ConvertFrom-Json
   $inventory = Get-Content -LiteralPath (Join-Path $dryRun 'extraction_inventory.json') -Raw | ConvertFrom-Json
-  if ($comparison.rejected_count -ne 1 -or $comparison.unknown_count -ne 2 -or
+  if ($comparison.rejected_count -ne 2 -or $comparison.unknown_count -ne 2 -or
       @($inventory.missing_allowlist_entries).Count -ne 0) {
-    throw 'Frozen-source extraction blockers differ from the reviewed 1 rejected / 2 unknown / 0 missing contract'
+    throw 'Frozen-source extraction blockers differ from the reviewed 2 rejected / 2 unknown / 0 missing contract'
   }
 
   Invoke-Checked 'aircraft source/license/hash verification' {
@@ -126,7 +126,7 @@ try {
     extractorTests = 'PASS'
     kbduPipelineTests = 'PASS'
     kbduAssetValidation = 'PASS'
-    frozenSourceExpectedBlockers = 'PASS_1_REJECTED_2_UNKNOWN'
+    frozenSourceExpectedBlockers = 'PASS_2_REJECTED_2_UNKNOWN'
     productIntegrity = 'PASS'
     productDependencyClosure = 'PASS'
     editMode = 'PASS'

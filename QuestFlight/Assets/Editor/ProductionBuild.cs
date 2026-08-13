@@ -31,15 +31,6 @@ namespace QuestFlight.Editor
                 Environment.GetEnvironmentVariable("QUESTFLIGHT_DEVELOPMENT_BUILD"),
                 "1",
                 StringComparison.Ordinal);
-            bool forceUnityPrototype = string.Equals(
-                Environment.GetEnvironmentVariable("QUESTFLIGHT_FORCE_UNITY_PROTOTYPE"),
-                "1",
-                StringComparison.Ordinal);
-            bool enableNativeJsbsim = string.Equals(
-                Environment.GetEnvironmentVariable("QUESTFLIGHT_ENABLE_NATIVE_JSBSIM"),
-                "1",
-                StringComparison.Ordinal);
-            ValidateBackendBuildFlags(development, forceUnityPrototype, enableNativeJsbsim);
             BuildOptions buildOptions = development
                 ? BuildOptions.Development | BuildOptions.AllowDebugging | BuildOptions.ConnectWithProfiler
                 : BuildOptions.None;
@@ -49,11 +40,7 @@ namespace QuestFlight.Editor
                 locationPathName = apkPath,
                 target = BuildTarget.Android,
                 options = buildOptions,
-                extraScriptingDefines = forceUnityPrototype
-                    ? new[] { "QUESTFLIGHT_FORCE_UNITY_PROTOTYPE" }
-                    : enableNativeJsbsim
-                        ? new[] { "QUESTFLIGHT_ENABLE_NATIVE_JSBSIM" }
-                        : Array.Empty<string>()
+                extraScriptingDefines = new[] { "QUESTFLIGHT_REQUIRE_NATIVE_JSBSIM" }
             };
 
             UnityEngine.Object[] authoredPreloadedAssets = PlayerSettings.GetPreloadedAssets();
@@ -79,20 +66,6 @@ namespace QuestFlight.Editor
             Debug.Log(
                 $"[QuestFlight][Build] SUCCESS apk={apkPath}; bytes={report.summary.totalSize}; " +
                 $"duration={report.summary.totalTime}; development={development}");
-        }
-
-        public static void ValidateBackendBuildFlags(
-            bool development,
-            bool forceUnityPrototype,
-            bool enableNativeJsbsim)
-        {
-            if (forceUnityPrototype && enableNativeJsbsim)
-                throw new InvalidOperationException(
-                    "Unity-prototype forcing and native-JSBSim opt-in are mutually exclusive.");
-            if (enableNativeJsbsim && !development)
-                throw new InvalidOperationException(
-                    "Native JSBSim requires a development build because the runtime authority " +
-                    "is deliberately compile-gated out of release-style products.");
         }
 
         private static void ValidateCompiledProductShaders()
@@ -166,7 +139,9 @@ namespace QuestFlight.Editor
                 colorSpace = PlayerSettings.colorSpace.ToString(),
                 msaa = QualitySettings.antiAliasing,
                 openXrRenderMode = openXrSettings != null ? openXrSettings.renderMode.ToString() : "missing",
-                integrity = integrity.ToString()
+                integrity = integrity.ToString(),
+                nativeJsbsimRequired = true,
+                unityPrototypeAllowed = false
             };
             string directory = Path.GetDirectoryName(apkPath) ?? "Builds/Android";
             File.WriteAllText(Path.Combine(directory, "questflight_build_evidence.json"), JsonUtility.ToJson(evidence, true));
@@ -194,6 +169,8 @@ namespace QuestFlight.Editor
             public int msaa;
             public string openXrRenderMode;
             public string integrity;
+            public bool nativeJsbsimRequired;
+            public bool unityPrototypeAllowed;
         }
 
         private static bool ConfigureAndroidSigningFromEnvironment()

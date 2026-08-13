@@ -60,7 +60,9 @@ namespace QuestFlight.PlayModeTests
             Assert.That(enabledCoordinators.Length, Is.EqualTo(1));
             object requestedBackend = enabledCoordinators[0].GetType()
                 .GetField("requestedBackend")?.GetValue(enabledCoordinators[0]);
-            Assert.That(requestedBackend?.ToString(), Is.EqualTo("UnityPrototype"));
+            Assert.That(requestedBackend?.ToString(), Is.EqualTo("JSBSimNativeDevelopment"));
+            Assert.That(behaviours.Any(behaviour => behaviour != null &&
+                behaviour.GetType().Name == "SimpleAircraftPhysics"), Is.False);
             Assert.That(behaviours.Any(behaviour => behaviour != null &&
                 behaviour.GetType().Name.IndexOf("JSBSim", StringComparison.OrdinalIgnoreCase) >= 0), Is.False);
         }

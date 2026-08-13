@@ -25,7 +25,7 @@ namespace QuestFlightLab.Flight.Backends
         }
 
         public FlightDynamicsBackendKind Kind => FlightDynamicsBackendKind.JSBSimNativeDevelopment;
-        public string DisplayName => "JSBSim 1.3.1 native (development gate)";
+        public string DisplayName => "JSBSim 1.3.1 native C172P";
         public bool IsAvailable => _libraryAvailable;
         public bool IsInitialized => _session.IsInitialized;
         public string LastError { get; private set; } = string.Empty;

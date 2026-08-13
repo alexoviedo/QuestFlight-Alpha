@@ -71745,7 +71745,6 @@ GameObject:
   - component: {fileID: 5108623857352381007}
   - component: {fileID: 5842700022739374341}
   - component: {fileID: 1573695374297373189}
-  - component: {fileID: 1423655655211657218}
   - component: {fileID: 6090694490867546566}
   - component: {fileID: 3005309151451274305}
   - component: {fileID: 80294514084062902}
@@ -71838,25 +71837,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &1423655655211657218
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7411373742601669578}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2c7bb0f5cfb3ce44ab2c711910720f37, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.SimpleAircraftPhysics
-  controls: {fileID: 0}
-  state: {fileID: 5842700022739374341}
-  config: {fileID: 11400000, guid: c483f23bbaf65bf46beefe0dd65f7006, type: 2}
-  runwayResetPosition: {x: 0, y: 1.25, z: -520}
-  runwayResetEuler: {x: 0, y: 78, z: 0}
-  initialForwardSpeedKts: 0
-  groundHeightMeters: 1.25
 --- !u!114 &6090694490867546566
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -71895,12 +71875,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d48e3ec7bb4127f4f95315a2b0b1bc24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightDynamicsCoordinator
-  requestedBackend: 0
-  preferNativeInDevelopment: 1
+  requestedBackend: 1
   simulationRoot: {fileID: 5108623857352381007}
   presentationRoot: {fileID: 5108623857352381007}
   aircraftState: {fileID: 5842700022739374341}
-  unityPrototype: {fileID: 1423655655211657218}
+  aircraftConfiguration: {fileID: 11400000, guid: c483f23bbaf65bf46beefe0dd65f7006, type: 2}
   authoritativeRigidbody: {fileID: 1573695374297373189}
   controls: {fileID: 0}
   terrainSurface: {fileID: 11400000, guid: b2b2be77d482f4c4c8fb5ceb35614891, type: 2}

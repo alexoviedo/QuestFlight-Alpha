@@ -529,6 +529,25 @@ photorealism acceptance. Exact evidence is in
 
 See `docs/evidence/BOULDER_CLOUDS_V1_CORRECTION_2026-08-11.md`.
 
+## Native JSBSim sole authority V1
+
+- Source: `f624490584aca3a6f187fca8b81ac5a5458a306a` on
+  `feature/native-jsbsim-sole-authority-v1`.
+- The selectable UnityPrototype backend and `SimpleAircraftPhysics` component
+  were removed from source and the serialized aircraft prefab. Native JSBSim
+  is required by Editor, development, and release products and fails closed.
+- Native-only scenario evidence: 12 executed, zero failures/errors; three pass
+  every defined bound and nine are `Unproven` where independent C172P
+  condition-specific envelopes remain absent. Power-off regression trace:
+  approximately 72 kt and 260 ft/min mean sink; not a best-glide acceptance.
+- Final post-removal EditMode: PASS 319/319. PlayMode, Android build, and exact
+  APK hardware result are recorded in
+  `docs/evidence/NATIVE_JSBSIM_SOLE_AUTHORITY_V1_2026-08-13.md`.
+
+Sole native authority is not certified-fidelity or training evidence. Physical
+Quest handling, 72 Hz timing, thermals, stale/tear, and allocations remain
+exact-APK hardware gates.
+
 ## Golden Eagle thermal V1
 
 - EditMode: PASS 308/308; PlayMode: PASS 10/10.

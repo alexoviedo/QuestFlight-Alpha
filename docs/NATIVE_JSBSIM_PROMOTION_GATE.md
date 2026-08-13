@@ -1,48 +1,59 @@
-# Native JSBSim promotion gate
+# Native JSBSim sole-authority gate
 
-The frozen R&D source at
-`cd4131fa7732a6db2d7387921dfef33e2c206970` passed the unchanged native
-promotion thresholds after correcting the go-around command schedule from an
-8-degree to a bounded 10-degree climb target. The acceptance threshold was not
-weakened.
+## Authority decision
 
-## Gate result
+Native JSBSim 1.3.1 is the only permitted QuestFlight product flight authority.
+The product no longer contains a UnityPrototype flight backend, serialized
+prototype physics component, selectable prototype build mode, or runtime
+fallback. This policy applies equally to Editor, development, and release
+builds.
 
-- 11/11 scenarios passed; 10/10 critical scenarios passed.
-- Go-around second-half altitude recovery was 78.969 ft against the unchanged
-  75 ft minimum.
-- No non-finite state was observed.
-- Steady-state managed allocations were zero.
-- Windows timing passed (well below the 0.5 ms average / 1.0 ms p95 limits).
-- Android ARM64 built with NDK 27.2.12479018.
-- Fresh APK extraction verified 16 KiB ELF LOAD alignment for JSBSim, the C ABI
-  wrapper, and the packaged C++ shared runtime.
-- Source, license, data, and binary hashes are complete in the embedded package
-  `SOURCE_MANIFEST.json`.
+The serialized product prefab requests the native backend. The sole
+`FlightDynamicsCoordinator` prepares the pinned payload and creates only
+`JSBSimNativeDevelopmentBackend` (the historical class name is retained for
+serialized/code continuity). Native model-integrity, ABI, initialization,
+non-finite-state, reset, or step failure makes the authority unavailable and
+stops simulation; it never changes the aircraft model.
 
-The promoted boundary is the embedded package
-`QuestFlight/Packages/com.alexoviedo.questflight.jsbsim`. It contains only the
-four required native libraries, managed C ABI owner, bounded C172 runtime data,
-build-time StreamingAssets injection, and source/license records. No R&D scene,
-coordinator, debug UI, evidence overlay, or legacy runtime system was imported.
+## Pinned native boundary
 
-## Product policy
+The embedded package is
+`QuestFlight/Packages/com.alexoviedo.questflight.jsbsim`. It contains:
 
-The authored prefab continues to serialize `UnityPrototype` as its requested
-backend. The sole product coordinator may prefer native JSBSim only in the
-Unity Editor or a `DEVELOPMENT_BUILD`. A release build resolves to the Unity
-prototype regardless of serialized or runtime preference. Native initialization,
-data, ABI, non-finite-state, or step failures fall back to the Unity prototype
-under the existing authority lease.
+- JSBSim 1.3.1 native libraries for Windows x86_64 development and Android
+  ARM64 product builds;
+- the versioned project C ABI wrapper;
+- the private `qfl-c172p-private-fidelity-v2` C172P derivative and bounded
+  runtime data;
+- build-time StreamingAssets injection and runtime SHA-256 validation;
+- source, model, binary, and license records.
 
-This software gate does not establish Quest performance or handling quality.
-Native JSBSim cannot become the release default until physical Quest 3 timing
-and handling evidence is collected. No certified-fidelity or training claim is
-made.
+The Android libraries were built using NDK 27.2.12479018 and have verified
+16 KiB ELF LOAD alignment. No R&D scene, sidecar service, alternate authority,
+debug UI, or runtime hierarchy repair is imported by this boundary.
 
-The frozen upstream C172 definition also contains an active 10 Hz
-`JSBout172B.csv` diagnostic output. The promotion run produced only an ignored,
-header-only file, and release builds cannot select this backend, but native
-release authority remains blocked until that output is disabled or redirected
-to an explicit external-evidence location and the full 11/11, allocation,
-timing, Android, alignment, and manifest gates are rerun on the changed payload.
+## Current evidence
+
+The native-only scenario suite executed all 12 scenarios on 2026-08-13. It
+reported zero failures and zero errors: beta/yaw damping, coordinated turn, and
+ground steering passed every currently defined bound; nine scenarios remain
+honestly `Unproven` where an independently sourced, condition-specific C172P
+acceptance envelope is not yet pinned. The power-off trace recorded an engine-off
+mean sink of approximately 260 ft/min at approximately 72 kt, replacing the
+retired prototype's nonphysical vertical-plunge path. That trace is regression
+evidence, not a best-glide fidelity claim.
+
+Final post-removal EditMode tests passed 319/319. PlayMode and the Android build
+must pass for each candidate. Physical Quest handling, 72 Hz timing, thermal,
+stale/tear, and allocation acceptance remain hardware gates for the exact APK.
+
+## Claims boundary
+
+Making native JSBSim the sole authority is an architecture and integrity
+decision, not certification. Nine scenario envelopes and exact-APK physical
+acceptance remain incomplete. The project does not claim certified C172
+fidelity, FAA approval, navigation suitability, or legal training credit.
+
+The private aircraft derivative has a separate GPL declaration plus an upstream
+non-sale statement. The owner has authorized private personal use; this record
+does not claim public or commercial redistribution rights.

@@ -386,10 +386,9 @@ namespace QuestFlight.Product
 
         private float AuthoredRotationSpeedKnots()
         {
-            C172StyleAircraftConfig config =
-                flightCoordinator != null && flightCoordinator.unityPrototype != null
-                    ? flightCoordinator.unityPrototype.config
-                    : null;
+            C172StyleAircraftConfig config = flightCoordinator != null
+                ? flightCoordinator.aircraftConfiguration
+                : null;
             return config != null
                 ? Mathf.Max(1f, config.Speeds.rotationKts)
                 : 55f;

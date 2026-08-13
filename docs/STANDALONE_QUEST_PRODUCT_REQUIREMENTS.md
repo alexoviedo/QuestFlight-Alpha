@@ -4,7 +4,7 @@
 
 Meta Quest 3 is the sole shipping target. The application must remain a self-contained Android ARM64, Vulkan, and OpenXR product. PCVR, Quest Link, Air Link, remote rendering, Windows shipping builds, and a required PC runtime are not supported architectures or fallback strategies.
 
-The product scene and its XR, camera, aircraft, environment, calibration, and flight-authority hierarchy remain explicitly authored and serialized. OpenXR owns tracked camera motion. Legacy R&D systems may not enter the product dependency closure. The Unity prototype flight backend remains authoritative unless native JSBSim passes every unchanged promotion gate.
+The product scene and its XR, camera, aircraft, environment, calibration, and flight-authority hierarchy remain explicitly authored and serialized. OpenXR owns tracked camera motion. Legacy R&D systems may not enter the product dependency closure. Native JSBSim is the only permitted flight authority in Editor, development, and release builds. Native initialization, model-integrity, ABI, non-finite-state, or step failure must fail closed; a UnityPrototype fallback is forbidden.
 
 ## Superseded recommendation
 

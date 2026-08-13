@@ -9,26 +9,25 @@ using UnityEngine;
 namespace QuestFlightLab.Flight.Backends
 {
     /// <summary>
-    /// Sole product fixed-step authority. The serialized release request remains
-    /// UnityPrototype. Editor/development players may prefer the promoted native
-    /// package, with fail-closed fallback under this same authority lease.
+    /// Sole product fixed-step authority. Native JSBSim is the only permitted
+    /// product backend. A native data, initialization, reset, or step failure
+    /// fails closed; it can never switch to the Unity prototype.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class FlightDynamicsCoordinator : MonoBehaviour
     {
         [Header("Single product authority")]
-        public FlightDynamicsBackendKind requestedBackend = FlightDynamicsBackendKind.UnityPrototype;
-        [Tooltip("Editor/development builds only. Release builds always resolve to UnityPrototype.")]
-        public bool preferNativeInDevelopment = true;
+        public FlightDynamicsBackendKind requestedBackend = FlightDynamicsBackendKind.JSBSimNativeDevelopment;
         public Transform simulationRoot;
         public Transform presentationRoot;
         public AircraftState aircraftState;
-        public SimpleAircraftPhysics unityPrototype;
+        [Tooltip("Authored C172 reference values used by route guidance only; JSBSim owns all simulation state.")]
+        public C172StyleAircraftConfig aircraftConfiguration;
         public Rigidbody authoritativeRigidbody;
         public ProductControlInput controls;
         [Tooltip("Offline-authored ENU terrain authority used by physical ground contact. No runtime raycasts or hierarchy discovery.")]
         public ProductionTerrainSurfaceAsset terrainSurface;
-        [Tooltip("Shared authored thermal. Applied only by the opt-in native JSBSim development backend; the release Unity prototype has no wind model.")]
+        [Tooltip("Shared authored thermal supplied to the native JSBSim air-mass input.")]
         public ThermalFieldProfile thermalField;
 
         [Header("Authored initial conditions")]
@@ -39,11 +38,10 @@ namespace QuestFlightLab.Flight.Backends
         [Range(1, 16)] public int maxStepsPerFixedUpdate = 8;
 
         public FlightDynamicsBackendKind ActiveBackendKind =>
-            _backend?.Kind ?? FlightDynamicsBackendKind.UnityPrototype;
+            _backend?.Kind ?? FlightDynamicsBackendKind.JSBSimNativeDevelopment;
         public bool IsInitialized => _backend != null && _backend.IsInitialized;
         public bool CoordinatorOwnsPresentationInterpolation => ShouldCoordinatorInterpolate(simulationRoot, presentationRoot);
         public string LastError { get; private set; } = string.Empty;
-        public string FallbackReason { get; private set; } = string.Empty;
         public FlightDynamicsState CurrentState => _currentState;
         public FlightDynamicsControlSnapshot LastAppliedControls { get; private set; } =
             FlightDynamicsControlSnapshot.NeutralIdle;
@@ -60,25 +58,10 @@ namespace QuestFlightLab.Flight.Backends
         private Action<double> _stepBackendAction;
         private string _preparedNativeDataRoot = string.Empty;
         private string _nativePreparationError = string.Empty;
-        private bool _authoredPrototypeEnabled;
-        private bool _prototypeEnabledStateCaptured;
         private static readonly AircraftControlState NeutralIdleControls = AircraftControlState.Neutral(0.10f);
-
-        public static bool DevelopmentBuildAllowsNative
-        {
-            get
-            {
-#if (UNITY_EDITOR || DEVELOPMENT_BUILD) && QUESTFLIGHT_ENABLE_NATIVE_JSBSIM && !QUESTFLIGHT_FORCE_UNITY_PROTOTYPE
-                return true;
-#else
-                return false;
-#endif
-            }
-        }
 
         private void Awake()
         {
-            CapturePrototypeEnabledState();
             if (!HasAuthoredReferences(out string error))
             {
                 LastError = error;
@@ -88,17 +71,12 @@ namespace QuestFlightLab.Flight.Backends
             }
             _stepBackendAction = StepBackendUnchecked;
             EnforceSinglePresentationOwner();
-            if (ResolveEffectiveBackend(requestedBackend, preferNativeInDevelopment,
-                    DevelopmentBuildAllowsNative) == FlightDynamicsBackendKind.JSBSimNativeDevelopment)
-            {
-                unityPrototype.enabled = false;
-            }
         }
 
         public bool HasAuthoredReferences(out string error)
         {
             if (simulationRoot == null || presentationRoot == null || aircraftState == null ||
-                unityPrototype == null || authoritativeRigidbody == null || controls == null ||
+                aircraftConfiguration == null || authoritativeRigidbody == null || controls == null ||
                 initialConditionProvider == null || terrainSurface == null || thermalField == null)
             {
                 error = "All flight-authority references must be serialized in the product prefab.";
@@ -109,20 +87,15 @@ namespace QuestFlightLab.Flight.Backends
                 error = "The serialized thermal profile is invalid: " + thermalFailure;
                 return false;
             }
-            if (simulationRoot != transform || unityPrototype.transform != simulationRoot ||
-                aircraftState.transform != simulationRoot || authoritativeRigidbody.transform != simulationRoot)
+            if (simulationRoot != transform || aircraftState.transform != simulationRoot ||
+                authoritativeRigidbody.transform != simulationRoot)
             {
                 error = "Flight-authority components must share AircraftSimulationRoot.";
                 return false;
             }
-            if (requestedBackend != FlightDynamicsBackendKind.UnityPrototype)
+            if (requestedBackend != FlightDynamicsBackendKind.JSBSimNativeDevelopment)
             {
-                error = "The serialized product coordinator must request UnityPrototype.";
-                return false;
-            }
-            if (!preferNativeInDevelopment)
-            {
-                error = "The product prefab must serialize the development-only native preference.";
+                error = "The serialized product coordinator must request native JSBSim.";
                 return false;
             }
             error = string.Empty;
@@ -131,12 +104,7 @@ namespace QuestFlightLab.Flight.Backends
 
         private IEnumerator Start()
         {
-            FlightDynamicsBackendKind desired = ResolveEffectiveBackend(
-                requestedBackend,
-                preferNativeInDevelopment,
-                DevelopmentBuildAllowsNative);
-            if (desired == FlightDynamicsBackendKind.JSBSimNativeDevelopment &&
-                !JSBSimRuntimeData.TryGetPreparedDataRoot(out _preparedNativeDataRoot, out _nativePreparationError))
+            if (!JSBSimRuntimeData.TryGetPreparedDataRoot(out _preparedNativeDataRoot, out _nativePreparationError))
             {
                 bool prepared = false;
                 yield return JSBSimRuntimeData.Prepare((success, root, error) =>
@@ -153,9 +121,7 @@ namespace QuestFlightLab.Flight.Backends
 
         public bool InitializeSelectedBackend()
         {
-            CapturePrototypeEnabledState();
             ShutdownBackend();
-            FallbackReason = string.Empty;
             LastError = string.Empty;
             RefreshConfiguredInitialConditions();
             if (!FlightDynamicsAuthority.TryAcquire(simulationRoot, this, out _authorityLease, out string authorityError))
@@ -164,56 +130,21 @@ namespace QuestFlightLab.Flight.Backends
             double fixedStep = 1.0 / Mathf.Max(30f, simulationRateHz);
             _accumulator = new FixedStepAccumulator(fixedStep, maxStepsPerFixedUpdate);
             FlightDynamicsBackendContext context = CreateContext(fixedStep);
-            FlightDynamicsBackendKind desired = ResolveEffectiveBackend(
-                requestedBackend,
-                preferNativeInDevelopment,
-                DevelopmentBuildAllowsNative);
-
-            if (desired == FlightDynamicsBackendKind.JSBSimNativeDevelopment)
+            if (string.IsNullOrWhiteSpace(_preparedNativeDataRoot))
+                JSBSimRuntimeData.TryGetPreparedDataRoot(out _preparedNativeDataRoot, out _nativePreparationError);
+            if (string.IsNullOrWhiteSpace(_preparedNativeDataRoot))
             {
-                if (string.IsNullOrWhiteSpace(_preparedNativeDataRoot))
-                    JSBSimRuntimeData.TryGetPreparedDataRoot(out _preparedNativeDataRoot, out _nativePreparationError);
-                if (!string.IsNullOrWhiteSpace(_preparedNativeDataRoot))
-                {
-                    unityPrototype.enabled = false;
-                    IFlightDynamicsBackend native = new JSBSimNativeDevelopmentBackend(_preparedNativeDataRoot);
-                    if (TryInitializeBackend(native, context, _configuredInitialConditions, out string nativeError))
-                    {
-                        CompleteInitialization(fixedStep);
-                        return true;
-                    }
-                    native.Dispose();
-                    FallbackReason = "Native JSBSim initialization failed: " + nativeError;
-                }
-                else
-                {
-                    FallbackReason = "Native JSBSim data preparation failed: " + _nativePreparationError;
-                }
-                Debug.LogWarning("[QuestFlight][FlightAuthority] " + FallbackReason +
-                                 " Falling back to Unity prototype.", this);
+                return ReleaseAndFail("Native JSBSim data preparation failed: " +
+                                      _nativePreparationError);
             }
-
-            RestorePrototypeEnabledState();
-            IFlightDynamicsBackend prototype = new UnityPrototypeFlightBackend();
-            if (!TryInitializeBackend(prototype, context, _configuredInitialConditions, out string prototypeError))
+            IFlightDynamicsBackend native = new JSBSimNativeDevelopmentBackend(_preparedNativeDataRoot);
+            if (!TryInitializeBackend(native, context, _configuredInitialConditions, out string nativeError))
             {
-                prototype.Dispose();
-                return ReleaseAndFail(prototypeError);
+                native.Dispose();
+                return ReleaseAndFail("Native JSBSim initialization failed: " + nativeError);
             }
             CompleteInitialization(fixedStep);
             return true;
-        }
-
-        public static FlightDynamicsBackendKind ResolveEffectiveBackend(
-            FlightDynamicsBackendKind serializedRequest,
-            bool preferNativeInDevelopment,
-            bool developmentBuildAllowsNative)
-        {
-            if (!developmentBuildAllowsNative) return FlightDynamicsBackendKind.UnityPrototype;
-            if (preferNativeInDevelopment) return FlightDynamicsBackendKind.JSBSimNativeDevelopment;
-            return serializedRequest == FlightDynamicsBackendKind.JSBSimNativeDevelopment
-                ? FlightDynamicsBackendKind.JSBSimNativeDevelopment
-                : FlightDynamicsBackendKind.UnityPrototype;
         }
 
         private void FixedUpdate()
@@ -258,7 +189,7 @@ namespace QuestFlightLab.Flight.Backends
         {
             if (!IsInitialized) return Fail("Cannot reset flight dynamics before backend initialization.");
             if (!_hasConfiguredInitialConditions) RefreshConfiguredInitialConditions();
-            return ResetToInitialConditions(_configuredInitialConditions, true);
+            return ResetToInitialConditions(_configuredInitialConditions);
         }
 
         /// <summary>
@@ -271,7 +202,7 @@ namespace QuestFlightLab.Flight.Backends
             if (!IsInitialized) return Fail("Cannot reset flight dynamics before backend initialization.");
             if (!InitialConditionsAreFinite(initialConditions))
                 return Fail("Recovery initial conditions contain a non-finite value.");
-            return ResetToInitialConditions(initialConditions, false);
+            return ResetToInitialConditions(initialConditions);
         }
 
         /// <summary>
@@ -289,17 +220,10 @@ namespace QuestFlightLab.Flight.Backends
             return true;
         }
 
-        private bool ResetToInitialConditions(
-            in FlightDynamicsInitialConditions initialConditions,
-            bool allowConfiguredNativeFallback)
+        private bool ResetToInitialConditions(in FlightDynamicsInitialConditions initialConditions)
         {
             if (!_backend.Reset(initialConditions))
-            {
-                if (allowConfiguredNativeFallback &&
-                    _backend.Kind == FlightDynamicsBackendKind.JSBSimNativeDevelopment &&
-                    TryRuntimeFallback(_backend.LastError)) return true;
                 return Fail(_backend.LastError);
-            }
             LastResetInitialConditions = initialConditions;
             ApplyControls(NeutralIdleControls);
             _currentState = _backend.CurrentState;
@@ -372,7 +296,6 @@ namespace QuestFlightLab.Flight.Backends
             {
                 simulationRoot = simulationRoot,
                 aircraftState = aircraftState,
-                unityPrototype = unityPrototype,
                 terrainSurface = terrainSurface,
                 localOrigin = GeodeticReference.Kbdu,
                 fixedDeltaTimeSeconds = fixedStep
@@ -389,22 +312,12 @@ namespace QuestFlightLab.Flight.Backends
         {
             if (_backend == null || !_backend.IsInitialized) return false;
             _previousState = _currentState;
-            // Only native JSBSim currently has a validated air-mass input. Keep
-            // the release prototype unchanged rather than layering an ad-hoc
-            // Unity force on top of its legacy model.
-            if (_backend.Kind == FlightDynamicsBackendKind.JSBSimNativeDevelopment)
-            {
-                float updraft = thermalField != null
-                    ? thermalField.SampleUpdraftMetersPerSecond(_currentState.positionUnityMeters)
-                    : 0f;
-                _backend.SetAtmosphere(AtmosphereFromUpdraft(updraft));
-            }
+            float updraft = thermalField != null
+                ? thermalField.SampleUpdraftMetersPerSecond(_currentState.positionUnityMeters)
+                : 0f;
+            _backend.SetAtmosphere(AtmosphereFromUpdraft(updraft));
             if (!_backend.Advance(fixedDeltaTimeSeconds))
-            {
-                if (_backend.Kind == FlightDynamicsBackendKind.JSBSimNativeDevelopment &&
-                    TryRuntimeFallback(_backend.LastError)) return true;
                 return Fail(_backend.LastError);
-            }
             _currentState = _backend.CurrentState;
             ApplyBackendPose(_currentState);
             ApplyLegacyState(_currentState);
@@ -419,67 +332,6 @@ namespace QuestFlightLab.Flight.Backends
                 windEastMetersPerSecond = 0d,
                 // Aviation NED uses positive down; a rising air mass is negative down.
                 windDownMetersPerSecond = -Math.Max(0d, updraftMetersPerSecond)
-            };
-        }
-
-        private bool TryRuntimeFallback(string nativeError)
-        {
-            FlightDynamicsState nativeState = _currentState;
-            AircraftControlState activeControls = controls != null ? controls.Current : NeutralIdleControls;
-            _backend?.Dispose();
-            _backend = null;
-            RestorePrototypeEnabledState();
-
-            IFlightDynamicsBackend prototype = new UnityPrototypeFlightBackend();
-            double fixedStep = _accumulator?.StepSeconds ?? 1.0 / Mathf.Max(30f, simulationRateHz);
-            if (!prototype.Initialize(CreateContext(fixedStep)))
-            {
-                string fallbackError = prototype.LastError;
-                prototype.Dispose();
-                return Fail("Native JSBSim failed ('" + nativeError +
-                            "') and Unity fallback initialization failed ('" + fallbackError + "').");
-            }
-            prototype.SetAtmosphere(FlightDynamicsAtmosphere.Calm);
-            FlightDynamicsInitialConditions continuation = InitialConditionsFromState(nativeState);
-            if (!prototype.Reset(continuation))
-            {
-                string fallbackError = prototype.LastError;
-                prototype.Dispose();
-                return Fail("Native JSBSim failed ('" + nativeError +
-                            "') and Unity fallback reset failed ('" + fallbackError + "').");
-            }
-            prototype.SetControls(activeControls);
-            _backend = prototype;
-            LastAppliedControls = FlightDynamicsControlSnapshot.From(activeControls);
-            LastResetInitialConditions = continuation;
-            _currentState = prototype.CurrentState;
-            _previousState = _currentState;
-            ApplyBackendPose(_currentState);
-            ApplyLegacyState(_currentState);
-            FallbackReason = "Native JSBSim runtime failure: " + nativeError;
-            LastError = string.Empty;
-            Debug.LogWarning("[QuestFlight][FlightAuthority] " + FallbackReason +
-                             " Continued with Unity prototype under the existing authority lease.", this);
-            return true;
-        }
-
-        private static FlightDynamicsInitialConditions InitialConditionsFromState(FlightDynamicsState state)
-        {
-            double verticalFeetPerSecond = state.verticalSpeedFeetPerMinute / 60.0;
-            double horizontalFeetPerSecond = state.groundSpeedKnots * 1.6878098571;
-            return new FlightDynamicsInitialConditions
-            {
-                latitudeDegrees = state.latitudeDegrees,
-                longitudeDegrees = state.longitudeDegrees,
-                altitudeMslMeters = state.altitudeMslMeters,
-                terrainElevationMslMeters = state.altitudeMslMeters - Math.Max(0.0, state.altitudeAglMeters),
-                calibratedAirspeedKnots = Math.Max(0.0, state.calibratedAirspeedKnots),
-                headingDegrees = state.headingDegrees,
-                pitchDegrees = state.pitchDegrees,
-                bankDegrees = state.bankDegrees,
-                flightPathAngleDegrees = Math.Atan2(verticalFeetPerSecond,
-                    Math.Max(0.01, horizontalFeetPerSecond)) * FlightFrameConversions.RadiansToDegrees,
-                engineRunning = state.engineRpm > 100.0
             };
         }
 
@@ -528,24 +380,10 @@ namespace QuestFlightLab.Flight.Backends
             if (rig != null && rig.enabled) presentationRoot = simulationRoot;
         }
 
-        private void CapturePrototypeEnabledState()
-        {
-            if (_prototypeEnabledStateCaptured || unityPrototype == null) return;
-            _authoredPrototypeEnabled = unityPrototype.enabled;
-            _prototypeEnabledStateCaptured = true;
-        }
-
-        private void RestorePrototypeEnabledState()
-        {
-            if (_prototypeEnabledStateCaptured && unityPrototype != null)
-                unityPrototype.enabled = _authoredPrototypeEnabled;
-        }
-
         private bool ReleaseAndFail(string message)
         {
             _backend?.Dispose();
             _backend = null;
-            RestorePrototypeEnabledState();
             _authorityLease?.Dispose();
             _authorityLease = null;
             return Fail(message);
@@ -567,7 +405,6 @@ namespace QuestFlightLab.Flight.Backends
         {
             _backend?.Dispose();
             _backend = null;
-            RestorePrototypeEnabledState();
             LastAppliedControls = FlightDynamicsControlSnapshot.NeutralIdle;
             _authorityLease?.Dispose();
             _authorityLease = null;

@@ -5,22 +5,13 @@ param(
   [string]$ArtifactDir = '',
   [ValidateRange(60, 3600)]
   [int]$TimeoutSeconds = 1200,
-  [switch]$Development,
-  [switch]$ForceUnityPrototype,
-  [switch]$EnableNativeJsbsim
+  [switch]$Development
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if (-not (Test-Path -LiteralPath $UnityExe)) { throw "Unity not found: $UnityExe" }
 if (-not (Test-Path -LiteralPath $ProjectPath)) { throw "Project not found: $ProjectPath" }
-if ($EnableNativeJsbsim -and -not $Development) {
-  throw '-EnableNativeJsbsim requires -Development; native JSBSim is compile-gated out of release-style builds.'
-}
-if ($EnableNativeJsbsim -and $ForceUnityPrototype) {
-  throw '-EnableNativeJsbsim and -ForceUnityPrototype are mutually exclusive.'
-}
-
 function Get-Sha256Hex {
   param([Parameter(Mandatory = $true)][string]$LiteralPath)
 
@@ -62,12 +53,8 @@ $arguments = @(
   '-logFile', $log
 )
 $previousDevelopment = $env:QUESTFLIGHT_DEVELOPMENT_BUILD
-$previousForceUnityPrototype = $env:QUESTFLIGHT_FORCE_UNITY_PROTOTYPE
-$previousEnableNativeJsbsim = $env:QUESTFLIGHT_ENABLE_NATIVE_JSBSIM
 try {
   $env:QUESTFLIGHT_DEVELOPMENT_BUILD = if ($Development) { '1' } else { '0' }
-  $env:QUESTFLIGHT_FORCE_UNITY_PROTOTYPE = if ($ForceUnityPrototype) { '1' } else { '0' }
-  $env:QUESTFLIGHT_ENABLE_NATIVE_JSBSIM = if ($EnableNativeJsbsim) { '1' } else { '0' }
   $process = Start-Process -FilePath $UnityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
   if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
     Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
@@ -75,8 +62,6 @@ try {
   }
 } finally {
   $env:QUESTFLIGHT_DEVELOPMENT_BUILD = $previousDevelopment
-  $env:QUESTFLIGHT_FORCE_UNITY_PROTOTYPE = $previousForceUnityPrototype
-  $env:QUESTFLIGHT_ENABLE_NATIVE_JSBSIM = $previousEnableNativeJsbsim
 }
 
 $exitCode = [int]$process.ExitCode
@@ -97,8 +82,8 @@ $hash = Get-Sha256Hex -LiteralPath $apk
   bytes = (Get-Item -LiteralPath $apk).Length
   sha256 = $hash
   development = [bool]$Development
-  forceUnityPrototype = [bool]$ForceUnityPrototype
-  enableNativeJsbsim = [bool]$EnableNativeJsbsim
+  nativeJsbsimRequired = $true
+  unityPrototypeAllowed = $false
 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $ArtifactDir 'product_apk_manifest.json') -Encoding UTF8
 
 Write-Host "Product APK: $apk"

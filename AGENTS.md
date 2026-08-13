@@ -12,7 +12,7 @@
 - Do not claim FAA approval, training credit, certified fidelity, production photorealism, broad compatibility, or Quest performance without evidence.
 - Do not commit Unity `Library`, `Temp`, `Obj`, `Logs`, `Builds`, APKs, captures, package caches, raw downloads, or unclear-license assets.
 - Every committed binary asset requires a source and license record.
-- The Unity prototype backend remains authoritative until the unchanged native JSBSim promotion gate passes.
+- Native JSBSim is the only permitted product flight authority. Product initialization or stepping must fail closed if native JSBSim is unavailable or invalid; no Unity flight-dynamics fallback is permitted.
 - Preserve paired Unity `.meta` files and GUIDs for extracted assets.
 - Keep restricted or unclear-rights aircraft assets local and uncommitted.
 - Standalone Quest 3 is the sole shipping target.
@@ -24,7 +24,7 @@
 - The shipping product must remain self-contained Android ARM64, Vulkan, and OpenXR.
 - The product scene remains explicitly authored and serialized.
 - Legacy R&D systems may not reenter the product dependency closure.
-- The Unity prototype backend remains authoritative until native JSBSim passes every promotion gate.
+- UnityPrototype flight-dynamics code, serialized components, build modes, and runtime fallbacks are forbidden from the product dependency closure.
 - Do not commit raw orthophotos, source archives, caches, generated builds, or unclear-license assets.
 - The annotated tag `standalone-scenery-baseline-v1` identifies the authoritative standalone scenery development baseline; it is not a release or photorealism/performance acceptance claim.
 - Failed scenery and URP experiment branches may not enter the active product dependency closure without a separately scoped, validated milestone.

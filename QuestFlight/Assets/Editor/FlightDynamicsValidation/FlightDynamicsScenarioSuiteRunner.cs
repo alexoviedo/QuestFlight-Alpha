@@ -13,20 +13,9 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
 
         public IReadOnlyList<FlightTraceSample> Trace => _trace;
 
-        public FlightDynamicsEvidenceSuite RunPrototypeOnly()
+        public FlightDynamicsEvidenceSuite RunNativeOnly()
         {
             FlightDynamicsEvidenceSuite suite = NewSuite();
-            using (IFlightDynamicsTraceBackend backend = new UnityPrototypeTraceBackend())
-                RunBackend(backend, suite);
-            return suite;
-        }
-
-        public FlightDynamicsEvidenceSuite RunPrototypeAndNative()
-        {
-            FlightDynamicsEvidenceSuite suite = NewSuite();
-            using (IFlightDynamicsTraceBackend backend = new UnityPrototypeTraceBackend())
-                RunBackend(backend, suite);
-
             using (NativeJsbsimTraceBackend native = new NativeJsbsimTraceBackend())
             {
                 if (native.IsAvailable)
@@ -255,9 +244,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
             result.metrics.Add(FlightEvidenceMetric.Classified(
                 "reported_sideslip_unit_contract",
                 FlightEvidenceStatus.Pass,
-                backend.Id == "UnityPrototype"
-                    ? "UnityPrototypeFlightBackend converts body-axis lateral velocity to beta degrees; legacy slipSkid remains presentation-only."
-                    : "The native backend reports aero/beta-deg."));
+                "The native backend reports aero/beta-deg."));
             result.ResolveStatus();
             return result;
         }
@@ -577,7 +564,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 result.metrics.Add(FlightEvidenceMetric.Classified(
                     "nosewheel_steering_diagnostics",
                     FlightEvidenceStatus.Unsupported,
-                    "The prototype backend has no independent landing-gear steering state."));
+                    "The selected backend exposes no independent landing-gear steering state."));
             }
             result.ResolveStatus();
             return result;

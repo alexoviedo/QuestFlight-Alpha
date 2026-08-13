@@ -7,7 +7,6 @@ namespace QuestFlightLab.Flight.Backends
 {
     public enum FlightDynamicsBackendKind
     {
-        UnityPrototype = 0,
         JSBSimNativeDevelopment = 1
     }
 
@@ -183,7 +182,6 @@ namespace QuestFlightLab.Flight.Backends
     {
         public Transform simulationRoot;
         public AircraftState aircraftState;
-        public SimpleAircraftPhysics unityPrototype;
         public ProductionTerrainSurfaceAsset terrainSurface;
         public GeodeticReference localOrigin = GeodeticReference.Kbdu;
         public double fixedDeltaTimeSeconds = 1.0 / 120.0;

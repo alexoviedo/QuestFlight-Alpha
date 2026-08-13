@@ -585,38 +585,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7682851496159033737}
     m_Modifications:
-    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
-      propertyPath: controls
-      value: 
-      objectReference: {fileID: 1171423066720843826}
-    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
-      propertyPath: groundHeightMeters
-      value: 1.0274717
-      objectReference: {fileID: 0}
-    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
-      propertyPath: runwayResetEuler.x
-      value: 0.13375312
-      objectReference: {fileID: 0}
-    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
-      propertyPath: runwayResetEuler.y
-      value: 89.971725
-      objectReference: {fileID: 0}
-    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
-      propertyPath: runwayResetEuler.z
-      value: -0.000000006670125
-      objectReference: {fileID: 0}
-    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
-      propertyPath: runwayResetPosition.x
-      value: -554.73395
-      objectReference: {fileID: 0}
-    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
-      propertyPath: runwayResetPosition.y
-      value: 1.0274717
-      objectReference: {fileID: 0}
-    - target: {fileID: 1423655655211657218, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
-      propertyPath: runwayResetPosition.z
-      value: -30.63398
-      objectReference: {fileID: 0}
     - target: {fileID: 2289500013244068266, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: mapperFallback
       value: 

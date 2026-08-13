@@ -50,31 +50,6 @@ namespace QuestFlight.Editor.FlightDynamicsValidation.Tests
         }
 
         [Test]
-        public void PrototypeResetKeepsPitchAttitudeSeparateFromFlightPathAngle()
-        {
-            using (UnityPrototypeTraceBackend backend =
-                   new UnityPrototypeTraceBackend())
-            {
-                FlightScenarioInitialState initial =
-                    FlightScenarioInitialState.Airborne(
-                        speedKnots: 75.0,
-                        altitudeAglMeters: 500.0,
-                        headingDegrees: 90.0,
-                        flightPathAngleDegrees: 0.0);
-                initial.pitchDegrees = 8.0;
-
-                Assert.That(backend.Reset(initial), Is.True, backend.LastError);
-                Assert.That(
-                    backend.State.velocityUnityMetersPerSecond.y,
-                    Is.EqualTo(0f).Within(0.001f),
-                    "A nose-up recovery attitude must not invent a climb when the authored flight-path angle is level.");
-                Assert.That(
-                    backend.State.pitchDegrees,
-                    Is.EqualTo(8.0).Within(0.05));
-            }
-        }
-
-        [Test]
         public void LiftoffDetectorRejectsResetBounceAndRequiresSustainedClimbingSeparation()
         {
             List<FlightTraceSample> trace = new List<FlightTraceSample>
@@ -160,23 +135,15 @@ namespace QuestFlight.Editor.FlightDynamicsValidation.Tests
         }
 
         [Test]
-        public void PrototypeSuiteIncludesEveryRequiredScenarioAndExplicitCapabilityStatuses()
+        public void NativeSuiteIncludesEveryRequiredScenario()
         {
             FlightDynamicsScenarioSuiteRunner runner = new FlightDynamicsScenarioSuiteRunner();
-            FlightDynamicsEvidenceSuite suite = runner.RunPrototypeOnly();
+            FlightDynamicsEvidenceSuite suite = runner.RunNativeOnly();
             Dictionary<string, FlightScenarioEvidence> scenarios = suite.scenarios
-                .Where(item => item.backend == "UnityPrototype")
+                .Where(item => item.backend == "JSBSimNativeDevelopment")
                 .ToDictionary(item => item.scenarioId, item => item, StringComparer.Ordinal);
 
             CollectionAssert.IsSubsetOf(RequiredScenarioIds, scenarios.Keys);
-            Assert.That(scenarios["mass_cg_matrix"].status,
-                Is.EqualTo(FlightEvidenceStatus.Unsupported.ToString()));
-            Assert.That(scenarios["wind_matrix"].status,
-                Is.EqualTo(FlightEvidenceStatus.Unsupported.ToString()));
-            Assert.That(
-                scenarios["beta_yaw_damping"].metrics.Single(item => item.id == "reported_sideslip_unit_contract").status,
-                Is.EqualTo(FlightEvidenceStatus.Pass.ToString()),
-                "The prototype adapter must expose conventional sideslip beta in degrees rather than the legacy normalized slip-ball ratio.");
             Assert.That(runner.Trace.Count, Is.GreaterThan(0));
         }
 

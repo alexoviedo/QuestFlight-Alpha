@@ -11,7 +11,7 @@ ProductionWorldRoot
 │   ├── Bounded aircraft/runway blob shadow
 │   └── One-batch, center-eye-oriented KBDU cloud impostor field
 ├── ProductionInputRoot
-├── AircraftSimulationRoot (one Unity prototype authority, CG pivot)
+├── AircraftSimulationRoot (one native JSBSim authority, CG pivot)
 │   ├── CenterOfGravityReference
 │   └── AircraftVisualRoot
 │       ├── ImportedAircraftExterior
@@ -35,7 +35,7 @@ taxiway signs. Both sources reuse the existing opaque context material, cast no
 realtime shadows, add no colliders or `LODGroup`, and never construct hierarchy
 at runtime.
 
-The hierarchy exists before frame zero. OpenXR owns tracked camera motion. Calibration modifies only `UserViewCalibrationOffset`. Input produces a neutral control snapshot consumed by one `FlightDynamicsCoordinator`; `UnityPrototypeFlightBackend` is the sole serialized authority. Environment geometry, runway, water, immutable far terrain, and presentation effects are authored assets rather than runtime reconstruction.
+The hierarchy exists before frame zero. OpenXR owns tracked camera motion. Calibration modifies only `UserViewCalibrationOffset`. Input produces a neutral control snapshot consumed by one `FlightDynamicsCoordinator`; its sole backend is the embedded native JSBSim 1.3.1 C172P derivative. The coordinator prepares the integrity-checked native payload, acquires one authority lease, and fails closed on preparation, initialization, ABI, non-finite-state, reset, or step failure. There is no alternate Unity flight model or runtime fallback. Environment geometry, runway, water, immutable far terrain, and presentation effects are authored assets rather than runtime reconstruction.
 
 The shipping architecture is standalone Quest 3 only: Android ARM64, IL2CPP, Vulkan, OpenXR single-pass instanced stereo, ASTC, and 4x MSAA. A Windows/OpenXR process may exist only as a development host for Meta XR Simulator and is never a shipping profile or required runtime dependency. The simulator establishes stereo/tracking/input/composition behavior, not mobile GPU or thermal performance.
 
@@ -248,8 +248,7 @@ joins a deterministic orbit around a shared `ThermalFieldProfile`. It uses
 explicit flap, soar, bank, and glide-transition clips; runtime code does not
 construct, discover, repair, or camera-parent hierarchy.
 
-The release coordinator still requests `UnityPrototype`. Only an explicitly
-compiled native-development build samples the thermal at the authoritative
-aircraft position and submits vertical wind through the existing JSBSim
-atmosphere ABI. This preserves one flight authority and does not layer an
-unvalidated Unity force onto the release prototype.
+The release coordinator samples the thermal at the authoritative aircraft
+position and submits vertical wind through the existing JSBSim atmosphere ABI.
+This preserves one flight authority and does not layer a Unity force onto the
+native aircraft model.

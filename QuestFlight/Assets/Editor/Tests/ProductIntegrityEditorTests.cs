@@ -67,14 +67,13 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void NativeJsbsimBuildIdentityCannotSilentlyDegradeToReleasePrototype()
+        public void ProductBuildUnconditionallyRequiresNativeJsbsim()
         {
-            Assert.DoesNotThrow(() =>
-                ProductionBuild.ValidateBackendBuildFlags(true, false, true));
-            Assert.Throws<InvalidOperationException>(() =>
-                ProductionBuild.ValidateBackendBuildFlags(false, false, true));
-            Assert.Throws<InvalidOperationException>(() =>
-                ProductionBuild.ValidateBackendBuildFlags(true, true, true));
+            string source = File.ReadAllText("Assets/Editor/ProductionBuild.cs");
+            Assert.That(source, Does.Contain("QUESTFLIGHT_REQUIRE_NATIVE_JSBSIM"));
+            Assert.That(source, Does.Not.Contain("FORCE_UNITY_PROTOTYPE"));
+            Assert.That(source, Does.Not.Contain("ForceUnityPrototype"));
+            Assert.That(source, Does.Not.Contain("EnableNativeJsbsim"));
         }
 
         [Test]

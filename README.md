@@ -1,6 +1,6 @@
 # T2 QuestFlight
 
-T2 QuestFlight is a private alpha vertical slice for standalone Meta Quest 3. It contains one explicitly authored C172-style cockpit/aircraft presentation, one KBDU-inspired environment, one Unity prototype flight authority, viewpoint calibration, mixed Meta hand/Touch interaction, and a guided reservoir demonstration route.
+T2 QuestFlight is a private alpha vertical slice for standalone Meta Quest 3. It contains one explicitly authored C172-style cockpit/aircraft presentation, one KBDU-inspired environment, one native JSBSim C172P flight authority, viewpoint calibration, mixed Meta hand/Touch interaction, and a guided reservoir demonstration route.
 
 ## Alpha distribution
 
@@ -25,10 +25,11 @@ release-signing/channel procedure is in
 - a guided takeoff, reservoir overflight, return, approach, and recovery loop;
 - standalone Quest 3 build target.
 
-The project has no USB2BLE/HOTAS dependency, Gaussian splats, native release
-flight authority, or legacy runtime scene repair. The Unity prototype remains
-the sole release authority; native JSBSim remains an unpromoted development
-backend.
+The project has no USB2BLE/HOTAS dependency, Gaussian splats, UnityPrototype
+flight dynamics, or legacy runtime scene repair. Native JSBSim is the sole
+product flight authority in Editor, development, and release builds. Missing
+or invalid native code/data fails closed rather than changing the aircraft
+model at runtime.
 
 ## Open and validate
 
