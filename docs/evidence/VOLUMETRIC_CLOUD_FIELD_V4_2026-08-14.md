@@ -147,3 +147,17 @@ Alex reported the clouds look really good and requested promotion to `main`.
 This establishes worn visual acceptance of the representation; it does not
 establish 72 Hz timing, thermal, stale/tear, or long-duration comfort acceptance,
 which were not measured on this exact APK.
+
+## Mainline promotion verification
+
+- `feature/volumetric-cloud-field-v4` fast-forwarded cleanly onto `main`; no
+  merge conflict or content rewrite occurred.
+- Post-merge PlayMode: PASS 10/10.
+- Unity product dependency closure: PASS; 608 dependencies, 414 approved, 194
+  package, zero rejected, zero unknown, `ready=True`.
+- Git LFS integrity: PASS.
+- The broader clean-source extraction audit remains blocked by four pre-existing
+  R&D-source classifications (`SimpleAircraftPhysics`, `Usb2BleInputMapper`,
+  `FlightTelemetry`, and `ShortPlaytestDemoPilot`). None is in the Unity product
+  dependency closure. This is recorded as a repository/tooling limitation, not
+  hidden or misreported as a shipping-product regression.
