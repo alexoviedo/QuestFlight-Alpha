@@ -16,24 +16,28 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2470
+  m_CustomRenderQueue: 2980
   stringTagMap: {}
   disabledShaderPasses: []
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _CloudAtlas:
-        m_Texture: {fileID: 2800000, guid: 7d56aa1b5dc7d1b4587f285e45b0e161, type: 3}
+    - _DensitySlices:
+        m_Texture: {fileID: 2800000, guid: dcdadaee21298b8439df8e9e68e352d9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AmbientGain: 0.72
-    - _CoverageCutoff: 0.02
-    - _EdgeSoftness: 0.55
-    - _SunGain: 0.16
+    - _DensityGain: 1.9
+    - _Extinction: 4.6
+    - _KBDUCloudExteriorOpacity: 1
+    - _MaximumDistance: 18000
+    - _MinimumStepMetres: 60
+    - _SilverLining: 0.4
     m_Colors:
-    - _CloudTint: {r: 0.84, g: 0.87, b: 0.91, a: 1}
+    - _AmbientColor: {r: 0.68, g: 0.72, b: 0.77, a: 1}
+    - _LitColor: {r: 0.94, g: 0.95, b: 0.97, a: 1}
+    - _UndersideColor: {r: 0.4, g: 0.44, b: 0.5, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

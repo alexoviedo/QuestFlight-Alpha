@@ -511,14 +511,15 @@ namespace QuestFlightLab.Editor
             BoulderCloudField clouds = context.environment.boulderCloudField == null
                 ? null
                 : context.environment.boulderCloudField.GetComponent<BoulderCloudField>();
-            if (clouds == null || clouds.Profile == null || clouds.Profile.Volumes.Length < 12)
+            if (clouds == null || clouds.Profile == null || clouds.Profile.Volumes.Length < 8)
                 throw new InvalidOperationException("Authored Boulder cloud field is unavailable for QA.");
             Vector3 airportCloud = clouds.transform.TransformPoint(
                 clouds.Profile.Volumes[6].centerLocalMeters);
             Vector3 groundCloud = clouds.transform.TransformPoint(
                 clouds.Profile.Volumes[0].centerLocalMeters);
+            BoulderCloudProfile.Volume reservoirCloudVolume = clouds.Profile.Volumes[6];
             Vector3 reservoirCloud = clouds.transform.TransformPoint(
-                clouds.Profile.Volumes[11].centerLocalMeters);
+                reservoirCloudVolume.centerLocalMeters);
             // Face the parked aircraft toward the authored cloud before taking the
             // cockpit view. Looking through the airframe from the original runway
             // heading produced a headliner image instead of cloud evidence.
@@ -540,7 +541,10 @@ namespace QuestFlightLab.Editor
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "cloud_02_pattern_volume", "Spatial cumulus volume from pattern altitude", "cloud",
                 cloudPatternCamera, LookAt(cloudPatternCamera, airportCloud), 58f, ViewProfile.Environment));
-            Vector3 sunwardCamera = reservoirCloud + new Vector3(-1350f, -250f, -1050f);
+            Vector3 sunwardCamera = reservoirCloud + new Vector3(
+                -reservoirCloudVolume.radiiMeters.x * 1.35f,
+                -reservoirCloudVolume.radiiMeters.y * 1.65f,
+                -reservoirCloudVolume.radiiMeters.z * 1.25f);
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "cloud_03_sunward_structure", "Cloud structure and restrained silver lining", "cloud",
                 sunwardCamera, LookAt(sunwardCamera, reservoirCloud), 48f, ViewProfile.Environment));

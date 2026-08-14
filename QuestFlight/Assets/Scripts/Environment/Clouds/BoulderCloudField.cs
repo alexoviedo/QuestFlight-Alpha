@@ -3,9 +3,10 @@ using UnityEngine;
 namespace QuestFlightLab.Environment
 {
     /// <summary>
-    /// Runtime atmosphere response for an explicitly authored, static cloud
-    /// field. It never creates hierarchy, writes the XR camera, or allocates in
-    /// steady state. The OpenXR camera is observed only for cloud containment.
+    /// Runtime atmosphere response for one explicitly authored sparse volume.
+    /// The renderer ray-marches external cloud density; this component only
+    /// supplies the continuous exterior/interior handoff. It never constructs
+    /// hierarchy, writes the XR camera, or allocates in steady state.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class BoulderCloudField : MonoBehaviour
@@ -22,6 +23,9 @@ namespace QuestFlightLab.Environment
         [SerializeField] private bool transparentBlending;
         [SerializeField] private bool realtimeCloudShadows;
         [SerializeField] private bool perEyeBillboarding;
+        [SerializeField] private bool sparseVolumetricField;
+        [SerializeField] private bool singleContinuousField;
+        [SerializeField] private bool temporalReprojection;
 
         private Camera cachedMainCamera;
         private Color baselineFogColor;
@@ -30,6 +34,8 @@ namespace QuestFlightLab.Environment
         private float baselineSkyExposure;
         private bool baselineCaptured;
         private float currentInteriorWeight;
+        private static readonly int ExteriorOpacityId =
+            Shader.PropertyToID("_KBDUCloudExteriorOpacity");
 
         public BoulderCloudProfile Profile => profile;
         public MeshRenderer[] SectorRenderers => sectorRenderers;
@@ -43,6 +49,9 @@ namespace QuestFlightLab.Environment
         public bool TransparentBlending => transparentBlending;
         public bool RealtimeCloudShadows => realtimeCloudShadows;
         public bool PerEyeBillboarding => perEyeBillboarding;
+        public bool SparseVolumetricField => sparseVolumetricField;
+        public bool SingleContinuousField => singleContinuousField;
+        public bool TemporalReprojection => temporalReprojection;
         public float CurrentInteriorWeight => currentInteriorWeight;
 
 #if UNITY_EDITOR
@@ -70,16 +79,20 @@ namespace QuestFlightLab.Environment
                 if (filter != null && filter.sharedMesh != null)
                     authoredTriangleCount += checked((int)(filter.sharedMesh.GetIndexCount(0) / 3u));
             }
-            alphaToCoverage = true;
-            transparentBlending = false;
+            alphaToCoverage = false;
+            transparentBlending = true;
             realtimeCloudShadows = false;
             perEyeBillboarding = false;
+            sparseVolumetricField = true;
+            singleContinuousField = true;
+            temporalReprojection = false;
         }
 #endif
 
         private void OnEnable()
         {
             CaptureBaseline();
+            Shader.SetGlobalFloat(ExteriorOpacityId, 1f);
         }
 
         private void OnDisable()
@@ -106,6 +119,7 @@ namespace QuestFlightLab.Environment
                 currentInteriorWeight,
                 target,
                 Time.unscaledDeltaTime * 0.85f);
+            Shader.SetGlobalFloat(ExteriorOpacityId, 1f - currentInteriorWeight);
             ApplyAtmosphere(currentInteriorWeight);
         }
 
@@ -139,6 +153,7 @@ namespace QuestFlightLab.Environment
         {
             CaptureBaseline();
             currentInteriorWeight = EvaluateInteriorWeight(worldPosition);
+            Shader.SetGlobalFloat(ExteriorOpacityId, 1f - currentInteriorWeight);
             ApplyAtmosphere(currentInteriorWeight);
         }
 
@@ -201,6 +216,7 @@ namespace QuestFlightLab.Environment
             if (sky != null && sky.HasProperty("_Exposure"))
                 sky.SetFloat("_Exposure", baselineSkyExposure);
             currentInteriorWeight = 0f;
+            Shader.SetGlobalFloat(ExteriorOpacityId, 1f);
             baselineCaptured = false;
         }
 
@@ -227,7 +243,7 @@ namespace QuestFlightLab.Environment
                 return false;
             }
             if (authoredDrawCount != sectorRenderers.Length || authoredTriangleCount <= 0 ||
-                authoredTriangleCount > 12000)
+                authoredTriangleCount > 128)
             {
                 report = "authored draw/triangle budget is invalid";
                 return false;
@@ -243,7 +259,8 @@ namespace QuestFlightLab.Environment
                     return false;
                 }
             }
-            if (!alphaToCoverage || transparentBlending || realtimeCloudShadows || perEyeBillboarding)
+            if (alphaToCoverage || !transparentBlending || realtimeCloudShadows || perEyeBillboarding ||
+                !sparseVolumetricField || !singleContinuousField || temporalReprojection)
             {
                 report = "Quest cloud render policy flags are invalid";
                 return false;

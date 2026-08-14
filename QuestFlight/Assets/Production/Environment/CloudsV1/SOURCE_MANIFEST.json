@@ -1,63 +1,60 @@
 {
-  "schemaVersion": 1,
-  "assetFamily": "KBDU_BoulderCloudField_V1",
-  "license": "Project-owned",
-  "externalAssetsIncluded": false,
+  "schemaVersion": 2,
+  "assetFamily": "KBDU_SparseVolumetricCloudField_V4",
+  "runtimeLicense": "Project-owned deterministic derivative",
   "rawDownloadsCommitted": false,
-  "generatedAtlas": {
-    "path": "KBDU_CloudImpostorAtlasV3.png",
-    "generator": "OpenAI image generation plus deterministic project-owned RGBA matte/color-dilation compiler",
-    "generatedDate": "2026-08-10",
-    "originalRgbSha256": "a4bf9047b4427f71e902cb6aa1b5c3ff1296e29f4f5d0dd685be5ecc4548dd82",
-    "sha256": "712ee9dfc6dc1a56619d1c54111831937dbabec7a4f1daaffbc23f0ca635ab1a",
-    "derivativeTool": "tools/clouds/build_cloud_rgba_atlas.py",
-    "runtimeImport": "straight-alpha RGBA, protected 2x2 cell gutters, color-dilated and neutral-vapor-lifted transparent edge, maximum 512 square, coverage-preserving mipmaps, streaming, clamp, Android ASTC 6x6",
-    "containsThirdPartyPhotography": false
+  "weatherContract": {
+    "station": "KBDU",
+    "observationUtc": "2026-08-14T10:55:00Z",
+    "rawObservation": "METAR KBDU 141055Z AUTO 00000KT 10SM SCT018 17/16 A3013 RMK AO2",
+    "lowLayer": "SCT018, represented by the sparse volumetric field",
+    "highLayer": "SCT120 from adjacent observations, represented by the fixed Kloppenheim HDRI",
+    "weatherIsLive": false,
+    "authority": "NOAA Aviation Weather Center",
+    "url": "https://aviationweather.gov/api/data/metar?ids=KBDU&format=json"
   },
-  "runtimeTechnique": "one depth-writing alpha-to-coverage batch of center-eye-oriented stereo-stable impostors plus spatial containment-driven existing-fog modulation",
-  "profile": {
-    "id": "KBDU_SUMMER_SCATTERED_V1",
-    "airportElevationMslMeters": 1612.6,
-    "baseAglMeters": 1450.0,
-    "topAglMeters": 2550.0,
-    "coverageFraction": 0.32,
-    "weatherIsLive": false
-  },
-  "sources": [
+  "externalDensitySources": [
     {
-      "authority": "NOAA Aviation Weather Center",
-      "url": "https://aviationweather.gov/data/metar/",
-      "use": "aviation cloud-layer terminology and reporting convention"
+      "file": "cloud_01_variant_0000.vdb",
+      "sha256": "c91381781adc353f26a25d6cb6c9e254f47b89db04d2e99d289ae0e7d545945c",
+      "authority": "JangaFX EmberGen Free VDB Assets",
+      "license": "CC0",
+      "committed": false
     },
     {
-      "authority": "NOAA National Centers for Environmental Information",
-      "url": "https://www.ncei.noaa.gov/access/search/data-search/local-climatological-data",
-      "use": "official surface-observation archive source class"
-    },
-    {
-      "authority": "NSF NCAR/UCAR",
-      "url": "https://scied.ucar.edu/learning-zone/clouds/clouds-form-mountains",
-      "use": "Front Range orographic cloud morphology"
-    },
-    {
-      "authority": "NSF NCAR/UCAR",
-      "url": "https://scied.ucar.edu/image/lenticular-clouds",
-      "use": "Boulder lee-wave context; not activated in the default fair-weather preset"
-    },
-    {
-      "authority": "US National Weather Service",
-      "url": "https://www.weather.gov/source/zhu/ZHU_Training_Page/clouds/cloud_development/clouds.htm",
-      "use": "cloud-level and convective-development constraints"
+      "file": "cloud_06_variant_0000.vdb",
+      "sha256": "3c416cd2ca163e5bbc87911975806312d65b1e39a9ef83f2cd74f152efeadbee",
+      "authority": "JangaFX EmberGen Free VDB Assets",
+      "license": "CC0",
+      "committed": false
     }
   ],
-  "questPolicy": {
-    "maximumDraws": 1,
-    "maximumTriangles": 12000,
-    "maximumMaterials": 1,
-    "transparentBlendSlots": 0,
-    "realtimeCloudCameras": 0,
-    "particles": 0,
-    "perEyeBillboards": false,
-    "steadyStateManagedAllocation": "none by design"
+  "compiledDerivatives": {
+    "compiler": "tools/clouds/build_sparse_volumetric_field.py",
+    "buildManifest": "Generated/KBDU_CloudVolumeBuild.json",
+    "densitySlices": {
+      "path": "KBDU_CloudDensitySlices_RGBA.png",
+      "sha256": "a0391ded672092ff24d4dda70e28bb99f02079c9929df62d562680617ccaff1f",
+      "logicalDimensions": "64x32x64 RGBA packed as 8x8 slices",
+      "runtimeImport": "linear, bilinear, clamp, no mipmaps, Android ASTC 6x6"
+    },
+    "coverageMap": {
+      "path": "KBDU_CloudCoverage_RGBA.png",
+      "sha256": "1a42fb731d80b46e1fd2c92adfa434b60f934ae51ed784c55c7ea8ac8aaf08b4",
+      "logicalDimensions": "256x256 RGBA weather and occupancy",
+      "runtimeImport": "linear, bilinear, clamp, mipmapped, Android ASTC 6x6"
+    }
+  },
+  "runtimeTechnique": {
+    "representation": "eight bounded VDB volumes batched in one serialized mesh",
+    "rendererCount": 1,
+    "proxyTriangles": 96,
+    "materials": 1,
+    "densityIntegration": "front-to-back Beer-Lambert ray march inside only the eight local proxy bounds",
+    "stereo": "per-eye world ray; identical world-space density field",
+    "interior": "existing authored fog/sun/sky attenuation blended from the same formation bounds",
+    "extraCameras": 0,
+    "temporalReprojection": false,
+    "cloudShadows": false
   }
 }

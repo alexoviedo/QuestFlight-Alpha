@@ -1,0 +1,94 @@
+{
+  "compiler": "tools/clouds/build_sparse_volumetric_field.py",
+  "densityOutput": {
+    "path": "KBDU_CloudDensitySlices_RGBA.png",
+    "sha256": "a0391ded672092ff24d4dda70e28bb99f02079c9929df62d562680617ccaff1f"
+  },
+  "dimensions": {
+    "sliceColumns": 8,
+    "x": 64,
+    "y": 32,
+    "z": 64
+  },
+  "formations": [
+    {
+      "rx": 0.13,
+      "rz": 0.1,
+      "strength": 0.88,
+      "type": 0.15,
+      "x": 0.2,
+      "z": 0.22
+    },
+    {
+      "rx": 0.11,
+      "rz": 0.09,
+      "strength": 0.7,
+      "type": 0.32,
+      "x": 0.34,
+      "z": 0.2
+    },
+    {
+      "rx": 0.14,
+      "rz": 0.09,
+      "strength": 0.82,
+      "type": 0.55,
+      "x": 0.58,
+      "z": 0.18
+    },
+    {
+      "rx": 0.12,
+      "rz": 0.12,
+      "strength": 0.74,
+      "type": 0.72,
+      "x": 0.78,
+      "z": 0.29
+    },
+    {
+      "rx": 0.15,
+      "rz": 0.11,
+      "strength": 0.82,
+      "type": 0.25,
+      "x": 0.18,
+      "z": 0.6
+    },
+    {
+      "rx": 0.13,
+      "rz": 0.1,
+      "strength": 0.72,
+      "type": 0.48,
+      "x": 0.38,
+      "z": 0.72
+    },
+    {
+      "rx": 0.16,
+      "rz": 0.12,
+      "strength": 0.86,
+      "type": 0.66,
+      "x": 0.64,
+      "z": 0.68
+    },
+    {
+      "rx": 0.12,
+      "rz": 0.09,
+      "strength": 0.68,
+      "type": 0.82,
+      "x": 0.84,
+      "z": 0.78
+    }
+  ],
+  "rawVdbCommitted": false,
+  "schemaVersion": 1,
+  "sourceA": {
+    "path": "cloud_01_variant_0000.vdb",
+    "sha256": "c91381781adc353f26a25d6cb6c9e254f47b89db04d2e99d289ae0e7d545945c"
+  },
+  "sourceB": {
+    "path": "cloud_06_variant_0000.vdb",
+    "sha256": "3c416cd2ca163e5bbc87911975806312d65b1e39a9ef83f2cd74f152efeadbee"
+  },
+  "weatherOutput": {
+    "path": "KBDU_CloudCoverage_RGBA.png",
+    "sha256": "1a42fb731d80b46e1fd2c92adfa434b60f934ae51ed784c55c7ea8ac8aaf08b4"
+  },
+  "weatherSize": 256
+}
