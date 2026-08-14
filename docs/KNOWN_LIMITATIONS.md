@@ -262,6 +262,23 @@ The airport corridor is a reference-faithful procedural approximation rather tha
   fidelity; nine current native scenarios remain unproven pending independent
   condition-specific C172P envelopes.
 
+### Current V4 representation
+
+- The active candidate replaces cutout impostors with eight bounded,
+  VDB-derived density volumes in one draw. It provides real side/underside
+  shading and sampled fly-through extinction, but it is a sparse Quest field,
+  not a physically simulated cloud/weather system.
+- Density, placement, illumination, and coverage are authored for the observed
+  KBDU scattered-cloud condition. They do not update from live weather and do
+  not model cloud evolution, precipitation, icing, turbulence, or cloud-cast
+  terrain shadows.
+- The aggregate planning gate still inherits unrelated full-scene draw and
+  visible-triangle excesses. Meta XR Simulator live connection was blocked by
+  a Windows Security prompt, so final stereo stability must be established by
+  the exact installed Quest APK.
+- No physical Quest 72 Hz, thermal, stale/tear, or comfort acceptance is claimed
+  until measured on that immutable APK.
+
 ## Golden Eagle thermal V1
 
 - The visible bird is a rights-recorded, low-poly animated eagle derivative

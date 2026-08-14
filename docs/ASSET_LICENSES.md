@@ -622,6 +622,19 @@ are preserved in `Assets/Production/Environment/CloudsV1/SOURCE_AND_LICENSE.md`
 and `SOURCE_MANIFEST.json`. No raw download or third-party cloud photography is
 committed.
 
+### Bounded volumetric cloud field V4
+
+The V4 runtime field replaces the former cutout atlas in the active product
+dependency closure with project-authored meshes, shader code, placement data,
+coverage data, and optimized density slices. The committed density atlas is an
+offline derivative of two externally retained cloud VDB sources; raw VDB files
+and source archives are not committed. Source URLs, source hashes, derivative
+hashes, attribution/license notes, weather calibration, and compiler settings
+are recorded in
+`Assets/Production/Environment/CloudsV1/SOURCE_AND_LICENSE.md` and
+`SOURCE_MANIFEST.json`. The reproducible compiler is
+`tools/clouds/build_sparse_volumetric_field.py`.
+
 ### Golden Eagle thermal cue
 
 The bounded soaring-raptor derivative uses `Animated Eagle` by Clement Abai /

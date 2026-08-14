@@ -529,6 +529,33 @@ photorealism acceptance. Exact evidence is in
 
 See `docs/evidence/BOULDER_CLOUDS_V1_CORRECTION_2026-08-11.md`.
 
+### 2026-08-14 bounded volumetric field candidate
+
+- The former camera-facing cutouts are replaced by eight explicitly authored
+  bounded volumes submitted as one renderer, one material, one draw, 96
+  triangles, and a maximum 48-step object-space raymarch.
+- Focused cloud EditMode evidence: PASS 7/7, including one-batch topology,
+  altitude/formation contracts, shader architecture, texture-import settings,
+  bounds, and fly-through containment.
+- Four dedicated full-resolution views were captured and inspected. They show
+  shaded top/side/underside volume, no card outline or proxy-box edge, and
+  smooth inside-cloud extinction. Long-range silhouettes remain intentionally
+  sparse and require worn acceptance.
+- Aggregate Visual QA remains `FAIL_MACHINE_QA` because inherited full-scene
+  planning ceilings are exceeded (80 versus 75 draws in one approach view and
+  694,164 versus 650,000 visible triangles in the cloud-ground view). The
+  dedicated pattern, sunward, and inside-cloud views pass their machine gates.
+- Meta XR Simulator compiled its development player, but live connection was
+  blocked by a Windows Security network prompt. Status is
+  `BLOCKED_WINDOWS_SECURITY_NETWORK_PROMPT`, not a stereo pass or cloud fail.
+- Release-style Android ARM64/Vulkan/OpenXR build: PASS; 178,334,854 bytes;
+  SHA-256
+  `193b7adc00ce69ed36218ef7c70b45c07998375a44c4094af087ea5ebb51db40`.
+  The exact APK was installed and launched on the connected Quest; worn visual
+  and hardware-timing acceptance remain pending.
+
+See `docs/evidence/VOLUMETRIC_CLOUD_FIELD_V4_2026-08-14.md`.
+
 ## Native JSBSim sole authority V1
 
 - Source: `f624490584aca3a6f187fca8b81ac5a5458a306a` on
