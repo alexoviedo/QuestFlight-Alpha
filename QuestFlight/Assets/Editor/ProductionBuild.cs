@@ -19,6 +19,7 @@ namespace QuestFlight.Editor
         public static void PerformAndroidBuild()
         {
             ProductProjectConfigurator.ConfigureProject();
+            ConfigureMetaOpenXrNativePluginSelection();
             ProductIntegrityReport integrity = ProductIntegrityValidator.Validate();
             if (!integrity.passed) throw new InvalidOperationException(integrity.ToString());
 
@@ -66,6 +67,43 @@ namespace QuestFlight.Editor
             Debug.Log(
                 $"[QuestFlight][Build] SUCCESS apk={apkPath}; bytes={report.summary.totalSize}; " +
                 $"duration={report.summary.totalTime}; development={development}");
+        }
+
+        /// <summary>
+        /// Meta XR supplies the OpenXR runtime loader inside OVRPlugin. A clean
+        /// package import can otherwise stage Unity OpenXR's loader AAR as well,
+        /// leaving Gradle with two different libopenxr_loader.so files. Meta's
+        /// own OVRGradleGeneration build hook applies this same importer policy;
+        /// enforce it here so a production build does not depend on Library
+        /// cache history or editor callback ordering.
+        /// </summary>
+        private static void ConfigureMetaOpenXrNativePluginSelection()
+        {
+            bool disabledUnityLoader = false;
+            bool includedMetaLoader = false;
+            foreach (PluginImporter importer in PluginImporter.GetAllImporters())
+            {
+                string path = importer.assetPath.Replace('\\', '/');
+                if (path.StartsWith("Packages/com.unity.xr.openxr/", StringComparison.Ordinal) &&
+                    path.EndsWith("/openxr_loader.aar", StringComparison.OrdinalIgnoreCase))
+                {
+                    importer.SetIncludeInBuildDelegate(_ => false);
+                    disabledUnityLoader = true;
+                }
+                else if (path.StartsWith("Packages/com.meta.xr.sdk.core/", StringComparison.Ordinal) &&
+                         path.EndsWith("/OVRPlugin.aar", StringComparison.OrdinalIgnoreCase))
+                {
+                    importer.SetIncludeInBuildDelegate(_ => true);
+                    includedMetaLoader = true;
+                }
+            }
+
+            if (!disabledUnityLoader || !includedMetaLoader)
+                throw new InvalidOperationException(
+                    "Could not establish one deterministic Meta OpenXR native-loader source. " +
+                    $"unityLoaderDisabled={disabledUnityLoader}; metaLoaderIncluded={includedMetaLoader}");
+
+            Debug.Log("[QuestFlight][Build] Meta OVRPlugin is the sole Android OpenXR native-loader source.");
         }
 
         private static void ValidateCompiledProductShaders()
