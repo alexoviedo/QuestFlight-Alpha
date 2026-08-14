@@ -551,8 +551,9 @@ See `docs/evidence/BOULDER_CLOUDS_V1_CORRECTION_2026-08-11.md`.
 - Release-style Android ARM64/Vulkan/OpenXR build: PASS; 178,334,854 bytes;
   SHA-256
   `193b7adc00ce69ed36218ef7c70b45c07998375a44c4094af087ea5ebb51db40`.
-  The exact APK was installed and launched on the connected Quest; worn visual
-  and hardware-timing acceptance remain pending.
+  The exact APK was installed and launched on the connected Quest. Alex's worn
+  review reported that the clouds look really good and approved mainline
+  promotion. Hardware timing and thermal acceptance were not measured.
 
 See `docs/evidence/VOLUMETRIC_CLOUD_FIELD_V4_2026-08-14.md`.
 

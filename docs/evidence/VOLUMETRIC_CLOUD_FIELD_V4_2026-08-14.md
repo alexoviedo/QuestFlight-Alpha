@@ -2,12 +2,13 @@
 
 ## Outcome
 
-This candidate replaces the rejected camera-facing cloud-card presentation
+This accepted candidate replaces the rejected camera-facing cloud-card presentation
 with eight bounded VDB-derived cloud volumes. The volumes have real side and
 underside depth, shaded bases, and sampled fly-through extinction while sharing
 one mesh, one renderer, one material, and one draw. The release-style APK built,
-installed, and launched on the connected Quest 3. Worn visual acceptance is
-pending and no merge-to-main decision is recorded yet.
+installed, and launched on the connected Quest 3. Alex's worn review of that
+candidate reported that the clouds "look really good" and approved promotion
+to `main`.
 
 This is a sparse standalone-Quest representation, not literal atmospheric
 simulation or a claim of production photorealism.
@@ -132,9 +133,9 @@ cloud-rendering failure.
   `com.alexoviedo.t2.questflight`, and produced no fatal, Unity-exception,
   shader, or OpenXR error in the launch-log scan.
 
-## Pending physical gate
+## Physical visual gate
 
-The installed immutable APK still requires the requested worn review for:
+The installed immutable APK received the requested worn review for:
 
 1. several separated cloud formations rather than one repeated object;
 2. convincing side and underside depth without white outlines or box edges;
@@ -142,5 +143,7 @@ The installed immutable APK still requires the requested worn review for:
 4. stable stereo presentation without shimmer, popping, or discomfort;
 5. overall realism score and largest remaining defect.
 
-No 72 Hz timing, thermal, stale/tear, or comfort acceptance is claimed until it
-is measured on this exact APK. Main remains unchanged pending that result.
+Alex reported the clouds look really good and requested promotion to `main`.
+This establishes worn visual acceptance of the representation; it does not
+establish 72 Hz timing, thermal, stale/tear, or long-duration comfort acceptance,
+which were not measured on this exact APK.

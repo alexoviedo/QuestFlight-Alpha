@@ -276,8 +276,9 @@ The airport corridor is a reference-faithful procedural approximation rather tha
   visible-triangle excesses. Meta XR Simulator live connection was blocked by
   a Windows Security prompt, so final stereo stability must be established by
   the exact installed Quest APK.
-- No physical Quest 72 Hz, thermal, stale/tear, or comfort acceptance is claimed
-  until measured on that immutable APK.
+- The exact installed APK passed Alex's worn visual review. No physical Quest
+  72 Hz, thermal, stale/tear, or long-duration comfort acceptance is claimed
+  because those metrics were not captured.
 
 ## Golden Eagle thermal V1
 
