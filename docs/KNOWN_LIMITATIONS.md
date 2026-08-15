@@ -16,6 +16,20 @@
   planning target. Physical Quest frame, memory, thermal, transition-pop, and
   worn-fidelity acceptance remain pending.
 
+## Full-map building clipmap V1.1 transition correction
+
+- Coverage pages preserve every source roof, but ordinary small buildings omit
+  far facade walls to keep the moving 4x4 window inside the Quest triangle
+  ceiling. The exact page containing the aircraft restores complete walls.
+- Crossing a one-kilometre page boundary can still change an individual roof
+  from its exact to 1.5 m-error-bounded simplified outline. The building mass no
+  longer disappears, but physical-headset review is required to judge the
+  remaining fidelity transition.
+- The active window is symmetric around the aircraft and its far edge is still
+  finite. Orthophoto imagery remains the representation beyond that window.
+- Static planning metrics and an Android build do not establish sustained 72 Hz,
+  thermal, or memory acceptance on Quest hardware.
+
 ## Full-map aerial clipmap V1 candidate
 
 - The source is Spring/Summer 2020 visual context, not current or navigable

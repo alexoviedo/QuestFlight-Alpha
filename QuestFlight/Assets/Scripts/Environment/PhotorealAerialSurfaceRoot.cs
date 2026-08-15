@@ -120,13 +120,18 @@ namespace QuestFlightLab.Environment
             bool canopyMapOnly = canopySurfaceManifest != null &&
                 canopySurfaceManifest.text.Contains(
                     "\"type\": \"terrain_canopy_map_only_outside_hero_radius\"");
-            Require(buildings.Length > 0 && buildings.Length <= 16,
-                $"building surface must use 1-16 offline batches, found {buildings.Length}", failures);
+            int maximumSerializedBuildingRenderers = aircraftCenteredBuildings
+                ? AircraftCenteredBuildingClipmapController.SlotCount + 1
+                : 16;
+            Require(buildings.Length > 0 && buildings.Length <= maximumSerializedBuildingRenderers,
+                $"building surface must use 1-{maximumSerializedBuildingRenderers} offline renderers, found {buildings.Length}", failures);
             Require(!aircraftCenteredBuildings ||
-                    buildings.Length == AircraftCenteredBuildingClipmapController.SlotCount &&
+                    buildings.Length == AircraftCenteredBuildingClipmapController.SlotCount + 1 &&
                     buildingClipmap.pageRenderers != null &&
                     buildingClipmap.pageFilters != null &&
-                    buildingClipmap.pageRenderers.Cast<Renderer>().SequenceEqual(buildings) &&
+                    buildingClipmap.pageRenderers.Cast<Renderer>().SequenceEqual(
+                        buildings.Take(AircraftCenteredBuildingClipmapController.SlotCount)) &&
+                    buildingClipmap.detailRenderer == buildings.Last() &&
                     buildingClipmap.pageFilters.Length == AircraftCenteredBuildingClipmapController.SlotCount,
                 "aircraft-centered building clipmap does not own the fixed serialized renderer pool", failures);
             Require(canopyMapOnly ? canopy.Length == 0 : canopy.Length > 0 && canopy.Length <= 4,
@@ -180,7 +185,9 @@ namespace QuestFlightLab.Environment
                     terrainMaximumErrorOutsideDeclaredOutliersMeters <= 1.5f,
                 "near terrain error contract is exceeded", failures);
 
-            Require(bakedBuildingDrawCount == buildings.Length,
+            Require(bakedBuildingDrawCount == (aircraftCenteredBuildings
+                    ? AircraftCenteredBuildingClipmapController.SlotCount
+                    : buildings.Length),
                 "building draw inventory is stale", failures);
             Require(bakedCanopyDrawCount == canopy.Length,
                 "canopy draw inventory is stale", failures);

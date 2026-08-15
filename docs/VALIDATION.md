@@ -33,6 +33,23 @@ Run from the repository root:
 - final test/build/simulator and physical Quest status are recorded in
   `docs/evidence/FULL_MAP_BUILDING_CLIPMAP_V1_2026-08-14.md`.
 
+## Full-map building clipmap V1.1 transition correction
+
+- root cause: the V1 compiler removed 56,789 of 57,407 components at the first
+  distance threshold, and the slot-index streamer reloaded all 16 slots after a
+  one-cell move;
+- representation: all 57,407 roof components persist in coverage pages, with
+  exact full geometry for the page containing the aircraft;
+- deterministic window contract: 12/16 pages retained after a one-axis shift,
+  9/16 after a diagonal shift, prediction used only for bounded prefetch;
+- exact generated-mesh maximum: 109,166 selected building triangles, below the
+  120,000 correction ceiling; estimated complete-scene maximum is 687,585 triangles;
+- payload: 144 CRC/hash-indexed LZ4 Android region bundles, 81,434,599 bundle
+  bytes, one opaque building material, and no transparency or dither transition;
+- authoring/serialization: PASS, 57,407 components and 576 pages. Full Visual QA,
+  Android build, and physical Quest results are recorded in
+  `docs/evidence/FULL_MAP_BUILDING_CLIPMAP_V1_1_2026-08-15.md`.
+
 ## Full-map aerial clipmap V1
 
 - source/page validation: PASS 1,873/1,873 pages from City item

@@ -174,7 +174,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<LODGroup>(true), Is.Empty);
             Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
 
-            Assert.That(root.buildingRoot.GetComponentsInChildren<MeshRenderer>(true), Has.Length.EqualTo(16));
+            Assert.That(root.buildingRoot.GetComponentsInChildren<MeshRenderer>(true),
+                Has.Length.EqualTo(AircraftCenteredBuildingClipmapController.SlotCount + 1));
             Assert.That(root.buildingRoot.GetComponentsInChildren<LODGroup>(true), Is.Empty,
                 "Context buildings use fixed, closed footprint shells so their scale and silhouette cannot pop.");
 

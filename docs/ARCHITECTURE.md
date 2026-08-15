@@ -37,15 +37,20 @@ at runtime.
 
 The hierarchy exists before frame zero. OpenXR owns tracked camera motion. Calibration modifies only `UserViewCalibrationOffset`. Input produces a neutral control snapshot consumed by one `FlightDynamicsCoordinator`; its sole backend is the embedded native JSBSim 1.3.1 C172P derivative. The coordinator prepares the integrity-checked native payload, acquires one authority lease, and fails closed on preparation, initialization, ABI, non-finite-state, reset, or step failure. There is no alternate Unity flight model or runtime fallback. Environment geometry, runway, water, immutable far terrain, and presentation effects are authored assets rather than runtime reconstruction.
 
-`FullMapBuildingClipmapV1` replaces the fixed airport-distance generic-building
-subset with a serialized 4x4 pool of 16 render slots. Offline tools compile
-57,407 official City/County footprint components into 576 one-kilometre pages
-and three roof-aware LODs. The aircraft simulation frame—not the camera—selects
-and predicts the active window. Local Android AssetBundles provide immutable
-precompiled meshes; runtime code neither creates meshes nor hierarchy. One
-opaque atlas material provides meter-scaled semantic facades, roofs, and
-nontransparent window glints. The authored airport hero corridor remains a
-separate authority and is excluded from the database.
+`FullMapBuildingClipmapV1.1` replaces the original mass-deleting LOD thresholds
+with a serialized 4x4 coverage pool plus one exact aircraft-page detail slot.
+Offline tools compile all 57,407 official City/County footprint components into
+576 one-kilometre coverage/detail pairs. Every simplified roof remains in the
+coverage representation; large and landmark structures also retain far walls.
+The exact page containing the aircraft replaces—not overlaps—its coverage page.
+The aircraft simulation frame—not the camera—selects the visible window, while
+prediction prefetches only. PageKey ownership retains 12 slots on a one-axis
+shift and nine on a diagonal shift; entering pages load before one atomic commit.
+CRC-indexed LZ4 Android AssetBundles remain resident while referenced and are
+released only with `UnloadAsync(true)` after detachment. Runtime code creates
+neither meshes nor hierarchy. One opaque atlas material provides meter-scaled
+semantic facades, roofs, and nontransparent window glints. The authored airport
+hero corridor remains a separate authority and is excluded from the database.
 
 The shipping architecture is standalone Quest 3 only: Android ARM64, IL2CPP, Vulkan, OpenXR single-pass instanced stereo, ASTC, and 4x MSAA. A Windows/OpenXR process may exist only as a development host for Meta XR Simulator and is never a shipping profile or required runtime dependency. The simulator establishes stereo/tracking/input/composition behavior, not mobile GPU or thermal performance.
 

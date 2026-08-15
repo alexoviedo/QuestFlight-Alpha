@@ -141,20 +141,22 @@ namespace QuestFlight.Editor.Tests
             AircraftCenteredBuildingClipmapController buildingClipmap =
                 root.productionBuildingSurfaceLayer.GetComponent<AircraftCenteredBuildingClipmapController>();
             Assert.That(buildingClipmap, Is.Not.Null);
-            Assert.That(buildings, Has.Length.EqualTo(AircraftCenteredBuildingClipmapController.SlotCount));
+            Assert.That(buildings, Has.Length.EqualTo(AircraftCenteredBuildingClipmapController.SlotCount + 1));
             Assert.That(canopy, Has.Length.EqualTo(4));
             Assert.That(buildings.SelectMany(item => item.sharedMaterials).Distinct().Count(), Is.EqualTo(1));
-            Assert.That(buildings.Select(item => item.GetComponent<MeshFilter>()).SequenceEqual(
+            Assert.That(buildings.Take(AircraftCenteredBuildingClipmapController.SlotCount)
+                .Select(item => item.GetComponent<MeshFilter>()).SequenceEqual(
                 buildingClipmap.pageFilters), Is.True);
+            Assert.That(buildings.Last().GetComponent<MeshFilter>(), Is.EqualTo(buildingClipmap.detailFilter));
             Assert.That(buildings.All(item => item.GetComponent<MeshFilter>().sharedMesh == null), Is.True,
                 "Runtime building pages must not be serialized into the product prefab.");
             Assert.That(buildings.All(item => item.sharedMaterial.shader.name ==
                 FullMapBuildingClipmapAssetAuthoring.ShaderName), Is.True);
             Assert.That(canopy.SelectMany(item => item.sharedMaterials).Distinct().Count(), Is.EqualTo(1));
             Assert.That(buildingClipmap.bundleDirectory, Is.EqualTo("QuestFlightBuildingClipmap"));
-            Assert.That(buildingClipmap.lod0MaximumDistance, Is.EqualTo(650f));
-            Assert.That(buildingClipmap.lod1MaximumDistance, Is.EqualTo(1500f));
-            Assert.That(buildingClipmap.lodHysteresisMeters, Is.GreaterThan(0f));
+            Assert.That(buildingClipmap.authoredContractVersion,
+                Is.EqualTo(AircraftCenteredBuildingClipmapController.ContractVersion));
+            Assert.That(buildingClipmap.authoredMaximumSelectedTriangles, Is.LessThanOrEqualTo(120000));
             Assert.That(canopy.All(item => item.GetComponent<MeshFilter>().sharedMesh
                     .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color)), Is.True,
                 "Canopy batches require crown/trunk semantic colors.");
@@ -243,7 +245,7 @@ namespace QuestFlight.Editor.Tests
                 root.productionBuildingSurfaceLayer.GetComponent<AircraftCenteredBuildingClipmapController>();
             Assert.That(clipmap, Is.Not.Null);
             Assert.That(root.buildingSurfaceRenderers, Has.Length.EqualTo(
-                AircraftCenteredBuildingClipmapController.SlotCount));
+                AircraftCenteredBuildingClipmapController.SlotCount + 1));
             Assert.That(root.buildingSurfaceRenderers.All(renderer =>
                 renderer.transform.parent == root.productionBuildingSurfaceLayer &&
                 renderer.GetComponent<MeshFilter>()?.sharedMesh == null), Is.True,

@@ -241,8 +241,15 @@ namespace QuestFlightLab.Environment
             Renderer[] replacementRenderers = aerialRoot.buildingRoot == null
                 ? Array.Empty<Renderer>()
                 : aerialRoot.buildingRoot.GetComponentsInChildren<Renderer>(true);
-            Require(replacementRenderers.Any(item =>
-                    item != null && item.enabled && IsAuthoredActive(item.transform, aerialRoot.transform)),
+            bool hasCommittedReplacement = replacementRenderers.Any(item =>
+                item != null && item.enabled && IsAuthoredActive(item.transform, aerialRoot.transform));
+            AircraftCenteredBuildingClipmapController clipmap = aerialRoot.buildingRoot == null
+                ? null
+                : aerialRoot.buildingRoot.GetComponent<AircraftCenteredBuildingClipmapController>();
+            bool hasValidPendingClipmap = clipmap != null && clipmap.enabled &&
+                                          IsAuthoredActive(clipmap.transform, aerialRoot.transform) &&
+                                          clipmap.TryValidateContract(out _);
+            Require(hasCommittedReplacement || hasValidPendingClipmap,
                 "active Aerial V1 replacement building renderers are missing", failures);
 
             Renderer[] legacyRenderers = filteredV2Context == null

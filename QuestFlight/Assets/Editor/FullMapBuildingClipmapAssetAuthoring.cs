@@ -29,8 +29,10 @@ namespace QuestFlight.Editor
         public const string ScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
         public const string ShaderName = "QuestFlight/Full Map Building Clipmap";
         private const int BundleRegionCells = 2;
-        private const string MeshCompilerVersion = "semantic-mesh-compiler-v4-20260814";
-        private const int MeasuredMaximumSelectedTriangles = 45213;
+        private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
+        private const string MeshCompilerVersion = "semantic-coverage-compiler-v5-20260815";
+        private const int MeasuredMaximumSelectedTriangles = 116000;
+        private const float CoverageWallMinimumAreaSquareMeters = 1000f;
 
         [Serializable] private sealed class Database
         {
@@ -74,6 +76,20 @@ namespace QuestFlight.Editor
             public int[] lod2_q;
         }
 
+        [Serializable] private sealed class BundleIndex
+        {
+            public string contract_version;
+            public string compiler_version;
+            public BundleRecord[] bundles;
+        }
+
+        [Serializable] private sealed class BundleRecord
+        {
+            public string name;
+            public uint crc;
+            public string hash;
+        }
+
         private sealed class MeshBuilder
         {
             public readonly List<Vector3> vertices = new List<Vector3>();
@@ -95,6 +111,27 @@ namespace QuestFlight.Editor
             {
                 BuildAndroidBundlesAndAuthorProduct();
                 Debug.Log("[QuestFlight][BuildingClipmap] SUCCESS");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception error)
+            {
+                Debug.LogException(error);
+                EditorApplication.Exit(1);
+            }
+        }
+
+        public static void ReauthorSerializedProductBatch()
+        {
+            try
+            {
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                Database database = LoadDatabase();
+                Material material = EnsureMaterial();
+                AuthorEnvironment(database, material);
+                BindSceneAircraftReference();
+                AssetDatabase.SaveAssets();
+                ValidateAuthoredProduct(database);
+                Debug.Log("[QuestFlight][BuildingClipmap] REAUTHOR SUCCESS");
                 EditorApplication.Exit(0);
             }
             catch (Exception error)
@@ -129,9 +166,9 @@ namespace QuestFlight.Editor
                                                 database.page_size_meters);
             int centerRow = Mathf.FloorToInt((center.z + database.map_half_extent_meters) /
                                              database.page_size_meters);
-            int minimumColumn = Mathf.Clamp(centerColumn - 1, 0,
+            int minimumColumn = Mathf.Clamp(centerColumn - AircraftCenteredBuildingClipmapController.GridSize / 2, 0,
                 database.columns - AircraftCenteredBuildingClipmapController.GridSize);
-            int minimumRow = Mathf.Clamp(centerRow - 1, 0,
+            int minimumRow = Mathf.Clamp(centerRow - AircraftCenteredBuildingClipmapController.GridSize / 2, 0,
                 database.rows - AircraftCenteredBuildingClipmapController.GridSize);
             for (int localRow = 0; localRow < AircraftCenteredBuildingClipmapController.GridSize; localRow++)
             for (int localColumn = 0; localColumn < AircraftCenteredBuildingClipmapController.GridSize; localColumn++)
@@ -139,23 +176,23 @@ namespace QuestFlight.Editor
                 int slot = localRow * AircraftCenteredBuildingClipmapController.GridSize + localColumn;
                 int column = minimumColumn + localColumn;
                 int row = minimumRow + localRow;
-                float pageCenterX = -database.map_half_extent_meters +
-                                    (column + 0.5f) * database.page_size_meters;
-                float pageCenterZ = -database.map_half_extent_meters +
-                                    (row + 0.5f) * database.page_size_meters;
-                float distance = Vector2.Distance(new Vector2(center.x, center.z),
-                    new Vector2(pageCenterX, pageCenterZ));
-                int lod = distance <= database.lod0_max_distance_meters
-                    ? 0
-                    : distance <= database.lod1_max_distance_meters ? 1 : 2;
-                Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath(column, row, lod)) ??
+                bool detail = column == Mathf.Clamp(centerColumn, 0, database.columns - 1) &&
+                              row == Mathf.Clamp(centerRow, 0, database.rows - 1);
+                Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath(column, row, false)) ??
                     throw new FileNotFoundException(
                         "Compiled building preview mesh is missing. Run full-map building authoring first.",
-                        MeshPath(column, row, lod));
+                        MeshPath(column, row, false));
                 controller.pageFilters[slot].sharedMesh = mesh;
                 controller.pageRenderers[slot].sharedMaterial = controller.sharedBuildingMaterial;
-                controller.pageRenderers[slot].enabled = mesh.vertexCount > 0;
+                controller.pageRenderers[slot].enabled = !detail && mesh.vertexCount > 0;
             }
+            Mesh detailMesh = AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath(
+                Mathf.Clamp(centerColumn, 0, database.columns - 1),
+                Mathf.Clamp(centerRow, 0, database.rows - 1), true)) ??
+                throw new FileNotFoundException("Compiled building detail preview mesh is missing.");
+            controller.detailFilter.sharedMesh = detailMesh;
+            controller.detailRenderer.sharedMaterial = controller.sharedBuildingMaterial;
+            controller.detailRenderer.enabled = detailMesh.vertexCount > 0;
         }
 
         public static void BuildAndroidBundlesAndAuthorProduct()
@@ -180,7 +217,7 @@ namespace QuestFlight.Editor
             if (source == null) throw new FileNotFoundException("Full-map building database is missing.", DatabasePath);
             Database database = JsonUtility.FromJson<Database>(source.text);
             if (database == null || database.schema_version != 1 ||
-                !string.Equals(database.contract_version, AircraftCenteredBuildingClipmapController.ContractVersion, StringComparison.Ordinal) ||
+                !string.Equals(database.contract_version, SourceDatabaseContractVersion, StringComparison.Ordinal) ||
                 database.pages == null || database.pages.Length != database.columns * database.rows ||
                 database.runtime_window_cells != AircraftCenteredBuildingClipmapController.GridSize)
                 throw new InvalidOperationException("Full-map building database contract is invalid.");
@@ -247,10 +284,10 @@ namespace QuestFlight.Editor
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             foreach (Page page in database.pages.OrderBy(item => item.row).ThenBy(item => item.column))
             {
-                for (int lod = 0; lod < 3; lod++)
+                foreach (bool detail in new[] { false, true })
                 {
-                    Mesh mesh = BuildPageMesh(database, page, lod);
-                    AssetDatabase.CreateAsset(mesh, MeshPath(page.column, page.row, lod));
+                    Mesh mesh = BuildPageMesh(database, page, detail);
+                    AssetDatabase.CreateAsset(mesh, MeshPath(page.column, page.row, detail));
                 }
                 if ((page.row * database.columns + page.column) % 24 == 23)
                 {
@@ -263,29 +300,31 @@ namespace QuestFlight.Editor
             AssetDatabase.SaveAssets();
         }
 
-        private static Mesh BuildPageMesh(Database database, Page page, int lod)
+        private static Mesh BuildPageMesh(Database database, Page page, bool detail)
         {
             MeshBuilder builder = new MeshBuilder();
             float pageMinX = -database.map_half_extent_meters + page.column * database.page_size_meters;
             float pageMinZ = -database.map_half_extent_meters + page.row * database.page_size_meters;
             foreach (Building building in page.buildings ?? Array.Empty<Building>())
             {
-                // Beyond the page containing the aircraft, the orthophoto already carries
-                // small roofs. Geometry remains only where projected size justifies it.
-                if (lod == 2 && !building.landmark && building.area_m2 < 8000f && building.height_dm < 700) continue;
-                if (lod == 1 && !building.landmark && building.area_m2 < 2000f && building.height_dm < 450) continue;
-                int[] ring = lod == 0 ? building.lod0_q : lod == 1 ? building.lod1_q : building.lod2_q;
+                // Coverage retains every database component. Its simplified roof mass
+                // stays visible across all former LOD thresholds; only large structures
+                // retain a far wall skirt. The page containing the aircraft uses the
+                // exact source footprint and complete walls.
+                int[] ring = detail ? building.lod0_q : building.lod2_q;
                 if (ring == null || ring.Length < 6 || ring.Length % 2 != 0) continue;
                 Vector2[] polygon = new Vector2[ring.Length / 2];
                 for (int i = 0; i < polygon.Length; i++)
                     polygon[i] = new Vector2(pageMinX + ring[i * 2] * database.quantization_meters,
                         pageMinZ + ring[i * 2 + 1] * database.quantization_meters);
-                AddBuilding(builder, polygon, building);
+                AddBuilding(builder, polygon, building,
+                    detail || building.landmark || building.area_m2 >= CoverageWallMinimumAreaSquareMeters,
+                    true);
             }
 
             Mesh mesh = new Mesh
             {
-                name = $"KBDU_buildings_lod{lod}_{page.column:D3}_{page.row:D3}",
+                name = $"KBDU_buildings_{(detail ? "detail" : "coverage")}_{page.column:D3}_{page.row:D3}",
                 indexFormat = builder.vertices.Count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16
             };
             mesh.SetVertices(builder.vertices);
@@ -300,7 +339,8 @@ namespace QuestFlight.Editor
             return mesh;
         }
 
-        private static void AddBuilding(MeshBuilder builder, Vector2[] polygon, Building building)
+        private static void AddBuilding(MeshBuilder builder, Vector2[] polygon, Building building,
+            bool includeWalls, bool includeRoof)
         {
             if (SignedArea(polygon) < 0f) Array.Reverse(polygon);
             float baseY = building.base_y_dm * 0.1f;
@@ -313,6 +353,7 @@ namespace QuestFlight.Editor
             Vector4 facadeParameters = new Vector4(0f, building.class_id, seed01, 0.40f);
             Vector4 roofParameters = new Vector4(1f, building.class_id, seed01, RoofDetailScale(building));
 
+            if (includeWalls)
             for (int i = 0; i < polygon.Length; i++)
             {
                 Vector2 a2 = polygon[i];
@@ -327,6 +368,7 @@ namespace QuestFlight.Editor
                     facadeCell, facadeParameters, tint);
             }
 
+            if (!includeRoof) return;
             List<int> triangles = Triangulate(polygon);
             RoofAxes axes = RoofAxes.From(polygon);
             Vector3[] roof = polygon.Select(point => new Vector3(point.x,
@@ -527,8 +569,8 @@ namespace QuestFlight.Editor
                 List<string> addresses = new List<string>();
                 for (int row = regionRow * BundleRegionCells; row < Mathf.Min(database.rows, (regionRow + 1) * BundleRegionCells); row++)
                 for (int column = regionColumn * BundleRegionCells; column < Mathf.Min(database.columns, (regionColumn + 1) * BundleRegionCells); column++)
-                for (int lod = 0; lod < 3; lod++)
-                { paths.Add(MeshPath(column, row, lod)); addresses.Add(AssetName(column, row, lod)); }
+                foreach (bool detail in new[] { false, true })
+                { paths.Add(MeshPath(column, row, detail)); addresses.Add(AssetName(column, row, detail)); }
                 builds.Add(new AssetBundleBuild
                 {
                     assetBundleName = $"qf_buildings_r{regionRow:D2}_c{regionColumn:D2}",
@@ -538,6 +580,24 @@ namespace QuestFlight.Editor
             AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(streaming, builds.ToArray(),
                 BuildAssetBundleOptions.ChunkBasedCompression | BuildAssetBundleOptions.StrictMode, BuildTarget.Android);
             if (manifest == null) throw new InvalidOperationException("Building AssetBundle compilation failed.");
+            BundleRecord[] records = builds.Select(build =>
+            {
+                string path = Path.Combine(streaming, build.assetBundleName);
+                if (!BuildPipeline.GetCRCForAssetBundle(path, out uint crc))
+                    throw new InvalidOperationException("Unable to calculate AssetBundle CRC: " + build.assetBundleName);
+                return new BundleRecord
+                {
+                    name = build.assetBundleName,
+                    crc = crc,
+                    hash = manifest.GetAssetBundleHash(build.assetBundleName).ToString()
+                };
+            }).ToArray();
+            File.WriteAllText(Path.Combine(streaming, "bundle_index.json"), JsonUtility.ToJson(new BundleIndex
+            {
+                contract_version = AircraftCenteredBuildingClipmapController.ContractVersion,
+                compiler_version = MeshCompilerVersion,
+                bundles = records
+            }, true));
         }
 
         private static void AuthorEnvironment(Database database, Material material)
@@ -562,9 +622,6 @@ namespace QuestFlight.Editor
                 controller.mapMinimumZ = -database.map_half_extent_meters;
                 controller.bundleRegionCells = BundleRegionCells;
                 controller.predictionSeconds = database.prediction_seconds;
-                controller.lod0MaximumDistance = database.lod0_max_distance_meters;
-                controller.lod1MaximumDistance = database.lod1_max_distance_meters;
-                controller.lodHysteresisMeters = database.hysteresis_meters;
                 controller.authoredMaximumSelectedTriangles = MeasuredMaximumSelectedTriangles;
                 controller.authoredContractVersion = AircraftCenteredBuildingClipmapController.ContractVersion;
                 controller.pageFilters = new MeshFilter[AircraftCenteredBuildingClipmapController.SlotCount];
@@ -584,9 +641,21 @@ namespace QuestFlight.Editor
                     renderer.allowOcclusionWhenDynamic = true;
                     controller.pageFilters[i] = filter; controller.pageRenderers[i] = renderer;
                 }
+                GameObject detailSlot = new GameObject("BuildingDetailSlot");
+                detailSlot.transform.SetParent(rootObject.transform, false);
+                controller.detailFilter = detailSlot.AddComponent<MeshFilter>();
+                controller.detailRenderer = detailSlot.AddComponent<MeshRenderer>();
+                controller.detailRenderer.sharedMaterial = material;
+                controller.detailRenderer.shadowCastingMode = ShadowCastingMode.Off;
+                controller.detailRenderer.receiveShadows = false;
+                controller.detailRenderer.lightProbeUsage = LightProbeUsage.BlendProbes;
+                controller.detailRenderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbes;
+                controller.detailRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                controller.detailRenderer.allowOcclusionWhenDynamic = true;
                 aerial.buildingRoot = rootObject.transform;
                 surface.productionBuildingSurfaceLayer = rootObject.transform;
-                surface.buildingSurfaceRenderers = controller.pageRenderers.Cast<Renderer>().ToArray();
+                surface.buildingSurfaceRenderers = controller.pageRenderers.Cast<Renderer>()
+                    .Concat(new Renderer[] { controller.detailRenderer }).ToArray();
                 surface.buildingSurfaceManifest = LoadRequired<TextAsset>(DatabasePath);
                 surface.representedBuildingCount = database.pages.Sum(page => page.buildings?.Length ?? 0);
                 surface.nearBuildingCoveragePercent = 100f;
@@ -603,7 +672,7 @@ namespace QuestFlight.Editor
                 aerial.bakedRendererCount = budget.rendererCount;
                 aerial.bakedSelectedTriangleCount = budget.triangleCount;
                 aerial.bakedMaterialCount = budget.materialCount;
-                aerial.bakeToolVersion = "full-map-building-clipmap-v1";
+                aerial.bakeToolVersion = AircraftCenteredBuildingClipmapController.ContractVersion;
                 aerial.bakeUtc = DateTime.UtcNow.ToString("O");
                 PrefabUtility.SaveAsPrefabAsset(environment, EnvironmentPath);
             }
@@ -626,7 +695,8 @@ namespace QuestFlight.Editor
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
             AircraftCenteredBuildingClipmapController prefabController = environment.GetComponentInChildren<AircraftCenteredBuildingClipmapController>(true);
             if (prefabController == null || prefabController.pageFilters.Length != AircraftCenteredBuildingClipmapController.SlotCount ||
-                prefabController.GetComponentsInChildren<MeshRenderer>(true).Length != AircraftCenteredBuildingClipmapController.SlotCount)
+                prefabController.detailFilter == null || prefabController.detailRenderer == null ||
+                prefabController.GetComponentsInChildren<MeshRenderer>(true).Length != AircraftCenteredBuildingClipmapController.SlotCount + 1)
                 throw new InvalidOperationException("Serialized full-map building renderer pool is invalid.");
             Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             AircraftCenteredBuildingClipmapController controller = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<AircraftCenteredBuildingClipmapController>(true)).Single();
@@ -636,8 +706,9 @@ namespace QuestFlight.Editor
             Debug.Log($"[QuestFlight][BuildingClipmap] {report}; components={database.pages.Sum(page => page.buildings?.Length ?? 0):N0}; pages={database.pages.Length:N0}.");
         }
 
-        private static string MeshPath(int column, int row, int lod) => $"{GeneratedRoot}/{AssetName(column, row, lod)}.asset";
-        private static string AssetName(int column, int row, int lod) => $"KBDU_buildings_lod{lod}_{column:D3}_{row:D3}";
+        private static string MeshPath(int column, int row, bool detail) => $"{GeneratedRoot}/{AssetName(column, row, detail)}.asset";
+        private static string AssetName(int column, int row, bool detail) =>
+            $"KBDU_buildings_{(detail ? "detail" : "coverage")}_{column:D3}_{row:D3}";
         private static T LoadRequired<T>(string path) where T : UnityEngine.Object =>
             AssetDatabase.LoadAssetAtPath<T>(path) ?? throw new InvalidOperationException("Required asset missing: " + path);
         private static string Absolute(string assetPath) => Path.Combine(Directory.GetParent(Application.dataPath)?.FullName ?? throw new InvalidOperationException(), assetPath.Replace('/', Path.DirectorySeparatorChar));
