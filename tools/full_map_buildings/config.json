@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "dataset_name": "KBDU Full Map Building Clipmap V1",
+  "center_wgs84": [40.03936527, -105.22608958],
+  "origin_elevation_meters": 1611.7824,
+  "terrain_surface_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ProductionTerrainSurfaceV2.json",
+  "map_half_extent_meters": 12000.0,
+  "page_size_meters": 1000.0,
+  "authored_hero_exclusion_bounds_xz": [-800.0, -500.0, 950.0, 750.0],
+  "runtime_window_cells": 4,
+  "quantization_meters": 0.1,
+  "imagery_authority_year": 2020,
+  "city_service_url": "https://gis.bouldercolorado.gov/ags_svr3/rest/services/pw/BuildingFootprints/MapServer/0/query",
+  "city_where": "LIFECYCLE = 'Active'",
+  "city_out_fields": [
+    "OBJECTID",
+    "FACILITYID",
+    "DRCOGID",
+    "SHORTNAME",
+    "LONGNAME",
+    "BLDGTYPE",
+    "SUBTYPE",
+    "BLDGHEIGHT",
+    "GROUNDELEV",
+    "FLOORCOUNT",
+    "BUILDYEAR",
+    "CONFIDENCE",
+    "LIFECYCLE"
+  ],
+  "county_service_url": "https://services.arcgis.com/jIL9msH9OI208GCb/ArcGIS/rest/services/BoulderColorado/FeatureServer/1/query",
+  "county_where": "Status IS NULL OR Status <> 'Demolished'",
+  "county_out_fields": [
+    "OBJECTID",
+    "StructureI",
+    "StructureT",
+    "Source",
+    "Status",
+    "StatusDate",
+    "BaseElevat",
+    "Height"
+  ],
+  "height_contract": {
+    "source_unit": "feet",
+    "minimum_meters": 2.4,
+    "maximum_context_meters": 90.0,
+    "fallback_by_class_meters": {
+      "residential": 6.2,
+      "commercial": 8.5,
+      "industrial": 7.5,
+      "institutional": 10.0,
+      "utility": 5.5,
+      "generic": 6.5
+    }
+  },
+  "roof_contract": {
+    "minimum_rise_meters": 0.55,
+    "maximum_rise_meters": 4.5,
+    "residential_pitch_rise_ratio": 0.24,
+    "industrial_pitch_rise_ratio": 0.12,
+    "minimum_component_area_square_meters": 9.0,
+    "lod1_simplification_meters": 0.35,
+    "lod2_simplification_meters": 1.25
+  },
+  "runtime_contract": {
+    "prediction_seconds": 2.5,
+    "lod0_max_distance_meters": 650.0,
+    "lod1_max_distance_meters": 1500.0,
+    "hysteresis_meters": 160.0,
+    "maximum_active_renderers": 16,
+    "maximum_active_building_triangles": 46005,
+    "maximum_materials": 1,
+    "maximum_incremental_texture_bytes": 8388608
+  },
+  "landmark_name_tokens": [
+    "FOLSOM",
+    "NCAR",
+    "NOAA",
+    "JILA",
+    "GAMOW",
+    "ENGINEERING CENTER",
+    "CHAMPION CENTER",
+    "WILLIAMS VILLAGE",
+    "BOULDER COMMUNITY HEALTH",
+    "FOOTHILLS HOSPITAL",
+    "UCAR"
+  ]
+}

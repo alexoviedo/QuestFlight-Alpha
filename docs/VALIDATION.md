@@ -15,6 +15,24 @@ Run from the repository root:
 
 `validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current feature candidate captures 81 Visual-QA views; every full-resolution image requires inspection. Historical milestones below retain their original capture counts. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. The accepted-baseline hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. Historical and feature-scoped values below are evidence only.
 
+## Full-map building clipmap V1
+
+- source/database validation: PASS, 57,407 components, 576 pages, 482 nonempty,
+  28,726 pitched roofs, 155 landmark components, zero airport-hero overlap, and
+  zero footprint inflation;
+- authored runtime contract: fixed 16 renderer slots, one material, zero
+  transparent slots, 144 self-contained Android region bundles;
+- sampled maximum: 11 active building draws and 45,213 building triangles;
+- Editor Visual QA: PASS 123/105 captures; affected full-resolution views
+  inspected for wall closure, footprint alignment, roof coherence, and atlas
+  seams;
+- immediate baseline/current inspected maxima: 80/71 draws and
+  694,164/623,632 selected triangles;
+- aggregate `FAIL_MACHINE_QA` is inherited from the unchanged 38-material scene
+  inventory against the older 29-material planning target;
+- final test/build/simulator and physical Quest status are recorded in
+  `docs/evidence/FULL_MAP_BUILDING_CLIPMAP_V1_2026-08-14.md`.
+
 ## Full-map aerial clipmap V1
 
 - source/page validation: PASS 1,873/1,873 pages from City item

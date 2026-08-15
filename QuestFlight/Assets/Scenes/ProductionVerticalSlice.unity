@@ -194,10 +194,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 822970674319725037, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
     - target: {fileID: 1891347455280266108, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: m_Name
       value: ProductionWorldRoot
       objectReference: {fileID: 0}
+    - target: {fileID: 1894376184008737484, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
     - target: {fileID: 2375097098290893549, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: m_CullingMask.m_Bits
       value: 3758096383
@@ -206,6 +214,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4809968350647497175, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
     - target: {fileID: 5427240911674089533, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -214,6 +226,18 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6566777400024870912, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
+    - target: {fileID: 6720499721070603682, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
+    - target: {fileID: 6798634233208321808, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
     - target: {fileID: 7682851496159033737, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -254,6 +278,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8718138329311266972, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -264,6 +292,17 @@ Light:
   m_CorrespondingSourceObject: {fileID: 2375097098290893549, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
   m_PrefabInstance: {fileID: 1853183167}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1853183169 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2514889943979819941, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+  m_PrefabInstance: {fileID: 1853183167}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a918c54035f94e349cf14e449a77b185, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Runtime.AircraftReferenceFrameRig
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

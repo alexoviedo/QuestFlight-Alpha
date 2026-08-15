@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "generator": "tools/full_map_buildings/prepare_material_atlas.py",
+  "source": "tools/full_map_buildings/assets/FullMapBuildingAtlas_Source.png",
+  "source_sha256": "836934a5f1cbb9db62ee68e57527889713f92157ab65c2959d7a97999f9eead0",
+  "source_kind": "project-directed OpenAI image generation; no external copyrighted photograph",
+  "derivatives": {
+    "FullMapBuildingAtlas_Albedo.png": "2c6b815b2a7fb07e8a528e33059a303df41d14c2ac0d91cd9a0b4c8e15efdfd2",
+    "FullMapBuildingAtlas_Normal.png": "f785ce08edc570a6df5a02f04658b2248cd143f36733dde36fbec22bf6975d58",
+    "FullMapBuildingAtlas_MRAO.png": "40c7bedead9316acdb012b69aba7233306119af3f486da1ea5f92f7219aa0b94"
+  },
+  "atlas_grid": [
+    4,
+    4
+  ],
+  "runtime_license": "Project-authored derivative for personal QuestFlight use"
+}

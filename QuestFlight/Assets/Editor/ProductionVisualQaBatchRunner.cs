@@ -27,7 +27,7 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 100;
+        private const int RequiredShotCount = 105;
         private const int DrawCallTarget = 75;
         private const long VisibleTriangleTarget = 650000L;
         // The headset-accepted readout/lens baseline is 29 materials (artifact
@@ -333,6 +333,11 @@ namespace QuestFlightLab.Editor
             Vector3 runway26 = environment.transform.TransformPoint(environment.runway26EndLocal);
             Vector3 runwayForward = Vector3.ProjectOnPlane(runway26 - runway08, Vector3.up).normalized;
             if (runwayForward.sqrMagnitude < 0.5f) throw new InvalidOperationException("FAA runway endpoints are degenerate.");
+            AircraftCenteredBuildingClipmapController buildingClipmap =
+                environment.GetComponentInChildren<AircraftCenteredBuildingClipmapController>(true);
+            if (buildingClipmap != null)
+                QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring.LoadEditorPreviewWindow(
+                    buildingClipmap, Vector3.Lerp(runway08, runway26, 0.5f));
 
             return new VisualContext
             {
@@ -918,6 +923,8 @@ namespace QuestFlightLab.Editor
                 LookAt(facadeCamera, nearBuildingPoint + Vector3.up * 4f), 42f,
                 ViewProfile.Environment));
 
+            RenderFullMapBuildingClipmapShots(context, report, outputDir, width, height, surface);
+
             CanopyMapEvidence canopyEvidence = BuildCanopyMapEvidence(terrain, context.environment, center);
             CanopyMapSample canopy250 = canopyEvidence.SelectAtRadius(250f);
             CanopyMapSample canopyTopSample = canopyEvidence.SelectDensest(250f, 1500f);
@@ -1075,6 +1082,54 @@ namespace QuestFlightLab.Editor
             }
             SetAircraftPose(
                 context, context.originalAircraftPosition, context.originalAircraftRotation);
+        }
+
+        private static void RenderFullMapBuildingClipmapShots(
+            VisualContext context,
+            ProductionVisualQaReport report,
+            string outputDir,
+            int width,
+            int height,
+            PhotorealAerialSurfaceRoot surface)
+        {
+            AircraftCenteredBuildingClipmapController clipmap =
+                surface.productionBuildingSurfaceLayer
+                    .GetComponent<AircraftCenteredBuildingClipmapController>();
+            if (clipmap == null) return;
+            foreach ((string id, string title, Vector3 target) in new[]
+                     {
+                         ("pasv1_29_buildings_cu_downtown", "CU and downtown semantic building coverage",
+                             new Vector3(-3500f, 0f, -3500f)),
+                         ("pasv1_30_buildings_residential", "Residential footprint and pitched-roof coverage",
+                             new Vector3(-3500f, 0f, -1500f)),
+                         ("pasv1_31_buildings_north_boulder", "North Boulder aircraft-centered building coverage",
+                             new Vector3(-4500f, 0f, 1500f))
+                     })
+            {
+                QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring.LoadEditorPreviewWindow(clipmap, target);
+                Vector3 cameraPosition = target + new Vector3(360f, 235f, -420f);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    id, title, "photoreal_building", cameraPosition,
+                    LookAt(cameraPosition, target + Vector3.up * 12f), 51f,
+                    ViewProfile.Environment));
+            }
+            foreach ((string id, string title, Vector3 target) in new[]
+                     {
+                         ("pasv1_32_buildings_cu_facade", "CU semantic facade material and window scale",
+                             new Vector3(-3500f, 0f, -3500f)),
+                         ("pasv1_33_buildings_residential_low", "Residential pitched-roof and facade continuity",
+                             new Vector3(-3500f, 0f, -1500f))
+                     })
+            {
+                QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring.LoadEditorPreviewWindow(clipmap, target);
+                Vector3 cameraPosition = target + new Vector3(95f, 48f, -115f);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    id, title, "photoreal_building", cameraPosition,
+                    LookAt(cameraPosition, target + Vector3.up * 8f), 48f,
+                    ViewProfile.Environment));
+            }
+            QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring.LoadEditorPreviewWindow(
+                clipmap, context.runwayMidpoint);
         }
 
         private static void CaptureMagneticCompassHeading(

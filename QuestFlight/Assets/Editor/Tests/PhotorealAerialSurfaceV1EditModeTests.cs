@@ -86,8 +86,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(Mathf.Abs(productToSourceRow0.y), Is.GreaterThan(0.002f),
                 "The serialized runtime frame must not silently fall back to identity.");
             Assert.That(Mathf.Abs(productToSourceRow1.x), Is.GreaterThan(0.002f));
-            Material[] semanticMaterials = root.buildingSurfaceRenderers
-                .Concat(root.canopySurfaceRenderers)
+            Material[] semanticMaterials = root.canopySurfaceRenderers
                 .SelectMany(renderer => renderer.sharedMaterials)
                 .Distinct()
                 .ToArray();
@@ -139,16 +138,23 @@ namespace QuestFlight.Editor.Tests
                 environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true);
             Renderer[] buildings = root.buildingSurfaceRenderers;
             Renderer[] canopy = root.canopySurfaceRenderers;
-            Assert.That(buildings, Has.Length.InRange(1, 16));
+            AircraftCenteredBuildingClipmapController buildingClipmap =
+                root.productionBuildingSurfaceLayer.GetComponent<AircraftCenteredBuildingClipmapController>();
+            Assert.That(buildingClipmap, Is.Not.Null);
+            Assert.That(buildings, Has.Length.EqualTo(AircraftCenteredBuildingClipmapController.SlotCount));
             Assert.That(canopy, Has.Length.EqualTo(4));
             Assert.That(buildings.SelectMany(item => item.sharedMaterials).Distinct().Count(), Is.EqualTo(1));
-            Assert.That(buildings.All(item => item.GetComponent<MeshFilter>().sharedMesh
-                    .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color)), Is.True,
-                "Every active context-building batch must carry its per-footprint semantic facade stream.");
+            Assert.That(buildings.Select(item => item.GetComponent<MeshFilter>()).SequenceEqual(
+                buildingClipmap.pageFilters), Is.True);
+            Assert.That(buildings.All(item => item.GetComponent<MeshFilter>().sharedMesh == null), Is.True,
+                "Runtime building pages must not be serialized into the product prefab.");
+            Assert.That(buildings.All(item => item.sharedMaterial.shader.name ==
+                FullMapBuildingClipmapAssetAuthoring.ShaderName), Is.True);
             Assert.That(canopy.SelectMany(item => item.sharedMaterials).Distinct().Count(), Is.EqualTo(1));
-            Assert.That(buildings.All(item => item.GetComponent<MeshFilter>().sharedMesh
-                    .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord0)), Is.True,
-                "Building facades require wall-local metre UVs.");
+            Assert.That(buildingClipmap.bundleDirectory, Is.EqualTo("QuestFlightBuildingClipmap"));
+            Assert.That(buildingClipmap.lod0MaximumDistance, Is.EqualTo(650f));
+            Assert.That(buildingClipmap.lod1MaximumDistance, Is.EqualTo(1500f));
+            Assert.That(buildingClipmap.lodHysteresisMeters, Is.GreaterThan(0f));
             Assert.That(canopy.All(item => item.GetComponent<MeshFilter>().sharedMesh
                     .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color)), Is.True,
                 "Canopy batches require crown/trunk semantic colors.");
@@ -233,9 +239,15 @@ namespace QuestFlight.Editor.Tests
                 environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true);
             Assert.That(root, Is.Not.Null);
 
-            AssertProductNativeMeshes(root.buildingSurfaceRenderers,
-                root.productionBuildingSurfaceLayer,
-                PhotorealAerialSurfaceNativeMeshAuthoring.BuildingNativeRoot);
+            AircraftCenteredBuildingClipmapController clipmap =
+                root.productionBuildingSurfaceLayer.GetComponent<AircraftCenteredBuildingClipmapController>();
+            Assert.That(clipmap, Is.Not.Null);
+            Assert.That(root.buildingSurfaceRenderers, Has.Length.EqualTo(
+                AircraftCenteredBuildingClipmapController.SlotCount));
+            Assert.That(root.buildingSurfaceRenderers.All(renderer =>
+                renderer.transform.parent == root.productionBuildingSurfaceLayer &&
+                renderer.GetComponent<MeshFilter>()?.sharedMesh == null), Is.True,
+                "Aircraft-centered page meshes must be bundle-loaded, not serialized into the environment prefab.");
             AssertProductNativeMeshes(root.canopySurfaceRenderers,
                 root.productionCanopySurfaceLayer,
                 PhotorealAerialSurfaceNativeMeshAuthoring.CanopyNativeRoot);
@@ -267,7 +279,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(dependencies.Count(path =>
                     path.StartsWith(PhotorealAerialSurfaceNativeMeshAuthoring.BuildingNativeRoot + "/",
                         StringComparison.Ordinal) && path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase)),
-                Is.EqualTo(PhotorealAerialSurfaceNativeMeshAuthoring.ExpectedBuildingBatchCount));
+                Is.Zero, "The obsolete airport-centered context-building batches must leave product dependency closure.");
+            Assert.That(dependencies, Does.Contain(FullMapBuildingClipmapAssetAuthoring.DatabasePath));
+            Assert.That(dependencies, Does.Contain(FullMapBuildingClipmapAssetAuthoring.MaterialPath));
             Assert.That(dependencies.Count(path =>
                     path.StartsWith(PhotorealAerialSurfaceNativeMeshAuthoring.CanopyNativeRoot + "/",
                         StringComparison.Ordinal) &&
@@ -294,7 +308,10 @@ namespace QuestFlight.Editor.Tests
             Material[] materials = root.buildingSurfaceRenderers.Concat(root.canopySurfaceRenderers)
                 .SelectMany(renderer => renderer.sharedMaterials).Distinct().ToArray();
             Assert.That(materials, Has.Length.EqualTo(2));
-            Assert.That(materials.All(material => material.shader == shader), Is.True);
+            Material canopyMaterial = root.canopySurfaceRenderers.Select(item => item.sharedMaterial).Distinct().Single();
+            Material buildingMaterial = root.buildingSurfaceRenderers.Select(item => item.sharedMaterial).Distinct().Single();
+            Assert.That(canopyMaterial.shader, Is.SameAs(shader));
+            Assert.That(buildingMaterial.shader.name, Is.EqualTo(FullMapBuildingClipmapAssetAuthoring.ShaderName));
             Assert.That(materials.All(material => material.renderQueue <= (int)UnityEngine.Rendering.RenderQueue.Geometry),
                 Is.True);
             Assert.That(materials.All(material => material.passCount == 1), Is.True);
@@ -307,6 +324,12 @@ namespace QuestFlight.Editor.Tests
             Assert.That(shaderSource, Does.Contain("_FacadeReflectionCube"));
             Assert.That(shaderSource, Does.Not.Contain("floor(worldPosition.xz / 96.0)"),
                 "Facade identity must come from the offline semantic footprint, not world-cell randomness.");
+            string buildingShaderSource = File.ReadAllText(Path.GetFullPath(
+                Path.Combine(Application.dataPath, "..", "Assets/Shaders/FullMapBuildingClipmap.shader")));
+            Assert.That(buildingShaderSource, Does.Contain("WindowMask"));
+            Assert.That(buildingShaderSource, Does.Contain("UNITY_SAMPLE_TEXCUBE"));
+            Assert.That(buildingShaderSource, Does.Contain("ZWrite On"));
+            Assert.That(buildingShaderSource, Does.Not.Contain("Blend SrcAlpha"));
         }
 
         [Test]

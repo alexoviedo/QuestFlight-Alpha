@@ -52,6 +52,8 @@ namespace T2.QuestFlight.Editor
                 ["Assets/Scripts/Environment/GoldenEagleThermalSoaring.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Environment/ThermalFieldProfile.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Environment/AircraftCenteredAerialClipmapController.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Environment/AircraftCenteredBuildingClipmapController.cs"] = "approved_product_authored",
+                ["Assets/Shaders/FullMapBuildingClipmap.shader"] = "approved_product_authored",
                 ["Assets/Scripts/Audio/ProductionC172AudioController.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Audio/ProductionC172AudioProfile.cs"] = "approved_product_authored",
                 ["Assets/Production/Audio/C172/ProductionC172Audio.mixer"] = "approved_product_authored",

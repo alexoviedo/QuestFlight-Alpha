@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-08-14T22:00:00Z",
+  "generator": "tools/full_map_buildings/build_full_map_building_database.py",
+  "temporal_authority": "City of Boulder 2020 aerial imagery",
+  "coordinate_contract": {
+    "frame": "local AEQD east-north-up",
+    "origin_wgs84": [40.03936527, -105.22608958],
+    "origin_elevation_meters": 1611.7824,
+    "unity_mapping": "+X east, +Y up, +Z north"
+  },
+  "sources": [
+    {
+      "name": "City of Boulder Building Footprints",
+      "url": "https://gis.bouldercolorado.gov/ags_svr3/rest/services/pw/BuildingFootprints/MapServer/0",
+      "query": "LIFECYCLE = 'Active'",
+      "raw_response_sha256": "29ef93de59eb72d30a0e057eebfe6927126f3aab52a9011fc5c2e1b75d82fe83",
+      "source_records": 51258,
+      "retained_components": 42780,
+      "rights_record": "Official City of Boulder GIS service; the layer metadata contains no copyright text. Attribution retained; raw response remains outside Git."
+    },
+    {
+      "name": "Boulder County Building and Structure Footprints",
+      "url": "https://services.arcgis.com/jIL9msH9OI208GCb/ArcGIS/rest/services/BoulderColorado/FeatureServer/1",
+      "query": "Status IS NULL OR Status <> 'Demolished'",
+      "raw_response_sha256": "c14d83bf8c960731c29ca942838747cdc7e869c1612a5bca500deb85524a5855",
+      "source_records": 23847,
+      "retained_components": 14627,
+      "rights_record": "Official Boulder County Land Use GIS service; service copyrightText is 'Boulder County Land Use'. Attribution retained; raw response remains outside Git."
+    },
+    {
+      "name": "KBDU Production Terrain Surface V2",
+      "path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ProductionTerrainSurfaceV2.json",
+      "sha256": "0d821e47766bd355e145b59f45cb56fcb3e67e709e72d054432fc8680a3ce7b1",
+      "rights_record": "Project derivative of previously recorded public-domain USGS 3DEP terrain data."
+    }
+  ],
+  "selection": {
+    "compiled_components": 57407,
+    "city_components": 42780,
+    "county_components": 14627,
+    "post_2020_excluded": 4728,
+    "outside_map_excluded": 2091,
+    "small_components_excluded": 3707,
+    "authored_airport_hero_components_excluded": 356,
+    "overlap_components_excluded": 6832,
+    "landmark_components": 155,
+    "pitched_roof_components": 28726,
+    "pages": 576,
+    "nonempty_pages": 482
+  },
+  "derivative": {
+    "path": "QuestFlight/Assets/Production/Environment/FullMapBuildingsV1/KBDU_FullMapBuildingDatabaseV1.json",
+    "sha256": "2298f3c861a6fcf46d0ef9f96860d60cd4c5c629e3bfa8d2da178dbfe68c0f46",
+    "license_boundary": "Compact project-authored procedural derivative for QuestFlight; underlying source attributions and terms remain applicable."
+  },
+  "raw_data_policy": "Raw service responses and caches are external and uncommitted."
+}

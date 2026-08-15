@@ -1,0 +1,654 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using QuestFlightLab.Environment;
+using QuestFlightLab.Runtime;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
+
+namespace QuestFlight.Editor
+{
+    /// <summary>Offline compiler for full-map semantic building pages and their fixed product owner.</summary>
+    public static class FullMapBuildingClipmapAssetAuthoring
+    {
+        public const string Root = "Assets/Production/Environment/FullMapBuildingsV1";
+        public const string DatabasePath = Root + "/KBDU_FullMapBuildingDatabaseV1.json";
+        public const string MaterialPath = Root + "/Materials/FullMapBuildingClipmap.mat";
+        public const string AlbedoPath = Root + "/Materials/FullMapBuildingAtlas_Albedo.png";
+        public const string NormalPath = Root + "/Materials/FullMapBuildingAtlas_Normal.png";
+        public const string MraoPath = Root + "/Materials/FullMapBuildingAtlas_MRAO.png";
+        public const string GeneratedRoot = "Assets/Generated/FullMapBuildingClipmap";
+        public const string StreamingRoot = "Assets/StreamingAssets/QuestFlightBuildingClipmap";
+        public const string EnvironmentPath = "Assets/Production/Environment/ProductionEnvironmentRoot.prefab";
+        public const string AircraftPath = "Assets/Production/Prefabs/ProductionC172AircraftRig.prefab";
+        public const string ScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
+        public const string ShaderName = "QuestFlight/Full Map Building Clipmap";
+        private const int BundleRegionCells = 2;
+        private const string MeshCompilerVersion = "semantic-mesh-compiler-v4-20260814";
+        private const int MeasuredMaximumSelectedTriangles = 45213;
+
+        [Serializable] private sealed class Database
+        {
+            public int schema_version;
+            public string contract_version;
+            public float map_half_extent_meters;
+            public float page_size_meters;
+            public int columns;
+            public int rows;
+            public float quantization_meters;
+            public int runtime_window_cells;
+            public float prediction_seconds;
+            public float lod0_max_distance_meters;
+            public float lod1_max_distance_meters;
+            public float hysteresis_meters;
+            public Page[] pages;
+        }
+
+        [Serializable] private sealed class Page
+        {
+            public int column;
+            public int row;
+            public Building[] buildings;
+        }
+
+        [Serializable] private sealed class Building
+        {
+            public int id;
+            public string source_id;
+            public int component;
+            public int class_id;
+            public int roof_id;
+            public int height_dm;
+            public int roof_rise_dm;
+            public int base_y_dm;
+            public float area_m2;
+            public long seed;
+            public bool landmark;
+            public int[] lod0_q;
+            public int[] lod1_q;
+            public int[] lod2_q;
+        }
+
+        private sealed class MeshBuilder
+        {
+            public readonly List<Vector3> vertices = new List<Vector3>();
+            public readonly List<Vector3> normals = new List<Vector3>();
+            public readonly List<Vector4> tangents = new List<Vector4>();
+            public readonly List<Vector2> detailUvs = new List<Vector2>();
+            public readonly List<Vector2> atlasCells = new List<Vector2>();
+            public readonly List<Vector4> parameters = new List<Vector4>();
+            public readonly List<Color32> colors = new List<Color32>();
+            public readonly List<int> indices = new List<int>();
+        }
+
+        [MenuItem("QuestFlight/Product/Author Full Map Building Clipmap")]
+        public static void RunInteractive() => BuildAndroidBundlesAndAuthorProduct();
+
+        public static void BuildAndroidBundlesAndAuthorProductBatch()
+        {
+            try
+            {
+                BuildAndroidBundlesAndAuthorProduct();
+                Debug.Log("[QuestFlight][BuildingClipmap] SUCCESS");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception error)
+            {
+                Debug.LogException(error);
+                EditorApplication.Exit(1);
+            }
+        }
+
+        public static void EnsureBuildArtifacts()
+        {
+            string stampPath = Absolute(StreamingRoot + "/build_stamp.txt");
+            string expected = SourceHash();
+            if (File.Exists(stampPath) && string.Equals(File.ReadAllText(stampPath).Trim(), expected, StringComparison.Ordinal) &&
+                Directory.EnumerateFiles(Absolute(StreamingRoot), "qf_buildings_*", SearchOption.TopDirectoryOnly).Any())
+                return;
+            BuildAndroidBundlesAndAuthorProduct();
+        }
+
+        /// <summary>
+        /// Assigns already compiled page meshes to the serialized pool for deterministic
+        /// Editor-only captures. The product prefab remains mesh-free; Android loads the
+        /// same addresses from bundles through the runtime controller.
+        /// </summary>
+        public static void LoadEditorPreviewWindow(
+            AircraftCenteredBuildingClipmapController controller,
+            Vector3 center)
+        {
+            if (controller == null) throw new ArgumentNullException(nameof(controller));
+            Database database = LoadDatabase();
+            int centerColumn = Mathf.FloorToInt((center.x + database.map_half_extent_meters) /
+                                                database.page_size_meters);
+            int centerRow = Mathf.FloorToInt((center.z + database.map_half_extent_meters) /
+                                             database.page_size_meters);
+            int minimumColumn = Mathf.Clamp(centerColumn - 1, 0,
+                database.columns - AircraftCenteredBuildingClipmapController.GridSize);
+            int minimumRow = Mathf.Clamp(centerRow - 1, 0,
+                database.rows - AircraftCenteredBuildingClipmapController.GridSize);
+            for (int localRow = 0; localRow < AircraftCenteredBuildingClipmapController.GridSize; localRow++)
+            for (int localColumn = 0; localColumn < AircraftCenteredBuildingClipmapController.GridSize; localColumn++)
+            {
+                int slot = localRow * AircraftCenteredBuildingClipmapController.GridSize + localColumn;
+                int column = minimumColumn + localColumn;
+                int row = minimumRow + localRow;
+                float pageCenterX = -database.map_half_extent_meters +
+                                    (column + 0.5f) * database.page_size_meters;
+                float pageCenterZ = -database.map_half_extent_meters +
+                                    (row + 0.5f) * database.page_size_meters;
+                float distance = Vector2.Distance(new Vector2(center.x, center.z),
+                    new Vector2(pageCenterX, pageCenterZ));
+                int lod = distance <= database.lod0_max_distance_meters
+                    ? 0
+                    : distance <= database.lod1_max_distance_meters ? 1 : 2;
+                Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath(column, row, lod)) ??
+                    throw new FileNotFoundException(
+                        "Compiled building preview mesh is missing. Run full-map building authoring first.",
+                        MeshPath(column, row, lod));
+                controller.pageFilters[slot].sharedMesh = mesh;
+                controller.pageRenderers[slot].sharedMaterial = controller.sharedBuildingMaterial;
+                controller.pageRenderers[slot].enabled = mesh.vertexCount > 0;
+            }
+        }
+
+        public static void BuildAndroidBundlesAndAuthorProduct()
+        {
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            Database database = LoadDatabase();
+            ConfigureTextures();
+            Material material = EnsureMaterial();
+            RebuildMeshAssets(database);
+            BuildBundles(database);
+            AuthorEnvironment(database, material);
+            BindSceneAircraftReference();
+            File.WriteAllText(Absolute(StreamingRoot + "/build_stamp.txt"), SourceHash());
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            AssetDatabase.SaveAssets();
+            ValidateAuthoredProduct(database);
+        }
+
+        private static Database LoadDatabase()
+        {
+            TextAsset source = AssetDatabase.LoadAssetAtPath<TextAsset>(DatabasePath);
+            if (source == null) throw new FileNotFoundException("Full-map building database is missing.", DatabasePath);
+            Database database = JsonUtility.FromJson<Database>(source.text);
+            if (database == null || database.schema_version != 1 ||
+                !string.Equals(database.contract_version, AircraftCenteredBuildingClipmapController.ContractVersion, StringComparison.Ordinal) ||
+                database.pages == null || database.pages.Length != database.columns * database.rows ||
+                database.runtime_window_cells != AircraftCenteredBuildingClipmapController.GridSize)
+                throw new InvalidOperationException("Full-map building database contract is invalid.");
+            return database;
+        }
+
+        private static void ConfigureTextures()
+        {
+            ConfigureTexture(AlbedoPath, true, TextureImporterType.Default, TextureImporterFormat.ASTC_6x6);
+            ConfigureTexture(NormalPath, false, TextureImporterType.NormalMap, TextureImporterFormat.ASTC_6x6);
+            ConfigureTexture(MraoPath, false, TextureImporterType.Default, TextureImporterFormat.ASTC_6x6);
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+        }
+
+        private static void ConfigureTexture(string path, bool sRgb, TextureImporterType type, TextureImporterFormat format)
+        {
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter ??
+                throw new InvalidOperationException("Texture importer is unavailable: " + path);
+            importer.textureType = type;
+            importer.sRGBTexture = sRgb;
+            importer.mipmapEnabled = true;
+            importer.streamingMipmaps = false;
+            importer.wrapMode = TextureWrapMode.Repeat;
+            importer.filterMode = FilterMode.Trilinear;
+            importer.anisoLevel = 4;
+            importer.alphaSource = TextureImporterAlphaSource.None;
+            importer.npotScale = TextureImporterNPOTScale.None;
+            TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
+            android.name = "Android";
+            android.overridden = true;
+            android.maxTextureSize = 1024;
+            android.format = format;
+            android.compressionQuality = 100;
+            importer.SetPlatformTextureSettings(android);
+            AssetDatabase.WriteImportSettingsIfDirty(path);
+        }
+
+        private static Material EnsureMaterial()
+        {
+            Shader shader = Shader.Find(ShaderName) ?? throw new InvalidOperationException("Building shader is missing.");
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
+            if (material == null)
+            {
+                material = new Material(shader) { name = "FullMapBuildingClipmap" };
+                AssetDatabase.CreateAsset(material, MaterialPath);
+            }
+            material.shader = shader;
+            material.SetTexture("_MainTex", LoadRequired<Texture2D>(AlbedoPath));
+            material.SetTexture("_BumpMap", LoadRequired<Texture2D>(NormalPath));
+            material.SetTexture("_MRAO", LoadRequired<Texture2D>(MraoPath));
+            material.SetFloat("_NormalScale", 0.45f);
+            material.SetFloat("_WindowReflection", 0.58f);
+            material.SetFloat("_AmbientLift", 0.18f);
+            material.enableInstancing = true;
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        private static void RebuildMeshAssets(Database database)
+        {
+            string absolute = Absolute(GeneratedRoot);
+            if (Directory.Exists(absolute)) Directory.Delete(absolute, true);
+            Directory.CreateDirectory(absolute);
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            foreach (Page page in database.pages.OrderBy(item => item.row).ThenBy(item => item.column))
+            {
+                for (int lod = 0; lod < 3; lod++)
+                {
+                    Mesh mesh = BuildPageMesh(database, page, lod);
+                    AssetDatabase.CreateAsset(mesh, MeshPath(page.column, page.row, lod));
+                }
+                if ((page.row * database.columns + page.column) % 24 == 23)
+                {
+                    AssetDatabase.SaveAssets();
+                    EditorUtility.DisplayProgressBar("Full-map building clipmap", $"Compiled row {page.row + 1}/{database.rows}",
+                        (page.row + 1f) / database.rows);
+                }
+            }
+            EditorUtility.ClearProgressBar();
+            AssetDatabase.SaveAssets();
+        }
+
+        private static Mesh BuildPageMesh(Database database, Page page, int lod)
+        {
+            MeshBuilder builder = new MeshBuilder();
+            float pageMinX = -database.map_half_extent_meters + page.column * database.page_size_meters;
+            float pageMinZ = -database.map_half_extent_meters + page.row * database.page_size_meters;
+            foreach (Building building in page.buildings ?? Array.Empty<Building>())
+            {
+                // Beyond the page containing the aircraft, the orthophoto already carries
+                // small roofs. Geometry remains only where projected size justifies it.
+                if (lod == 2 && !building.landmark && building.area_m2 < 8000f && building.height_dm < 700) continue;
+                if (lod == 1 && !building.landmark && building.area_m2 < 2000f && building.height_dm < 450) continue;
+                int[] ring = lod == 0 ? building.lod0_q : lod == 1 ? building.lod1_q : building.lod2_q;
+                if (ring == null || ring.Length < 6 || ring.Length % 2 != 0) continue;
+                Vector2[] polygon = new Vector2[ring.Length / 2];
+                for (int i = 0; i < polygon.Length; i++)
+                    polygon[i] = new Vector2(pageMinX + ring[i * 2] * database.quantization_meters,
+                        pageMinZ + ring[i * 2 + 1] * database.quantization_meters);
+                AddBuilding(builder, polygon, building);
+            }
+
+            Mesh mesh = new Mesh
+            {
+                name = $"KBDU_buildings_lod{lod}_{page.column:D3}_{page.row:D3}",
+                indexFormat = builder.vertices.Count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16
+            };
+            mesh.SetVertices(builder.vertices);
+            mesh.SetNormals(builder.normals);
+            mesh.SetTangents(builder.tangents);
+            mesh.SetUVs(0, builder.detailUvs);
+            mesh.SetUVs(1, builder.atlasCells);
+            mesh.SetUVs(2, builder.parameters);
+            mesh.SetColors(builder.colors);
+            mesh.SetIndices(builder.indices, MeshTopology.Triangles, 0, true);
+            mesh.UploadMeshData(false);
+            return mesh;
+        }
+
+        private static void AddBuilding(MeshBuilder builder, Vector2[] polygon, Building building)
+        {
+            if (SignedArea(polygon) < 0f) Array.Reverse(polygon);
+            float baseY = building.base_y_dm * 0.1f;
+            float wallTop = baseY + building.height_dm * 0.1f;
+            float roofRise = building.roof_rise_dm * 0.1f;
+            Color32 tint = BuildingTint(building);
+            Vector2 facadeCell = FacadeCell(building);
+            Vector2 roofCell = RoofCell(building);
+            float seed01 = (building.seed & 0xffff) / 65535f;
+            Vector4 facadeParameters = new Vector4(0f, building.class_id, seed01, 0.40f);
+            Vector4 roofParameters = new Vector4(1f, building.class_id, seed01, RoofDetailScale(building));
+
+            for (int i = 0; i < polygon.Length; i++)
+            {
+                Vector2 a2 = polygon[i];
+                Vector2 b2 = polygon[(i + 1) % polygon.Length];
+                Vector3 a = new Vector3(a2.x, baseY, a2.y);
+                Vector3 b = new Vector3(b2.x, baseY, b2.y);
+                Vector3 c = new Vector3(b2.x, wallTop, b2.y);
+                Vector3 d = new Vector3(a2.x, wallTop, a2.y);
+                float length = Vector2.Distance(a2, b2);
+                AddQuad(builder, a, b, c, d,
+                    new Vector2(0f, 0f), new Vector2(length, 0f), new Vector2(length, wallTop - baseY), new Vector2(0f, wallTop - baseY),
+                    facadeCell, facadeParameters, tint);
+            }
+
+            List<int> triangles = Triangulate(polygon);
+            RoofAxes axes = RoofAxes.From(polygon);
+            Vector3[] roof = polygon.Select(point => new Vector3(point.x,
+                wallTop + RoofHeight(point, axes, building.roof_id, roofRise), point.y)).ToArray();
+            for (int i = 0; i + 2 < triangles.Count; i += 3)
+            {
+                int a = triangles[i];
+                int b = triangles[i + 1];
+                int c = triangles[i + 2];
+                // Polygon triangulation is CCW in X/Z; reverse for an upward Unity normal.
+                AddTriangle(builder, roof[a], roof[c], roof[b], roofCell, roofParameters, tint, true);
+            }
+        }
+
+        private static void AddQuad(MeshBuilder builder, Vector3 a, Vector3 b, Vector3 c, Vector3 d,
+            Vector2 uvA, Vector2 uvB, Vector2 uvC, Vector2 uvD, Vector2 atlasCell, Vector4 parameters, Color32 tint)
+        {
+            // Source footprint rings are CCW in X/Z. Their interior is left of
+            // each directed edge, so the exterior wall normal is the reverse of
+            // Cross(edge, up). The old winding faced inward and Cull Back made
+            // exterior walls disappear from ordinary flight views.
+            Vector3 normal = Vector3.Cross(c - a, b - a).normalized;
+            Vector3 tangent3 = (b - a).normalized;
+            Vector4 tangent = new Vector4(tangent3.x, tangent3.y, tangent3.z, -1f);
+            int start = builder.vertices.Count;
+            foreach ((Vector3 point, Vector2 uv) in new[] { (a, uvA), (b, uvB), (c, uvC), (d, uvD) })
+            {
+                builder.vertices.Add(point); builder.normals.Add(normal); builder.tangents.Add(tangent);
+                builder.detailUvs.Add(uv); builder.atlasCells.Add(atlasCell); builder.parameters.Add(parameters); builder.colors.Add(tint);
+            }
+            builder.indices.Add(start); builder.indices.Add(start + 2); builder.indices.Add(start + 1);
+            builder.indices.Add(start); builder.indices.Add(start + 3); builder.indices.Add(start + 2);
+        }
+
+        private static void AddTriangle(MeshBuilder builder, Vector3 a, Vector3 b, Vector3 c,
+            Vector2 atlasCell, Vector4 parameters, Color32 tint, bool roof)
+        {
+            Vector3 normal = Vector3.Cross(b - a, c - a).normalized;
+            Vector3 tangent3 = Vector3.ProjectOnPlane(Vector3.right, normal).normalized;
+            if (tangent3.sqrMagnitude < 0.1f) tangent3 = Vector3.ProjectOnPlane(Vector3.forward, normal).normalized;
+            Vector4 tangent = new Vector4(tangent3.x, tangent3.y, tangent3.z, 1f);
+            int start = builder.vertices.Count;
+            foreach (Vector3 point in new[] { a, b, c })
+            {
+                builder.vertices.Add(point); builder.normals.Add(normal); builder.tangents.Add(tangent);
+                builder.detailUvs.Add(roof ? new Vector2(point.x, point.z) : new Vector2(point.x, point.y));
+                builder.atlasCells.Add(atlasCell); builder.parameters.Add(parameters); builder.colors.Add(tint);
+            }
+            builder.indices.Add(start); builder.indices.Add(start + 1); builder.indices.Add(start + 2);
+        }
+
+        private static List<int> Triangulate(Vector2[] polygon)
+        {
+            List<int> remaining = Enumerable.Range(0, polygon.Length).ToList();
+            List<int> result = new List<int>((polygon.Length - 2) * 3);
+            int guard = polygon.Length * polygon.Length;
+            while (remaining.Count > 3 && guard-- > 0)
+            {
+                bool clipped = false;
+                for (int i = 0; i < remaining.Count; i++)
+                {
+                    int previous = remaining[(i - 1 + remaining.Count) % remaining.Count];
+                    int current = remaining[i];
+                    int next = remaining[(i + 1) % remaining.Count];
+                    if (Cross(polygon[previous], polygon[current], polygon[next]) <= 0.0001f) continue;
+                    bool contains = false;
+                    foreach (int candidate in remaining)
+                    {
+                        if (candidate == previous || candidate == current || candidate == next) continue;
+                        if (PointInTriangle(polygon[candidate], polygon[previous], polygon[current], polygon[next]))
+                        { contains = true; break; }
+                    }
+                    if (contains) continue;
+                    result.Add(previous); result.Add(current); result.Add(next);
+                    remaining.RemoveAt(i); clipped = true; break;
+                }
+                if (!clipped) break;
+            }
+            if (remaining.Count == 3)
+            { result.Add(remaining[0]); result.Add(remaining[1]); result.Add(remaining[2]); }
+            if (result.Count == 0 && polygon.Length >= 3)
+                for (int i = 1; i < polygon.Length - 1; i++) { result.Add(0); result.Add(i); result.Add(i + 1); }
+            return result;
+        }
+
+        private static float SignedArea(Vector2[] polygon)
+        {
+            float area = 0f;
+            for (int i = 0; i < polygon.Length; i++)
+            { Vector2 a = polygon[i], b = polygon[(i + 1) % polygon.Length]; area += a.x * b.y - b.x * a.y; }
+            return area * 0.5f;
+        }
+
+        private static float Cross(Vector2 a, Vector2 b, Vector2 c) =>
+            (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+
+        private static bool PointInTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
+        {
+            float ab = Cross(a, b, p), bc = Cross(b, c, p), ca = Cross(c, a, p);
+            return ab >= -0.0001f && bc >= -0.0001f && ca >= -0.0001f;
+        }
+
+        private readonly struct RoofAxes
+        {
+            public readonly Vector2 center, major, minor;
+            public readonly float majorExtent, minorExtent;
+            private RoofAxes(Vector2 center, Vector2 major, Vector2 minor, float majorExtent, float minorExtent)
+            { this.center = center; this.major = major; this.minor = minor; this.majorExtent = majorExtent; this.minorExtent = minorExtent; }
+            public static RoofAxes From(Vector2[] polygon)
+            {
+                Vector2 center = polygon.Aggregate(Vector2.zero, (sum, point) => sum + point) / polygon.Length;
+                float xx = 0f, zz = 0f, xz = 0f;
+                foreach (Vector2 point in polygon)
+                { Vector2 d = point - center; xx += d.x * d.x; zz += d.y * d.y; xz += d.x * d.y; }
+                float angle = 0.5f * Mathf.Atan2(2f * xz, xx - zz);
+                Vector2 major = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                Vector2 minor = new Vector2(-major.y, major.x);
+                float majorExtent = polygon.Max(p => Mathf.Abs(Vector2.Dot(p - center, major)));
+                float minorExtent = polygon.Max(p => Mathf.Abs(Vector2.Dot(p - center, minor)));
+                if (minorExtent > majorExtent) (major, minor, majorExtent, minorExtent) = (minor, major, minorExtent, majorExtent);
+                return new RoofAxes(center, major, minor, Mathf.Max(majorExtent, 0.1f), Mathf.Max(minorExtent, 0.1f));
+            }
+        }
+
+        private static float RoofHeight(Vector2 point, RoofAxes axes, int roofId, float rise)
+        {
+            if (roofId == 0 || rise <= 0f) return 0f;
+            Vector2 delta = point - axes.center;
+            float minor = 1f - Mathf.Clamp01(Mathf.Abs(Vector2.Dot(delta, axes.minor)) / axes.minorExtent);
+            if (roofId == 1) return rise * minor;
+            float major = 1f - Mathf.Clamp01(Mathf.Abs(Vector2.Dot(delta, axes.major)) / axes.majorExtent);
+            return rise * Mathf.Min(minor, major);
+        }
+
+        private static Vector2 FacadeCell(Building building)
+        {
+            int seed = (int)(building.seed & 0x7fffffff);
+            return building.class_id switch
+            {
+                0 => new Vector2(seed % 4, 0),
+                1 => new Vector2(seed % 2, 1),
+                2 => new Vector2(2 + seed % 2, 1),
+                3 => seed % 3 == 0 ? new Vector2(2, 3) : new Vector2(seed % 2, seed % 2),
+                4 => new Vector2(3, 3),
+                _ => new Vector2(seed % 4, 0)
+            };
+        }
+
+        private static Vector2 RoofCell(Building building)
+        {
+            int seed = (int)(building.seed & 0x7fffffff);
+            return building.class_id switch
+            {
+                // Residential and small generic structures use restrained shingle
+                // variants; commercial/institutional roofs use membrane; industrial
+                // and utility structures use standing-seam metal. This prevents the
+                // former random assignment of shingles to warehouses and metal to homes.
+                0 => new Vector2(seed % 2 == 0 ? 0 : 2, 2),
+                1 => new Vector2(1, 2),
+                2 => new Vector2(3, 2),
+                3 => new Vector2(1, 2),
+                4 => new Vector2(3, 2),
+                _ => new Vector2(seed % 3 == 0 ? 0 : 1, 2)
+            };
+        }
+
+        private static float RoofDetailScale(Building building)
+        {
+            return building.class_id switch
+            {
+                0 => 0.38f, // asphalt shingles: small modules
+                1 => 0.075f, // broad commercial membrane fields
+                2 => 0.14f, // corrugated/standing-seam industrial roofs
+                3 => 0.075f,
+                4 => 0.14f,
+                _ => 0.11f
+            };
+        }
+
+        private static Color32 BuildingTint(Building building)
+        {
+            int seed = (int)(building.seed & 0x7fffffff);
+            float variation = 0.93f + (seed % 13) / 130f;
+            float warmth = ((seed / 13) % 7 - 3) * 0.008f;
+            return new Color(variation + warmth, variation, variation - warmth, 1f);
+        }
+
+        private static void BuildBundles(Database database)
+        {
+            string streaming = Absolute(StreamingRoot);
+            if (Directory.Exists(streaming)) Directory.Delete(streaming, true);
+            Directory.CreateDirectory(streaming);
+            List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
+            for (int regionRow = 0; regionRow < Mathf.CeilToInt(database.rows / (float)BundleRegionCells); regionRow++)
+            for (int regionColumn = 0; regionColumn < Mathf.CeilToInt(database.columns / (float)BundleRegionCells); regionColumn++)
+            {
+                List<string> paths = new List<string>();
+                List<string> addresses = new List<string>();
+                for (int row = regionRow * BundleRegionCells; row < Mathf.Min(database.rows, (regionRow + 1) * BundleRegionCells); row++)
+                for (int column = regionColumn * BundleRegionCells; column < Mathf.Min(database.columns, (regionColumn + 1) * BundleRegionCells); column++)
+                for (int lod = 0; lod < 3; lod++)
+                { paths.Add(MeshPath(column, row, lod)); addresses.Add(AssetName(column, row, lod)); }
+                builds.Add(new AssetBundleBuild
+                {
+                    assetBundleName = $"qf_buildings_r{regionRow:D2}_c{regionColumn:D2}",
+                    assetNames = paths.ToArray(), addressableNames = addresses.ToArray()
+                });
+            }
+            AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(streaming, builds.ToArray(),
+                BuildAssetBundleOptions.ChunkBasedCompression | BuildAssetBundleOptions.StrictMode, BuildTarget.Android);
+            if (manifest == null) throw new InvalidOperationException("Building AssetBundle compilation failed.");
+        }
+
+        private static void AuthorEnvironment(Database database, Material material)
+        {
+            GameObject environment = PrefabUtility.LoadPrefabContents(EnvironmentPath);
+            try
+            {
+                ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>() ??
+                    throw new InvalidOperationException("Production environment contract is missing.");
+                AerialSceneryRoot aerial = environment.GetComponentInChildren<AerialSceneryRoot>(true) ??
+                    throw new InvalidOperationException("Aerial scenery root is missing.");
+                PhotorealAerialSurfaceRoot surface = environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true) ??
+                    throw new InvalidOperationException("Photoreal aerial-surface contract is missing.");
+                if (aerial.buildingRoot != null) UnityEngine.Object.DestroyImmediate(aerial.buildingRoot.gameObject);
+                GameObject rootObject = new GameObject(PhotorealAerialSurfaceRoot.BuildingLayerName);
+                rootObject.transform.SetParent(aerial.transform, false);
+                AircraftCenteredBuildingClipmapController controller = rootObject.AddComponent<AircraftCenteredBuildingClipmapController>();
+                controller.sharedBuildingMaterial = material;
+                controller.columns = database.columns; controller.rows = database.rows;
+                controller.pageSizeMeters = database.page_size_meters;
+                controller.mapMinimumX = -database.map_half_extent_meters;
+                controller.mapMinimumZ = -database.map_half_extent_meters;
+                controller.bundleRegionCells = BundleRegionCells;
+                controller.predictionSeconds = database.prediction_seconds;
+                controller.lod0MaximumDistance = database.lod0_max_distance_meters;
+                controller.lod1MaximumDistance = database.lod1_max_distance_meters;
+                controller.lodHysteresisMeters = database.hysteresis_meters;
+                controller.authoredMaximumSelectedTriangles = MeasuredMaximumSelectedTriangles;
+                controller.authoredContractVersion = AircraftCenteredBuildingClipmapController.ContractVersion;
+                controller.pageFilters = new MeshFilter[AircraftCenteredBuildingClipmapController.SlotCount];
+                controller.pageRenderers = new MeshRenderer[AircraftCenteredBuildingClipmapController.SlotCount];
+                for (int i = 0; i < AircraftCenteredBuildingClipmapController.SlotCount; i++)
+                {
+                    GameObject slot = new GameObject($"BuildingPageSlot_{i:D2}");
+                    slot.transform.SetParent(rootObject.transform, false);
+                    MeshFilter filter = slot.AddComponent<MeshFilter>();
+                    MeshRenderer renderer = slot.AddComponent<MeshRenderer>();
+                    renderer.sharedMaterial = material;
+                    renderer.shadowCastingMode = ShadowCastingMode.Off;
+                    renderer.receiveShadows = false;
+                    renderer.lightProbeUsage = LightProbeUsage.BlendProbes;
+                    renderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbes;
+                    renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                    renderer.allowOcclusionWhenDynamic = true;
+                    controller.pageFilters[i] = filter; controller.pageRenderers[i] = renderer;
+                }
+                aerial.buildingRoot = rootObject.transform;
+                surface.productionBuildingSurfaceLayer = rootObject.transform;
+                surface.buildingSurfaceRenderers = controller.pageRenderers.Cast<Renderer>().ToArray();
+                surface.buildingSurfaceManifest = LoadRequired<TextAsset>(DatabasePath);
+                surface.representedBuildingCount = database.pages.Sum(page => page.buildings?.Length ?? 0);
+                surface.nearBuildingCoveragePercent = 100f;
+                surface.midBuildingCoveragePercent = 100f;
+                surface.maximumBuildingFootprintInflationPercent = 0f;
+                surface.bakedBuildingDrawCount = AircraftCenteredBuildingClipmapController.SlotCount;
+                surface.bakedBuildingTriangleCount = MeasuredMaximumSelectedTriangles;
+                surface.bakeToolVersion = AircraftCenteredBuildingClipmapController.ContractVersion;
+                surface.bakeUtc = DateTime.UtcNow.ToString("O");
+                ProductionEnvironmentBudget budget = contract.CalculateBudget();
+                contract.bakedRendererCount = budget.rendererCount;
+                contract.bakedTriangleCount = budget.triangleCount;
+                contract.bakedMaterialCount = budget.materialCount;
+                aerial.bakedRendererCount = budget.rendererCount;
+                aerial.bakedSelectedTriangleCount = budget.triangleCount;
+                aerial.bakedMaterialCount = budget.materialCount;
+                aerial.bakeToolVersion = "full-map-building-clipmap-v1";
+                aerial.bakeUtc = DateTime.UtcNow.ToString("O");
+                PrefabUtility.SaveAsPrefabAsset(environment, EnvironmentPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(environment); }
+        }
+
+        private static void BindSceneAircraftReference()
+        {
+            Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            AircraftReferenceFrameRig rig = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<AircraftReferenceFrameRig>(true)).Single();
+            AircraftCenteredBuildingClipmapController controller = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<AircraftCenteredBuildingClipmapController>(true)).Single();
+            controller.trackedRig = rig;
+            EditorUtility.SetDirty(controller);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(controller);
+            EditorSceneManager.SaveScene(scene);
+        }
+
+        private static void ValidateAuthoredProduct(Database database)
+        {
+            GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
+            AircraftCenteredBuildingClipmapController prefabController = environment.GetComponentInChildren<AircraftCenteredBuildingClipmapController>(true);
+            if (prefabController == null || prefabController.pageFilters.Length != AircraftCenteredBuildingClipmapController.SlotCount ||
+                prefabController.GetComponentsInChildren<MeshRenderer>(true).Length != AircraftCenteredBuildingClipmapController.SlotCount)
+                throw new InvalidOperationException("Serialized full-map building renderer pool is invalid.");
+            Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            AircraftCenteredBuildingClipmapController controller = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<AircraftCenteredBuildingClipmapController>(true)).Single();
+            if (!controller.TryValidateContract(out string report)) throw new InvalidOperationException(report);
+            if (database.pages.Sum(page => page.buildings?.Length ?? 0) < 50000)
+                throw new InvalidOperationException("Full-map building database lost expected coverage.");
+            Debug.Log($"[QuestFlight][BuildingClipmap] {report}; components={database.pages.Sum(page => page.buildings?.Length ?? 0):N0}; pages={database.pages.Length:N0}.");
+        }
+
+        private static string MeshPath(int column, int row, int lod) => $"{GeneratedRoot}/{AssetName(column, row, lod)}.asset";
+        private static string AssetName(int column, int row, int lod) => $"KBDU_buildings_lod{lod}_{column:D3}_{row:D3}";
+        private static T LoadRequired<T>(string path) where T : UnityEngine.Object =>
+            AssetDatabase.LoadAssetAtPath<T>(path) ?? throw new InvalidOperationException("Required asset missing: " + path);
+        private static string Absolute(string assetPath) => Path.Combine(Directory.GetParent(Application.dataPath)?.FullName ?? throw new InvalidOperationException(), assetPath.Replace('/', Path.DirectorySeparatorChar));
+        private static string SourceHash()
+        {
+            using SHA256 sha = SHA256.Create();
+            byte[] database = File.ReadAllBytes(Absolute(DatabasePath));
+            byte[] compiler = System.Text.Encoding.UTF8.GetBytes(MeshCompilerVersion);
+            sha.TransformBlock(database, 0, database.Length, null, 0);
+            sha.TransformFinalBlock(compiler, 0, compiler.Length);
+            return BitConverter.ToString(sha.Hash).Replace("-", "").ToLowerInvariant();
+        }
+    }
+}

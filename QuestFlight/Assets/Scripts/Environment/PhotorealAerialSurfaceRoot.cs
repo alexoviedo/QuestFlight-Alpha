@@ -108,13 +108,27 @@ namespace QuestFlightLab.Environment
                     surfaceClassification, buildingOwnershipMask, canopyOwnershipMask),
                 "one or more runtime surface inputs are missing", failures);
 
-            Renderer[] buildings = Active(buildingSurfaceRenderers);
+            AircraftCenteredBuildingClipmapController buildingClipmap =
+                productionBuildingSurfaceLayer == null
+                    ? null
+                    : productionBuildingSurfaceLayer.GetComponent<AircraftCenteredBuildingClipmapController>();
+            bool aircraftCenteredBuildings = buildingClipmap != null;
+            Renderer[] buildings = aircraftCenteredBuildings
+                ? (buildingSurfaceRenderers ?? Array.Empty<Renderer>()).Where(value => value != null).ToArray()
+                : Active(buildingSurfaceRenderers);
             Renderer[] canopy = Active(canopySurfaceRenderers);
             bool canopyMapOnly = canopySurfaceManifest != null &&
                 canopySurfaceManifest.text.Contains(
                     "\"type\": \"terrain_canopy_map_only_outside_hero_radius\"");
             Require(buildings.Length > 0 && buildings.Length <= 16,
                 $"building surface must use 1-16 offline batches, found {buildings.Length}", failures);
+            Require(!aircraftCenteredBuildings ||
+                    buildings.Length == AircraftCenteredBuildingClipmapController.SlotCount &&
+                    buildingClipmap.pageRenderers != null &&
+                    buildingClipmap.pageFilters != null &&
+                    buildingClipmap.pageRenderers.Cast<Renderer>().SequenceEqual(buildings) &&
+                    buildingClipmap.pageFilters.Length == AircraftCenteredBuildingClipmapController.SlotCount,
+                "aircraft-centered building clipmap does not own the fixed serialized renderer pool", failures);
             Require(canopyMapOnly ? canopy.Length == 0 : canopy.Length > 0 && canopy.Length <= 4,
                 canopyMapOnly
                     ? $"terrain-map-only canopy must have zero raised batches, found {canopy.Length}"
@@ -125,8 +139,9 @@ namespace QuestFlightLab.Environment
                 canopyMapOnly
                     ? "terrain-map-only canopy must not retain a geometry material"
                     : "canopy surface must use one shared material", failures);
-            Require(buildings.All(renderer => renderer.GetComponent<MeshFilter>()?.sharedMesh != null),
-                "a building batch has no mesh", failures);
+            Require(aircraftCenteredBuildings ||
+                    buildings.All(renderer => renderer.GetComponent<MeshFilter>()?.sharedMesh != null),
+                "a static building batch has no mesh", failures);
             Require(canopy.All(renderer => renderer.GetComponent<MeshFilter>()?.sharedMesh != null),
                 "a canopy batch has no mesh", failures);
             Require(buildings.Concat(canopy).SelectMany(renderer =>
@@ -175,8 +190,12 @@ namespace QuestFlightLab.Environment
             // fail-closed in Editor; Android validates the baked positive
             // inventory plus draw and dependency contracts instead.
 #if UNITY_EDITOR
-            Require(bakedBuildingTriangleCount == CountTriangles(buildings),
-                "building triangle inventory is stale", failures);
+            Require(aircraftCenteredBuildings
+                    ? bakedBuildingTriangleCount > 0
+                    : bakedBuildingTriangleCount == CountTriangles(buildings),
+                aircraftCenteredBuildings
+                    ? "aircraft-centered building triangle ceiling is missing"
+                    : "building triangle inventory is stale", failures);
             Require(bakedCanopyTriangleCount == CountTriangles(canopy),
                 "canopy triangle inventory is stale", failures);
 #else

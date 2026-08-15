@@ -1,5 +1,21 @@
 # Known limitations
 
+## Full-map building clipmap V1 candidate
+
+- The 57,407 components greatly improve coverage and spatial fidelity, but
+  official footprint/height records are incomplete and are aligned to the 2020
+  imagery chronology rather than current conditions.
+- Facades and doors/windows are semantic procedural approximations, not surveyed
+  or photographically reconstructed per-building elevations.
+- Named landmarks preserve multipart footprint massing and height but lack
+  bespoke landmark silhouettes, signage, and roof equipment.
+- Very small ordinary buildings outside the current 4x4 page window remain
+  orthophoto-only; this is deliberate Quest cost control.
+- Editor Visual QA shows fewer peak draws and selected triangles, while the
+  inherited complete-scene 38-material count still exceeds the old 29-material
+  planning target. Physical Quest frame, memory, thermal, transition-pop, and
+  worn-fidelity acceptance remain pending.
+
 ## Full-map aerial clipmap V1 candidate
 
 - The source is Spring/Summer 2020 visual context, not current or navigable

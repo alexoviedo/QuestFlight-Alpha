@@ -17,10 +17,26 @@ The authored product scene uses a bounded KBDU-inspired environment. It contains
 - OpenStreetMap: clipped and simplified airport/context geometry and semantic building footprints; ODbL 1.0, with required attribution © OpenStreetMap contributors.
 - USGS/USDA NAIP Plus: bounded 2019 natural-color public-domain derivatives remain the historical baseline and alignment/fallback source. Raw exports and processing intermediates remain external.
 - Poly Haven: the `Kloppenheim 03 (Pure Sky)` HDRI supplies the photographic sky and static environment-reflection source under CC0 1.0. The raw 4K download remains external; the optimized 2K HDR derivative and its source manifest are committed.
+- City of Boulder Building Footprints: active building polygons, semantic class,
+  build year, ground elevation, height, and floors for the city portion of the
+  full-map clipmap. The official layer metadata has no copyright statement;
+  attribution is retained.
+- Boulder County Land Use Building and Structure Footprints: official fallback
+  geometry/height coverage for unincorporated Boulder County. The service
+  copyright record is `Boulder County Land Use`; attribution is retained.
 
 Exact requests, retrieval timestamps, raw and derivative hashes, licenses, attribution, budgets, and frozen toolchain hashes are in `tools/kbdu_environment/kbdu_source_manifest.json`.
 
 The City 2020 item/service contract, cache snapshot, processing settings, optimized output hashes, and orthophoto-only water rule are in `QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_AerialSurfaceV1_SourceManifest.json`. Its pinned source hashes are: item response `b7f17522b698a8657e85b9b750bc5ca5e0e388976ac915907a13ccb76b52f4b0`, item contract `aafc729bdb6dd666d003912b9db06025e1579e144733b1c7e4a49ce4ffd58663`, service response `ddecdb4e09f830ce2f6e57a13b2bc5db64c5c7dae8e1adf99d716aca9580da80`, service contract `177a053bdbc7ecd3484c21e6d39ecf7ca18ea810ab750f76e7ebfe48bad19c79`, source snapshot `6fa6baea9eb2d876577da883d88b029e018a75dad9728f3faad13bed76ead02b`, and ordered 5,551-tile set `41c88c222bae40db5ba061332e2919e99b682015c7ce7bc203f0c7d85c8a6906`.
+
+The full-map building database is a temporally filtered 2020-context derivative:
+City data has priority, County data fills uncovered regions, post-2020 records
+are excluded, and authored airport-hero footprints are excluded to prevent
+duplicates. Missing County elevations are sampled from the retained USGS
+terrain surface rather than placed at a constant plane. Exact source/derivative
+hashes and counts are recorded in
+`FullMapBuildingsV1/KBDU_FullMapBuildingDatabaseV1_PROVENANCE.json`; raw service
+responses and authoring caches remain outside Git.
 
 The aircraft-centered full-map derivative uses the same official City 2020
 item (`22b7c93a74394696824258f807f345ba`) and published 0.2286 m source, but

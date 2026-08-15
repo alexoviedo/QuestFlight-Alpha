@@ -426,9 +426,18 @@ namespace QuestFlightLab.Environment
 
         public ProductionEnvironmentBudget CalculateBudget()
         {
+            AircraftCenteredBuildingClipmapController[] buildingClipmaps =
+                GetComponentsInChildren<AircraftCenteredBuildingClipmapController>(true)
+                    .Where(clipmap => clipmap != null && IsAuthoredActive(clipmap.transform))
+                    .ToArray();
+            HashSet<Renderer> buildingClipmapRenderers = new HashSet<Renderer>(
+                buildingClipmaps.SelectMany(clipmap =>
+                    clipmap.pageRenderers ?? Array.Empty<MeshRenderer>())
+                    .Where(renderer => renderer != null));
             Renderer[] renderers = GetComponentsInChildren<Renderer>(true)
                 .Where(renderer => renderer != null && renderer.enabled &&
-                                   !renderer.forceRenderingOff && IsAuthoredActive(renderer.transform))
+                                   !renderer.forceRenderingOff && IsAuthoredActive(renderer.transform) &&
+                                   !buildingClipmapRenderers.Contains(renderer))
                 .ToArray();
             AerialVegetationBatchRenderer[] vegetationBatches =
                 GetComponentsInChildren<AerialVegetationBatchRenderer>(true)
@@ -451,6 +460,12 @@ namespace QuestFlightLab.Environment
             {
                 foreach (Material material in renderer.sharedMaterials)
                     if (material != null) materials.Add(material);
+            }
+            foreach (AircraftCenteredBuildingClipmapController clipmap in buildingClipmaps)
+            {
+                if (clipmap.sharedBuildingMaterial != null)
+                    materials.Add(clipmap.sharedBuildingMaterial);
+                triangles += clipmap.authoredMaximumSelectedTriangles;
             }
             foreach (AerialVegetationBatchRenderer batch in vegetationBatches)
             {
@@ -475,7 +490,8 @@ namespace QuestFlightLab.Environment
             foreach (MeshFilter filter in GetComponentsInChildren<MeshFilter>(true)
                          .Where(filter => filter != null && IsAuthoredActive(filter.transform) &&
                                           filter.GetComponent<Renderer>() is Renderer renderer &&
-                                          renderer.enabled && !renderer.forceRenderingOff))
+                                          renderer.enabled && !renderer.forceRenderingOff &&
+                                          !buildingClipmapRenderers.Contains(renderer)))
             {
                 Mesh mesh = filter.sharedMesh;
                 if (mesh == null) continue;
@@ -483,6 +499,7 @@ namespace QuestFlightLab.Environment
                     triangles += (long)mesh.GetIndexCount(subMesh) / 3L;
             }
             int authoredDrawSources = renderers.Length +
+                                      buildingClipmaps.Sum(clipmap => clipmap.pageRenderers?.Length ?? 0) +
                                       vegetationBatches.Sum(batch => batch.NonEmptyDrawCount) +
                                       closeTreeLods.Sum(batch => batch.AuthoredMaximumDrawCount) +
                                       nearFieldGrass.Sum(batch => batch.AuthoredMaximumDrawCount);

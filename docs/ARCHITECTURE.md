@@ -37,6 +37,16 @@ at runtime.
 
 The hierarchy exists before frame zero. OpenXR owns tracked camera motion. Calibration modifies only `UserViewCalibrationOffset`. Input produces a neutral control snapshot consumed by one `FlightDynamicsCoordinator`; its sole backend is the embedded native JSBSim 1.3.1 C172P derivative. The coordinator prepares the integrity-checked native payload, acquires one authority lease, and fails closed on preparation, initialization, ABI, non-finite-state, reset, or step failure. There is no alternate Unity flight model or runtime fallback. Environment geometry, runway, water, immutable far terrain, and presentation effects are authored assets rather than runtime reconstruction.
 
+`FullMapBuildingClipmapV1` replaces the fixed airport-distance generic-building
+subset with a serialized 4x4 pool of 16 render slots. Offline tools compile
+57,407 official City/County footprint components into 576 one-kilometre pages
+and three roof-aware LODs. The aircraft simulation frame—not the camera—selects
+and predicts the active window. Local Android AssetBundles provide immutable
+precompiled meshes; runtime code neither creates meshes nor hierarchy. One
+opaque atlas material provides meter-scaled semantic facades, roofs, and
+nontransparent window glints. The authored airport hero corridor remains a
+separate authority and is excluded from the database.
+
 The shipping architecture is standalone Quest 3 only: Android ARM64, IL2CPP, Vulkan, OpenXR single-pass instanced stereo, ASTC, and 4x MSAA. A Windows/OpenXR process may exist only as a development host for Meta XR Simulator and is never a shipping profile or required runtime dependency. The simulator establishes stereo/tracking/input/composition behavior, not mobile GPU or thermal performance.
 
 Visible environment geometry uses one product-local WGS84 AEQD east-north-up coordinate frame for the near, mid, and far terrain meshes and aligned orthophoto atlases. Lidar data textures retain their source-relative UTM 13N raster frame and are sampled only through the pinned transform described below; treating the two numeric grids as identical is invalid. Explicit overlap bands blend the aligned imagery levels without independent tile transforms. Shared materials and offline spatial batching bound scene cost. The accepted `standalone-scenery-baseline-v1` context-building shells deliberately use no runtime scale-changing LODGroups; no batch is described as GPU instanced unless its renderer and shader variants prove it.

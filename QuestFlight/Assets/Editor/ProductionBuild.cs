@@ -19,6 +19,9 @@ namespace QuestFlight.Editor
         public static void PerformAndroidBuild()
         {
             ProductProjectConfigurator.ConfigureProject();
+            // The scene owns a fixed renderer pool; only deterministic offline page bundles
+            // are generated here. No runtime hierarchy or geometry authoring is permitted.
+            FullMapBuildingClipmapAssetAuthoring.EnsureBuildArtifacts();
             ConfigureMetaOpenXrNativePluginSelection();
             ProductIntegrityReport integrity = ProductIntegrityValidator.Validate();
             if (!integrity.passed) throw new InvalidOperationException(integrity.ToString());

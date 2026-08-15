@@ -4,6 +4,24 @@ Audit basis: frozen R&D commit `cd4131fa7732a6db2d7387921dfef33e2c206970`, tagge
 
 Every product binary must match an entry here or receive a new source/license review. Raw downloads are not product assets.
 
+## Full-map building clipmap V1
+
+- City of Boulder Building Footprints: official City GIS MapServer; its layer
+  metadata exposes no copyright statement. The project retains City attribution.
+- Boulder County Building and Structure Footprints: official Boulder County GIS
+  FeatureServer; its metadata identifies `Boulder County Land Use` as the
+  copyright source. The project retains that attribution.
+- Grounding fallback: the already recorded public-domain USGS 3DEP-derived
+  `KBDU_ProductionTerrainSurfaceV2.json`.
+- Material source: project-directed OpenAI image generation, saved as
+  `tools/full_map_buildings/assets/FullMapBuildingAtlas_Source.png`; no external
+  photograph or downloaded material entered the atlas.
+
+Raw GIS responses remain external. The exact service URLs, filters, raw hashes,
+counts, terrain hash, derivative hash, exclusions, and rights boundary are in
+`KBDU_FullMapBuildingDatabaseV1_PROVENANCE.json`. The atlas source and derivative
+hashes are in `FullMapBuildingsV1/Materials/SOURCE_MANIFEST.json`.
+
 ## Cockpit Completion V3 generated derivatives
 
 The V3 instrument layout/mesh/atlas, neutralized source-meter mesh, avionics
