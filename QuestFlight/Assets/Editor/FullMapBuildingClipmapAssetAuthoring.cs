@@ -22,6 +22,7 @@ namespace QuestFlight.Editor
         public const string AlbedoPath = Root + "/Materials/FullMapBuildingAtlas_Albedo.png";
         public const string NormalPath = Root + "/Materials/FullMapBuildingAtlas_Normal.png";
         public const string MraoPath = Root + "/Materials/FullMapBuildingAtlas_MRAO.png";
+        public const string CompilationReportPath = Root + "/KBDU_StableShellCompilationV1.json";
         public const string GeneratedRoot = "Assets/Generated/FullMapBuildingClipmap";
         public const string StreamingRoot = "Assets/StreamingAssets/QuestFlightBuildingClipmap";
         public const string EnvironmentPath = "Assets/Production/Environment/ProductionEnvironmentRoot.prefab";
@@ -30,9 +31,12 @@ namespace QuestFlight.Editor
         public const string ShaderName = "QuestFlight/Full Map Building Clipmap";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
-        private const string MeshCompilerVersion = "semantic-coverage-compiler-v5-20260815";
-        private const int MeasuredMaximumSelectedTriangles = 116000;
-        private const float CoverageWallMinimumAreaSquareMeters = 1000f;
+        private const string MeshCompilerVersion = "stable-closed-shell-compiler-v6-20260815";
+        private const int MaximumSelectedTriangleCeiling = 140000;
+        private const int AuthoredMaximumSelectedTriangles = 139588;
+        private const int OrdinaryFootprintVertexLimit = 4;
+        private const int LargeFootprintVertexLimit = 6;
+        private const float LargeFootprintAreaSquareMeters = 1000f;
 
         [Serializable] private sealed class Database
         {
@@ -88,6 +92,21 @@ namespace QuestFlight.Editor
             public string name;
             public uint crc;
             public string hash;
+        }
+
+        [Serializable] private sealed class StableShellCompilationReport
+        {
+            public string compiler_version;
+            public int represented_buildings;
+            public int exact_landmarks;
+            public int four_vertex_shells;
+            public int six_vertex_shells;
+            public int higher_vertex_shells;
+            public int maximum_active_window_triangles;
+            public float maximum_area_error_percent;
+            public float maximum_inflation_percent;
+            public float maximum_centroid_shift_meters;
+            public float maximum_boundary_error_meters;
         }
 
         private sealed class MeshBuilder
@@ -176,23 +195,14 @@ namespace QuestFlight.Editor
                 int slot = localRow * AircraftCenteredBuildingClipmapController.GridSize + localColumn;
                 int column = minimumColumn + localColumn;
                 int row = minimumRow + localRow;
-                bool detail = column == Mathf.Clamp(centerColumn, 0, database.columns - 1) &&
-                              row == Mathf.Clamp(centerRow, 0, database.rows - 1);
-                Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath(column, row, false)) ??
+                Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath(column, row)) ??
                     throw new FileNotFoundException(
                         "Compiled building preview mesh is missing. Run full-map building authoring first.",
-                        MeshPath(column, row, false));
+                        MeshPath(column, row));
                 controller.pageFilters[slot].sharedMesh = mesh;
                 controller.pageRenderers[slot].sharedMaterial = controller.sharedBuildingMaterial;
-                controller.pageRenderers[slot].enabled = !detail && mesh.vertexCount > 0;
+                controller.pageRenderers[slot].enabled = mesh.vertexCount > 0;
             }
-            Mesh detailMesh = AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath(
-                Mathf.Clamp(centerColumn, 0, database.columns - 1),
-                Mathf.Clamp(centerRow, 0, database.rows - 1), true)) ??
-                throw new FileNotFoundException("Compiled building detail preview mesh is missing.");
-            controller.detailFilter.sharedMesh = detailMesh;
-            controller.detailRenderer.sharedMaterial = controller.sharedBuildingMaterial;
-            controller.detailRenderer.enabled = detailMesh.vertexCount > 0;
         }
 
         public static void BuildAndroidBundlesAndAuthorProduct()
@@ -284,11 +294,8 @@ namespace QuestFlight.Editor
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             foreach (Page page in database.pages.OrderBy(item => item.row).ThenBy(item => item.column))
             {
-                foreach (bool detail in new[] { false, true })
-                {
-                    Mesh mesh = BuildPageMesh(database, page, detail);
-                    AssetDatabase.CreateAsset(mesh, MeshPath(page.column, page.row, detail));
-                }
+                Mesh mesh = BuildPageMesh(database, page);
+                AssetDatabase.CreateAsset(mesh, MeshPath(page.column, page.row));
                 if ((page.row * database.columns + page.column) % 24 == 23)
                 {
                     AssetDatabase.SaveAssets();
@@ -298,33 +305,29 @@ namespace QuestFlight.Editor
             }
             EditorUtility.ClearProgressBar();
             AssetDatabase.SaveAssets();
+            WriteCompilationReport(database);
         }
 
-        private static Mesh BuildPageMesh(Database database, Page page, bool detail)
+        private static Mesh BuildPageMesh(Database database, Page page)
         {
             MeshBuilder builder = new MeshBuilder();
             float pageMinX = -database.map_half_extent_meters + page.column * database.page_size_meters;
             float pageMinZ = -database.map_half_extent_meters + page.row * database.page_size_meters;
             foreach (Building building in page.buildings ?? Array.Empty<Building>())
             {
-                // Coverage retains every database component. Its simplified roof mass
-                // stays visible across all former LOD thresholds; only large structures
-                // retain a far wall skirt. The page containing the aircraft uses the
-                // exact source footprint and complete walls.
-                int[] ring = detail ? building.lod0_q : building.lod2_q;
+                int[] ring = building.lod2_q;
                 if (ring == null || ring.Length < 6 || ring.Length % 2 != 0) continue;
                 Vector2[] polygon = new Vector2[ring.Length / 2];
                 for (int i = 0; i < polygon.Length; i++)
                     polygon[i] = new Vector2(pageMinX + ring[i * 2] * database.quantization_meters,
                         pageMinZ + ring[i * 2 + 1] * database.quantization_meters);
-                AddBuilding(builder, polygon, building,
-                    detail || building.landmark || building.area_m2 >= CoverageWallMinimumAreaSquareMeters,
-                    true);
+                polygon = CompileStableFootprint(polygon, building);
+                AddBuilding(builder, polygon, building, true, true);
             }
 
             Mesh mesh = new Mesh
             {
-                name = $"KBDU_buildings_{(detail ? "detail" : "coverage")}_{page.column:D3}_{page.row:D3}",
+                name = $"KBDU_buildings_stable_{page.column:D3}_{page.row:D3}",
                 indexFormat = builder.vertices.Count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16
             };
             mesh.SetVertices(builder.vertices);
@@ -337,6 +340,166 @@ namespace QuestFlight.Editor
             mesh.SetIndices(builder.indices, MeshTopology.Triangles, 0, true);
             mesh.UploadMeshData(false);
             return mesh;
+        }
+
+        private static Vector2[] CompileStableFootprint(Vector2[] source, Building building)
+        {
+            if (source == null || source.Length < 3) return source;
+            Vector2[] validSource = IsSimplePolygon(source) ? source.ToArray() : ConvexHull(source);
+            if (building.landmark || validSource.Length <= 3) return validSource;
+
+            int target = Mathf.Min(validSource.Length,
+                building.area_m2 >= LargeFootprintAreaSquareMeters
+                    ? LargeFootprintVertexLimit
+                    : OrdinaryFootprintVertexLimit);
+            Vector2[] candidate = ReduceFootprint(validSource, target);
+            FootprintError error = MeasureFootprintError(validSource, candidate);
+
+            if (validSource.Length > target &&
+                (error.areaFraction > 0.30f || error.boundaryMeters > 10f || error.centroidMeters > 3f))
+            {
+                target = Mathf.Min(validSource.Length, 6);
+                candidate = ReduceFootprint(validSource, target);
+                error = MeasureFootprintError(validSource, candidate);
+            }
+            if (validSource.Length > target &&
+                (error.areaFraction > 0.35f || error.boundaryMeters > 15f || error.centroidMeters > 4f))
+            {
+                target = Mathf.Min(validSource.Length, 8);
+                candidate = ReduceFootprint(validSource, target);
+                error = MeasureFootprintError(validSource, candidate);
+            }
+            if (validSource.Length > target &&
+                (error.areaFraction > 0.40f || error.boundaryMeters > 20f || error.centroidMeters > 6f))
+            {
+                target = Mathf.Min(validSource.Length, 10);
+                candidate = ReduceFootprint(validSource, target);
+                error = MeasureFootprintError(validSource, candidate);
+            }
+            while (validSource.Length > candidate.Length &&
+                   (error.areaFraction > 0.30f || error.boundaryMeters > 10f || error.centroidMeters > 3f))
+            {
+                Vector2[] refined = ReduceFootprint(validSource, Mathf.Min(validSource.Length, candidate.Length + 2));
+                if (refined.Length <= candidate.Length) break;
+                candidate = refined;
+                error = MeasureFootprintError(validSource, candidate);
+            }
+
+            return candidate;
+        }
+
+        private readonly struct FootprintError
+        {
+            public readonly float areaFraction;
+            public readonly float centroidMeters;
+            public readonly float boundaryMeters;
+            public FootprintError(float areaFraction, float centroidMeters, float boundaryMeters)
+            { this.areaFraction = areaFraction; this.centroidMeters = centroidMeters; this.boundaryMeters = boundaryMeters; }
+        }
+
+        private static FootprintError MeasureFootprintError(Vector2[] source, Vector2[] candidate)
+        {
+            float sourceArea = Mathf.Max(0.001f, Mathf.Abs(SignedArea(source)));
+            float areaFraction = Mathf.Abs(Mathf.Abs(SignedArea(candidate)) - sourceArea) / sourceArea;
+            float centroidMeters = Vector2.Distance(PolygonCentroid(source), PolygonCentroid(candidate));
+            float boundaryMeters = 0f;
+            foreach (Vector2 point in source)
+            {
+                float nearest = float.PositiveInfinity;
+                for (int i = 0; i < candidate.Length; i++)
+                    nearest = Mathf.Min(nearest, PointSegmentDistance(point, candidate[i], candidate[(i + 1) % candidate.Length]));
+                boundaryMeters = Mathf.Max(boundaryMeters, nearest);
+            }
+            return new FootprintError(areaFraction, centroidMeters, boundaryMeters);
+        }
+
+        private static Vector2[] ReduceFootprint(Vector2[] source, int targetVertices)
+        {
+            List<Vector2> points = source.ToList();
+            float maximumArea = Mathf.Abs(SignedArea(source)) * 1.05f;
+            while (points.Count > Mathf.Max(3, targetVertices))
+            {
+                int remove = -1;
+                float best = float.PositiveInfinity;
+                for (int i = 0; i < points.Count; i++)
+                {
+                    List<Vector2> trial = points.Where((_, index) => index != i).ToList();
+                    float trialArea = Mathf.Abs(SignedArea(trial.ToArray()));
+                    if (trialArea < 0.01f || trialArea > maximumArea || !IsSimplePolygon(trial.ToArray())) continue;
+                    float score = Mathf.Abs(Cross(points[(i - 1 + points.Count) % points.Count], points[i], points[(i + 1) % points.Count]));
+                    if (score < best - 0.0001f || (Mathf.Abs(score - best) <= 0.0001f && i < remove))
+                    { best = score; remove = i; }
+                }
+                if (remove < 0) break;
+                points.RemoveAt(remove);
+            }
+            return points.ToArray();
+        }
+
+        private static bool IsSimplePolygon(Vector2[] polygon)
+        {
+            if (polygon == null || polygon.Length < 3 || Mathf.Abs(SignedArea(polygon)) < 0.01f) return false;
+            for (int i = 0; i < polygon.Length; i++)
+            {
+                Vector2 a = polygon[i], b = polygon[(i + 1) % polygon.Length];
+                for (int j = i + 1; j < polygon.Length; j++)
+                {
+                    if (j == i || j == (i + 1) % polygon.Length || (j + 1) % polygon.Length == i) continue;
+                    if (i == 0 && j == polygon.Length - 1) continue;
+                    if (SegmentsIntersect(a, b, polygon[j], polygon[(j + 1) % polygon.Length])) return false;
+                }
+            }
+            return true;
+        }
+
+        private static bool SegmentsIntersect(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            float abC = Cross(a, b, c), abD = Cross(a, b, d), cdA = Cross(c, d, a), cdB = Cross(c, d, b);
+            return abC * abD < -0.000001f && cdA * cdB < -0.000001f;
+        }
+
+        private static Vector2[] ConvexHull(IEnumerable<Vector2> source)
+        {
+            List<Vector2> points = source.Distinct().OrderBy(point => point.x).ThenBy(point => point.y).ToList();
+            if (points.Count <= 3) return points.ToArray();
+            List<Vector2> lower = new List<Vector2>();
+            foreach (Vector2 point in points)
+            {
+                while (lower.Count >= 2 && Cross(lower[lower.Count - 2], lower[lower.Count - 1], point) <= 0f) lower.RemoveAt(lower.Count - 1);
+                lower.Add(point);
+            }
+            List<Vector2> upper = new List<Vector2>();
+            for (int i = points.Count - 1; i >= 0; i--)
+            {
+                Vector2 point = points[i];
+                while (upper.Count >= 2 && Cross(upper[upper.Count - 2], upper[upper.Count - 1], point) <= 0f) upper.RemoveAt(upper.Count - 1);
+                upper.Add(point);
+            }
+            lower.RemoveAt(lower.Count - 1);
+            upper.RemoveAt(upper.Count - 1);
+            return lower.Concat(upper).ToArray();
+        }
+
+        private static Vector2 PolygonCentroid(Vector2[] polygon)
+        {
+            float crossSum = 0f, x = 0f, y = 0f;
+            for (int i = 0; i < polygon.Length; i++)
+            {
+                Vector2 a = polygon[i], b = polygon[(i + 1) % polygon.Length];
+                float cross = a.x * b.y - b.x * a.y;
+                crossSum += cross; x += (a.x + b.x) * cross; y += (a.y + b.y) * cross;
+            }
+            if (Mathf.Abs(crossSum) < 0.0001f)
+                return polygon.Aggregate(Vector2.zero, (sum, point) => sum + point) / polygon.Length;
+            return new Vector2(x / (3f * crossSum), y / (3f * crossSum));
+        }
+
+        private static float PointSegmentDistance(Vector2 point, Vector2 a, Vector2 b)
+        {
+            Vector2 edge = b - a;
+            float lengthSquared = edge.sqrMagnitude;
+            float t = lengthSquared > 0.000001f ? Mathf.Clamp01(Vector2.Dot(point - a, edge) / lengthSquared) : 0f;
+            return Vector2.Distance(point, a + edge * t);
         }
 
         private static void AddBuilding(MeshBuilder builder, Vector2[] polygon, Building building,
@@ -556,6 +719,60 @@ namespace QuestFlight.Editor
             return new Color(variation + warmth, variation, variation - warmth, 1f);
         }
 
+        private static void WriteCompilationReport(Database database)
+        {
+            int[,] pageTriangles = new int[database.columns, database.rows];
+            StableShellCompilationReport report = new StableShellCompilationReport
+            {
+                compiler_version = MeshCompilerVersion
+            };
+            foreach (Page page in database.pages)
+            foreach (Building building in page.buildings ?? Array.Empty<Building>())
+            {
+                int[] ring = building.lod2_q;
+                if (ring == null || ring.Length < 6 || ring.Length % 2 != 0) continue;
+                Vector2[] source = new Vector2[ring.Length / 2];
+                for (int i = 0; i < source.Length; i++)
+                    source[i] = new Vector2(ring[i * 2] * database.quantization_meters,
+                        ring[i * 2 + 1] * database.quantization_meters);
+                Vector2[] compiled = CompileStableFootprint(source, building);
+                if (compiled == null || compiled.Length < 3 || !IsSimplePolygon(compiled))
+                    throw new InvalidOperationException("Stable shell compilation produced an invalid footprint: " + building.id);
+                FootprintError error = MeasureFootprintError(source, compiled);
+                report.represented_buildings++;
+                if (building.landmark) report.exact_landmarks++;
+                if (compiled.Length <= 4) report.four_vertex_shells++;
+                else if (compiled.Length <= 6) report.six_vertex_shells++;
+                else report.higher_vertex_shells++;
+                report.maximum_area_error_percent = Mathf.Max(report.maximum_area_error_percent, error.areaFraction * 100f);
+                float inflation = (Mathf.Abs(SignedArea(compiled)) - Mathf.Abs(SignedArea(source))) /
+                                  Mathf.Max(0.001f, Mathf.Abs(SignedArea(source))) * 100f;
+                report.maximum_inflation_percent = Mathf.Max(report.maximum_inflation_percent, inflation);
+                report.maximum_centroid_shift_meters = Mathf.Max(report.maximum_centroid_shift_meters, error.centroidMeters);
+                report.maximum_boundary_error_meters = Mathf.Max(report.maximum_boundary_error_meters, error.boundaryMeters);
+                pageTriangles[page.column, page.row] += 3 * compiled.Length - 2;
+            }
+
+            for (int minimumRow = 0; minimumRow <= database.rows - AircraftCenteredBuildingClipmapController.GridSize; minimumRow++)
+            for (int minimumColumn = 0; minimumColumn <= database.columns - AircraftCenteredBuildingClipmapController.GridSize; minimumColumn++)
+            {
+                int selected = 0;
+                for (int row = minimumRow; row < minimumRow + AircraftCenteredBuildingClipmapController.GridSize; row++)
+                for (int column = minimumColumn; column < minimumColumn + AircraftCenteredBuildingClipmapController.GridSize; column++)
+                    selected += pageTriangles[column, row];
+                report.maximum_active_window_triangles = Mathf.Max(report.maximum_active_window_triangles, selected);
+            }
+            if (report.represented_buildings != 57407)
+                throw new InvalidOperationException("Stable shell compilation lost source buildings.");
+            if (report.maximum_active_window_triangles > MaximumSelectedTriangleCeiling)
+                throw new InvalidOperationException($"Stable shell window exceeds {MaximumSelectedTriangleCeiling:N0} triangles: {report.maximum_active_window_triangles:N0}.");
+            if (report.maximum_inflation_percent > 5.01f)
+                throw new InvalidOperationException($"Stable shell footprint inflation exceeds 5%: {report.maximum_inflation_percent:0.###}%.");
+
+            File.WriteAllText(Absolute(CompilationReportPath), JsonUtility.ToJson(report, true));
+            AssetDatabase.ImportAsset(CompilationReportPath, ImportAssetOptions.ForceSynchronousImport);
+        }
+
         private static void BuildBundles(Database database)
         {
             string streaming = Absolute(StreamingRoot);
@@ -569,8 +786,7 @@ namespace QuestFlight.Editor
                 List<string> addresses = new List<string>();
                 for (int row = regionRow * BundleRegionCells; row < Mathf.Min(database.rows, (regionRow + 1) * BundleRegionCells); row++)
                 for (int column = regionColumn * BundleRegionCells; column < Mathf.Min(database.columns, (regionColumn + 1) * BundleRegionCells); column++)
-                foreach (bool detail in new[] { false, true })
-                { paths.Add(MeshPath(column, row, detail)); addresses.Add(AssetName(column, row, detail)); }
+                { paths.Add(MeshPath(column, row)); addresses.Add(AssetName(column, row)); }
                 builds.Add(new AssetBundleBuild
                 {
                     assetBundleName = $"qf_buildings_r{regionRow:D2}_c{regionColumn:D2}",
@@ -622,7 +838,7 @@ namespace QuestFlight.Editor
                 controller.mapMinimumZ = -database.map_half_extent_meters;
                 controller.bundleRegionCells = BundleRegionCells;
                 controller.predictionSeconds = database.prediction_seconds;
-                controller.authoredMaximumSelectedTriangles = MeasuredMaximumSelectedTriangles;
+                controller.authoredMaximumSelectedTriangles = AuthoredMaximumSelectedTriangles;
                 controller.authoredContractVersion = AircraftCenteredBuildingClipmapController.ContractVersion;
                 controller.pageFilters = new MeshFilter[AircraftCenteredBuildingClipmapController.SlotCount];
                 controller.pageRenderers = new MeshRenderer[AircraftCenteredBuildingClipmapController.SlotCount];
@@ -641,28 +857,16 @@ namespace QuestFlight.Editor
                     renderer.allowOcclusionWhenDynamic = true;
                     controller.pageFilters[i] = filter; controller.pageRenderers[i] = renderer;
                 }
-                GameObject detailSlot = new GameObject("BuildingDetailSlot");
-                detailSlot.transform.SetParent(rootObject.transform, false);
-                controller.detailFilter = detailSlot.AddComponent<MeshFilter>();
-                controller.detailRenderer = detailSlot.AddComponent<MeshRenderer>();
-                controller.detailRenderer.sharedMaterial = material;
-                controller.detailRenderer.shadowCastingMode = ShadowCastingMode.Off;
-                controller.detailRenderer.receiveShadows = false;
-                controller.detailRenderer.lightProbeUsage = LightProbeUsage.BlendProbes;
-                controller.detailRenderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbes;
-                controller.detailRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
-                controller.detailRenderer.allowOcclusionWhenDynamic = true;
                 aerial.buildingRoot = rootObject.transform;
                 surface.productionBuildingSurfaceLayer = rootObject.transform;
-                surface.buildingSurfaceRenderers = controller.pageRenderers.Cast<Renderer>()
-                    .Concat(new Renderer[] { controller.detailRenderer }).ToArray();
+                surface.buildingSurfaceRenderers = controller.pageRenderers.Cast<Renderer>().ToArray();
                 surface.buildingSurfaceManifest = LoadRequired<TextAsset>(DatabasePath);
                 surface.representedBuildingCount = database.pages.Sum(page => page.buildings?.Length ?? 0);
                 surface.nearBuildingCoveragePercent = 100f;
                 surface.midBuildingCoveragePercent = 100f;
-                surface.maximumBuildingFootprintInflationPercent = 0f;
+                surface.maximumBuildingFootprintInflationPercent = 5f;
                 surface.bakedBuildingDrawCount = AircraftCenteredBuildingClipmapController.SlotCount;
-                surface.bakedBuildingTriangleCount = MeasuredMaximumSelectedTriangles;
+                surface.bakedBuildingTriangleCount = AuthoredMaximumSelectedTriangles;
                 surface.bakeToolVersion = AircraftCenteredBuildingClipmapController.ContractVersion;
                 surface.bakeUtc = DateTime.UtcNow.ToString("O");
                 ProductionEnvironmentBudget budget = contract.CalculateBudget();
@@ -695,8 +899,7 @@ namespace QuestFlight.Editor
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
             AircraftCenteredBuildingClipmapController prefabController = environment.GetComponentInChildren<AircraftCenteredBuildingClipmapController>(true);
             if (prefabController == null || prefabController.pageFilters.Length != AircraftCenteredBuildingClipmapController.SlotCount ||
-                prefabController.detailFilter == null || prefabController.detailRenderer == null ||
-                prefabController.GetComponentsInChildren<MeshRenderer>(true).Length != AircraftCenteredBuildingClipmapController.SlotCount + 1)
+                prefabController.GetComponentsInChildren<MeshRenderer>(true).Length != AircraftCenteredBuildingClipmapController.SlotCount)
                 throw new InvalidOperationException("Serialized full-map building renderer pool is invalid.");
             Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             AircraftCenteredBuildingClipmapController controller = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<AircraftCenteredBuildingClipmapController>(true)).Single();
@@ -706,9 +909,9 @@ namespace QuestFlight.Editor
             Debug.Log($"[QuestFlight][BuildingClipmap] {report}; components={database.pages.Sum(page => page.buildings?.Length ?? 0):N0}; pages={database.pages.Length:N0}.");
         }
 
-        private static string MeshPath(int column, int row, bool detail) => $"{GeneratedRoot}/{AssetName(column, row, detail)}.asset";
-        private static string AssetName(int column, int row, bool detail) =>
-            $"KBDU_buildings_{(detail ? "detail" : "coverage")}_{column:D3}_{row:D3}";
+        private static string MeshPath(int column, int row) => $"{GeneratedRoot}/{AssetName(column, row)}.asset";
+        private static string AssetName(int column, int row) =>
+            $"KBDU_buildings_stable_{column:D3}_{row:D3}";
         private static T LoadRequired<T>(string path) where T : UnityEngine.Object =>
             AssetDatabase.LoadAssetAtPath<T>(path) ?? throw new InvalidOperationException("Required asset missing: " + path);
         private static string Absolute(string assetPath) => Path.Combine(Directory.GetParent(Application.dataPath)?.FullName ?? throw new InvalidOperationException(), assetPath.Replace('/', Path.DirectorySeparatorChar));

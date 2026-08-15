@@ -50,6 +50,30 @@ Run from the repository root:
   Android build, and physical Quest results are recorded in
   `docs/evidence/FULL_MAP_BUILDING_CLIPMAP_V1_1_2026-08-15.md`.
 
+## Full-map building clipmap V1.2 stable shells
+
+- root cause: V1.1 compiled 56,042 of 57,407 ordinary buildings without walls
+  in coverage pages, then replaced the containing coverage page with an exact
+  detail page; walls therefore appeared and disappeared at page transitions;
+- representation: one stable closed-shell mesh per page, one material, 16
+  serialized renderers, no detail slot, alpha, dither, card curtain, runtime
+  mesh generation, or representation-dependent geometry switch;
+- source coverage: PASS, 57,407 components; 155 exact landmarks, 52,730
+  four-vertex shells, 3,949 six-vertex shells, and 728 higher-vertex shells;
+- footprint bounds: PASS, maximum 29.9918% area error, 4.99618% inflation,
+  2.99987 m centroid shift, and 10.0 m boundary error;
+- exact generated-mesh maximum: 139,588 selected building triangles, below the
+  140,000 correction ceiling;
+- EditMode: PASS 325/325; PlayMode: PASS 10/10; dependency closure: ready with
+  zero rejected or unknown dependencies;
+- affected full-resolution Visual QA views pass and were inspected. Aggregate
+  Visual QA remains `FAIL_MACHINE_QA` because the inherited 38-material scene
+  exceeds the old 29-material target; this milestone adds no material;
+- Meta XR Simulator: `BLOCKED_MISSING_RECORDED_REPLAYS`; shipping settings were
+  preserved and no stereo result is inferred;
+- release-style Android build: PASS. Physical Quest transition and sustained
+  performance acceptance remain pending and are not inferred.
+
 ## Full-map aerial clipmap V1
 
 - source/page validation: PASS 1,873/1,873 pages from City item

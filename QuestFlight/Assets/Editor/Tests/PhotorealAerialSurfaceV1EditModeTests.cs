@@ -141,13 +141,12 @@ namespace QuestFlight.Editor.Tests
             AircraftCenteredBuildingClipmapController buildingClipmap =
                 root.productionBuildingSurfaceLayer.GetComponent<AircraftCenteredBuildingClipmapController>();
             Assert.That(buildingClipmap, Is.Not.Null);
-            Assert.That(buildings, Has.Length.EqualTo(AircraftCenteredBuildingClipmapController.SlotCount + 1));
+            Assert.That(buildings, Has.Length.EqualTo(AircraftCenteredBuildingClipmapController.SlotCount));
             Assert.That(canopy, Has.Length.EqualTo(4));
             Assert.That(buildings.SelectMany(item => item.sharedMaterials).Distinct().Count(), Is.EqualTo(1));
             Assert.That(buildings.Take(AircraftCenteredBuildingClipmapController.SlotCount)
                 .Select(item => item.GetComponent<MeshFilter>()).SequenceEqual(
                 buildingClipmap.pageFilters), Is.True);
-            Assert.That(buildings.Last().GetComponent<MeshFilter>(), Is.EqualTo(buildingClipmap.detailFilter));
             Assert.That(buildings.All(item => item.GetComponent<MeshFilter>().sharedMesh == null), Is.True,
                 "Runtime building pages must not be serialized into the product prefab.");
             Assert.That(buildings.All(item => item.sharedMaterial.shader.name ==
@@ -156,7 +155,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(buildingClipmap.bundleDirectory, Is.EqualTo("QuestFlightBuildingClipmap"));
             Assert.That(buildingClipmap.authoredContractVersion,
                 Is.EqualTo(AircraftCenteredBuildingClipmapController.ContractVersion));
-            Assert.That(buildingClipmap.authoredMaximumSelectedTriangles, Is.LessThanOrEqualTo(120000));
+            Assert.That(buildingClipmap.authoredMaximumSelectedTriangles, Is.LessThanOrEqualTo(140000));
             Assert.That(canopy.All(item => item.GetComponent<MeshFilter>().sharedMesh
                     .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color)), Is.True,
                 "Canopy batches require crown/trunk semantic colors.");
@@ -245,7 +244,7 @@ namespace QuestFlight.Editor.Tests
                 root.productionBuildingSurfaceLayer.GetComponent<AircraftCenteredBuildingClipmapController>();
             Assert.That(clipmap, Is.Not.Null);
             Assert.That(root.buildingSurfaceRenderers, Has.Length.EqualTo(
-                AircraftCenteredBuildingClipmapController.SlotCount + 1));
+                AircraftCenteredBuildingClipmapController.SlotCount));
             Assert.That(root.buildingSurfaceRenderers.All(renderer =>
                 renderer.transform.parent == root.productionBuildingSurfaceLayer &&
                 renderer.GetComponent<MeshFilter>()?.sharedMesh == null), Is.True,

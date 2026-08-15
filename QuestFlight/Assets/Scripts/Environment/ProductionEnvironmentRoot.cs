@@ -432,10 +432,7 @@ namespace QuestFlightLab.Environment
                     .ToArray();
             HashSet<Renderer> buildingClipmapRenderers = new HashSet<Renderer>(
                 buildingClipmaps.SelectMany(clipmap =>
-                    (clipmap.pageRenderers ?? Array.Empty<MeshRenderer>()).Cast<Renderer>()
-                    .Concat(clipmap.detailRenderer == null
-                        ? Array.Empty<Renderer>()
-                        : new Renderer[] { clipmap.detailRenderer }))
+                    (clipmap.pageRenderers ?? Array.Empty<MeshRenderer>()).Cast<Renderer>())
                     .Where(renderer => renderer != null));
             Renderer[] renderers = GetComponentsInChildren<Renderer>(true)
                 .Where(renderer => renderer != null && renderer.enabled &&

@@ -11,16 +11,14 @@ namespace QuestFlightLab.Environment
 {
     /// <summary>
     /// Streams offline-compiled 1 km building pages through one explicitly authored
-    /// 4x4 coverage pool and one exact-detail renderer. Coverage never changes with
-    /// LOD: every represented roof remains present until its far page leaves the
-    /// aircraft-centered window. The detail renderer replaces only the coverage page
-    /// containing the aircraft, so a page transition changes fidelity without making
-    /// an entire neighborhood appear or disappear.
+    /// 4x4 renderer pool. Every page contains the same closed context-building shells
+    /// at every aircraft position, so crossing an inner page boundary never replaces
+    /// roofs, walls, bounds, materials, or pivots.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class AircraftCenteredBuildingClipmapController : MonoBehaviour
     {
-        public const string ContractVersion = "full-map-building-clipmap-v1.1";
+        public const string ContractVersion = "full-map-building-clipmap-v1.2";
         public const int GridSize = 4;
         public const int SlotCount = GridSize * GridSize;
 
@@ -28,8 +26,6 @@ namespace QuestFlightLab.Environment
         public AircraftReferenceFrameRig trackedRig;
         public MeshFilter[] pageFilters = Array.Empty<MeshFilter>();
         public MeshRenderer[] pageRenderers = Array.Empty<MeshRenderer>();
-        public MeshFilter detailFilter;
-        public MeshRenderer detailRenderer;
         public Material sharedBuildingMaterial;
 
         [Header("Offline page contract")]
@@ -43,7 +39,7 @@ namespace QuestFlightLab.Environment
         public int bundleRegionCells = 2;
         [Min(0f)] public float predictionSeconds = 2.5f;
         [Min(0.02f)] public float movementPollSeconds = 0.3f;
-        public int authoredMaximumSelectedTriangles = 116000;
+        public int authoredMaximumSelectedTriangles = 139588;
         public string authoredContractVersion = ContractVersion;
 
         [Header("Runtime evidence (read only)")]
@@ -53,7 +49,7 @@ namespace QuestFlightLab.Environment
         [SerializeField] private int residentRegions;
 
         private readonly PageState[] states = new PageState[SlotCount];
-        private readonly Dictionary<PageAssetKey, Mesh> meshes = new Dictionary<PageAssetKey, Mesh>();
+        private readonly Dictionary<PageKey, Mesh> meshes = new Dictionary<PageKey, Mesh>();
         private readonly Dictionary<string, RegionState> regions = new Dictionary<string, RegionState>();
         private readonly Dictionary<string, uint> bundleCrcs = new Dictionary<string, uint>(StringComparer.Ordinal);
         private Vector3 previousPosition;
@@ -84,16 +80,6 @@ namespace QuestFlightLab.Environment
             public override bool Equals(object obj) => obj is PageKey other && Equals(other);
             public override int GetHashCode() => unchecked((column * 397) ^ row);
             public override string ToString() => $"{column:D3},{row:D3}";
-        }
-
-        private readonly struct PageAssetKey : IEquatable<PageAssetKey>
-        {
-            public readonly PageKey page;
-            public readonly bool detail;
-            public PageAssetKey(PageKey page, bool detail) { this.page = page; this.detail = detail; }
-            public bool Equals(PageAssetKey other) => page.Equals(other.page) && detail == other.detail;
-            public override bool Equals(object obj) => obj is PageAssetKey other && Equals(other);
-            public override int GetHashCode() => unchecked((page.GetHashCode() * 397) ^ (detail ? 1 : 0));
         }
 
         private sealed class PageState
@@ -129,8 +115,6 @@ namespace QuestFlightLab.Environment
                 pageRenderers[i].sharedMaterial = sharedBuildingMaterial;
                 pageRenderers[i].enabled = false;
             }
-            detailRenderer.sharedMaterial = sharedBuildingMaterial;
-            detailRenderer.enabled = false;
         }
 
         private void DisableRenderers()
@@ -138,7 +122,6 @@ namespace QuestFlightLab.Environment
             if (pageRenderers != null)
                 foreach (MeshRenderer renderer in pageRenderers)
                     if (renderer != null) renderer.enabled = false;
-            if (detailRenderer != null) detailRenderer.enabled = false;
         }
 
         private IEnumerator Start()
@@ -198,15 +181,12 @@ namespace QuestFlightLab.Environment
 
                 Vector2Int minimum = DesiredMinimum(current);
                 List<PageKey> active = WindowPages(minimum);
-                PageKey detailPage = ContainingPage(current);
-                List<PageAssetKey> required = active.Select(page => new PageAssetKey(page, false)).ToList();
-                required.Add(new PageAssetKey(detailPage, true));
 
                 bool loaded = true;
-                foreach (PageAssetKey key in required)
+                foreach (PageKey page in active)
                 {
                     bool oneLoaded = false;
-                    yield return EnsureMesh(key, result => oneLoaded = result != null);
+                    yield return EnsureMesh(page, result => oneLoaded = result != null);
                     if (!oneLoaded) { loaded = false; break; }
                 }
                 if (!loaded)
@@ -215,23 +195,22 @@ namespace QuestFlightLab.Environment
                     yield break;
                 }
 
-                CommitWindow(active, detailPage, force);
+                CommitWindow(active, force);
 
                 Vector3 prediction = Vector3.ClampMagnitude(velocity * predictionSeconds, pageSizeMeters);
                 Vector3 predicted = current + prediction;
-                HashSet<PageAssetKey> residency = new HashSet<PageAssetKey>(required);
+                HashSet<PageKey> residency = new HashSet<PageKey>(active);
                 foreach (PageKey page in WindowPages(DesiredMinimum(predicted)))
-                    residency.Add(new PageAssetKey(page, false));
-                residency.Add(new PageAssetKey(ContainingPage(predicted), true));
-                foreach (PageAssetKey key in residency)
-                    if (!meshes.ContainsKey(key))
-                        yield return EnsureMesh(key, _ => { });
+                    residency.Add(page);
+                foreach (PageKey page in residency)
+                    if (!meshes.ContainsKey(page))
+                        yield return EnsureMesh(page, _ => { });
                 yield return ReleaseUnusedRegions(residency);
             }
             finally { refreshRunning = false; }
         }
 
-        private void CommitWindow(IReadOnlyList<PageKey> active, PageKey detailPage, bool force)
+        private void CommitWindow(IReadOnlyList<PageKey> active, bool force)
         {
             HashSet<PageKey> desired = new HashSet<PageKey>(active);
             Dictionary<PageKey, int> retained = new Dictionary<PageKey, int>();
@@ -248,16 +227,16 @@ namespace QuestFlightLab.Environment
             {
                 if (retained.TryGetValue(page, out int existing))
                 {
-                    pageRenderers[existing].enabled = !page.Equals(detailPage) && states[existing].mesh.vertexCount > 0;
+                    pageRenderers[existing].enabled = states[existing].mesh.vertexCount > 0;
                     continue;
                 }
                 int slot = available.Dequeue();
-                Mesh mesh = meshes[new PageAssetKey(page, false)];
+                Mesh mesh = meshes[page];
                 states[slot].page = page;
                 states[slot].mesh = mesh;
                 states[slot].occupied = true;
                 pageFilters[slot].sharedMesh = mesh;
-                pageRenderers[slot].enabled = !page.Equals(detailPage) && mesh.vertexCount > 0;
+                pageRenderers[slot].enabled = mesh.vertexCount > 0;
             }
 
             HashSet<PageKey> committed = new HashSet<PageKey>(active);
@@ -270,22 +249,19 @@ namespace QuestFlightLab.Environment
                 pageRenderers[i].enabled = false;
             }
 
-            Mesh detail = meshes[new PageAssetKey(detailPage, true)];
-            detailFilter.sharedMesh = detail;
-            detailRenderer.enabled = detail.vertexCount > 0;
             activeCoveragePages = pageRenderers.Count(renderer => renderer.enabled);
             if (!force && (lastEnteringPages == GridSize || lastEnteringPages == GridSize * 2 - 1))
-                Debug.Log($"[QuestFlight][BuildingClipmap] Atomic page shift: retained={lastRetainedPages}; entering={lastEnteringPages}; detail={detailPage}.", this);
+                Debug.Log($"[QuestFlight][BuildingClipmap] Atomic stable-shell page shift: retained={lastRetainedPages}; entering={lastEnteringPages}.", this);
         }
 
-        private IEnumerator EnsureMesh(PageAssetKey key, Action<Mesh> completed)
+        private IEnumerator EnsureMesh(PageKey page, Action<Mesh> completed)
         {
-            if (meshes.TryGetValue(key, out Mesh cached) && cached != null)
+            if (meshes.TryGetValue(page, out Mesh cached) && cached != null)
             {
                 completed(cached);
                 yield break;
             }
-            string regionName = RegionName(key.page);
+            string regionName = RegionName(page);
             if (!regions.TryGetValue(regionName, out RegionState region) || region.bundle == null)
             {
                 if (!bundleCrcs.TryGetValue(regionName, out uint crc))
@@ -313,7 +289,7 @@ namespace QuestFlightLab.Environment
                 residentRegions = regions.Count;
             }
 
-            string assetName = AssetName(key);
+            string assetName = AssetName(page);
             AssetBundleRequest assetRequest = region.bundle.LoadAssetAsync<Mesh>(assetName);
             yield return assetRequest;
             Mesh loaded = assetRequest.asset as Mesh;
@@ -323,19 +299,19 @@ namespace QuestFlightLab.Environment
                 completed(null);
                 yield break;
             }
-            meshes[key] = loaded;
+            meshes[page] = loaded;
             completed(loaded);
         }
 
-        private IEnumerator ReleaseUnusedRegions(HashSet<PageAssetKey> residency)
+        private IEnumerator ReleaseUnusedRegions(HashSet<PageKey> residency)
         {
-            HashSet<string> needed = new HashSet<string>(residency.Select(key => RegionName(key.page)), StringComparer.Ordinal);
+            HashSet<string> needed = new HashSet<string>(residency.Select(RegionName), StringComparer.Ordinal);
             List<string> stale = regions.Keys.Where(name => !needed.Contains(name)).ToList();
             foreach (string name in stale)
             {
                 RegionState region = regions[name];
                 regions.Remove(name);
-                foreach (PageAssetKey key in meshes.Keys.Where(key => RegionName(key.page) == name).ToList()) meshes.Remove(key);
+                foreach (PageKey page in meshes.Keys.Where(page => RegionName(page) == name).ToList()) meshes.Remove(page);
                 if (region.bundle != null) yield return region.bundle.UnloadAsync(true);
             }
             residentRegions = regions.Count;
@@ -365,8 +341,8 @@ namespace QuestFlightLab.Environment
         private string RegionName(PageKey page) =>
             $"qf_buildings_r{page.row / bundleRegionCells:D2}_c{page.column / bundleRegionCells:D2}";
 
-        private static string AssetName(PageAssetKey key) =>
-            $"KBDU_buildings_{(key.detail ? "detail" : "coverage")}_{key.page.column:D3}_{key.page.row:D3}";
+        private static string AssetName(PageKey page) =>
+            $"KBDU_buildings_stable_{page.column:D3}_{page.row:D3}";
 
         private string StreamingUrl(string leaf) =>
             Application.streamingAssetsPath.TrimEnd('/', '\\') + "/" + bundleDirectory + "/" + leaf;
@@ -376,7 +352,6 @@ namespace QuestFlightLab.Environment
             DisableRenderers();
             foreach (MeshFilter filter in pageFilters ?? Array.Empty<MeshFilter>())
                 if (filter != null) filter.sharedMesh = null;
-            if (detailFilter != null) detailFilter.sharedMesh = null;
             foreach (RegionState region in regions.Values)
                 if (region.bundle != null) region.bundle.Unload(true);
             regions.Clear();
@@ -396,12 +371,10 @@ namespace QuestFlightLab.Environment
                     if (pageFilters[i] == null || pageRenderers[i] == null || pageFilters[i].gameObject != pageRenderers[i].gameObject ||
                         pageFilters[i].transform.parent != transform)
                         failures.Add("coverage slot " + i + " is not explicitly authored directly under the clipmap root");
-            if (detailFilter == null || detailRenderer == null || detailFilter.gameObject != detailRenderer.gameObject || detailFilter.transform.parent != transform)
-                failures.Add("the exact-detail renderer is not explicitly authored directly under the clipmap root");
             if (columns < GridSize || rows < GridSize || pageSizeMeters <= 0f || bundleRegionCells <= 0) failures.Add("page grid contract is invalid");
             if (predictionSeconds < 0f || movementPollSeconds <= 0f) failures.Add("streaming timing contract is invalid");
             if (authoredMaximumSelectedTriangles <= 0) failures.Add("authored maximum selected triangle count is missing");
-            report = failures.Count == 0 ? "PASS stable 16-page coverage plus one exact aircraft-page detail renderer" : string.Join("; ", failures);
+            report = failures.Count == 0 ? "PASS stable 16-page closed-shell renderer pool with no inner-page replacement" : string.Join("; ", failures);
             return failures.Count == 0;
         }
     }

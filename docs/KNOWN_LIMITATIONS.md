@@ -30,6 +30,23 @@
 - Static planning metrics and an Android build do not establish sustained 72 Hz,
   thermal, or memory acceptance on Quest hardware.
 
+## Full-map building clipmap V1.2 stable shells
+
+- The former roof-only coverage representation and aircraft-page wall swap are
+  removed. All 57,407 represented buildings now remain closed shells across
+  page transitions.
+- Ordinary footprints are deliberately simplified to keep the worst active
+  window within 140,000 building triangles. The measured maximum is 139,588;
+  landmarks retain exact footprints, while ordinary shells are bounded to 30%
+  area error, 5% inflation, 3 m centroid shift, and 10 m boundary error.
+- This change fixes representation-dependent wall popping, but it does not turn
+  procedural facades into surveyed building art. Full physical-headset review
+  is still required to judge page-boundary continuity and worn fidelity.
+- The inherited scene-wide 38-material inventory still exceeds the older
+  29-material planning target. Missing recorded Meta XR Simulator sessions also
+  block the aggregate stereo replay gate; neither condition was introduced by
+  the stable-shell compiler.
+
 ## Full-map aerial clipmap V1 candidate
 
 - The source is Spring/Summer 2020 visual context, not current or navigable

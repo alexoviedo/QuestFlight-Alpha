@@ -121,17 +121,15 @@ namespace QuestFlightLab.Environment
                 canopySurfaceManifest.text.Contains(
                     "\"type\": \"terrain_canopy_map_only_outside_hero_radius\"");
             int maximumSerializedBuildingRenderers = aircraftCenteredBuildings
-                ? AircraftCenteredBuildingClipmapController.SlotCount + 1
+                ? AircraftCenteredBuildingClipmapController.SlotCount
                 : 16;
             Require(buildings.Length > 0 && buildings.Length <= maximumSerializedBuildingRenderers,
                 $"building surface must use 1-{maximumSerializedBuildingRenderers} offline renderers, found {buildings.Length}", failures);
             Require(!aircraftCenteredBuildings ||
-                    buildings.Length == AircraftCenteredBuildingClipmapController.SlotCount + 1 &&
+                    buildings.Length == AircraftCenteredBuildingClipmapController.SlotCount &&
                     buildingClipmap.pageRenderers != null &&
                     buildingClipmap.pageFilters != null &&
-                    buildingClipmap.pageRenderers.Cast<Renderer>().SequenceEqual(
-                        buildings.Take(AircraftCenteredBuildingClipmapController.SlotCount)) &&
-                    buildingClipmap.detailRenderer == buildings.Last() &&
+                    buildingClipmap.pageRenderers.Cast<Renderer>().SequenceEqual(buildings) &&
                     buildingClipmap.pageFilters.Length == AircraftCenteredBuildingClipmapController.SlotCount,
                 "aircraft-centered building clipmap does not own the fixed serialized renderer pool", failures);
             Require(canopyMapOnly ? canopy.Length == 0 : canopy.Length > 0 && canopy.Length <= 4,

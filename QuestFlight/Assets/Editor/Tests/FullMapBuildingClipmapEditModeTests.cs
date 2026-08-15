@@ -25,17 +25,13 @@ namespace QuestFlight.Editor.Tests
             Assert.That(controller.transform.name, Is.EqualTo(PhotorealAerialSurfaceRoot.BuildingLayerName));
             Assert.That(controller.pageFilters, Has.Length.EqualTo(AircraftCenteredBuildingClipmapController.SlotCount));
             Assert.That(controller.pageRenderers, Has.Length.EqualTo(AircraftCenteredBuildingClipmapController.SlotCount));
-            Assert.That(controller.detailFilter, Is.Not.Null);
-            Assert.That(controller.detailRenderer, Is.Not.Null);
             Assert.That(controller.pageFilters.All(filter => filter != null && filter.sharedMesh == null), Is.True);
-            Assert.That(controller.detailFilter.sharedMesh, Is.Null);
             Assert.That(controller.pageRenderers.All(renderer => renderer != null &&
                 renderer.sharedMaterial == controller.sharedBuildingMaterial &&
                 renderer.shadowCastingMode == ShadowCastingMode.Off), Is.True);
-            Assert.That(controller.detailRenderer.sharedMaterial, Is.EqualTo(controller.sharedBuildingMaterial));
             Assert.That(controller.GetComponentsInChildren<LODGroup>(true), Is.Empty);
             Assert.That(controller.authoredContractVersion, Is.EqualTo(AircraftCenteredBuildingClipmapController.ContractVersion));
-            Assert.That(controller.authoredMaximumSelectedTriangles, Is.LessThanOrEqualTo(120000));
+            Assert.That(controller.authoredMaximumSelectedTriangles, Is.EqualTo(139588));
 
             var scene = EditorSceneManager.OpenScene(
                 FullMapBuildingClipmapAssetAuthoring.ScenePath, OpenSceneMode.Single);
@@ -63,13 +59,16 @@ namespace QuestFlight.Editor.Tests
             Assert.That(source, Does.Not.Contain("Instantiate("));
             Assert.That(source, Does.Not.Contain("FindObject"));
             Assert.That(source, Does.Contain("Application.streamingAssetsPath"));
-            Assert.That(source, Does.Contain("CommitWindow(active, detailPage"));
+            Assert.That(source, Does.Contain("CommitWindow(active, force"));
+            Assert.That(source, Does.Not.Contain("detailRenderer"));
             Assert.That(source, Does.Contain("UnloadAsync(true)"));
             Assert.That(source, Does.Not.Contain("Unload(false)"));
             Assert.That(source, Does.Not.Contain("bundle.Unload(loaded == null)"));
 
             string authoring = Read("Assets/Editor/FullMapBuildingClipmapAssetAuthoring.cs");
-            Assert.That(authoring, Does.Contain("CoverageWallMinimumAreaSquareMeters"));
+            Assert.That(authoring, Does.Contain("CompileStableFootprint"));
+            Assert.That(authoring, Does.Contain("OrdinaryFootprintVertexLimit"));
+            Assert.That(authoring, Does.Not.Contain("CoverageWallMinimumAreaSquareMeters"));
             Assert.That(authoring, Does.Contain("building.lod2_q"));
             Assert.That(authoring, Does.Not.Contain("building.area_m2 < 2000f"));
             Assert.That(authoring, Does.Not.Contain("building.area_m2 < 8000f"));
@@ -142,22 +141,17 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void CoverageAndDetailCompilerStayInsideTheBuildingTriangleCeiling()
+        public void StableShellCompilerStaysInsideTheBuildingTriangleCeiling()
         {
             int columns = 24, rows = 24;
-            int[,] coverage = new int[columns, rows];
-            int[,] detail = new int[columns, rows];
+            int[,] stable = new int[columns, rows];
             for (int row = 0; row < rows; row++)
             for (int column = 0; column < columns; column++)
             {
-                Mesh coverageMesh = AssetDatabase.LoadAssetAtPath<Mesh>(
-                    $"{FullMapBuildingClipmapAssetAuthoring.GeneratedRoot}/KBDU_buildings_coverage_{column:D3}_{row:D3}.asset");
-                Mesh detailMesh = AssetDatabase.LoadAssetAtPath<Mesh>(
-                    $"{FullMapBuildingClipmapAssetAuthoring.GeneratedRoot}/KBDU_buildings_detail_{column:D3}_{row:D3}.asset");
-                Assert.That(coverageMesh, Is.Not.Null, $"coverage {column},{row}");
-                Assert.That(detailMesh, Is.Not.Null, $"detail {column},{row}");
-                coverage[column, row] = (int)coverageMesh.GetIndexCount(0) / 3;
-                detail[column, row] = (int)detailMesh.GetIndexCount(0) / 3;
+                Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(
+                    $"{FullMapBuildingClipmapAssetAuthoring.GeneratedRoot}/KBDU_buildings_stable_{column:D3}_{row:D3}.asset");
+                Assert.That(mesh, Is.Not.Null, $"stable {column},{row}");
+                stable[column, row] = (int)mesh.GetIndexCount(0) / 3;
             }
 
             int maximum = 0;
@@ -166,14 +160,13 @@ namespace QuestFlight.Editor.Tests
             {
                 int minimumColumn = Mathf.Clamp(currentColumn - 2, 0, columns - 4);
                 int minimumRow = Mathf.Clamp(currentRow - 2, 0, rows - 4);
-                int selected = detail[currentColumn, currentRow];
+                int selected = 0;
                 for (int row = minimumRow; row < minimumRow + 4; row++)
                 for (int column = minimumColumn; column < minimumColumn + 4; column++)
-                    if (column != currentColumn || row != currentRow) selected += coverage[column, row];
+                    selected += stable[column, row];
                 maximum = Mathf.Max(maximum, selected);
             }
-            Assert.That(maximum, Is.EqualTo(109166));
-            Assert.That(maximum, Is.LessThanOrEqualTo(120000));
+            Assert.That(maximum, Is.EqualTo(139588));
         }
 
         private static System.Collections.Generic.HashSet<Vector2Int> Window(Vector2Int minimum)

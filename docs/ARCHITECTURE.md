@@ -37,12 +37,15 @@ at runtime.
 
 The hierarchy exists before frame zero. OpenXR owns tracked camera motion. Calibration modifies only `UserViewCalibrationOffset`. Input produces a neutral control snapshot consumed by one `FlightDynamicsCoordinator`; its sole backend is the embedded native JSBSim 1.3.1 C172P derivative. The coordinator prepares the integrity-checked native payload, acquires one authority lease, and fails closed on preparation, initialization, ABI, non-finite-state, reset, or step failure. There is no alternate Unity flight model or runtime fallback. Environment geometry, runway, water, immutable far terrain, and presentation effects are authored assets rather than runtime reconstruction.
 
-`FullMapBuildingClipmapV1.1` replaces the original mass-deleting LOD thresholds
-with a serialized 4x4 coverage pool plus one exact aircraft-page detail slot.
-Offline tools compile all 57,407 official City/County footprint components into
-576 one-kilometre coverage/detail pairs. Every simplified roof remains in the
-coverage representation; large and landmark structures also retain far walls.
-The exact page containing the aircraft replaces—not overlaps—its coverage page.
+`FullMapBuildingClipmapV1.2` replaces the former coverage/detail representation
+switch with one serialized 4x4 stable closed-shell pool. Offline tools compile
+all 57,407 official City/County footprint components into 576 one-kilometre
+pages. Every represented building keeps walls and a roof from all viewing
+distances; a page never changes geometry merely because it contains the
+aircraft. Landmarks retain exact footprints. Ordinary footprints are simplified
+offline under explicit area, inflation, centroid-shift, and boundary-error
+ceilings, and the same ring authors both walls and roof so the shell cannot
+separate.
 The aircraft simulation frame—not the camera—selects the visible window, while
 prediction prefetches only. PageKey ownership retains 12 slots on a one-axis
 shift and nine on a diagonal shift; entering pages load before one atomic commit.
