@@ -374,3 +374,17 @@ The airport corridor is a reference-faithful procedural approximation rather tha
 - The exact APK is installed for worn review. Stereo simulator orchestration
   failed before connection, and no physical Quest frame, thermal, or comfort
   acceptance is claimed.
+
+## Full-map watertight building shells V1
+
+- Ordinary procedural shells now share exact wall-top/roof-perimeter vertices
+  and extend 1.60 m below the sampled authoritative terrain. This removes the
+  visible shell gaps; the hidden skirt is not a surveyed foundation model.
+- Terrain height is sampled from the authored production surface. Rare source
+  footprint overhangs beyond the bounded terrain domain use the nearest domain
+  boundary sample.
+- The correction does not improve incomplete OSM tags, uncertain building
+  heights, procedural facade detail, or close-range architectural fidelity.
+- Machine captures and deterministic mesh validation pass the sealing contract.
+  Worn visual acceptance and physical Quest timing/thermal evidence remain
+  pending for the installed APK.

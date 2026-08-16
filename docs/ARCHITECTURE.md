@@ -282,3 +282,20 @@ facades continue to use the procedural facade atlas. Terrain and roofs share
 bindings atomically. This adds no renderer, draw, material, transparent slot,
 runtime texture, or hierarchy object. Airport hero buildings remain on authored
 materials because their clean-plate imagery no longer contains source roofs.
+
+## Full-map watertight building shells
+
+The stable full-map shell compiler seals each ordinary building against both
+its roof and authoritative terrain. Wall-top endpoints are the exact shared
+roof-perimeter vertices, including pitched-roof height, rather than a separate
+flat wall cap. Each wall-bottom endpoint samples
+`KBDU_ProductionTerrainSurfaceV2` at its footprint coordinate and extends 1.60
+m below that surface as a hidden foundation skirt. The 576-page geometry and
+16-renderer runtime pool are unchanged.
+
+The compiler removes consecutive duplicate ring points, uses local-origin
+double-precision area tests, and accepts a roof only when exactly `n - 2`
+triangles cover every perimeter vertex. A post-compile mesh audit rejects any
+roof-wall mismatch over 1 mm, terrain-unsealed wall bottom, or unshared vertical
+wall corner. This is offline authoring; no runtime repair or hierarchy creation
+is introduced.

@@ -122,6 +122,33 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
+        public void CompiledShellsSealWallsToAuthoritativeTerrainAndExactRoofVertices()
+        {
+            TextAsset report = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                FullMapBuildingClipmapAssetAuthoring.CompilationReportPath);
+            Assert.That(report, Is.Not.Null);
+            Assert.That(report.text, Does.Contain("terrain-sealed-shell-compiler-v7-20260816"));
+            Assert.That(report.text, Does.Contain("\"foundation_embed_meters\": 1.6"));
+            Assert.That(report.text, Does.Contain("\"maximum_roof_wall_seam_meters\": 0.0"));
+            Assert.That(report.text, Does.Contain("\"maximum_vertical_corner_seam_meters\": 0.0"));
+
+            string authoring = Read("Assets/Editor/FullMapBuildingClipmapAssetAuthoring.cs");
+            Assert.That(authoring, Does.Contain("Vector3 c = roof[(i + 1) % polygon.Length]"),
+                "A wall top endpoint must be the exact roof perimeter vertex, not a parallel approximation.");
+            Assert.That(authoring, Does.Contain("Vector3 d = roof[i]"));
+            Assert.That(authoring, Does.Contain("Mathf.Min(authoredBaseY, sample.heightMeters) - FoundationEmbedMeters"),
+                "Each wall endpoint must extend beneath both the building datum and authoritative terrain.");
+            Assert.That(authoring, Does.Contain("Wall/roof seam exceeds 1 mm"));
+            Assert.That(authoring, Does.Contain("Open vertical wall corner found"));
+
+            ProductionTerrainSurfaceAsset terrain = AssetDatabase.LoadAssetAtPath<ProductionTerrainSurfaceAsset>(
+                FullMapBuildingClipmapAssetAuthoring.TerrainSurfacePath);
+            Assert.That(terrain, Is.Not.Null);
+            Assert.That(FullMapBuildingClipmapAssetAuthoring.FoundationEmbedMeters, Is.GreaterThan(1.5f),
+                "Foundation skirt must exceed the documented maximum simplified-terrain error.");
+        }
+
+        [Test]
         public void AircraftCenteredWindowRetainsPagesAcrossCellBoundaries()
         {
             GameObject owner = new GameObject("BuildingClipmapWindowTest");

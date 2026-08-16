@@ -1,13 +1,18 @@
 {
-    "compiler_version": "stable-closed-shell-compiler-v6-20260815",
+    "compiler_version": "terrain-sealed-shell-compiler-v7-20260816",
     "represented_buildings": 57407,
     "exact_landmarks": 155,
     "four_vertex_shells": 52730,
     "six_vertex_shells": 3949,
     "higher_vertex_shells": 728,
     "maximum_active_window_triangles": 139594,
-    "maximum_area_error_percent": 29.99180793762207,
-    "maximum_inflation_percent": 4.996175765991211,
+    "maximum_area_error_percent": 29.991779327392579,
+    "maximum_inflation_percent": 4.999911308288574,
     "maximum_centroid_shift_meters": 2.9998700618743898,
-    "maximum_boundary_error_meters": 10.0
+    "maximum_boundary_error_meters": 10.0,
+    "terrain_sealed_wall_vertices": 485182,
+    "roof_sealed_wall_vertices": 485182,
+    "foundation_embed_meters": 1.600000023841858,
+    "maximum_roof_wall_seam_meters": 0.0,
+    "maximum_vertical_corner_seam_meters": 0.0
 }

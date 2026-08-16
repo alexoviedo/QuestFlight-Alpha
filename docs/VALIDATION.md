@@ -687,3 +687,28 @@ Exact evidence: `docs/evidence/GOLDEN_EAGLE_THERMAL_V1_2026-08-11.md`.
   timing/thermal acceptance remain pending.
 
 Exact evidence: `docs/evidence/FULL_MAP_BUILDING_ROOFS_V1_2026-08-16.md`.
+
+## Full-map watertight building shells V1
+
+- Offline compiler report: PASS for 57,407 buildings, 485,182 terrain-sealed
+  wall vertices, 485,182 exact roof-wall vertices, 0.0 m maximum roof seam,
+  0.0 m maximum vertical-corner seam, and a 1.60 m terrain embed.
+- Runtime representation cost is unchanged: 576 pages, 16 page renderers, and
+  139,594 maximum active-window building triangles.
+- EditMode: PASS 327/327. PlayMode: PASS 10/10.
+- Product integrity: PASS during the release build; dependency closure: PASS
+  with 595 dependencies, zero rejected, and zero unknown.
+- Full-resolution Visual QA: 123 nonblank captures produced; focused low,
+  facade, residential, takeoff-left, and airport-building views inspected.
+  Aggregate classification remains `FAIL_MACHINE_QA` only for the inherited
+  38/29 material target; maximum estimated draws/triangles remain 77/655,103.
+- Meta XR Simulator: `BLOCKED_MISSING_RECORDED_REPLAYS`; the required VRS files
+  are absent and Android AssetBundles are incompatible with its Windows player.
+  No stereo or Quest performance pass is claimed.
+- Android ARM64/Vulkan/OpenXR build: PASS; 1,483,937,488 bytes; SHA-256
+  `e72f8a28882f99141b1a77712793becd91e2a45fcd031f5ed6cc90df079feab9`.
+- Exact APK installation on connected Quest 3: PASS. Worn inspection remains
+  pending.
+
+Exact evidence:
+`docs/evidence/FULL_MAP_BUILDING_WATERTIGHT_V1_2026-08-16.md`.

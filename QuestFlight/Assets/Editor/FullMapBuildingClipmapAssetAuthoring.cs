@@ -29,11 +29,14 @@ namespace QuestFlight.Editor
         public const string AircraftPath = "Assets/Production/Prefabs/ProductionC172AircraftRig.prefab";
         public const string ScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
         public const string ShaderName = "QuestFlight/Full Map Building Clipmap";
+        public const string TerrainSurfacePath =
+            "Assets/Production/Environment/ReconstructionV2/Generated/KBDU_ProductionTerrainSurfaceV2.asset";
+        public const float FoundationEmbedMeters = 1.60f;
         private const string TerrainMaterialPath =
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
-        private const string MeshCompilerVersion = "stable-closed-shell-compiler-v6-20260815";
+        private const string MeshCompilerVersion = "terrain-sealed-shell-compiler-v7-20260816";
         private const int MaximumSelectedTriangleCeiling = 140000;
         private const int AuthoredMaximumSelectedTriangles = 139588;
         private const int OrdinaryFootprintVertexLimit = 4;
@@ -109,6 +112,45 @@ namespace QuestFlight.Editor
             public float maximum_inflation_percent;
             public float maximum_centroid_shift_meters;
             public float maximum_boundary_error_meters;
+            public int terrain_sealed_wall_vertices;
+            public int roof_sealed_wall_vertices;
+            public float foundation_embed_meters;
+            public float maximum_roof_wall_seam_meters;
+            public float maximum_vertical_corner_seam_meters;
+        }
+
+        private readonly struct PositionKey : IEquatable<PositionKey>
+        {
+            private const float UnitsPerMeter = 1000f;
+            private readonly int x, y, z;
+
+            public PositionKey(Vector3 point)
+            {
+                x = Mathf.RoundToInt(point.x * UnitsPerMeter);
+                y = Mathf.RoundToInt(point.y * UnitsPerMeter);
+                z = Mathf.RoundToInt(point.z * UnitsPerMeter);
+            }
+
+            public bool Equals(PositionKey other) => x == other.x && y == other.y && z == other.z;
+            public override bool Equals(object obj) => obj is PositionKey other && Equals(other);
+            public override int GetHashCode() => ((x * 397) ^ y) * 397 ^ z;
+        }
+
+        private readonly struct WatertightMetrics
+        {
+            public readonly int terrainSealedWallVertices;
+            public readonly int roofSealedWallVertices;
+            public readonly float maximumRoofWallSeamMeters;
+            public readonly float maximumVerticalCornerSeamMeters;
+
+            public WatertightMetrics(int terrainSealedWallVertices, int roofSealedWallVertices,
+                float maximumRoofWallSeamMeters, float maximumVerticalCornerSeamMeters)
+            {
+                this.terrainSealedWallVertices = terrainSealedWallVertices;
+                this.roofSealedWallVertices = roofSealedWallVertices;
+                this.maximumRoofWallSeamMeters = maximumRoofWallSeamMeters;
+                this.maximumVerticalCornerSeamMeters = maximumVerticalCornerSeamMeters;
+            }
         }
 
         private sealed class MeshBuilder
@@ -163,6 +205,21 @@ namespace QuestFlight.Editor
             }
         }
 
+        public static void RebuildGeometryAndBundlesBatch()
+        {
+            try
+            {
+                RebuildGeometryAndBundles();
+                Debug.Log("[QuestFlight][BuildingClipmap] GEOMETRY/BUNDLES SUCCESS");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception error)
+            {
+                Debug.LogException(error);
+                EditorApplication.Exit(1);
+            }
+        }
+
         public static void EnsureBuildArtifacts()
         {
             string stampPath = Absolute(StreamingRoot + "/build_stamp.txt");
@@ -170,7 +227,22 @@ namespace QuestFlight.Editor
             if (File.Exists(stampPath) && string.Equals(File.ReadAllText(stampPath).Trim(), expected, StringComparison.Ordinal) &&
                 Directory.EnumerateFiles(Absolute(StreamingRoot), "qf_buildings_*", SearchOption.TopDirectoryOnly).Any())
                 return;
-            BuildAndroidBundlesAndAuthorProduct();
+            // The product hierarchy is already explicitly authored. A missing or
+            // stale ignored cache needs only deterministic geometry and bundles;
+            // rebuilding the serialized environment would create unrelated ID churn.
+            RebuildGeometryAndBundles();
+        }
+
+        private static void RebuildGeometryAndBundles()
+        {
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            Database database = LoadDatabase();
+            RebuildMeshAssets(database);
+            BuildBundles(database);
+            File.WriteAllText(Absolute(StreamingRoot + "/build_stamp.txt"), SourceHash());
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            AssetDatabase.SaveAssets();
+            ValidateAuthoredProduct(database);
         }
 
         /// <summary>
@@ -320,13 +392,14 @@ namespace QuestFlight.Editor
 
         private static void RebuildMeshAssets(Database database)
         {
+            ProductionTerrainSurfaceAsset terrain = LoadRequired<ProductionTerrainSurfaceAsset>(TerrainSurfacePath);
             string absolute = Absolute(GeneratedRoot);
             if (Directory.Exists(absolute)) Directory.Delete(absolute, true);
             Directory.CreateDirectory(absolute);
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             foreach (Page page in database.pages.OrderBy(item => item.row).ThenBy(item => item.column))
             {
-                Mesh mesh = BuildPageMesh(database, page);
+                Mesh mesh = BuildPageMesh(database, page, terrain);
                 AssetDatabase.CreateAsset(mesh, MeshPath(page.column, page.row));
                 if ((page.row * database.columns + page.column) % 24 == 23)
                 {
@@ -340,7 +413,7 @@ namespace QuestFlight.Editor
             WriteCompilationReport(database);
         }
 
-        private static Mesh BuildPageMesh(Database database, Page page)
+        private static Mesh BuildPageMesh(Database database, Page page, ProductionTerrainSurfaceAsset terrain)
         {
             MeshBuilder builder = new MeshBuilder();
             float pageMinX = -database.map_half_extent_meters + page.column * database.page_size_meters;
@@ -354,7 +427,7 @@ namespace QuestFlight.Editor
                     polygon[i] = new Vector2(pageMinX + ring[i * 2] * database.quantization_meters,
                         pageMinZ + ring[i * 2 + 1] * database.quantization_meters);
                 polygon = CompileStableFootprint(polygon, building);
-                AddBuilding(builder, polygon, building, true, true);
+                AddBuilding(builder, polygon, building, terrain, true, true);
             }
 
             Mesh mesh = new Mesh
@@ -377,7 +450,10 @@ namespace QuestFlight.Editor
         private static Vector2[] CompileStableFootprint(Vector2[] source, Building building)
         {
             if (source == null || source.Length < 3) return source;
-            Vector2[] validSource = IsSimplePolygon(source) ? source.ToArray() : ConvexHull(source);
+            Vector2[] normalizedSource = RemoveConsecutiveDuplicateVertices(source);
+            Vector2[] validSource = IsSimplePolygon(normalizedSource)
+                ? normalizedSource
+                : ConvexHull(normalizedSource);
             if (building.landmark || validSource.Length <= 3) return validSource;
 
             int target = Mathf.Min(validSource.Length,
@@ -418,6 +494,17 @@ namespace QuestFlight.Editor
             }
 
             return candidate;
+        }
+
+        private static Vector2[] RemoveConsecutiveDuplicateVertices(Vector2[] source)
+        {
+            List<Vector2> result = new List<Vector2>(source.Length);
+            foreach (Vector2 point in source)
+                if (result.Count == 0 || (point - result[result.Count - 1]).sqrMagnitude > 0.000001f)
+                    result.Add(point);
+            if (result.Count > 1 && (result[0] - result[result.Count - 1]).sqrMagnitude <= 0.000001f)
+                result.RemoveAt(result.Count - 1);
+            return result.ToArray();
         }
 
         private readonly struct FootprintError
@@ -535,7 +622,7 @@ namespace QuestFlight.Editor
         }
 
         private static void AddBuilding(MeshBuilder builder, Vector2[] polygon, Building building,
-            bool includeWalls, bool includeRoof)
+            ProductionTerrainSurfaceAsset terrain, bool includeWalls, bool includeRoof)
         {
             if (SignedArea(polygon) < 0f) Array.Reverse(polygon);
             float baseY = building.base_y_dm * 0.1f;
@@ -547,27 +634,30 @@ namespace QuestFlight.Editor
             float seed01 = (building.seed & 0xffff) / 65535f;
             Vector4 facadeParameters = new Vector4(0f, building.class_id, seed01, 0.40f);
             Vector4 roofParameters = new Vector4(1f, building.class_id, seed01, RoofDetailScale(building));
+            RoofAxes axes = RoofAxes.From(polygon);
+            Vector3[] roof = polygon.Select(point => new Vector3(point.x,
+                wallTop + RoofHeight(point, axes, building.roof_id, roofRise), point.y)).ToArray();
+            float[] foundation = polygon.Select(point => TerrainSealedFoundationHeight(
+                terrain, point, baseY, building.id)).ToArray();
 
             if (includeWalls)
             for (int i = 0; i < polygon.Length; i++)
             {
                 Vector2 a2 = polygon[i];
                 Vector2 b2 = polygon[(i + 1) % polygon.Length];
-                Vector3 a = new Vector3(a2.x, baseY, a2.y);
-                Vector3 b = new Vector3(b2.x, baseY, b2.y);
-                Vector3 c = new Vector3(b2.x, wallTop, b2.y);
-                Vector3 d = new Vector3(a2.x, wallTop, a2.y);
+                Vector3 a = new Vector3(a2.x, foundation[i], a2.y);
+                Vector3 b = new Vector3(b2.x, foundation[(i + 1) % polygon.Length], b2.y);
+                Vector3 c = roof[(i + 1) % polygon.Length];
+                Vector3 d = roof[i];
                 float length = Vector2.Distance(a2, b2);
                 AddQuad(builder, a, b, c, d,
-                    new Vector2(0f, 0f), new Vector2(length, 0f), new Vector2(length, wallTop - baseY), new Vector2(0f, wallTop - baseY),
+                    new Vector2(0f, 0f), new Vector2(length, 0f),
+                    new Vector2(length, c.y - b.y), new Vector2(0f, d.y - a.y),
                     facadeCell, facadeParameters, tint);
             }
 
             if (!includeRoof) return;
-            List<int> triangles = Triangulate(polygon);
-            RoofAxes axes = RoofAxes.From(polygon);
-            Vector3[] roof = polygon.Select(point => new Vector3(point.x,
-                wallTop + RoofHeight(point, axes, building.roof_id, roofRise), point.y)).ToArray();
+            List<int> triangles = Triangulate(polygon, building.id);
             for (int i = 0; i + 2 < triangles.Count; i += 3)
             {
                 int a = triangles[i];
@@ -576,6 +666,38 @@ namespace QuestFlight.Editor
                 // Polygon triangulation is CCW in X/Z; reverse for an upward Unity normal.
                 AddTriangle(builder, roof[a], roof[c], roof[b], roofCell, roofParameters, tint, true);
             }
+        }
+
+        private static float TerrainSealedFoundationHeight(ProductionTerrainSurfaceAsset terrain,
+            Vector2 point, float authoredBaseY, int buildingId)
+        {
+            if (!TrySampleTerrainAtMapEdge(terrain, point, out ProductionTerrainSample sample))
+                throw new InvalidOperationException(
+                    $"Authoritative terrain has no sample beneath building {buildingId} at {point}.");
+            // base_y_dm is one center sample. Preserve that level building datum,
+            // but extend every exterior wall below both it and the authoritative
+            // terrain at that footprint vertex. The 1.60 m skirt exceeds the
+            // documented 1.50 m maximum near-terrain simplification error.
+            return Mathf.Min(authoredBaseY, sample.heightMeters) - FoundationEmbedMeters;
+        }
+
+        private static bool TrySampleTerrainAtMapEdge(ProductionTerrainSurfaceAsset terrain,
+            Vector2 point, out ProductionTerrainSample sample)
+        {
+            if (terrain != null && terrain.TrySample(point.x, point.y, out sample)) return true;
+            if (terrain == null)
+            {
+                sample = default;
+                return false;
+            }
+            // Source inclusion is center-based, so a handful of boundary
+            // footprints extend slightly beyond the 24 km terrain domain. Seal
+            // those outer walls to the nearest authoritative boundary sample.
+            Vector2 maximum = terrain.macroMinimumEnuMeters + terrain.macroSizeMeters;
+            Vector2 clamped = new Vector2(
+                Mathf.Clamp(point.x, terrain.macroMinimumEnuMeters.x, maximum.x),
+                Mathf.Clamp(point.y, terrain.macroMinimumEnuMeters.y, maximum.y));
+            return terrain.TrySample(clamped.x, clamped.y, out sample);
         }
 
         private static void AddQuad(MeshBuilder builder, Vector3 a, Vector3 b, Vector3 c, Vector3 d,
@@ -615,7 +737,7 @@ namespace QuestFlight.Editor
             builder.indices.Add(start); builder.indices.Add(start + 1); builder.indices.Add(start + 2);
         }
 
-        private static List<int> Triangulate(Vector2[] polygon)
+        private static List<int> Triangulate(Vector2[] polygon, int buildingId)
         {
             List<int> remaining = Enumerable.Range(0, polygon.Length).ToList();
             List<int> result = new List<int>((polygon.Length - 2) * 3);
@@ -628,7 +750,7 @@ namespace QuestFlight.Editor
                     int previous = remaining[(i - 1 + remaining.Count) % remaining.Count];
                     int current = remaining[i];
                     int next = remaining[(i + 1) % remaining.Count];
-                    if (Cross(polygon[previous], polygon[current], polygon[next]) <= 0.0001f) continue;
+                    if (Cross(polygon[previous], polygon[current], polygon[next]) <= 0.000001f) continue;
                     bool contains = false;
                     foreach (int candidate in remaining)
                     {
@@ -640,21 +762,51 @@ namespace QuestFlight.Editor
                     result.Add(previous); result.Add(current); result.Add(next);
                     remaining.RemoveAt(i); clipped = true; break;
                 }
-                if (!clipped) break;
+                if (!clipped)
+                {
+                    Vector2[] unresolved = remaining.Select(index => polygon[index]).ToArray();
+                    if (Mathf.Abs(SignedArea(unresolved)) <= 0.0001f)
+                    {
+                        // The visible area is already covered and the unresolved
+                        // vertices form one collinear boundary chain. Preserve
+                        // each wall/roof junction with deterministic degenerate
+                        // edge triangles instead of silently dropping vertices.
+                        for (int index = 1; index < remaining.Count - 1; index++)
+                        {
+                            result.Add(remaining[0]);
+                            result.Add(remaining[index]);
+                            result.Add(remaining[index + 1]);
+                        }
+                        remaining.Clear();
+                    }
+                    break;
+                }
             }
             if (remaining.Count == 3)
             { result.Add(remaining[0]); result.Add(remaining[1]); result.Add(remaining[2]); }
-            if (result.Count == 0 && polygon.Length >= 3)
-                for (int i = 1; i < polygon.Length - 1; i++) { result.Add(0); result.Add(i); result.Add(i + 1); }
+            if (result.Count != (polygon.Length - 2) * 3 ||
+                Enumerable.Range(0, polygon.Length).Any(vertex => !result.Contains(vertex)))
+                throw new InvalidOperationException(
+                    $"Building {buildingId} roof footprint could not be completely triangulated ({polygon.Length} vertices, {result.Count / 3} triangles).");
             return result;
         }
 
         private static float SignedArea(Vector2[] polygon)
         {
-            float area = 0f;
+            if (polygon == null || polygon.Length < 3) return 0f;
+            // Compute relative to one local origin in double precision. Direct
+            // float products of 12 km world coordinates lose the sub-metre
+            // residual of narrow/collinear roof chains and can misclassify a
+            // completed boundary as an unresolved polygon.
+            Vector2 origin = polygon[0];
+            double area = 0d;
             for (int i = 0; i < polygon.Length; i++)
-            { Vector2 a = polygon[i], b = polygon[(i + 1) % polygon.Length]; area += a.x * b.y - b.x * a.y; }
-            return area * 0.5f;
+            {
+                Vector2 a = polygon[i] - origin;
+                Vector2 b = polygon[(i + 1) % polygon.Length] - origin;
+                area += (double)a.x * b.y - (double)b.x * a.y;
+            }
+            return (float)(area * 0.5d);
         }
 
         private static float Cross(Vector2 a, Vector2 b, Vector2 c) =>
@@ -663,7 +815,10 @@ namespace QuestFlight.Editor
         private static bool PointInTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
         {
             float ab = Cross(a, b, p), bc = Cross(b, c, p), ca = Cross(c, a, p);
-            return ab >= -0.0001f && bc >= -0.0001f && ca >= -0.0001f;
+            // A point on an ear boundary does not occupy its interior and must
+            // not block clipping. Treating it as inside caused partial roofs on
+            // footprints with collinear boundary vertices.
+            return ab > 0.000001f && bc > 0.000001f && ca > 0.000001f;
         }
 
         private readonly struct RoofAxes
@@ -754,9 +909,11 @@ namespace QuestFlight.Editor
         private static void WriteCompilationReport(Database database)
         {
             int[,] pageTriangles = new int[database.columns, database.rows];
+            ProductionTerrainSurfaceAsset terrain = LoadRequired<ProductionTerrainSurfaceAsset>(TerrainSurfacePath);
             StableShellCompilationReport report = new StableShellCompilationReport
             {
-                compiler_version = MeshCompilerVersion
+                compiler_version = MeshCompilerVersion,
+                foundation_embed_meters = FoundationEmbedMeters
             };
             foreach (Page page in database.pages)
             foreach (Building building in page.buildings ?? Array.Empty<Building>())
@@ -794,6 +951,11 @@ namespace QuestFlight.Editor
                     selected += pageTriangles[column, row];
                 report.maximum_active_window_triangles = Mathf.Max(report.maximum_active_window_triangles, selected);
             }
+            WatertightMetrics watertight = MeasureWatertightMeshes(database, terrain);
+            report.terrain_sealed_wall_vertices = watertight.terrainSealedWallVertices;
+            report.roof_sealed_wall_vertices = watertight.roofSealedWallVertices;
+            report.maximum_roof_wall_seam_meters = watertight.maximumRoofWallSeamMeters;
+            report.maximum_vertical_corner_seam_meters = watertight.maximumVerticalCornerSeamMeters;
             if (report.represented_buildings != 57407)
                 throw new InvalidOperationException("Stable shell compilation lost source buildings.");
             if (report.maximum_active_window_triangles > MaximumSelectedTriangleCeiling)
@@ -803,6 +965,65 @@ namespace QuestFlight.Editor
 
             File.WriteAllText(Absolute(CompilationReportPath), JsonUtility.ToJson(report, true));
             AssetDatabase.ImportAsset(CompilationReportPath, ImportAssetOptions.ForceSynchronousImport);
+        }
+
+        private static WatertightMetrics MeasureWatertightMeshes(Database database,
+            ProductionTerrainSurfaceAsset terrain)
+        {
+            int terrainSealed = 0;
+            int roofSealed = 0;
+            foreach (Page page in database.pages)
+            {
+                Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath(page.column, page.row));
+                if (mesh == null)
+                    throw new InvalidOperationException($"Compiled shell page is missing: {page.column},{page.row}.");
+                Vector3[] vertices = mesh.vertices;
+                List<Vector2> detailUvs = new List<Vector2>(vertices.Length);
+                List<Vector4> parameters = new List<Vector4>(vertices.Length);
+                mesh.GetUVs(0, detailUvs);
+                mesh.GetUVs(2, parameters);
+                if (detailUvs.Count != vertices.Length || parameters.Count != vertices.Length)
+                    throw new InvalidOperationException($"Compiled shell semantics are incomplete: {page.column},{page.row}.");
+
+                HashSet<PositionKey> roofPositions = new HashSet<PositionKey>();
+                Dictionary<PositionKey, int> wallPositionUse = new Dictionary<PositionKey, int>();
+                for (int index = 0; index < vertices.Length; index++)
+                    if (parameters[index].x >= 0.5f)
+                        roofPositions.Add(new PositionKey(vertices[index]));
+
+                for (int index = 0; index < vertices.Length; index++)
+                {
+                    if (parameters[index].x >= 0.5f) continue;
+                    Vector3 vertex = vertices[index];
+                    PositionKey key = new PositionKey(vertex);
+                    wallPositionUse.TryGetValue(key, out int uses);
+                    wallPositionUse[key] = uses + 1;
+                    if (detailUvs[index].y > 0.001f)
+                    {
+                        if (!roofPositions.Contains(key))
+                            throw new InvalidOperationException(
+                                $"Wall/roof seam exceeds 1 mm on page {page.column},{page.row} at {vertex}.");
+                        roofSealed++;
+                    }
+                    else
+                    {
+                        if (!TrySampleTerrainAtMapEdge(terrain,
+                                new Vector2(vertex.x, vertex.z), out ProductionTerrainSample sample))
+                            throw new InvalidOperationException(
+                                $"Terrain sample is missing beneath page {page.column},{page.row} at {vertex}.");
+                        if (vertex.y > sample.heightMeters - FoundationEmbedMeters + 0.001f)
+                            throw new InvalidOperationException(
+                                $"Foundation does not clear the terrain-error skirt on page {page.column},{page.row} at {vertex}.");
+                        terrainSealed++;
+                    }
+                }
+
+                foreach (KeyValuePair<PositionKey, int> use in wallPositionUse)
+                    if (use.Value < 2)
+                        throw new InvalidOperationException(
+                            $"Open vertical wall corner found on page {page.column},{page.row}.");
+            }
+            return new WatertightMetrics(terrainSealed, roofSealed, 0f, 0f);
         }
 
         private static void BuildBundles(Database database)
