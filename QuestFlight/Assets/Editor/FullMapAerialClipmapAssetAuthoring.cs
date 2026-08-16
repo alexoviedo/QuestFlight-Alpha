@@ -193,6 +193,10 @@ namespace QuestFlight.Editor
                     root.AddComponent<AircraftCenteredAerialClipmapController>();
                 controller.trackedRig = rig;
                 controller.terrainMaterial = AssetDatabase.LoadAssetAtPath<Material>(TerrainMaterialPath);
+                controller.buildingRoofMaterial = AssetDatabase.LoadAssetAtPath<Material>(
+                    FullMapBuildingClipmapAssetAuthoring.MaterialPath);
+                if (controller.buildingRoofMaterial == null)
+                    throw new InvalidOperationException("Projected-roof building material is missing.");
                 controller.legacyFallbackMipController = root.GetComponent<GeospatialMipController>();
                 if (controller.legacyFallbackMipController == null)
                     throw new InvalidOperationException("Fixed-pyramid startup fallback is missing.");

@@ -71949,6 +71949,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.AircraftCenteredAerialClipmapController
   trackedRig: {fileID: 80294514084062902}
   terrainMaterial: {fileID: 2100000, guid: 11f20e651054e1a48875807e63931157, type: 2}
+  buildingRoofMaterial: {fileID: 2100000, guid: 4f7fbc69f641c8f4fa79e25f9595c26e, type: 2}
   legacyFallbackMipController: {fileID: 9060366833482072133}
   bundleDirectory: QuestFlightAerialClipmap
   mapMinimumX: -12000
@@ -71980,7 +71981,7 @@ MonoBehaviour:
   predictionSeconds: 3
   movementPollSeconds: 0.25
   writeDevelopmentTrace: 1
-  authoredContractVersion: full_map_aerial_clipmap_v1
+  authoredContractVersion: full_map_aerial_clipmap_v1_1_projected_roofs
 --- !u!1 &7413943360108704442
 GameObject:
   m_ObjectHideFlags: 0

@@ -359,3 +359,18 @@ The airport corridor is a reference-faithful procedural approximation rather tha
   sources. Physical Quest loudness, comfort, 72 Hz timing, and thermal impact
   require worn hardware acceptance of the exact APK and are not inferred from
   EditMode or build results.
+
+## Full-map projected building roofs V1
+
+- Ordinary building roofs now reproduce the georeferenced orthophoto vertically
+  on retained roof geometry. This improves aerial semantic consistency but is
+  not surveyed construction detail.
+- Source-image baked light, shadows, and photographed roof objects remain in
+  the projected color and may not match a future time-of-day system.
+- Close grazing views remain limited by source ground sample distance and the
+  current moving-imagery residency. Airport hero buildings intentionally keep
+  their authored materials because the airport clean plate removes their source
+  roof imagery.
+- The exact APK is installed for worn review. Stereo simulator orchestration
+  failed before connection, and no physical Quest frame, thermal, or comfort
+  acceptance is claimed.

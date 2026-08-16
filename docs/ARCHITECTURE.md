@@ -270,3 +270,15 @@ The release coordinator samples the thermal at the authoritative aircraft
 position and submits vertical wind through the existing JSBSim atmosphere ABI.
 This preserves one flight authority and does not layer a Unity force onto the
 native aircraft model.
+
+## Full-map projected building roofs
+
+Ordinary full-map building shells retain the stable 576-page, 16-renderer
+geometry architecture. Their shared opaque shader uses the existing semantic
+roof vertex flag to sample the terrain orthophoto vertically in world space;
+facades continue to use the procedural facade atlas. Terrain and roofs share
+`AerialClipmapSampling.cginc`, fixed fallback mappings, and the aircraft-centered
+3x3 high/medium runtime page arrays. One controller commits both material
+bindings atomically. This adds no renderer, draw, material, transparent slot,
+runtime texture, or hierarchy object. Airport hero buildings remain on authored
+materials because their clean-plate imagery no longer contains source roofs.

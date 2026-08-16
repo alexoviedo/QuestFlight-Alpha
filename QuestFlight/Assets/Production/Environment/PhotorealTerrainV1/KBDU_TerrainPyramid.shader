@@ -68,15 +68,13 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             #pragma multi_compile_instancing
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
+            #include "../../../Shaders/AerialClipmapSampling.cginc"
             #include "../AerialSceneryV1/Vegetation/Shaders/AerialCanopyMap.cginc"
 
             sampler2D _NearAlbedo;
             sampler2D _NearSourceNormal;
             sampler2D _MidAlbedo;
             sampler2D _FarAlbedo;
-            sampler2D _ClipGlobalAlbedo;
-            UNITY_DECLARE_TEX2DARRAY(_ClipHighAlbedo);
-            UNITY_DECLARE_TEX2DARRAY_NOSAMPLER(_ClipMediumAlbedo);
             sampler2D _DetailAlbedo;
             sampler2D _AirportCoreCleanPlateAlbedo;
             sampler2D _AirportCoreCleanPlateMask;
@@ -86,10 +84,6 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             float4 _FarWorldMinInvSize;
             float4 _NearBlendStartEnd;
             float4 _MidBlendStartEnd;
-            float4 _ClipHighGridMinSize;
-            float4 _ClipMediumGridMinSize;
-            float4 _ClipHighUvScaleOffsetBlend;
-            float4 _ClipMediumUvScaleOffsetBlend;
             float4 _DetailFadeStartEnd;
             float4 _DetailRadiusFadeStartEnd;
             float4 _NearSourceNormalFadeStartEnd;
@@ -142,41 +136,6 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             {
                 half width = max(4.0, fwidth(radius) * 1.5);
                 return 1.0 - smoothstep(width, width * 2.0, abs(radius - boundary));
-            }
-
-            half SampleAircraftCenteredClipmap(
-                float2 world,
-                float4 gridMinSize,
-                float4 uvScaleOffsetBlend,
-                bool highTier,
-                out fixed3 color)
-            {
-                color = fixed3(0, 0, 0);
-                float tileSize = gridMinSize.z;
-                float2 pagePosition = (world - gridMinSize.xy) * gridMinSize.w;
-                half inside = step(0.0, pagePosition.x) * step(pagePosition.x, 3.0) *
-                    step(0.0, pagePosition.y) * step(pagePosition.y, 3.0);
-                UNITY_BRANCH if (inside < 0.5h)
-                    return 0.0h;
-
-                float2 cell = min(floor(pagePosition), 2.0);
-                float slice = cell.y * 3.0 + cell.x;
-                float2 pageUv = frac(pagePosition) * uvScaleOffsetBlend.xy +
-                    uvScaleOffsetBlend.zz;
-                // Use explicit world-space gradients. frac(pagePosition) is discontinuous at
-                // each array-slice boundary; implicit derivatives there can select an
-                // excessively coarse mip and draw a visible moving line across adjacent pages.
-                float2 pageUvDx = ddx(world) * gridMinSize.w * uvScaleOffsetBlend.xy;
-                float2 pageUvDy = ddy(world) * gridMinSize.w * uvScaleOffsetBlend.xy;
-                color = highTier
-                    ? _ClipHighAlbedo.SampleGrad(
-                        sampler_ClipHighAlbedo, float3(pageUv, slice), pageUvDx, pageUvDy).rgb
-                    : _ClipMediumAlbedo.SampleGrad(
-                        sampler_ClipHighAlbedo, float3(pageUv, slice), pageUvDx, pageUvDy).rgb;
-                float edgeMeters = min(
-                    min(pagePosition.x, 3.0 - pagePosition.x),
-                    min(pagePosition.y, 3.0 - pagePosition.y)) * tileSize;
-                return smoothstep(0.0, max(1.0, uvScaleOffsetBlend.w), edgeMeters);
             }
 
             fixed4 frag(v2f input) : SV_Target
@@ -263,11 +222,11 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 {
                     macro = tex2Dgrad(_ClipGlobalAlbedo, farUv, farUvDx, farUvDy).rgb;
                     fixed3 clipColor;
-                    half clipWeight = SampleAircraftCenteredClipmap(
+                    half clipWeight = QuestFlightSampleAircraftCenteredClipmap(
                         world, _ClipMediumGridMinSize, _ClipMediumUvScaleOffsetBlend,
                         false, clipColor);
                     macro = lerp(macro, clipColor, clipWeight);
-                    clipWeight = SampleAircraftCenteredClipmap(
+                    clipWeight = QuestFlightSampleAircraftCenteredClipmap(
                         world, _ClipHighGridMinSize, _ClipHighUvScaleOffsetBlend,
                         true, clipColor);
                     macro = lerp(macro, clipColor, clipWeight);

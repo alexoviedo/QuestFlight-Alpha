@@ -27,6 +27,14 @@ Material:
         m_Texture: {fileID: 2800000, guid: a133a9d6c3ab2a04d88c2bd3a5b08c44, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ClipGlobalAlbedo:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FarAlbedo:
+        m_Texture: {fileID: 2800000, guid: 5c913aef598ec2a751b1b49b06e68d15, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MRAO:
         m_Texture: {fileID: 2800000, guid: 31f9d512a4e2a5d448e0d592f96a0fc5, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -35,11 +43,25 @@ Material:
         m_Texture: {fileID: 2800000, guid: dba92414bdef9df479be803cfa0741df, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _MidAlbedo:
+        m_Texture: {fileID: 2800000, guid: adf9e4cbca21c5442fbdcd1b92b6b393, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NearAlbedo:
+        m_Texture: {fileID: 2800000, guid: 0021365d50509d2abe127a826626ee6e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _AmbientLift: 0.18
+    - _ClipmapEnabled: 0
     - _NormalScale: 0.45
     - _WindowReflection: 0.58
-    m_Colors: []
+    m_Colors:
+    - _FarWorldMinInvSize: {r: -12000, g: -12000, b: 0.000041666666, a: 0.000041666666}
+    - _MidBlendStartEnd: {r: 5000, g: 6000, b: 0, a: 0}
+    - _MidWorldMinInvSize: {r: -6000, g: -6000, b: 0.00008333333, a: 0.00008333333}
+    - _NearBlendStartEnd: {r: 1800, g: 1980, b: 0, a: 0}
+    - _NearWorldMinInvSize: {r: -2000, g: -2000, b: 0.00025, a: 0.00025}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

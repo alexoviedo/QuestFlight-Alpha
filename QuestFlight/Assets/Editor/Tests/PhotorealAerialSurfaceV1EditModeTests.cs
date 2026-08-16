@@ -329,6 +329,8 @@ namespace QuestFlight.Editor.Tests
                 Path.Combine(Application.dataPath, "..", "Assets/Shaders/FullMapBuildingClipmap.shader")));
             Assert.That(buildingShaderSource, Does.Contain("WindowMask"));
             Assert.That(buildingShaderSource, Does.Contain("UNITY_SAMPLE_TEXCUBE"));
+            Assert.That(buildingShaderSource, Does.Contain("SampleProjectedRoofOrthophoto"));
+            Assert.That(buildingShaderSource, Does.Contain("i.worldPos.xz"));
             Assert.That(buildingShaderSource, Does.Contain("ZWrite On"));
             Assert.That(buildingShaderSource, Does.Not.Contain("Blend SrcAlpha"));
         }

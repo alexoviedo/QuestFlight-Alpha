@@ -19,6 +19,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(controllers, Has.Length.EqualTo(1));
             Assert.That(controllers[0].trackedRig, Is.SameAs(prefab.GetComponent<AircraftReferenceFrameRig>()));
             Assert.That(controllers[0].terrainMaterial, Is.Not.Null);
+            Assert.That(controllers[0].buildingRoofMaterial, Is.SameAs(
+                AssetDatabase.LoadAssetAtPath<Material>(FullMapBuildingClipmapAssetAuthoring.MaterialPath)));
             Assert.That(controllers[0].legacyFallbackMipController,
                 Is.SameAs(prefab.GetComponent<GeospatialMipController>()));
             Assert.That(controllers[0].authoredContractVersion,
@@ -44,9 +46,11 @@ namespace QuestFlight.Editor.Tests
         {
             string path = "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader";
             string source = System.IO.File.ReadAllText(path);
-            StringAssert.Contains("UNITY_DECLARE_TEX2DARRAY(_ClipHighAlbedo)", source);
-            StringAssert.Contains("UNITY_DECLARE_TEX2DARRAY_NOSAMPLER(_ClipMediumAlbedo)", source);
-            StringAssert.Contains("sampler2D _ClipGlobalAlbedo", source);
+            string shared = System.IO.File.ReadAllText("Assets/Shaders/AerialClipmapSampling.cginc");
+            StringAssert.Contains("AerialClipmapSampling.cginc", source);
+            StringAssert.Contains("UNITY_DECLARE_TEX2DARRAY(_ClipHighAlbedo)", shared);
+            StringAssert.Contains("UNITY_DECLARE_TEX2DARRAY_NOSAMPLER(_ClipMediumAlbedo)", shared);
+            StringAssert.Contains("sampler2D _ClipGlobalAlbedo", shared);
             StringAssert.DoesNotContain("sampler2D _RecoveryMidNWAlbedo", source);
             StringAssert.DoesNotContain("sampler2D _RecoveryMidNEAlbedo", source);
             StringAssert.DoesNotContain("sampler2D _RecoveryMidSWAlbedo", source);
@@ -79,7 +83,7 @@ namespace QuestFlight.Editor.Tests
         public void ArrayPagesUseWorldSpaceGradientsAcrossSliceBoundaries()
         {
             string source = System.IO.File.ReadAllText(
-                "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.shader");
+                "Assets/Shaders/AerialClipmapSampling.cginc");
             StringAssert.Contains("_ClipHighAlbedo.SampleGrad", source);
             StringAssert.Contains("_ClipMediumAlbedo.SampleGrad", source);
             StringAssert.Contains("sampler_ClipHighAlbedo, float3(pageUv, slice)", source,
@@ -87,6 +91,34 @@ namespace QuestFlight.Editor.Tests
             StringAssert.Contains("float2 pageUvDx = ddx(world)", source);
             StringAssert.DoesNotContain(
                 "UNITY_SAMPLE_TEX2DARRAY(_ClipHighAlbedo, float3(pageUv, slice))", source);
+        }
+
+        [Test]
+        public void TerrainAndBuildingRoofsShareOneAtomicImageryBinding()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/Production/Prefabs/ProductionC172AircraftRig.prefab");
+            AircraftCenteredAerialClipmapController controller =
+                prefab.GetComponent<AircraftCenteredAerialClipmapController>();
+            Material terrain = controller.terrainMaterial;
+            Material roofs = controller.buildingRoofMaterial;
+            Assert.That(terrain, Is.Not.Null);
+            Assert.That(roofs, Is.Not.Null);
+            foreach (string propertyName in new[] { "_NearAlbedo", "_MidAlbedo", "_FarAlbedo" })
+                Assert.That(roofs.GetTexture(propertyName), Is.SameAs(terrain.GetTexture(propertyName)), propertyName);
+            foreach (string propertyName in new[]
+                     {
+                         "_NearWorldMinInvSize", "_MidWorldMinInvSize", "_FarWorldMinInvSize",
+                         "_NearBlendStartEnd", "_MidBlendStartEnd"
+                     })
+                Assert.That(roofs.GetVector(propertyName), Is.EqualTo(terrain.GetVector(propertyName)), propertyName);
+
+            string runtime = System.IO.File.ReadAllText(
+                "Assets/Scripts/Environment/AircraftCenteredAerialClipmapController.cs");
+            StringAssert.Contains("SetConsumerTexture", runtime);
+            StringAssert.Contains("SetConsumerVector", runtime);
+            StringAssert.Contains("SetConsumerFloat", runtime);
+            StringAssert.DoesNotContain("new Material", runtime);
         }
 
         [Test]

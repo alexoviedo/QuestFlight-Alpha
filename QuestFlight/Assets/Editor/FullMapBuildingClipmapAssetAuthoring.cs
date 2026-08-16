@@ -29,6 +29,8 @@ namespace QuestFlight.Editor
         public const string AircraftPath = "Assets/Production/Prefabs/ProductionC172AircraftRig.prefab";
         public const string ScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
         public const string ShaderName = "QuestFlight/Full Map Building Clipmap";
+        private const string TerrainMaterialPath =
+            "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
         private const string MeshCompilerVersion = "stable-closed-shell-compiler-v6-20260815";
@@ -146,6 +148,7 @@ namespace QuestFlight.Editor
                 AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 Database database = LoadDatabase();
                 Material material = EnsureMaterial();
+                AuthorAircraftImageryBinding(material);
                 AuthorEnvironment(database, material);
                 BindSceneAircraftReference();
                 AssetDatabase.SaveAssets();
@@ -211,6 +214,7 @@ namespace QuestFlight.Editor
             Database database = LoadDatabase();
             ConfigureTextures();
             Material material = EnsureMaterial();
+            AuthorAircraftImageryBinding(material);
             RebuildMeshAssets(database);
             BuildBundles(database);
             AuthorEnvironment(database, material);
@@ -281,9 +285,37 @@ namespace QuestFlight.Editor
             material.SetFloat("_NormalScale", 0.45f);
             material.SetFloat("_WindowReflection", 0.58f);
             material.SetFloat("_AmbientLift", 0.18f);
+            Material terrain = LoadRequired<Material>(TerrainMaterialPath);
+            foreach (string propertyName in new[] { "_NearAlbedo", "_MidAlbedo", "_FarAlbedo" })
+                material.SetTexture(propertyName, terrain.GetTexture(propertyName));
+            foreach (string propertyName in new[]
+                     {
+                         "_NearWorldMinInvSize", "_MidWorldMinInvSize", "_FarWorldMinInvSize",
+                         "_NearBlendStartEnd", "_MidBlendStartEnd"
+                     })
+                material.SetVector(propertyName, terrain.GetVector(propertyName));
+            material.SetFloat("_ClipmapEnabled", 0f);
             material.enableInstancing = true;
             EditorUtility.SetDirty(material);
             return material;
+        }
+
+        private static void AuthorAircraftImageryBinding(Material buildingMaterial)
+        {
+            GameObject aircraft = PrefabUtility.LoadPrefabContents(AircraftPath);
+            try
+            {
+                AircraftCenteredAerialClipmapController aerialController =
+                    aircraft.GetComponent<AircraftCenteredAerialClipmapController>() ??
+                    throw new InvalidOperationException("Aircraft-centered aerial clipmap controller is missing.");
+                aerialController.buildingRoofMaterial = buildingMaterial;
+                aerialController.authoredContractVersion = AircraftCenteredAerialClipmapController.ContractVersion;
+                PrefabUtility.SaveAsPrefabAsset(aircraft, AircraftPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(aircraft);
+            }
         }
 
         private static void RebuildMeshAssets(Database database)
@@ -894,6 +926,17 @@ namespace QuestFlight.Editor
             EditorSceneManager.SaveScene(scene);
         }
 
+        // Cross-prefab references cannot live on ProductionEnvironmentRoot itself.
+        // Keep this narrow entry point so an accepted environment prefab can be
+        // re-bound without regenerating its renderer pool or changing local IDs.
+        public static void BindSceneAircraftReferenceBatch()
+        {
+            BindSceneAircraftReference();
+            AssetDatabase.SaveAssets();
+            Debug.Log("[QuestFlight][BuildingClipmap] SCENE REFERENCE BIND SUCCESS");
+            if (Application.isBatchMode) EditorApplication.Exit(0);
+        }
+
         private static void ValidateAuthoredProduct(Database database)
         {
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
@@ -904,9 +947,13 @@ namespace QuestFlight.Editor
             Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             AircraftCenteredBuildingClipmapController controller = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<AircraftCenteredBuildingClipmapController>(true)).Single();
             if (!controller.TryValidateContract(out string report)) throw new InvalidOperationException(report);
+            AircraftCenteredAerialClipmapController aerialController = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<AircraftCenteredAerialClipmapController>(true)).Single();
+            if (!aerialController.TryValidateContract(out string aerialReport))
+                throw new InvalidOperationException(aerialReport);
             if (database.pages.Sum(page => page.buildings?.Length ?? 0) < 50000)
                 throw new InvalidOperationException("Full-map building database lost expected coverage.");
-            Debug.Log($"[QuestFlight][BuildingClipmap] {report}; components={database.pages.Sum(page => page.buildings?.Length ?? 0):N0}; pages={database.pages.Length:N0}.");
+            Debug.Log($"[QuestFlight][BuildingClipmap] {report}; {aerialReport}; components={database.pages.Sum(page => page.buildings?.Length ?? 0):N0}; pages={database.pages.Length:N0}.");
         }
 
         private static string MeshPath(int column, int row) => $"{GeneratedRoot}/{AssetName(column, row)}.asset";

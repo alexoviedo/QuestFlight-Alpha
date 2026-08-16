@@ -663,3 +663,27 @@ Exact evidence: `docs/evidence/GOLDEN_EAGLE_THERMAL_V1_2026-08-11.md`.
   upstroke and extended-wing poses plus seated-pilot discoverability.
 - Aggregate Visual QA retains inherited whole-scene budget failures. Build and
   worn exact-APK results must be recorded after completion.
+
+## Full-map projected building roofs V1
+
+- Stable-shell authoring and serialized imagery-binding contract: PASS for
+  57,407 components, 576 pages, and 16 runtime page renderers.
+- Product integrity: PASS; 3,179 assets, 2,017 scene objects, 121 renderers,
+  659,873/800,000 serialized triangles, and 37 materials.
+- Dependency closure: PASS; 595 dependencies, 401 approved, 194 package-owned,
+  zero rejected, and zero unknown.
+- EditMode: PASS 326/326. PlayMode: PASS 10/10.
+- Full-resolution Visual QA: 123 nonblank 1920x1080 captures produced; dedicated
+  building views were inspected against V1.2 and showed projected source roof
+  imagery without new geometry, footprint, wall, or facade regressions.
+- Aggregate Visual QA remains `FAIL_MACHINE_QA` for the inherited 38/29 material
+  planning target; the roof correction adds no material.
+- Meta XR Simulator: `FAIL_SIMULATOR_ORCHESTRATION` before stereo connection due
+  to a Windows development-player `sharedassets0.assets` write assertion, with
+  ten VRS recordings also absent. Shipping configuration was restored.
+- Android ARM64/Vulkan/OpenXR build: PASS; 1,481,910,892 bytes; SHA-256
+  `76471e5cd2920a65e53bdb6cc7645aa72398f6a98c094961014c53cf2dc171e6`.
+- Exact APK install to the connected Quest 3: PASS. Worn visual and physical
+  timing/thermal acceptance remain pending.
+
+Exact evidence: `docs/evidence/FULL_MAP_BUILDING_ROOFS_V1_2026-08-16.md`.

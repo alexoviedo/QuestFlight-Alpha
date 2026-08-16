@@ -86,6 +86,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(material.GetTexture("_MainTex"), Is.Not.Null);
             Assert.That(material.GetTexture("_BumpMap"), Is.Not.Null);
             Assert.That(material.GetTexture("_MRAO"), Is.Not.Null);
+            Assert.That(material.GetTexture("_NearAlbedo"), Is.Not.Null);
+            Assert.That(material.GetTexture("_MidAlbedo"), Is.Not.Null);
+            Assert.That(material.GetTexture("_FarAlbedo"), Is.Not.Null);
             foreach (string path in new[]
                      {
                          FullMapBuildingClipmapAssetAuthoring.AlbedoPath,
@@ -104,6 +107,11 @@ namespace QuestFlight.Editor.Tests
             Assert.That(shader, Does.Contain("i.detailUv"));
             Assert.That(shader, Does.Contain("WindowMask"));
             Assert.That(shader, Does.Contain("mirroredPeriod"));
+            Assert.That(shader, Does.Contain("SampleProjectedRoofOrthophoto(i.worldPos.xz)"));
+            Assert.That(shader, Does.Contain("AerialClipmapSampling.cginc"));
+            Assert.That(shader, Does.Contain("UNITY_BRANCH if (roof > 0.5h)"));
+            Assert.That(shader, Does.Contain("albedo = tex2D(_MainTex, atlasUv).rgb * i.color.rgb"),
+                "Generated facade appearance must remain on the wall-only branch.");
             Assert.That(shader, Does.Not.Contain("Blend "));
 
             string authoring = Read("Assets/Editor/FullMapBuildingClipmapAssetAuthoring.cs");

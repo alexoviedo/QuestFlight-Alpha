@@ -16,7 +16,7 @@ namespace QuestFlightLab.Environment
     [RequireComponent(typeof(AircraftReferenceFrameRig))]
     public sealed class AircraftCenteredAerialClipmapController : MonoBehaviour
     {
-        public const string ContractVersion = "full_map_aerial_clipmap_v1";
+        public const string ContractVersion = "full_map_aerial_clipmap_v1_1_projected_roofs";
         private const int GridSize = 3;
         private const int SliceCount = GridSize * GridSize;
         public const int MaximumActiveAerialTextureBytes = 24 * 1024 * 1024;
@@ -24,6 +24,8 @@ namespace QuestFlightLab.Environment
         [Header("Authored references")]
         public AircraftReferenceFrameRig trackedRig;
         public Material terrainMaterial;
+        [Tooltip("The one full-map building material that shares terrain imagery for projected roofs.")]
+        public Material buildingRoofMaterial;
         [Tooltip("Retained only as the deterministic startup fallback. Its explicit mip requests are released after the complete clipmap becomes active.")]
         public GeospatialMipController legacyFallbackMipController;
 
@@ -110,7 +112,7 @@ namespace QuestFlightLab.Environment
                 }
             }
 #endif
-            terrainMaterial?.SetFloat("_ClipmapEnabled", 0f);
+            SetConsumerFloat("_ClipmapEnabled", 0f);
             Trace("startup", $"arrays={SystemInfo.supports2DArrayTextures}; copy={SystemInfo.copyTextureSupport}; " +
                 $"device={SystemInfo.graphicsDeviceName}; api={SystemInfo.graphicsDeviceType}");
             if (!TryValidateContract(out string report))
@@ -167,7 +169,9 @@ namespace QuestFlightLab.Environment
                     // failures retain the previous complete arrays and must never expose the
                     // startup fallback again.
                     clipmapActivated = true;
-                    terrainMaterial.SetFloat("_ClipmapEnabled", 1f);
+                    // Both materials become visible to the render thread in the same
+                    // frame; roofs can never expose a different imagery generation.
+                    SetConsumerFloat("_ClipmapEnabled", 1f);
                     if (legacyFallbackMipController != null && legacyFallbackMipController.enabled)
                     {
                         legacyFallbackMipController.enabled = false;
@@ -203,7 +207,7 @@ namespace QuestFlightLab.Environment
                         Trace("global_asset_error", "KBDU_2020_global_000_000");
                         yield break;
                     }
-                    terrainMaterial.SetTexture("_ClipGlobalAlbedo", globalTexture);
+                    SetConsumerTexture("_ClipGlobalAlbedo", globalTexture);
                     globalReady = true;
                     Trace("global_ready", $"format={globalTexture.graphicsFormat}; mips={globalTexture.mipmapCount}");
                 }
@@ -396,17 +400,35 @@ namespace QuestFlightLab.Environment
             float scale = (tier.pagePixels - 2f * tier.gutterPixels) / tier.pagePixels;
             float offset = tier.gutterPixels / (float)tier.pagePixels;
             string prefix = tier.name == "high" ? "_ClipHigh" : "_ClipMedium";
-            terrainMaterial.SetTexture(prefix + "Albedo", runtime.active);
-            terrainMaterial.SetVector(prefix + "GridMinSize",
+            SetConsumerTexture(prefix + "Albedo", runtime.active);
+            SetConsumerVector(prefix + "GridMinSize",
                 new Vector4(minimumX, minimumZ, tier.tileInnerMeters, 1f / tier.tileInnerMeters));
-            terrainMaterial.SetVector(prefix + "UvScaleOffsetBlend",
+            SetConsumerVector(prefix + "UvScaleOffsetBlend",
                 new Vector4(scale, scale, offset, tier.blendWidthMeters));
+        }
+
+        private void SetConsumerTexture(string propertyName, Texture value)
+        {
+            terrainMaterial?.SetTexture(propertyName, value);
+            buildingRoofMaterial?.SetTexture(propertyName, value);
+        }
+
+        private void SetConsumerVector(string propertyName, Vector4 value)
+        {
+            terrainMaterial?.SetVector(propertyName, value);
+            buildingRoofMaterial?.SetVector(propertyName, value);
+        }
+
+        private void SetConsumerFloat(string propertyName, float value)
+        {
+            terrainMaterial?.SetFloat(propertyName, value);
+            buildingRoofMaterial?.SetFloat(propertyName, value);
         }
 
         private void OnDisable()
         {
             refreshRunning = false;
-            if (terrainMaterial != null) terrainMaterial.SetFloat("_ClipmapEnabled", 0f);
+            SetConsumerFloat("_ClipmapEnabled", 0f);
             clipmapActivated = false;
             DestroyArray(highRuntime);
             DestroyArray(mediumRuntime);
@@ -429,6 +451,9 @@ namespace QuestFlightLab.Environment
             if (terrainMaterial == null || terrainMaterial.shader == null ||
                 terrainMaterial.shader.name != "QuestFlight/KBDU Terrain Pyramid")
                 failures.Add("terrain material authority is missing or wrong");
+            if (buildingRoofMaterial == null || buildingRoofMaterial.shader == null ||
+                buildingRoofMaterial.shader.name != "QuestFlight/Full Map Building Clipmap")
+                failures.Add("projected-roof building material is missing or wrong");
             if (legacyFallbackMipController == null ||
                 legacyFallbackMipController.gameObject != gameObject)
                 failures.Add("serialized fixed-pyramid startup fallback is missing or on another root");
