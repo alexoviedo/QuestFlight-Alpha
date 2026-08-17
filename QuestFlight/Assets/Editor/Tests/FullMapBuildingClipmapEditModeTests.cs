@@ -132,7 +132,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(shader, Does.Contain("UNITY_SAMPLE_TEX2DARRAY(_FacadeAlbedo"));
             Assert.That(shader, Does.Contain("half hasCompleteBay"));
             Assert.That(shader, Does.Contain("half DoorMask"));
-            Assert.That(shader, Does.Contain("half openingScreenFade"));
+            Assert.That(shader, Does.Not.Contain("openingScreenFade"),
+                "Accepted full-distance facade apertures must not be hidden by the retired screen-size fade.");
             Assert.That(shader, Does.Contain("DetailAtlasUv"));
             Assert.That(shader, Does.Contain("tex2D(_FacadeDetail"));
             Assert.That(shader, Does.Not.Contain("shellReveal"));
@@ -151,6 +152,23 @@ namespace QuestFlight.Editor.Tests
             Assert.That(authoring, Does.Contain("seed01, RoofDetailScale(building)"));
             Assert.That(authoring, Does.Contain("Vector3.Cross(c - a, b - a)"));
             Assert.That(authoring, Does.Contain("builder.indices.Add(start + 2); builder.indices.Add(start + 1)"));
+        }
+
+        [Test]
+        public void UninitializedResidencyQueryFailsClosedWithoutThrowing()
+        {
+            GameObject owner = new GameObject("UninitializedBuildingResidencyTest");
+            try
+            {
+                AircraftCenteredBuildingClipmapController controller =
+                    owner.AddComponent<AircraftCenteredBuildingClipmapController>();
+                bool[] committed = new bool[controller.PageColumns * controller.PageRows];
+                bool[] prefetched = new bool[committed.Length];
+                Assert.That(controller.TryCopyPageResidency(committed, prefetched), Is.False);
+                Assert.That(committed, Is.All.False);
+                Assert.That(prefetched, Is.All.False);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(owner); }
         }
 
         [Test]

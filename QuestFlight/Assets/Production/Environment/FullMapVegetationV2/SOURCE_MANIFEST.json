@@ -5,7 +5,7 @@
     "source_imagery": "City of Boulder 2020 orthophoto clipmap",
     "tree_geometry": "existing AirportCloseTree LOD0/LOD1/LOD2 derivatives",
     "tree_geometry_license": "Poly Haven Tree Small 02, CC0 1.0 Universal",
-    "draw_ceiling_per_eye": 3,
+    "draw_ceiling_per_eye": 7,
     "ordinary_billboard_renderer": false,
     "per_tree_game_objects": false,
     "raw_orthophotos_committed": false,
@@ -26,6 +26,16 @@
       "asset": "KBDU ProductionTerrainSurfaceV2",
       "role": "deterministic terrain grounding",
       "license": "project-owned USGS-derived terrain record"
+    },
+    {
+      "asset": "USGS 3DEP CO_DRCOG_1_2020 compact canopy-height derivative",
+      "role": "bounded height-above-ground evidence after orthophoto vegetation ownership; never placement authority",
+      "license": "United States Government Work / Public Domain"
+    },
+    {
+      "asset": "ProductionAirportCloseTreeInstances",
+      "role": "preserved 1,047-instance airport-close height and crown calibration",
+      "license": "project-authored optimized derivative with upstream records in AirportCloseTreeLods_SourceManifest.json"
     }
   ],
   "external_shape_references": [

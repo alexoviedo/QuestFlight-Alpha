@@ -16,17 +16,20 @@
   },
   "limitations": [
     "RGB orthophoto segmentation is semantic placement evidence, not an individual-tree survey.",
-    "Full-map height uses bounded visual allometry outside the retained near-airport lidar zone.",
+    "Aligned 3DEP height evidence is bounded to its retained coverage; deterministic orthophoto/context allometry owns uncovered or unsupported crowns.",
+    "The 3DEP work unit has no vegetation classes in the product bounds, so lidar never creates a vegetation placement.",
     "Raw orthophotos and downloaded high-poly reference assets remain external and uncommitted."
   ],
   "processing": {
     "analysis_meters_per_pixel": 1.3333333333333333,
     "color_method": "robust median of the brighter source-canopy samples to avoid double-baked shadow",
     "generator": "tools/full_map_vegetation/build_full_map_vegetation.py",
-    "height_method": "terrain grounded; bounded Boulder crown-height allometry because full-map surveyed canopy height is unavailable",
+    "height_method": "orthophoto-owned local-crown evidence; exact aligned 3DEP blend where supported; deterministic context allometry elsewhere; no hash-derived height",
     "placement_method": "connected-canopy segmentation with deterministic mask-constrained blue-noise centers",
     "sample_only": false,
-    "semantic_method": "RGB vegetation/texture segmentation plus authoritative building-footprint stem exclusion"
+    "semantic_method": "RGB vegetation/texture segmentation plus authoritative building-footprint stem exclusion",
+    "dimension_rebuilder": "tools/full_map_vegetation/rebuild_tree_dimensions.py",
+    "dimension_preservation": "placement, terrain base, page order, tint, rotation, and seed preserved byte-for-byte"
   },
   "schema": "questflight.full-map-vegetation-clipmap.v2",
   "sources": {
@@ -51,12 +54,17 @@
     "terrain_manifest": {
       "path": "QuestFlight\\Assets\\Production\\Environment\\ReconstructionV2\\KBDU_ProductionTerrainSurfaceV2.json",
       "sha256": "0d821e47766bd355e145b59f45cb56fcb3e67e709e72d054432fc8680a3ce7b1"
+    },
+    "lidar_manifest": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\AerialSceneryV1\\Lidar\\KBDU_LidarManifestV1.json",
+      "sha256": "1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5",
+      "authority": "bounded height evidence only; orthophoto retains semantic ownership"
     }
   },
   "statistics": {
     "accepted_near_instances_preserved": 1047,
     "binary_bytes": 17137784,
-    "binary_sha256": "0a24adb52cd6280f70b11a9d5e2d6d9c7cf7082713c89af1cfd1ee79b1a5b942",
+    "binary_sha256": "b56c7a0bea6e986d28e730f30fd978f7e7eb1119227a0cd3221e6b559f30af00",
     "debug_pages": [
       "KBDU_2020_high_017_018",
       "KBDU_2020_high_018_018",
@@ -65,11 +73,41 @@
     "maximum_runtime_page_instances": 1600,
     "mean_nonempty_runtime_page_instances": 1565.53,
     "nonempty_runtime_pages": 576,
-    "ordinary_trees": 901452,
+    "ordinary_trees": 900720,
     "raw_candidates": 4217470,
     "runtime_instances": 901744,
-    "shrubs": 159,
+    "shrubs": 327,
     "source_pages_processed": 1296,
-    "tall_narrow_trees": 133
+    "tall_narrow_trees": 697,
+    "height_sources": {
+      "accepted_near": 1047,
+      "orthophoto_context_allometry": 880310,
+      "orthophoto_owned_lidar_blend": 20060,
+      "orthophoto_shrub": 327
+    },
+    "height_distribution_meters": {
+      "count": 901744,
+      "minimum": 1.46,
+      "p05": 8.49,
+      "p25": 10.79,
+      "median": 12.48,
+      "p75": 14.18,
+      "p95": 16.34,
+      "maximum": 26.87,
+      "unique_centimeter_values": 2078
+    },
+    "crown_distribution_meters": {
+      "count": 901744,
+      "minimum": 2.2,
+      "p05": 7.71,
+      "p25": 8.81,
+      "median": 9.58,
+      "p75": 10.24,
+      "p95": 10.89,
+      "maximum": 15.6,
+      "unique_centimeter_values": 918
+    },
+    "legacy_height_cap_23_5_count": 0,
+    "legacy_crown_cap_15_5_count": 0
   }
 }

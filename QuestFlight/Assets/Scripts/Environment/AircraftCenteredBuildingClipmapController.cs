@@ -145,7 +145,12 @@ namespace QuestFlightLab.Environment
             for (int index = 0; index < states.Length; index++)
             {
                 PageState state = states[index];
-                if (!state.occupied || !TryPageIndex(state.page, out int pageIndex))
+                // Editor capture cameras can render an authored scene before Awake has
+                // initialized the fixed residency slots. Treat that as unavailable
+                // coverage; callers already fall back to their deterministic editor
+                // selection instead of allowing a render callback to throw.
+                if (state == null || !state.occupied ||
+                    !TryPageIndex(state.page, out int pageIndex))
                     continue;
                 committed[pageIndex] = true;
                 prefetched[pageIndex] = true;

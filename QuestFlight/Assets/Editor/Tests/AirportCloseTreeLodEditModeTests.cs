@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
@@ -139,6 +140,65 @@ namespace QuestFlight.Editor.Tests
                 Does.Contain("\"schema\": \"questflight.full-map-vegetation-clipmap.v2\""));
             Assert.That(fullMap.text,
                 Does.Contain("\"geometry\": \"overlapping individual crown/trunk LODs; no opaque grove hull\""));
+            Assert.That(fullMap.text, Does.Contain("no hash-derived height"));
+            Assert.That(fullMap.text,
+                Does.Contain("orthophoto retains semantic ownership"));
+        }
+
+        [Test]
+        public void FullMapTreeDimensionsAreEvidenceDrivenAndNotCapDominated()
+        {
+            GameObject environment =
+                AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
+            AirportCloseTreeLodRenderer renderer =
+                environment.GetComponentInChildren<AirportCloseTreeLodRenderer>(true);
+            byte[] bytes = renderer.FullMapPlacementDatabase.bytes;
+            Dictionary<ushort, int> heightCounts = new Dictionary<ushort, int>();
+            Dictionary<ushort, int> crownCounts = new Dictionary<ushort, int>();
+            int legacyHeightCapCount = 0;
+            int legacyCrownCapCount = 0;
+
+            using MemoryStream stream = new MemoryStream(bytes, false);
+            using BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true);
+            Assert.That(Encoding.ASCII.GetString(reader.ReadBytes(8)), Is.EqualTo("QFFMVG2\0"));
+            Assert.That(reader.ReadInt32(), Is.EqualTo(2));
+            reader.ReadBytes(4 * 4);
+            int columns = reader.ReadInt32();
+            int rows = reader.ReadInt32();
+            int instanceCount = reader.ReadInt32();
+            reader.ReadBytes(columns * rows * 8);
+            for (int index = 0; index < instanceCount; index++)
+            {
+                reader.ReadUInt16();
+                reader.ReadUInt16();
+                reader.ReadInt32();
+                ushort height = reader.ReadUInt16();
+                ushort crown = reader.ReadUInt16();
+                reader.ReadBytes(7);
+                heightCounts[height] = heightCounts.TryGetValue(height, out int heights)
+                    ? heights + 1
+                    : 1;
+                crownCounts[crown] = crownCounts.TryGetValue(crown, out int crowns)
+                    ? crowns + 1
+                    : 1;
+                if (height == 2350)
+                    legacyHeightCapCount++;
+                if (crown == 1550)
+                    legacyCrownCapCount++;
+            }
+
+            int maximumHeightMode = 0;
+            foreach (int count in heightCounts.Values)
+                maximumHeightMode = Mathf.Max(maximumHeightMode, count);
+            int maximumCrownMode = 0;
+            foreach (int count in crownCounts.Values)
+                maximumCrownMode = Mathf.Max(maximumCrownMode, count);
+            Assert.That(heightCounts.Count, Is.GreaterThanOrEqualTo(500));
+            Assert.That(crownCounts.Count, Is.GreaterThanOrEqualTo(250));
+            Assert.That(maximumHeightMode, Is.LessThanOrEqualTo(instanceCount * 0.05f));
+            Assert.That(maximumCrownMode, Is.LessThanOrEqualTo(instanceCount * 0.10f));
+            Assert.That(legacyHeightCapCount, Is.LessThanOrEqualTo(instanceCount * 0.01f));
+            Assert.That(legacyCrownCapCount, Is.LessThanOrEqualTo(instanceCount * 0.01f));
         }
 
         [Test]

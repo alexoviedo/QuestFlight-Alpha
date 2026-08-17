@@ -18,7 +18,7 @@ remain external.
 
 - 901,744 quantized tree/shrub records across all 576 pages.
 - Compact database: 17,137,784 bytes; SHA-256
-  `0a24adb52cd6280f70b11a9d5e2d6d9c7cf7082713c89af1cfd1ee79b1a5b942`.
+  `b56c7a0bea6e986d28e730f30fd978f7e7eb1119227a0cd3221e6b559f30af00`.
 - Source candidates examined: 4,217,470.
 - Runtime maximum page population: 1,600; mean nonempty population: 1,565.53.
 - Existing optimized tree tiers: 344 / 122 / 2 triangles.
@@ -48,6 +48,38 @@ The prior four opaque/static grove hulls are removed from the product dependency
 closure. This eliminates the previously rejected boulder/blob silhouette while
 recovering four static draws and their serialized triangles.
 
+## Deterministic dimension correction
+
+The previous full-map fallback inferred every ordinary height from crown width
+and a stable hash, then clamped crowns to 15.5 m and heights to 23.5 m. In the
+accepted database, 732,915 crowns (81.28%) and 328,666 heights (36.45%) landed
+exactly on those caps. That was the measured source of the uniform skyline.
+
+`tools/full_map_vegetation/rebuild_tree_dimensions.py` now preserves all
+901,744 accepted positions, terrain bases, page records, colors, rotations, and
+seeds byte-for-byte. It partitions physical size from deterministic imagery
+crown/tonal evidence and blends the aligned compact 3DEP canopy height only where
+orthophoto vegetation ownership and lidar support agree. The 1,047 accepted
+airport-close records remain verbatim. Unsupported full-map crowns use context
+allometry with no hash-derived height.
+
+Before/after dimension statistics:
+
+| Metric | Before | After |
+| --- | ---: | ---: |
+| Height p05 / median / p95 | 17.79 / 22.47 / 23.50 m | 8.49 / 12.48 / 16.34 m |
+| Crown p05 / median / p95 | 11.92 / 15.50 / 15.50 m | 7.71 / 9.58 / 10.89 m |
+| Unique height values (cm) | 1,864 | 2,078 |
+| Unique crown values (cm) | 382 | 918 |
+| Exact 23.5 m height records | 328,666 | 0 |
+| Exact 15.5 m crown records | 732,915 | 0 |
+
+The final height sources are 1,047 preserved airport-close records, 20,060
+orthophoto-owned/lidar-supported blends, 880,310 deterministic orthophoto/context
+allometry records, and 327 shrub records. This changes pixel coverage and must
+still receive physical Quest visual acceptance, but it does not change the static
+draw, triangle, material, texture, renderer, or database-size budgets.
+
 ## Downloaded reference disposition
 
 The five downloaded Sketchfab archives were inspected outside Git. Candidate
@@ -59,13 +91,27 @@ are recorded in `FullMapVegetationV2/SOURCE_MANIFEST.json`.
 ## Validation
 
 - Serialized authoring: PASS; 61 draws / 608,774 triangles / 12 materials.
-- Focused vegetation EditMode: 6/6 PASS.
+- EditMode: 331/331 PASS, including the seven full-map vegetation contracts and
+  the uninitialized-residency fail-closed regression test.
 - Product PlayMode: 10/10 PASS after retaining the existing seven-draw
   vegetation contract.
 - Android release-style build: PASS; SHA-256
-  `49580f9fcd2b502d46a7fda8e113c718a9a104afbd4c53a75c21dd9c3b63d63a`.
-- Physical Quest LOD-transition review: pending the installed-candidate worn
-  check.
+  `b0831331c50d8484372171d4e2822326eda3cc066ce6298a37de2c9ecea7d9ed`.
+- Current-product Visual QA rendered 68 deterministic views. The lead inspected
+  the full-resolution vegetation/terrain frames; low shrubs, ordinary crowns,
+  and mature corridor trees no longer share one skyline height. The aggregate
+  runner remains blocked by a pre-existing missing elevated semantic-surface
+  candidate and therefore omits its 32 legacy V4 A/B views. Two unrelated
+  static views also retain their existing marginal budget failures (77 versus
+  75 draws, and 653,377 versus 650,000 triangles).
+- Full product validation remains blocked by the same broader source-closure
+  audit (two excluded and two unclassified legacy dependencies) plus the
+  aggregate Visual QA blocker above; the dimension change introduces neither.
+- Physical Quest LOD-transition review: the extended-coverage candidate was
+  reported improved; the exact dimension-corrected APK is installed and its
+  visual acceptance remains pending.
+- Offline height-distribution and immutable-field gate: PASS; report retained in
+  the external `tree_height_fidelity_v1_*` artifact root.
 
 Machine evidence does not constitute physical Quest frame, thermal, comfort,
 or final photorealism acceptance.

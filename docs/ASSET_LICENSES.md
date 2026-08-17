@@ -693,6 +693,10 @@ compiler is `tools/audio/prepare_c172_audio.py`.
 Placement/color evidence comes from the already recorded City of Boulder 2020
 orthophoto, building exclusion from the project-owned OSM-derived full-map
 building database, and grounding from the USGS-derived production terrain.
+The public-domain USGS 3DEP `CO_DRCOG_1_2020` compact canopy-height derivative
+is bounded height evidence after orthophoto semantic ownership; it never creates
+a vegetation placement. The 1,047 airport-close dimensions retain their existing
+project-authored/source records.
 Runtime geometry and atlases continue to use the optimized derivative of Poly
 Haven `Tree Small 02` under CC0 1.0. The downloaded Sketchfab tree/bush archives
 were inspected externally as silhouette references only; none enters the

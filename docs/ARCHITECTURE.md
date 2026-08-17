@@ -328,3 +328,13 @@ screen size and two-second hysteresis control only true mesh-tier changes; there
 is no culled-to-visible or page-entry fade. The rejected four opaque grove hulls
 remain outside the product dependency closure, and the orthophoto remains the
 sub-pixel canopy authority. No tree owns a GameObject or `Update` method.
+
+Tree dimensions are compiled offline and stored once per accepted placement;
+all three visual tiers consume that same height/crown transform. The dimension
+compiler preserves placement, terrain base, page order, tint, rotation, and seed.
+The 1,047 accepted airport-close dimensions remain verbatim. Elsewhere,
+orthophoto crown ownership and local crown/tonal structure drive deterministic
+context allometry, with the exactly transformed compact 3DEP canopy raster used
+only as bounded height evidence where supported. Stable hashes never affect
+height. This removes the former 15.5 m crown and 23.5 m height saturation without
+adding runtime state, textures, materials, geometry, or draw calls.
