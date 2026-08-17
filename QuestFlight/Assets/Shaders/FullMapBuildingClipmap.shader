@@ -306,12 +306,10 @@ Shader "QuestFlight/Full Map Building Clipmap"
                     float2 windowUv;
                     window = WindowMask(i.detailUv, wallLength, i.parameters.z, facadeStyle,
                         i.atlasCell.y, windowUv);
-                    // Sub-pixel reflective openings otherwise collapse into a bright
-                    // crawling stipple in aerial views. Fade the semantic mask by
-                    // projected metre size, continuously and without LOD dither/pop.
-                    half metersPerPixel = max(length(ddx(i.detailUv)), length(ddy(i.detailUv)));
-                    half openingScreenFade = 1.0h - smoothstep(0.18h, 0.46h, metersPerPixel);
-                    window *= openingScreenFade;
+                    // Window semantics remain active for every resident building.
+                    // WindowMask already uses screen derivatives to soften aperture
+                    // edges, so a second distance fade only made distant buildings
+                    // read as featureless blocks from the pilot's forward view.
                     float2 doorUv;
                     half door = DoorMask(i.detailUv, wallLength, facadeStyle, i.atlasCell.y, doorUv);
                     window *= 1.0h - door;

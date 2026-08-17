@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using NUnit.Framework;
 using QuestFlightLab.Environment;
 using UnityEditor;
@@ -31,7 +30,11 @@ namespace QuestFlight.Editor.Tests
                 renderer.shadowCastingMode == ShadowCastingMode.Off), Is.True);
             Assert.That(controller.GetComponentsInChildren<LODGroup>(true), Is.Empty);
             Assert.That(controller.authoredContractVersion, Is.EqualTo(AircraftCenteredBuildingClipmapController.ContractVersion));
-            Assert.That(controller.authoredMaximumSelectedTriangles, Is.EqualTo(139588));
+            Assert.That(controller.authoredMaximumSelectedTriangles, Is.EqualTo(233298));
+            Assert.That(controller.pageTriangleCounts, Has.Length.EqualTo(576));
+            Assert.That(controller.pageBuildingCounts, Has.Length.EqualTo(576));
+            Assert.That(controller.pageRoofAreasSquareMeters, Has.Length.EqualTo(576));
+            Assert.That(controller.pageBuildingCounts.Sum(), Is.EqualTo(57407));
 
             var scene = EditorSceneManager.OpenScene(
                 FullMapBuildingClipmapAssetAuthoring.ScenePath, OpenSceneMode.Single);
@@ -66,7 +69,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(source, Does.Not.Contain("Instantiate("));
             Assert.That(source, Does.Not.Contain("FindObject"));
             Assert.That(source, Does.Contain("Application.streamingAssetsPath"));
-            Assert.That(source, Does.Contain("CommitWindow(active, force"));
+            Assert.That(source, Does.Contain("CommitWindow(target, force"));
             Assert.That(source, Does.Not.Contain("detailRenderer"));
             Assert.That(source, Does.Contain("UnloadAsync(true)"));
             Assert.That(source, Does.Not.Contain("Unload(false)"));
@@ -98,6 +101,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(material.GetTexture("_NearAlbedo"), Is.Not.Null);
             Assert.That(material.GetTexture("_MidAlbedo"), Is.Not.Null);
             Assert.That(material.GetTexture("_FarAlbedo"), Is.Not.Null);
+            Assert.That(material.HasProperty("_BuildingShellMorphEnabled"), Is.False);
             foreach (string path in new[]
                      {
                          FullMapBuildingClipmapAssetAuthoring.AlbedoPath,
@@ -131,6 +135,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(shader, Does.Contain("half openingScreenFade"));
             Assert.That(shader, Does.Contain("DetailAtlasUv"));
             Assert.That(shader, Does.Contain("tex2D(_FacadeDetail"));
+            Assert.That(shader, Does.Not.Contain("shellReveal"));
+            Assert.That(shader, Does.Not.Contain("_BuildingLodReferencePosition"));
             Assert.That(shader, Does.Not.Contain("clip(window"),
                 "Distant openings must fade continuously rather than pop or dither between eyes.");
             Assert.That(shader, Does.Contain("SampleProjectedRoofOrthophoto(i.worldPos.xz)"));
@@ -142,7 +148,7 @@ namespace QuestFlight.Editor.Tests
 
             string authoring = Read("Assets/Editor/FullMapBuildingClipmapAssetAuthoring.cs");
             Assert.That(authoring, Does.Contain("RoofCell(building)"));
-            Assert.That(authoring, Does.Contain("RoofDetailScale(building)"));
+            Assert.That(authoring, Does.Contain("seed01, RoofDetailScale(building)"));
             Assert.That(authoring, Does.Contain("Vector3.Cross(c - a, b - a)"));
             Assert.That(authoring, Does.Contain("builder.indices.Add(start + 2); builder.indices.Add(start + 1)"));
         }
@@ -153,7 +159,7 @@ namespace QuestFlight.Editor.Tests
             TextAsset report = AssetDatabase.LoadAssetAtPath<TextAsset>(
                 FullMapBuildingClipmapAssetAuthoring.CompilationReportPath);
             Assert.That(report, Is.Not.Null);
-            Assert.That(report.text, Does.Contain("boulder-semantic-facade-compiler-v9-20260816"));
+            Assert.That(report.text, Does.Contain("full-height-forward-residency-compiler-v11-20260817"));
             Assert.That(report.text, Does.Contain("\"foundation_embed_meters\": 1.6"));
             Assert.That(report.text, Does.Contain("\"maximum_roof_wall_seam_meters\": 0.0"));
             Assert.That(report.text, Does.Contain("\"maximum_vertical_corner_seam_meters\": 0.0"));
@@ -175,30 +181,45 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void AircraftCenteredWindowRetainsPagesAcrossCellBoundaries()
+        public void SelectionProtectsTheFullHeightBaseAndPreloadsTheNextForwardFringe()
         {
-            GameObject owner = new GameObject("BuildingClipmapWindowTest");
-            try
+            GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(
+                FullMapBuildingClipmapAssetAuthoring.EnvironmentPath);
+            AircraftCenteredBuildingClipmapController controller = environment
+                .GetComponentInChildren<AircraftCenteredBuildingClipmapController>(true);
+            Vector3 origin = new Vector3(10f, 100f, 10f);
+            Vector2Int[] selected = controller.CalculateDesiredPagesForTest(
+                origin, Vector3.forward, Vector3.forward);
+            Vector2Int[] basePages = controller.CalculateBasePagesForTest(origin);
+            Assert.That(selected, Has.Length.EqualTo(AircraftCenteredBuildingClipmapController.SlotCount));
+            Assert.That(basePages, Has.Length.EqualTo(AircraftCenteredBuildingClipmapController.BaseSlotCount));
+            Assert.That(basePages.All(selected.Contains), Is.True,
+                "Every page in the accepted 4x4 full-height base must remain resident.");
+            for (int column = 10; column <= 13; column++)
+                Assert.That(selected, Does.Contain(new Vector2Int(column, 14)),
+                    "The complete next forward row must be resident before the boundary crossing.");
+
+            Vector2Int[] nextBase = controller.CalculateBasePagesForTest(new Vector3(10f, 100f, 1100f));
+            Assert.That(nextBase.All(selected.Contains), Is.True,
+                "A normal forward page crossing must introduce no previously absent base geometry.");
+
+            var connected = new System.Collections.Generic.HashSet<Vector2Int> { basePages[0] };
+            bool changed;
+            do
             {
-                AircraftCenteredBuildingClipmapController controller =
-                    owner.AddComponent<AircraftCenteredBuildingClipmapController>();
-                controller.columns = 24;
-                controller.rows = 24;
-                controller.pageSizeMeters = 1000f;
-                controller.mapMinimumX = -12000f;
-                controller.mapMinimumZ = -12000f;
-                MethodInfo desiredMinimum = typeof(AircraftCenteredBuildingClipmapController)
-                    .GetMethod("DesiredMinimum", BindingFlags.Instance | BindingFlags.NonPublic);
-                Assert.That(desiredMinimum, Is.Not.Null);
-                Vector2Int a = (Vector2Int)desiredMinimum.Invoke(controller, new object[] { new Vector3(10f, 0f, 10f) });
-                Vector2Int x = (Vector2Int)desiredMinimum.Invoke(controller, new object[] { new Vector3(1010f, 0f, 10f) });
-                Vector2Int diagonal = (Vector2Int)desiredMinimum.Invoke(controller, new object[] { new Vector3(1010f, 0f, 1010f) });
-                Assert.That(Window(a).Intersect(Window(x)).Count(), Is.EqualTo(12),
-                    "A one-axis page shift must retain 12 of 16 renderer owners.");
-                Assert.That(Window(a).Intersect(Window(diagonal)).Count(), Is.EqualTo(9),
-                    "A diagonal page shift must retain 9 of 16 renderer owners.");
-            }
-            finally { UnityEngine.Object.DestroyImmediate(owner); }
+                changed = false;
+                foreach (Vector2Int page in selected)
+                {
+                    if (connected.Contains(page)) continue;
+                    if (connected.Any(other => Mathf.Abs(page.x - other.x) + Mathf.Abs(page.y - other.y) == 1))
+                    { connected.Add(page); changed = true; }
+                }
+            } while (changed);
+            Assert.That(connected.Count, Is.EqualTo(selected.Length),
+                "Forward residency must be one connected landscape, never isolated popping islands.");
+
+            int triangles = selected.Sum(page => controller.pageTriangleCounts[page.y * controller.columns + page.x]);
+            Assert.That(triangles, Is.LessThanOrEqualTo(controller.authoredMaximumSelectedTriangles));
         }
 
         [Test]
@@ -215,27 +236,9 @@ namespace QuestFlight.Editor.Tests
                 stable[column, row] = (int)mesh.GetIndexCount(0) / 3;
             }
 
-            int maximum = 0;
-            for (int currentRow = 0; currentRow < rows; currentRow++)
-            for (int currentColumn = 0; currentColumn < columns; currentColumn++)
-            {
-                int minimumColumn = Mathf.Clamp(currentColumn - 2, 0, columns - 4);
-                int minimumRow = Mathf.Clamp(currentRow - 2, 0, rows - 4);
-                int selected = 0;
-                for (int row = minimumRow; row < minimumRow + 4; row++)
-                for (int column = minimumColumn; column < minimumColumn + 4; column++)
-                    selected += stable[column, row];
-                maximum = Mathf.Max(maximum, selected);
-            }
-            Assert.That(maximum, Is.EqualTo(139588));
-        }
-
-        private static System.Collections.Generic.HashSet<Vector2Int> Window(Vector2Int minimum)
-        {
-            var pages = new System.Collections.Generic.HashSet<Vector2Int>();
-            for (int row = 0; row < 4; row++)
-            for (int column = 0; column < 4; column++) pages.Add(minimum + new Vector2Int(column, row));
-            return pages;
+            int maximum = stable.Cast<int>().OrderByDescending(value => value)
+                .Take(AircraftCenteredBuildingClipmapController.SlotCount).Sum();
+            Assert.That(maximum, Is.EqualTo(233298));
         }
 
         private static int Occurrences(string source, string value)

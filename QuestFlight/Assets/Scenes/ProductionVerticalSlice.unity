@@ -230,6 +230,10 @@ PrefabInstance:
       propertyPath: trackedRig
       value: 
       objectReference: {fileID: 1853183169}
+    - target: {fileID: 3346621618127676652, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
     - target: {fileID: 3552262450579603851, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: trackedRig
       value: 
@@ -239,6 +243,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4809968350647497175, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
+    - target: {fileID: 5030582711598755484, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: trackedRig
       value: 
       objectReference: {fileID: 1853183169}
@@ -306,6 +314,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8678225328133429851, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
     - target: {fileID: 8718138329311266972, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: trackedRig
       value: 

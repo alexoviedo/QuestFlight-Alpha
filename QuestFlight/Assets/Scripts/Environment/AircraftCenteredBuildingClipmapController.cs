@@ -11,16 +11,19 @@ namespace QuestFlightLab.Environment
 {
     /// <summary>
     /// Streams offline-compiled 1 km building pages through one explicitly authored
-    /// 4x4 renderer pool. Every page contains the same closed context-building shells
-    /// at every aircraft position, so crossing an inner page boundary never replaces
-    /// roofs, walls, bounds, materials, or pivots.
+    /// renderer pool. The accepted contiguous 4x4 window is always retained at full
+    /// height. Eight additional, connected pages extend the aircraft-forward view and
+    /// preload the next base-window pages before the aircraft reaches them.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class AircraftCenteredBuildingClipmapController : MonoBehaviour
     {
-        public const string ContractVersion = "full-map-building-clipmap-v1.2";
+        public const string ContractVersion = "full-map-building-clipmap-v1.5";
         public const int GridSize = 4;
-        public const int SlotCount = GridSize * GridSize;
+        public const int BaseSlotCount = GridSize * GridSize;
+        public const int ForwardExtensionSlotCount = 8;
+        public const int SlotCount = BaseSlotCount + ForwardExtensionSlotCount;
+        public const int CandidateRadiusPages = 6;
 
         [Header("Explicitly authored references")]
         public AircraftReferenceFrameRig trackedRig;
@@ -37,16 +40,28 @@ namespace QuestFlightLab.Environment
         public float mapMinimumX = -12000f;
         public float mapMinimumZ = -12000f;
         public int bundleRegionCells = 2;
+        public int[] pageTriangleCounts = Array.Empty<int>();
+        public int[] pageBuildingCounts = Array.Empty<int>();
+        public float[] pageRoofAreasSquareMeters = Array.Empty<float>();
         [Min(0f)] public float predictionSeconds = 2.5f;
         [Min(0.02f)] public float movementPollSeconds = 0.3f;
-        public int authoredMaximumSelectedTriangles = 139588;
+        public int authoredMaximumSelectedTriangles = 233298;
         public string authoredContractVersion = ContractVersion;
+
+        [Header("Flight-simulator interest contract")]
+        [Range(30f, 100f)] public float expandedViewHalfAngleDegrees = 68f;
+        [Range(0.05f, 2f)] public float directionResponseSeconds = 0.65f;
+        [Min(0f)] public float stickyPageScore = 0.18f;
 
         [Header("Runtime evidence (read only)")]
         [SerializeField] private int activeCoveragePages;
         [SerializeField] private int lastRetainedPages;
         [SerializeField] private int lastEnteringPages;
         [SerializeField] private int residentRegions;
+        [SerializeField] private Vector3 stableAircraftForward = Vector3.forward;
+        [SerializeField] private Vector3 stableViewForward = Vector3.forward;
+        [SerializeField] private int protectedBasePages;
+        [SerializeField] private int activeForwardPages;
 
         private readonly PageState[] states = new PageState[SlotCount];
         private readonly Dictionary<PageKey, Mesh> meshes = new Dictionary<PageKey, Mesh>();
@@ -57,6 +72,14 @@ namespace QuestFlightLab.Environment
         private bool hasPreviousPosition;
         private bool refreshRunning;
         private bool indexReady;
+
+        private sealed class ScoredPage
+        {
+            public PageKey page;
+            public float score;
+            public int triangles;
+            public float distance;
+        }
 
         [Serializable] private sealed class BundleIndex
         {
@@ -115,6 +138,26 @@ namespace QuestFlightLab.Environment
                 pageRenderers[i].sharedMaterial = sharedBuildingMaterial;
                 pageRenderers[i].enabled = false;
             }
+            stableAircraftForward = HorizontalForward(trackedRig.transform.forward, Vector3.forward);
+            Camera camera = trackedRig.TrackedCamera;
+            stableViewForward = camera != null
+                ? HorizontalForward(camera.transform.forward, stableAircraftForward)
+                : stableAircraftForward;
+        }
+
+        private void LateUpdate() => UpdateStableDirections();
+
+        private void UpdateStableDirections()
+        {
+            if (trackedRig == null) return;
+            float response = 1f - Mathf.Exp(-Mathf.Max(0f, Time.unscaledDeltaTime) /
+                Mathf.Max(0.05f, directionResponseSeconds));
+            Vector3 aircraft = HorizontalForward(trackedRig.transform.forward, stableAircraftForward);
+            stableAircraftForward = Vector3.Slerp(stableAircraftForward, aircraft, response).normalized;
+            Camera camera = trackedRig.TrackedCamera;
+            if (camera == null) return;
+            Vector3 view = HorizontalForward(camera.transform.forward, stableViewForward);
+            stableViewForward = Vector3.Slerp(stableViewForward, view, response).normalized;
         }
 
         private void DisableRenderers()
@@ -179,11 +222,11 @@ namespace QuestFlightLab.Environment
                 previousSampleTime = now;
                 hasPreviousPosition = true;
 
-                Vector2Int minimum = DesiredMinimum(current);
-                List<PageKey> active = WindowPages(minimum);
+                List<PageKey> target = SelectDesiredPages(current, stableAircraftForward,
+                    stableViewForward, OccupiedPages());
 
                 bool loaded = true;
-                foreach (PageKey page in active)
+                foreach (PageKey page in target)
                 {
                     bool oneLoaded = false;
                     yield return EnsureMesh(page, result => oneLoaded = result != null);
@@ -195,12 +238,20 @@ namespace QuestFlightLab.Environment
                     yield break;
                 }
 
-                CommitWindow(active, force);
+                CommitWindow(target, force);
+                List<PageKey> active = target;
+
+                HashSet<PageKey> protectedWindow = new HashSet<PageKey>(
+                    WindowPages(DesiredMinimum(current)));
+                protectedBasePages = active.Count(protectedWindow.Contains);
+                activeForwardPages = active.Count - protectedBasePages;
 
                 Vector3 prediction = Vector3.ClampMagnitude(velocity * predictionSeconds, pageSizeMeters);
                 Vector3 predicted = current + prediction;
                 HashSet<PageKey> residency = new HashSet<PageKey>(active);
-                foreach (PageKey page in WindowPages(DesiredMinimum(predicted)))
+                foreach (PageKey page in target) residency.Add(page);
+                foreach (PageKey page in SelectDesiredPages(predicted, stableAircraftForward,
+                             stableViewForward, residency))
                     residency.Add(page);
                 foreach (PageKey page in residency)
                     if (!meshes.ContainsKey(page))
@@ -209,6 +260,185 @@ namespace QuestFlightLab.Environment
             }
             finally { refreshRunning = false; }
         }
+
+        private HashSet<PageKey> OccupiedPages() => new HashSet<PageKey>(states
+            .Where(state => state.occupied)
+            .Select(state => state.page));
+
+        private List<PageKey> SelectDesiredPages(
+            Vector3 referencePosition,
+            Vector3 aircraftForward,
+            Vector3 viewForward,
+            ICollection<PageKey> stickyPages)
+        {
+            PageKey containing = ContainingPage(referencePosition);
+            Vector2Int baseMinimum = DesiredMinimum(referencePosition);
+            List<PageKey> basePages = WindowPages(baseMinimum);
+            HashSet<PageKey> selected = new HashSet<PageKey>(basePages);
+            bool viewIsRear = Vector3.Dot(aircraftForward, viewForward) < -0.15f;
+            float viewThreshold = Mathf.Cos(expandedViewHalfAngleDegrees * Mathf.Deg2Rad);
+            List<ScoredPage> candidates = new List<ScoredPage>();
+
+            // The first extension tier is the complete page fringe that will enter the
+            // protected 4x4 window at the next boundary in the dominant flight direction.
+            // This prevents a one-frame geometry hole during normal forward flight.
+            AddForwardFringe(baseMinimum, aircraftForward, selected);
+
+            // For diagonal flight, also retain the orthogonal entering fringe. This uses
+            // the full extension budget and prevents alternating X/Z boundary gaps.
+            float absoluteX = Mathf.Abs(aircraftForward.x);
+            float absoluteZ = Mathf.Abs(aircraftForward.z);
+            if (Mathf.Min(absoluteX, absoluteZ) >= Mathf.Max(absoluteX, absoluteZ) * 0.35f)
+                AddForwardFringe(baseMinimum,
+                    absoluteX >= absoluteZ
+                        ? new Vector3(0f, 0f, Mathf.Sign(aircraftForward.z))
+                        : new Vector3(Mathf.Sign(aircraftForward.x), 0f, 0f),
+                    selected);
+
+            for (int row = Mathf.Max(0, containing.row - CandidateRadiusPages);
+                 row <= Mathf.Min(rows - 1, containing.row + CandidateRadiusPages); row++)
+            for (int column = Mathf.Max(0, containing.column - CandidateRadiusPages);
+                 column <= Mathf.Min(columns - 1, containing.column + CandidateRadiusPages); column++)
+            {
+                PageKey page = new PageKey(column, row);
+                if (selected.Contains(page)) continue;
+                Vector3 offset = PageCenter(page) - referencePosition;
+                offset.y = 0f;
+                float distance = Mathf.Max(1f, offset.magnitude);
+                Vector3 direction = HorizontalForward(offset, aircraftForward);
+                float aircraftDot = Vector3.Dot(aircraftForward, direction);
+                float viewDot = Vector3.Dot(viewForward, direction);
+                float corridor = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-0.15f, 0.9f, aircraftDot));
+                float view = !viewIsRear && viewDot > viewThreshold
+                    ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(viewThreshold, 1f, viewDot))
+                    : 0f;
+                float coverage = Mathf.Sqrt(Mathf.Max(1, PageBuildingCount(page))) * 0.35f +
+                                 Mathf.Sqrt(Mathf.Max(1f, PageRoofArea(page))) * 0.035f;
+                float distanceKilometers = Mathf.Max(0.25f, distance / 1000f);
+                float score = coverage * (0.3f + 1.7f * Mathf.Max(corridor, view)) /
+                              (distanceKilometers * distanceKilometers);
+                if (stickyPages != null && stickyPages.Contains(page)) score *= 1f + stickyPageScore;
+                candidates.Add(new ScoredPage
+                {
+                    page = page,
+                    score = score,
+                    triangles = PageTriangleCount(page),
+                    distance = distance
+                });
+            }
+
+            // Grow a connected extension. A disconnected high-score page would pop into
+            // an isolated island, which is particularly visible from a flight-simulator view.
+            while (selected.Count < SlotCount)
+            {
+                ScoredPage next = candidates
+                    .Where(candidate => !selected.Contains(candidate.page) &&
+                                        IsEdgeAdjacent(candidate.page, selected))
+                    .OrderByDescending(candidate => candidate.score)
+                    .ThenBy(candidate => candidate.distance)
+                    .ThenBy(candidate => candidate.page.row)
+                    .ThenBy(candidate => candidate.page.column)
+                    .FirstOrDefault();
+                if (next == null) break;
+                selected.Add(next.page);
+            }
+
+            return selected.OrderBy(page => basePages.Contains(page) ? 0 : 1)
+                .ThenBy(page => PageCenterDistanceSquared(page, referencePosition))
+                .ToList();
+        }
+
+        private void AddForwardFringe(Vector2Int minimum, Vector3 forward, HashSet<PageKey> selected)
+        {
+            bool alongZ = Mathf.Abs(forward.z) >= Mathf.Abs(forward.x);
+            int sign = alongZ ? (forward.z >= 0f ? 1 : -1) : (forward.x >= 0f ? 1 : -1);
+            for (int offset = 0; offset < GridSize && selected.Count < SlotCount; offset++)
+            {
+                int column = alongZ ? minimum.x + offset : minimum.x + (sign > 0 ? GridSize : -1);
+                int row = alongZ ? minimum.y + (sign > 0 ? GridSize : -1) : minimum.y + offset;
+                if (column >= 0 && column < columns && row >= 0 && row < rows)
+                    selected.Add(new PageKey(column, row));
+            }
+        }
+
+        private static bool IsEdgeAdjacent(PageKey page, IEnumerable<PageKey> selected)
+        {
+            return selected.Any(other =>
+                Mathf.Abs(page.column - other.column) + Mathf.Abs(page.row - other.row) == 1);
+        }
+
+        private Vector2Int DesiredMinimum(Vector3 position)
+        {
+            PageKey containing = ContainingPage(position);
+            return new Vector2Int(
+                Mathf.Clamp(containing.column - GridSize / 2, 0, columns - GridSize),
+                Mathf.Clamp(containing.row - GridSize / 2, 0, rows - GridSize));
+        }
+
+        private List<PageKey> WindowPages(Vector2Int minimum)
+        {
+            List<PageKey> pages = new List<PageKey>(BaseSlotCount);
+            for (int row = minimum.y; row < minimum.y + GridSize; row++)
+            for (int column = minimum.x; column < minimum.x + GridSize; column++)
+                pages.Add(new PageKey(column, row));
+            return pages;
+        }
+
+        private Vector3 PageCenter(PageKey page) => new Vector3(
+            mapMinimumX + (page.column + 0.5f) * pageSizeMeters,
+            0f,
+            mapMinimumZ + (page.row + 0.5f) * pageSizeMeters);
+
+        private float PageCenterDistanceSquared(PageKey page, Vector3 position) =>
+            (PageCenter(page) - position).sqrMagnitude;
+
+        private int PageTriangleCount(PageKey page)
+        {
+            int index = page.row * columns + page.column;
+            return pageTriangleCounts != null && index >= 0 && index < pageTriangleCounts.Length
+                ? Mathf.Max(0, pageTriangleCounts[index])
+                : 0;
+        }
+
+        private int PageBuildingCount(PageKey page)
+        {
+            int index = page.row * columns + page.column;
+            return pageBuildingCounts != null && index >= 0 && index < pageBuildingCounts.Length
+                ? Mathf.Max(0, pageBuildingCounts[index])
+                : 0;
+        }
+
+        private float PageRoofArea(PageKey page)
+        {
+            int index = page.row * columns + page.column;
+            return pageRoofAreasSquareMeters != null && index >= 0 && index < pageRoofAreasSquareMeters.Length
+                ? Mathf.Max(0f, pageRoofAreasSquareMeters[index])
+                : 0f;
+        }
+
+        private static Vector3 HorizontalForward(Vector3 value, Vector3 fallback)
+        {
+            value.y = 0f;
+            if (value.sqrMagnitude > 0.0001f) return value.normalized;
+            fallback.y = 0f;
+            return fallback.sqrMagnitude > 0.0001f ? fallback.normalized : Vector3.forward;
+        }
+
+        public Vector2Int[] CalculateDesiredPagesForTest(
+            Vector3 position,
+            Vector3 aircraftForward,
+            Vector3 viewForward)
+        {
+            return SelectDesiredPages(position,
+                    HorizontalForward(aircraftForward, Vector3.forward),
+                    HorizontalForward(viewForward, aircraftForward),
+                    new HashSet<PageKey>())
+                .Select(page => new Vector2Int(page.column, page.row)).ToArray();
+        }
+
+        public Vector2Int[] CalculateBasePagesForTest(Vector3 position) =>
+            WindowPages(DesiredMinimum(position))
+                .Select(page => new Vector2Int(page.column, page.row)).ToArray();
 
         private void CommitWindow(IReadOnlyList<PageKey> active, bool force)
         {
@@ -250,8 +480,8 @@ namespace QuestFlightLab.Environment
             }
 
             activeCoveragePages = pageRenderers.Count(renderer => renderer.enabled);
-            if (!force && (lastEnteringPages == GridSize || lastEnteringPages == GridSize * 2 - 1))
-                Debug.Log($"[QuestFlight][BuildingClipmap] Atomic stable-shell page shift: retained={lastRetainedPages}; entering={lastEnteringPages}.", this);
+            if (!force && lastEnteringPages > 0)
+                Debug.Log($"[QuestFlight][BuildingClipmap] Full-height page shift: retained={lastRetainedPages}; entering={lastEnteringPages}.", this);
         }
 
         private IEnumerator EnsureMesh(PageKey page, Action<Mesh> completed)
@@ -317,26 +547,9 @@ namespace QuestFlightLab.Environment
             residentRegions = regions.Count;
         }
 
-        private Vector2Int DesiredMinimum(Vector3 position)
-        {
-            PageKey page = ContainingPage(position);
-            return new Vector2Int(
-                Mathf.Clamp(page.column - GridSize / 2, 0, columns - GridSize),
-                Mathf.Clamp(page.row - GridSize / 2, 0, rows - GridSize));
-        }
-
         private PageKey ContainingPage(Vector3 position) => new PageKey(
             Mathf.Clamp(Mathf.FloorToInt((position.x - mapMinimumX) / pageSizeMeters), 0, columns - 1),
             Mathf.Clamp(Mathf.FloorToInt((position.z - mapMinimumZ) / pageSizeMeters), 0, rows - 1));
-
-        private static List<PageKey> WindowPages(Vector2Int minimum)
-        {
-            List<PageKey> result = new List<PageKey>(SlotCount);
-            for (int row = 0; row < GridSize; row++)
-            for (int column = 0; column < GridSize; column++)
-                result.Add(new PageKey(minimum.x + column, minimum.y + row));
-            return result;
-        }
 
         private string RegionName(PageKey page) =>
             $"qf_buildings_r{page.row / bundleRegionCells:D2}_c{page.column / bundleRegionCells:D2}";
@@ -365,16 +578,22 @@ namespace QuestFlightLab.Environment
             if (trackedRig == null) failures.Add("tracked aircraft reference is missing");
             if (sharedBuildingMaterial == null) failures.Add("shared material is missing");
             if (pageFilters == null || pageFilters.Length != SlotCount || pageRenderers == null || pageRenderers.Length != SlotCount)
-                failures.Add("the fixed 4x4 coverage renderer pool is incomplete");
+                failures.Add("the fixed 16-page base plus eight-page forward renderer pool is incomplete");
             else
                 for (int i = 0; i < SlotCount; i++)
                     if (pageFilters[i] == null || pageRenderers[i] == null || pageFilters[i].gameObject != pageRenderers[i].gameObject ||
                         pageFilters[i].transform.parent != transform)
                         failures.Add("coverage slot " + i + " is not explicitly authored directly under the clipmap root");
             if (columns < GridSize || rows < GridSize || pageSizeMeters <= 0f || bundleRegionCells <= 0) failures.Add("page grid contract is invalid");
+            if (pageTriangleCounts == null || pageTriangleCounts.Length != columns * rows ||
+                pageBuildingCounts == null || pageBuildingCounts.Length != columns * rows ||
+                pageRoofAreasSquareMeters == null || pageRoofAreasSquareMeters.Length != columns * rows)
+                failures.Add("page coverage metadata is invalid");
             if (predictionSeconds < 0f || movementPollSeconds <= 0f) failures.Add("streaming timing contract is invalid");
             if (authoredMaximumSelectedTriangles <= 0) failures.Add("authored maximum selected triangle count is missing");
-            report = failures.Count == 0 ? "PASS stable 16-page closed-shell renderer pool with no inner-page replacement" : string.Join("; ", failures);
+            report = failures.Count == 0
+                ? "PASS protected 16-page full-height base plus eight connected forward pages"
+                : string.Join("; ", failures);
             return failures.Count == 0;
         }
     }

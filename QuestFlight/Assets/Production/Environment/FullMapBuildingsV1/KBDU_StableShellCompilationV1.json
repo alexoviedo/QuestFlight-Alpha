@@ -1,11 +1,11 @@
 {
-    "compiler_version": "boulder-semantic-facade-compiler-v9-20260816",
+    "compiler_version": "full-height-forward-residency-compiler-v11-20260817",
     "represented_buildings": 57407,
     "exact_landmarks": 155,
     "four_vertex_shells": 52730,
     "six_vertex_shells": 3949,
     "higher_vertex_shells": 728,
-    "maximum_active_window_triangles": 139594,
+    "maximum_active_window_triangles": 233316,
     "maximum_area_error_percent": 29.991779327392579,
     "maximum_inflation_percent": 4.999911308288574,
     "maximum_centroid_shift_meters": 2.9998700618743898,

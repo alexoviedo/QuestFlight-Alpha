@@ -38,10 +38,10 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
-        private const string MeshCompilerVersion = "boulder-semantic-facade-compiler-v9-20260816";
+        private const string MeshCompilerVersion = "full-height-forward-residency-compiler-v11-20260817";
         private const string FacadeContractVersion = "boulder-semantic-facades-v2";
-        private const int MaximumSelectedTriangleCeiling = 140000;
-        private const int AuthoredMaximumSelectedTriangles = 139588;
+        private const int MaximumSelectedTriangleCeiling = 235000;
+        private const int AuthoredMaximumSelectedTriangles = 233298;
         private const int OrdinaryFootprintVertexLimit = 4;
         private const int LargeFootprintVertexLimit = 6;
         private const float LargeFootprintAreaSquareMeters = 1000f;
@@ -1034,6 +1034,13 @@ namespace QuestFlight.Editor
                     selected += pageTriangles[column, row];
                 report.maximum_active_window_triangles = Mathf.Max(report.maximum_active_window_triangles, selected);
             }
+            // The runtime retains the accepted full-height 4x4 window and eight
+            // additional connected pages. The sum of the globally heaviest 24 pages
+            // is a conservative bound for every possible runtime selection.
+            report.maximum_active_window_triangles = pageTriangles.Cast<int>()
+                .OrderByDescending(value => value)
+                .Take(AircraftCenteredBuildingClipmapController.SlotCount)
+                .Sum();
             WatertightMetrics watertight = MeasureWatertightMeshes(database, terrain);
             report.terrain_sealed_wall_vertices = watertight.terrainSealedWallVertices;
             report.roof_sealed_wall_vertices = watertight.roofSealedWallVertices;
@@ -1176,6 +1183,19 @@ namespace QuestFlight.Editor
                 controller.predictionSeconds = database.prediction_seconds;
                 controller.authoredMaximumSelectedTriangles = AuthoredMaximumSelectedTriangles;
                 controller.authoredContractVersion = AircraftCenteredBuildingClipmapController.ContractVersion;
+                controller.pageTriangleCounts = new int[database.columns * database.rows];
+                controller.pageBuildingCounts = new int[database.columns * database.rows];
+                controller.pageRoofAreasSquareMeters = new float[database.columns * database.rows];
+                foreach (Page page in database.pages)
+                {
+                    int index = page.row * database.columns + page.column;
+                    Mesh pageMesh = LoadRequired<Mesh>(MeshPath(page.column, page.row));
+                    controller.pageTriangleCounts[index] = (int)pageMesh.GetIndexCount(0) / 3;
+                    Building[] buildings = page.buildings ?? Array.Empty<Building>();
+                    controller.pageBuildingCounts[index] = buildings.Length;
+                    controller.pageRoofAreasSquareMeters[index] = buildings.Sum(building =>
+                        Mathf.Max(0f, building.area_m2));
+                }
                 controller.pageFilters = new MeshFilter[AircraftCenteredBuildingClipmapController.SlotCount];
                 controller.pageRenderers = new MeshRenderer[AircraftCenteredBuildingClipmapController.SlotCount];
                 for (int i = 0; i < AircraftCenteredBuildingClipmapController.SlotCount; i++)
