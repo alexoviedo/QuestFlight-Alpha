@@ -62,6 +62,7 @@ namespace QuestFlightLab.Environment
         [SerializeField] private Vector3 stableViewForward = Vector3.forward;
         [SerializeField] private int protectedBasePages;
         [SerializeField] private int activeForwardPages;
+        [SerializeField] private int pageResidencyRevision;
 
         private readonly PageState[] states = new PageState[SlotCount];
         private readonly Dictionary<PageKey, Mesh> meshes = new Dictionary<PageKey, Mesh>();
@@ -115,6 +116,56 @@ namespace QuestFlightLab.Environment
         private sealed class RegionState
         {
             public AssetBundle bundle;
+        }
+
+        public int PageColumns => columns;
+        public int PageRows => rows;
+        public float PageSizeMeters => pageSizeMeters;
+        public float MapMinimumX => mapMinimumX;
+        public float MapMinimumZ => mapMinimumZ;
+        public Vector3 StableAircraftForward => stableAircraftForward;
+        public Vector3 StableViewForward => stableViewForward;
+        public int PageResidencyRevision => pageResidencyRevision;
+        public bool HasCommittedCoverage => activeCoveragePages > 0;
+
+        /// <summary>
+        /// Copies the controller's already-committed and already-loaded/prefetched page
+        /// residency into caller-owned buffers. This does not alter building selection
+        /// and performs no managed allocation.
+        /// </summary>
+        public bool TryCopyPageResidency(bool[] committed, bool[] prefetched)
+        {
+            int pageCount = checked(columns * rows);
+            if (committed == null || prefetched == null ||
+                committed.Length != pageCount || prefetched.Length != pageCount)
+                return false;
+
+            Array.Clear(committed, 0, committed.Length);
+            Array.Clear(prefetched, 0, prefetched.Length);
+            for (int index = 0; index < states.Length; index++)
+            {
+                PageState state = states[index];
+                if (!state.occupied || !TryPageIndex(state.page, out int pageIndex))
+                    continue;
+                committed[pageIndex] = true;
+                prefetched[pageIndex] = true;
+            }
+            foreach (PageKey page in meshes.Keys)
+                if (TryPageIndex(page, out int pageIndex))
+                    prefetched[pageIndex] = true;
+            return activeCoveragePages > 0;
+        }
+
+        private bool TryPageIndex(PageKey page, out int index)
+        {
+            if (page.column < 0 || page.column >= columns ||
+                page.row < 0 || page.row >= rows)
+            {
+                index = -1;
+                return false;
+            }
+            index = page.row * columns + page.column;
+            return true;
         }
 
         private void Awake()
@@ -257,6 +308,7 @@ namespace QuestFlightLab.Environment
                     if (!meshes.ContainsKey(page))
                         yield return EnsureMesh(page, _ => { });
                 yield return ReleaseUnusedRegions(residency);
+                pageResidencyRevision++;
             }
             finally { refreshRunning = false; }
         }

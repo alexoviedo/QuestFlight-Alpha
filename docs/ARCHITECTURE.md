@@ -312,12 +312,19 @@ The 24 km square vegetation representation is compiled offline from the 2020
 orthophoto, authoritative full-map building footprints, and the production
 terrain height source. It stores quantized crown/trunk placements in 576 fixed
 1 km pages. The player does not classify imagery or create hierarchy: one
-serialized `AirportCloseTreeLodRenderer` selects nearby pages and draws the
-existing 344/122/2-triangle tree tiers in at most three instanced draws.
+serialized `AirportCloseTreeLodRenderer` draws the existing 344/122/2-triangle
+tree tiers through one shared material and bounded instanced batches.
 
-LOD selection uses projected screen size, center-eye world-upright eight-view
-impostors, persistent hysteresis, alpha-to-coverage transitions, and a bounded
-1.6 km terrain handoff. The camera frustum excludes irrelevant pages, so detail
-follows the pilot rather than the airport. The rejected four opaque grove hulls
-are removed from the product dependency closure; the orthophoto remains the far
-canopy authority. No tree owns a GameObject or `Update` method.
+Vegetation shares the building clipmap's grid, committed/prefetched pages, and
+stable aircraft direction, but building mesh residency no longer limits far-tree
+visibility. A stable 96-page aircraft-oriented envelope extends 10 km forward,
+7 km laterally, and 3 km rearward. Every retained page contributes the same 144
+deterministic far samples; committed and prefetched building pages are mandatory
+members. A one-page exit halo prevents boundary churn, and head turns cannot
+evict forward coverage. Up to 24/240/4,875 visible instances use the
+near/middle/far tiers in at most seven draws and 50,694 transition-inclusive
+triangles. Projected
+screen size and two-second hysteresis control only true mesh-tier changes; there
+is no culled-to-visible or page-entry fade. The rejected four opaque grove hulls
+remain outside the product dependency closure, and the orthophoto remains the
+sub-pixel canopy authority. No tree owns a GameObject or `Update` method.

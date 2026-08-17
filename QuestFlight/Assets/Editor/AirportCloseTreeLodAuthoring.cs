@@ -126,6 +126,8 @@ namespace QuestFlight.Editor
                     environment.GetComponent<ProductionEnvironmentRoot>();
                 PhotorealAerialSurfaceRoot surface =
                     environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true);
+                AircraftCenteredBuildingClipmapController buildingClipmap =
+                    environment.GetComponentInChildren<AircraftCenteredBuildingClipmapController>(true);
                 AerialSceneryRoot aerial =
                     environment.GetComponentInChildren<AerialSceneryRoot>(true);
                 AirportCoreBenchmarkRoot benchmark =
@@ -158,8 +160,11 @@ namespace QuestFlight.Editor
                     renderer = runtimeObject.GetComponent<AirportCloseTreeLodRenderer>() ??
                         runtimeObject.AddComponent<AirportCloseTreeLodRenderer>();
                 }
+                if (buildingClipmap == null)
+                    throw new InvalidOperationException(
+                        "Full-map vegetation requires the authored building clipmap residency authority.");
                 renderer.Configure(canopyMaterial, lod0, lod1, lod2,
-                    placementAsset, sourceAsset, instances, fullMapDatabase);
+                    placementAsset, sourceAsset, instances, fullMapDatabase, buildingClipmap);
 
                 Renderer[] staticCanopy = surface.canopySurfaceRenderers
                     .Where(item => item != null).ToArray();
@@ -183,9 +188,9 @@ namespace QuestFlight.Editor
                     checked((int)renderer.AuthoredMaximumSelectedTriangleCount);
                 aerial.bakedVegetationMaterialCount = 1;
 
-                if (renderer.AuthoredMaximumDrawCount != 3 ||
+                if (renderer.AuthoredMaximumDrawCount != 7 ||
                     renderer.AuthoredMaximumSelectedTriangleCount <= 0 ||
-                    renderer.AuthoredMaximumSelectedTriangleCount > 45000)
+                    renderer.AuthoredMaximumSelectedTriangleCount > 52000)
                     throw new InvalidOperationException(
                         "Airport-close runtime LOD budget exceeds its authored contract.");
                 if (budget.rendererCount > 75 || budget.triangleCount > 650000 ||

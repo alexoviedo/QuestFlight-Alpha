@@ -5803,11 +5803,11 @@ MonoBehaviour:
   - {fileID: 5647493251231481069}
   - {fileID: 8853359896272806083}
   - {fileID: 4934532480890289504}
-  bakedRendererCount: 57
-  bakedSelectedTriangleCount: 600584
+  bakedRendererCount: 61
+  bakedSelectedTriangleCount: 608774
   bakedMaterialCount: 12
-  bakedVegetationRendererCount: 3
-  bakedVegetationTriangleCount: 42504
+  bakedVegetationRendererCount: 7
+  bakedVegetationTriangleCount: 50694
   bakedVegetationMaterialCount: 1
   bakeToolVersion: full-map-building-clipmap-v1.5
   bakeUtc: 2026-08-17T06:19:49.3399390Z
@@ -6386,8 +6386,8 @@ MonoBehaviour:
     bounded derivatives
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
-  bakedRendererCount: 57
-  bakedTriangleCount: 600584
+  bakedRendererCount: 61
+  bakedTriangleCount: 608774
   bakedMaterialCount: 12
   bakedTextureCount: 28
   bakeUtc: 2026-08-12T08:42:04.7392327Z
@@ -8709,6 +8709,7 @@ MonoBehaviour:
   stableViewForward: {x: 0, y: 0, z: 1}
   protectedBasePages: 0
   activeForwardPages: 0
+  pageResidencyRevision: 0
 --- !u!1 &8891957776800893980
 GameObject:
   m_ObjectHideFlags: 0
@@ -8975,6 +8976,7 @@ MonoBehaviour:
   placementManifest: {fileID: 4900000, guid: c3fcfbaf10a9a628c38362c280b2eabf, type: 3}
   sourceLicenseManifest: {fileID: 4900000, guid: 89cc45f73c0549e8b3d94e56753a6028, type: 3}
   fullMapPlacementDatabase: {fileID: 4900000, guid: aaa31402c20c90f42836298ae231cb76, type: 3}
+  buildingClipmap: {fileID: 1153024618204506478}
   instances:
   - matrix:
       e00: -14.858223
@@ -33061,12 +33063,12 @@ MonoBehaviour:
   lod0ExitScreenPixels: 48
   lod1EnterScreenPixels: 12
   lod1ExitScreenPixels: 7
-  maximumDistanceMeters: 1600
-  transitionDurationSeconds: 0.6
-  minimumResidencySeconds: 1
+  maximumDistanceMeters: 10000
+  transitionDurationSeconds: 0.35
+  minimumResidencySeconds: 2
   impostorAngularHysteresisDegrees: 6
-  authoredMaximumDrawCount: 3
-  authoredMaximumSelectedTriangleCount: 42504
+  authoredMaximumDrawCount: 7
+  authoredMaximumSelectedTriangleCount: 50694
   projectedScreenSizeSelection: 1
   persistentHysteresis: 1
   centerEyeWorldUprightImpostor: 1

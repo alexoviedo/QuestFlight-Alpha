@@ -31,11 +31,31 @@ namespace QuestFlight.Editor.Tests
             Assert.That(renderers, Has.Length.EqualTo(1));
 
             AirportCloseTreeLodRenderer renderer = renderers[0];
+            AircraftCenteredBuildingClipmapController buildingClipmap =
+                environment.GetComponentInChildren<AircraftCenteredBuildingClipmapController>(true);
             AirportCoreBenchmarkRoot benchmark =
                 environment.GetComponentInChildren<AirportCoreBenchmarkRoot>(true);
             Assert.That(renderer.Instances, Has.Length.EqualTo(1047));
             Assert.That(renderer.FullMapPlacementDatabase, Is.Not.Null);
-            Assert.That(renderer.MaximumDistanceMeters, Is.EqualTo(1600f));
+            Assert.That(renderer.BuildingClipmap, Is.Not.Null);
+            Assert.That(renderer.BuildingClipmap, Is.SameAs(buildingClipmap));
+            Assert.That(buildingClipmap.PageColumns, Is.EqualTo(24));
+            Assert.That(buildingClipmap.PageRows, Is.EqualTo(24));
+            Assert.That(buildingClipmap.PageSizeMeters, Is.EqualTo(1000f));
+            Assert.That(buildingClipmap.MapMinimumX, Is.EqualTo(-12000f));
+            Assert.That(buildingClipmap.MapMinimumZ, Is.EqualTo(-12000f));
+            Assert.That(renderer.UsesSharedBuildingPageResidency, Is.True);
+            Assert.That(renderer.CullEntryFadeEnabled, Is.False);
+            Assert.That(renderer.MaximumDistanceMeters, Is.EqualTo(10000f));
+            Assert.That(renderer.ForwardTreeCoverageMeters, Is.EqualTo(10000f));
+            Assert.That(renderer.LateralTreeCoverageMeters, Is.EqualTo(7000f));
+            Assert.That(renderer.RearTreeCoverageMeters, Is.EqualTo(3000f));
+            Assert.That(renderer.FarCoveragePageLimit, Is.EqualTo(96));
+            Assert.That(renderer.FarSamplesPerCoveragePage, Is.EqualTo(144));
+            Assert.That(renderer.MaximumFarCoverageCandidates, Is.EqualTo(13824));
+            Assert.That(renderer.MaximumFarDrawPopulation, Is.EqualTo(4875));
+            Assert.That(renderer.StablePageStratifiedFarSelection, Is.True);
+            Assert.That(renderer.BuildingPagesAreMandatoryTreeCoverage, Is.True);
             Assert.That(benchmark, Is.Not.Null);
             Assert.That(benchmark.vegetationHeroCluster, Is.Not.Null);
             Assert.That(benchmark.vegetationHeroCluster.gameObject.activeSelf, Is.False,
@@ -46,9 +66,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(TriangleCount(renderer.Lod0Mesh), Is.EqualTo(344));
             Assert.That(TriangleCount(renderer.Lod1Mesh), Is.EqualTo(122));
             Assert.That(TriangleCount(renderer.Lod2Mesh), Is.EqualTo(2));
-            Assert.That(renderer.AuthoredMaximumDrawCount, Is.EqualTo(3));
+            Assert.That(renderer.AuthoredMaximumDrawCount, Is.EqualTo(7));
             Assert.That(renderer.AuthoredMaximumSelectedTriangleCount,
-                Is.EqualTo(42504));
+                Is.EqualTo(50694));
             Assert.That(renderer.ProjectedScreenSizeSelection, Is.True);
             Assert.That(renderer.PersistentHysteresis, Is.True);
             Assert.That(renderer.CenterEyeWorldUprightImpostor, Is.True);
@@ -59,11 +79,36 @@ namespace QuestFlight.Editor.Tests
             Assert.That(renderer.Lod1EnterScreenPixels,
                 Is.GreaterThan(renderer.Lod1ExitScreenPixels));
             Assert.That(renderer.MinimumResidencySeconds,
-                Is.GreaterThanOrEqualTo(0.7f));
+                Is.GreaterThanOrEqualTo(2f));
             Assert.That(renderer.GetComponentsInChildren<LODGroup>(true), Is.Empty);
             Assert.That(renderer.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
             Assert.That(renderer.transform.childCount, Is.EqualTo(0),
                 "Close-tree instances must not become one GameObject per tree.");
+        }
+
+        [Test]
+        public void FarCoverageEnvelopeProtectsPilotForwardAndLateralViews()
+        {
+            GameObject environment =
+                AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
+            AirportCloseTreeLodRenderer renderer =
+                environment.GetComponentInChildren<AirportCloseTreeLodRenderer>(true);
+            Vector3 forward = Vector3.forward;
+
+            Assert.That(renderer.IsInsideTreeCoverageForTest(
+                new Vector3(0f, 0f, 9900f), forward), Is.True);
+            Assert.That(renderer.IsInsideTreeCoverageForTest(
+                new Vector3(0f, 0f, 10100f), forward), Is.False);
+            Assert.That(renderer.IsInsideTreeCoverageForTest(
+                new Vector3(6900f, 0f, 0f), forward), Is.True);
+            Assert.That(renderer.IsInsideTreeCoverageForTest(
+                new Vector3(7100f, 0f, 0f), forward), Is.False);
+            Assert.That(renderer.IsInsideTreeCoverageForTest(
+                new Vector3(0f, 0f, -2900f), forward), Is.True);
+            Assert.That(renderer.IsInsideTreeCoverageForTest(
+                new Vector3(0f, 0f, -3100f), forward), Is.False);
+            Assert.That(renderer.IsInsideTreeCoverageForTest(
+                new Vector3(4000f, 0f, 7000f), forward), Is.True);
         }
 
         [Test]

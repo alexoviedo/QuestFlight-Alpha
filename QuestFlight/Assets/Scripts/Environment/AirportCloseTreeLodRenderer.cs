@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -21,9 +20,16 @@ namespace QuestFlightLab.Environment
     {
         public const int MaximumLod0Instances = 24;
         public const int MaximumLod1Instances = 240;
-        public const int MaximumLod2Instances = 780;
-        public const int MaximumDrawCount = 3;
+        public const int MaximumLod2Instances = 4875;
+        public const int MaximumDrawCount = 7;
         public const int ImpostorFrameCount = 8;
+        public const int MaximumCoveragePages = 96;
+        public const int FarSamplesPerPage = 144;
+        public const float ForwardCoverageMeters = 10000f;
+        public const float LateralCoverageMeters = 7000f;
+        public const float RearCoverageMeters = 3000f;
+        public const float CoverageExitBufferMeters = 1000f;
+        private const int MaximumInstancesPerDraw = 1023;
 
         private const byte Lod0 = 0;
         private const byte Lod1 = 1;
@@ -90,6 +96,7 @@ namespace QuestFlightLab.Environment
         [SerializeField] private TextAsset placementManifest;
         [SerializeField] private TextAsset sourceLicenseManifest;
         [SerializeField] private TextAsset fullMapPlacementDatabase;
+        [SerializeField] private AircraftCenteredBuildingClipmapController buildingClipmap;
         [SerializeField] private Instance[] instances = Array.Empty<Instance>();
         [SerializeField] private float lod0EnterScreenPixels = 72f;
         [SerializeField] private float lod0ExitScreenPixels = 48f;
@@ -123,6 +130,12 @@ namespace QuestFlightLab.Environment
         private readonly float[] lod1Frames = new float[Lod1ArrayCapacity];
         private readonly float[] lod2Frames = new float[Lod2ArrayCapacity];
         private readonly Plane[] frustumPlanes = new Plane[6];
+        private readonly Matrix4x4[] batchMatrices =
+            new Matrix4x4[MaximumInstancesPerDraw];
+        private readonly Vector4[] batchTints =
+            new Vector4[MaximumInstancesPerDraw];
+        private readonly float[] batchFades = new float[MaximumInstancesPerDraw];
+        private readonly float[] batchFrames = new float[MaximumInstancesPerDraw];
 
         private struct RuntimeInstance
         {
@@ -142,6 +155,14 @@ namespace QuestFlightLab.Environment
         private RuntimeInstance[] runtimeInstances = Array.Empty<RuntimeInstance>();
         private int[] pageOffsets = Array.Empty<int>();
         private int[] pageCounts = Array.Empty<int>();
+        private bool[] committedPages = Array.Empty<bool>();
+        private bool[] prefetchedPages = Array.Empty<bool>();
+        private bool[] previousPrefetchedPages = Array.Empty<bool>();
+        private bool[] treeCoveragePages = Array.Empty<bool>();
+        private bool[] previousTreeCoveragePages = Array.Empty<bool>();
+        private PageCandidate[] pageCandidates = Array.Empty<PageCandidate>();
+        private int[] coveragePageIndices = Array.Empty<int>();
+        private int coveragePageCount;
         private float databaseMinimumX;
         private float databaseMinimumZ;
         private float databasePageSize;
@@ -162,6 +183,28 @@ namespace QuestFlightLab.Environment
             public float pixels;
         }
 
+        private struct PageCandidate
+        {
+            public int page;
+            public float priority;
+            public bool mandatory;
+        }
+
+        private sealed class PageCandidateComparer : IComparer<PageCandidate>
+        {
+            public static readonly PageCandidateComparer Instance =
+                new PageCandidateComparer();
+
+            public int Compare(PageCandidate left, PageCandidate right)
+            {
+                int mandatory = right.mandatory.CompareTo(left.mandatory);
+                if (mandatory != 0)
+                    return mandatory;
+                int priority = right.priority.CompareTo(left.priority);
+                return priority != 0 ? priority : left.page.CompareTo(right.page);
+            }
+        }
+
         private sealed class CandidateComparer : IComparer<Candidate>
         {
             public static readonly CandidateComparer Instance = new CandidateComparer();
@@ -176,6 +219,9 @@ namespace QuestFlightLab.Environment
         private bool[] visible = Array.Empty<bool>();
         private bool[] selectedLod0 = Array.Empty<bool>();
         private bool[] selectedLod1 = Array.Empty<bool>();
+        private bool[] selectedForDraw = Array.Empty<bool>();
+        private bool[] selectedLastFrame = Array.Empty<bool>();
+        private bool[] farEligible = Array.Empty<bool>();
         private float[] projectedPixels = Array.Empty<float>();
         private float[] priorities = Array.Empty<float>();
         private byte[] desiredLods = Array.Empty<byte>();
@@ -196,6 +242,7 @@ namespace QuestFlightLab.Environment
         public TextAsset PlacementManifest => placementManifest;
         public TextAsset SourceLicenseManifest => sourceLicenseManifest;
         public TextAsset FullMapPlacementDatabase => fullMapPlacementDatabase;
+        public AircraftCenteredBuildingClipmapController BuildingClipmap => buildingClipmap;
         public Instance[] Instances => instances;
         public int RuntimeInstanceCount => runtimeInstances == null ? 0 : runtimeInstances.Length;
         public float Lod0EnterScreenPixels => lod0EnterScreenPixels;
@@ -213,12 +260,38 @@ namespace QuestFlightLab.Environment
         public bool CenterEyeWorldUprightImpostor => centerEyeWorldUprightImpostor;
         public bool PerEyeFacingBehavior => perEyeFacingBehavior;
         public bool AlphaToCoverageTransition => alphaToCoverageTransition;
+        public bool UsesSharedBuildingPageResidency =>
+            fullMapPlacementDatabase == null || buildingClipmap != null;
+        public bool CullEntryFadeEnabled => false;
+        public int FarCoveragePageLimit => MaximumCoveragePages;
+        public int FarSamplesPerCoveragePage => FarSamplesPerPage;
+        public float ForwardTreeCoverageMeters => ForwardCoverageMeters;
+        public float LateralTreeCoverageMeters => LateralCoverageMeters;
+        public float RearTreeCoverageMeters => RearCoverageMeters;
+        public bool BuildingPagesAreMandatoryTreeCoverage => true;
+        public int MaximumFarCoverageCandidates =>
+            MaximumCoveragePages * FarSamplesPerPage;
+        public int MaximumFarDrawPopulation => MaximumLod2Instances;
+        public bool StablePageStratifiedFarSelection => true;
 
         // Compatibility properties make the intentional V1-to-V2 policy change
         // explicit to repository validators and temporal evidence.
         public bool FixedWorldOrientationOnly => false;
         public bool CameraFacingBehavior => centerEyeWorldUprightImpostor;
         public bool LodCrossfadeOrDither => alphaToCoverageTransition;
+
+        public bool IsInsideTreeCoverageForTest(Vector3 offset, Vector3 aircraftForward)
+        {
+            Vector3 forward = HorizontalDirection(aircraftForward, Vector3.forward);
+            Vector3 right = new Vector3(forward.z, 0f, -forward.x);
+            offset.y = 0f;
+            return InsideCoverageEnvelope(
+                Vector3.Dot(offset, forward),
+                Mathf.Abs(Vector3.Dot(offset, right)),
+                ForwardCoverageMeters,
+                LateralCoverageMeters,
+                RearCoverageMeters);
+        }
 
         public void Configure(
             Material material,
@@ -228,7 +301,8 @@ namespace QuestFlightLab.Environment
             TextAsset placements,
             TextAsset sourceManifest,
             Instance[] authoredInstances,
-            TextAsset fullMapDatabase = null)
+            TextAsset fullMapDatabase = null,
+            AircraftCenteredBuildingClipmapController sharedBuildingClipmap = null)
         {
             sharedCanopyMaterial = material;
             lod0Mesh = nearMesh;
@@ -237,14 +311,17 @@ namespace QuestFlightLab.Environment
             placementManifest = placements;
             sourceLicenseManifest = sourceManifest;
             fullMapPlacementDatabase = fullMapDatabase;
+            buildingClipmap = sharedBuildingClipmap;
             instances = authoredInstances ?? Array.Empty<Instance>();
             lod0EnterScreenPixels = 72f;
             lod0ExitScreenPixels = 48f;
             lod1EnterScreenPixels = 12f;
             lod1ExitScreenPixels = 7f;
-            maximumDistanceMeters = fullMapDatabase == null ? 750f : 1600f;
-            transitionDurationSeconds = 0.60f;
-            minimumResidencySeconds = 1.00f;
+            maximumDistanceMeters = fullMapDatabase == null
+                ? 750f
+                : ForwardCoverageMeters;
+            transitionDurationSeconds = 0.35f;
+            minimumResidencySeconds = 2.00f;
             impostorAngularHysteresisDegrees = 6f;
             projectedScreenSizeSelection = true;
             persistentHysteresis = true;
@@ -301,6 +378,9 @@ namespace QuestFlightLab.Environment
             visible = new bool[count];
             selectedLod0 = new bool[count];
             selectedLod1 = new bool[count];
+            selectedForDraw = new bool[count];
+            selectedLastFrame = new bool[count];
+            farEligible = new bool[count];
             projectedPixels = new float[count];
             priorities = new float[count];
             desiredLods = new byte[count];
@@ -312,10 +392,8 @@ namespace QuestFlightLab.Environment
             int activeCapacity = count;
             if (pageOffsets.Length > 0)
             {
-                int pageRadius = Mathf.CeilToInt(maximumDistanceMeters / databasePageSize);
-                int nearbyPageCount = (pageRadius * 2 + 1) * (pageRadius * 2 + 1);
-                int maximumPageCount = pageCounts.Max();
-                activeCapacity = Mathf.Min(count, checked(nearbyPageCount * maximumPageCount));
+                activeCapacity = Mathf.Min(count, checked(
+                    MaximumCoveragePages * FarSamplesPerPage));
             }
             activeIndices = new int[activeCapacity];
             previousActiveIndices = new int[activeCapacity];
@@ -323,6 +401,7 @@ namespace QuestFlightLab.Environment
             activeCount = 0;
             previousActiveCount = 0;
             candidateCount = 0;
+            coveragePageCount = 0;
             for (int index = 0; index < count; index++)
             {
                 desiredLods[index] = Culled;
@@ -354,6 +433,13 @@ namespace QuestFlightLab.Environment
                 }
                 pageOffsets = Array.Empty<int>();
                 pageCounts = Array.Empty<int>();
+                committedPages = Array.Empty<bool>();
+                prefetchedPages = Array.Empty<bool>();
+                previousPrefetchedPages = Array.Empty<bool>();
+                treeCoveragePages = Array.Empty<bool>();
+                previousTreeCoveragePages = Array.Empty<bool>();
+                pageCandidates = Array.Empty<PageCandidate>();
+                coveragePageIndices = Array.Empty<int>();
                 loadedDatabaseInstanceId = 0;
                 return;
             }
@@ -393,6 +479,13 @@ namespace QuestFlightLab.Environment
                     $"Full-map vegetation database length mismatch ({bytes.LongLength} != {expectedBytes}).");
             pageOffsets = new int[pageCount];
             pageCounts = new int[pageCount];
+            committedPages = new bool[pageCount];
+            prefetchedPages = new bool[pageCount];
+            previousPrefetchedPages = new bool[pageCount];
+            treeCoveragePages = new bool[pageCount];
+            previousTreeCoveragePages = new bool[pageCount];
+            pageCandidates = new PageCandidate[pageCount];
+            coveragePageIndices = new int[MaximumCoveragePages];
             for (int page = 0; page < pageCount; page++)
             {
                 pageOffsets[page] = reader.ReadInt32();
@@ -467,16 +560,28 @@ namespace QuestFlightLab.Environment
             Prepare();
             Vector3 cameraPosition = camera.transform.position;
             Vector3 cameraForward = camera.transform.forward;
+            Vector3 aircraftForward = buildingClipmap != null
+                ? buildingClipmap.StableAircraftForward
+                : cameraForward;
+            Vector3 viewForward = buildingClipmap != null
+                ? buildingClipmap.StableViewForward
+                : cameraForward;
             GeometryUtility.CalculateFrustumPlanes(camera, frustumPlanes);
-            BuildActiveIndices(cameraPosition);
-            EvaluateVisibility(camera, cameraPosition, cameraForward);
-            SelectDesiredLods();
             float now = Time.realtimeSinceStartup;
+            if (!BuildActiveIndices(cameraPosition, aircraftForward, viewForward, now))
+                return;
+            EvaluateVisibility(camera, cameraPosition, aircraftForward, viewForward);
+            SelectDesiredLods();
             AdvancePersistentStates(now);
             BuildAndDraw(camera, cameraPosition, layer, now);
+            UpdateSelectionHistory();
         }
 
-        private void BuildActiveIndices(Vector3 cameraPosition)
+        private bool BuildActiveIndices(
+            Vector3 cameraPosition,
+            Vector3 aircraftForward,
+            Vector3 viewForward,
+            float now)
         {
             int[] swap = previousActiveIndices;
             previousActiveIndices = activeIndices;
@@ -487,70 +592,233 @@ namespace QuestFlightLab.Environment
             {
                 int index = previousActiveIndices[position];
                 visible[index] = false;
-                desiredLods[index] = Culled;
+                selectedForDraw[index] = false;
+                farEligible[index] = false;
             }
 
             if (pageOffsets.Length == 0)
             {
                 for (int index = 0; index < runtimeInstances.Length; index++)
                     activeIndices[activeCount++] = index;
-                return;
+                return activeCount > 0;
             }
 
-            int centerColumn = Mathf.FloorToInt(
-                (cameraPosition.x - databaseMinimumX) / databasePageSize);
-            int centerRow = Mathf.FloorToInt(
-                (cameraPosition.z - databaseMinimumZ) / databasePageSize);
-            int radius = Mathf.CeilToInt(maximumDistanceMeters / databasePageSize);
-            float maximumSquared = maximumDistanceMeters * maximumDistanceMeters;
-            for (int row = Mathf.Max(0, centerRow - radius);
-                 row <= Mathf.Min(databaseRows - 1, centerRow + radius);
-                 row++)
+            bool residencyReady = SynchronizeBuildingResidency(now);
+#if UNITY_EDITOR
+            if (!residencyReady && !Application.isPlaying)
             {
-                float minimumZ = databaseMinimumZ + row * databasePageSize;
-                float maximumZ = minimumZ + databasePageSize;
-                float closestZ = Mathf.Clamp(cameraPosition.z, minimumZ, maximumZ);
-                for (int column = Mathf.Max(0, centerColumn - radius);
-                     column <= Mathf.Min(databaseColumns - 1, centerColumn + radius);
-                     column++)
+                BuildEditorFallbackResidency(cameraPosition, aircraftForward, viewForward, now);
+                residencyReady = true;
+            }
+#endif
+            if (!residencyReady)
+                return false;
+
+            BuildTreeCoverage(cameraPosition, aircraftForward);
+            for (int coverage = 0; coverage < coveragePageCount; coverage++)
+            {
+                int page = coveragePageIndices[coverage];
+                int start = pageOffsets[page];
+                int farEnd = start + Mathf.Min(pageCounts[page], FarSamplesPerPage);
+                for (int index = start; index < farEnd; index++)
                 {
-                    float minimumX = databaseMinimumX + column * databasePageSize;
-                    float maximumX = minimumX + databasePageSize;
-                    float closestX = Mathf.Clamp(cameraPosition.x, minimumX, maximumX);
-                    float dx = cameraPosition.x - closestX;
-                    float dz = cameraPosition.z - closestZ;
-                    if (dx * dx + dz * dz > maximumSquared)
-                        continue;
-                    Bounds pageBounds = new Bounds(
-                        new Vector3(
-                            (minimumX + maximumX) * 0.5f,
-                            500f,
-                            (minimumZ + maximumZ) * 0.5f),
-                        new Vector3(databasePageSize, 2000f, databasePageSize));
-                    if (!GeometryUtility.TestPlanesAABB(frustumPlanes, pageBounds))
-                        continue;
-                    int page = row * databaseColumns + column;
+                    if (activeCount >= activeIndices.Length)
+                        throw new InvalidOperationException(
+                            "Full-map vegetation active-page capacity was exceeded.");
+                    activeIndices[activeCount++] = index;
+                    farEligible[index] = true;
+                }
+            }
+            return activeCount > 0;
+        }
+
+        private void BuildTreeCoverage(Vector3 cameraPosition, Vector3 aircraftForward)
+        {
+            Array.Clear(treeCoveragePages, 0, treeCoveragePages.Length);
+            Vector3 forward = HorizontalDirection(aircraftForward, Vector3.forward);
+            Vector3 right = new Vector3(forward.z, 0f, -forward.x);
+            int pageCandidateCount = 0;
+            float forwardExit = ForwardCoverageMeters + CoverageExitBufferMeters;
+            float lateralExit = LateralCoverageMeters + CoverageExitBufferMeters;
+            float rearExit = RearCoverageMeters + CoverageExitBufferMeters;
+
+            for (int row = 0; row < databaseRows; row++)
+            for (int column = 0; column < databaseColumns; column++)
+            {
+                int page = row * databaseColumns + column;
+                Vector3 center = new Vector3(
+                    databaseMinimumX + (column + 0.5f) * databasePageSize,
+                    cameraPosition.y,
+                    databaseMinimumZ + (row + 0.5f) * databasePageSize);
+                Vector3 offset = center - cameraPosition;
+                offset.y = 0f;
+                float longitudinal = Vector3.Dot(offset, forward);
+                float lateral = Mathf.Abs(Vector3.Dot(offset, right));
+                bool mandatory = committedPages[page] || prefetchedPages[page];
+                bool insideEntry = InsideCoverageEnvelope(
+                    longitudinal,
+                    lateral,
+                    ForwardCoverageMeters,
+                    LateralCoverageMeters,
+                    RearCoverageMeters);
+                bool insideExit = previousTreeCoveragePages[page] &&
+                    InsideCoverageEnvelope(
+                        longitudinal,
+                        lateral,
+                        forwardExit,
+                        lateralExit,
+                        rearExit);
+                if (!mandatory && !insideEntry && !insideExit)
+                    continue;
+
+                float distance = Mathf.Max(1f, offset.magnitude);
+                float forwardWeight = Mathf.Clamp01(
+                    (longitudinal + RearCoverageMeters) /
+                    (ForwardCoverageMeters + RearCoverageMeters));
+                float sideWeight = 1f - Mathf.Clamp01(lateral / lateralExit);
+                pageCandidates[pageCandidateCount++] = new PageCandidate
+                {
+                    page = page,
+                    mandatory = mandatory,
+                    priority =
+                        (insideExit ? 10000f : 0f) +
+                        forwardWeight * 1000f +
+                        sideWeight * 250f -
+                        distance * 0.01f,
+                };
+            }
+
+            Array.Sort(pageCandidates, 0, pageCandidateCount,
+                PageCandidateComparer.Instance);
+            coveragePageCount = Mathf.Min(MaximumCoveragePages, pageCandidateCount);
+            for (int index = 0; index < coveragePageCount; index++)
+            {
+                int page = pageCandidates[index].page;
+                coveragePageIndices[index] = page;
+                treeCoveragePages[page] = true;
+            }
+            Array.Copy(treeCoveragePages, previousTreeCoveragePages,
+                treeCoveragePages.Length);
+        }
+
+        private static bool InsideCoverageEnvelope(
+            float longitudinal,
+            float lateral,
+            float forwardMeters,
+            float lateralMeters,
+            float rearMeters)
+        {
+            if (longitudinal < -rearMeters || longitudinal > forwardMeters ||
+                lateral > lateralMeters)
+                return false;
+            float longitudinalScale = longitudinal >= 0f
+                ? forwardMeters
+                : rearMeters;
+            float normalizedLongitudinal = longitudinal /
+                Mathf.Max(1f, longitudinalScale);
+            float normalizedLateral = lateral / Mathf.Max(1f, lateralMeters);
+            return normalizedLongitudinal * normalizedLongitudinal +
+                normalizedLateral * normalizedLateral <= 1f;
+        }
+
+        private bool SynchronizeBuildingResidency(float now)
+        {
+            if (buildingClipmap == null || committedPages.Length == 0 ||
+                buildingClipmap.PageColumns != databaseColumns ||
+                buildingClipmap.PageRows != databaseRows ||
+                Mathf.Abs(buildingClipmap.PageSizeMeters - databasePageSize) > 0.01f ||
+                Mathf.Abs(buildingClipmap.MapMinimumX - databaseMinimumX) > 0.01f ||
+                Mathf.Abs(buildingClipmap.MapMinimumZ - databaseMinimumZ) > 0.01f)
+                return false;
+
+            bool ready = buildingClipmap.TryCopyPageResidency(
+                committedPages, prefetchedPages);
+            if (!ready)
+                return false;
+            PrewarmNewPages(now);
+            return true;
+        }
+
+        private void PrewarmNewPages(float now)
+        {
+            for (int page = 0; page < prefetchedPages.Length; page++)
+            {
+                if (prefetchedPages[page] && !previousPrefetchedPages[page])
+                {
                     int start = pageOffsets[page];
                     int end = start + pageCounts[page];
                     for (int index = start; index < end; index++)
                     {
-                        if (activeCount >= activeIndices.Length)
-                            throw new InvalidOperationException(
-                                "Full-map vegetation active-page capacity was exceeded.");
-                        activeIndices[activeCount++] = index;
+                        if (currentLods[index] != Uninitialized && currentLods[index] != Culled)
+                            continue;
+                        currentLods[index] = Lod2;
+                        previousLods[index] = Culled;
+                        desiredLods[index] = Lod2;
+                        transitionStarts[index] = float.NegativeInfinity;
+                        lastStateChanges[index] = now - minimumResidencySeconds;
                     }
                 }
+                previousPrefetchedPages[page] = prefetchedPages[page];
             }
         }
+
+#if UNITY_EDITOR
+        private void BuildEditorFallbackResidency(
+            Vector3 cameraPosition,
+            Vector3 aircraftForward,
+            Vector3 viewForward,
+            float now)
+        {
+            Array.Clear(committedPages, 0, committedPages.Length);
+            Array.Clear(prefetchedPages, 0, prefetchedPages.Length);
+            int centerColumn = Mathf.Clamp(Mathf.FloorToInt(
+                (cameraPosition.x - databaseMinimumX) / databasePageSize),
+                0, databaseColumns - 1);
+            int centerRow = Mathf.Clamp(Mathf.FloorToInt(
+                (cameraPosition.z - databaseMinimumZ) / databasePageSize),
+                0, databaseRows - 1);
+            int minimumColumn = Mathf.Clamp(centerColumn - 2, 0, databaseColumns - 4);
+            int minimumRow = Mathf.Clamp(centerRow - 2, 0, databaseRows - 4);
+            for (int row = minimumRow; row < minimumRow + 4; row++)
+            for (int column = minimumColumn; column < minimumColumn + 4; column++)
+                SetEditorPage(column, row);
+
+            Vector3 stableForward = HorizontalDirection(aircraftForward, viewForward);
+            bool alongZ = Mathf.Abs(stableForward.z) >= Mathf.Abs(stableForward.x);
+            int sign = alongZ ? (stableForward.z >= 0f ? 1 : -1) :
+                (stableForward.x >= 0f ? 1 : -1);
+            for (int depth = 1; depth <= 2; depth++)
+            for (int offset = 0; offset < 4; offset++)
+            {
+                int column = alongZ ? minimumColumn + offset :
+                    minimumColumn + (sign > 0 ? 3 + depth : -depth);
+                int row = alongZ ? minimumRow + (sign > 0 ? 3 + depth : -depth) :
+                    minimumRow + offset;
+                SetEditorPage(column, row);
+            }
+            Array.Copy(committedPages, prefetchedPages, committedPages.Length);
+            PrewarmNewPages(now);
+        }
+
+        private void SetEditorPage(int column, int row)
+        {
+            if (column < 0 || column >= databaseColumns || row < 0 || row >= databaseRows)
+                return;
+            committedPages[row * databaseColumns + column] = true;
+        }
+#endif
 
         private void EvaluateVisibility(
             Camera camera,
             Vector3 cameraPosition,
-            Vector3 cameraForward)
+            Vector3 aircraftForward,
+            Vector3 viewForward)
         {
-            float maximumDistanceSquared = maximumDistanceMeters * maximumDistanceMeters;
             float focalPixels = camera.pixelHeight /
                 (2f * Mathf.Tan(camera.fieldOfView * Mathf.Deg2Rad * 0.5f));
+            Vector3 stableAircraftForward = HorizontalDirection(aircraftForward, Vector3.forward);
+            Vector3 stableViewForward = HorizontalDirection(viewForward, stableAircraftForward);
+            float viewThreshold = Mathf.Cos(68f * Mathf.Deg2Rad);
             candidateCount = 0;
             for (int active = 0; active < activeCount; active++)
             {
@@ -558,27 +826,28 @@ namespace QuestFlightLab.Environment
                 RuntimeInstance instance = runtimeInstances[index];
                 Vector3 offset = instance.Center - cameraPosition;
                 float distanceSquared = offset.sqrMagnitude;
-                bool inRange = distanceSquared <= maximumDistanceSquared;
-                bool inFront = Vector3.Dot(cameraForward, offset) >= -instance.Radius;
-                bool inFrustum = false;
-                if (inRange && inFront)
-                {
-                    Bounds bounds = new Bounds(
-                        instance.Center,
-                        Vector3.one * (instance.Radius * 2f));
-                    inFrustum = GeometryUtility.TestPlanesAABB(frustumPlanes, bounds);
-                }
-                visible[index] = inRange && inFront && inFrustum;
+                Bounds bounds = new Bounds(
+                    instance.Center,
+                    Vector3.one * (instance.Radius * 2f));
+                visible[index] = GeometryUtility.TestPlanesAABB(frustumPlanes, bounds);
                 float distance = Mathf.Sqrt(Mathf.Max(0.01f, distanceSquared));
                 float pixels = instance.Radius * 2f * focalPixels / distance;
                 projectedPixels[index] = pixels;
-                float forwardWeight = Mathf.Clamp01(
-                    Vector3.Dot(cameraForward, offset / distance));
-                priorities[index] = pixels + forwardWeight * 32f - distance * 0.001f +
+                Vector3 direction = HorizontalDirection(offset, stableAircraftForward);
+                float aircraftDot = Vector3.Dot(stableAircraftForward, direction);
+                float viewDot = Vector3.Dot(stableViewForward, direction);
+                float forwardWeight = Mathf.Clamp01((aircraftDot + 0.15f) / 1.15f);
+                float viewWeight = Mathf.Clamp01((viewDot - viewThreshold) /
+                    Mathf.Max(0.001f, 1f - viewThreshold));
+                priorities[index] = pixels + forwardWeight * 32f + viewWeight * 12f +
+                    (selectedLastFrame[index] ? 12f : 0f) - distance * 0.0005f +
                     (runtimeInstances.Length - index) * 0.0000001f;
                 selectedLod0[index] = false;
                 selectedLod1[index] = false;
-                desiredLods[index] = Culled;
+                selectedForDraw[index] = false;
+                desiredLods[index] = currentLods[index] == Uninitialized
+                    ? Lod2
+                    : currentLods[index];
                 if (visible[index])
                 {
                     candidates[candidateCount++] = new Candidate
@@ -596,7 +865,6 @@ namespace QuestFlightLab.Environment
         {
             int lod0Count = 0;
             int lod1Count = 0;
-            int lod2Count = 0;
             for (int candidateIndex = 0; candidateIndex < candidateCount; candidateIndex++)
             {
                 Candidate candidate = candidates[candidateIndex];
@@ -610,21 +878,35 @@ namespace QuestFlightLab.Environment
                 if (candidate.pixels >= lod0Threshold && lod0Count < MaximumLod0Instances)
                 {
                     selectedLod0[index] = true;
+                    selectedForDraw[index] = true;
                     desiredLods[index] = Lod0;
                     lod0Count++;
                 }
                 else if (candidate.pixels >= lod1Threshold && lod1Count < MaximumLod1Instances)
                 {
                     selectedLod1[index] = true;
+                    selectedForDraw[index] = true;
                     desiredLods[index] = Lod1;
                     lod1Count++;
                 }
-                else if (lod2Count < MaximumLod2Instances)
-                {
-                    desiredLods[index] = Lod2;
-                    lod2Count++;
-                }
             }
+
+            int lod2Count = 0;
+            for (int candidateIndex = 0;
+                 candidateIndex < candidateCount && lod2Count < MaximumLod2Instances;
+                 candidateIndex++)
+                AssignFarCandidate(candidateIndex, ref lod2Count);
+        }
+
+        private void AssignFarCandidate(int candidateIndex, ref int total)
+        {
+            int index = candidates[candidateIndex].index;
+            if (selectedForDraw[index] || !farEligible[index] ||
+                total >= MaximumLod2Instances)
+                return;
+            selectedForDraw[index] = true;
+            desiredLods[index] = Lod2;
+            total++;
         }
 
         private void AdvancePersistentStates(float now)
@@ -635,6 +917,17 @@ namespace QuestFlightLab.Environment
                 byte desired = desiredLods[index];
                 if (currentLods[index] == Uninitialized)
                 {
+                    currentLods[index] = desired;
+                    previousLods[index] = Culled;
+                    transitionStarts[index] = float.NegativeInfinity;
+                    lastStateChanges[index] = now;
+                    continue;
+                }
+                if (selectedForDraw[index] && !selectedLastFrame[index])
+                {
+                    // The page was prepared before it entered the visible population.
+                    // Select the correct first visible tier immediately; never expose a
+                    // Cull-to-tree alpha ramp in the pilot's view.
                     currentLods[index] = desired;
                     previousLods[index] = Culled;
                     transitionStarts[index] = float.NegativeInfinity;
@@ -669,7 +962,7 @@ namespace QuestFlightLab.Environment
             for (int active = 0; active < activeCount; active++)
             {
                 int index = activeIndices[active];
-                if (!visible[index])
+                if (!visible[index] || !selectedForDraw[index])
                     continue;
                 float elapsed = now - transitionStarts[index];
                 bool transitioning = elapsed >= 0f &&
@@ -739,6 +1032,15 @@ namespace QuestFlightLab.Environment
                 layer);
         }
 
+        private void UpdateSelectionHistory()
+        {
+            for (int active = 0; active < activeCount; active++)
+            {
+                int index = activeIndices[active];
+                selectedLastFrame[index] = selectedForDraw[index];
+            }
+        }
+
         private void AddInstance(
             int index,
             byte lod,
@@ -751,15 +1053,6 @@ namespace QuestFlightLab.Environment
             if (lod == Culled || fade <= 0.001f)
                 return;
             RuntimeInstance instance = runtimeInstances[index];
-            float distance = Vector3.Distance(cameraPosition, instance.Center);
-            float handoffStart = Mathf.Max(0f, maximumDistanceMeters - 180f);
-            float handoff = 1f - Mathf.SmoothStep(
-                0f,
-                1f,
-                Mathf.InverseLerp(handoffStart, maximumDistanceMeters, distance));
-            fade *= handoff;
-            if (fade <= 0.001f)
-                return;
             if (lod == Lod0 && lod0Count < lod0Matrices.Length)
             {
                 lod0Matrices[lod0Count] = instance.Matrix;
@@ -813,6 +1106,17 @@ namespace QuestFlightLab.Environment
             return current;
         }
 
+        private static Vector3 HorizontalDirection(Vector3 value, Vector3 fallback)
+        {
+            value.y = 0f;
+            if (value.sqrMagnitude > 0.0001f)
+                return value.normalized;
+            fallback.y = 0f;
+            return fallback.sqrMagnitude > 0.0001f
+                ? fallback.normalized
+                : Vector3.forward;
+        }
+
         private void DrawTier(
             Mesh mesh,
             Matrix4x4[] matrices,
@@ -826,22 +1130,30 @@ namespace QuestFlightLab.Environment
         {
             if (count <= 0)
                 return;
-            properties.SetVectorArray(InstanceTintId, tints);
-            properties.SetFloatArray(InstanceFadeId, fades);
-            properties.SetFloatArray(ImpostorFrameId, frames);
-            Graphics.DrawMeshInstanced(
-                mesh,
-                0,
-                sharedCanopyMaterial,
-                matrices,
-                count,
-                properties,
-                ShadowCastingMode.Off,
-                false,
-                layer,
-                camera,
-                LightProbeUsage.Off,
-                null);
+            for (int offset = 0; offset < count; offset += MaximumInstancesPerDraw)
+            {
+                int batchCount = Mathf.Min(MaximumInstancesPerDraw, count - offset);
+                Array.Copy(matrices, offset, batchMatrices, 0, batchCount);
+                Array.Copy(tints, offset, batchTints, 0, batchCount);
+                Array.Copy(fades, offset, batchFades, 0, batchCount);
+                Array.Copy(frames, offset, batchFrames, 0, batchCount);
+                properties.SetVectorArray(InstanceTintId, batchTints);
+                properties.SetFloatArray(InstanceFadeId, batchFades);
+                properties.SetFloatArray(ImpostorFrameId, batchFrames);
+                Graphics.DrawMeshInstanced(
+                    mesh,
+                    0,
+                    sharedCanopyMaterial,
+                    batchMatrices,
+                    batchCount,
+                    properties,
+                    ShadowCastingMode.Off,
+                    false,
+                    layer,
+                    camera,
+                    LightProbeUsage.Off,
+                    null);
+            }
         }
     }
 }
