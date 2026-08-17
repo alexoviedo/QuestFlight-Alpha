@@ -230,6 +230,10 @@ PrefabInstance:
       propertyPath: trackedRig
       value: 
       objectReference: {fileID: 1853183169}
+    - target: {fileID: 3552262450579603851, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
     - target: {fileID: 3628160845237562894, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: m_Enabled
       value: 1

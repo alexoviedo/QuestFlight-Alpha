@@ -31,6 +31,10 @@ Material:
         m_Texture: {fileID: 18700000, guid: 1a4811add3654504aa46e926516c7fa9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _FacadeDetail:
+        m_Texture: {fileID: 2800000, guid: 4a5793d93c072364fa3cd5d4802cea37, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _FacadeMRAO:
         m_Texture: {fileID: 18700000, guid: 51446e012e662e6479d9401a3b520c03, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -53,10 +57,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AmbientLift: 0.18
+    - _AmbientLift: 0.04
     - _ClipmapEnabled: 0
-    - _NormalScale: 0.45
-    - _WindowReflection: 0.58
+    - _NormalScale: 0.34
+    - _WindowReflection: 0.38
     m_Colors:
     - _FarWorldMinInvSize: {r: -12000, g: -12000, b: 0.000041666666, a: 0.000041666666}
     - _MidBlendStartEnd: {r: 5000, g: 6000, b: 0, a: 0}

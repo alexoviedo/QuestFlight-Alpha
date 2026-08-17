@@ -22,7 +22,8 @@ namespace QuestFlight.Editor
         public const string AlbedoPath = Root + "/Materials/FullMapBuildingFacadeArray_Albedo.png";
         public const string NormalPath = Root + "/Materials/FullMapBuildingFacadeArray_Normal.png";
         public const string MraoPath = Root + "/Materials/FullMapBuildingFacadeArray_MRAO.png";
-        public const string FacadeManifestPath = Root + "/KBDU_FullMapBuildingFacadeManifestV1.json";
+        public const string DetailPath = Root + "/Materials/FullMapBuildingFacadeDetailAtlas.png";
+        public const string FacadeManifestPath = Root + "/KBDU_FullMapBuildingFacadeManifestV2.json";
         public const string CompilationReportPath = Root + "/KBDU_StableShellCompilationV1.json";
         public const string GeneratedRoot = "Assets/Generated/FullMapBuildingClipmap";
         public const string StreamingRoot = "Assets/StreamingAssets/QuestFlightBuildingClipmap";
@@ -37,8 +38,8 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
-        private const string MeshCompilerVersion = "semantic-facade-shell-compiler-v8-20260816";
-        private const string FacadeContractVersion = "parcel-grounded-facades-v1";
+        private const string MeshCompilerVersion = "boulder-semantic-facade-compiler-v9-20260816";
+        private const string FacadeContractVersion = "boulder-semantic-facades-v2";
         private const int MaximumSelectedTriangleCeiling = 140000;
         private const int AuthoredMaximumSelectedTriangles = 139588;
         private const int OrdinaryFootprintVertexLimit = 4;
@@ -89,6 +90,11 @@ namespace QuestFlight.Editor
             public int facade_style_id;
             public int stories_x2;
             public int built_year;
+            public int semantic_class_id;
+            public int semantic_region_id;
+            public int semantic_confidence;
+            public int parcel_role_id;
+            public int material_rule_id;
             public int[] lod0_q;
             public int[] lod1_q;
             public int[] lod2_q;
@@ -325,7 +331,33 @@ namespace QuestFlight.Editor
             ConfigureTextureArray(AlbedoPath, true, TextureImporterType.Default, TextureImporterFormat.ASTC_6x6);
             ConfigureTextureArray(NormalPath, false, TextureImporterType.NormalMap, TextureImporterFormat.ASTC_6x6);
             ConfigureTextureArray(MraoPath, false, TextureImporterType.Default, TextureImporterFormat.ASTC_6x6);
+            ConfigureDetailTexture(DetailPath);
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+        }
+
+        private static void ConfigureDetailTexture(string path)
+        {
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter ??
+                throw new InvalidOperationException("Texture importer is unavailable: " + path);
+            importer.textureType = TextureImporterType.Default;
+            importer.textureShape = TextureImporterShape.Texture2D;
+            importer.sRGBTexture = true;
+            importer.mipmapEnabled = true;
+            importer.streamingMipmaps = false;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.filterMode = FilterMode.Trilinear;
+            importer.anisoLevel = 2;
+            importer.alphaSource = TextureImporterAlphaSource.FromInput;
+            importer.alphaIsTransparency = false;
+            importer.npotScale = TextureImporterNPOTScale.None;
+            TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
+            android.name = "Android";
+            android.overridden = true;
+            android.maxTextureSize = 1024;
+            android.format = TextureImporterFormat.ASTC_6x6;
+            android.compressionQuality = 100;
+            importer.SetPlatformTextureSettings(android);
+            AssetDatabase.WriteImportSettingsIfDirty(path);
         }
 
         private static void ConfigureTextureArray(string path, bool sRgb, TextureImporterType type, TextureImporterFormat format)
@@ -381,9 +413,10 @@ namespace QuestFlight.Editor
             material.SetTexture("_FacadeAlbedo", LoadRequired<Texture>(AlbedoPath));
             material.SetTexture("_FacadeNormal", LoadRequired<Texture>(NormalPath));
             material.SetTexture("_FacadeMRAO", LoadRequired<Texture>(MraoPath));
-            material.SetFloat("_NormalScale", 0.45f);
-            material.SetFloat("_WindowReflection", 0.58f);
-            material.SetFloat("_AmbientLift", 0.18f);
+            material.SetTexture("_FacadeDetail", LoadRequired<Texture>(DetailPath));
+            material.SetFloat("_NormalScale", 0.34f);
+            material.SetFloat("_WindowReflection", 0.38f);
+            material.SetFloat("_AmbientLift", 0.04f);
             Material terrain = LoadRequired<Material>(TerrainMaterialPath);
             foreach (string propertyName in new[] { "_NearAlbedo", "_MidAlbedo", "_FarAlbedo" })
                 material.SetTexture(propertyName, terrain.GetTexture(propertyName));
@@ -1224,6 +1257,13 @@ namespace QuestFlight.Editor
                 throw new InvalidOperationException(aerialReport);
             if (database.pages.Sum(page => page.buildings?.Length ?? 0) < 50000)
                 throw new InvalidOperationException("Full-map building database lost expected coverage.");
+            Building[] buildings = database.pages.SelectMany(page => page.buildings ?? Array.Empty<Building>()).ToArray();
+            if (buildings.Any(building => building.material_id < 0 || building.material_id >= 16 ||
+                                          building.facade_style_id < 0 || building.facade_style_id > 5 ||
+                                          building.semantic_class_id < 0 || building.semantic_class_id > 9 ||
+                                          building.semantic_region_id < 0 || building.semantic_region_id > 6 ||
+                                          building.material_rule_id < 0 || building.material_rule_id > 4))
+                throw new InvalidOperationException("Full-map building facade V2 semantics are incomplete or out of range.");
             Debug.Log($"[QuestFlight][BuildingClipmap] {report}; {aerialReport}; components={database.pages.Sum(page => page.buildings?.Length ?? 0):N0}; pages={database.pages.Length:N0}.");
         }
 

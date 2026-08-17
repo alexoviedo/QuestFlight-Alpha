@@ -50,10 +50,13 @@ namespace QuestFlight.Editor.Tests
             Assert.That(Occurrences(database.text, "\"source_id\":"), Is.EqualTo(57407));
             Assert.That(Occurrences(database.text, "\"column\":"), Is.EqualTo(576));
             Assert.That(database.text, Does.Contain("\"contract_version\":\"full-map-building-clipmap-v1\""));
-            Assert.That(database.text, Does.Contain("\"facade_contract_version\":\"parcel-grounded-facades-v1\""));
+            Assert.That(database.text, Does.Contain("\"facade_contract_version\":\"boulder-semantic-facades-v2\""));
             Assert.That(Occurrences(database.text, "\"material_id\":"), Is.EqualTo(57407));
             Assert.That(Occurrences(database.text, "\"facade_style_id\":"), Is.EqualTo(57407));
             Assert.That(Occurrences(database.text, "\"material_confidence\":"), Is.EqualTo(57407));
+            Assert.That(Occurrences(database.text, "\"semantic_class_id\":"), Is.EqualTo(57407));
+            Assert.That(Occurrences(database.text, "\"semantic_region_id\":"), Is.EqualTo(57407));
+            Assert.That(Occurrences(database.text, "\"material_rule_id\":"), Is.EqualTo(57407));
             Assert.That(database.text, Does.Contain("\"roof_id\":1"));
             Assert.That(database.text, Does.Contain("\"roof_id\":2"));
 
@@ -90,6 +93,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(material.GetTexture("_FacadeAlbedo"), Is.TypeOf<Texture2DArray>());
             Assert.That(material.GetTexture("_FacadeNormal"), Is.TypeOf<Texture2DArray>());
             Assert.That(material.GetTexture("_FacadeMRAO"), Is.TypeOf<Texture2DArray>());
+            Assert.That(material.GetTexture("_FacadeDetail"), Is.TypeOf<Texture2D>());
             Assert.That(((Texture2DArray)material.GetTexture("_FacadeAlbedo")).depth, Is.EqualTo(16));
             Assert.That(material.GetTexture("_NearAlbedo"), Is.Not.Null);
             Assert.That(material.GetTexture("_MidAlbedo"), Is.Not.Null);
@@ -109,6 +113,14 @@ namespace QuestFlight.Editor.Tests
                 Assert.That(importer.GetPlatformTextureSettings("Android").format,
                     Is.EqualTo(TextureImporterFormat.ASTC_6x6), path);
             }
+            TextureImporter detailImporter = AssetImporter.GetAtPath(
+                FullMapBuildingClipmapAssetAuthoring.DetailPath) as TextureImporter;
+            Assert.That(detailImporter, Is.Not.Null);
+            Assert.That(detailImporter.textureShape, Is.EqualTo(TextureImporterShape.Texture2D));
+            Assert.That(detailImporter.mipmapEnabled, Is.True);
+            Assert.That(detailImporter.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));
+            Assert.That(detailImporter.GetPlatformTextureSettings("Android").format,
+                Is.EqualTo(TextureImporterFormat.ASTC_6x6));
             string shader = Read("Assets/Shaders/FullMapBuildingClipmap.shader");
             Assert.That(shader, Does.Contain("i.detailUv"));
             Assert.That(shader, Does.Contain("WindowMask"));
@@ -117,6 +129,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(shader, Does.Contain("half hasCompleteBay"));
             Assert.That(shader, Does.Contain("half DoorMask"));
             Assert.That(shader, Does.Contain("half openingScreenFade"));
+            Assert.That(shader, Does.Contain("DetailAtlasUv"));
+            Assert.That(shader, Does.Contain("tex2D(_FacadeDetail"));
             Assert.That(shader, Does.Not.Contain("clip(window"),
                 "Distant openings must fade continuously rather than pop or dither between eyes.");
             Assert.That(shader, Does.Contain("SampleProjectedRoofOrthophoto(i.worldPos.xz)"));
@@ -139,7 +153,7 @@ namespace QuestFlight.Editor.Tests
             TextAsset report = AssetDatabase.LoadAssetAtPath<TextAsset>(
                 FullMapBuildingClipmapAssetAuthoring.CompilationReportPath);
             Assert.That(report, Is.Not.Null);
-            Assert.That(report.text, Does.Contain("semantic-facade-shell-compiler-v8-20260816"));
+            Assert.That(report.text, Does.Contain("boulder-semantic-facade-compiler-v9-20260816"));
             Assert.That(report.text, Does.Contain("\"foundation_embed_meters\": 1.6"));
             Assert.That(report.text, Does.Contain("\"maximum_roof_wall_seam_meters\": 0.0"));
             Assert.That(report.text, Does.Contain("\"maximum_vertical_corner_seam_meters\": 0.0"));

@@ -5,9 +5,10 @@ Shader "QuestFlight/Full Map Building Clipmap"
         _FacadeAlbedo ("Facade Albedo Array", 2DArray) = "" {}
         _FacadeNormal ("Facade Normal Array", 2DArray) = "" {}
         _FacadeMRAO ("Facade MRAO Array", 2DArray) = "" {}
-        _NormalScale ("Normal Scale", Range(0, 1)) = 0.45
-        _WindowReflection ("Window Reflection", Range(0, 1)) = 0.58
-        _AmbientLift ("Ambient Lift", Range(0, 1)) = 0.18
+        _FacadeDetail ("Facade Aperture Detail", 2D) = "gray" {}
+        _NormalScale ("Normal Scale", Range(0, 1)) = 0.34
+        _WindowReflection ("Window Reflection", Range(0, 1)) = 0.38
+        _AmbientLift ("Ambient Lift", Range(0, 1)) = 0.04
         [HideInInspector] _NearAlbedo ("Near orthophoto fallback", 2D) = "gray" {}
         [HideInInspector] _MidAlbedo ("Mid orthophoto fallback", 2D) = "gray" {}
         [HideInInspector] _FarAlbedo ("Far orthophoto fallback", 2D) = "gray" {}
@@ -42,6 +43,7 @@ Shader "QuestFlight/Full Map Building Clipmap"
             UNITY_DECLARE_TEX2DARRAY(_FacadeAlbedo);
             UNITY_DECLARE_TEX2DARRAY(_FacadeNormal);
             UNITY_DECLARE_TEX2DARRAY(_FacadeMRAO);
+            sampler2D _FacadeDetail;
             sampler2D _NearAlbedo;
             sampler2D _MidAlbedo;
             sampler2D _FarAlbedo;
@@ -100,18 +102,22 @@ Shader "QuestFlight/Full Map Building Clipmap"
 
             float MaterialTileMeters(half materialId)
             {
-                if (materialId < 3.0h) return 1.57;
+                if (materialId < 1.0h) return 1.80;
+                if (materialId < 2.0h) return 1.57;
+                if (materialId < 3.0h) return 2.00;
                 if (materialId < 4.0h) return 3.00;
-                if (materialId < 5.0h) return 2.00;
-                if (materialId < 6.0h) return 3.00;
-                if (materialId < 7.0h) return 1.00;
+                if (materialId < 5.0h) return 1.00;
+                if (materialId < 6.0h) return 2.00;
+                if (materialId < 7.0h) return 3.00;
                 if (materialId < 8.0h) return 2.00;
-                if (materialId < 9.0h) return 1.59;
+                if (materialId < 9.0h) return 2.00;
+                if (materialId < 10.0h) return 1.59;
                 if (materialId < 11.0h) return 1.12;
-                if (materialId < 12.0h) return 1.70;
-                if (materialId < 13.0h) return 2.00;
-                if (materialId < 14.0h) return 1.12;
-                return 1.57;
+                if (materialId < 12.0h) return 2.70;
+                if (materialId < 13.0h) return 3.00;
+                if (materialId < 14.0h) return 1.80;
+                if (materialId < 15.0h) return 2.00;
+                return 1.80;
             }
 
             float2 FacadeUv(float2 uvMeters, half materialId)
@@ -138,7 +144,8 @@ Shader "QuestFlight/Full Map Building Clipmap"
                 { bayWidth = 5.4h; storeyHeight = 4.1h; sill = 1.75h; openingHeight = 1.05h; openingWidth = 0.48h; topMargin = 0.70h; }
             }
 
-            half WindowMask(float2 uvMeters, half wallLength, half eaveHeight, half style, half facadeRole)
+            half WindowMask(float2 uvMeters, half wallLength, half eaveHeight, half style,
+                half facadeRole, out float2 apertureUv)
             {
                 half bayWidth, storeyHeight, sill, openingHeight, openingWidth, topMargin;
                 FacadeLayout(style, bayWidth, storeyHeight, sill, openingHeight, openingWidth, topMargin);
@@ -152,11 +159,13 @@ Shader "QuestFlight/Full Map Building Clipmap"
                 half bayLocal = frac(localX / max(slot, 0.01h));
                 half edgeX = max(fwidth(bayLocal), 0.002h) * 1.5h;
                 half left = (1.0h - openingWidth) * 0.5h;
+                apertureUv.x = saturate((bayLocal - left) / max(openingWidth, 0.01h));
                 half horizontal = smoothstep(left, left + edgeX, bayLocal) *
                     (1.0h - smoothstep(1.0h - left - edgeX, 1.0h - left, bayLocal));
 
                 half floorIndex = floor(max(0.0h, uvMeters.y) / storeyHeight);
                 half floorLocal = uvMeters.y - floorIndex * storeyHeight;
+                apertureUv.y = saturate((floorLocal - sill) / max(openingHeight, 0.01h));
                 half clearOpeningHeight = sill + openingHeight + topMargin;
                 half canFitFirstFloor = step(clearOpeningHeight, eaveHeight);
                 half completeFloors = canFitFirstFloor *
@@ -173,18 +182,28 @@ Shader "QuestFlight/Full Map Building Clipmap"
                 return horizontal * vertical * withinWall * validFloor * hasCompleteBay * allowed;
             }
 
-            half DoorMask(float2 uvMeters, half wallLength, half style, half facadeRole)
+            half DoorMask(float2 uvMeters, half wallLength, half style, half facadeRole,
+                out float2 apertureUv)
             {
                 half isFront = 1.0h - step(0.5h, facadeRole);
                 half doorWidth = style > 1.5h && style < 2.5h ? 3.4h :
                     (style > 0.5h && style < 1.5h ? 1.8h : 1.05h);
                 half doorHeight = style > 1.5h && style < 2.5h ? 3.6h : 2.20h;
                 half centerDistance = abs(uvMeters.x - wallLength * 0.5h);
+                apertureUv = float2(saturate((uvMeters.x - (wallLength - doorWidth) * 0.5h) /
+                    max(doorWidth, 0.01h)), saturate(uvMeters.y / max(doorHeight, 0.01h)));
                 half edge = max(fwidth(centerDistance), 0.003h) * 1.5h;
                 half horizontal = 1.0h - smoothstep(doorWidth * 0.5h - edge, doorWidth * 0.5h, centerDistance);
                 half vertical = step(0.04h, uvMeters.y) *
                     (1.0h - smoothstep(doorHeight - edge, doorHeight, uvMeters.y));
                 return horizontal * vertical * isFront * step(doorWidth + 1.2h, wallLength);
+            }
+
+            float2 DetailAtlasUv(float2 apertureUv, half cell)
+            {
+                float2 safeUv = lerp(0.035, 0.965, saturate(apertureUv));
+                float2 cellOrigin = float2(fmod(cell, 4.0h), floor(cell * 0.25h));
+                return (cellOrigin + safeUv) * 0.25;
             }
 
             fixed3 SampleSerializedOrthophoto(float2 world)
@@ -253,6 +272,7 @@ Shader "QuestFlight/Full Map Building Clipmap"
                 fixed3 albedo;
                 half3 n;
                 half roughness;
+                half occlusion = 1.0h;
                 half window = 0.0h;
                 half3 viewDir = normalize(_WorldSpaceCameraPos.xyz - i.worldPos);
                 UNITY_BRANCH if (roof > 0.5h)
@@ -275,6 +295,7 @@ Shader "QuestFlight/Full Map Building Clipmap"
                     float2 facadeUv = FacadeUv(i.detailUv, materialId);
                     albedo = UNITY_SAMPLE_TEX2DARRAY(_FacadeAlbedo, float3(facadeUv, materialId)).rgb * i.color.rgb;
                     fixed3 packed = UNITY_SAMPLE_TEX2DARRAY(_FacadeMRAO, float3(facadeUv, materialId)).rgb;
+                    occlusion = packed.b;
                     half3 tangentNormal = UnpackNormal(
                         UNITY_SAMPLE_TEX2DARRAY(_FacadeNormal, float3(facadeUv, materialId)));
                     tangentNormal.xy *= _NormalScale;
@@ -282,33 +303,37 @@ Shader "QuestFlight/Full Map Building Clipmap"
                         i.worldBitangent * tangentNormal.y + i.worldNormal * tangentNormal.z);
                     roughness = packed.g;
                     half wallLength = max(0.01h, i.atlasCell.x);
-                    window = WindowMask(i.detailUv, wallLength, i.parameters.z, facadeStyle, i.atlasCell.y);
+                    float2 windowUv;
+                    window = WindowMask(i.detailUv, wallLength, i.parameters.z, facadeStyle,
+                        i.atlasCell.y, windowUv);
                     // Sub-pixel reflective openings otherwise collapse into a bright
                     // crawling stipple in aerial views. Fade the semantic mask by
                     // projected metre size, continuously and without LOD dither/pop.
                     half metersPerPixel = max(length(ddx(i.detailUv)), length(ddy(i.detailUv)));
                     half openingScreenFade = 1.0h - smoothstep(0.18h, 0.46h, metersPerPixel);
                     window *= openingScreenFade;
-                    half door = DoorMask(i.detailUv, wallLength, facadeStyle, i.atlasCell.y);
+                    float2 doorUv;
+                    half door = DoorMask(i.detailUv, wallLength, facadeStyle, i.atlasCell.y, doorUv);
                     window *= 1.0h - door;
                     UNITY_BRANCH if (window > 0.001h)
                     {
-                        fixed3 glassBase = facadeStyle < 0.5h ? fixed3(0.075h, 0.095h, 0.105h) :
-                            fixed3(0.085h, 0.115h, 0.135h);
+                        fixed4 aperture = tex2D(_FacadeDetail,
+                            DetailAtlasUv(windowUv, min(5.0h, facadeStyle)));
                         half3 reflectionNormal = normalize(i.worldNormal);
                         half3 reflectionDirection = reflect(-viewDir, reflectionNormal);
                         half4 encodedReflection = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, reflectionDirection);
                         half3 environmentReflection = DecodeHDR(encodedReflection, unity_SpecCube0_HDR);
                         half fresnel = pow(1.0 - saturate(dot(reflectionNormal, viewDir)), 3.0);
-                        half reflectionWeight = saturate(_WindowReflection * (0.38 + fresnel * 0.62));
-                        albedo = lerp(albedo, lerp(glassBase, environmentReflection, reflectionWeight), window * 0.88);
+                        half reflectionWeight = saturate(_WindowReflection * (0.22 + fresnel * 0.78));
+                        albedo = lerp(albedo, lerp(aperture.rgb, environmentReflection, reflectionWeight),
+                            window * aperture.a * 0.92);
                         roughness = lerp(roughness, 0.22h, window);
                     }
                     UNITY_BRANCH if (door > 0.001h)
                     {
-                        fixed3 doorColor = facadeStyle > 1.5h ? fixed3(0.22h, 0.24h, 0.23h) :
-                            fixed3(0.24h, 0.18h, 0.13h);
-                        albedo = lerp(albedo, doorColor, door * 0.92h);
+                        fixed4 aperture = tex2D(_FacadeDetail,
+                            DetailAtlasUv(doorUv, 8.0h + min(5.0h, facadeStyle)));
+                        albedo = lerp(albedo, aperture.rgb, door * aperture.a * 0.94h);
                         roughness = lerp(roughness, 0.48h, door);
                     }
                 }
@@ -332,7 +357,9 @@ Shader "QuestFlight/Full Map Building Clipmap"
                 else
                 {
                     half specular = pow(saturate(dot(n, halfVector)), lerp(10.0h, 72.0h, 1.0h - roughness));
-                    color = albedo * (ambient + _AmbientLift + _LightColor0.rgb * ndl * shadow);
+                    half3 irradiance = max(ambient, 0.0h) * 0.35h + _AmbientLift +
+                        _LightColor0.rgb * (0.08h + ndl * 0.55h) * shadow;
+                    color = albedo * irradiance * lerp(0.76h, 1.0h, occlusion);
                     color += _LightColor0.rgb * specular * shadow * lerp(0.04h, 0.36h, window);
                 }
                 UNITY_APPLY_FOG(i.fogCoord, color);

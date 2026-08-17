@@ -1,0 +1,28 @@
+{
+  "contract": "full-map-building-facade-quality-v2",
+  "expected_buildings": 57407,
+  "expected_pages": 576,
+  "expected_materials": 16,
+  "minimum_used_materials": 14,
+  "maximum_global_material_share": 0.25,
+  "maximum_dense_page_material_share": 0.88,
+  "minimum_dense_page_median_entropy_bits": 1.15,
+  "minimum_dense_page_buildings": 40,
+  "maximum_false_small_industrial": 0,
+  "maximum_explicit_blue_facades": 0,
+  "geometry_fields": [
+    "id",
+    "source_id",
+    "component",
+    "class_id",
+    "roof_id",
+    "height_dm",
+    "roof_rise_dm",
+    "base_y_dm",
+    "area_m2",
+    "landmark",
+    "lod0_q",
+    "lod1_q",
+    "lod2_q"
+  ]
+}
