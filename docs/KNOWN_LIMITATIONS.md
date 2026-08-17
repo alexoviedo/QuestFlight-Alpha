@@ -388,3 +388,23 @@ The airport corridor is a reference-faithful procedural approximation rather tha
 - Machine captures and deterministic mesh validation pass the sealing contract.
   Worn visual acceptance and physical Quest timing/thermal evidence remain
   pending for the installed APK.
+
+## Full-map vegetation clipmap V2
+
+- Full-map vegetation now follows the pilot across the 24 km square instead of
+  falling off with airport distance. The 901,744-record database is a
+  deterministic visual inference from 2020 RGB orthophotography, not a botanical
+  survey or claim of current individual-tree occupancy.
+- Building footprints receive a hard stem exclusion and the color/texture
+  classifier inherently rejects ordinary gray pavement and blue water. Fine
+  unmapped paths, recent clearing, seasonal change, and unusual source colors can
+  still produce local omissions or false positives.
+- Full-map heights use bounded Boulder-area crown/height allometry outside the
+  retained 1,047 airport-near placements; species, age, exact height, branches,
+  and season remain approximate.
+- The downloaded high-poly reference trees are not product assets. Runtime uses
+  the already optimized 344/122/2-triangle tiers, one material, and at most three
+  draws. The orthophoto remains the far-canopy authority.
+- Machine and stereo evidence do not establish physical Quest frame, thermal,
+  comfort, or final photorealism acceptance; those claims require exact-APK
+  hardware evidence.

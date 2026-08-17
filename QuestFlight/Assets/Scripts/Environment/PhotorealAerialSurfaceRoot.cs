@@ -117,6 +117,13 @@ namespace QuestFlightLab.Environment
                 ? (buildingSurfaceRenderers ?? Array.Empty<Renderer>()).Where(value => value != null).ToArray()
                 : Active(buildingSurfaceRenderers);
             Renderer[] canopy = Active(canopySurfaceRenderers);
+            AirportCloseTreeLodRenderer streamedCanopy = productionCanopySurfaceLayer == null
+                ? null
+                : productionCanopySurfaceLayer
+                    .GetComponentsInChildren<AirportCloseTreeLodRenderer>(true)
+                    .SingleOrDefault(value => value.enabled && IsAuthoredActive(value.transform));
+            bool fullMapStreamedCanopy = streamedCanopy != null &&
+                streamedCanopy.FullMapPlacementDatabase != null;
             bool canopyMapOnly = canopySurfaceManifest != null &&
                 canopySurfaceManifest.text.Contains(
                     "\"type\": \"terrain_canopy_map_only_outside_hero_radius\"");
@@ -132,15 +139,18 @@ namespace QuestFlightLab.Environment
                     buildingClipmap.pageRenderers.Cast<Renderer>().SequenceEqual(buildings) &&
                     buildingClipmap.pageFilters.Length == AircraftCenteredBuildingClipmapController.SlotCount,
                 "aircraft-centered building clipmap does not own the fixed serialized renderer pool", failures);
-            Require(canopyMapOnly ? canopy.Length == 0 : canopy.Length > 0 && canopy.Length <= 4,
-                canopyMapOnly
-                    ? $"terrain-map-only canopy must have zero raised batches, found {canopy.Length}"
+            Require((canopyMapOnly || fullMapStreamedCanopy)
+                    ? canopy.Length == 0
+                    : canopy.Length > 0 && canopy.Length <= 4,
+                canopyMapOnly || fullMapStreamedCanopy
+                    ? $"streamed/map-only canopy must have zero obsolete raised batches, found {canopy.Length}"
                     : $"canopy surface must use 1-4 offline batches, found {canopy.Length}", failures);
             Require(DistinctMaterialCount(buildings) == 1,
                 "building surface must use one shared material", failures);
-            Require(DistinctMaterialCount(canopy) == (canopyMapOnly ? 0 : 1),
-                canopyMapOnly
-                    ? "terrain-map-only canopy must not retain a geometry material"
+            Require(DistinctMaterialCount(canopy) ==
+                    ((canopyMapOnly || fullMapStreamedCanopy) ? 0 : 1),
+                canopyMapOnly || fullMapStreamedCanopy
+                    ? "streamed/map-only canopy must not retain a static geometry material"
                     : "canopy surface must use one shared material", failures);
             Require(aircraftCenteredBuildings ||
                     buildings.All(renderer => renderer.GetComponent<MeshFilter>()?.sharedMesh != null),
@@ -169,7 +179,9 @@ namespace QuestFlightLab.Environment
                 $"2-4 km building coverage is {midBuildingCoveragePercent:0.###}%", failures);
             Require(maximumBuildingFootprintInflationPercent <= 5f,
                 $"building footprint inflation is {maximumBuildingFootprintInflationPercent:0.###}%", failures);
-            Require(canopyMapOnly ? representedCanopyComponentCount == 0 : representedCanopyComponentCount > 0,
+            Require(canopyMapOnly
+                    ? representedCanopyComponentCount == 0
+                    : representedCanopyComponentCount > 0,
                 canopyMapOnly
                     ? "terrain-map-only canopy must not report raised components"
                     : "no connected canopy component is represented", failures);
@@ -206,7 +218,7 @@ namespace QuestFlightLab.Environment
 #else
             Require(bakedBuildingTriangleCount > 0,
                 "building triangle inventory is missing", failures);
-            Require(canopyMapOnly || bakedCanopyTriangleCount > 0,
+            Require(canopyMapOnly || fullMapStreamedCanopy || bakedCanopyTriangleCount > 0,
                 "canopy triangle inventory is missing", failures);
 #endif
             Require(bakedTextureResidentBytes > 0, "texture residency inventory is missing", failures);

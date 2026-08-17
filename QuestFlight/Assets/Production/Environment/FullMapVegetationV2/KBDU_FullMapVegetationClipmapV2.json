@@ -1,0 +1,75 @@
+{
+  "contract": {
+    "bounds_meters": [
+      -12000.0,
+      -12000.0,
+      12000.0,
+      12000.0
+    ],
+    "columns": 24,
+    "coordinate_frame": "KBDU local AEQD; Unity +X east, +Y up, +Z north",
+    "far_handoff": "2020 orthophoto; no individual geometry below useful projected size",
+    "geometry": "overlapping individual crown/trunk LODs; no opaque grove hull",
+    "maximum_instances_per_page": 1600,
+    "rows": 24,
+    "runtime_page_meters": 1000.0
+  },
+  "limitations": [
+    "RGB orthophoto segmentation is semantic placement evidence, not an individual-tree survey.",
+    "Full-map height uses bounded visual allometry outside the retained near-airport lidar zone.",
+    "Raw orthophotos and downloaded high-poly reference assets remain external and uncommitted."
+  ],
+  "processing": {
+    "analysis_meters_per_pixel": 1.3333333333333333,
+    "color_method": "robust median of the brighter source-canopy samples to avoid double-baked shadow",
+    "generator": "tools/full_map_vegetation/build_full_map_vegetation.py",
+    "height_method": "terrain grounded; bounded Boulder crown-height allometry because full-map surveyed canopy height is unavailable",
+    "placement_method": "connected-canopy segmentation with deterministic mask-constrained blue-noise centers",
+    "sample_only": false,
+    "semantic_method": "RGB vegetation/texture segmentation plus authoritative building-footprint stem exclusion"
+  },
+  "schema": "questflight.full-map-vegetation-clipmap.v2",
+  "sources": {
+    "accepted_near_placements": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealAerialSurfaceV1\\Canopy\\ProductionAirportCloseTreeInstances.json",
+      "sha256": "350d09a3b2ddff2522d534740ad2b48ecee0cec9b811d9c7e350dfeb8c3a1576"
+    },
+    "building_database": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapBuildingsV1\\KBDU_FullMapBuildingDatabaseV1.json",
+      "sha256": "5d5b7387c1e13b8f0ad9bac268ba9445a4f58e2db560c06654153ca866e34b72"
+    },
+    "clipmap_manifest": {
+      "path": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\full_map_aerial_clipmap_v1_20260812_150316\\unity_import_pages_2020\\clipmap_manifest.json",
+      "sha256": "98129cbf175c218d63d04365883fb670cda6daddf07fccfeb047581047e7ea6a"
+    },
+    "imagery": {
+      "acquisition": "2020",
+      "native_resolution_meters": 0.2286,
+      "publisher": "City of Boulder",
+      "raw_imagery_committed": false
+    },
+    "terrain_manifest": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\ReconstructionV2\\KBDU_ProductionTerrainSurfaceV2.json",
+      "sha256": "0d821e47766bd355e145b59f45cb56fcb3e67e709e72d054432fc8680a3ce7b1"
+    }
+  },
+  "statistics": {
+    "accepted_near_instances_preserved": 1047,
+    "binary_bytes": 17137784,
+    "binary_sha256": "0a24adb52cd6280f70b11a9d5e2d6d9c7cf7082713c89af1cfd1ee79b1a5b942",
+    "debug_pages": [
+      "KBDU_2020_high_017_018",
+      "KBDU_2020_high_018_018",
+      "KBDU_2020_high_019_018"
+    ],
+    "maximum_runtime_page_instances": 1600,
+    "mean_nonempty_runtime_page_instances": 1565.53,
+    "nonempty_runtime_pages": 576,
+    "ordinary_trees": 901452,
+    "raw_candidates": 4217470,
+    "runtime_instances": 901744,
+    "shrubs": 159,
+    "source_pages_processed": 1296,
+    "tall_narrow_trees": 133
+  }
+}

@@ -23,6 +23,12 @@ namespace QuestFlight.Editor
             CanopyRoot + "/ProductionAirportCloseTreeInstances.json";
         public const string SourceManifestPath =
             CanopyRoot + "/AirportCloseTreeLods_SourceManifest.json";
+        public const string FullMapRoot =
+            "Assets/Production/Environment/FullMapVegetationV2";
+        public const string FullMapDatabasePath =
+            FullMapRoot + "/KBDU_FullMapVegetationClipmapV2.bytes";
+        public const string FullMapManifestPath =
+            FullMapRoot + "/KBDU_FullMapVegetationClipmapV2.json";
         public const string Lod0AssetPath =
             CanopyRoot + "/Native/AirportCloseTree_LOD0.asset";
         public const string Lod1AssetPath =
@@ -92,6 +98,8 @@ namespace QuestFlight.Editor
             Mesh lod2 = meshes["AirportCloseTree_LOD2"];
             TextAsset placementAsset = LoadRequired<TextAsset>(PlacementManifestPath);
             TextAsset sourceAsset = LoadRequired<TextAsset>(SourceManifestPath);
+            TextAsset fullMapDatabase = LoadRequired<TextAsset>(FullMapDatabasePath);
+            TextAsset fullMapManifest = LoadRequired<TextAsset>(FullMapManifestPath);
             Material canopyMaterial = LoadRequired<Material>(CanopyMaterialPath);
             Texture2D heroLeafAtlas = LoadRequired<Texture2D>(HeroLeafAtlasPath);
             Texture2D impostorAtlas = LoadRequired<Texture2D>(ImpostorAtlasPath);
@@ -135,20 +143,33 @@ namespace QuestFlight.Editor
 
                 Transform canopy = surface.productionCanopySurfaceLayer;
                 Transform previous = canopy.Find(RuntimeObjectName);
-                if (previous != null)
-                    UnityEngine.Object.DestroyImmediate(previous.gameObject);
-                GameObject runtimeObject = new GameObject(RuntimeObjectName);
-                runtimeObject.layer = canopy.gameObject.layer;
-                runtimeObject.transform.SetParent(canopy, false);
-                AirportCloseTreeLodRenderer renderer =
-                    runtimeObject.AddComponent<AirportCloseTreeLodRenderer>();
+                GameObject runtimeObject;
+                AirportCloseTreeLodRenderer renderer;
+                if (previous == null)
+                {
+                    runtimeObject = new GameObject(RuntimeObjectName);
+                    runtimeObject.layer = canopy.gameObject.layer;
+                    runtimeObject.transform.SetParent(canopy, false);
+                    renderer = runtimeObject.AddComponent<AirportCloseTreeLodRenderer>();
+                }
+                else
+                {
+                    runtimeObject = previous.gameObject;
+                    renderer = runtimeObject.GetComponent<AirportCloseTreeLodRenderer>() ??
+                        runtimeObject.AddComponent<AirportCloseTreeLodRenderer>();
+                }
                 renderer.Configure(canopyMaterial, lod0, lod1, lod2,
-                    placementAsset, sourceAsset, instances);
+                    placementAsset, sourceAsset, instances, fullMapDatabase);
 
                 Renderer[] staticCanopy = surface.canopySurfaceRenderers
                     .Where(item => item != null).ToArray();
-                surface.bakedCanopyDrawCount = staticCanopy.Length;
-                surface.bakedCanopyTriangleCount = CountTriangles(staticCanopy);
+                foreach (Renderer obsoleteCanopyHull in staticCanopy)
+                    UnityEngine.Object.DestroyImmediate(obsoleteCanopyHull.gameObject);
+                surface.canopySurfaceRenderers = Array.Empty<Renderer>();
+                surface.canopySurfaceManifest = fullMapManifest;
+                surface.representedCanopyComponentCount = renderer.RuntimeInstanceCount;
+                surface.bakedCanopyDrawCount = 0;
+                surface.bakedCanopyTriangleCount = 0;
                 ProductionEnvironmentBudget budget = environmentRoot.CalculateBudget();
                 environmentRoot.bakedRendererCount = budget.rendererCount;
                 environmentRoot.bakedTriangleCount = budget.triangleCount;
@@ -157,15 +178,14 @@ namespace QuestFlight.Editor
                 aerial.bakedSelectedTriangleCount = budget.triangleCount;
                 aerial.bakedMaterialCount = budget.materialCount;
                 aerial.bakedVegetationRendererCount =
-                    staticCanopy.Length + renderer.AuthoredMaximumDrawCount;
+                    renderer.AuthoredMaximumDrawCount;
                 aerial.bakedVegetationTriangleCount =
-                    surface.bakedCanopyTriangleCount +
                     checked((int)renderer.AuthoredMaximumSelectedTriangleCount);
                 aerial.bakedVegetationMaterialCount = 1;
 
                 if (renderer.AuthoredMaximumDrawCount != 3 ||
                     renderer.AuthoredMaximumSelectedTriangleCount <= 0 ||
-                    renderer.AuthoredMaximumSelectedTriangleCount > 30000)
+                    renderer.AuthoredMaximumSelectedTriangleCount > 45000)
                     throw new InvalidOperationException(
                         "Airport-close runtime LOD budget exceeds its authored contract.");
                 if (budget.rendererCount > 75 || budget.triangleCount > 650000 ||

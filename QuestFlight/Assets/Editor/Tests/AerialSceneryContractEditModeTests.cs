@@ -166,11 +166,12 @@ namespace QuestFlight.Editor.Tests
                 environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true);
             Assert.That(surface, Is.Not.Null);
             Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<Renderer>(true),
-                Has.Length.EqualTo(4));
-            Assert.That(surface.canopySurfaceRenderers, Has.Length.EqualTo(4));
-            Assert.That(surface.canopySurfaceRenderers.Sum(item =>
-                (long)item.GetComponent<MeshFilter>().sharedMesh.GetIndexCount(0) / 3L),
-                Is.LessThanOrEqualTo(59000));
+                Is.Empty);
+            Assert.That(surface.canopySurfaceRenderers, Is.Empty);
+            AirportCloseTreeLodRenderer[] fullMapVegetation = surface.productionCanopySurfaceLayer
+                .GetComponentsInChildren<AirportCloseTreeLodRenderer>(true);
+            Assert.That(fullMapVegetation, Has.Length.EqualTo(1));
+            Assert.That(fullMapVegetation[0].FullMapPlacementDatabase, Is.Not.Null);
             Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<LODGroup>(true), Is.Empty);
             Assert.That(surface.productionCanopySurfaceLayer.GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
 

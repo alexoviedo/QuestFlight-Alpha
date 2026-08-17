@@ -131,7 +131,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void BuildingsAndRoundedSemanticGrovesAreOfflineBatched()
+        public void BuildingsAndFullMapVegetationUseBoundedCompiledRepresentations()
         {
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
             PhotorealAerialSurfaceRoot root =
@@ -142,7 +142,7 @@ namespace QuestFlight.Editor.Tests
                 root.productionBuildingSurfaceLayer.GetComponent<AircraftCenteredBuildingClipmapController>();
             Assert.That(buildingClipmap, Is.Not.Null);
             Assert.That(buildings, Has.Length.EqualTo(AircraftCenteredBuildingClipmapController.SlotCount));
-            Assert.That(canopy, Has.Length.EqualTo(4));
+            Assert.That(canopy, Is.Empty);
             Assert.That(buildings.SelectMany(item => item.sharedMaterials).Distinct().Count(), Is.EqualTo(1));
             Assert.That(buildings.Take(AircraftCenteredBuildingClipmapController.SlotCount)
                 .Select(item => item.GetComponent<MeshFilter>()).SequenceEqual(
@@ -151,18 +151,16 @@ namespace QuestFlight.Editor.Tests
                 "Runtime building pages must not be serialized into the product prefab.");
             Assert.That(buildings.All(item => item.sharedMaterial.shader.name ==
                 FullMapBuildingClipmapAssetAuthoring.ShaderName), Is.True);
-            Assert.That(canopy.SelectMany(item => item.sharedMaterials).Distinct().Count(), Is.EqualTo(1));
+            AirportCloseTreeLodRenderer[] vegetation = root.productionCanopySurfaceLayer
+                .GetComponentsInChildren<AirportCloseTreeLodRenderer>(true);
+            Assert.That(vegetation, Has.Length.EqualTo(1));
+            Assert.That(vegetation[0].FullMapPlacementDatabase, Is.Not.Null);
             Assert.That(buildingClipmap.bundleDirectory, Is.EqualTo("QuestFlightBuildingClipmap"));
             Assert.That(buildingClipmap.authoredContractVersion,
                 Is.EqualTo(AircraftCenteredBuildingClipmapController.ContractVersion));
-            Assert.That(buildingClipmap.authoredMaximumSelectedTriangles, Is.LessThanOrEqualTo(140000));
-            Assert.That(canopy.All(item => item.GetComponent<MeshFilter>().sharedMesh
-                    .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color)), Is.True,
-                "Canopy batches require crown/trunk semantic colors.");
-            Assert.That(canopy.All(item => item.GetComponent<MeshFilter>().sharedMesh
-                    .HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord0)), Is.True,
-                "Canopy batches require atlas UVs for static perforated near foliage.");
-            Material canopyMaterial = canopy.Select(item => item.sharedMaterial).Distinct().Single();
+            Assert.That(buildingClipmap.authoredMaximumSelectedTriangles, Is.LessThanOrEqualTo(235000),
+                "The accepted building clipmap budget is 235k selected triangles; vegetation must not relax it.");
+            Material canopyMaterial = vegetation[0].SharedCanopyMaterial;
             Assert.That(canopyMaterial.GetTexture("_NearFoliageAtlas"), Is.Not.Null);
             Assert.That(canopyMaterial.GetFloat("_FoliageCutoff"), Is.InRange(0.25f, 0.45f));
             Assert.That(canopyMaterial.GetFloat("_Cull"), Is.EqualTo(0f));
@@ -179,12 +177,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root.midBuildingCoveragePercent, Is.GreaterThanOrEqualTo(98f));
             Assert.That(root.maximumBuildingFootprintInflationPercent, Is.LessThanOrEqualTo(5f));
             Assert.That(root.canopySurfaceManifest.text,
-                Does.Contain("volumetric_close_tree_lods_then_oblique_semantic_groves_over_continuous_terrain_canopy"));
+                Does.Contain("questflight.full-map-vegetation-clipmap.v2"));
             Assert.That(root.canopySurfaceManifest.text,
-                Does.Contain("\"near_horizontal_static_foliage_card_count\": 0"));
-            Assert.That(root.canopySurfaceManifest.text, Does.Contain("\"mesh_batch_count\": 4"));
-            Assert.That(root.canopySurfaceManifest.text,
-                Does.Contain("REJECTED_BLOCK_AND_CLIFF_SILHOUETTES"));
+                Does.Contain("no opaque grove hull"));
             Assert.That(root.representedCanopyComponentCount, Is.GreaterThan(0));
             Assert.That(root.representedCanopyAreaPercentOfSource, Is.InRange(90f, 110f));
             Assert.That(root.medianCanopyHeightAgreementPercent, Is.InRange(100f, 160f));
@@ -289,7 +284,11 @@ namespace QuestFlight.Editor.Tests
                     Path.GetFileNameWithoutExtension(path).StartsWith(
                         "ProductionCanopySurfaceLayer_", StringComparison.Ordinal) &&
                     path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase)),
-                Is.EqualTo(PhotorealAerialSurfaceNativeMeshAuthoring.ExpectedCanopyBatchCount));
+                Is.Zero, "Obsolete static grove meshes must leave product dependency closure.");
+            Assert.That(dependencies,
+                Does.Contain(AirportCloseTreeLodAuthoring.FullMapDatabasePath));
+            Assert.That(dependencies,
+                Does.Contain(AirportCloseTreeLodAuthoring.FullMapManifestPath));
             Assert.That(dependencies.Count(path => string.Equals(path,
                     PhotorealAerialSurfaceNativeMeshAuthoring.TerrainNativePath,
                     StringComparison.Ordinal)),
@@ -306,10 +305,13 @@ namespace QuestFlight.Editor.Tests
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
             PhotorealAerialSurfaceRoot root =
                 environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true);
-            Material[] materials = root.buildingSurfaceRenderers.Concat(root.canopySurfaceRenderers)
-                .SelectMany(renderer => renderer.sharedMaterials).Distinct().ToArray();
+            AirportCloseTreeLodRenderer vegetation = root.productionCanopySurfaceLayer
+                .GetComponentInChildren<AirportCloseTreeLodRenderer>(true);
+            Material[] materials = root.buildingSurfaceRenderers
+                .SelectMany(renderer => renderer.sharedMaterials)
+                .Append(vegetation.SharedCanopyMaterial).Distinct().ToArray();
             Assert.That(materials, Has.Length.EqualTo(2));
-            Material canopyMaterial = root.canopySurfaceRenderers.Select(item => item.sharedMaterial).Distinct().Single();
+            Material canopyMaterial = vegetation.SharedCanopyMaterial;
             Material buildingMaterial = root.buildingSurfaceRenderers.Select(item => item.sharedMaterial).Distinct().Single();
             Assert.That(canopyMaterial.shader, Is.SameAs(shader));
             Assert.That(buildingMaterial.shader.name, Is.EqualTo(FullMapBuildingClipmapAssetAuthoring.ShaderName));

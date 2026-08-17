@@ -687,3 +687,15 @@ switch-click, and touchdown cues are deterministic project-authored synthesis.
 Exact raw/output hashes, segment timings, and processing settings are recorded
 in `Assets/Production/Audio/C172/Clips/SOURCE_MANIFEST.json`; the reproducible
 compiler is `tools/audio/prepare_c172_audio.py`.
+
+### Full-map vegetation clipmap V2
+
+Placement/color evidence comes from the already recorded City of Boulder 2020
+orthophoto, building exclusion from the project-owned OSM-derived full-map
+building database, and grounding from the USGS-derived production terrain.
+Runtime geometry and atlases continue to use the optimized derivative of Poly
+Haven `Tree Small 02` under CC0 1.0. The downloaded Sketchfab tree/bush archives
+were inspected externally as silhouette references only; none enters the
+product dependency closure because each source mesh materially exceeds the
+Quest tree budget. Their hashes and exclusion decisions are recorded in
+`Assets/Production/Environment/FullMapVegetationV2/SOURCE_MANIFEST.json`.

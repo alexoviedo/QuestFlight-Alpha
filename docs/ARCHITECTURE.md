@@ -6,7 +6,7 @@ ProductionWorldRoot
 │   ├── Product-AEQD near/mid/far terrain and aligned orthophoto pyramid
 │   ├── Fixed DTM-only bare-earth terrain and semantic ownership manifests
 │   ├── OSM-footprint building batches, authored hero objects, and parked-aircraft HLOD
-│   ├── Terrain-owned far canopy, four fixed semantic-grove batches, and orthophoto-only water
+│   ├── Terrain-owned far canopy, one aircraft-centered three-draw vegetation clipmap, and orthophoto-only water
 │   ├── Bounded instanced runway-side grass and one combined airport-detail mesh
 │   ├── Bounded aircraft/runway blob shadow
 │   └── One-batch, bounded VDB-derived KBDU cloud-volume field
@@ -305,3 +305,19 @@ triangles cover every perimeter vertex. A post-compile mesh audit rejects any
 roof-wall mismatch over 1 mm, terrain-unsealed wall bottom, or unshared vertical
 wall corner. This is offline authoring; no runtime repair or hierarchy creation
 is introduced.
+
+## Full-map vegetation clipmap V2
+
+The 24 km square vegetation representation is compiled offline from the 2020
+orthophoto, authoritative full-map building footprints, and the production
+terrain height source. It stores quantized crown/trunk placements in 576 fixed
+1 km pages. The player does not classify imagery or create hierarchy: one
+serialized `AirportCloseTreeLodRenderer` selects nearby pages and draws the
+existing 344/122/2-triangle tree tiers in at most three instanced draws.
+
+LOD selection uses projected screen size, center-eye world-upright eight-view
+impostors, persistent hysteresis, alpha-to-coverage transitions, and a bounded
+1.6 km terrain handoff. The camera frustum excludes irrelevant pages, so detail
+follows the pilot rather than the airport. The rejected four opaque grove hulls
+are removed from the product dependency closure; the orthophoto remains the far
+canopy authority. No tree owns a GameObject or `Update` method.

@@ -1,5 +1,5 @@
 using System.IO;
-using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using QuestFlightLab.Environment;
 using UnityEditor;
@@ -16,6 +16,9 @@ namespace QuestFlight.Editor.Tests
         private const string PlacementManifestPath =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/" +
             "ProductionAirportCloseTreeInstances.json";
+        private const string FullMapManifestPath =
+            "Assets/Production/Environment/FullMapVegetationV2/" +
+            "KBDU_FullMapVegetationClipmapV2.json";
 
         [Test]
         public void ProductUsesOneBoundedSourceDerivedCloseTreeRenderer()
@@ -31,6 +34,8 @@ namespace QuestFlight.Editor.Tests
             AirportCoreBenchmarkRoot benchmark =
                 environment.GetComponentInChildren<AirportCoreBenchmarkRoot>(true);
             Assert.That(renderer.Instances, Has.Length.EqualTo(1047));
+            Assert.That(renderer.FullMapPlacementDatabase, Is.Not.Null);
+            Assert.That(renderer.MaximumDistanceMeters, Is.EqualTo(1600f));
             Assert.That(benchmark, Is.Not.Null);
             Assert.That(benchmark.vegetationHeroCluster, Is.Not.Null);
             Assert.That(benchmark.vegetationHeroCluster.gameObject.activeSelf, Is.False,
@@ -43,7 +48,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(TriangleCount(renderer.Lod2Mesh), Is.EqualTo(2));
             Assert.That(renderer.AuthoredMaximumDrawCount, Is.EqualTo(3));
             Assert.That(renderer.AuthoredMaximumSelectedTriangleCount,
-                Is.EqualTo(24562));
+                Is.EqualTo(42504));
             Assert.That(renderer.ProjectedScreenSizeSelection, Is.True);
             Assert.That(renderer.PersistentHysteresis, Is.True);
             Assert.That(renderer.CenterEyeWorldUprightImpostor, Is.True);
@@ -83,6 +88,51 @@ namespace QuestFlight.Editor.Tests
             Assert.That(placements.text,
                 Does.Contain("\"schema\": \"questflight.airport-close-tree-instances.v1\""));
             Assert.That(placements.text, Does.Contain("\"instance_count\": 1047"));
+            TextAsset fullMap = AssetDatabase.LoadAssetAtPath<TextAsset>(FullMapManifestPath);
+            Assert.That(fullMap, Is.Not.Null);
+            Assert.That(fullMap.text,
+                Does.Contain("\"schema\": \"questflight.full-map-vegetation-clipmap.v2\""));
+            Assert.That(fullMap.text,
+                Does.Contain("\"geometry\": \"overlapping individual crown/trunk LODs; no opaque grove hull\""));
+        }
+
+        [Test]
+        public void FullMapPlacementDatabaseIsCompleteBoundedAndSequential()
+        {
+            GameObject environment =
+                AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
+            AirportCloseTreeLodRenderer renderer =
+                environment.GetComponentInChildren<AirportCloseTreeLodRenderer>(true);
+            byte[] bytes = renderer.FullMapPlacementDatabase.bytes;
+
+            using MemoryStream stream = new MemoryStream(bytes, false);
+            using BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true);
+            Assert.That(Encoding.ASCII.GetString(reader.ReadBytes(8)), Is.EqualTo("QFFMVG2\0"));
+            Assert.That(reader.ReadInt32(), Is.EqualTo(2));
+            Assert.That(reader.ReadSingle(), Is.EqualTo(-12000f));
+            Assert.That(reader.ReadSingle(), Is.EqualTo(-12000f));
+            Assert.That(reader.ReadSingle(), Is.EqualTo(1000f));
+            Assert.That(reader.ReadSingle(), Is.EqualTo(0.1f));
+            int columns = reader.ReadInt32();
+            int rows = reader.ReadInt32();
+            int instanceCount = reader.ReadInt32();
+            Assert.That(columns, Is.EqualTo(24));
+            Assert.That(rows, Is.EqualTo(24));
+            Assert.That(instanceCount, Is.EqualTo(901744));
+
+            int expectedOffset = 0;
+            for (int index = 0; index < columns * rows; index++)
+            {
+                int offset = reader.ReadInt32();
+                int count = reader.ReadInt32();
+                Assert.That(offset, Is.EqualTo(expectedOffset));
+                Assert.That(count, Is.InRange(1, 1600));
+                expectedOffset += count;
+            }
+
+            Assert.That(expectedOffset, Is.EqualTo(instanceCount));
+            Assert.That(bytes.Length,
+                Is.EqualTo(40 + columns * rows * 8 + instanceCount * 19));
         }
 
         [Test]
@@ -111,9 +161,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root, Is.Not.Null);
             Assert.That(surface, Is.Not.Null);
             Assert.That(closeTrees, Is.Not.Null);
-            Assert.That(surface.canopySurfaceRenderers
-                .Select(item => item.sharedMaterial).Distinct().Single(),
-                Is.SameAs(closeTrees.SharedCanopyMaterial));
+            Assert.That(surface.canopySurfaceRenderers, Is.Empty,
+                "The obsolete opaque grove hulls must not remain in product dependency closure.");
             Assert.That(closeTrees.SharedCanopyMaterial.GetTexture("_HeroLeafAtlas"),
                 Is.Not.Null);
             Assert.That(closeTrees.SharedCanopyMaterial.GetTexture("_TreeImpostorAtlas"),

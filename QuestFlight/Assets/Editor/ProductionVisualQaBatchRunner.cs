@@ -848,13 +848,16 @@ namespace QuestFlightLab.Editor
             Renderer[] canopy = surface.canopySurfaceRenderers.Where(item => item != null).ToArray();
             Renderer[] authoredCanopyRenderers = surface.productionCanopySurfaceLayer
                 .GetComponentsInChildren<Renderer>(true);
-            if (canopy.Length != 4 || authoredCanopyRenderers.Length != 4 ||
-                canopy.Any(renderer => !renderer.enabled ||
-                                       renderer.GetComponent<MeshFilter>()?.sharedMesh == null) ||
-                canopy.Select(renderer => renderer.sharedMaterial).Distinct().Count() != 1)
+            AirportCloseTreeLodRenderer[] streamedCanopy = surface.productionCanopySurfaceLayer
+                .GetComponentsInChildren<AirportCloseTreeLodRenderer>(true);
+            if (canopy.Length != 0 || authoredCanopyRenderers.Length != 0 ||
+                streamedCanopy.Length != 1 ||
+                streamedCanopy[0].FullMapPlacementDatabase == null ||
+                streamedCanopy[0].SharedCanopyMaterial == null)
                 throw new InvalidOperationException(
-                    "Photoreal Aerial Surface V1 must expose four enabled, one-material semantic grove " +
-                    $"batches; contract={canopy.Length}, hierarchy={authoredCanopyRenderers.Length}.");
+                    "Photoreal Aerial Surface V2 must expose one full-map, three-draw vegetation " +
+                    $"clipmap and no obsolete grove hulls; contract={canopy.Length}, " +
+                    $"hierarchy={authoredCanopyRenderers.Length}, streamed={streamedCanopy.Length}.");
             Vector3 center = context.runwayMidpoint;
 
             Vector3 leftLow = center - context.runwayRight * 520f - context.runwayForward * 260f + Vector3.up * 115f;

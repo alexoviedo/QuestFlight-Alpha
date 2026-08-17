@@ -44,22 +44,15 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void ProductUsesGroundedSemanticGrovesAndContinuousFarCanopy()
+        public void ProductUsesStreamedCrownAndTrunkLodsOverContinuousFarCanopy()
         {
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
             Assert.That(environment, Is.Not.Null);
             PhotorealAerialSurfaceRoot surface =
                 environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true);
             Assert.That(surface, Is.Not.Null);
-            Assert.That(surface.canopySurfaceRenderers, Has.Length.EqualTo(4));
-            Assert.That(surface.canopySurfaceRenderers.All(renderer =>
-                renderer != null && renderer.enabled &&
-                renderer.GetComponent<MeshFilter>()?.sharedMesh != null), Is.True);
-            Assert.That(surface.canopySurfaceRenderers.Sum(renderer =>
-                renderer.GetComponent<MeshFilter>().sharedMesh.triangles.Length / 3),
-                Is.InRange(29000, 59000));
-            Assert.That(surface.canopySurfaceRenderers.Select(renderer => renderer.sharedMaterial)
-                .Distinct().Count(), Is.EqualTo(1));
+            Assert.That(surface.canopySurfaceRenderers, Is.Empty,
+                "Rejected opaque grove hulls must be absent from the product.");
             Assert.That(surface.productionCanopySurfaceLayer
                 .GetComponentsInChildren<BillboardRenderer>(true), Is.Empty);
             Assert.That(surface.productionCanopySurfaceLayer
@@ -69,18 +62,18 @@ namespace QuestFlight.Editor.Tests
                 .GetComponentsInChildren<AirportCloseTreeLodRenderer>(true);
             Assert.That(closeTrees, Has.Length.EqualTo(1));
             Assert.That(closeTrees[0].Instances, Has.Length.EqualTo(1047));
+            Assert.That(closeTrees[0].FullMapPlacementDatabase, Is.Not.Null);
             Assert.That(closeTrees[0].CenterEyeWorldUprightImpostor, Is.True);
             Assert.That(closeTrees[0].PerEyeFacingBehavior, Is.False);
             Assert.That(closeTrees[0].ProjectedScreenSizeSelection, Is.True);
             Assert.That(closeTrees[0].PersistentHysteresis, Is.True);
             Assert.That(closeTrees[0].AlphaToCoverageTransition, Is.True);
             Assert.That(surface.canopySurfaceManifest.text,
-                Does.Contain("volumetric_close_tree_lods_then_oblique_semantic_groves_over_continuous_terrain_canopy"));
+                Does.Contain("questflight.full-map-vegetation-clipmap.v2"));
             Assert.That(surface.canopySurfaceManifest.text,
-                Does.Contain("\"near_horizontal_static_foliage_card_count\": 0"));
+                Does.Contain("no opaque grove hull"));
             Assert.That(surface.canopySurfaceManifest.text,
-                Does.Contain("\"source_coverage_fraction_0_1500m\": 0.960"),
-                "Committed grove geometry must cover at least 95% of the high-confidence source footprint.");
+                Does.Contain("\"bounds_meters\": ["));
         }
 
         [Test]

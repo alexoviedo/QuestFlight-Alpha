@@ -1,0 +1,67 @@
+{
+  "schema": "questflight.full-map-vegetation-source.v2",
+  "runtime_contract": {
+    "target": "standalone Quest 3",
+    "source_imagery": "City of Boulder 2020 orthophoto clipmap",
+    "tree_geometry": "existing AirportCloseTree LOD0/LOD1/LOD2 derivatives",
+    "tree_geometry_license": "Poly Haven Tree Small 02, CC0 1.0 Universal",
+    "draw_ceiling_per_eye": 3,
+    "ordinary_billboard_renderer": false,
+    "per_tree_game_objects": false,
+    "raw_orthophotos_committed": false,
+    "raw_downloads_committed": false
+  },
+  "placement_sources": [
+    {
+      "asset": "City of Boulder 2020 orthophoto",
+      "role": "full-map canopy/shrub semantic placement and source-color evidence",
+      "license": "City of Boulder open data/public-domain source record retained by the aerial clipmap manifest"
+    },
+    {
+      "asset": "KBDU FullMapBuildingDatabaseV1",
+      "role": "authoritative stem exclusion; crown overhang remains permitted",
+      "license": "project-owned optimized derivative with upstream provenance in its source manifest"
+    },
+    {
+      "asset": "KBDU ProductionTerrainSurfaceV2",
+      "role": "deterministic terrain grounding",
+      "license": "project-owned USGS-derived terrain record"
+    }
+  ],
+  "external_shape_references": [
+    {
+      "archive": "mountain-trees.zip",
+      "sha256": "2C24D8000C9CAF6F2A1DBF6012FA9C4249247C8EF3666BF576E1A0AB0E498292",
+      "inspection": "17 meshes; 168967 triangles; 9 materials",
+      "runtime_use": false,
+      "reason": "external high-detail silhouette reference only; direct use exceeds the Quest tree budget"
+    },
+    {
+      "archive": "photorealistic-bush.zip",
+      "sha256": "AEEE87E3729639591E79DCF3B91352D63DEEB69C7CB62F15D5B88BC60410762F",
+      "inspection": "135433 triangles",
+      "runtime_use": false,
+      "reason": "external shrub-volume reference only; direct use exceeds the Quest tree budget"
+    },
+    {
+      "archive": "poplar-tree.zip",
+      "sha256": "999D3742AF2C27344067D2A7F440D50C37E4551B419457BEB33BFC3723AB2322",
+      "inspection": "26415 triangles",
+      "runtime_use": false,
+      "reason": "external tall-narrow crown reference only; direct use exceeds the Quest tree budget"
+    },
+    {
+      "archive": "realistic-tree.zip",
+      "sha256": "035FD647521C812FD06524D9B3C6CF0BAB2927B77A0C4BACCDA6B557B7F1F384",
+      "inspection": "19921 triangles",
+      "runtime_use": false,
+      "reason": "external branching/crown reference only; direct use exceeds the Quest tree budget"
+    },
+    {
+      "archive": "realistic-trees-collection.zip",
+      "sha256": "C63DD50988A11140855D91271A644A44D126D6F30A7656E10C52EF7EE9BABF40",
+      "runtime_use": false,
+      "reason": "excluded after Blender 5.1 import failure; no derivative entered the dependency closure"
+    }
+  ]
+}
