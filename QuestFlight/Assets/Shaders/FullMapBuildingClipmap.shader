@@ -2,9 +2,9 @@ Shader "QuestFlight/Full Map Building Clipmap"
 {
     Properties
     {
-        _MainTex ("Albedo Atlas", 2D) = "white" {}
-        _BumpMap ("Normal Atlas", 2D) = "bump" {}
-        _MRAO ("MRAO Atlas", 2D) = "white" {}
+        _FacadeAlbedo ("Facade Albedo Array", 2DArray) = "" {}
+        _FacadeNormal ("Facade Normal Array", 2DArray) = "" {}
+        _FacadeMRAO ("Facade MRAO Array", 2DArray) = "" {}
         _NormalScale ("Normal Scale", Range(0, 1)) = 0.45
         _WindowReflection ("Window Reflection", Range(0, 1)) = 0.58
         _AmbientLift ("Ambient Lift", Range(0, 1)) = 0.18
@@ -39,9 +39,9 @@ Shader "QuestFlight/Full Map Building Clipmap"
             #include "AutoLight.cginc"
             #include "AerialClipmapSampling.cginc"
 
-            sampler2D _MainTex;
-            sampler2D _BumpMap;
-            sampler2D _MRAO;
+            UNITY_DECLARE_TEX2DARRAY(_FacadeAlbedo);
+            UNITY_DECLARE_TEX2DARRAY(_FacadeNormal);
+            UNITY_DECLARE_TEX2DARRAY(_FacadeMRAO);
             sampler2D _NearAlbedo;
             sampler2D _MidAlbedo;
             sampler2D _FarAlbedo;
@@ -61,8 +61,8 @@ Shader "QuestFlight/Full Map Building Clipmap"
                 float3 normal : NORMAL;
                 float4 tangent : TANGENT;
                 float2 detailUv : TEXCOORD0;
-                float2 atlasCell : TEXCOORD1;
-                float4 parameters : TEXCOORD2; // x=surface, y=class, z=seed, w=detail scale
+                float2 atlasCell : TEXCOORD1; // wall: side length, facade role
+                float4 parameters : TEXCOORD2; // wall: surface, primary material, eave height, packed style/secondary
                 fixed4 color : COLOR;
             };
 
@@ -98,33 +98,93 @@ Shader "QuestFlight/Full Map Building Clipmap"
                 return o;
             }
 
-            float2 AtlasUv(float2 uv, float2 cell)
+            float MaterialTileMeters(half materialId)
             {
-                // Mirror-repeat inside one atlas cell. The authored material source is
-                // photographic rather than mathematically tileable; ordinary frac()
-                // exposed both cell edges as a regular roof/facade grid at flight
-                // distances. Mirroring keeps the edge value and first derivative
-                // continuous without another texture, pass, or sample.
-                float2 mirroredPeriod = frac(uv * 0.5) * 2.0;
-                float2 wrapped = 1.0 - abs(mirroredPeriod - 1.0);
-                // A one-texel inset prevents adjacent atlas cells bleeding at grazing angles.
-                wrapped = lerp(1.0 / 256.0, 1.0 - 1.0 / 256.0, wrapped);
-                return (cell + wrapped) * 0.25;
+                if (materialId < 3.0h) return 1.57;
+                if (materialId < 4.0h) return 3.00;
+                if (materialId < 5.0h) return 2.00;
+                if (materialId < 6.0h) return 3.00;
+                if (materialId < 7.0h) return 1.00;
+                if (materialId < 8.0h) return 2.00;
+                if (materialId < 9.0h) return 1.59;
+                if (materialId < 11.0h) return 1.12;
+                if (materialId < 12.0h) return 1.70;
+                if (materialId < 13.0h) return 2.00;
+                if (materialId < 14.0h) return 1.12;
+                return 1.57;
             }
 
-            half WindowMask(float2 uvMeters, half classId)
+            float2 FacadeUv(float2 uvMeters, half materialId)
             {
-                half period = classId < 0.5 ? 3.6 : (classId < 1.5 ? 3.0 : 4.5);
-                half storey = 3.15;
-                float2 cell = frac(float2(uvMeters.x / period, uvMeters.y / storey));
-                half edge = max(fwidth(cell.x), fwidth(cell.y)) * 1.5;
-                half horizontal = smoothstep(0.12, 0.12 + edge, cell.x) * (1.0 - smoothstep(0.78 - edge, 0.78, cell.x));
-                half vertical = smoothstep(0.30, 0.30 + edge, cell.y) * (1.0 - smoothstep(0.78 - edge, 0.78, cell.y));
-                half allowed = classId < 3.9 ? 1.0 : 0.0;
-                // Industrial facades retain sparse clerestory glazing rather than office grids.
-                if (classId > 1.5 && classId < 2.5)
-                    vertical *= smoothstep(0.62, 0.68, cell.y);
-                return horizontal * vertical * allowed;
+                return uvMeters / max(0.25, MaterialTileMeters(materialId));
+            }
+
+            void FacadeLayout(half style, out half bayWidth, out half storeyHeight,
+                out half sill, out half openingHeight, out half openingWidth, out half topMargin)
+            {
+                // 0 residential, 1 commercial, 2 industrial, 3 institutional,
+                // 4 utility, 5 agricultural/outbuilding.
+                bayWidth = 3.1h; storeyHeight = 3.05h; sill = 0.82h;
+                openingHeight = 1.35h; openingWidth = 0.62h; topMargin = 0.48h;
+                if (style > 0.5h && style < 1.5h)
+                { bayWidth = 3.6h; storeyHeight = 3.6h; sill = 0.48h; openingHeight = 2.20h; openingWidth = 0.72h; topMargin = 0.62h; }
+                else if (style > 1.5h && style < 2.5h)
+                { bayWidth = 5.2h; storeyHeight = 4.3h; sill = 2.35h; openingHeight = 0.85h; openingWidth = 0.58h; topMargin = 0.72h; }
+                else if (style > 2.5h && style < 3.5h)
+                { bayWidth = 3.4h; storeyHeight = 3.45h; sill = 0.88h; openingHeight = 1.55h; openingWidth = 0.60h; topMargin = 0.62h; }
+                else if (style > 3.5h && style < 4.5h)
+                { bayWidth = 6.0h; storeyHeight = 4.0h; sill = 2.2h; openingHeight = 0.65h; openingWidth = 0.45h; topMargin = 0.75h; }
+                else if (style > 4.5h)
+                { bayWidth = 5.4h; storeyHeight = 4.1h; sill = 1.75h; openingHeight = 1.05h; openingWidth = 0.48h; topMargin = 0.70h; }
+            }
+
+            half WindowMask(float2 uvMeters, half wallLength, half eaveHeight, half style, half facadeRole)
+            {
+                half bayWidth, storeyHeight, sill, openingHeight, openingWidth, topMargin;
+                FacadeLayout(style, bayWidth, storeyHeight, sill, openingHeight, openingWidth, topMargin);
+                half margin = min(1.15h, wallLength * 0.18h);
+                half usable = max(0.0h, wallLength - margin * 2.0h);
+                half bayCount = floor(usable / bayWidth);
+                half hasCompleteBay = step(1.0h, bayCount);
+                half slot = usable / max(1.0h, bayCount);
+                half localX = uvMeters.x - margin;
+                half withinWall = step(0.0h, localX) * step(localX, usable);
+                half bayLocal = frac(localX / max(slot, 0.01h));
+                half edgeX = max(fwidth(bayLocal), 0.002h) * 1.5h;
+                half left = (1.0h - openingWidth) * 0.5h;
+                half horizontal = smoothstep(left, left + edgeX, bayLocal) *
+                    (1.0h - smoothstep(1.0h - left - edgeX, 1.0h - left, bayLocal));
+
+                half floorIndex = floor(max(0.0h, uvMeters.y) / storeyHeight);
+                half floorLocal = uvMeters.y - floorIndex * storeyHeight;
+                half clearOpeningHeight = sill + openingHeight + topMargin;
+                half canFitFirstFloor = step(clearOpeningHeight, eaveHeight);
+                half completeFloors = canFitFirstFloor *
+                    (floor(max(0.0h, eaveHeight - clearOpeningHeight) / storeyHeight) + 1.0h);
+                half verticalEdge = max(fwidth(floorLocal), 0.003h) * 1.5h;
+                half vertical = smoothstep(sill, sill + verticalEdge, floorLocal) *
+                    (1.0h - smoothstep(sill + openingHeight - verticalEdge, sill + openingHeight, floorLocal));
+                half validFloor = step(0.0h, uvMeters.y) * step(floorIndex + 1.0h, completeFloors);
+                half allowed = style > 3.5h && style < 4.5h ? 0.0h : 1.0h;
+                // Rear industrial/agricultural faces stay service-like rather than
+                // receiving a false office grid.
+                if (facadeRole > 1.5h &&
+                    ((style > 1.5h && style < 2.5h) || style > 4.5h)) allowed = 0.0h;
+                return horizontal * vertical * withinWall * validFloor * hasCompleteBay * allowed;
+            }
+
+            half DoorMask(float2 uvMeters, half wallLength, half style, half facadeRole)
+            {
+                half isFront = 1.0h - step(0.5h, facadeRole);
+                half doorWidth = style > 1.5h && style < 2.5h ? 3.4h :
+                    (style > 0.5h && style < 1.5h ? 1.8h : 1.05h);
+                half doorHeight = style > 1.5h && style < 2.5h ? 3.6h : 2.20h;
+                half centerDistance = abs(uvMeters.x - wallLength * 0.5h);
+                half edge = max(fwidth(centerDistance), 0.003h) * 1.5h;
+                half horizontal = 1.0h - smoothstep(doorWidth * 0.5h - edge, doorWidth * 0.5h, centerDistance);
+                half vertical = step(0.04h, uvMeters.y) *
+                    (1.0h - smoothstep(doorHeight - edge, doorHeight, uvMeters.y));
+                return horizontal * vertical * isFront * step(doorWidth + 1.2h, wallLength);
             }
 
             fixed3 SampleSerializedOrthophoto(float2 world)
@@ -206,27 +266,50 @@ Shader "QuestFlight/Full Map Building Clipmap"
                 }
                 else
                 {
-                    float2 scaledUv = i.detailUv * max(0.02, i.parameters.w);
-                    float2 atlasUv = AtlasUv(scaledUv, i.atlasCell);
-                    albedo = tex2D(_MainTex, atlasUv).rgb * i.color.rgb;
-                    fixed3 packed = tex2D(_MRAO, atlasUv).rgb;
-                    half3 tangentNormal = UnpackNormal(tex2D(_BumpMap, atlasUv));
+                    half primaryMaterial = floor(i.parameters.y + 0.5h);
+                    half facadeStyle = floor(i.parameters.w + 0.001h);
+                    half secondaryMaterial = floor(frac(i.parameters.w) * 32.0h + 0.5h) - 1.0h;
+                    half useSecondary = step(-0.5h, secondaryMaterial) * step(0.0h, i.detailUv.y) *
+                        (1.0h - step(1.05h, i.detailUv.y));
+                    half materialId = lerp(primaryMaterial, secondaryMaterial, useSecondary);
+                    float2 facadeUv = FacadeUv(i.detailUv, materialId);
+                    albedo = UNITY_SAMPLE_TEX2DARRAY(_FacadeAlbedo, float3(facadeUv, materialId)).rgb * i.color.rgb;
+                    fixed3 packed = UNITY_SAMPLE_TEX2DARRAY(_FacadeMRAO, float3(facadeUv, materialId)).rgb;
+                    half3 tangentNormal = UnpackNormal(
+                        UNITY_SAMPLE_TEX2DARRAY(_FacadeNormal, float3(facadeUv, materialId)));
                     tangentNormal.xy *= _NormalScale;
                     n = normalize(i.worldTangent * tangentNormal.x +
                         i.worldBitangent * tangentNormal.y + i.worldNormal * tangentNormal.z);
                     roughness = packed.g;
-                    window = WindowMask(i.detailUv, i.parameters.y);
+                    half wallLength = max(0.01h, i.atlasCell.x);
+                    window = WindowMask(i.detailUv, wallLength, i.parameters.z, facadeStyle, i.atlasCell.y);
+                    // Sub-pixel reflective openings otherwise collapse into a bright
+                    // crawling stipple in aerial views. Fade the semantic mask by
+                    // projected metre size, continuously and without LOD dither/pop.
+                    half metersPerPixel = max(length(ddx(i.detailUv)), length(ddy(i.detailUv)));
+                    half openingScreenFade = 1.0h - smoothstep(0.18h, 0.46h, metersPerPixel);
+                    window *= openingScreenFade;
+                    half door = DoorMask(i.detailUv, wallLength, facadeStyle, i.atlasCell.y);
+                    window *= 1.0h - door;
                     UNITY_BRANCH if (window > 0.001h)
                     {
-                        float2 glassCell = float2(fmod(floor(i.parameters.z * 127.0), 2.0), 3.0);
-                        fixed3 glassBase = tex2D(_MainTex, AtlasUv(scaledUv * 0.18, glassCell)).rgb;
-                        half3 reflectionDirection = reflect(-viewDir, n);
+                        fixed3 glassBase = facadeStyle < 0.5h ? fixed3(0.075h, 0.095h, 0.105h) :
+                            fixed3(0.085h, 0.115h, 0.135h);
+                        half3 reflectionNormal = normalize(i.worldNormal);
+                        half3 reflectionDirection = reflect(-viewDir, reflectionNormal);
                         half4 encodedReflection = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, reflectionDirection);
                         half3 environmentReflection = DecodeHDR(encodedReflection, unity_SpecCube0_HDR);
-                        half fresnel = pow(1.0 - saturate(dot(n, viewDir)), 3.0);
+                        half fresnel = pow(1.0 - saturate(dot(reflectionNormal, viewDir)), 3.0);
                         half reflectionWeight = saturate(_WindowReflection * (0.38 + fresnel * 0.62));
-                        albedo = lerp(albedo, lerp(glassBase, environmentReflection, reflectionWeight), window * 0.82);
+                        albedo = lerp(albedo, lerp(glassBase, environmentReflection, reflectionWeight), window * 0.88);
                         roughness = lerp(roughness, 0.22h, window);
+                    }
+                    UNITY_BRANCH if (door > 0.001h)
+                    {
+                        fixed3 doorColor = facadeStyle > 1.5h ? fixed3(0.22h, 0.24h, 0.23h) :
+                            fixed3(0.24h, 0.18h, 0.13h);
+                        albedo = lerp(albedo, doorColor, door * 0.92h);
+                        roughness = lerp(roughness, 0.48h, door);
                     }
                 }
 

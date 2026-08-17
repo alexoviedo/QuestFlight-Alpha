@@ -24,6 +24,10 @@ The authored product scene uses a bounded KBDU-inspired environment. It contains
 - Boulder County Land Use Building and Structure Footprints: official fallback
   geometry/height coverage for unincorporated Boulder County. The service
   copyright record is `Boulder County Land Use`; attribution is retained.
+- Boulder County parcel and Assessor building tables: official bounded parcel
+  geometry and exterior-wall/construction descriptors used only to classify the
+  full-map facade derivative. Raw records stay external; no owner, address,
+  parcel, or account identifier is retained in the product database.
 
 Exact requests, retrieval timestamps, raw and derivative hashes, licenses, attribution, budgets, and frozen toolchain hashes are in `tools/kbdu_environment/kbdu_source_manifest.json`.
 
@@ -37,6 +41,13 @@ terrain surface rather than placed at a constant plane. Exact source/derivative
 hashes and counts are recorded in
 `FullMapBuildingsV1/KBDU_FullMapBuildingDatabaseV1_PROVENANCE.json`; raw service
 responses and authoring caches remain outside Git.
+
+Facade enrichment preserves that geometry and adds a confidence-ranked material
+contract. Of 57,407 components, 16,530 use Assessor exterior-wall evidence, 615
+use parcel construction evidence, and 40,262 use deterministic semantic
+inference. The compact manifest, raw-source hashes, material distribution, and
+confidence boundary are recorded in
+`FullMapBuildingsV1/KBDU_FullMapBuildingFacadeManifestV1.json`.
 
 The aircraft-centered full-map derivative uses the same official City 2020
 item (`22b7c93a74394696824258f807f345ba`) and published 0.2286 m source, but

@@ -1,0 +1,420 @@
+{
+  "contract": "physically-scaled-facade-array-v1",
+  "runtime_slice_size": 512,
+  "flipbook_grid": [
+    4,
+    4
+  ],
+  "slice_count": 16,
+  "channels": {
+    "albedo": "sRGB photographic diffuse",
+    "normal": "Poly Haven OpenGL tangent-space normal",
+    "mrao": "R=metallic, G=roughness, B=ambient occlusion"
+  },
+  "slices": [
+    {
+      "index": 0,
+      "name": "painted_wood_siding",
+      "source_asset": "weathered_plank_siding",
+      "meters_per_tile": [
+        1.57,
+        1.57
+      ],
+      "albedo_multiplier": [
+        0.68,
+        0.61,
+        0.48
+      ],
+      "full_palette_recolor": true
+    },
+    {
+      "index": 1,
+      "name": "gray_wood_siding",
+      "source_asset": "weathered_plank_siding",
+      "meters_per_tile": [
+        1.57,
+        1.57
+      ],
+      "albedo_multiplier": [
+        0.46,
+        0.49,
+        0.5
+      ],
+      "full_palette_recolor": true
+    },
+    {
+      "index": 2,
+      "name": "cement_board",
+      "source_asset": "weathered_plank_siding",
+      "meters_per_tile": [
+        1.57,
+        1.57
+      ],
+      "albedo_multiplier": [
+        0.72,
+        0.7,
+        0.63
+      ],
+      "full_palette_recolor": true
+    },
+    {
+      "index": 3,
+      "name": "red_brick",
+      "source_asset": "brick_wall_001",
+      "meters_per_tile": [
+        3.0,
+        3.0
+      ],
+      "albedo_multiplier": [
+        1.0,
+        0.88,
+        0.82
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 4,
+      "name": "tan_brick",
+      "source_asset": "yellow_brick",
+      "meters_per_tile": [
+        2.0,
+        2.0
+      ],
+      "albedo_multiplier": [
+        0.96,
+        0.93,
+        0.83
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 5,
+      "name": "beige_stucco",
+      "source_asset": "beige_wall_001",
+      "meters_per_tile": [
+        3.0,
+        3.0
+      ],
+      "albedo_multiplier": [
+        1.0,
+        0.98,
+        0.92
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 6,
+      "name": "gray_stucco",
+      "source_asset": "grey_plaster",
+      "meters_per_tile": [
+        1.0,
+        1.0
+      ],
+      "albedo_multiplier": [
+        0.96,
+        0.98,
+        1.0
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 7,
+      "name": "concrete_block",
+      "source_asset": "concrete_block_wall",
+      "meters_per_tile": [
+        2.0,
+        2.0
+      ],
+      "albedo_multiplier": [
+        0.94,
+        0.96,
+        0.98
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 8,
+      "name": "precast_concrete",
+      "source_asset": "precast_concrete_wall",
+      "meters_per_tile": [
+        1.59,
+        1.59
+      ],
+      "albedo_multiplier": [
+        0.98,
+        0.98,
+        0.96
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 9,
+      "name": "white_corrugated_metal",
+      "source_asset": "corrugated_iron",
+      "meters_per_tile": [
+        1.12,
+        1.12
+      ],
+      "albedo_multiplier": [
+        1.12,
+        1.12,
+        1.08
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 10,
+      "name": "blue_corrugated_metal",
+      "source_asset": "corrugated_iron",
+      "meters_per_tile": [
+        1.12,
+        1.12
+      ],
+      "albedo_multiplier": [
+        0.48,
+        0.7,
+        0.82
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 11,
+      "name": "moss_rock_stone",
+      "source_asset": "stone_wall_04",
+      "meters_per_tile": [
+        1.7,
+        1.7
+      ],
+      "albedo_multiplier": [
+        0.9,
+        0.9,
+        0.82
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 12,
+      "name": "painted_block",
+      "source_asset": "concrete_block_wall",
+      "meters_per_tile": [
+        2.0,
+        2.0
+      ],
+      "albedo_multiplier": [
+        0.82,
+        0.84,
+        0.8
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 13,
+      "name": "dark_utility_metal",
+      "source_asset": "corrugated_iron",
+      "meters_per_tile": [
+        1.12,
+        1.12
+      ],
+      "albedo_multiplier": [
+        0.42,
+        0.44,
+        0.42
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 14,
+      "name": "cedar_or_log",
+      "source_asset": "weathered_plank_siding",
+      "meters_per_tile": [
+        1.57,
+        1.57
+      ],
+      "albedo_multiplier": [
+        0.82,
+        0.62,
+        0.43
+      ],
+      "full_palette_recolor": false
+    },
+    {
+      "index": 15,
+      "name": "light_vinyl_siding",
+      "source_asset": "weathered_plank_siding",
+      "meters_per_tile": [
+        1.57,
+        1.57
+      ],
+      "albedo_multiplier": [
+        0.76,
+        0.75,
+        0.69
+      ],
+      "full_palette_recolor": true
+    }
+  ],
+  "sources": {
+    "weathered_plank_siding": {
+      "name": "Weathered Plank Siding",
+      "license": "CC0",
+      "source": "https://polyhaven.com/a/weathered_plank_siding",
+      "dimensions_meters": [
+        1.57,
+        1.57
+      ],
+      "authors": {
+        "Dimitrios Savva": "All"
+      },
+      "download_sha256": {
+        "Diffuse": "c0ca9e4a481d3d8e190c46fd12024a558381ea94790943a7dbdf2882e59c66ea",
+        "nor_gl": "0ab20ef6a7573a2768a582aed3dcf850ba5785019578cea3c116361894fb904f",
+        "arm": "975fef6e01b133a259a750c3f71fd7c2bdc621b12d8ac3f6a19f23cfcc1ac770"
+      }
+    },
+    "brick_wall_001": {
+      "name": "Brick Wall 001",
+      "license": "CC0",
+      "source": "https://polyhaven.com/a/brick_wall_001",
+      "dimensions_meters": [
+        3.0,
+        3.0
+      ],
+      "authors": {
+        "Rob Tuytel": "Processing",
+        "Dimitrios Savva": "Photography"
+      },
+      "download_sha256": {
+        "Diffuse": "903f042853052b3b4dcbf9a511d688b77983f5af641a3effbb2e130d159daed0",
+        "nor_gl": "0b51c30896a1706d8a5bb24448bcff791ec2e51458a90fef9498e61f74de9efe",
+        "arm": "aa8a7f54060ea5d564c35b13956b6689e0b4e693a9bfd8f719dcf61db65e6795"
+      }
+    },
+    "yellow_brick": {
+      "name": "Yellow Brick",
+      "license": "CC0",
+      "source": "https://polyhaven.com/a/yellow_brick",
+      "dimensions_meters": [
+        2.0,
+        2.0
+      ],
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "download_sha256": {
+        "Diffuse": "d57f56735b51d5df7ae3efb171860abf751626b566e4a345427256dc7ddb93be",
+        "nor_gl": "2e8355a25bf7a1f60045a9b7d302a73060534c0037b0d63a1b90039ff00e7b17",
+        "arm": "7b0e0792436e6d8f15777b666d12c0f8f1bab34955f4a933816b44523c2a9dc4"
+      }
+    },
+    "beige_wall_001": {
+      "name": "Beige Wall 001",
+      "license": "CC0",
+      "source": "https://polyhaven.com/a/beige_wall_001",
+      "dimensions_meters": [
+        3.0,
+        3.0
+      ],
+      "authors": {
+        "Dimitrios Savva": "Photography",
+        "Rico Cilliers": "Processing"
+      },
+      "download_sha256": {
+        "Diffuse": "0c93d5b4878616a4eeef2e99886f34d0d485a2d4809d602a3db9f46f806bc3de",
+        "nor_gl": "568891ee5a988073f293dd8822abf78d4d497846f37f4a1ad3d0e8028301ed88",
+        "arm": "74479795603994083634f7a06d3079c25aa891380aac50a6538076aaf4481ea9"
+      }
+    },
+    "grey_plaster": {
+      "name": "Grey Plaster",
+      "license": "CC0",
+      "source": "https://polyhaven.com/a/grey_plaster",
+      "dimensions_meters": [
+        1.0,
+        1.0
+      ],
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "download_sha256": {
+        "Diffuse": "e7f7f7fd113cbe3e882fc5d3f5f587216be62db629f1f32dee1fad86f412a3df",
+        "nor_gl": "7ffd1ed71c202566e3af93c7c4f4a2f0031ddffb9fd22fb8a282e82fe84aeea2",
+        "arm": "721265256634f04970eb5e66450ce6c3ab3e18ae04e439e8456ccf6bc49be7a6"
+      }
+    },
+    "concrete_block_wall": {
+      "name": "Concrete Block Wall",
+      "license": "CC0",
+      "source": "https://polyhaven.com/a/concrete_block_wall",
+      "dimensions_meters": [
+        2.0,
+        2.0
+      ],
+      "authors": {
+        "Charlotte Baglioni": "All"
+      },
+      "download_sha256": {
+        "Diffuse": "78ead3859ce7c18f38c0ab91005ae5c3d136556e0e0a885a06c2077d18997e5a",
+        "nor_gl": "d687894162a3c5d6b1c91df893d8862d3ed2ab75fc6a1f028bacf5b9b77f0e7c",
+        "arm": "dc9af06c80eb2e1a3d050f7103eb40b15ebaf23eca8246775221d1e0cfe8082b"
+      }
+    },
+    "precast_concrete_wall": {
+      "name": "Precast Concrete Wall",
+      "license": "CC0",
+      "source": "https://polyhaven.com/a/precast_concrete_wall",
+      "dimensions_meters": [
+        1.59,
+        1.59
+      ],
+      "authors": {
+        "Dimitrios Savva": "All"
+      },
+      "download_sha256": {
+        "Diffuse": "5fd3f827c42845f7530267953b4e1813dbc5634ce0be6fcb785c490105eb3718",
+        "nor_gl": "531daec7d990b157dad6cd6477572c91f4e753ffa3be8947e599198bfefb27cb",
+        "arm": "e1166e1e34613c6ac0ecfef90a8d371522347aa918984fdc35b0d9701c909d62"
+      }
+    },
+    "corrugated_iron": {
+      "name": "Corrugated Iron",
+      "license": "CC0",
+      "source": "https://polyhaven.com/a/corrugated_iron",
+      "dimensions_meters": [
+        1.12,
+        1.12
+      ],
+      "authors": {
+        "Jenelle van Heerden": "Processing",
+        "Dimitrios Savva": "Photography"
+      },
+      "download_sha256": {
+        "Diffuse": "c030184b53d90ee758766ab5cf5895f7c47030ab23ebecc38d74b8601009a722",
+        "nor_gl": "41a3a63490c19a4ce234d49222c55270dad32c7283825a3de7fa43400a4df5a0",
+        "arm": "1cfd532bbda27f501bb08c5c70f37827012bf5159837576c8c58451e915ec8a0"
+      }
+    },
+    "stone_wall_04": {
+      "name": "Stone Wall 04",
+      "license": "CC0",
+      "source": "https://polyhaven.com/a/stone_wall_04",
+      "dimensions_meters": [
+        1.7,
+        1.7
+      ],
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "download_sha256": {
+        "Diffuse": "236642ba7a4ab6e3a55eea12bf19787f75f6c073ed3e3e8c8c15d30f4e5e22fe",
+        "nor_gl": "b0d74a9ad518818cd38cd641b35658231a5e9b8690d1a910c021fb8af7169436",
+        "arm": "814dd946de59ac7895646d978f46ab412d888c07a484ebba1153f2f95d407db2"
+      }
+    }
+  },
+  "runtime_derivative_sha256": {
+    "FullMapBuildingFacadeArray_Albedo.png": "4a524895570cef591c9562bb1282b4d24c9f3a8308b36f22771e0d3fb4f9257c",
+    "FullMapBuildingFacadeArray_Normal.png": "ee8fa249d0bd2845bdd7abac74307087949d2f59bf153768eb79baf2fdd2a9ec",
+    "FullMapBuildingFacadeArray_MRAO.png": "14376d2081e6188f8a10b2cad55542bee9ea3a1fbeb039172a00aa66d7dc2057"
+  },
+  "raw_sources_committed": false
+}

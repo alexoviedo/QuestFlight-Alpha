@@ -51,8 +51,14 @@ prediction prefetches only. PageKey ownership retains 12 slots on a one-axis
 shift and nine on a diagonal shift; entering pages load before one atomic commit.
 CRC-indexed LZ4 Android AssetBundles remain resident while referenced and are
 released only with `UnloadAsync(true)` after detachment. Runtime code creates
-neither meshes nor hierarchy. One opaque atlas material provides meter-scaled
-semantic facades, roofs, and nontransparent window glints. The authored airport
+neither meshes nor hierarchy. One opaque material uses three 16-slice ASTC
+texture arrays for metre-scaled facades. County Assessor exterior-wall records
+drive authoritative assignments where available; parcel construction records
+and deterministic land-use/style rules are confidence-ranked fallbacks.
+Openings are shader masks with complete metre-sized bays, floor/eave bounds, a
+single inferred front door, and class-specific layouts; glass is an opaque
+reflective response and cannot sample the brick/siding channel. Roofs retain
+the existing world-projected orthophoto representation. The authored airport
 hero corridor remains a separate authority and is excluded from the database.
 
 The shipping architecture is standalone Quest 3 only: Android ARM64, IL2CPP, Vulkan, OpenXR single-pass instanced stereo, ASTC, and 4x MSAA. A Windows/OpenXR process may exist only as a development host for Meta XR Simulator and is never a shipping profile or required runtime dependency. The simulator establishes stereo/tracking/input/composition behavior, not mobile GPU or thermal performance.

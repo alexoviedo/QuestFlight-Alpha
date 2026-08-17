@@ -50,6 +50,10 @@ namespace QuestFlight.Editor.Tests
             Assert.That(Occurrences(database.text, "\"source_id\":"), Is.EqualTo(57407));
             Assert.That(Occurrences(database.text, "\"column\":"), Is.EqualTo(576));
             Assert.That(database.text, Does.Contain("\"contract_version\":\"full-map-building-clipmap-v1\""));
+            Assert.That(database.text, Does.Contain("\"facade_contract_version\":\"parcel-grounded-facades-v1\""));
+            Assert.That(Occurrences(database.text, "\"material_id\":"), Is.EqualTo(57407));
+            Assert.That(Occurrences(database.text, "\"facade_style_id\":"), Is.EqualTo(57407));
+            Assert.That(Occurrences(database.text, "\"material_confidence\":"), Is.EqualTo(57407));
             Assert.That(database.text, Does.Contain("\"roof_id\":1"));
             Assert.That(database.text, Does.Contain("\"roof_id\":2"));
 
@@ -75,7 +79,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void SharedAtlasIsOpaqueCompressedAndMeterScaled()
+        public void SharedFacadeArraysAreOpaqueCompressedAndMeterScaled()
         {
             Material material = AssetDatabase.LoadAssetAtPath<Material>(
                 FullMapBuildingClipmapAssetAuthoring.MaterialPath);
@@ -83,9 +87,10 @@ namespace QuestFlight.Editor.Tests
             Assert.That(material.shader.name, Is.EqualTo(FullMapBuildingClipmapAssetAuthoring.ShaderName));
             Assert.That(material.renderQueue, Is.LessThanOrEqualTo((int)RenderQueue.Geometry));
             Assert.That(material.enableInstancing, Is.True);
-            Assert.That(material.GetTexture("_MainTex"), Is.Not.Null);
-            Assert.That(material.GetTexture("_BumpMap"), Is.Not.Null);
-            Assert.That(material.GetTexture("_MRAO"), Is.Not.Null);
+            Assert.That(material.GetTexture("_FacadeAlbedo"), Is.TypeOf<Texture2DArray>());
+            Assert.That(material.GetTexture("_FacadeNormal"), Is.TypeOf<Texture2DArray>());
+            Assert.That(material.GetTexture("_FacadeMRAO"), Is.TypeOf<Texture2DArray>());
+            Assert.That(((Texture2DArray)material.GetTexture("_FacadeAlbedo")).depth, Is.EqualTo(16));
             Assert.That(material.GetTexture("_NearAlbedo"), Is.Not.Null);
             Assert.That(material.GetTexture("_MidAlbedo"), Is.Not.Null);
             Assert.That(material.GetTexture("_FarAlbedo"), Is.Not.Null);
@@ -98,6 +103,7 @@ namespace QuestFlight.Editor.Tests
             {
                 TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
                 Assert.That(importer, Is.Not.Null, path);
+                Assert.That(importer.textureShape, Is.EqualTo(TextureImporterShape.Texture2DArray), path);
                 Assert.That(importer.mipmapEnabled, Is.True, path);
                 Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Trilinear), path);
                 Assert.That(importer.GetPlatformTextureSettings("Android").format,
@@ -106,12 +112,18 @@ namespace QuestFlight.Editor.Tests
             string shader = Read("Assets/Shaders/FullMapBuildingClipmap.shader");
             Assert.That(shader, Does.Contain("i.detailUv"));
             Assert.That(shader, Does.Contain("WindowMask"));
-            Assert.That(shader, Does.Contain("mirroredPeriod"));
+            Assert.That(shader, Does.Contain("MaterialTileMeters"));
+            Assert.That(shader, Does.Contain("UNITY_SAMPLE_TEX2DARRAY(_FacadeAlbedo"));
+            Assert.That(shader, Does.Contain("half hasCompleteBay"));
+            Assert.That(shader, Does.Contain("half DoorMask"));
+            Assert.That(shader, Does.Contain("half openingScreenFade"));
+            Assert.That(shader, Does.Not.Contain("clip(window"),
+                "Distant openings must fade continuously rather than pop or dither between eyes.");
             Assert.That(shader, Does.Contain("SampleProjectedRoofOrthophoto(i.worldPos.xz)"));
             Assert.That(shader, Does.Contain("AerialClipmapSampling.cginc"));
             Assert.That(shader, Does.Contain("UNITY_BRANCH if (roof > 0.5h)"));
-            Assert.That(shader, Does.Contain("albedo = tex2D(_MainTex, atlasUv).rgb * i.color.rgb"),
-                "Generated facade appearance must remain on the wall-only branch.");
+            Assert.That(shader, Does.Not.Contain("tex2D(_MainTex"),
+                "Wall rendering must not fall back to the retired semantic-incoherent atlas.");
             Assert.That(shader, Does.Not.Contain("Blend "));
 
             string authoring = Read("Assets/Editor/FullMapBuildingClipmapAssetAuthoring.cs");
@@ -127,7 +139,7 @@ namespace QuestFlight.Editor.Tests
             TextAsset report = AssetDatabase.LoadAssetAtPath<TextAsset>(
                 FullMapBuildingClipmapAssetAuthoring.CompilationReportPath);
             Assert.That(report, Is.Not.Null);
-            Assert.That(report.text, Does.Contain("terrain-sealed-shell-compiler-v7-20260816"));
+            Assert.That(report.text, Does.Contain("semantic-facade-shell-compiler-v8-20260816"));
             Assert.That(report.text, Does.Contain("\"foundation_embed_meters\": 1.6"));
             Assert.That(report.text, Does.Contain("\"maximum_roof_wall_seam_meters\": 0.0"));
             Assert.That(report.text, Does.Contain("\"maximum_vertical_corner_seam_meters\": 0.0"));

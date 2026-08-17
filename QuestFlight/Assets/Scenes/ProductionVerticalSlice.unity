@@ -202,6 +202,10 @@ PrefabInstance:
       propertyPath: trackedRig
       value: 
       objectReference: {fileID: 1853183169}
+    - target: {fileID: 1776927175361944246, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
     - target: {fileID: 1891347455280266108, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: m_Name
       value: ProductionWorldRoot
@@ -210,11 +214,19 @@ PrefabInstance:
       propertyPath: trackedRig
       value: 
       objectReference: {fileID: 1853183169}
+    - target: {fileID: 1993684283713012176, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
     - target: {fileID: 2375097098290893549, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: m_CullingMask.m_Bits
       value: 3758096383
       objectReference: {fileID: 0}
     - target: {fileID: 3185837820387090015, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
+      propertyPath: trackedRig
+      value: 
+      objectReference: {fileID: 1853183169}
+    - target: {fileID: 3340604570668183694, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: trackedRig
       value: 
       objectReference: {fileID: 1853183169}

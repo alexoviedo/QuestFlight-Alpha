@@ -19,9 +19,10 @@ namespace QuestFlight.Editor
         public const string Root = "Assets/Production/Environment/FullMapBuildingsV1";
         public const string DatabasePath = Root + "/KBDU_FullMapBuildingDatabaseV1.json";
         public const string MaterialPath = Root + "/Materials/FullMapBuildingClipmap.mat";
-        public const string AlbedoPath = Root + "/Materials/FullMapBuildingAtlas_Albedo.png";
-        public const string NormalPath = Root + "/Materials/FullMapBuildingAtlas_Normal.png";
-        public const string MraoPath = Root + "/Materials/FullMapBuildingAtlas_MRAO.png";
+        public const string AlbedoPath = Root + "/Materials/FullMapBuildingFacadeArray_Albedo.png";
+        public const string NormalPath = Root + "/Materials/FullMapBuildingFacadeArray_Normal.png";
+        public const string MraoPath = Root + "/Materials/FullMapBuildingFacadeArray_MRAO.png";
+        public const string FacadeManifestPath = Root + "/KBDU_FullMapBuildingFacadeManifestV1.json";
         public const string CompilationReportPath = Root + "/KBDU_StableShellCompilationV1.json";
         public const string GeneratedRoot = "Assets/Generated/FullMapBuildingClipmap";
         public const string StreamingRoot = "Assets/StreamingAssets/QuestFlightBuildingClipmap";
@@ -36,7 +37,8 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
-        private const string MeshCompilerVersion = "terrain-sealed-shell-compiler-v7-20260816";
+        private const string MeshCompilerVersion = "semantic-facade-shell-compiler-v8-20260816";
+        private const string FacadeContractVersion = "parcel-grounded-facades-v1";
         private const int MaximumSelectedTriangleCeiling = 140000;
         private const int AuthoredMaximumSelectedTriangles = 139588;
         private const int OrdinaryFootprintVertexLimit = 4;
@@ -47,6 +49,7 @@ namespace QuestFlight.Editor
         {
             public int schema_version;
             public string contract_version;
+            public string facade_contract_version;
             public float map_half_extent_meters;
             public float page_size_meters;
             public int columns;
@@ -80,6 +83,12 @@ namespace QuestFlight.Editor
             public float area_m2;
             public long seed;
             public bool landmark;
+            public int material_id;
+            public int secondary_material_id;
+            public int material_confidence;
+            public int facade_style_id;
+            public int stories_x2;
+            public int built_year;
             public int[] lod0_q;
             public int[] lod1_q;
             public int[] lod2_q;
@@ -304,6 +313,7 @@ namespace QuestFlight.Editor
             Database database = JsonUtility.FromJson<Database>(source.text);
             if (database == null || database.schema_version != 1 ||
                 !string.Equals(database.contract_version, SourceDatabaseContractVersion, StringComparison.Ordinal) ||
+                !string.Equals(database.facade_contract_version, FacadeContractVersion, StringComparison.Ordinal) ||
                 database.pages == null || database.pages.Length != database.columns * database.rows ||
                 database.runtime_window_cells != AircraftCenteredBuildingClipmapController.GridSize)
                 throw new InvalidOperationException("Full-map building database contract is invalid.");
@@ -312,17 +322,24 @@ namespace QuestFlight.Editor
 
         private static void ConfigureTextures()
         {
-            ConfigureTexture(AlbedoPath, true, TextureImporterType.Default, TextureImporterFormat.ASTC_6x6);
-            ConfigureTexture(NormalPath, false, TextureImporterType.NormalMap, TextureImporterFormat.ASTC_6x6);
-            ConfigureTexture(MraoPath, false, TextureImporterType.Default, TextureImporterFormat.ASTC_6x6);
+            ConfigureTextureArray(AlbedoPath, true, TextureImporterType.Default, TextureImporterFormat.ASTC_6x6);
+            ConfigureTextureArray(NormalPath, false, TextureImporterType.NormalMap, TextureImporterFormat.ASTC_6x6);
+            ConfigureTextureArray(MraoPath, false, TextureImporterType.Default, TextureImporterFormat.ASTC_6x6);
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
         }
 
-        private static void ConfigureTexture(string path, bool sRgb, TextureImporterType type, TextureImporterFormat format)
+        private static void ConfigureTextureArray(string path, bool sRgb, TextureImporterType type, TextureImporterFormat format)
         {
             TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter ??
                 throw new InvalidOperationException("Texture importer is unavailable: " + path);
             importer.textureType = type;
+            importer.textureShape = TextureImporterShape.Texture2DArray;
+            TextureImporterSettings settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            settings.textureShape = TextureImporterShape.Texture2DArray;
+            settings.flipbookColumns = 4;
+            settings.flipbookRows = 4;
+            importer.SetTextureSettings(settings);
             importer.sRGBTexture = sRgb;
             importer.mipmapEnabled = true;
             importer.streamingMipmaps = false;
@@ -334,7 +351,7 @@ namespace QuestFlight.Editor
             TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
             android.name = "Android";
             android.overridden = true;
-            android.maxTextureSize = 1024;
+            android.maxTextureSize = 2048;
             android.format = format;
             android.compressionQuality = 100;
             importer.SetPlatformTextureSettings(android);
@@ -350,10 +367,20 @@ namespace QuestFlight.Editor
                 material = new Material(shader) { name = "FullMapBuildingClipmap" };
                 AssetDatabase.CreateAsset(material, MaterialPath);
             }
+            else
+            {
+                // Reset obsolete serialized properties while preserving the material
+                // asset GUID used by the scene/prefab.  Otherwise Unity retains the
+                // retired atlas references in dependency closure even after the
+                // shader no longer exposes those properties.
+                Material clean = new Material(shader) { name = material.name };
+                EditorUtility.CopySerialized(clean, material);
+                UnityEngine.Object.DestroyImmediate(clean);
+            }
             material.shader = shader;
-            material.SetTexture("_MainTex", LoadRequired<Texture2D>(AlbedoPath));
-            material.SetTexture("_BumpMap", LoadRequired<Texture2D>(NormalPath));
-            material.SetTexture("_MRAO", LoadRequired<Texture2D>(MraoPath));
+            material.SetTexture("_FacadeAlbedo", LoadRequired<Texture>(AlbedoPath));
+            material.SetTexture("_FacadeNormal", LoadRequired<Texture>(NormalPath));
+            material.SetTexture("_FacadeMRAO", LoadRequired<Texture>(MraoPath));
             material.SetFloat("_NormalScale", 0.45f);
             material.SetFloat("_WindowReflection", 0.58f);
             material.SetFloat("_AmbientLift", 0.18f);
@@ -629,10 +656,8 @@ namespace QuestFlight.Editor
             float wallTop = baseY + building.height_dm * 0.1f;
             float roofRise = building.roof_rise_dm * 0.1f;
             Color32 tint = BuildingTint(building);
-            Vector2 facadeCell = FacadeCell(building);
             Vector2 roofCell = RoofCell(building);
             float seed01 = (building.seed & 0xffff) / 65535f;
-            Vector4 facadeParameters = new Vector4(0f, building.class_id, seed01, 0.40f);
             Vector4 roofParameters = new Vector4(1f, building.class_id, seed01, RoofDetailScale(building));
             RoofAxes axes = RoofAxes.From(polygon);
             Vector3[] roof = polygon.Select(point => new Vector3(point.x,
@@ -640,6 +665,8 @@ namespace QuestFlight.Editor
             float[] foundation = polygon.Select(point => TerrainSealedFoundationHeight(
                 terrain, point, baseY, building.id)).ToArray();
 
+            int frontWall = FrontWallIndex(polygon, building.seed);
+            Vector2 frontNormal = ExteriorNormal(polygon, frontWall);
             if (includeWalls)
             for (int i = 0; i < polygon.Length; i++)
             {
@@ -650,10 +677,18 @@ namespace QuestFlight.Editor
                 Vector3 c = roof[(i + 1) % polygon.Length];
                 Vector3 d = roof[i];
                 float length = Vector2.Distance(a2, b2);
+                Vector2 outward = ExteriorNormal(polygon, i);
+                float facadeRole = i == frontWall ? 0f :
+                    Vector2.Dot(outward, frontNormal) < -0.72f ? 2f : 1f;
+                Vector2 facadeSemantics = new Vector2(length, facadeRole);
+                float packedStyleAndSecondary = building.facade_style_id +
+                    (Mathf.Clamp(building.secondary_material_id, -1, 15) + 1) / 32f;
+                Vector4 facadeParameters = new Vector4(
+                    0f, building.material_id, building.height_dm * 0.1f, packedStyleAndSecondary);
                 AddQuad(builder, a, b, c, d,
-                    new Vector2(0f, 0f), new Vector2(length, 0f),
-                    new Vector2(length, c.y - b.y), new Vector2(0f, d.y - a.y),
-                    facadeCell, facadeParameters, tint);
+                    new Vector2(0f, a.y - baseY), new Vector2(length, b.y - baseY),
+                    new Vector2(length, c.y - baseY), new Vector2(0f, d.y - baseY),
+                    facadeSemantics, facadeParameters, tint);
             }
 
             if (!includeRoof) return;
@@ -812,6 +847,33 @@ namespace QuestFlight.Editor
         private static float Cross(Vector2 a, Vector2 b, Vector2 c) =>
             (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 
+        private static Vector2 ExteriorNormal(Vector2[] polygon, int edgeIndex)
+        {
+            Vector2 edge = polygon[(edgeIndex + 1) % polygon.Length] - polygon[edgeIndex];
+            return new Vector2(edge.y, -edge.x).normalized;
+        }
+
+        private static int FrontWallIndex(Vector2[] polygon, long seed)
+        {
+            // A stable longest-side frontage is preferable to stochastic doors on
+            // every face. Source parcel/road frontage is not complete map-wide, so
+            // this conservative rule is explicitly classified as inferred.
+            float longest = -1f;
+            List<int> candidates = new List<int>();
+            for (int index = 0; index < polygon.Length; index++)
+            {
+                float length = Vector2.Distance(polygon[index], polygon[(index + 1) % polygon.Length]);
+                if (length > longest + 0.05f)
+                {
+                    longest = length;
+                    candidates.Clear();
+                    candidates.Add(index);
+                }
+                else if (Mathf.Abs(length - longest) <= 0.05f) candidates.Add(index);
+            }
+            return candidates[(int)((seed & 0x7fffffff) % candidates.Count)];
+        }
+
         private static bool PointInTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
         {
             float ab = Cross(a, b, p), bc = Cross(b, c, p), ca = Cross(c, a, p);
@@ -853,20 +915,6 @@ namespace QuestFlight.Editor
             return rise * Mathf.Min(minor, major);
         }
 
-        private static Vector2 FacadeCell(Building building)
-        {
-            int seed = (int)(building.seed & 0x7fffffff);
-            return building.class_id switch
-            {
-                0 => new Vector2(seed % 4, 0),
-                1 => new Vector2(seed % 2, 1),
-                2 => new Vector2(2 + seed % 2, 1),
-                3 => seed % 3 == 0 ? new Vector2(2, 3) : new Vector2(seed % 2, seed % 2),
-                4 => new Vector2(3, 3),
-                _ => new Vector2(seed % 4, 0)
-            };
-        }
-
         private static Vector2 RoofCell(Building building)
         {
             int seed = (int)(building.seed & 0x7fffffff);
@@ -901,8 +949,10 @@ namespace QuestFlight.Editor
         private static Color32 BuildingTint(Building building)
         {
             int seed = (int)(building.seed & 0x7fffffff);
-            float variation = 0.93f + (seed % 13) / 130f;
-            float warmth = ((seed / 13) % 7 - 3) * 0.008f;
+            // Photographic source color remains authoritative. Variation is only
+            // enough to avoid exact clones, never enough to change material family.
+            float variation = 0.97f + (seed % 13) / 216f;
+            float warmth = ((seed / 13) % 7 - 3) * 0.004f;
             return new Color(variation + warmth, variation, variation - warmth, 1f);
         }
 

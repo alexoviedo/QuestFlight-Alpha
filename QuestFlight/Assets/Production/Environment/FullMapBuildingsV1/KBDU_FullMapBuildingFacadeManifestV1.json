@@ -1,0 +1,68 @@
+{
+  "facade_contract_version": "parcel-grounded-facades-v1",
+  "building_count": 57407,
+  "parcel_feature_count": 15995,
+  "parcel_match_count": 19770,
+  "assessor_match_count": 19720,
+  "unmatched_parcel_count": 37637,
+  "confidence_counts": {
+    "inferred": 40262,
+    "parcel_construction": 615,
+    "authoritative_exterior": 16530
+  },
+  "material_counts": {
+    "beige_stucco": 3388,
+    "blue_corrugated_metal": 901,
+    "cedar_or_log": 33,
+    "cement_board": 4171,
+    "concrete_block": 5136,
+    "dark_utility_metal": 895,
+    "gray_stucco": 738,
+    "gray_wood_siding": 4971,
+    "light_vinyl_siding": 1976,
+    "moss_rock_stone": 622,
+    "painted_block": 4693,
+    "painted_wood_siding": 7057,
+    "precast_concrete": 5182,
+    "red_brick": 7161,
+    "tan_brick": 4995,
+    "white_corrugated_metal": 5488
+  },
+  "style_counts": {
+    "0": 26350,
+    "1": 2439,
+    "2": 12497,
+    "3": 813,
+    "4": 73,
+    "5": 15235
+  },
+  "sources": {
+    "assessor_buildings_url": "https://assessor.boco.solutions/ASR_PublicDataFiles/Buildings.csv",
+    "assessor_buildings_sha256": "4ee0804ce736aa09881d26b0bdbe265609108a79bd953fa6af9762f7e8c3090e",
+    "parcels_url": "https://maps.bouldercounty.org/arcgis/rest/services/PARCELS/PARCELS_OWNER/FeatureServer/0/query",
+    "parcels_sha256": "93900a51a5f08cd65eebc1a4366668b834973692f89cb0e98b2f765787b54838"
+  },
+  "material_names": [
+    "painted_wood_siding",
+    "gray_wood_siding",
+    "cement_board",
+    "red_brick",
+    "tan_brick",
+    "beige_stucco",
+    "gray_stucco",
+    "concrete_block",
+    "precast_concrete",
+    "white_corrugated_metal",
+    "blue_corrugated_metal",
+    "moss_rock_stone",
+    "painted_block",
+    "dark_utility_metal",
+    "cedar_or_log",
+    "light_vinyl_siding"
+  ],
+  "confidence_contract": {
+    "0": "semantic inference",
+    "1": "parcel construction evidence",
+    "2": "assessor exterior-wall evidence"
+  }
+}

@@ -23,24 +23,24 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: a133a9d6c3ab2a04d88c2bd3a5b08c44, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _ClipGlobalAlbedo:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _FacadeAlbedo:
+        m_Texture: {fileID: 18700000, guid: 1a4811add3654504aa46e926516c7fa9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FacadeMRAO:
+        m_Texture: {fileID: 18700000, guid: 51446e012e662e6479d9401a3b520c03, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FacadeNormal:
+        m_Texture: {fileID: 18700000, guid: ba74e1f36a436554ebd93e3b3cfe2b8f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _FarAlbedo:
         m_Texture: {fileID: 2800000, guid: 5c913aef598ec2a751b1b49b06e68d15, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MRAO:
-        m_Texture: {fileID: 2800000, guid: 31f9d512a4e2a5d448e0d592f96a0fc5, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 2800000, guid: dba92414bdef9df479be803cfa0741df, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MidAlbedo:

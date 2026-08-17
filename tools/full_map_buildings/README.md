@@ -24,6 +24,35 @@ python tools/full_map_buildings/build_full_map_building_database.py `
 Unity compilation is performed by
 `QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring.BuildAndroidBundlesAndAuthorProductBatch`.
 
+Facade semantics are a second deterministic offline stage. It spatially joins
+the compact building centroids to the official Boulder County parcel service,
+then joins parcel account numbers to the County Assessor building table. Raw
+parcel and assessor files stay in the external artifact root:
+
+```powershell
+python tools/full_map_buildings/enrich_building_facades.py `
+  --database QuestFlight/Assets/Production/Environment/FullMapBuildingsV1/KBDU_FullMapBuildingDatabaseV1.json `
+  --city-footprints "<artifact-root>\raw\city_building_footprints.geojson" `
+  --county-footprints "<artifact-root>\raw\county_building_footprints.geojson" `
+  --assessor-buildings "<artifact-root>\raw\Buildings.csv" `
+  --parcel-cache "<artifact-root>\raw\boulder_county_parcels.json" `
+  --manifest QuestFlight/Assets/Production/Environment/FullMapBuildingsV1/KBDU_FullMapBuildingFacadeManifestV1.json
+```
+
+The shared 16-slice facade array is regenerated from pinned Poly Haven CC0
+albedo, OpenGL-normal, and ARM sources. Physical source dimensions are recorded
+per slice and sampled in metres by the runtime shader:
+
+```powershell
+python tools/full_map_buildings/prepare_facade_material_arrays.py `
+  --raw-dir "<artifact-root>\raw\polyhaven" `
+  --output-dir QuestFlight/Assets/Production/Environment/FullMapBuildingsV1/Materials
+```
+
+The database records a confidence level for every assignment: assessor exterior
+wall evidence, parcel construction evidence, or deterministic semantic inference.
+Inferred assignments are never represented as surveyed architectural truth.
+
 Validate the committed compact derivative and its worst sampled 4 x 4 runtime window:
 
 ```powershell

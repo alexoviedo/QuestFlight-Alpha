@@ -13,14 +13,23 @@ Every product binary must match an entry here or receive a new source/license re
   copyright source. The project retains that attribution.
 - Grounding fallback: the already recorded public-domain USGS 3DEP-derived
   `KBDU_ProductionTerrainSurfaceV2.json`.
-- Material source: project-directed OpenAI image generation, saved as
-  `tools/full_map_buildings/assets/FullMapBuildingAtlas_Source.png`; no external
-  photograph or downloaded material entered the atlas.
+- Facade material sources: nine Poly Haven photographic materials under CC0
+  (`weathered_plank_siding`, `brick_wall_001`, `yellow_brick`,
+  `beige_wall_001`, `grey_plaster`, `concrete_block_wall`,
+  `precast_concrete_wall`, `corrugated_iron`, and `stone_wall_04`). Raw 1K
+  downloads remain external. The committed 16-slice 512px derivatives retain
+  albedo, tangent normal, and packed MRAO only.
+- Building-use/material evidence: official Boulder County parcel geometry and
+  County Assessor `Buildings.csv`. The committed derivative retains only a
+  material/style identifier, confidence code, half-story count, and build year;
+  owner names, addresses, account identifiers, and raw records do not enter Git
+  or the product.
 
-Raw GIS responses remain external. The exact service URLs, filters, raw hashes,
+Raw GIS/assessor responses remain external. The exact service URLs, filters, raw hashes,
 counts, terrain hash, derivative hash, exclusions, and rights boundary are in
-`KBDU_FullMapBuildingDatabaseV1_PROVENANCE.json`. The atlas source and derivative
-hashes are in `FullMapBuildingsV1/Materials/SOURCE_MANIFEST.json`.
+`KBDU_FullMapBuildingDatabaseV1_PROVENANCE.json`. The previous atlas manifest is
+retained as historical V1 evidence; active sources and derivative hashes are in
+`FullMapBuildingsV1/Materials/FullMapBuildingFacadeArray_SOURCE_MANIFEST.json`.
 
 ## Cockpit Completion V3 generated derivatives
 
