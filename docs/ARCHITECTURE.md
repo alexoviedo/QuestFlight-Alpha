@@ -338,3 +338,33 @@ context allometry, with the exactly transformed compact 3DEP canopy raster used
 only as bounded height evidence where supported. Stable hashes never affect
 height. This removes the former 15.5 m crown and 23.5 m height saturation without
 adding runtime state, textures, materials, geometry, or draw calls.
+
+## Full-map vegetation HLOD V3
+
+V3 fixes the V2 coverage-loss defect rather than layering more sparse props on
+top of it. V2 stored 901,744 accepted placements but its far-page cap consumed
+only the first 144 confidence-sorted records in every 1 km page. V3 compiles
+those placements into a coverage-safe 975,627-record database: 892,037 ordinary
+trees, 697 tall/narrow trees, 9,010 bounded low-vegetation shrubs, and 73,883
+85 m grove aggregates. Every page begins with its spatially complete grove set;
+individual records follow in a deterministic whole-page spatial-hash order.
+
+One serialized `AirportCloseTreeLodRenderer` remains the runtime authority. The
+96-page aircraft-oriented envelope preserves 10 km forward, 7 km lateral, and
+3 km rear coverage. All retained pages expose the bounded aggregate prefix,
+while the nine closest pages within 2.4 km expose up to 600 individual records
+for useful near detail. Projected size chooses the existing 344/122/2-triangle
+tree tiers, a project-authored 24-triangle shrub tier, or a project-authored
+44-triangle multi-lobe grove tier. The six-draw, one-material contract has no
+per-tree GameObjects, per-tree updates, camera-facing billboards, crossfade, or
+runtime mesh construction.
+
+Far vegetation remains terrain-owned. One 4096-square ASTC/mipmapped RGBA
+derivative stores feathered full-map canopy coverage, low-vegetation fraction,
+and aggregate normal direction. It is constrained by the accepted placement
+database and building exclusions, so ordinary fields do not become forest. The
+terrain consumes it in its existing draw and fades it in after near geometry
+ownership; the orthophoto remains the color authority. The authored planning
+maximum is 81,584 selected vegetation triangles, and the integrated environment
+measures 60 draws, 639,664 triangles, and 12 materials. These are Editor/static
+contracts, not physical Quest timing or photorealism claims.

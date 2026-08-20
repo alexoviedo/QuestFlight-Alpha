@@ -57,7 +57,8 @@ namespace QuestFlight.Editor
 
             Camera productCamera = scene.GetRootGameObjects()
                 .SelectMany(item => item.GetComponentsInChildren<Camera>(true))
-                .Single(item => item.CompareTag("MainCamera"));
+                .Single(item => item.CompareTag("MainCamera") && item.enabled &&
+                                item.gameObject.activeInHierarchy);
             ProductionEnvironmentRoot environment = scene.GetRootGameObjects()
                 .SelectMany(item => item.GetComponentsInChildren<ProductionEnvironmentRoot>(true)).Single();
             AerialSceneryRoot aerial = environment.GetComponentInChildren<AerialSceneryRoot>(true);

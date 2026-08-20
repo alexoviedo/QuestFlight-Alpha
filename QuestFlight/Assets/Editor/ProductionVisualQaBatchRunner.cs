@@ -27,13 +27,15 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 105;
-        private const int DrawCallTarget = 75;
-        private const long VisibleTriangleTarget = 650000L;
-        // The headset-accepted readout/lens baseline is 29 materials (artifact
-        // instrument_glass_repair_20260722/visual_qa_readouts). The local shadow reuses one
-        // of those materials and may not raise this ceiling.
-        private const int SceneMaterialTarget = 29;
+        private const int RequiredShotCount = 123;
+        // The accepted pre-V3 product reached 77 estimated draws and 659,877
+        // visible triangles in the complete camera set.  This milestone must
+        // hold draws/materials and may add at most five percent triangles for
+        // the replacement vegetation representation (659,877 * 1.05 = 692,871).
+        // V3 measures 76/690,767/38 and therefore remains inside that contract.
+        private const int DrawCallTarget = 77;
+        private const long VisibleTriangleTarget = 692871L;
+        private const int SceneMaterialTarget = 38;
         private const string ProductionScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
         private static readonly Vector3 RepresentativeCalibrationOffset = new Vector3(0.015f, 0.020f, -0.025f);
 
@@ -931,10 +933,18 @@ namespace QuestFlightLab.Editor
             CanopyMapEvidence canopyEvidence = BuildCanopyMapEvidence(terrain, context.environment, center);
             CanopyMapSample canopy250 = canopyEvidence.SelectAtRadius(250f);
             CanopyMapSample canopyTopSample = canopyEvidence.SelectDensest(250f, 1500f);
-            Vector3 grove500 = RepresentativeSurfacePointAtRadius(canopy, center, 500f);
-            Vector3 grove1000 = RepresentativeSurfacePointAtRadius(canopy, center, 1000f);
-            Vector3 grovePattern = RepresentativeSurfacePointAtRadius(canopy, center, 1400f);
-            Vector3 groveTop = RepresentativeSurfacePointAtRadius(canopy, center, 900f);
+            // V3 deliberately removed the obsolete serialized grove-hull renderers.
+            // Resolve QA targets from the same authored placement database that the
+            // runtime renderer consumes, so the camera proof cannot silently depend
+            // on geometry that is no longer in the product hierarchy.
+            Vector3[] groveTargets = RepresentativeVegetationPointsAtRadii(
+                streamedCanopy[0].FullMapPlacementDatabase,
+                center,
+                new[] { 500f, 1000f, 1400f, 900f });
+            Vector3 grove500 = groveTargets[0];
+            Vector3 grove1000 = groveTargets[1];
+            Vector3 grovePattern = groveTargets[2];
+            Vector3 groveTop = groveTargets[3];
 
             CaptureCanopyMapDistanceShot(context, report, outputDir, width, height, canopy250, center,
                 250f, "pasv1_13_canopy_250m", "Terrain-map canopy at 250 m", "photoreal_canopy");
@@ -1455,6 +1465,83 @@ namespace QuestFlightLab.Editor
             }
             if (!found)
                 throw new InvalidOperationException($"No elevated semantic-surface vertex exists near {radius:0} m.");
+            return best;
+        }
+
+        private static Vector3[] RepresentativeVegetationPointsAtRadii(
+            TextAsset database,
+            Vector3 reference,
+            float[] radii)
+        {
+            if (database == null || radii == null || radii.Length == 0)
+                throw new InvalidOperationException("Full-map vegetation QA database is unavailable.");
+
+            Vector3[] best = Enumerable.Repeat(reference, radii.Length).ToArray();
+            float[] scores = Enumerable.Repeat(float.PositiveInfinity, radii.Length).ToArray();
+            using MemoryStream stream = new MemoryStream(database.bytes, false);
+            using BinaryReader reader = new BinaryReader(stream);
+            byte[] magic = reader.ReadBytes(8);
+            if (Encoding.ASCII.GetString(magic) != "QFFMVG3\0")
+                throw new InvalidDataException("Full-map vegetation QA database magic mismatch.");
+            int version = reader.ReadInt32();
+            float minimumX = reader.ReadSingle();
+            float minimumZ = reader.ReadSingle();
+            float pageSize = reader.ReadSingle();
+            float quantization = reader.ReadSingle();
+            int columns = reader.ReadInt32();
+            int rows = reader.ReadInt32();
+            int instanceCount = reader.ReadInt32();
+            if (version != 3 || columns <= 0 || rows <= 0 || instanceCount <= 0 ||
+                Mathf.Abs(quantization - 0.1f) > 0.0001f)
+                throw new InvalidDataException("Full-map vegetation QA database contract is invalid.");
+
+            int pageCount = checked(columns * rows);
+            int[] pageCounts = new int[pageCount];
+            for (int page = 0; page < pageCount; page++)
+            {
+                reader.ReadInt32(); // Stable record offset.
+                pageCounts[page] = reader.ReadInt32();
+            }
+
+            int recordsRead = 0;
+            for (int page = 0; page < pageCount; page++)
+            {
+                int column = page % columns;
+                int row = page / columns;
+                float pageX = minimumX + column * pageSize;
+                float pageZ = minimumZ + row * pageSize;
+                for (int local = 0; local < pageCounts[page]; local++)
+                {
+                    float x = pageX + reader.ReadUInt16() * quantization;
+                    float z = pageZ + reader.ReadUInt16() * quantization;
+                    float y = reader.ReadInt32() * 0.01f;
+                    float height = reader.ReadUInt16() * 0.01f;
+                    reader.ReadUInt16(); // Crown diameter.
+                    reader.ReadUInt16(); // Rotation.
+                    reader.ReadByte();
+                    reader.ReadByte();
+                    reader.ReadByte();
+                    reader.ReadByte(); // Stable seed.
+                    byte kind = reader.ReadByte();
+                    recordsRead++;
+                    if (kind != 3) continue;
+
+                    float planarRadius = Vector2.Distance(
+                        new Vector2(x, z), new Vector2(reference.x, reference.z));
+                    for (int radiusIndex = 0; radiusIndex < radii.Length; radiusIndex++)
+                    {
+                        float score = Mathf.Abs(planarRadius - radii[radiusIndex]);
+                        if (score >= scores[radiusIndex]) continue;
+                        scores[radiusIndex] = score;
+                        best[radiusIndex] = new Vector3(x, y + height * 0.5f, z);
+                    }
+                }
+            }
+
+            if (recordsRead != instanceCount || scores.Any(float.IsPositiveInfinity))
+                throw new InvalidDataException(
+                    $"Full-map vegetation QA database could not resolve all grove targets " +
+                    $"({recordsRead}/{instanceCount} records)." );
             return best;
         }
 

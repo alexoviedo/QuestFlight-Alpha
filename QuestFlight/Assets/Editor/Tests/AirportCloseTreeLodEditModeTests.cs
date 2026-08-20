@@ -18,8 +18,13 @@ namespace QuestFlight.Editor.Tests
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/" +
             "ProductionAirportCloseTreeInstances.json";
         private const string FullMapManifestPath =
-            "Assets/Production/Environment/FullMapVegetationV2/" +
-            "KBDU_FullMapVegetationClipmapV2.json";
+            "Assets/Production/Environment/FullMapVegetationV3/" +
+            "KBDU_FullMapVegetationHlodV3.json";
+        private const string FullMapCanopyTexturePath =
+            "Assets/Production/Environment/FullMapVegetationV3/" +
+            "KBDU_FullMapCanopyVisual_RGBA.png";
+        private const string TerrainMaterialPath =
+            "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
 
         [Test]
         public void ProductUsesOneBoundedSourceDerivedCloseTreeRenderer()
@@ -54,7 +59,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(renderer.FarCoveragePageLimit, Is.EqualTo(96));
             Assert.That(renderer.FarSamplesPerCoveragePage, Is.EqualTo(144));
             Assert.That(renderer.MaximumFarCoverageCandidates, Is.EqualTo(13824));
-            Assert.That(renderer.MaximumFarDrawPopulation, Is.EqualTo(4875));
+            Assert.That(renderer.MaximumFarDrawPopulation, Is.EqualTo(1000));
+            Assert.That(renderer.NearSamplesPerCoveragePage, Is.EqualTo(600));
+            Assert.That(renderer.FullDensityPageLimit, Is.EqualTo(9));
             Assert.That(renderer.StablePageStratifiedFarSelection, Is.True);
             Assert.That(renderer.BuildingPagesAreMandatoryTreeCoverage, Is.True);
             Assert.That(benchmark, Is.Not.Null);
@@ -64,12 +71,16 @@ namespace QuestFlight.Editor.Tests
             Assert.That(renderer.Lod0Mesh, Is.Not.Null);
             Assert.That(renderer.Lod1Mesh, Is.Not.Null);
             Assert.That(renderer.Lod2Mesh, Is.Not.Null);
+            Assert.That(renderer.ShrubMesh, Is.Not.Null);
+            Assert.That(renderer.GroveMesh, Is.Not.Null);
             Assert.That(TriangleCount(renderer.Lod0Mesh), Is.EqualTo(344));
             Assert.That(TriangleCount(renderer.Lod1Mesh), Is.EqualTo(122));
             Assert.That(TriangleCount(renderer.Lod2Mesh), Is.EqualTo(2));
-            Assert.That(renderer.AuthoredMaximumDrawCount, Is.EqualTo(7));
+            Assert.That(TriangleCount(renderer.ShrubMesh), Is.EqualTo(24));
+            Assert.That(TriangleCount(renderer.GroveMesh), Is.EqualTo(44));
+            Assert.That(renderer.AuthoredMaximumDrawCount, Is.EqualTo(6));
             Assert.That(renderer.AuthoredMaximumSelectedTriangleCount,
-                Is.EqualTo(50694));
+                Is.EqualTo(81584));
             Assert.That(renderer.ProjectedScreenSizeSelection, Is.True);
             Assert.That(renderer.PersistentHysteresis, Is.True);
             Assert.That(renderer.CenterEyeWorldUprightImpostor, Is.True);
@@ -137,12 +148,12 @@ namespace QuestFlight.Editor.Tests
             TextAsset fullMap = AssetDatabase.LoadAssetAtPath<TextAsset>(FullMapManifestPath);
             Assert.That(fullMap, Is.Not.Null);
             Assert.That(fullMap.text,
-                Does.Contain("\"schema\": \"questflight.full-map-vegetation-clipmap.v2\""));
+                Does.Contain("\"schema\": \"questflight.full-map-vegetation-hlod.v3\""));
             Assert.That(fullMap.text,
-                Does.Contain("\"geometry\": \"overlapping individual crown/trunk LODs; no opaque grove hull\""));
-            Assert.That(fullMap.text, Does.Contain("no hash-derived height"));
+                Does.Contain("\"geometry\": \"volumetric near trees/shrubs plus bounded multi-lobe grove HLOD\""));
+            Assert.That(fullMap.text, Does.Contain("confidence-prefix loss removed"));
             Assert.That(fullMap.text,
-                Does.Contain("orthophoto retains semantic ownership"));
+                Does.Contain("orthophoto-derived canopy normal/occlusion map"));
         }
 
         [Test]
@@ -160,8 +171,8 @@ namespace QuestFlight.Editor.Tests
 
             using MemoryStream stream = new MemoryStream(bytes, false);
             using BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true);
-            Assert.That(Encoding.ASCII.GetString(reader.ReadBytes(8)), Is.EqualTo("QFFMVG2\0"));
-            Assert.That(reader.ReadInt32(), Is.EqualTo(2));
+            Assert.That(Encoding.ASCII.GetString(reader.ReadBytes(8)), Is.EqualTo("QFFMVG3\0"));
+            Assert.That(reader.ReadInt32(), Is.EqualTo(3));
             reader.ReadBytes(4 * 4);
             int columns = reader.ReadInt32();
             int rows = reader.ReadInt32();
@@ -212,8 +223,8 @@ namespace QuestFlight.Editor.Tests
 
             using MemoryStream stream = new MemoryStream(bytes, false);
             using BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true);
-            Assert.That(Encoding.ASCII.GetString(reader.ReadBytes(8)), Is.EqualTo("QFFMVG2\0"));
-            Assert.That(reader.ReadInt32(), Is.EqualTo(2));
+            Assert.That(Encoding.ASCII.GetString(reader.ReadBytes(8)), Is.EqualTo("QFFMVG3\0"));
+            Assert.That(reader.ReadInt32(), Is.EqualTo(3));
             Assert.That(reader.ReadSingle(), Is.EqualTo(-12000f));
             Assert.That(reader.ReadSingle(), Is.EqualTo(-12000f));
             Assert.That(reader.ReadSingle(), Is.EqualTo(1000f));
@@ -223,7 +234,7 @@ namespace QuestFlight.Editor.Tests
             int instanceCount = reader.ReadInt32();
             Assert.That(columns, Is.EqualTo(24));
             Assert.That(rows, Is.EqualTo(24));
-            Assert.That(instanceCount, Is.EqualTo(901744));
+            Assert.That(instanceCount, Is.EqualTo(975627));
 
             int expectedOffset = 0;
             for (int index = 0; index < columns * rows; index++)
@@ -231,13 +242,41 @@ namespace QuestFlight.Editor.Tests
                 int offset = reader.ReadInt32();
                 int count = reader.ReadInt32();
                 Assert.That(offset, Is.EqualTo(expectedOffset));
-                Assert.That(count, Is.InRange(1, 1600));
+                Assert.That(count, Is.InRange(1, 1744));
                 expectedOffset += count;
             }
 
             Assert.That(expectedOffset, Is.EqualTo(instanceCount));
             Assert.That(bytes.Length,
                 Is.EqualTo(40 + columns * rows * 8 + instanceCount * 19));
+        }
+
+        [Test]
+        public void FullMapCanopyReliefIsOneLinearCompressedTerrainSample()
+        {
+            Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                FullMapCanopyTexturePath);
+            Assert.That(texture, Is.Not.Null);
+            Assert.That(texture.width, Is.EqualTo(4096));
+            Assert.That(texture.height, Is.EqualTo(4096));
+            TextureImporter importer = AssetImporter.GetAtPath(
+                FullMapCanopyTexturePath) as TextureImporter;
+            Assert.That(importer, Is.Not.Null);
+            Assert.That(importer.sRGBTexture, Is.False);
+            Assert.That(importer.mipmapEnabled, Is.True);
+            Assert.That(importer.streamingMipmaps, Is.True);
+            Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));
+            Assert.That(importer.GetPlatformTextureSettings("Android").format,
+                Is.EqualTo(TextureImporterFormat.ASTC_8x8));
+
+            Material terrain = AssetDatabase.LoadAssetAtPath<Material>(
+                TerrainMaterialPath);
+            Assert.That(terrain, Is.Not.Null);
+            Assert.That(terrain.GetTexture("_FullMapCanopyVisual"),
+                Is.SameAs(texture));
+            Assert.That(terrain.GetVector("_FullMapCanopyWorldMinInvSize"),
+                Is.EqualTo(new Vector4(
+                    -12000f, -12000f, 1f / 24000f, 1f / 24000f)));
         }
 
         [Test]

@@ -55,6 +55,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: 5c913aef598ec2a751b1b49b06e68d15, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _FullMapCanopyVisual:
+        m_Texture: {fileID: 2800000, guid: c15bbaa3c4b7a5944ab85f938b14724b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _FullMapWaterMask:
         m_Texture: {fileID: 2800000, guid: 36836fbbd2839b743bb88a10292535b6, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -80,6 +84,8 @@ Material:
     - _ClipmapEnabled: 0
     - _DetailScale: 0.06666667
     - _DiagnosticMode: 0
+    - _FullMapCanopyColorStrength: 0.42
+    - _FullMapCanopyNormalStrength: 0.48
     - _FullMapWaterCrestGlintStrength: 0.12
     - _FullMapWaterDistortionStrength: 0.022
     - _FullMapWaterFresnelStrength: 0.14
@@ -99,6 +105,8 @@ Material:
     - _DetailFadeStartEnd: {r: 250, g: 2600, b: 0, a: 0}
     - _DetailRadiusFadeStartEnd: {r: 4500, g: 6800, b: 0, a: 0}
     - _FarWorldMinInvSize: {r: -12000, g: -12000, b: 0.000041666666, a: 0.000041666666}
+    - _FullMapCanopyGeometryFadeStartEnd: {r: 700, g: 1450, b: 0, a: 0}
+    - _FullMapCanopyWorldMinInvSize: {r: -12000, g: -12000, b: 0.000041666666, a: 0.000041666666}
     - _FullMapWaterWorldMinInvSize: {r: -12000, g: -12000, b: 0.000041666666, a: 0.000041666666}
     - _MidBlendStartEnd: {r: 5000, g: 6000, b: 0, a: 0}
     - _MidWorldMinInvSize: {r: -6000, g: -6000, b: 0.00008333333, a: 0.00008333333}

@@ -703,3 +703,23 @@ were inspected externally as silhouette references only; none enters the
 product dependency closure because each source mesh materially exceeds the
 Quest tree budget. Their hashes and exclusion decisions are recorded in
 `Assets/Production/Environment/FullMapVegetationV2/SOURCE_MANIFEST.json`.
+
+### Full-map vegetation HLOD V3
+
+V3 introduces no new third-party runtime model. It deterministically derives
+its record database from the accepted V2 database and continues to use the CC0
+Poly Haven `Tree Small 02` optimized atlas/near-tree family. The 24-triangle
+shrub and 44-triangle grove HLOD meshes are project-authored Unity derivatives.
+Downloaded Sketchfab trees and shrubs were inspected only as external visual
+references and do not enter the product dependency closure.
+
+The full-map canopy visual is derived offline from the already recorded City of
+Boulder 2020 orthophoto and is constrained by the accepted V2 placements and
+OSM-derived building exclusions. Raw imagery remains external. The committed
+V3 placement binary is 18,541,561 bytes with SHA-256
+`ed139adb77ba55cc6614c2d1ba656b53540e3b9ef9b7891e2d4f05083af2eab8`;
+the committed canopy RGBA PNG is 35,760,529 bytes with SHA-256
+`0c12e4cd1801e134ba5dd3d4fae86b2bf9f6003cc4b497f249ab7a62ab0385fa`.
+Exact input hashes, generation tools, exclusions, and the no-splats decision are
+recorded in
+`Assets/Production/Environment/FullMapVegetationV3/SOURCE_MANIFEST.json`.

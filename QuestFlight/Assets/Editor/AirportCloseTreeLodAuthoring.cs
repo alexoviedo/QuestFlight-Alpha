@@ -24,17 +24,25 @@ namespace QuestFlight.Editor
         public const string SourceManifestPath =
             CanopyRoot + "/AirportCloseTreeLods_SourceManifest.json";
         public const string FullMapRoot =
-            "Assets/Production/Environment/FullMapVegetationV2";
+            "Assets/Production/Environment/FullMapVegetationV3";
         public const string FullMapDatabasePath =
-            FullMapRoot + "/KBDU_FullMapVegetationClipmapV2.bytes";
+            FullMapRoot + "/KBDU_FullMapVegetationHlodV3.bytes";
         public const string FullMapManifestPath =
-            FullMapRoot + "/KBDU_FullMapVegetationClipmapV2.json";
+            FullMapRoot + "/KBDU_FullMapVegetationHlodV3.json";
+        public const string FullMapCanopyTexturePath =
+            FullMapRoot + "/KBDU_FullMapCanopyVisual_RGBA.png";
+        public const string FullMapCanopyManifestPath =
+            FullMapRoot + "/KBDU_FullMapCanopyVisual.json";
         public const string Lod0AssetPath =
             CanopyRoot + "/Native/AirportCloseTree_LOD0.asset";
         public const string Lod1AssetPath =
             CanopyRoot + "/Native/AirportCloseTree_LOD1.asset";
         public const string Lod2AssetPath =
             CanopyRoot + "/Native/AirportCloseTree_LOD2.asset";
+        public const string ShrubAssetPath =
+            CanopyRoot + "/Native/FullMapShrub_LOD.asset";
+        public const string GroveAssetPath =
+            CanopyRoot + "/Native/FullMapGrove_HLOD.asset";
         public const string HeroLeafAtlasPath =
             CanopyRoot + "/Textures/AirportCloseTree_HeroLeaf_RGBA.png";
         public const string ImpostorAtlasPath =
@@ -42,6 +50,8 @@ namespace QuestFlight.Editor
         public const string CanopyMaterialPath =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/Materials/" +
             "ProductionCanopySurfaceLayer.mat";
+        public const string TerrainMaterialPath =
+            "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         public const string RuntimeObjectName = "AirportCloseTreeLOD";
 
         private static readonly byte[] Magic =
@@ -91,21 +101,38 @@ namespace QuestFlight.Editor
         public static void Apply()
         {
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            ConfigureFullMapCanopyTexture();
             PhotorealAerialSurfaceNativeMeshAuthoring.CompileAll();
             Dictionary<string, Mesh> meshes = CompileNativeLods();
             Mesh lod0 = meshes["AirportCloseTree_LOD0"];
             Mesh lod1 = meshes["AirportCloseTree_LOD1"];
             Mesh lod2 = meshes["AirportCloseTree_LOD2"];
+            Mesh shrub = CreateOrUpdateVolumeMesh(
+                ShrubAssetPath, "FullMapShrub_LOD", false);
+            Mesh grove = CreateOrUpdateVolumeMesh(
+                GroveAssetPath, "FullMapGrove_HLOD", true);
             TextAsset placementAsset = LoadRequired<TextAsset>(PlacementManifestPath);
             TextAsset sourceAsset = LoadRequired<TextAsset>(SourceManifestPath);
             TextAsset fullMapDatabase = LoadRequired<TextAsset>(FullMapDatabasePath);
             TextAsset fullMapManifest = LoadRequired<TextAsset>(FullMapManifestPath);
             Material canopyMaterial = LoadRequired<Material>(CanopyMaterialPath);
+            Material terrainMaterial = LoadRequired<Material>(TerrainMaterialPath);
+            Texture2D fullMapCanopy = LoadRequired<Texture2D>(FullMapCanopyTexturePath);
             Texture2D heroLeafAtlas = LoadRequired<Texture2D>(HeroLeafAtlasPath);
             Texture2D impostorAtlas = LoadRequired<Texture2D>(ImpostorAtlasPath);
             canopyMaterial.enableInstancing = true;
             canopyMaterial.SetTexture("_HeroLeafAtlas", heroLeafAtlas);
             canopyMaterial.SetTexture("_TreeImpostorAtlas", impostorAtlas);
+            if (!terrainMaterial.HasProperty("_FullMapCanopyVisual"))
+                throw new InvalidOperationException(
+                    "Terrain material shader lacks the full-map canopy contract.");
+            terrainMaterial.SetTexture("_FullMapCanopyVisual", fullMapCanopy);
+            terrainMaterial.SetVector("_FullMapCanopyWorldMinInvSize",
+                new Vector4(-12000f, -12000f, 1f / 24000f, 1f / 24000f));
+            terrainMaterial.SetVector("_FullMapCanopyGeometryFadeStartEnd",
+                new Vector4(700f, 1450f, 0f, 0f));
+            terrainMaterial.SetFloat("_FullMapCanopyColorStrength", 0.42f);
+            terrainMaterial.SetFloat("_FullMapCanopyNormalStrength", 0.48f);
 
             PlacementManifest manifest =
                 JsonUtility.FromJson<PlacementManifest>(placementAsset.text);
@@ -163,7 +190,7 @@ namespace QuestFlight.Editor
                 if (buildingClipmap == null)
                     throw new InvalidOperationException(
                         "Full-map vegetation requires the authored building clipmap residency authority.");
-                renderer.Configure(canopyMaterial, lod0, lod1, lod2,
+                renderer.Configure(canopyMaterial, lod0, lod1, lod2, shrub, grove,
                     placementAsset, sourceAsset, instances, fullMapDatabase, buildingClipmap);
 
                 Renderer[] staticCanopy = surface.canopySurfaceRenderers
@@ -188,9 +215,9 @@ namespace QuestFlight.Editor
                     checked((int)renderer.AuthoredMaximumSelectedTriangleCount);
                 aerial.bakedVegetationMaterialCount = 1;
 
-                if (renderer.AuthoredMaximumDrawCount != 7 ||
+                if (renderer.AuthoredMaximumDrawCount != 6 ||
                     renderer.AuthoredMaximumSelectedTriangleCount <= 0 ||
-                    renderer.AuthoredMaximumSelectedTriangleCount > 52000)
+                    renderer.AuthoredMaximumSelectedTriangleCount > 85000)
                     throw new InvalidOperationException(
                         "Airport-close runtime LOD budget exceeds its authored contract.");
                 if (budget.rendererCount > 75 || budget.triangleCount > 650000 ||
@@ -201,6 +228,7 @@ namespace QuestFlight.Editor
                         $"{budget.materialCount}/29 materials.");
 
                 EditorUtility.SetDirty(canopyMaterial);
+                EditorUtility.SetDirty(terrainMaterial);
                 EditorUtility.SetDirty(surface);
                 EditorUtility.SetDirty(aerial);
                 EditorUtility.SetDirty(benchmark);
@@ -222,6 +250,35 @@ namespace QuestFlight.Editor
             }
 
             AssetDatabase.SaveAssets();
+        }
+
+        private static void ConfigureFullMapCanopyTexture()
+        {
+            AssetDatabase.ImportAsset(
+                FullMapCanopyTexturePath,
+                ImportAssetOptions.ForceSynchronousImport);
+            TextureImporter importer = AssetImporter.GetAtPath(
+                FullMapCanopyTexturePath) as TextureImporter;
+            if (importer == null)
+                throw new InvalidOperationException(
+                    "Full-map canopy texture importer is missing.");
+            importer.textureType = TextureImporterType.Default;
+            importer.sRGBTexture = false;
+            importer.alphaSource = TextureImporterAlphaSource.FromInput;
+            importer.mipmapEnabled = true;
+            importer.streamingMipmaps = true;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.filterMode = FilterMode.Trilinear;
+            importer.anisoLevel = 2;
+            importer.maxTextureSize = 4096;
+            TextureImporterPlatformSettings android =
+                importer.GetPlatformTextureSettings("Android");
+            android.overridden = true;
+            android.maxTextureSize = 4096;
+            android.format = TextureImporterFormat.ASTC_8x8;
+            android.textureCompression = TextureImporterCompression.Compressed;
+            importer.SetPlatformTextureSettings(android);
+            importer.SaveAndReimport();
         }
 
         private static Dictionary<string, Mesh> CompileNativeLods()
@@ -302,6 +359,161 @@ namespace QuestFlight.Editor
             if (memory.Position != memory.Length)
                 throw new InvalidDataException("Airport-close tree source has trailing bytes.");
             return result;
+        }
+
+        private static Mesh CreateOrUpdateVolumeMesh(
+            string path,
+            string name,
+            bool grove)
+        {
+            List<Vector3> vertices = new List<Vector3>();
+            List<Vector3> normals = new List<Vector3>();
+            List<Color32> colors = new List<Color32>();
+            List<Vector2> uv = new List<Vector2>();
+            List<int> triangles = new List<int>();
+            int lobeCount = grove ? 8 : 6;
+            for (int lobe = 0; lobe < lobeCount; lobe++)
+            {
+                float angle = lobe * 2.39996323f + (grove ? 0.37f : 0.11f);
+                float radial = grove
+                    ? 0.10f + 0.28f * ((lobe * 5) % 7) / 6f
+                    : 0.04f + 0.19f * ((lobe * 3) % 5) / 4f;
+                float centerY = grove
+                    ? 0.52f + 0.20f * ((lobe * 7) % 5) / 4f
+                    : 0.25f + 0.32f * ((lobe * 5) % 7) / 6f;
+                Vector3 center = new Vector3(
+                    Mathf.Cos(angle) * radial,
+                    centerY,
+                    Mathf.Sin(angle) * radial);
+                float halfWidth = grove
+                    ? 0.19f + 0.035f * (lobe % 3)
+                    : 0.25f + 0.025f * (lobe % 2);
+                float halfHeight = grove
+                    ? 0.24f + 0.025f * ((lobe + 1) % 3)
+                    : 0.24f + 0.035f * (lobe % 3);
+                AppendFoliagePair(
+                    vertices, normals, colors, uv, triangles,
+                    center, halfWidth, halfHeight, angle + lobe * 0.19f, lobe);
+            }
+            if (grove)
+            {
+                for (int trunk = 0; trunk < 6; trunk++)
+                {
+                    float angle = trunk * 2.39996323f;
+                    float radial = 0.08f + 0.25f * ((trunk * 3) % 5) / 4f;
+                    AppendTrunkCard(
+                        vertices, normals, colors, uv, triangles,
+                        new Vector3(Mathf.Cos(angle) * radial, 0f,
+                            Mathf.Sin(angle) * radial),
+                        0.018f + 0.006f * (trunk % 2),
+                        0.56f + 0.08f * (trunk % 3),
+                        angle + 0.41f);
+                }
+            }
+
+            Mesh generated = new Mesh
+            {
+                name = name,
+                indexFormat = IndexFormat.UInt16,
+                vertices = vertices.ToArray(),
+                normals = normals.ToArray(),
+                colors32 = colors.ToArray(),
+                uv = uv.ToArray(),
+                triangles = triangles.ToArray(),
+            };
+            generated.RecalculateBounds();
+            generated.UploadMeshData(true);
+            Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (existing == null)
+            {
+                AssetDatabase.CreateAsset(generated, path);
+                return generated;
+            }
+            EditorUtility.CopySerialized(generated, existing);
+            UnityEngine.Object.DestroyImmediate(generated);
+            EditorUtility.SetDirty(existing);
+            return existing;
+        }
+
+        private static void AppendFoliagePair(
+            List<Vector3> vertices,
+            List<Vector3> normals,
+            List<Color32> colors,
+            List<Vector2> uv,
+            List<int> triangles,
+            Vector3 center,
+            float halfWidth,
+            float halfHeight,
+            float angle,
+            int atlasSeed)
+        {
+            for (int plane = 0; plane < 2; plane++)
+            {
+                float orientation = angle + plane * Mathf.PI * 0.5f;
+                Vector3 tangent = new Vector3(
+                    Mathf.Cos(orientation), 0f, Mathf.Sin(orientation));
+                Vector3 normal = new Vector3(-tangent.z, 0f, tangent.x);
+                Vector3 up = Vector3.up;
+                int first = vertices.Count;
+                vertices.Add(center - tangent * halfWidth - up * halfHeight);
+                vertices.Add(center - tangent * halfWidth + up * halfHeight);
+                vertices.Add(center + tangent * halfWidth + up * halfHeight);
+                vertices.Add(center + tangent * halfWidth - up * halfHeight);
+                for (int index = 0; index < 4; index++)
+                {
+                    normals.Add(normal);
+                    colors.Add(new Color32(0, 72, 116, 46));
+                }
+                float inset = 0.018f;
+                float cellX = (atlasSeed * 3 + plane) % 4;
+                float cellY = ((atlasSeed + plane * 2) / 4) % 4;
+                float u0 = 4f + cellX * 0.25f + inset;
+                float v0 = cellY * 0.25f + inset;
+                float u1 = 4f + (cellX + 1f) * 0.25f - inset;
+                float v1 = (cellY + 1f) * 0.25f - inset;
+                uv.Add(new Vector2(u0, v0));
+                uv.Add(new Vector2(u0, v1));
+                uv.Add(new Vector2(u1, v1));
+                uv.Add(new Vector2(u1, v0));
+                triangles.Add(first);
+                triangles.Add(first + 2);
+                triangles.Add(first + 1);
+                triangles.Add(first);
+                triangles.Add(first + 3);
+                triangles.Add(first + 2);
+            }
+        }
+
+        private static void AppendTrunkCard(
+            List<Vector3> vertices,
+            List<Vector3> normals,
+            List<Color32> colors,
+            List<Vector2> uv,
+            List<int> triangles,
+            Vector3 basePosition,
+            float halfWidth,
+            float height,
+            float angle)
+        {
+            Vector3 tangent = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+            Vector3 normal = new Vector3(-tangent.z, 0f, tangent.x);
+            int first = vertices.Count;
+            vertices.Add(basePosition - tangent * halfWidth);
+            vertices.Add(basePosition - tangent * halfWidth + Vector3.up * height);
+            vertices.Add(basePosition + tangent * halfWidth + Vector3.up * height);
+            vertices.Add(basePosition + tangent * halfWidth);
+            for (int index = 0; index < 4; index++)
+            {
+                normals.Add(normal);
+                colors.Add(new Color32(255, 126, 92, 52));
+                uv.Add(new Vector2(-1f, -1f));
+            }
+            triangles.Add(first);
+            triangles.Add(first + 2);
+            triangles.Add(first + 1);
+            triangles.Add(first);
+            triangles.Add(first + 3);
+            triangles.Add(first + 2);
         }
 
         private static AirportCloseTreeLodRenderer.Instance[] BuildInstances(

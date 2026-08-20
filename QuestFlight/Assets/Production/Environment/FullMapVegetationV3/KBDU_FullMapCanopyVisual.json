@@ -1,0 +1,53 @@
+{
+  "schema": "questflight.full-map-canopy-visual.v1",
+  "contract": {
+    "bounds_meters": [
+      -12000.0,
+      -12000.0,
+      12000.0,
+      12000.0
+    ],
+    "texture_size": [
+      4096,
+      4096
+    ],
+    "meters_per_texel": 5.859375,
+    "channels": {
+      "r": "feathered woody vegetation coverage",
+      "g": "bounded hedge/shrub/low-vegetation fraction",
+      "b": "aggregate canopy normal X encoded 0..1",
+      "a": "aggregate canopy normal Z encoded 0..1"
+    },
+    "runtime_draws": 0
+  },
+  "processing": {
+    "generator": "tools/full_map_vegetation/build_full_map_canopy_visual.py",
+    "analysis_meters_per_pixel": 0.6666666666666666,
+    "segmentation": "source RGB texture/vegetation classifier with building-footprint exclusion",
+    "normal": "smoothed coverage gradient; aggregate far-canopy relief only"
+  },
+  "sources": {
+    "clipmap_manifest": {
+      "path": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\full_map_aerial_clipmap_v1_20260812_150316\\unity_import_pages_2020\\clipmap_manifest.json",
+      "sha256": "98129cbf175c218d63d04365883fb670cda6daddf07fccfeb047581047e7ea6a"
+    },
+    "building_database": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapBuildingsV1\\KBDU_FullMapBuildingDatabaseV1.json",
+      "sha256": "5d5b7387c1e13b8f0ad9bac268ba9445a4f58e2db560c06654153ca866e34b72"
+    },
+    "placement_database": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapVegetationV2\\KBDU_FullMapVegetationClipmapV2.bytes",
+      "sha256": "b56c7a0bea6e986d28e730f30fd978f7e7eb1119227a0cd3221e6b559f30af00"
+    },
+    "imagery_acquisition": "2020",
+    "raw_imagery_committed": false
+  },
+  "statistics": {
+    "source_pages": 1296,
+    "canopy_coverage_fraction": 0.302491,
+    "canopy_supported_texels": 7288724,
+    "shrub_supported_texels": 91958,
+    "runtime_bytes": 35760529,
+    "runtime_sha256": "0c12e4cd1801e134ba5dd3d4fae86b2bf9f6003cc4b497f249ab7a62ab0385fa"
+  }
+}

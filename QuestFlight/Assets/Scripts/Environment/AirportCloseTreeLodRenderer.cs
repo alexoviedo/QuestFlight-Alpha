@@ -19,12 +19,17 @@ namespace QuestFlightLab.Environment
     public sealed class AirportCloseTreeLodRenderer : MonoBehaviour
     {
         public const int MaximumLod0Instances = 24;
-        public const int MaximumLod1Instances = 240;
-        public const int MaximumLod2Instances = 4875;
-        public const int MaximumDrawCount = 7;
+        public const int MaximumLod1Instances = 300;
+        public const int MaximumLod2Instances = 1000;
+        public const int MaximumShrubInstances = 200;
+        public const int MaximumGroveInstances = 600;
+        public const int MaximumDrawCount = 6;
         public const int ImpostorFrameCount = 8;
         public const int MaximumCoveragePages = 96;
         public const int FarSamplesPerPage = 144;
+        public const int NearSamplesPerPage = 600;
+        public const int MaximumFullDensityPages = 9;
+        public const float FullDensityRadiusMeters = 2400f;
         public const float ForwardCoverageMeters = 10000f;
         public const float LateralCoverageMeters = 7000f;
         public const float RearCoverageMeters = 3000f;
@@ -36,10 +41,10 @@ namespace QuestFlightLab.Environment
         private const byte Lod2 = 2;
         private const byte Culled = 3;
         private const byte Uninitialized = byte.MaxValue;
-        private const int FullMapDatabaseVersion = 2;
+        private const int FullMapDatabaseVersion = 3;
         private const int FullMapHeaderBytes = 40;
         private const int FullMapInstanceBytes = 19;
-        private static readonly byte[] FullMapMagic = Encoding.ASCII.GetBytes("QFFMVG2\0");
+        private static readonly byte[] FullMapMagic = Encoding.ASCII.GetBytes("QFFMVG3\0");
 
         private const int Lod0ArrayCapacity = MaximumLod0Instances * 2;
         private const int Lod1ArrayCapacity =
@@ -93,6 +98,8 @@ namespace QuestFlightLab.Environment
         [SerializeField] private Mesh lod0Mesh;
         [SerializeField] private Mesh lod1Mesh;
         [SerializeField] private Mesh lod2Mesh;
+        [SerializeField] private Mesh shrubMesh;
+        [SerializeField] private Mesh groveMesh;
         [SerializeField] private TextAsset placementManifest;
         [SerializeField] private TextAsset sourceLicenseManifest;
         [SerializeField] private TextAsset fullMapPlacementDatabase;
@@ -129,6 +136,16 @@ namespace QuestFlightLab.Environment
         private readonly float[] lod0Frames = new float[Lod0ArrayCapacity];
         private readonly float[] lod1Frames = new float[Lod1ArrayCapacity];
         private readonly float[] lod2Frames = new float[Lod2ArrayCapacity];
+        private readonly Matrix4x4[] shrubMatrices =
+            new Matrix4x4[MaximumShrubInstances];
+        private readonly Matrix4x4[] groveMatrices =
+            new Matrix4x4[MaximumGroveInstances];
+        private readonly Vector4[] shrubTints = new Vector4[MaximumShrubInstances];
+        private readonly Vector4[] groveTints = new Vector4[MaximumGroveInstances];
+        private readonly float[] shrubFades = new float[MaximumShrubInstances];
+        private readonly float[] groveFades = new float[MaximumGroveInstances];
+        private readonly float[] shrubFrames = new float[MaximumShrubInstances];
+        private readonly float[] groveFrames = new float[MaximumGroveInstances];
         private readonly Plane[] frustumPlanes = new Plane[6];
         private readonly Matrix4x4[] batchMatrices =
             new Matrix4x4[MaximumInstancesPerDraw];
@@ -145,6 +162,7 @@ namespace QuestFlightLab.Environment
             public Vector4 Tint;
             public float Radius;
             public float RotationDegrees;
+            public byte Kind;
 
             public Matrix4x4 Matrix => Matrix4x4.TRS(
                 Position,
@@ -160,6 +178,7 @@ namespace QuestFlightLab.Environment
         private bool[] previousPrefetchedPages = Array.Empty<bool>();
         private bool[] treeCoveragePages = Array.Empty<bool>();
         private bool[] previousTreeCoveragePages = Array.Empty<bool>();
+        private bool[] fullDensityPages = Array.Empty<bool>();
         private PageCandidate[] pageCandidates = Array.Empty<PageCandidate>();
         private int[] coveragePageIndices = Array.Empty<int>();
         private int coveragePageCount;
@@ -181,6 +200,7 @@ namespace QuestFlightLab.Environment
             public int index;
             public float priority;
             public float pixels;
+            public float distance;
         }
 
         private struct PageCandidate
@@ -234,11 +254,15 @@ namespace QuestFlightLab.Environment
         private MaterialPropertyBlock lod0Properties;
         private MaterialPropertyBlock lod1Properties;
         private MaterialPropertyBlock lod2Properties;
+        private MaterialPropertyBlock shrubProperties;
+        private MaterialPropertyBlock groveProperties;
 
         public Material SharedCanopyMaterial => sharedCanopyMaterial;
         public Mesh Lod0Mesh => lod0Mesh;
         public Mesh Lod1Mesh => lod1Mesh;
         public Mesh Lod2Mesh => lod2Mesh;
+        public Mesh ShrubMesh => shrubMesh;
+        public Mesh GroveMesh => groveMesh;
         public TextAsset PlacementManifest => placementManifest;
         public TextAsset SourceLicenseManifest => sourceLicenseManifest;
         public TextAsset FullMapPlacementDatabase => fullMapPlacementDatabase;
@@ -272,6 +296,8 @@ namespace QuestFlightLab.Environment
         public int MaximumFarCoverageCandidates =>
             MaximumCoveragePages * FarSamplesPerPage;
         public int MaximumFarDrawPopulation => MaximumLod2Instances;
+        public int NearSamplesPerCoveragePage => NearSamplesPerPage;
+        public int FullDensityPageLimit => MaximumFullDensityPages;
         public bool StablePageStratifiedFarSelection => true;
 
         // Compatibility properties make the intentional V1-to-V2 policy change
@@ -298,6 +324,8 @@ namespace QuestFlightLab.Environment
             Mesh nearMesh,
             Mesh middleMesh,
             Mesh farMesh,
+            Mesh authoredShrubMesh,
+            Mesh authoredGroveMesh,
             TextAsset placements,
             TextAsset sourceManifest,
             Instance[] authoredInstances,
@@ -308,6 +336,8 @@ namespace QuestFlightLab.Environment
             lod0Mesh = nearMesh;
             lod1Mesh = middleMesh;
             lod2Mesh = farMesh;
+            shrubMesh = authoredShrubMesh;
+            groveMesh = authoredGroveMesh;
             placementManifest = placements;
             sourceLicenseManifest = sourceManifest;
             fullMapPlacementDatabase = fullMapDatabase;
@@ -334,7 +364,9 @@ namespace QuestFlightLab.Environment
                 (long)TriangleCount(lod1Mesh) * MaximumLod1Instances +
                 (long)TriangleCount(lod2Mesh) * MaximumLod2Instances +
                 (long)TriangleCount(lod1Mesh) * MaximumLod0Instances +
-                (long)TriangleCount(lod2Mesh) * MaximumLod1Instances;
+                (long)TriangleCount(lod2Mesh) * MaximumLod1Instances +
+                (long)TriangleCount(shrubMesh) * MaximumShrubInstances +
+                (long)TriangleCount(groveMesh) * MaximumGroveInstances;
             loadedDatabaseInstanceId = 0;
             Prepare();
         }
@@ -370,6 +402,8 @@ namespace QuestFlightLab.Environment
             lod0Properties ??= new MaterialPropertyBlock();
             lod1Properties ??= new MaterialPropertyBlock();
             lod2Properties ??= new MaterialPropertyBlock();
+            shrubProperties ??= new MaterialPropertyBlock();
+            groveProperties ??= new MaterialPropertyBlock();
             EnsureRuntimeInstances();
             int count = runtimeInstances == null ? 0 : runtimeInstances.Length;
             if (currentLods.Length == count)
@@ -393,7 +427,8 @@ namespace QuestFlightLab.Environment
             if (pageOffsets.Length > 0)
             {
                 activeCapacity = Mathf.Min(count, checked(
-                    MaximumCoveragePages * FarSamplesPerPage));
+                    MaximumCoveragePages * FarSamplesPerPage +
+                    MaximumFullDensityPages * NearSamplesPerPage));
             }
             activeIndices = new int[activeCapacity];
             previousActiveIndices = new int[activeCapacity];
@@ -438,6 +473,7 @@ namespace QuestFlightLab.Environment
                 previousPrefetchedPages = Array.Empty<bool>();
                 treeCoveragePages = Array.Empty<bool>();
                 previousTreeCoveragePages = Array.Empty<bool>();
+                fullDensityPages = Array.Empty<bool>();
                 pageCandidates = Array.Empty<PageCandidate>();
                 coveragePageIndices = Array.Empty<int>();
                 loadedDatabaseInstanceId = 0;
@@ -484,6 +520,7 @@ namespace QuestFlightLab.Environment
             previousPrefetchedPages = new bool[pageCount];
             treeCoveragePages = new bool[pageCount];
             previousTreeCoveragePages = new bool[pageCount];
+            fullDensityPages = new bool[pageCount];
             pageCandidates = new PageCandidate[pageCount];
             coveragePageIndices = new int[MaximumCoveragePages];
             for (int page = 0; page < pageCount; page++)
@@ -519,7 +556,8 @@ namespace QuestFlightLab.Environment
                     float blue = reader.ReadByte() / 255f;
                     reader.ReadByte(); // Stable seed is retained in the derivative manifest.
                     byte kind = reader.ReadByte();
-                    if (height < 0.75f || height > 30f || crown < 1.5f || crown > 20f || kind > 2)
+                    if (height < 0.75f || height > 30f || crown < 1.5f ||
+                        crown > 85f || kind > 3)
                         throw new InvalidDataException($"Full-map vegetation instance {destination} is implausible.");
                     Vector3 position = new Vector3(x, y, z);
                     Vector3 scale = new Vector3(
@@ -537,6 +575,7 @@ namespace QuestFlightLab.Environment
                         Tint = new Vector4(red, green, blue, 1f),
                         Radius = radius,
                         RotationDegrees = rotationDegrees,
+                        Kind = kind,
                     };
                 }
             }
@@ -548,6 +587,7 @@ namespace QuestFlightLab.Environment
             if (camera == null || !enabled || !gameObject.activeInHierarchy ||
                 !gameObject.scene.IsValid() || sharedCanopyMaterial == null ||
                 lod0Mesh == null || lod1Mesh == null || lod2Mesh == null ||
+                shrubMesh == null || groveMesh == null ||
                 runtimeInstances == null || runtimeInstances.Length == 0)
                 return;
             if (camera.cameraType == CameraType.Preview ||
@@ -615,6 +655,7 @@ namespace QuestFlightLab.Environment
                 return false;
 
             BuildTreeCoverage(cameraPosition, aircraftForward);
+            SelectFullDensityPages(cameraPosition);
             for (int coverage = 0; coverage < coveragePageCount; coverage++)
             {
                 int page = coveragePageIndices[coverage];
@@ -628,8 +669,54 @@ namespace QuestFlightLab.Environment
                     activeIndices[activeCount++] = index;
                     farEligible[index] = true;
                 }
+                if (!fullDensityPages[page])
+                    continue;
+                int nearEnd = Mathf.Min(
+                    start + pageCounts[page],
+                    farEnd + NearSamplesPerPage);
+                for (int index = farEnd; index < nearEnd; index++)
+                {
+                    if (activeCount >= activeIndices.Length)
+                        throw new InvalidOperationException(
+                            "Full-map vegetation near-density capacity was exceeded.");
+                    activeIndices[activeCount++] = index;
+                    farEligible[index] = false;
+                }
             }
             return activeCount > 0;
+        }
+
+        private void SelectFullDensityPages(Vector3 cameraPosition)
+        {
+            Array.Clear(fullDensityPages, 0, fullDensityPages.Length);
+            int selected = 0;
+            float radiusSquared = FullDensityRadiusMeters * FullDensityRadiusMeters;
+            while (selected < MaximumFullDensityPages)
+            {
+                int bestPage = -1;
+                float bestDistanceSquared = float.PositiveInfinity;
+                for (int coverage = 0; coverage < coveragePageCount; coverage++)
+                {
+                    int page = coveragePageIndices[coverage];
+                    if (fullDensityPages[page])
+                        continue;
+                    int column = page % databaseColumns;
+                    int row = page / databaseColumns;
+                    float centerX = databaseMinimumX + (column + 0.5f) * databasePageSize;
+                    float centerZ = databaseMinimumZ + (row + 0.5f) * databasePageSize;
+                    float dx = centerX - cameraPosition.x;
+                    float dz = centerZ - cameraPosition.z;
+                    float distanceSquared = dx * dx + dz * dz;
+                    if (distanceSquared > radiusSquared || distanceSquared >= bestDistanceSquared)
+                        continue;
+                    bestDistanceSquared = distanceSquared;
+                    bestPage = page;
+                }
+                if (bestPage < 0)
+                    break;
+                fullDensityPages[bestPage] = true;
+                selected++;
+            }
         }
 
         private void BuildTreeCoverage(Vector3 cameraPosition, Vector3 aircraftForward)
@@ -850,11 +937,12 @@ namespace QuestFlightLab.Environment
                     : currentLods[index];
                 if (visible[index])
                 {
-                    candidates[candidateCount++] = new Candidate
+                candidates[candidateCount++] = new Candidate
                     {
                         index = index,
                         priority = priorities[index],
                         pixels = pixels,
+                        distance = distance,
                     };
                 }
             }
@@ -865,10 +953,24 @@ namespace QuestFlightLab.Environment
         {
             int lod0Count = 0;
             int lod1Count = 0;
+            int shrubCount = 0;
             for (int candidateIndex = 0; candidateIndex < candidateCount; candidateIndex++)
             {
                 Candidate candidate = candidates[candidateIndex];
                 int index = candidate.index;
+                byte kind = runtimeInstances[index].Kind;
+                if (kind == 3)
+                    continue;
+                if (kind == 2)
+                {
+                    if (candidate.pixels >= 4f && shrubCount < MaximumShrubInstances)
+                    {
+                        selectedForDraw[index] = true;
+                        desiredLods[index] = Lod1;
+                        shrubCount++;
+                    }
+                    continue;
+                }
                 float lod0Threshold = currentLods[index] == Lod0
                     ? lod0ExitScreenPixels
                     : lod0EnterScreenPixels;
@@ -892,21 +994,41 @@ namespace QuestFlightLab.Environment
             }
 
             int lod2Count = 0;
+            int groveCount = 0;
             for (int candidateIndex = 0;
-                 candidateIndex < candidateCount && lod2Count < MaximumLod2Instances;
+                 candidateIndex < candidateCount &&
+                 (lod2Count < MaximumLod2Instances || groveCount < MaximumGroveInstances);
                  candidateIndex++)
-                AssignFarCandidate(candidateIndex, ref lod2Count);
+                AssignFarCandidate(candidateIndex, ref lod2Count, ref groveCount);
         }
 
-        private void AssignFarCandidate(int candidateIndex, ref int total)
+        private void AssignFarCandidate(
+            int candidateIndex,
+            ref int individualTotal,
+            ref int groveTotal)
         {
             int index = candidates[candidateIndex].index;
-            if (selectedForDraw[index] || !farEligible[index] ||
-                total >= MaximumLod2Instances)
+            if (selectedForDraw[index] || !farEligible[index])
+                return;
+            byte kind = runtimeInstances[index].Kind;
+            if (kind == 3)
+            {
+                // Individual trees and the zero-draw terrain canopy are already
+                // resident before a grove aggregate retires at close range.
+                if (candidates[candidateIndex].distance < 900f ||
+                    groveTotal >= MaximumGroveInstances)
+                    return;
+                selectedForDraw[index] = true;
+                desiredLods[index] = Lod2;
+                groveTotal++;
+                return;
+            }
+            if (kind == 2 || individualTotal >= MaximumLod2Instances ||
+                candidates[candidateIndex].pixels < 1.25f)
                 return;
             selectedForDraw[index] = true;
             desiredLods[index] = Lod2;
-            total++;
+            individualTotal++;
         }
 
         private void AdvancePersistentStates(float now)
@@ -915,6 +1037,14 @@ namespace QuestFlightLab.Environment
             {
                 int index = activeIndices[active];
                 byte desired = desiredLods[index];
+                if (runtimeInstances[index].Kind >= 2)
+                {
+                    currentLods[index] = desired;
+                    previousLods[index] = Culled;
+                    transitionStarts[index] = float.NegativeInfinity;
+                    lastStateChanges[index] = now;
+                    continue;
+                }
                 if (currentLods[index] == Uninitialized)
                 {
                     currentLods[index] = desired;
@@ -958,6 +1088,8 @@ namespace QuestFlightLab.Environment
             int lod0Count = 0;
             int lod1Count = 0;
             int lod2Count = 0;
+            int shrubCount = 0;
+            int groveCount = 0;
 
             for (int active = 0; active < activeCount; active++)
             {
@@ -977,7 +1109,9 @@ namespace QuestFlightLab.Environment
                         cameraPosition,
                         ref lod0Count,
                         ref lod1Count,
-                        ref lod2Count);
+                        ref lod2Count,
+                        ref shrubCount,
+                        ref groveCount);
                     continue;
                 }
                 float progress = Mathf.SmoothStep(
@@ -989,7 +1123,9 @@ namespace QuestFlightLab.Environment
                     cameraPosition,
                     ref lod0Count,
                     ref lod1Count,
-                    ref lod2Count);
+                    ref lod2Count,
+                    ref shrubCount,
+                    ref groveCount);
                 AddInstance(
                     index,
                     currentLods[index],
@@ -997,7 +1133,9 @@ namespace QuestFlightLab.Environment
                     cameraPosition,
                     ref lod0Count,
                     ref lod1Count,
-                    ref lod2Count);
+                    ref lod2Count,
+                    ref shrubCount,
+                    ref groveCount);
             }
 
             DrawTier(
@@ -1030,6 +1168,26 @@ namespace QuestFlightLab.Environment
                 lod2Properties,
                 camera,
                 layer);
+            DrawTier(
+                shrubMesh,
+                shrubMatrices,
+                shrubTints,
+                shrubFades,
+                shrubFrames,
+                shrubCount,
+                shrubProperties,
+                camera,
+                layer);
+            DrawTier(
+                groveMesh,
+                groveMatrices,
+                groveTints,
+                groveFades,
+                groveFrames,
+                groveCount,
+                groveProperties,
+                camera,
+                layer);
         }
 
         private void UpdateSelectionHistory()
@@ -1048,11 +1206,35 @@ namespace QuestFlightLab.Environment
             Vector3 cameraPosition,
             ref int lod0Count,
             ref int lod1Count,
-            ref int lod2Count)
+            ref int lod2Count,
+            ref int shrubCount,
+            ref int groveCount)
         {
             if (lod == Culled || fade <= 0.001f)
                 return;
             RuntimeInstance instance = runtimeInstances[index];
+            if (instance.Kind == 2)
+            {
+                if (shrubCount >= shrubMatrices.Length)
+                    return;
+                shrubMatrices[shrubCount] = instance.Matrix;
+                shrubTints[shrubCount] = instance.Tint;
+                shrubFades[shrubCount] = fade;
+                shrubFrames[shrubCount] = 0f;
+                shrubCount++;
+                return;
+            }
+            if (instance.Kind == 3)
+            {
+                if (groveCount >= groveMatrices.Length)
+                    return;
+                groveMatrices[groveCount] = instance.Matrix;
+                groveTints[groveCount] = instance.Tint;
+                groveFades[groveCount] = fade;
+                groveFrames[groveCount] = 0f;
+                groveCount++;
+                return;
+            }
             if (lod == Lod0 && lod0Count < lod0Matrices.Length)
             {
                 lod0Matrices[lod0Count] = instance.Matrix;

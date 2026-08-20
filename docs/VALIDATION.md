@@ -712,3 +712,29 @@ Exact evidence: `docs/evidence/FULL_MAP_BUILDING_ROOFS_V1_2026-08-16.md`.
 
 Exact evidence:
 `docs/evidence/FULL_MAP_BUILDING_WATERTIGHT_V1_2026-08-16.md`.
+
+## Full-map vegetation HLOD V3
+
+- V3 database/manifest contract: PASS for 975,627 records across 576 sequential
+  pages: 892,037 ordinary trees, 697 tall/narrow trees, 9,010 shrubs, and
+  73,883 bounded grove HLODs.
+- Runtime representation: PASS for one serialized renderer, one material, six
+  maximum draws, 81,584 maximum selected vegetation triangles, no per-tree
+  GameObjects/updates, and no runtime mesh construction.
+- Full-map canopy visual: PASS for one 4096-square linear, mipmapped, streamed
+  ASTC 8x8 texture bound to the existing terrain material; no added draw or
+  material.
+- Unity EditMode: PASS 332/332. PlayMode: PASS 10/10.
+- Production Visual QA: PASS 123/123, including image analysis; peak estimates
+  are 76 draws, 690,767 visible triangles, and 38 materials.
+- Dedicated aerial QA: PASS 40/40 nonblank before/after captures; the lead
+  inspected the full-resolution airport, 100/300/500 m AGL, 250/500/1,000 m
+  canopy, pattern-altitude, top-down, and diagnostic views.
+- Static Quest planning gate: PASS at 76/77 draws, 690,767/692,871 visible
+  triangles, 38/38 materials, 296,322,278/307,507,088 conservative texture
+  bytes, 18/18 inherited transparent slots, and 4x MSAA.
+- Android build, simulator, and exact-APK physical Quest status are recorded in
+  `docs/evidence/FULL_MAP_VEGETATION_HLOD_V3_2026-08-20.md`.
+
+The budget values are static Editor evidence. They do not establish physical
+Quest frame time, residency, thermals, stale/tear behavior, or worn quality.

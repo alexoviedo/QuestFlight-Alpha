@@ -190,3 +190,20 @@ and National Weather Service cloud-development training. The exact URLs and
 roles are pinned in
 `Assets/Production/Environment/CloudsV1/SOURCE_MANIFEST.json`. No observation
 record, third-party photograph, or raw weather download is committed.
+
+## Full-map vegetation HLOD V3 sources
+
+The V3 placement authority is the accepted 901,744-record V2 database derived
+from City of Boulder 2020 orthophotography, the OSM-derived building-footprint
+exclusion, and production terrain grounding. V3 adds deterministic 85 m grove
+aggregation and a bounded low-vegetation class; it does not reinterpret raw
+lidar classes as vegetation. The compact 3DEP product remains height evidence
+only where supported.
+
+All 1,296 external 2020 high-resolution imagery pages are analyzed offline at
+0.667 m/texel to recover boundary detail inside the accepted placement support.
+Raw pages remain external. The only added full-map shader input is a 4096-square
+RGBA canopy visual with coverage, low-vegetation fraction, and aggregate normal
+channels. Exact source paths, hashes, processing parameters, runtime products,
+and limitations are pinned in
+`QuestFlight/Assets/Production/Environment/FullMapVegetationV3/SOURCE_MANIFEST.json`.

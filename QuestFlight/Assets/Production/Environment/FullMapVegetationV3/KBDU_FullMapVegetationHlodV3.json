@@ -1,0 +1,85 @@
+{
+  "schema": "questflight.full-map-vegetation-hlod.v3",
+  "contract": {
+    "coordinate_frame": "KBDU local AEQD; Unity +X east, +Y up, +Z north",
+    "bounds_meters": [
+      -12000.0,
+      -12000.0,
+      12000.0,
+      12000.0
+    ],
+    "runtime_page_meters": 1000.0,
+    "columns": 24,
+    "rows": 24,
+    "far_prefix": "all occupied 85 m grove cells, ordered before individuals",
+    "near_suffix": "stable spatially distributed individual trees and shrubs",
+    "geometry": "volumetric near trees/shrubs plus bounded multi-lobe grove HLOD",
+    "far_handoff": "full-map orthophoto-derived canopy normal/occlusion map"
+  },
+  "processing": {
+    "generator": "tools/full_map_vegetation/compile_vegetation_hlod_v3.py",
+    "source_schema": "questflight.full-map-vegetation-clipmap.v2",
+    "grove_cell_meters": 85.0,
+    "shrub_rule": {
+      "maximum_height_meters": 7.5,
+      "maximum_crown_meters": 7.0,
+      "authority": "bounded low-vegetation class; no random reassignment"
+    },
+    "individual_order": "stable whole-page spatial hash; confidence-prefix loss removed"
+  },
+  "sources": {
+    "v2_database": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapVegetationV2\\KBDU_FullMapVegetationClipmapV2.bytes",
+      "sha256": "b56c7a0bea6e986d28e730f30fd978f7e7eb1119227a0cd3221e6b559f30af00"
+    },
+    "v2_manifest": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapVegetationV2\\KBDU_FullMapVegetationClipmapV2.json",
+      "sha256": "9c966d4c8eb87411699d58b23b863e6d427b13c1eb1d8c2b9d7a1ee5d2788f91"
+    },
+    "upstream": {
+      "accepted_near_placements": {
+        "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealAerialSurfaceV1\\Canopy\\ProductionAirportCloseTreeInstances.json",
+        "sha256": "350d09a3b2ddff2522d534740ad2b48ecee0cec9b811d9c7e350dfeb8c3a1576"
+      },
+      "building_database": {
+        "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapBuildingsV1\\KBDU_FullMapBuildingDatabaseV1.json",
+        "sha256": "5d5b7387c1e13b8f0ad9bac268ba9445a4f58e2db560c06654153ca866e34b72"
+      },
+      "clipmap_manifest": {
+        "path": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\full_map_aerial_clipmap_v1_20260812_150316\\unity_import_pages_2020\\clipmap_manifest.json",
+        "sha256": "98129cbf175c218d63d04365883fb670cda6daddf07fccfeb047581047e7ea6a"
+      },
+      "imagery": {
+        "acquisition": "2020",
+        "native_resolution_meters": 0.2286,
+        "publisher": "City of Boulder",
+        "raw_imagery_committed": false
+      },
+      "terrain_manifest": {
+        "path": "QuestFlight\\Assets\\Production\\Environment\\ReconstructionV2\\KBDU_ProductionTerrainSurfaceV2.json",
+        "sha256": "0d821e47766bd355e145b59f45cb56fcb3e67e709e72d054432fc8680a3ce7b1"
+      },
+      "lidar_manifest": {
+        "path": "QuestFlight\\Assets\\Production\\Environment\\AerialSceneryV1\\Lidar\\KBDU_LidarManifestV1.json",
+        "sha256": "1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5",
+        "authority": "bounded height evidence only; orthophoto retains semantic ownership"
+      }
+    }
+  },
+  "statistics": {
+    "runtime_records": 975627,
+    "ordinary_trees": 892037,
+    "tall_narrow_trees": 697,
+    "shrubs": 9010,
+    "grove_hlods": 73883,
+    "maximum_groves_per_page": 144,
+    "mean_groves_per_nonempty_page": 128.27,
+    "binary_bytes": 18541561,
+    "binary_sha256": "ed139adb77ba55cc6614c2d1ba656b53540e3b9ef9b7891e2d4f05083af2eab8"
+  },
+  "limitations": [
+    "Orthophoto segmentation is semantic placement evidence, not an individual-tree survey.",
+    "Grove HLODs are bounded aggregate silhouettes and are never used for close inspection.",
+    "Raw imagery and downloaded high-poly references remain external and uncommitted."
+  ]
+}

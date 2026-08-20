@@ -93,7 +93,8 @@ namespace QuestFlightLab.Tests.Editor
 
             string include = File.ReadAllText(IncludePath);
             Assert.That(include, Does.Contain("sampler2D _AerialCanopyHandoffMask"));
-            Assert.That(include, Does.Contain("sample.coverage = geometryToMapHandoff"));
+            Assert.That(include, Does.Contain("sample.coverage = saturate("));
+            Assert.That(include, Does.Contain("fullCoverage * (1.0h - geometryToMapHandoff)"));
             Assert.That(include, Does.Not.Contain("_AerialCanopyMapHandoffWeight"));
         }
 

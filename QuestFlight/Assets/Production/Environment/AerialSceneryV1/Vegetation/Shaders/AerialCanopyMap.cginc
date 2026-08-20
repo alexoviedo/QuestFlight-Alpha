@@ -17,7 +17,10 @@ sampler2D _AerialCanopyNormalOcclusion;
 // This replaces a scalar handoff,
 // which cannot describe ownership over the finite 4,096 m lidar square.
 sampler2D _AerialCanopyHandoffMask;
+sampler2D _FullMapCanopyVisual;
 float4 _AerialCanopyLocalBounds;
+float4 _FullMapCanopyWorldMinInvSize;
+float4 _FullMapCanopyGeometryFadeStartEnd;
 float4 _AerialCanopyProductToSourceRow0;
 float4 _AerialCanopyProductToSourceRow1;
 float4 _AerialCanopySourceToProductRow0;
@@ -25,6 +28,8 @@ float4 _AerialCanopySourceToProductRow1;
 half _AerialCanopyHeightQuantumMeters;
 half _AerialCanopyColorStrength;
 half _AerialCanopyNormalStrength;
+half _FullMapCanopyColorStrength;
+half _FullMapCanopyNormalStrength;
 fixed3 _AerialCanopyTint;
 
 struct QuestFlightAerialCanopySample
@@ -37,6 +42,7 @@ struct QuestFlightAerialCanopySample
     half terrainValidity;
     half geometryToMapHandoff;
     half3 canopyNormalLocal;
+    half fullMapWeight;
 };
 
 inline float2 QuestFlightAerialCanopyUv(float2 localXZ)
@@ -61,22 +67,46 @@ inline QuestFlightAerialCanopySample QuestFlightSampleAerialCanopy(float2 localX
     half4 terrainNormalAndValidity = tex2D(_AerialTerrainNormalAndValidity, sampledUv);
     half4 canopyNormalAndOcclusion = tex2D(_AerialCanopyNormalOcclusion, sampledUv);
     half geometryToMapHandoff = tex2D(_AerialCanopyHandoffMask, sampledUv).r * insideBounds;
+    float2 fullUv = (localXZ - _FullMapCanopyWorldMinInvSize.xy) *
+        _FullMapCanopyWorldMinInvSize.zw;
+    half fullInside = step(0.0, fullUv.x) * step(fullUv.x, 1.0) *
+        step(0.0, fullUv.y) * step(fullUv.y, 1.0);
+    half4 fullMap = tex2D(_FullMapCanopyVisual, saturate(fullUv));
+    half cameraDistance = distance(localXZ, _WorldSpaceCameraPos.xz);
+    half geometryHandoff = smoothstep(
+        _FullMapCanopyGeometryFadeStartEnd.x,
+        max(_FullMapCanopyGeometryFadeStartEnd.x + 1.0,
+            _FullMapCanopyGeometryFadeStartEnd.y),
+        cameraDistance);
+    half fullCoverage = fullMap.r * fullInside * geometryHandoff;
     QuestFlightAerialCanopySample sample;
     sample.heightMeters = features.r * 255.0h * _AerialCanopyHeightQuantumMeters;
-    sample.density = features.g;
+    sample.density = max(features.g, fullMap.r);
     sample.buildingHeightMeters = features.b * 255.0h * _AerialCanopyHeightQuantumMeters;
-    sample.occlusion = canopyNormalAndOcclusion.a;
+    sample.occlusion = lerp(
+        canopyNormalAndOcclusion.a,
+        0.30h + fullMap.r * 0.34h,
+        fullCoverage);
     // The R8 texture is the final Tier2/Tier3 canopy weight. Its generator already
     // zeros DTM nodata, sub-threshold HAG/density, building-confounded pixels,
     // and Tier0/Tier1 ownership. Do not recreate a broader heuristic here.
-    sample.coverage = geometryToMapHandoff;
+    sample.coverage = saturate(
+        geometryToMapHandoff + fullCoverage * (1.0h - geometryToMapHandoff));
     sample.terrainValidity = step(0.5h / 255.0h, terrainNormalAndValidity.a) * insideBounds;
     sample.geometryToMapHandoff = geometryToMapHandoff;
     half3 sourceNormal = canopyNormalAndOcclusion.rgb * 2.0h - 1.0h;
     half2 productNormalXZ = half2(
         dot(_AerialCanopySourceToProductRow0.xy, sourceNormal.xz),
         dot(_AerialCanopySourceToProductRow1.xy, sourceNormal.xz));
-    sample.canopyNormalLocal = normalize(half3(productNormalXZ.x, sourceNormal.y, productNormalXZ.y));
+    half2 fullNormalXZ = fullMap.ba * 2.0h - 1.0h;
+    half fullNormalY = sqrt(saturate(1.0h - dot(fullNormalXZ, fullNormalXZ)));
+    half3 localCanopyNormal = normalize(
+        half3(productNormalXZ.x, sourceNormal.y, productNormalXZ.y));
+    sample.canopyNormalLocal = normalize(lerp(
+        localCanopyNormal,
+        half3(fullNormalXZ.x, max(0.18h, fullNormalY), fullNormalXZ.y),
+        fullCoverage));
+    sample.fullMapWeight = fullCoverage;
     return sample;
 }
 
@@ -84,17 +114,26 @@ inline fixed3 QuestFlightApplyAerialCanopyColor(
     fixed3 orthophotoColor,
     QuestFlightAerialCanopySample canopy)
 {
-    half weight = canopy.coverage * canopy.density * _AerialCanopyColorStrength;
+    half localWeight = canopy.coverage * (1.0h - canopy.fullMapWeight) *
+        canopy.density * _AerialCanopyColorStrength;
     half shaded = lerp(1.0h, 0.62h, canopy.occlusion);
     fixed3 canopyColor = lerp(orthophotoColor, _AerialCanopyTint, 0.54h) * shaded;
-    return lerp(orthophotoColor, canopyColor, saturate(weight));
+    fixed3 result = lerp(orthophotoColor, canopyColor, saturate(localWeight));
+    // The full-map source is the same orthophoto displayed by the terrain.  It
+    // adds aggregate crown relief without painting a second green overlay.
+    half fullWeight = canopy.fullMapWeight * _FullMapCanopyColorStrength;
+    return result * lerp(1.0h, lerp(0.95h, 0.82h, canopy.occlusion), fullWeight);
 }
 
 inline half3 QuestFlightApplyAerialCanopyNormal(
     half3 terrainNormalLocal,
     QuestFlightAerialCanopySample canopy)
 {
-    half weight = canopy.coverage * canopy.density * _AerialCanopyNormalStrength;
+    half strength = lerp(
+        _AerialCanopyNormalStrength,
+        _FullMapCanopyNormalStrength,
+        canopy.fullMapWeight);
+    half weight = canopy.coverage * canopy.density * strength;
     return normalize(lerp(terrainNormalLocal, canopy.canopyNormalLocal, saturate(weight)));
 }
 

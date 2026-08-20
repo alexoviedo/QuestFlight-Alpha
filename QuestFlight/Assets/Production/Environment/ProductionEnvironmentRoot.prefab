@@ -5803,11 +5803,11 @@ MonoBehaviour:
   - {fileID: 5647493251231481069}
   - {fileID: 8853359896272806083}
   - {fileID: 4934532480890289504}
-  bakedRendererCount: 61
-  bakedSelectedTriangleCount: 608774
+  bakedRendererCount: 60
+  bakedSelectedTriangleCount: 639664
   bakedMaterialCount: 12
-  bakedVegetationRendererCount: 7
-  bakedVegetationTriangleCount: 50694
+  bakedVegetationRendererCount: 6
+  bakedVegetationTriangleCount: 81584
   bakedVegetationMaterialCount: 1
   bakeToolVersion: full-map-building-clipmap-v1.5
   bakeUtc: 2026-08-17T06:19:49.3399390Z
@@ -5863,7 +5863,7 @@ MonoBehaviour:
   imagerySourceManifest: {fileID: 4900000, guid: 9cd1529625ed7d73046c0e63a16f133d, type: 3}
   lidarSurfaceManifest: {fileID: 4900000, guid: 79edf231e6f80c0376b3cc76db14d018, type: 3}
   buildingSurfaceManifest: {fileID: 4900000, guid: 230952562ef81bc49a856d366b4e233a, type: 3}
-  canopySurfaceManifest: {fileID: 4900000, guid: 54c8fa15e53991a42a31aeacdaf23b17, type: 3}
+  canopySurfaceManifest: {fileID: 4900000, guid: 3f20eb1f4aff1b042874e6c8543d3eef, type: 3}
   ownershipExclusionManifest: {fileID: 4900000, guid: a59685f8a04828e1f145477dbf6c9211, type: 3}
   nearOrthophoto: {fileID: 2800000, guid: 0021365d50509d2abe127a826626ee6e, type: 3}
   midOrthophoto: {fileID: 2800000, guid: adf9e4cbca21c5442fbdcd1b92b6b393, type: 3}
@@ -5881,7 +5881,7 @@ MonoBehaviour:
   nearBuildingCoveragePercent: 100
   midBuildingCoveragePercent: 100
   maximumBuildingFootprintInflationPercent: 5
-  representedCanopyComponentCount: 901744
+  representedCanopyComponentCount: 975627
   representedCanopyAreaPercentOfSource: 100
   medianCanopyHeightAgreementPercent: 143.95
   terrainMeanAbsoluteErrorMeters: 0.10746558
@@ -6386,8 +6386,8 @@ MonoBehaviour:
     bounded derivatives
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
-  bakedRendererCount: 61
-  bakedTriangleCount: 608774
+  bakedRendererCount: 60
+  bakedTriangleCount: 639664
   bakedMaterialCount: 12
   bakedTextureCount: 28
   bakeUtc: 2026-08-12T08:42:04.7392327Z
@@ -8973,9 +8973,11 @@ MonoBehaviour:
   lod0Mesh: {fileID: 4300000, guid: a8b300be4c4fda048b88d691569d4b34, type: 2}
   lod1Mesh: {fileID: 4300000, guid: 935d15ad4539dd8419c22378a47b7cf7, type: 2}
   lod2Mesh: {fileID: 4300000, guid: 012a3dcd1bdbcd44b970a30d9e2e8564, type: 2}
+  shrubMesh: {fileID: 4300000, guid: a92c5d708cd691948a27f69d95a8b09f, type: 2}
+  groveMesh: {fileID: 4300000, guid: ab2aacc8a026aad4694233aec7eff940, type: 2}
   placementManifest: {fileID: 4900000, guid: c3fcfbaf10a9a628c38362c280b2eabf, type: 3}
   sourceLicenseManifest: {fileID: 4900000, guid: 89cc45f73c0549e8b3d94e56753a6028, type: 3}
-  fullMapPlacementDatabase: {fileID: 4900000, guid: aaa31402c20c90f42836298ae231cb76, type: 3}
+  fullMapPlacementDatabase: {fileID: 4900000, guid: a8bb31688f189cd41a3e69a15d3ee82c, type: 3}
   buildingClipmap: {fileID: 1153024618204506478}
   instances:
   - matrix:
@@ -33067,8 +33069,8 @@ MonoBehaviour:
   transitionDurationSeconds: 0.35
   minimumResidencySeconds: 2
   impostorAngularHysteresisDegrees: 6
-  authoredMaximumDrawCount: 7
-  authoredMaximumSelectedTriangleCount: 50694
+  authoredMaximumDrawCount: 6
+  authoredMaximumSelectedTriangleCount: 81584
   projectedScreenSizeSelection: 1
   persistentHysteresis: 1
   centerEyeWorldUprightImpostor: 1

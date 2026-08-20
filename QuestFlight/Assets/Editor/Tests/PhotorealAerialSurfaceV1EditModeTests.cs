@@ -177,9 +177,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(root.midBuildingCoveragePercent, Is.GreaterThanOrEqualTo(98f));
             Assert.That(root.maximumBuildingFootprintInflationPercent, Is.LessThanOrEqualTo(5f));
             Assert.That(root.canopySurfaceManifest.text,
-                Does.Contain("questflight.full-map-vegetation-clipmap.v2"));
+                Does.Contain("questflight.full-map-vegetation-hlod.v3"));
             Assert.That(root.canopySurfaceManifest.text,
-                Does.Contain("no opaque grove hull"));
+                Does.Contain("bounded multi-lobe grove HLOD"));
             Assert.That(root.representedCanopyComponentCount, Is.GreaterThan(0));
             Assert.That(root.representedCanopyAreaPercentOfSource, Is.InRange(90f, 110f));
             Assert.That(root.medianCanopyHeightAgreementPercent, Is.InRange(100f, 160f));

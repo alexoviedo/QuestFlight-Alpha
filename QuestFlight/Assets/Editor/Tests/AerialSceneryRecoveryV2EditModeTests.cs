@@ -69,9 +69,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(closeTrees[0].PersistentHysteresis, Is.True);
             Assert.That(closeTrees[0].AlphaToCoverageTransition, Is.True);
             Assert.That(surface.canopySurfaceManifest.text,
-                Does.Contain("questflight.full-map-vegetation-clipmap.v2"));
+                Does.Contain("questflight.full-map-vegetation-hlod.v3"));
             Assert.That(surface.canopySurfaceManifest.text,
-                Does.Contain("no opaque grove hull"));
+                Does.Contain("bounded multi-lobe grove HLOD"));
             Assert.That(surface.canopySurfaceManifest.text,
                 Does.Contain("\"bounds_meters\": ["));
         }

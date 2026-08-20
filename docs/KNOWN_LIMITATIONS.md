@@ -408,3 +408,22 @@ The airport corridor is a reference-faithful procedural approximation rather tha
 - Machine and stereo evidence do not establish physical Quest frame, thermal,
   comfort, or final photorealism acceptance; those claims require exact-APK
   hardware evidence.
+
+## Full-map vegetation HLOD V3
+
+- V3 represents the complete accepted placement field through 892,734 tree
+  records, 9,010 shrubs, and 73,883 bounded grove HLODs. Those records are
+  deterministic visual inference from 2020 orthophotography, not a botanical
+  inventory, current occupancy survey, or species map.
+- Low vegetation is assigned only by a bounded height/crown rule. Shrub species,
+  branching, season, and exact maintenance state remain approximate.
+- Grove HLODs are 85 m aggregate silhouettes for middle distance and are never
+  used as close hero trees. Their lobe layout avoids the rejected opaque blob
+  hull, but it cannot reproduce every individual crown or understory opening.
+- The 4096-square full-map canopy visual preserves orthophoto color and adds one
+  terrain-owned normal/occlusion response. Its 0.302491 coverage fraction is
+  constrained by accepted placements; residual source-classification omissions
+  and false positives can still occur.
+- Static/Editor gates pass the baseline-relative draw, triangle, material, and
+  texture contracts. No exact-APK worn quality, 72 Hz timing, thermals,
+  stale/tear, or sustained allocation acceptance is claimed yet.

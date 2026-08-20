@@ -34,6 +34,11 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
         _AerialCanopyColorStrength ("Aerial canopy color strength", Range(0,1)) = 0
         _AerialCanopyNormalStrength ("Aerial canopy normal strength", Range(0,1)) = 0
         _AerialCanopyTint ("Aerial canopy tint", Color) = (0.25,0.34,0.16,1)
+        _FullMapCanopyVisual ("Full-map canopy coverage/shrub/normal", 2D) = "gray" {}
+        _FullMapCanopyWorldMinInvSize ("Full-map canopy min XZ / inverse size", Vector) = (-12000,-12000,0.0000416667,0.0000416667)
+        _FullMapCanopyGeometryFadeStartEnd ("Canopy geometry to terrain handoff", Vector) = (700,1450,0,0)
+        _FullMapCanopyColorStrength ("Full-map canopy occlusion strength", Range(0,1)) = 0.42
+        _FullMapCanopyNormalStrength ("Full-map canopy normal strength", Range(0,1)) = 0.48
         _FullMapWaterMask ("Full-map water coverage", 2D) = "black" {}
         _FullMapWaterWorldMinInvSize ("Water min XZ / inverse size", Vector) = (-12000,-12000,0.0000416667,0.0000416667)
         _FullMapWaterReflectionStrength ("Water neutral reflection strength", Range(0,1)) = 0.095
@@ -180,6 +185,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 aerialCanopy.terrainValidity = 0.0h;
                 aerialCanopy.geometryToMapHandoff = 0.0h;
                 aerialCanopy.canopyNormalLocal = half3(0.0h, 1.0h, 0.0h);
+                aerialCanopy.fullMapWeight = 0.0h;
                 float2 nearUv = saturate((world - _NearWorldMinInvSize.xy) * _NearWorldMinInvSize.zw);
                 float2 midUv = saturate((world - _MidWorldMinInvSize.xy) * _MidWorldMinInvSize.zw);
                 float2 farUv = saturate((world - _FarWorldMinInvSize.xy) * _FarWorldMinInvSize.zw);
@@ -254,8 +260,11 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                     macro = lerp(macro, cleanPlate, saturate(cleanPlateWeight));
                 }
 
-                UNITY_BRANCH if (aerialCanopyInside > 0.5h &&
-                    (_AerialCanopyColorStrength > 0.001h || _AerialCanopyNormalStrength > 0.001h))
+                UNITY_BRANCH if (
+                    _AerialCanopyColorStrength > 0.001h ||
+                    _AerialCanopyNormalStrength > 0.001h ||
+                    _FullMapCanopyColorStrength > 0.001h ||
+                    _FullMapCanopyNormalStrength > 0.001h)
                 {
                     aerialCanopy = QuestFlightSampleAerialCanopy(world);
                     fixed3 canopyColor = QuestFlightApplyAerialCanopyColor(macro, aerialCanopy);

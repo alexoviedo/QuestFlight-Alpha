@@ -23,16 +23,17 @@ namespace QuestFlight.Editor
     /// </summary>
     public static class QuestPerformanceBudgetBatchRunner
     {
-        // Photoreal Aerial Surface V1 replaces scenery and imagery in-place. These are
-        // hard development-baseline ceilings, not measured Quest performance claims.
-        private const int DrawCallTarget = 75;
-        private const long VisibleTriangleTarget = 650000L;
-        // The headset-accepted cockpit/readout baseline contains 29 visible materials while
-        // retaining 28 active distinct scene materials. The authored local-shadow path reuses
-        // an existing cockpit material and must not raise either count.
-        private const int MaterialTarget = 29;
-        private const long TextureMemoryTargetBytes = 210L * 1024L * 1024L;
-        private const int TransparentMaterialSlotTarget = 3;
+        // The accepted V2 product is the planning baseline for this replacement:
+        // 77 draws, 659,877 visible triangles, 38 materials, 290,729,872 texture
+        // bytes, and 18 transparent slots. V3 must hold draws/materials/slots,
+        // may add at most five percent visible triangles, and may add at most
+        // 16 MiB of textures. These remain static Editor ceilings, not measured
+        // Quest performance claims.
+        private const int DrawCallTarget = 77;
+        private const long VisibleTriangleTarget = 692871L;
+        private const int MaterialTarget = 38;
+        private const long TextureMemoryTargetBytes = 307507088L;
+        private const int TransparentMaterialSlotTarget = 18;
         private const string OutputEnvironmentVariable = "QFL_PERFORMANCE_BUDGET_DIR";
         private const string VisualReportEnvironmentVariable = "QFL_VISUAL_QA_REPORT";
 

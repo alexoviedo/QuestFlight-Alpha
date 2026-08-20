@@ -1,0 +1,39 @@
+{
+  "schema": "questflight.full-map-vegetation-source.v3",
+  "runtime_assets": [
+    "KBDU_FullMapVegetationHlodV3.bytes",
+    "KBDU_FullMapCanopyVisual_RGBA.png"
+  ],
+  "sources": [
+    {
+      "name": "Accepted full-map vegetation V2 placements",
+      "path": "../FullMapVegetationV2/KBDU_FullMapVegetationClipmapV2.bytes",
+      "role": "individual tree positions, crown dimensions, ground registration, and source color"
+    },
+    {
+      "name": "City of Boulder 2020 aerial imagery",
+      "role": "offline canopy boundary and low-vegetation segmentation",
+      "raw_source_committed": false,
+      "rights": "public-data source already recorded by the aerial clipmap manifest"
+    },
+    {
+      "name": "Tree Small 02",
+      "author": "Poly Haven",
+      "url": "https://polyhaven.com/a/tree_small_02",
+      "license": "CC0 1.0 Universal",
+      "role": "existing optimized near-tree and foliage-atlas source"
+    }
+  ],
+  "derived_assets": {
+    "placement_compiler": "tools/full_map_vegetation/compile_vegetation_hlod_v3.py",
+    "canopy_compiler": "tools/full_map_vegetation/build_full_map_canopy_visual.py",
+    "shrub_and_grove_meshes": "project-authored deterministic offline Unity meshes",
+    "downloaded_sketchfab_models_in_runtime": false
+  },
+  "exclusions": [
+    "raw orthophotos",
+    "raw high-poly Sketchfab archives",
+    "Gaussian splat data",
+    "per-tree GameObjects"
+  ]
+}
