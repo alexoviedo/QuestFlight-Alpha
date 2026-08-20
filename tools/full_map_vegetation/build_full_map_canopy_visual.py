@@ -42,6 +42,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--clipmap-manifest", type=Path, required=True)
     parser.add_argument("--building-database", type=Path, required=True)
     parser.add_argument("--placement-database", type=Path, required=True)
+    parser.add_argument("--semantic-exclusion-mask", type=Path, required=True)
+    parser.add_argument("--semantic-exclusion-manifest", type=Path, required=True)
     parser.add_argument("--output-texture", type=Path, required=True)
     parser.add_argument("--output-manifest", type=Path, required=True)
     parser.add_argument("--debug-preview", type=Path)
@@ -56,8 +58,8 @@ def placement_support(path: Path) -> tuple[np.ndarray, np.ndarray]:
     magic, version, minimum_x, minimum_z, page_size, quantization, columns, rows, count = (
         header.unpack_from(data, 0)
     )
-    if magic != b"QFFMVG2\0" or version != 2:
-        raise ValueError("Canopy support requires the accepted V2 individual database")
+    if (magic, version) not in ((b"QFFMVG2\0", 2), (b"QFFMVG3\0", 3)):
+        raise ValueError("Canopy support requires a full-map V2/V3 vegetation database")
     support = np.zeros((OUTPUT_SIZE, OUTPUT_SIZE), dtype=np.uint8)
     shrub = np.zeros_like(support)
     table_offset = header.size
@@ -71,6 +73,8 @@ def placement_support(path: Path) -> tuple[np.ndarray, np.ndarray]:
         page_z = minimum_z + row * page_size
         for local in range(page_count):
             raw = instance.unpack_from(data, records_offset + (offset + local) * instance.size)
+            if version == 3 and raw[10] == 3:
+                continue
             x = page_x + raw[0] * quantization
             z = page_z + raw[1] * quantization
             height = raw[3] * 0.01
@@ -163,6 +167,10 @@ def main() -> None:
             print(f"processed {ordinal}/{len(source_pages)} high-resolution pages", flush=True)
 
     accepted_support, accepted_shrubs = placement_support(args.placement_database)
+    semantic = np.asarray(Image.open(args.semantic_exclusion_mask).convert("RGB"))
+    if semantic.shape[:2] != (OUTPUT_SIZE, OUTPUT_SIZE):
+        raise ValueError("Semantic exclusion mask does not match the canopy output grid")
+    hard_exclusion = np.max(semantic[:, :, :2], axis=2) >= 128
     coverage = cv2.GaussianBlur(coverage, (0, 0), 0.72)
     coverage = np.clip((coverage - 0.055) / 0.78, 0.0, 1.0)
     coverage = np.maximum(coverage * accepted_support, accepted_support * 0.58)
@@ -170,6 +178,8 @@ def main() -> None:
         np.clip(cv2.GaussianBlur(shrubs, (0, 0), 0.55), 0.0, 1.0) * coverage,
         accepted_shrubs * 0.62,
     )
+    coverage[hard_exclusion] = 0.0
+    shrubs[hard_exclusion] = 0.0
     relief = cv2.GaussianBlur(coverage, (0, 0), 2.2)
     gradient_x = cv2.Sobel(relief, cv2.CV_32F, 1, 0, ksize=3) * 1.65
     gradient_z = -cv2.Sobel(relief, cv2.CV_32F, 0, 1, ksize=3) * 1.65
@@ -179,6 +189,8 @@ def main() -> None:
     inverse = 1.0 / np.sqrt(normal_x * normal_x + normal_y * normal_y + normal_z * normal_z)
     normal_x *= inverse
     normal_z *= inverse
+    normal_x[hard_exclusion] = 0.0
+    normal_z[hard_exclusion] = 0.0
 
     rgba = np.empty((OUTPUT_SIZE, OUTPUT_SIZE, 4), dtype=np.uint8)
     rgba[:, :, 0] = np.rint(coverage * 255.0).astype(np.uint8)
@@ -186,7 +198,7 @@ def main() -> None:
     rgba[:, :, 2] = np.rint((normal_x * 0.5 + 0.5) * 255.0).astype(np.uint8)
     rgba[:, :, 3] = np.rint((normal_z * 0.5 + 0.5) * 255.0).astype(np.uint8)
     args.output_texture.parent.mkdir(parents=True, exist_ok=True)
-    Image.fromarray(rgba, "RGBA").save(args.output_texture, optimize=True)
+    Image.fromarray(rgba).save(args.output_texture, optimize=True)
 
     if args.debug_preview is not None:
         preview = np.zeros((1024, 1024, 3), dtype=np.uint8)
@@ -198,7 +210,7 @@ def main() -> None:
         cv2.imwrite(str(args.debug_preview), preview)
 
     manifest = {
-        "schema": "questflight.full-map-canopy-visual.v1",
+        "schema": "questflight.full-map-canopy-visual.v1.1",
         "contract": {
             "bounds_meters": [WORLD_MIN, WORLD_MIN, WORLD_MIN + WORLD_SIZE, WORLD_MIN + WORLD_SIZE],
             "texture_size": [OUTPUT_SIZE, OUTPUT_SIZE],
@@ -216,11 +228,22 @@ def main() -> None:
             "analysis_meters_per_pixel": float(high["meters_per_texel"]) * ANALYSIS_DOWNSAMPLE,
             "segmentation": "source RGB texture/vegetation classifier with building-footprint exclusion",
             "normal": "smoothed coverage gradient; aggregate far-canopy relief only",
+            "semantic_exclusion": (
+                "water interiors and verified athletic playing surfaces are cleared after all feathering"
+            ),
         },
         "sources": {
             "clipmap_manifest": {"path": str(args.clipmap_manifest), "sha256": sha256(args.clipmap_manifest)},
             "building_database": {"path": str(args.building_database), "sha256": sha256(args.building_database)},
             "placement_database": {"path": str(args.placement_database), "sha256": sha256(args.placement_database)},
+            "semantic_exclusion_mask": {
+                "path": str(args.semantic_exclusion_mask),
+                "sha256": sha256(args.semantic_exclusion_mask),
+            },
+            "semantic_exclusion_manifest": {
+                "path": str(args.semantic_exclusion_manifest),
+                "sha256": sha256(args.semantic_exclusion_manifest),
+            },
             "imagery_acquisition": "2020",
             "raw_imagery_committed": False,
         },
@@ -231,6 +254,7 @@ def main() -> None:
             "shrub_supported_texels": int(np.count_nonzero(shrubs >= 0.12)),
             "runtime_bytes": args.output_texture.stat().st_size,
             "runtime_sha256": sha256(args.output_texture),
+            "semantic_excluded_texels": int(np.count_nonzero(hard_exclusion)),
         },
     }
     args.output_manifest.parent.mkdir(parents=True, exist_ok=True)

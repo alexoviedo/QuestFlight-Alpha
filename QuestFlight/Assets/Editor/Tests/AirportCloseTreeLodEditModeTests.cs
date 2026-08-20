@@ -148,7 +148,7 @@ namespace QuestFlight.Editor.Tests
             TextAsset fullMap = AssetDatabase.LoadAssetAtPath<TextAsset>(FullMapManifestPath);
             Assert.That(fullMap, Is.Not.Null);
             Assert.That(fullMap.text,
-                Does.Contain("\"schema\": \"questflight.full-map-vegetation-hlod.v3\""));
+                Does.Contain("\"schema\": \"questflight.full-map-vegetation-hlod.v3.1\""));
             Assert.That(fullMap.text,
                 Does.Contain("\"geometry\": \"volumetric near trees/shrubs plus bounded multi-lobe grove HLOD\""));
             Assert.That(fullMap.text, Does.Contain("confidence-prefix loss removed"));

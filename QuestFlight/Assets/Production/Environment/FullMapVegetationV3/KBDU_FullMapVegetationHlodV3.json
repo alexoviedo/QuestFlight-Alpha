@@ -1,5 +1,5 @@
 {
-  "schema": "questflight.full-map-vegetation-hlod.v3",
+  "schema": "questflight.full-map-vegetation-hlod.v3.1",
   "contract": {
     "coordinate_frame": "KBDU local AEQD; Unity +X east, +Y up, +Z north",
     "bounds_meters": [
@@ -25,7 +25,9 @@
       "maximum_crown_meters": 7.0,
       "authority": "bounded low-vegetation class; no random reassignment"
     },
-    "individual_order": "stable whole-page spatial hash; confidence-prefix loss removed"
+    "individual_order": "stable whole-page spatial hash; confidence-prefix loss removed",
+    "semantic_exclusion": "offline hard water-interior and verified athletic-playing-surface center rejection",
+    "grove_boundary_policy": "anchor to a retained individual and clamp the aggregate crown to hard-exclusion clearance"
   },
   "sources": {
     "v2_database": {
@@ -64,18 +66,42 @@
         "sha256": "1a08c8c4be14737e86d1a8819ae4cdff3edb58f7f9a2147a23278b366d0f34e5",
         "authority": "bounded height evidence only; orthophoto retains semantic ownership"
       }
+    },
+    "semantic_exclusion_mask": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapVegetationV3\\KBDU_VegetationSemanticExclusionV1.png",
+      "sha256": "8a708641e25b01d732ea67e33ca2c6cb9c139b184333d313616ccf344302ab86"
+    },
+    "semantic_exclusion_manifest": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapVegetationV3\\KBDU_VegetationSemanticExclusionV1.json",
+      "sha256": "bac5f5bb6ec3523f66c40afa46ba8aafe07fcc97fc2972481dc26cb524cd8bed"
     }
   },
   "statistics": {
-    "runtime_records": 975627,
-    "ordinary_trees": 892037,
-    "tall_narrow_trees": 697,
-    "shrubs": 9010,
-    "grove_hlods": 73883,
+    "runtime_records": 940562,
+    "ordinary_trees": 859138,
+    "tall_narrow_trees": 676,
+    "shrubs": 8694,
+    "grove_hlods": 72054,
     "maximum_groves_per_page": 144,
-    "mean_groves_per_nonempty_page": 128.27,
-    "binary_bytes": 18541561,
-    "binary_sha256": "ed139adb77ba55cc6614c2d1ba656b53540e3b9ef9b7891e2d4f05083af2eab8"
+    "mean_groves_per_nonempty_page": 125.31,
+    "binary_bytes": 17875326,
+    "binary_sha256": "5dda526cce6c8be0b2773feef4904ccf4b72023069e5cd54e7dfbb387effd10e",
+    "source_individuals": 901744,
+    "retained_individuals": 868508,
+    "semantic_rejections": {
+      "athletic_surface": 1464,
+      "athletic_surface_kind_0": 1457,
+      "athletic_surface_kind_1": 6,
+      "athletic_surface_kind_2": 1,
+      "water": 31772,
+      "water_kind_0": 31689,
+      "water_kind_1": 15,
+      "water_kind_2": 68
+    },
+    "aggregate_boundary_adjustments": {
+      "groves_clamped_at_semantic_boundary": 2766,
+      "groves_omitted_at_semantic_boundary": 517
+    }
   },
   "limitations": [
     "Orthophoto segmentation is semantic placement evidence, not an individual-tree survey.",

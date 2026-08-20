@@ -1,0 +1,7387 @@
+{
+  "schema": "questflight.full-map-vegetation-semantic-exclusion.v1",
+  "contract": {
+    "coordinate_frame": "KBDU local ENU; +X east, +Z north",
+    "bounds_meters": [
+      -12000.0,
+      -12000.0,
+      12000.0,
+      12000.0
+    ],
+    "texture_size": [
+      4096,
+      4096
+    ],
+    "meters_per_texel": 5.859375,
+    "row_zero": "north",
+    "channels": {
+      "r": "hard water interior vegetation exclusion",
+      "g": "verified athletic playing-surface vegetation exclusion",
+      "b": "reserved"
+    },
+    "runtime_dependency": false
+  },
+  "processing": {
+    "generator": "tools/full_map_vegetation/build_vegetation_semantic_exclusions.py",
+    "water_threshold": 32,
+    "sports_policy": "actual OSM pitch/track/field-sport polygons only; parks, sports-centre parcels, stadium parcels, and golf courses are not blanket exclusions",
+    "shoreline_policy": "strong feathered-mask interior only; no outward dilation"
+  },
+  "sources": {
+    "water_mask": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealTerrainV1\\Water\\KBDU_FullMapWaterMask.png",
+      "sha256": "328ecb8673cb27bb5d8bb8a30799664c2a1da43606bd1ee5d461e9ec31fe3a76"
+    },
+    "environment_config": {
+      "path": "tools\\kbdu_environment\\config.json",
+      "sha256": "31a22c259b2474ae06e815791d764720fd616835e4efc22622526af6ff8b9336"
+    },
+    "osm_query_sha256": "61ed61e57e075b8c1e969164fc223edab068ec25b205dcf965be63d7ccd953a7",
+    "osm_response_sha256": "a5e8bb1dc3dbbe50fb627b3074a8bdaee8b155e32516810b94aeb4b3a919c69c",
+    "osm_endpoint_or_cache": "pinned-local-cache",
+    "osm_base_timestamp": "2026-08-20T20:27:01Z",
+    "raw_osm_committed": false,
+    "license": "ODbL-1.0"
+  },
+  "statistics": {
+    "water_excluded_texels": 633753,
+    "sports_excluded_texels": 34910,
+    "sports_polygon_count": 523,
+    "sports_role_counts": {
+      "athletic_track": 7,
+      "playing_surface": 516
+    },
+    "skipped": {
+      "below_80_square_meters": 7,
+      "missing_or_nonpolygon_geometry": 80,
+      "not_an_actual_playing_surface": 66,
+      "outside_product_bounds": 1
+    },
+    "mask_bytes": 113856,
+    "mask_sha256": "8a708641e25b01d732ea67e33ca2c6cb9c139b184333d313616ccf344302ab86"
+  },
+  "sports_surfaces": [
+    {
+      "source_id": "osm:way/40360349",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": "Public Tennis Court",
+      "area_square_meters": 542.77,
+      "bounds_enu_meters": [
+        -4570.58,
+        -4524.66,
+        -4553.48,
+        -4489.53
+      ]
+    },
+    {
+      "source_id": "osm:way/222216435",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 236.56,
+      "bounds_enu_meters": [
+        -4788.9,
+        -4766.5,
+        -4771.39,
+        -4752.35
+      ]
+    },
+    {
+      "source_id": "osm:way/222216437",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 602.81,
+      "bounds_enu_meters": [
+        -4768.61,
+        -4786.31,
+        -4749.86,
+        -4751.69
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426340",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.45,
+      "bounds_enu_meters": [
+        -5689.53,
+        -2589.43,
+        -5671.22,
+        -2563.03
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426341",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 270.14,
+      "bounds_enu_meters": [
+        -5675.66,
+        -2584.68,
+        -5657.44,
+        -2558.42
+      ]
+    },
+    {
+      "source_id": "osm:way/1202429929",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 504.05,
+      "bounds_enu_meters": [
+        -11381.43,
+        -96.05,
+        -11354.39,
+        -58.91
+      ]
+    },
+    {
+      "source_id": "osm:way/864177718",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 582.83,
+      "bounds_enu_meters": [
+        -11614.42,
+        1373.42,
+        -11596.08,
+        1405.38
+      ]
+    },
+    {
+      "source_id": "osm:way/864803117",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 253.23,
+      "bounds_enu_meters": [
+        -10661.62,
+        907.45,
+        -10645.78,
+        933.37
+      ]
+    },
+    {
+      "source_id": "osm:way/682279056",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 619.92,
+      "bounds_enu_meters": [
+        -8264.36,
+        -1331.4,
+        -8239.01,
+        -1294.57
+      ]
+    },
+    {
+      "source_id": "osm:way/682279067",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 592.25,
+      "bounds_enu_meters": [
+        -7609.8,
+        -1155.92,
+        -7584.69,
+        -1117.07
+      ]
+    },
+    {
+      "source_id": "osm:way/242264746",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 493.4,
+      "bounds_enu_meters": [
+        -4838.6,
+        -2139.48,
+        -4804.07,
+        -2112.41
+      ]
+    },
+    {
+      "source_id": "osm:way/470654572",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5443.19,
+      "bounds_enu_meters": [
+        -4638.03,
+        -1714.28,
+        -4529.71,
+        -1661.29
+      ]
+    },
+    {
+      "source_id": "osm:way/236803066",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 128.08,
+      "bounds_enu_meters": [
+        -4534.01,
+        -756.24,
+        -4525.64,
+        -739.85
+      ]
+    },
+    {
+      "source_id": "osm:way/236803067",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 130.04,
+      "bounds_enu_meters": [
+        -4521.81,
+        -756.44,
+        -4513.63,
+        -739.98
+      ]
+    },
+    {
+      "source_id": "osm:way/601902068",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2724.14,
+      "bounds_enu_meters": [
+        -5223.74,
+        -1268.44,
+        -5160.41,
+        -1209.26
+      ]
+    },
+    {
+      "source_id": "osm:way/601902069",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2935.61,
+      "bounds_enu_meters": [
+        -5223.29,
+        -1338.92,
+        -5160.53,
+        -1276.23
+      ]
+    },
+    {
+      "source_id": "osm:way/601902070",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 138.38,
+      "bounds_enu_meters": [
+        -5213.52,
+        -1198.33,
+        -5201.03,
+        -1187.16
+      ]
+    },
+    {
+      "source_id": "osm:way/236803062",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 271.37,
+      "bounds_enu_meters": [
+        -4601.03,
+        -767.62,
+        -4589.58,
+        -743.38
+      ]
+    },
+    {
+      "source_id": "osm:way/236803063",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 286.41,
+      "bounds_enu_meters": [
+        -4585.88,
+        -767.92,
+        -4573.99,
+        -743.39
+      ]
+    },
+    {
+      "source_id": "osm:way/236803064",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 275.31,
+      "bounds_enu_meters": [
+        -4567.6,
+        -767.58,
+        -4556.1,
+        -743.41
+      ]
+    },
+    {
+      "source_id": "osm:way/236803065",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 275.42,
+      "bounds_enu_meters": [
+        -4552.29,
+        -767.43,
+        -4540.74,
+        -743.23
+      ]
+    },
+    {
+      "source_id": "osm:way/374509308",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 87.47,
+      "bounds_enu_meters": [
+        -4594.54,
+        -784.08,
+        -4580.81,
+        -777.44
+      ]
+    },
+    {
+      "source_id": "osm:way/374509309",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 88.06,
+      "bounds_enu_meters": [
+        -4575.61,
+        -784.06,
+        -4561.95,
+        -777.53
+      ]
+    },
+    {
+      "source_id": "osm:way/1494697439",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 98.44,
+      "bounds_enu_meters": [
+        -6068.23,
+        -30.69,
+        -6060.73,
+        -16.86
+      ]
+    },
+    {
+      "source_id": "osm:way/874920448",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 258.63,
+      "bounds_enu_meters": [
+        -5600.83,
+        23.94,
+        -5589.49,
+        48.05
+      ]
+    },
+    {
+      "source_id": "osm:way/34937208",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5612.76,
+      "bounds_enu_meters": [
+        -4555.01,
+        -220.9,
+        -4477.36,
+        -144.81
+      ]
+    },
+    {
+      "source_id": "osm:way/34937209",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2745.29,
+      "bounds_enu_meters": [
+        -4471.18,
+        -233.01,
+        -4409.67,
+        -169.92
+      ]
+    },
+    {
+      "source_id": "osm:way/34937210",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5523.41,
+      "bounds_enu_meters": [
+        -4552.5,
+        -309.17,
+        -4476.77,
+        -228.93
+      ]
+    },
+    {
+      "source_id": "osm:way/34937211",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2785.54,
+      "bounds_enu_meters": [
+        -4469.77,
+        -302.41,
+        -4407.55,
+        -239.27
+      ]
+    },
+    {
+      "source_id": "osm:way/473476939",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": null,
+      "name": "Iris Fields",
+      "area_square_meters": 27705.1,
+      "bounds_enu_meters": [
+        -4572.68,
+        -317.34,
+        -4388.76,
+        -138.93
+      ]
+    },
+    {
+      "source_id": "osm:way/52429082",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 663.31,
+      "bounds_enu_meters": [
+        -5372.59,
+        524.47,
+        -5350.55,
+        563.2
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426497",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 269.02,
+      "bounds_enu_meters": [
+        -5306.93,
+        884.37,
+        -5295.59,
+        908.39
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426498",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 269.06,
+      "bounds_enu_meters": [
+        -5288.57,
+        884.19,
+        -5277.23,
+        908.21
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426499",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 86.52,
+      "bounds_enu_meters": [
+        -5304.65,
+        898.68,
+        -5298.08,
+        912.32
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426500",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 86.52,
+      "bounds_enu_meters": [
+        -5304.62,
+        880.42,
+        -5298.05,
+        894.06
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426501",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 86.46,
+      "bounds_enu_meters": [
+        -5286.41,
+        880.3,
+        -5279.84,
+        893.94
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426502",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 86.46,
+      "bounds_enu_meters": [
+        -5286.55,
+        898.55,
+        -5279.98,
+        912.2
+      ]
+    },
+    {
+      "source_id": "osm:way/48271322",
+      "role": "playing_surface",
+      "sport": "roller_skating;roller_hockey",
+      "leisure": "pitch",
+      "name": "Foothiils Park Outdoor Mini Rink",
+      "area_square_meters": 423.27,
+      "bounds_enu_meters": [
+        -5241.35,
+        1739.16,
+        -5226.29,
+        1769.67
+      ]
+    },
+    {
+      "source_id": "osm:way/48271325",
+      "role": "playing_surface",
+      "sport": "roller_skating;roller_hockey;skating",
+      "leisure": "pitch",
+      "name": "Foothills Park Outdoor Rink",
+      "area_square_meters": 1059.81,
+      "bounds_enu_meters": [
+        -5274.54,
+        1731.83,
+        -5251.76,
+        1780.21
+      ]
+    },
+    {
+      "source_id": "osm:way/754759544",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 349.84,
+      "bounds_enu_meters": [
+        -5070.61,
+        1732.34,
+        -5056.85,
+        1758.37
+      ]
+    },
+    {
+      "source_id": "osm:way/1030266831",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 263.79,
+      "bounds_enu_meters": [
+        -5415.23,
+        2740.28,
+        -5402.93,
+        2765.25
+      ]
+    },
+    {
+      "source_id": "osm:way/860894135",
+      "role": "playing_surface",
+      "sport": "equestrian",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1197.26,
+      "bounds_enu_meters": [
+        -5050.33,
+        11708.9,
+        -5008.7,
+        11771.97
+      ]
+    },
+    {
+      "source_id": "osm:way/860894136",
+      "role": "playing_surface",
+      "sport": "equestrian",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2585.9,
+      "bounds_enu_meters": [
+        -4884.79,
+        11636.2,
+        -4850.0,
+        11714.15
+      ]
+    },
+    {
+      "source_id": "osm:way/359197612",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": "Founders Park",
+      "area_square_meters": 531.03,
+      "bounds_enu_meters": [
+        4587.92,
+        -9446.76,
+        4606.36,
+        -9417.62
+      ]
+    },
+    {
+      "source_id": "osm:way/486943549",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3789.39,
+      "bounds_enu_meters": [
+        4368.58,
+        -9444.44,
+        4432.02,
+        -9379.06
+      ]
+    },
+    {
+      "source_id": "osm:way/61951731",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 514.53,
+      "bounds_enu_meters": [
+        4061.21,
+        -8129.42,
+        4093.85,
+        -8102.66
+      ]
+    },
+    {
+      "source_id": "osm:way/45892115",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1197.63,
+      "bounds_enu_meters": [
+        6067.16,
+        -11202.86,
+        6105.01,
+        -11165.17
+      ]
+    },
+    {
+      "source_id": "osm:way/45892116",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1225.98,
+      "bounds_enu_meters": [
+        6076.53,
+        -11159.47,
+        6113.69,
+        -11121.55
+      ]
+    },
+    {
+      "source_id": "osm:way/1254495863",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 735.74,
+      "bounds_enu_meters": [
+        5969.77,
+        -11425.04,
+        5997.5,
+        -11392.8
+      ]
+    },
+    {
+      "source_id": "osm:way/1254496067",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 635.17,
+      "bounds_enu_meters": [
+        5941.11,
+        -11427.34,
+        5965.52,
+        -11396.19
+      ]
+    },
+    {
+      "source_id": "osm:way/264650388",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 163.24,
+      "bounds_enu_meters": [
+        7275.63,
+        -11134.32,
+        7295.58,
+        -11123.11
+      ]
+    },
+    {
+      "source_id": "osm:way/700770977",
+      "role": "playing_surface",
+      "sport": "skateboard",
+      "leisure": "pitch",
+      "name": "Superior Skate Park",
+      "area_square_meters": 644.48,
+      "bounds_enu_meters": [
+        7046.67,
+        -11493.64,
+        7083.26,
+        -11461.66
+      ]
+    },
+    {
+      "source_id": "osm:way/852565469",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": "Autrey Pickleball Court",
+      "area_square_meters": 1216.4,
+      "bounds_enu_meters": [
+        7116.05,
+        -11467.31,
+        7164.76,
+        -11421.35
+      ]
+    },
+    {
+      "source_id": "osm:way/486937431",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 170.09,
+      "bounds_enu_meters": [
+        5708.48,
+        -10720.91,
+        5724.25,
+        -10700.87
+      ]
+    },
+    {
+      "source_id": "osm:way/1361015476",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5362.64,
+      "bounds_enu_meters": [
+        5457.92,
+        -9482.97,
+        5560.47,
+        -9406.97
+      ]
+    },
+    {
+      "source_id": "osm:way/1361057925",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 477.52,
+      "bounds_enu_meters": [
+        5703.44,
+        -9666.89,
+        5727.12,
+        -9635.74
+      ]
+    },
+    {
+      "source_id": "osm:way/543990211",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 252.44,
+      "bounds_enu_meters": [
+        6469.53,
+        -9204.31,
+        6492.08,
+        -9178.92
+      ]
+    },
+    {
+      "source_id": "osm:way/543990313",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 258.74,
+      "bounds_enu_meters": [
+        6500.48,
+        -9216.67,
+        6523.03,
+        -9190.82
+      ]
+    },
+    {
+      "source_id": "osm:way/1361061186",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1327.63,
+      "bounds_enu_meters": [
+        6465.04,
+        -9222.49,
+        6528.3,
+        -9173.8
+      ]
+    },
+    {
+      "source_id": "osm:way/828597280",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 284.31,
+      "bounds_enu_meters": [
+        6127.74,
+        -8603.86,
+        6143.23,
+        -8585.09
+      ]
+    },
+    {
+      "source_id": "osm:way/34686450",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 306.87,
+      "bounds_enu_meters": [
+        6463.87,
+        -8090.96,
+        6477.65,
+        -8068.21
+      ]
+    },
+    {
+      "source_id": "osm:way/34686454",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": "Heritage Park",
+      "area_square_meters": 7523.59,
+      "bounds_enu_meters": [
+        6362.31,
+        -8204.93,
+        6482.67,
+        -8102.71
+      ]
+    },
+    {
+      "source_id": "osm:way/561652262",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": "Heritage Park",
+      "area_square_meters": 600.07,
+      "bounds_enu_meters": [
+        6431.19,
+        -8084.54,
+        6460.68,
+        -8054.87
+      ]
+    },
+    {
+      "source_id": "osm:way/828564815",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1847.65,
+      "bounds_enu_meters": [
+        6365.01,
+        -8063.95,
+        6423.65,
+        -8022.91
+      ]
+    },
+    {
+      "source_id": "osm:way/333686976",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 4289.3,
+      "bounds_enu_meters": [
+        7075.16,
+        -9525.96,
+        7145.89,
+        -9463.81
+      ]
+    },
+    {
+      "source_id": "osm:way/333687537",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 10677.92,
+      "bounds_enu_meters": [
+        7419.61,
+        -9596.22,
+        7543.09,
+        -9454.68
+      ]
+    },
+    {
+      "source_id": "osm:way/333687538",
+      "role": "playing_surface",
+      "sport": "softball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 4148.4,
+      "bounds_enu_meters": [
+        7320.64,
+        -9558.65,
+        7420.84,
+        -9486.57
+      ]
+    },
+    {
+      "source_id": "osm:way/333687539",
+      "role": "playing_surface",
+      "sport": "american_football;soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7013.76,
+      "bounds_enu_meters": [
+        7383.35,
+        -9703.36,
+        7507.54,
+        -9578.18
+      ]
+    },
+    {
+      "source_id": "osm:way/1347419190",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 627.06,
+      "bounds_enu_meters": [
+        7154.14,
+        -9489.35,
+        7171.92,
+        -9453.84
+      ]
+    },
+    {
+      "source_id": "osm:way/1350409583",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1066.1,
+      "bounds_enu_meters": [
+        7378.83,
+        -9621.22,
+        7426.17,
+        -9573.58
+      ]
+    },
+    {
+      "source_id": "osm:way/1350419955",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 637.72,
+      "bounds_enu_meters": [
+        7171.82,
+        -9489.41,
+        7189.94,
+        -9453.88
+      ]
+    },
+    {
+      "source_id": "osm:way/1350419956",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 627.88,
+      "bounds_enu_meters": [
+        7189.76,
+        -9489.49,
+        7207.64,
+        -9453.93
+      ]
+    },
+    {
+      "source_id": "osm:way/1350419957",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 667.15,
+      "bounds_enu_meters": [
+        7207.46,
+        -9489.51,
+        7226.59,
+        -9454.03
+      ]
+    },
+    {
+      "source_id": "osm:way/333686751",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2078.43,
+      "bounds_enu_meters": [
+        6965.17,
+        -9563.69,
+        7022.5,
+        -9509.47
+      ]
+    },
+    {
+      "source_id": "osm:way/333686807",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5465.59,
+      "bounds_enu_meters": [
+        6848.47,
+        -9640.63,
+        6961.63,
+        -9528.03
+      ]
+    },
+    {
+      "source_id": "osm:way/333686882",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3794.68,
+      "bounds_enu_meters": [
+        7066.82,
+        -9652.94,
+        7154.96,
+        -9563.17
+      ]
+    },
+    {
+      "source_id": "osm:way/333686978",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2766.57,
+      "bounds_enu_meters": [
+        7152.54,
+        -9530.45,
+        7226.67,
+        -9492.54
+      ]
+    },
+    {
+      "source_id": "osm:way/1350419958",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 672.02,
+      "bounds_enu_meters": [
+        7152.54,
+        -9529.99,
+        7171.0,
+        -9492.54
+      ]
+    },
+    {
+      "source_id": "osm:way/1350419959",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 688.1,
+      "bounds_enu_meters": [
+        7170.78,
+        -9530.09,
+        7189.37,
+        -9492.54
+      ]
+    },
+    {
+      "source_id": "osm:way/1350419960",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 690.54,
+      "bounds_enu_meters": [
+        7189.15,
+        -9530.27,
+        7207.7,
+        -9492.64
+      ]
+    },
+    {
+      "source_id": "osm:way/1350419961",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 715.92,
+      "bounds_enu_meters": [
+        7207.63,
+        -9530.45,
+        7226.67,
+        -9492.59
+      ]
+    },
+    {
+      "source_id": "osm:way/1350419962",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 328.16,
+      "bounds_enu_meters": [
+        7200.92,
+        -9596.04,
+        7223.42,
+        -9581.23
+      ]
+    },
+    {
+      "source_id": "osm:way/1350419963",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 328.15,
+      "bounds_enu_meters": [
+        7221.89,
+        -9574.36,
+        7244.38,
+        -9559.56
+      ]
+    },
+    {
+      "source_id": "osm:way/1350409584",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1025.82,
+      "bounds_enu_meters": [
+        7464.6,
+        -9707.36,
+        7511.74,
+        -9660.74
+      ]
+    },
+    {
+      "source_id": "osm:way/366046856",
+      "role": "playing_surface",
+      "sport": "bocc\u00e9_ball",
+      "leisure": "pitch",
+      "name": "Bocc\u00e9 Ball Courts",
+      "area_square_meters": 190.82,
+      "bounds_enu_meters": [
+        8932.86,
+        -10548.21,
+        8943.65,
+        -10529.53
+      ]
+    },
+    {
+      "source_id": "osm:way/369274981",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1493.86,
+      "bounds_enu_meters": [
+        10856.9,
+        -11784.38,
+        10906.81,
+        -11737.61
+      ]
+    },
+    {
+      "source_id": "osm:way/133299622",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2266.49,
+      "bounds_enu_meters": [
+        11406.98,
+        -12000.0,
+        11502.1,
+        -11967.38
+      ]
+    },
+    {
+      "source_id": "osm:way/1414783682",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.51,
+      "bounds_enu_meters": [
+        -3398.15,
+        -7430.86,
+        -3379.97,
+        -7405.06
+      ]
+    },
+    {
+      "source_id": "osm:way/1414783683",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.51,
+      "bounds_enu_meters": [
+        -3381.27,
+        -7436.99,
+        -3363.08,
+        -7411.18
+      ]
+    },
+    {
+      "source_id": "osm:way/518509811",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 694.4,
+      "bounds_enu_meters": [
+        -3271.34,
+        -7267.22,
+        -3250.88,
+        -7230.29
+      ]
+    },
+    {
+      "source_id": "osm:way/1414783604",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 250.31,
+      "bounds_enu_meters": [
+        -3402.13,
+        -7083.98,
+        -3386.57,
+        -7058.5
+      ]
+    },
+    {
+      "source_id": "osm:way/1414783605",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 250.23,
+      "bounds_enu_meters": [
+        -3387.43,
+        -7087.31,
+        -3371.88,
+        -7061.83
+      ]
+    },
+    {
+      "source_id": "osm:way/1414783658",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.51,
+      "bounds_enu_meters": [
+        -3359.71,
+        -7243.54,
+        -3348.73,
+        -7219.93
+      ]
+    },
+    {
+      "source_id": "osm:way/1414783659",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.51,
+      "bounds_enu_meters": [
+        -3345.34,
+        -7243.37,
+        -3334.35,
+        -7219.76
+      ]
+    },
+    {
+      "source_id": "osm:way/896613979",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 8749.92,
+      "bounds_enu_meters": [
+        -3114.17,
+        -7532.69,
+        -3044.97,
+        -7402.59
+      ]
+    },
+    {
+      "source_id": "osm:way/896630233",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 912.54,
+      "bounds_enu_meters": [
+        -3081.22,
+        -7441.21,
+        -3048.28,
+        -7408.13
+      ]
+    },
+    {
+      "source_id": "osm:way/1069097587",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 228.94,
+      "bounds_enu_meters": [
+        -3197.58,
+        -6614.97,
+        -3175.24,
+        -6594.17
+      ]
+    },
+    {
+      "source_id": "osm:way/478760158",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 521.7,
+      "bounds_enu_meters": [
+        -2278.79,
+        -6420.53,
+        -2262.45,
+        -6388.44
+      ]
+    },
+    {
+      "source_id": "osm:way/472848518",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 223.5,
+      "bounds_enu_meters": [
+        -2585.66,
+        -5229.64,
+        -2567.1,
+        -5216.29
+      ]
+    },
+    {
+      "source_id": "osm:way/75695093",
+      "role": "playing_surface",
+      "sport": "softball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3718.38,
+      "bounds_enu_meters": [
+        -1639.57,
+        -7411.98,
+        -1569.24,
+        -7341.01
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900932",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 256.02,
+      "bounds_enu_meters": [
+        -1661.44,
+        -7318.41,
+        -1650.57,
+        -7294.57
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900933",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.96,
+      "bounds_enu_meters": [
+        -1646.72,
+        -7318.36,
+        -1635.85,
+        -7294.53
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900934",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.92,
+      "bounds_enu_meters": [
+        -1617.38,
+        -7318.35,
+        -1606.51,
+        -7294.5
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900935",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.96,
+      "bounds_enu_meters": [
+        -1632.1,
+        -7318.39,
+        -1621.23,
+        -7294.55
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900937",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 256.02,
+      "bounds_enu_meters": [
+        -1570.01,
+        -7318.38,
+        -1559.14,
+        -7294.54
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900938",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.96,
+      "bounds_enu_meters": [
+        -1603.14,
+        -7318.39,
+        -1592.27,
+        -7294.56
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900939",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.96,
+      "bounds_enu_meters": [
+        -1588.42,
+        -7318.35,
+        -1577.55,
+        -7294.52
+      ]
+    },
+    {
+      "source_id": "osm:way/40525351",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5969.86,
+      "bounds_enu_meters": [
+        -1428.19,
+        -7461.08,
+        -1375.21,
+        -7347.73
+      ]
+    },
+    {
+      "source_id": "osm:way/167317982",
+      "role": "athletic_track",
+      "sport": "running",
+      "leisure": "track",
+      "name": null,
+      "area_square_meters": 11446.87,
+      "bounds_enu_meters": [
+        -1438.7,
+        -7490.08,
+        -1364.77,
+        -7318.44
+      ]
+    },
+    {
+      "source_id": "osm:way/75695090",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6775.84,
+      "bounds_enu_meters": [
+        -1524.31,
+        -7292.63,
+        -1432.89,
+        -7202.93
+      ]
+    },
+    {
+      "source_id": "osm:way/167317838",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 10718.54,
+      "bounds_enu_meters": [
+        -1578.39,
+        -7470.86,
+        -1467.93,
+        -7362.21
+      ]
+    },
+    {
+      "source_id": "osm:way/547362042",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 262.61,
+      "bounds_enu_meters": [
+        -1030.46,
+        -6575.61,
+        -1012.23,
+        -6551.64
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900936",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 256.02,
+      "bounds_enu_meters": [
+        -1555.29,
+        -7318.34,
+        -1544.42,
+        -7294.49
+      ]
+    },
+    {
+      "source_id": "osm:way/292348777",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 223.77,
+      "bounds_enu_meters": [
+        -1907.04,
+        -7135.76,
+        -1886.43,
+        -7113.65
+      ]
+    },
+    {
+      "source_id": "osm:way/292348778",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 165.23,
+      "bounds_enu_meters": [
+        -1891.45,
+        -7142.77,
+        -1876.55,
+        -7122.44
+      ]
+    },
+    {
+      "source_id": "osm:way/292348779",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 181.59,
+      "bounds_enu_meters": [
+        -1879.38,
+        -7146.66,
+        -1863.91,
+        -7126.49
+      ]
+    },
+    {
+      "source_id": "osm:way/292348780",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 155.05,
+      "bounds_enu_meters": [
+        -1867.94,
+        -7150.02,
+        -1853.46,
+        -7130.22
+      ]
+    },
+    {
+      "source_id": "osm:way/440408693",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5619.54,
+      "bounds_enu_meters": [
+        -1910.84,
+        -7116.16,
+        -1821.3,
+        -7004.46
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900717",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 257.05,
+      "bounds_enu_meters": [
+        -1887.02,
+        -7192.37,
+        -1869.11,
+        -7166.56
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900718",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 257.24,
+      "bounds_enu_meters": [
+        -1873.03,
+        -7197.11,
+        -1855.12,
+        -7171.29
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900719",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 257.05,
+      "bounds_enu_meters": [
+        -1871.09,
+        -7236.62,
+        -1853.19,
+        -7210.81
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900720",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 257.23,
+      "bounds_enu_meters": [
+        -1885.07,
+        -7231.89,
+        -1867.17,
+        -7206.06
+      ]
+    },
+    {
+      "source_id": "osm:way/274149925",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3893.91,
+      "bounds_enu_meters": [
+        -1524.1,
+        -7192.96,
+        -1448.28,
+        -7141.52
+      ]
+    },
+    {
+      "source_id": "osm:way/274150983",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5815.37,
+      "bounds_enu_meters": [
+        -1427.78,
+        -7202.51,
+        -1335.57,
+        -7137.55
+      ]
+    },
+    {
+      "source_id": "osm:way/1260613967",
+      "role": "playing_surface",
+      "sport": "lacrosse",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5293.49,
+      "bounds_enu_meters": [
+        -1425.01,
+        -7273.16,
+        -1328.9,
+        -7217.47
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900988",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.67,
+      "bounds_enu_meters": [
+        -1053.36,
+        -6611.34,
+        -1038.76,
+        -6586.05
+      ]
+    },
+    {
+      "source_id": "osm:way/1442900989",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.71,
+      "bounds_enu_meters": [
+        -1037.31,
+        -6614.13,
+        -1022.71,
+        -6588.85
+      ]
+    },
+    {
+      "source_id": "osm:way/917144697",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.44,
+      "bounds_enu_meters": [
+        -607.38,
+        -6582.53,
+        -595.52,
+        -6558.42
+      ]
+    },
+    {
+      "source_id": "osm:way/917144698",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.37,
+      "bounds_enu_meters": [
+        -589.48,
+        -6582.4,
+        -577.62,
+        -6558.3
+      ]
+    },
+    {
+      "source_id": "osm:way/917144699",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.44,
+      "bounds_enu_meters": [
+        -571.2,
+        -6582.06,
+        -559.34,
+        -6557.96
+      ]
+    },
+    {
+      "source_id": "osm:way/917144700",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.33,
+      "bounds_enu_meters": [
+        -547.72,
+        -6582.23,
+        -535.87,
+        -6558.13
+      ]
+    },
+    {
+      "source_id": "osm:way/917144701",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.44,
+      "bounds_enu_meters": [
+        -528.77,
+        -6582.23,
+        -516.91,
+        -6558.13
+      ]
+    },
+    {
+      "source_id": "osm:way/917144702",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.37,
+      "bounds_enu_meters": [
+        -510.99,
+        -6582.57,
+        -499.14,
+        -6558.47
+      ]
+    },
+    {
+      "source_id": "osm:way/917144703",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.4,
+      "bounds_enu_meters": [
+        -503.95,
+        -6637.53,
+        -492.1,
+        -6613.42
+      ]
+    },
+    {
+      "source_id": "osm:way/917144704",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.4,
+      "bounds_enu_meters": [
+        -522.23,
+        -6637.7,
+        -510.38,
+        -6613.59
+      ]
+    },
+    {
+      "source_id": "osm:way/917144705",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.5,
+      "bounds_enu_meters": [
+        -541.01,
+        -6637.19,
+        -529.16,
+        -6613.09
+      ]
+    },
+    {
+      "source_id": "osm:way/917144706",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.4,
+      "bounds_enu_meters": [
+        -577.41,
+        -6637.19,
+        -565.55,
+        -6613.09
+      ]
+    },
+    {
+      "source_id": "osm:way/917144707",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.5,
+      "bounds_enu_meters": [
+        -595.85,
+        -6637.52,
+        -583.99,
+        -6613.42
+      ]
+    },
+    {
+      "source_id": "osm:way/917144708",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 277.5,
+      "bounds_enu_meters": [
+        -614.3,
+        -6637.69,
+        -602.44,
+        -6613.58
+      ]
+    },
+    {
+      "source_id": "osm:way/511845939",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 676.5,
+      "bounds_enu_meters": [
+        -1019.62,
+        -5326.22,
+        -991.36,
+        -5285.78
+      ]
+    },
+    {
+      "source_id": "osm:way/86473132",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3743.14,
+      "bounds_enu_meters": [
+        -2104.75,
+        -5641.93,
+        -2037.25,
+        -5574.08
+      ]
+    },
+    {
+      "source_id": "osm:way/1442901033",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 261.42,
+      "bounds_enu_meters": [
+        -2088.2,
+        -5683.85,
+        -2076.92,
+        -5659.84
+      ]
+    },
+    {
+      "source_id": "osm:way/1442901034",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 261.09,
+      "bounds_enu_meters": [
+        -2073.28,
+        -5683.77,
+        -2062.0,
+        -5659.76
+      ]
+    },
+    {
+      "source_id": "osm:way/209682040",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 753.65,
+      "bounds_enu_meters": [
+        -832.43,
+        -5533.93,
+        -812.32,
+        -5495.6
+      ]
+    },
+    {
+      "source_id": "osm:way/569173029",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 661.43,
+      "bounds_enu_meters": [
+        -773.38,
+        -5674.08,
+        -754.88,
+        -5638.03
+      ]
+    },
+    {
+      "source_id": "osm:way/193052233",
+      "role": "playing_surface",
+      "sport": "multi",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 8576.24,
+      "bounds_enu_meters": [
+        52.13,
+        -5268.39,
+        126.6,
+        -5152.66
+      ]
+    },
+    {
+      "source_id": "osm:way/210256211",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 510.44,
+      "bounds_enu_meters": [
+        -3930.97,
+        -4006.55,
+        -3914.65,
+        -3974.97
+      ]
+    },
+    {
+      "source_id": "osm:way/888784772",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5468.52,
+      "bounds_enu_meters": [
+        -3396.94,
+        -4266.12,
+        -3298.76,
+        -4146.05
+      ]
+    },
+    {
+      "source_id": "osm:way/1448494432",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 235.74,
+      "bounds_enu_meters": [
+        -3433.34,
+        -4200.78,
+        -3411.94,
+        -4181.61
+      ]
+    },
+    {
+      "source_id": "osm:way/216984415",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 687.66,
+      "bounds_enu_meters": [
+        -2137.88,
+        -4525.14,
+        -2117.78,
+        -4481.12
+      ]
+    },
+    {
+      "source_id": "osm:way/471691231",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 131.45,
+      "bounds_enu_meters": [
+        -2290.99,
+        -4914.7,
+        -2281.36,
+        -4899.15
+      ]
+    },
+    {
+      "source_id": "osm:way/168647811",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": "Kittredge Field",
+      "area_square_meters": 3952.88,
+      "bounds_enu_meters": [
+        -2994.41,
+        -4258.36,
+        -2900.64,
+        -4169.56
+      ]
+    },
+    {
+      "source_id": "osm:way/168647812",
+      "role": "playing_surface",
+      "sport": "soccer;lacrosse",
+      "leisure": "pitch",
+      "name": "Kittredge Field",
+      "area_square_meters": 3985.51,
+      "bounds_enu_meters": [
+        -2928.39,
+        -4198.53,
+        -2839.3,
+        -4104.68
+      ]
+    },
+    {
+      "source_id": "osm:way/177619539",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": "Kittredge Field",
+      "area_square_meters": 7300.04,
+      "bounds_enu_meters": [
+        -2892.62,
+        -4104.07,
+        -2822.94,
+        -3987.41
+      ]
+    },
+    {
+      "source_id": "osm:way/194217258",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 375.33,
+      "bounds_enu_meters": [
+        -3112.25,
+        -4166.42,
+        -3097.13,
+        -4141.55
+      ]
+    },
+    {
+      "source_id": "osm:way/888785544",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 284.09,
+      "bounds_enu_meters": [
+        -2872.79,
+        -3867.84,
+        -2860.42,
+        -3844.69
+      ]
+    },
+    {
+      "source_id": "osm:way/888785545",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 283.99,
+      "bounds_enu_meters": [
+        -2857.54,
+        -3867.85,
+        -2845.16,
+        -3844.69
+      ]
+    },
+    {
+      "source_id": "osm:way/888785546",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 283.99,
+      "bounds_enu_meters": [
+        -2872.7,
+        -3832.78,
+        -2860.32,
+        -3809.62
+      ]
+    },
+    {
+      "source_id": "osm:way/888785547",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 283.99,
+      "bounds_enu_meters": [
+        -2857.46,
+        -3832.78,
+        -2845.09,
+        -3809.63
+      ]
+    },
+    {
+      "source_id": "osm:way/46371964",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": "Franklin Field",
+      "area_square_meters": 10908.63,
+      "bounds_enu_meters": [
+        -3351.77,
+        -3444.23,
+        -3262.08,
+        -3322.16
+      ]
+    },
+    {
+      "source_id": "osm:way/106145544",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5330.88,
+      "bounds_enu_meters": [
+        -3503.07,
+        -3049.21,
+        -3453.11,
+        -2938.97
+      ]
+    },
+    {
+      "source_id": "osm:way/214006637",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5800.61,
+      "bounds_enu_meters": [
+        -3449.37,
+        -3048.98,
+        -3394.95,
+        -2937.35
+      ]
+    },
+    {
+      "source_id": "osm:way/214006646",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6032.52,
+      "bounds_enu_meters": [
+        -3396.98,
+        -3048.04,
+        -3340.47,
+        -2936.36
+      ]
+    },
+    {
+      "source_id": "osm:way/948311383",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 164.07,
+      "bounds_enu_meters": [
+        -3708.71,
+        -3072.28,
+        -3698.63,
+        -3054.93
+      ]
+    },
+    {
+      "source_id": "osm:way/1348157845",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": "Ford Practice Facility (CU Boulder)",
+      "area_square_meters": 9323.91,
+      "bounds_enu_meters": [
+        -3345.7,
+        -3322.25,
+        -3270.17,
+        -3195.22
+      ]
+    },
+    {
+      "source_id": "osm:way/1350683374",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": "Folsom Field",
+      "area_square_meters": 5411.3,
+      "bounds_enu_meters": [
+        -3510.78,
+        -3374.92,
+        -3461.32,
+        -3265.36
+      ]
+    },
+    {
+      "source_id": "osm:way/1352406948",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5367.39,
+      "bounds_enu_meters": [
+        -3340.68,
+        -3438.73,
+        -3291.98,
+        -3328.38
+      ]
+    },
+    {
+      "source_id": "osm:way/1357075108",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 287.85,
+      "bounds_enu_meters": [
+        -3591.11,
+        -3259.03,
+        -3578.69,
+        -3235.52
+      ]
+    },
+    {
+      "source_id": "osm:way/1357075109",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 287.61,
+      "bounds_enu_meters": [
+        -3610.2,
+        -3259.02,
+        -3597.78,
+        -3235.47
+      ]
+    },
+    {
+      "source_id": "osm:way/1357075110",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 281.15,
+      "bounds_enu_meters": [
+        -3628.65,
+        -3259.24,
+        -3616.56,
+        -3235.74
+      ]
+    },
+    {
+      "source_id": "osm:way/87899619",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": "Christian Recht Field",
+      "area_square_meters": 5380.21,
+      "bounds_enu_meters": [
+        -4311.61,
+        -2988.07,
+        -4194.49,
+        -2919.11
+      ]
+    },
+    {
+      "source_id": "osm:way/130861005",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3347.94,
+      "bounds_enu_meters": [
+        -4081.72,
+        -2981.01,
+        -4015.41,
+        -2916.44
+      ]
+    },
+    {
+      "source_id": "osm:way/214006642",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 258.43,
+      "bounds_enu_meters": [
+        -3395.34,
+        -2925.0,
+        -3382.7,
+        -2904.27
+      ]
+    },
+    {
+      "source_id": "osm:way/214006644",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 151.18,
+      "bounds_enu_meters": [
+        -3538.51,
+        -2925.39,
+        -3520.39,
+        -2916.9
+      ]
+    },
+    {
+      "source_id": "osm:way/482550354",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 467.58,
+      "bounds_enu_meters": [
+        -4115.11,
+        -2936.82,
+        -4092.27,
+        -2916.24
+      ]
+    },
+    {
+      "source_id": "osm:way/1360173120",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 265.73,
+      "bounds_enu_meters": [
+        -4313.11,
+        -2899.24,
+        -4297.8,
+        -2873.6
+      ]
+    },
+    {
+      "source_id": "osm:way/1360173121",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 265.73,
+      "bounds_enu_meters": [
+        -4298.71,
+        -2901.97,
+        -4283.4,
+        -2876.33
+      ]
+    },
+    {
+      "source_id": "osm:way/1360173122",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 265.69,
+      "bounds_enu_meters": [
+        -4284.49,
+        -2904.83,
+        -4269.17,
+        -2879.19
+      ]
+    },
+    {
+      "source_id": "osm:way/108336825",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 147.65,
+      "bounds_enu_meters": [
+        -3374.73,
+        -2922.67,
+        -3366.24,
+        -2904.81
+      ]
+    },
+    {
+      "source_id": "osm:way/263395036",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 252.24,
+      "bounds_enu_meters": [
+        -3594.53,
+        -2417.56,
+        -3582.57,
+        -2395.96
+      ]
+    },
+    {
+      "source_id": "osm:way/215667609",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 269.05,
+      "bounds_enu_meters": [
+        -2918.63,
+        -3220.09,
+        -2896.58,
+        -3207.58
+      ]
+    },
+    {
+      "source_id": "osm:way/1497456728",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 156.06,
+      "bounds_enu_meters": [
+        -2931.05,
+        -3142.2,
+        -2913.71,
+        -3133.16
+      ]
+    },
+    {
+      "source_id": "osm:way/1497456729",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 156.07,
+      "bounds_enu_meters": [
+        -2912.77,
+        -3142.23,
+        -2895.44,
+        -3133.19
+      ]
+    },
+    {
+      "source_id": "osm:way/1497456730",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 156.05,
+      "bounds_enu_meters": [
+        -2894.57,
+        -3142.29,
+        -2877.23,
+        -3133.26
+      ]
+    },
+    {
+      "source_id": "osm:way/1497456731",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 156.15,
+      "bounds_enu_meters": [
+        -2876.07,
+        -3142.19,
+        -2858.74,
+        -3133.14
+      ]
+    },
+    {
+      "source_id": "osm:way/264694556",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1393.21,
+      "bounds_enu_meters": [
+        -2426.86,
+        -3209.87,
+        -2387.34,
+        -3172.43
+      ]
+    },
+    {
+      "source_id": "osm:way/264694581",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 322.89,
+      "bounds_enu_meters": [
+        -2450.62,
+        -3208.43,
+        -2433.8,
+        -3182.45
+      ]
+    },
+    {
+      "source_id": "osm:way/466835752",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 138.0,
+      "bounds_enu_meters": [
+        -2223.64,
+        -3225.01,
+        -2213.19,
+        -3211.63
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426205",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.09,
+      "bounds_enu_meters": [
+        -2159.88,
+        -3604.01,
+        -2148.23,
+        -3580.09
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426206",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.05,
+      "bounds_enu_meters": [
+        -2144.17,
+        -3604.07,
+        -2132.52,
+        -3580.15
+      ]
+    },
+    {
+      "source_id": "osm:way/121868782",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": "Prentup Field",
+      "area_square_meters": 16172.12,
+      "bounds_enu_meters": [
+        -2153.56,
+        -3310.62,
+        -2015.7,
+        -3167.34
+      ]
+    },
+    {
+      "source_id": "osm:way/286296295",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 230.31,
+      "bounds_enu_meters": [
+        -2114.1,
+        -3595.04,
+        -2095.97,
+        -3581.9
+      ]
+    },
+    {
+      "source_id": "osm:way/97051890",
+      "role": "playing_surface",
+      "sport": "skateboard",
+      "leisure": "pitch",
+      "name": "Boulder Skatepark",
+      "area_square_meters": 2126.46,
+      "bounds_enu_meters": [
+        -2443.0,
+        -2917.41,
+        -2387.78,
+        -2854.25
+      ]
+    },
+    {
+      "source_id": "osm:way/97051895",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 10498.74,
+      "bounds_enu_meters": [
+        -2528.94,
+        -2903.6,
+        -2414.22,
+        -2791.7
+      ]
+    },
+    {
+      "source_id": "osm:way/89532970",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 242.01,
+      "bounds_enu_meters": [
+        -1989.38,
+        -4821.68,
+        -1965.81,
+        -4799.94
+      ]
+    },
+    {
+      "source_id": "osm:way/89532974",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 995.18,
+      "bounds_enu_meters": [
+        -2008.83,
+        -4857.63,
+        -1963.77,
+        -4814.1
+      ]
+    },
+    {
+      "source_id": "osm:way/89533053",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": "Williams Village Field",
+      "area_square_meters": 8788.75,
+      "bounds_enu_meters": [
+        -2033.52,
+        -4629.66,
+        -1928.83,
+        -4540.18
+      ]
+    },
+    {
+      "source_id": "osm:way/58672379",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2871.58,
+      "bounds_enu_meters": [
+        -1600.52,
+        -3838.93,
+        -1540.52,
+        -3780.54
+      ]
+    },
+    {
+      "source_id": "osm:way/130359292",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2223.63,
+      "bounds_enu_meters": [
+        -1021.02,
+        -4978.33,
+        -961.6,
+        -4927.79
+      ]
+    },
+    {
+      "source_id": "osm:way/58672380",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2960.53,
+      "bounds_enu_meters": [
+        -1675.64,
+        -3837.55,
+        -1615.63,
+        -3775.5
+      ]
+    },
+    {
+      "source_id": "osm:way/58672378",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3945.45,
+      "bounds_enu_meters": [
+        -1525.85,
+        -3826.18,
+        -1457.6,
+        -3757.74
+      ]
+    },
+    {
+      "source_id": "osm:way/608810680",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 453.55,
+      "bounds_enu_meters": [
+        -915.41,
+        -5019.18,
+        -891.72,
+        -4990.73
+      ]
+    },
+    {
+      "source_id": "osm:way/1025717522",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 241.69,
+      "bounds_enu_meters": [
+        -617.31,
+        -4782.0,
+        -606.89,
+        -4758.15
+      ]
+    },
+    {
+      "source_id": "osm:way/1025717523",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 263.46,
+      "bounds_enu_meters": [
+        -636.33,
+        -4818.47,
+        -625.17,
+        -4794.63
+      ]
+    },
+    {
+      "source_id": "osm:way/1025717524",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 255.9,
+      "bounds_enu_meters": [
+        -617.65,
+        -4818.77,
+        -606.88,
+        -4794.49
+      ]
+    },
+    {
+      "source_id": "osm:way/689200489",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5355.67,
+      "bounds_enu_meters": [
+        -216.82,
+        -4943.29,
+        -167.66,
+        -4833.38
+      ]
+    },
+    {
+      "source_id": "osm:way/952030124",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 304.56,
+      "bounds_enu_meters": [
+        -283.85,
+        -4955.34,
+        -270.29,
+        -4932.84
+      ]
+    },
+    {
+      "source_id": "osm:way/952030125",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 304.49,
+      "bounds_enu_meters": [
+        -268.55,
+        -4955.32,
+        -254.98,
+        -4932.83
+      ]
+    },
+    {
+      "source_id": "osm:way/952030126",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 265.37,
+      "bounds_enu_meters": [
+        -145.19,
+        -5062.02,
+        -133.95,
+        -5038.12
+      ]
+    },
+    {
+      "source_id": "osm:way/952030127",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 265.47,
+      "bounds_enu_meters": [
+        -129.41,
+        -5061.87,
+        -118.16,
+        -5037.96
+      ]
+    },
+    {
+      "source_id": "osm:way/952030128",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 265.43,
+      "bounds_enu_meters": [
+        -111.66,
+        -5061.82,
+        -100.43,
+        -5037.91
+      ]
+    },
+    {
+      "source_id": "osm:way/952030129",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 265.47,
+      "bounds_enu_meters": [
+        -95.83,
+        -5061.55,
+        -84.58,
+        -5037.64
+      ]
+    },
+    {
+      "source_id": "osm:way/264694039",
+      "role": "playing_surface",
+      "sport": "athletics",
+      "leisure": "pitch",
+      "name": "Track and Field Practice Field",
+      "area_square_meters": 6038.84,
+      "bounds_enu_meters": [
+        -1856.58,
+        -3259.51,
+        -1769.69,
+        -3153.87
+      ]
+    },
+    {
+      "source_id": "osm:way/284845230",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 347.97,
+      "bounds_enu_meters": [
+        -1119.01,
+        -3617.08,
+        -1092.34,
+        -3590.46
+      ]
+    },
+    {
+      "source_id": "osm:way/532858381",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 257.56,
+      "bounds_enu_meters": [
+        -1780.72,
+        -2628.07,
+        -1761.91,
+        -2604.52
+      ]
+    },
+    {
+      "source_id": "osm:way/48251936",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3453.66,
+      "bounds_enu_meters": [
+        -632.94,
+        -3392.4,
+        -569.1,
+        -3327.85
+      ]
+    },
+    {
+      "source_id": "osm:way/413039277",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 520.35,
+      "bounds_enu_meters": [
+        -635.48,
+        -3517.16,
+        -602.88,
+        -3501.15
+      ]
+    },
+    {
+      "source_id": "osm:way/1470383070",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 267.49,
+      "bounds_enu_meters": [
+        -725.08,
+        -3348.9,
+        -713.75,
+        -3324.89
+      ]
+    },
+    {
+      "source_id": "osm:way/1470383071",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 267.59,
+      "bounds_enu_meters": [
+        -709.42,
+        -3348.85,
+        -698.08,
+        -3324.82
+      ]
+    },
+    {
+      "source_id": "osm:way/89383992",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 425.65,
+      "bounds_enu_meters": [
+        348.84,
+        -5223.84,
+        364.12,
+        -5195.82
+      ]
+    },
+    {
+      "source_id": "osm:way/89383994",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 712.52,
+      "bounds_enu_meters": [
+        267.0,
+        -5214.09,
+        299.25,
+        -5190.87
+      ]
+    },
+    {
+      "source_id": "osm:way/89383998",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3566.12,
+      "bounds_enu_meters": [
+        303.27,
+        -5182.82,
+        401.75,
+        -5144.89
+      ]
+    },
+    {
+      "source_id": "osm:way/193052234",
+      "role": "playing_surface",
+      "sport": "multi",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 8635.58,
+      "bounds_enu_meters": [
+        177.0,
+        -5338.11,
+        251.75,
+        -5222.38
+      ]
+    },
+    {
+      "source_id": "osm:way/492645806",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 369.23,
+      "bounds_enu_meters": [
+        335.61,
+        -5223.88,
+        348.88,
+        -5195.9
+      ]
+    },
+    {
+      "source_id": "osm:way/492645807",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 367.46,
+      "bounds_enu_meters": [
+        322.44,
+        -5223.91,
+        335.66,
+        -5195.98
+      ]
+    },
+    {
+      "source_id": "osm:way/492645808",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 368.06,
+      "bounds_enu_meters": [
+        309.24,
+        -5223.94,
+        322.49,
+        -5196.0
+      ]
+    },
+    {
+      "source_id": "osm:way/544563085",
+      "role": "playing_surface",
+      "sport": "racquet",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 562.32,
+      "bounds_enu_meters": [
+        276.9,
+        -5173.92,
+        303.71,
+        -5152.57
+      ]
+    },
+    {
+      "source_id": "osm:way/356856810",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 8106.37,
+      "bounds_enu_meters": [
+        157.46,
+        -3882.58,
+        250.03,
+        -3769.81
+      ]
+    },
+    {
+      "source_id": "osm:way/475997767",
+      "role": "athletic_track",
+      "sport": "running",
+      "leisure": "track",
+      "name": null,
+      "area_square_meters": 9373.07,
+      "bounds_enu_meters": [
+        1375.85,
+        -4343.51,
+        1440.01,
+        -4180.62
+      ]
+    },
+    {
+      "source_id": "osm:way/688938399",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5353.87,
+      "bounds_enu_meters": [
+        1382.92,
+        -4317.27,
+        1433.33,
+        -4207.16
+      ]
+    },
+    {
+      "source_id": "osm:way/996135328",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 613.37,
+      "bounds_enu_meters": [
+        1300.41,
+        -4131.97,
+        1322.72,
+        -4104.01
+      ]
+    },
+    {
+      "source_id": "osm:way/200692370",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 624.39,
+      "bounds_enu_meters": [
+        1611.5,
+        -3462.45,
+        1633.96,
+        -3426.42
+      ]
+    },
+    {
+      "source_id": "osm:way/200692371",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 646.28,
+      "bounds_enu_meters": [
+        1630.05,
+        -3465.43,
+        1652.28,
+        -3426.87
+      ]
+    },
+    {
+      "source_id": "osm:way/1351147810",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 621.23,
+      "bounds_enu_meters": [
+        2456.43,
+        -5057.8,
+        2475.17,
+        -5022.48
+      ]
+    },
+    {
+      "source_id": "osm:way/1435114760",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2790.87,
+      "bounds_enu_meters": [
+        -3690.48,
+        -1982.69,
+        -3632.03,
+        -1902.93
+      ]
+    },
+    {
+      "source_id": "osm:way/608703526",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 399.16,
+      "bounds_enu_meters": [
+        -4035.21,
+        -930.5,
+        -4012.49,
+        -907.84
+      ]
+    },
+    {
+      "source_id": "osm:way/264630874",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 335.24,
+      "bounds_enu_meters": [
+        -3211.29,
+        -1930.58,
+        -3193.91,
+        -1905.99
+      ]
+    },
+    {
+      "source_id": "osm:way/48270628",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6145.07,
+      "bounds_enu_meters": [
+        -2513.66,
+        -1635.08,
+        -2426.49,
+        -1550.0
+      ]
+    },
+    {
+      "source_id": "osm:way/48270636",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5543.42,
+      "bounds_enu_meters": [
+        -2617.9,
+        -1637.6,
+        -2533.74,
+        -1554.79
+      ]
+    },
+    {
+      "source_id": "osm:way/48270637",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5111.99,
+      "bounds_enu_meters": [
+        -2655.72,
+        -1676.08,
+        -2571.02,
+        -1589.42
+      ]
+    },
+    {
+      "source_id": "osm:way/198083139",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 716.06,
+      "bounds_enu_meters": [
+        -2529.02,
+        -1072.39,
+        -2508.17,
+        -1034.09
+      ]
+    },
+    {
+      "source_id": "osm:way/48270786",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": "Columbine Tennis Court 1",
+      "area_square_meters": 254.91,
+      "bounds_enu_meters": [
+        -3545.55,
+        -714.9,
+        -3534.39,
+        -691.79
+      ]
+    },
+    {
+      "source_id": "osm:way/924979572",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": "Columbine Tennis Court 2",
+      "area_square_meters": 255.01,
+      "bounds_enu_meters": [
+        -3531.21,
+        -715.18,
+        -3520.05,
+        -692.07
+      ]
+    },
+    {
+      "source_id": "osm:way/924979573",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3308.07,
+      "bounds_enu_meters": [
+        -3716.0,
+        -700.98,
+        -3609.05,
+        -670.0
+      ]
+    },
+    {
+      "source_id": "osm:way/305929437",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 261.2,
+      "bounds_enu_meters": [
+        -3469.56,
+        691.55,
+        -3458.73,
+        715.85
+      ]
+    },
+    {
+      "source_id": "osm:way/305929438",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 257.96,
+      "bounds_enu_meters": [
+        -3454.9,
+        691.54,
+        -3444.31,
+        716.07
+      ]
+    },
+    {
+      "source_id": "osm:way/305929439",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 272.2,
+      "bounds_enu_meters": [
+        -3436.91,
+        692.31,
+        -3425.13,
+        716.54
+      ]
+    },
+    {
+      "source_id": "osm:way/305929440",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 271.96,
+      "bounds_enu_meters": [
+        -3421.91,
+        691.71,
+        -3410.8,
+        716.22
+      ]
+    },
+    {
+      "source_id": "osm:way/652204243",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 9797.64,
+      "bounds_enu_meters": [
+        -3515.66,
+        570.63,
+        -3410.63,
+        669.99
+      ]
+    },
+    {
+      "source_id": "osm:way/652204263",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 161.95,
+      "bounds_enu_meters": [
+        -3482.63,
+        687.32,
+        -3473.61,
+        705.28
+      ]
+    },
+    {
+      "source_id": "osm:way/652204264",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 161.8,
+      "bounds_enu_meters": [
+        -3493.63,
+        687.29,
+        -3484.61,
+        705.25
+      ]
+    },
+    {
+      "source_id": "osm:way/240893591",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 281.92,
+      "bounds_enu_meters": [
+        -2724.18,
+        -252.59,
+        -2700.19,
+        -227.1
+      ]
+    },
+    {
+      "source_id": "osm:way/294583694",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 310.35,
+      "bounds_enu_meters": [
+        -3222.91,
+        -87.17,
+        -3205.41,
+        -61.52
+      ]
+    },
+    {
+      "source_id": "osm:way/521108399",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1317.21,
+      "bounds_enu_meters": [
+        -3001.46,
+        -281.38,
+        -2965.4,
+        -244.77
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426112",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 269.2,
+      "bounds_enu_meters": [
+        -2132.12,
+        -395.97,
+        -2120.89,
+        -371.94
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426113",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 269.0,
+      "bounds_enu_meters": [
+        -2117.48,
+        -396.19,
+        -2106.25,
+        -372.15
+      ]
+    },
+    {
+      "source_id": "osm:way/45979927",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1850.36,
+      "bounds_enu_meters": [
+        -2966.46,
+        451.81,
+        -2914.98,
+        503.56
+      ]
+    },
+    {
+      "source_id": "osm:way/886253004",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 570.72,
+      "bounds_enu_meters": [
+        -2482.8,
+        35.55,
+        -2465.54,
+        69.78
+      ]
+    },
+    {
+      "source_id": "osm:way/688935790",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1223.17,
+      "bounds_enu_meters": [
+        -1994.3,
+        -1620.62,
+        -1941.89,
+        -1589.31
+      ]
+    },
+    {
+      "source_id": "osm:way/264690917",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 467.95,
+      "bounds_enu_meters": [
+        -1905.0,
+        -746.36,
+        -1877.91,
+        -723.18
+      ]
+    },
+    {
+      "source_id": "osm:way/607110711",
+      "role": "playing_surface",
+      "sport": "rugby_league",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5384.75,
+      "bounds_enu_meters": [
+        -1033.06,
+        -1387.18,
+        -913.78,
+        -1287.31
+      ]
+    },
+    {
+      "source_id": "osm:way/77977414",
+      "role": "playing_surface",
+      "sport": "skateboard",
+      "leisure": "pitch",
+      "name": "Green Block Skatepark",
+      "area_square_meters": 2640.54,
+      "bounds_enu_meters": [
+        -341.2,
+        -1082.04,
+        -292.48,
+        -1027.07
+      ]
+    },
+    {
+      "source_id": "osm:way/963483009",
+      "role": "playing_surface",
+      "sport": "skateboard",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1157.55,
+      "bounds_enu_meters": [
+        -417.03,
+        -1056.52,
+        -375.49,
+        -1012.91
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426193",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 274.75,
+      "bounds_enu_meters": [
+        -2026.66,
+        -714.44,
+        -2015.0,
+        -690.19
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426194",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 274.92,
+      "bounds_enu_meters": [
+        -2011.59,
+        -714.55,
+        -1999.92,
+        -690.28
+      ]
+    },
+    {
+      "source_id": "osm:way/120926950",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6896.37,
+      "bounds_enu_meters": [
+        -1820.76,
+        256.6,
+        -1720.07,
+        325.19
+      ]
+    },
+    {
+      "source_id": "osm:way/120926951",
+      "role": "playing_surface",
+      "sport": "rugby_union",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 8864.25,
+      "bounds_enu_meters": [
+        -1769.64,
+        359.19,
+        -1663.29,
+        503.6
+      ]
+    },
+    {
+      "source_id": "osm:way/224546645",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3372.66,
+      "bounds_enu_meters": [
+        -1933.18,
+        474.05,
+        -1859.98,
+        520.22
+      ]
+    },
+    {
+      "source_id": "osm:way/224546647",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6854.34,
+      "bounds_enu_meters": [
+        -1933.18,
+        256.59,
+        -1832.81,
+        325.02
+      ]
+    },
+    {
+      "source_id": "osm:way/224546649",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3341.89,
+      "bounds_enu_meters": [
+        -1832.68,
+        346.13,
+        -1786.84,
+        419.51
+      ]
+    },
+    {
+      "source_id": "osm:way/224546651",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6887.51,
+      "bounds_enu_meters": [
+        -1932.79,
+        181.72,
+        -1832.62,
+        250.55
+      ]
+    },
+    {
+      "source_id": "osm:way/224546653",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5831.65,
+      "bounds_enu_meters": [
+        -1933.11,
+        334.04,
+        -1841.91,
+        398.06
+      ]
+    },
+    {
+      "source_id": "osm:way/224546655",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5829.44,
+      "bounds_enu_meters": [
+        -1933.17,
+        404.18,
+        -1841.7,
+        468.07
+      ]
+    },
+    {
+      "source_id": "osm:way/224546656",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3367.5,
+      "bounds_enu_meters": [
+        -1832.63,
+        425.35,
+        -1786.64,
+        498.73
+      ]
+    },
+    {
+      "source_id": "osm:way/1254209412",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6901.99,
+      "bounds_enu_meters": [
+        -1820.81,
+        182.02,
+        -1720.03,
+        250.61
+      ]
+    },
+    {
+      "source_id": "osm:way/1254209413",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6887.87,
+      "bounds_enu_meters": [
+        -1820.89,
+        107.42,
+        -1720.71,
+        176.25
+      ]
+    },
+    {
+      "source_id": "osm:way/1254209414",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6887.57,
+      "bounds_enu_meters": [
+        -1933.17,
+        107.0,
+        -1832.99,
+        175.82
+      ]
+    },
+    {
+      "source_id": "osm:way/305929157",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.8,
+      "bounds_enu_meters": [
+        -4168.11,
+        1377.28,
+        -4156.28,
+        1400.81
+      ]
+    },
+    {
+      "source_id": "osm:way/532641967",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 275.76,
+      "bounds_enu_meters": [
+        -4047.7,
+        1392.37,
+        -4024.36,
+        1404.39
+      ]
+    },
+    {
+      "source_id": "osm:way/305929433",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 256.3,
+      "bounds_enu_meters": [
+        -3469.43,
+        729.05,
+        -3458.26,
+        752.78
+      ]
+    },
+    {
+      "source_id": "osm:way/305929434",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 267.11,
+      "bounds_enu_meters": [
+        -3455.5,
+        729.08,
+        -3443.79,
+        753.43
+      ]
+    },
+    {
+      "source_id": "osm:way/305929435",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 252.86,
+      "bounds_enu_meters": [
+        -3436.21,
+        728.99,
+        -3425.66,
+        753.61
+      ]
+    },
+    {
+      "source_id": "osm:way/305929436",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 286.11,
+      "bounds_enu_meters": [
+        -3422.21,
+        728.51,
+        -3410.03,
+        753.52
+      ]
+    },
+    {
+      "source_id": "osm:way/652204265",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 893.76,
+      "bounds_enu_meters": [
+        -3415.95,
+        806.27,
+        -3384.25,
+        838.53
+      ]
+    },
+    {
+      "source_id": "osm:way/652204266",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 893.74,
+      "bounds_enu_meters": [
+        -3458.59,
+        779.44,
+        -3426.89,
+        811.7
+      ]
+    },
+    {
+      "source_id": "osm:way/652204267",
+      "role": "playing_surface",
+      "sport": "american_football;soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6329.18,
+      "bounds_enu_meters": [
+        -3562.65,
+        724.7,
+        -3503.35,
+        834.65
+      ]
+    },
+    {
+      "source_id": "osm:way/305928888",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 621.98,
+      "bounds_enu_meters": [
+        -4040.6,
+        1722.98,
+        -4021.59,
+        1756.55
+      ]
+    },
+    {
+      "source_id": "osm:way/305928889",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 658.12,
+      "bounds_enu_meters": [
+        -4060.3,
+        1722.77,
+        -4040.23,
+        1756.34
+      ]
+    },
+    {
+      "source_id": "osm:way/532641966",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 103.54,
+      "bounds_enu_meters": [
+        -3823.57,
+        1852.39,
+        -3807.68,
+        1861.28
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426030",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.33,
+      "bounds_enu_meters": [
+        -2400.27,
+        968.72,
+        -2388.82,
+        992.85
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426031",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.16,
+      "bounds_enu_meters": [
+        -2381.92,
+        968.89,
+        -2370.48,
+        993.01
+      ]
+    },
+    {
+      "source_id": "osm:way/477639342",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 353.13,
+      "bounds_enu_meters": [
+        -4324.96,
+        2687.21,
+        -4301.82,
+        2703.04
+      ]
+    },
+    {
+      "source_id": "osm:way/477639346",
+      "role": "playing_surface",
+      "sport": "roller_hockey;roller_skating",
+      "leisure": "pitch",
+      "name": "Hartmann Park Outdoor Rink",
+      "area_square_meters": 1459.91,
+      "bounds_enu_meters": [
+        -4217.4,
+        2522.3,
+        -4190.86,
+        2579.51
+      ]
+    },
+    {
+      "source_id": "osm:way/566476590",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 315.97,
+      "bounds_enu_meters": [
+        -2039.22,
+        1477.92,
+        -2025.84,
+        1502.73
+      ]
+    },
+    {
+      "source_id": "osm:way/566476591",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 253.14,
+      "bounds_enu_meters": [
+        -1940.46,
+        1603.09,
+        -1914.9,
+        1618.89
+      ]
+    },
+    {
+      "source_id": "osm:way/1435363850",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 169.13,
+      "bounds_enu_meters": [
+        110.99,
+        3475.1,
+        128.54,
+        3485.19
+      ]
+    },
+    {
+      "source_id": "osm:way/472096646",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 597.65,
+      "bounds_enu_meters": [
+        -869.99,
+        2937.2,
+        -853.1,
+        2972.79
+      ]
+    },
+    {
+      "source_id": "osm:way/714624900",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 202.21,
+      "bounds_enu_meters": [
+        -113.3,
+        3534.75,
+        -90.89,
+        3550.73
+      ]
+    },
+    {
+      "source_id": "osm:way/714624901",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 220.32,
+      "bounds_enu_meters": [
+        -82.92,
+        3523.01,
+        -57.74,
+        3540.35
+      ]
+    },
+    {
+      "source_id": "osm:way/1435363848",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 170.41,
+      "bounds_enu_meters": [
+        -35.73,
+        3483.33,
+        -15.83,
+        3501.97
+      ]
+    },
+    {
+      "source_id": "osm:way/1435363849",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 194.29,
+      "bounds_enu_meters": [
+        38.14,
+        3488.21,
+        59.23,
+        3503.8
+      ]
+    },
+    {
+      "source_id": "osm:way/64459508",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7203.67,
+      "bounds_enu_meters": [
+        971.65,
+        -1932.09,
+        1067.35,
+        -1841.32
+      ]
+    },
+    {
+      "source_id": "osm:way/64459509",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7374.75,
+      "bounds_enu_meters": [
+        967.98,
+        -1822.36,
+        1067.35,
+        -1733.22
+      ]
+    },
+    {
+      "source_id": "osm:way/64459510",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7262.58,
+      "bounds_enu_meters": [
+        1092.08,
+        -1821.71,
+        1186.41,
+        -1730.02
+      ]
+    },
+    {
+      "source_id": "osm:way/64459511",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7173.46,
+      "bounds_enu_meters": [
+        1092.55,
+        -1931.18,
+        1186.42,
+        -1842.22
+      ]
+    },
+    {
+      "source_id": "osm:way/77722459",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7542.53,
+      "bounds_enu_meters": [
+        1027.37,
+        -1532.46,
+        1123.07,
+        -1435.98
+      ]
+    },
+    {
+      "source_id": "osm:way/77722460",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7277.42,
+      "bounds_enu_meters": [
+        914.26,
+        -1533.6,
+        1011.81,
+        -1438.05
+      ]
+    },
+    {
+      "source_id": "osm:way/1202042886",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 202.15,
+      "bounds_enu_meters": [
+        556.01,
+        -1376.46,
+        574.87,
+        -1365.65
+      ]
+    },
+    {
+      "source_id": "osm:way/77722458",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7256.56,
+      "bounds_enu_meters": [
+        1027.37,
+        -1421.62,
+        1124.21,
+        -1325.84
+      ]
+    },
+    {
+      "source_id": "osm:way/1000414684",
+      "role": "playing_surface",
+      "sport": "cycling",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3239.7,
+      "bounds_enu_meters": [
+        1294.4,
+        -1317.45,
+        1328.83,
+        -1220.95
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426582",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 267.26,
+      "bounds_enu_meters": [
+        989.91,
+        2162.61,
+        1001.17,
+        2186.72
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426583",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 267.26,
+      "bounds_enu_meters": [
+        1005.79,
+        2162.67,
+        1017.05,
+        2186.77
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426608",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 271.11,
+      "bounds_enu_meters": [
+        1138.86,
+        2057.91,
+        1151.5,
+        2082.71
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426609",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 271.06,
+      "bounds_enu_meters": [
+        1155.03,
+        2056.74,
+        1167.67,
+        2081.53
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426610",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 83.76,
+      "bounds_enu_meters": [
+        1158.64,
+        2071.62,
+        1165.56,
+        2085.3
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426611",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 83.76,
+      "bounds_enu_meters": [
+        1157.52,
+        2053.38,
+        1164.44,
+        2067.06
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426612",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 83.72,
+      "bounds_enu_meters": [
+        1142.27,
+        2072.64,
+        1149.19,
+        2086.3
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426613",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 83.7,
+      "bounds_enu_meters": [
+        1141.27,
+        2054.44,
+        1148.19,
+        2068.12
+      ]
+    },
+    {
+      "source_id": "osm:way/469776161",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 625.85,
+      "bounds_enu_meters": [
+        925.36,
+        2305.56,
+        943.42,
+        2341.77
+      ]
+    },
+    {
+      "source_id": "osm:way/260710245",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 401.33,
+      "bounds_enu_meters": [
+        1241.64,
+        2188.93,
+        1256.63,
+        2216.5
+      ]
+    },
+    {
+      "source_id": "osm:way/1435363851",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 168.83,
+      "bounds_enu_meters": [
+        360.26,
+        3503.63,
+        378.14,
+        3522.76
+      ]
+    },
+    {
+      "source_id": "osm:way/469808630",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 578.02,
+      "bounds_enu_meters": [
+        1377.75,
+        2257.55,
+        1395.79,
+        2289.83
+      ]
+    },
+    {
+      "source_id": "osm:way/1069809472",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 172.97,
+      "bounds_enu_meters": [
+        2044.62,
+        2628.32,
+        2063.85,
+        2639.06
+      ]
+    },
+    {
+      "source_id": "osm:way/264860748",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 515.64,
+      "bounds_enu_meters": [
+        1887.61,
+        3116.59,
+        1917.86,
+        3133.66
+      ]
+    },
+    {
+      "source_id": "osm:way/509053492",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 254.61,
+      "bounds_enu_meters": [
+        2035.64,
+        2912.49,
+        2052.65,
+        2927.76
+      ]
+    },
+    {
+      "source_id": "osm:way/543473890",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 679.01,
+      "bounds_enu_meters": [
+        3858.63,
+        1711.15,
+        3877.4,
+        1747.85
+      ]
+    },
+    {
+      "source_id": "osm:way/543473885",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 632.0,
+      "bounds_enu_meters": [
+        3979.14,
+        2737.53,
+        3998.17,
+        2773.45
+      ]
+    },
+    {
+      "source_id": "osm:way/207984782",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1064.86,
+      "bounds_enu_meters": [
+        3698.54,
+        3490.76,
+        3730.25,
+        3525.07
+      ]
+    },
+    {
+      "source_id": "osm:way/46263293",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2588.27,
+      "bounds_enu_meters": [
+        5683.01,
+        -7260.04,
+        5743.88,
+        -7181.65
+      ]
+    },
+    {
+      "source_id": "osm:way/1078674449",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 257.04,
+      "bounds_enu_meters": [
+        5719.33,
+        -7246.63,
+        5739.24,
+        -7220.75
+      ]
+    },
+    {
+      "source_id": "osm:way/1435792341",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.27,
+      "bounds_enu_meters": [
+        4907.63,
+        -6731.36,
+        4919.39,
+        -6707.3
+      ]
+    },
+    {
+      "source_id": "osm:way/46263851",
+      "role": "playing_surface",
+      "sport": "skating;roller_skating;roller_hockey",
+      "leisure": "pitch",
+      "name": "Louisville Outdoor Rink",
+      "area_square_meters": 1418.15,
+      "bounds_enu_meters": [
+        5618.34,
+        -7270.08,
+        5676.94,
+        -7232.0
+      ]
+    },
+    {
+      "source_id": "osm:way/46263852",
+      "role": "playing_surface",
+      "sport": "skateboard",
+      "leisure": "pitch",
+      "name": "Louisville Skatepark",
+      "area_square_meters": 1102.44,
+      "bounds_enu_meters": [
+        5533.32,
+        -7280.03,
+        5583.47,
+        -7248.5
+      ]
+    },
+    {
+      "source_id": "osm:way/1078674446",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 257.15,
+      "bounds_enu_meters": [
+        5687.4,
+        -7221.1,
+        5707.31,
+        -7195.2
+      ]
+    },
+    {
+      "source_id": "osm:way/1078674447",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 257.04,
+      "bounds_enu_meters": [
+        5704.01,
+        -7213.43,
+        5723.92,
+        -7187.55
+      ]
+    },
+    {
+      "source_id": "osm:way/1078674448",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 257.12,
+      "bounds_enu_meters": [
+        5702.72,
+        -7254.28,
+        5722.63,
+        -7228.4
+      ]
+    },
+    {
+      "source_id": "osm:way/1078660651",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1169.64,
+      "bounds_enu_meters": [
+        5915.31,
+        -7698.0,
+        5951.05,
+        -7662.75
+      ]
+    },
+    {
+      "source_id": "osm:way/1078845722",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 211.31,
+      "bounds_enu_meters": [
+        5828.76,
+        -7769.39,
+        5837.96,
+        -7746.05
+      ]
+    },
+    {
+      "source_id": "osm:way/1435792342",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 261.78,
+      "bounds_enu_meters": [
+        4703.17,
+        -6443.92,
+        4727.29,
+        -6432.67
+      ]
+    },
+    {
+      "source_id": "osm:way/1453925173",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 158.32,
+      "bounds_enu_meters": [
+        5385.55,
+        -6062.99,
+        5395.7,
+        -6046.94
+      ]
+    },
+    {
+      "source_id": "osm:way/920574804",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 120.61,
+      "bounds_enu_meters": [
+        5653.41,
+        -5452.02,
+        5665.69,
+        -5440.87
+      ]
+    },
+    {
+      "source_id": "osm:way/1516722795",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 266.42,
+      "bounds_enu_meters": [
+        5587.86,
+        -5778.12,
+        5599.06,
+        -5754.27
+      ]
+    },
+    {
+      "source_id": "osm:way/1516722796",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 266.2,
+      "bounds_enu_meters": [
+        5602.63,
+        -5778.12,
+        5613.84,
+        -5754.28
+      ]
+    },
+    {
+      "source_id": "osm:way/1516722797",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 82.5,
+      "bounds_enu_meters": [
+        5590.36,
+        -5763.96,
+        5596.51,
+        -5750.46
+      ]
+    },
+    {
+      "source_id": "osm:way/1085616772",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 695.78,
+      "bounds_enu_meters": [
+        7304.6,
+        -7685.83,
+        7342.55,
+        -7665.27
+      ]
+    },
+    {
+      "source_id": "osm:way/46229418",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": "Cleo Mudrock East",
+      "area_square_meters": 8149.89,
+      "bounds_enu_meters": [
+        7462.33,
+        -7337.5,
+        7562.15,
+        -7246.2
+      ]
+    },
+    {
+      "source_id": "osm:way/46229419",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": "Cleo Mudrock West",
+      "area_square_meters": 6968.17,
+      "bounds_enu_meters": [
+        7347.02,
+        -7341.45,
+        7434.53,
+        -7245.78
+      ]
+    },
+    {
+      "source_id": "osm:way/923642940",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 187.01,
+      "bounds_enu_meters": [
+        7430.78,
+        -7078.1,
+        7449.91,
+        -7058.59
+      ]
+    },
+    {
+      "source_id": "osm:way/923642941",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 187.01,
+      "bounds_enu_meters": [
+        7421.08,
+        -7150.48,
+        7436.83,
+        -7132.74
+      ]
+    },
+    {
+      "source_id": "osm:way/370499521",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 447.42,
+      "bounds_enu_meters": [
+        8005.33,
+        -7661.51,
+        8037.89,
+        -7632.54
+      ]
+    },
+    {
+      "source_id": "osm:way/793392241",
+      "role": "playing_surface",
+      "sport": "boules",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 335.66,
+      "bounds_enu_meters": [
+        8062.42,
+        -7513.35,
+        8088.77,
+        -7486.88
+      ]
+    },
+    {
+      "source_id": "osm:way/122317577",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 8368.19,
+      "bounds_enu_meters": [
+        8275.98,
+        -6742.62,
+        8371.04,
+        -6642.31
+      ]
+    },
+    {
+      "source_id": "osm:way/453826103",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 123.95,
+      "bounds_enu_meters": [
+        7195.17,
+        -5918.18,
+        7207.47,
+        -5906.26
+      ]
+    },
+    {
+      "source_id": "osm:way/1330509565",
+      "role": "playing_surface",
+      "sport": null,
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1744.55,
+      "bounds_enu_meters": [
+        7152.99,
+        -6002.17,
+        7209.14,
+        -5970.61
+      ]
+    },
+    {
+      "source_id": "osm:way/459907974",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5402.06,
+      "bounds_enu_meters": [
+        7854.07,
+        -6149.85,
+        7903.87,
+        -6039.47
+      ]
+    },
+    {
+      "source_id": "osm:way/460254161",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 399.16,
+      "bounds_enu_meters": [
+        7871.71,
+        -6240.2,
+        7887.28,
+        -6214.21
+      ]
+    },
+    {
+      "source_id": "osm:way/460254164",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1217.74,
+      "bounds_enu_meters": [
+        7752.47,
+        -6155.32,
+        7789.55,
+        -6117.09
+      ]
+    },
+    {
+      "source_id": "osm:way/460254165",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2384.12,
+      "bounds_enu_meters": [
+        7713.19,
+        -6152.71,
+        7750.64,
+        -6087.95
+      ]
+    },
+    {
+      "source_id": "osm:way/460254166",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1170.12,
+      "bounds_enu_meters": [
+        7674.67,
+        -6109.42,
+        7711.22,
+        -6073.01
+      ]
+    },
+    {
+      "source_id": "osm:way/1278250505",
+      "role": "athletic_track",
+      "sport": "running",
+      "leisure": "track",
+      "name": null,
+      "area_square_meters": 9318.22,
+      "bounds_enu_meters": [
+        7847.35,
+        -6176.61,
+        7910.55,
+        -6013.38
+      ]
+    },
+    {
+      "source_id": "osm:way/1470382309",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 270.57,
+      "bounds_enu_meters": [
+        7854.54,
+        -6244.94,
+        7865.91,
+        -6220.79
+      ]
+    },
+    {
+      "source_id": "osm:way/1470382310",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 270.68,
+      "bounds_enu_meters": [
+        7838.14,
+        -6245.13,
+        7849.51,
+        -6220.98
+      ]
+    },
+    {
+      "source_id": "osm:way/35023685",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1320.72,
+      "bounds_enu_meters": [
+        7405.41,
+        -5669.03,
+        7446.39,
+        -5628.89
+      ]
+    },
+    {
+      "source_id": "osm:way/1434440890",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.8,
+      "bounds_enu_meters": [
+        7462.62,
+        -5693.19,
+        7476.5,
+        -5667.98
+      ]
+    },
+    {
+      "source_id": "osm:way/1434440891",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.85,
+      "bounds_enu_meters": [
+        7480.78,
+        -5695.24,
+        7494.66,
+        -5670.03
+      ]
+    },
+    {
+      "source_id": "osm:way/122317573",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": "Field 3",
+      "area_square_meters": 7879.97,
+      "bounds_enu_meters": [
+        8625.77,
+        -6492.58,
+        8726.24,
+        -6391.7
+      ]
+    },
+    {
+      "source_id": "osm:way/122317575",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": "Field 4",
+      "area_square_meters": 10183.39,
+      "bounds_enu_meters": [
+        8624.8,
+        -6363.19,
+        8734.69,
+        -6253.7
+      ]
+    },
+    {
+      "source_id": "osm:way/122317572",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": "Field 2",
+      "area_square_meters": 7849.32,
+      "bounds_enu_meters": [
+        8506.69,
+        -6492.3,
+        8607.24,
+        -6391.33
+      ]
+    },
+    {
+      "source_id": "osm:way/122317574",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": "Field 1",
+      "area_square_meters": 7826.44,
+      "bounds_enu_meters": [
+        8506.83,
+        -6363.38,
+        8606.86,
+        -6262.96
+      ]
+    },
+    {
+      "source_id": "osm:way/278753869",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 869.46,
+      "bounds_enu_meters": [
+        6322.48,
+        -4739.35,
+        6359.34,
+        -4714.9
+      ]
+    },
+    {
+      "source_id": "osm:way/278753890",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 222.79,
+      "bounds_enu_meters": [
+        6379.51,
+        -4743.72,
+        6391.63,
+        -4723.65
+      ]
+    },
+    {
+      "source_id": "osm:way/278753891",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 240.41,
+      "bounds_enu_meters": [
+        6396.76,
+        -4745.61,
+        6409.95,
+        -4727.0
+      ]
+    },
+    {
+      "source_id": "osm:way/628640977",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 92.55,
+      "bounds_enu_meters": [
+        8284.25,
+        -4173.95,
+        8297.99,
+        -4160.49
+      ]
+    },
+    {
+      "source_id": "osm:way/967719583",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 364.87,
+      "bounds_enu_meters": [
+        7718.43,
+        -3015.27,
+        7745.86,
+        -2987.42
+      ]
+    },
+    {
+      "source_id": "osm:way/380142618",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 275.65,
+      "bounds_enu_meters": [
+        8875.52,
+        -3380.49,
+        8888.11,
+        -3357.89
+      ]
+    },
+    {
+      "source_id": "osm:way/380142620",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 185.7,
+      "bounds_enu_meters": [
+        8895.92,
+        -3374.71,
+        8906.25,
+        -3356.04
+      ]
+    },
+    {
+      "source_id": "osm:way/920553127",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 301.43,
+      "bounds_enu_meters": [
+        8992.72,
+        -2641.5,
+        9011.37,
+        -2624.9
+      ]
+    },
+    {
+      "source_id": "osm:way/1428215001",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 260.0,
+      "bounds_enu_meters": [
+        10405.08,
+        -7321.15,
+        10416.6,
+        -7297.29
+      ]
+    },
+    {
+      "source_id": "osm:way/321734784",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 404.27,
+      "bounds_enu_meters": [
+        11195.8,
+        -7737.12,
+        11210.86,
+        -7710.14
+      ]
+    },
+    {
+      "source_id": "osm:way/1470381581",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 271.17,
+      "bounds_enu_meters": [
+        11293.25,
+        -7645.5,
+        11304.83,
+        -7621.52
+      ]
+    },
+    {
+      "source_id": "osm:way/1470381582",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 271.17,
+      "bounds_enu_meters": [
+        11311.58,
+        -7645.73,
+        11323.17,
+        -7621.75
+      ]
+    },
+    {
+      "source_id": "osm:way/321734775",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7621.41,
+      "bounds_enu_meters": [
+        11291.83,
+        -7768.17,
+        11361.22,
+        -7657.85
+      ]
+    },
+    {
+      "source_id": "osm:way/35921393",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 359.02,
+      "bounds_enu_meters": [
+        9431.75,
+        -6129.69,
+        9447.17,
+        -6104.35
+      ]
+    },
+    {
+      "source_id": "osm:way/460263285",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2187.18,
+      "bounds_enu_meters": [
+        9588.16,
+        -6088.6,
+        9639.02,
+        -6037.22
+      ]
+    },
+    {
+      "source_id": "osm:way/1414783819",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 259.34,
+      "bounds_enu_meters": [
+        9389.49,
+        -6002.1,
+        9400.52,
+        -5978.13
+      ]
+    },
+    {
+      "source_id": "osm:way/1414783820",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 259.14,
+      "bounds_enu_meters": [
+        9404.51,
+        -6001.85,
+        9415.53,
+        -5977.88
+      ]
+    },
+    {
+      "source_id": "osm:way/1416975469",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 263.74,
+      "bounds_enu_meters": [
+        9619.63,
+        -6206.37,
+        9631.06,
+        -6182.21
+      ]
+    },
+    {
+      "source_id": "osm:way/35795037",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 12834.65,
+      "bounds_enu_meters": [
+        9844.24,
+        -6055.55,
+        9973.97,
+        -5904.48
+      ]
+    },
+    {
+      "source_id": "osm:way/35795064",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 4469.56,
+      "bounds_enu_meters": [
+        9894.91,
+        -5924.13,
+        9974.61,
+        -5835.96
+      ]
+    },
+    {
+      "source_id": "osm:way/35795193",
+      "role": "playing_surface",
+      "sport": "american_football;soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6824.41,
+      "bounds_enu_meters": [
+        9786.91,
+        -6187.11,
+        9915.59,
+        -6084.61
+      ]
+    },
+    {
+      "source_id": "osm:way/35795218",
+      "role": "athletic_track",
+      "sport": "athletics",
+      "leisure": "track",
+      "name": null,
+      "area_square_meters": 10904.53,
+      "bounds_enu_meters": [
+        9770.07,
+        -6194.15,
+        9932.78,
+        -6081.55
+      ]
+    },
+    {
+      "source_id": "osm:way/264694912",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 341.14,
+      "bounds_enu_meters": [
+        9647.36,
+        -6303.76,
+        9661.89,
+        -6279.14
+      ]
+    },
+    {
+      "source_id": "osm:way/264694919",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 466.62,
+      "bounds_enu_meters": [
+        9789.65,
+        -6451.39,
+        9821.33,
+        -6421.87
+      ]
+    },
+    {
+      "source_id": "osm:way/264694921",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 4769.43,
+      "bounds_enu_meters": [
+        9774.87,
+        -6403.73,
+        9867.48,
+        -6349.59
+      ]
+    },
+    {
+      "source_id": "osm:way/460263284",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6160.99,
+      "bounds_enu_meters": [
+        9689.0,
+        -6167.25,
+        9746.5,
+        -6055.95
+      ]
+    },
+    {
+      "source_id": "osm:way/1416975462",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 263.74,
+      "bounds_enu_meters": [
+        9749.56,
+        -6204.73,
+        9760.99,
+        -6180.56
+      ]
+    },
+    {
+      "source_id": "osm:way/1416975463",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 263.74,
+      "bounds_enu_meters": [
+        9733.13,
+        -6205.24,
+        9744.56,
+        -6181.07
+      ]
+    },
+    {
+      "source_id": "osm:way/1416975464",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 263.74,
+      "bounds_enu_meters": [
+        9716.21,
+        -6205.09,
+        9727.64,
+        -6180.93
+      ]
+    },
+    {
+      "source_id": "osm:way/1416975465",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 263.74,
+      "bounds_enu_meters": [
+        9693.38,
+        -6205.62,
+        9704.81,
+        -6181.46
+      ]
+    },
+    {
+      "source_id": "osm:way/1416975466",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 263.74,
+      "bounds_enu_meters": [
+        9674.66,
+        -6206.13,
+        9686.09,
+        -6181.97
+      ]
+    },
+    {
+      "source_id": "osm:way/1416975467",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 263.74,
+      "bounds_enu_meters": [
+        9656.58,
+        -6205.99,
+        9668.02,
+        -6181.83
+      ]
+    },
+    {
+      "source_id": "osm:way/1416975468",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 263.74,
+      "bounds_enu_meters": [
+        9638.68,
+        -6206.18,
+        9650.11,
+        -6182.01
+      ]
+    },
+    {
+      "source_id": "osm:way/283456571",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 131.12,
+      "bounds_enu_meters": [
+        11220.36,
+        -6197.4,
+        11236.36,
+        -6181.07
+      ]
+    },
+    {
+      "source_id": "osm:way/35920920",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 992.74,
+      "bounds_enu_meters": [
+        10393.68,
+        -5463.65,
+        10432.85,
+        -5437.61
+      ]
+    },
+    {
+      "source_id": "osm:way/1310738850",
+      "role": "athletic_track",
+      "sport": "running",
+      "leisure": "track",
+      "name": null,
+      "area_square_meters": 10629.53,
+      "bounds_enu_meters": [
+        10397.47,
+        -5383.09,
+        10565.61,
+        -5313.23
+      ]
+    },
+    {
+      "source_id": "osm:way/728268790",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 490.84,
+      "bounds_enu_meters": [
+        9410.12,
+        -5099.69,
+        9441.9,
+        -5066.9
+      ]
+    },
+    {
+      "source_id": "osm:way/1089983799",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 827.85,
+      "bounds_enu_meters": [
+        9357.73,
+        -5065.34,
+        9402.22,
+        -5030.15
+      ]
+    },
+    {
+      "source_id": "osm:way/35798141",
+      "role": "playing_surface",
+      "sport": "multi",
+      "leisure": null,
+      "name": null,
+      "area_square_meters": 16460.97,
+      "bounds_enu_meters": [
+        10928.58,
+        -4654.94,
+        11019.47,
+        -4462.82
+      ]
+    },
+    {
+      "source_id": "osm:way/35879157",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2494.88,
+      "bounds_enu_meters": [
+        11791.81,
+        -4318.58,
+        11869.56,
+        -4286.32
+      ]
+    },
+    {
+      "source_id": "osm:way/36269906",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5802.06,
+      "bounds_enu_meters": [
+        11351.32,
+        -4107.71,
+        11470.77,
+        -4023.34
+      ]
+    },
+    {
+      "source_id": "osm:way/36269963",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5106.35,
+      "bounds_enu_meters": [
+        11427.48,
+        -4157.77,
+        11507.04,
+        -4053.8
+      ]
+    },
+    {
+      "source_id": "osm:way/36270032",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2717.16,
+      "bounds_enu_meters": [
+        11356.37,
+        -4178.58,
+        11394.58,
+        -4104.39
+      ]
+    },
+    {
+      "source_id": "osm:way/36270062",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3382.5,
+      "bounds_enu_meters": [
+        11390.21,
+        -4183.66,
+        11476.82,
+        -4119.51
+      ]
+    },
+    {
+      "source_id": "osm:way/56026084",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 261.72,
+      "bounds_enu_meters": [
+        11722.49,
+        -4271.31,
+        11743.17,
+        -4258.16
+      ]
+    },
+    {
+      "source_id": "osm:way/230286085",
+      "role": "playing_surface",
+      "sport": "skateboard",
+      "leisure": "pitch",
+      "name": "Lafayette Skatepark",
+      "area_square_meters": 2148.97,
+      "bounds_enu_meters": [
+        11527.66,
+        -4173.08,
+        11598.4,
+        -4122.48
+      ]
+    },
+    {
+      "source_id": "osm:way/1013577637",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1314.36,
+      "bounds_enu_meters": [
+        11633.37,
+        -4206.8,
+        11676.84,
+        -4167.0
+      ]
+    },
+    {
+      "source_id": "osm:way/1305102718",
+      "role": "playing_surface",
+      "sport": "roller_skating;roller_hockey",
+      "leisure": "pitch",
+      "name": "Lafayette City Park Outdoor Roller Rink",
+      "area_square_meters": 1215.36,
+      "bounds_enu_meters": [
+        11512.3,
+        -4096.16,
+        11565.78,
+        -4071.46
+      ]
+    },
+    {
+      "source_id": "osm:way/489632493",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 530.63,
+      "bounds_enu_meters": [
+        11540.63,
+        -2467.05,
+        11564.24,
+        -2441.98
+      ]
+    },
+    {
+      "source_id": "osm:way/1047528816",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3484.21,
+      "bounds_enu_meters": [
+        11556.82,
+        -2377.29,
+        11643.65,
+        -2306.07
+      ]
+    },
+    {
+      "source_id": "osm:way/1470378630",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 265.85,
+      "bounds_enu_meters": [
+        11614.25,
+        -2447.47,
+        11625.68,
+        -2423.35
+      ]
+    },
+    {
+      "source_id": "osm:way/1470378631",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 265.85,
+      "bounds_enu_meters": [
+        11632.69,
+        -2447.7,
+        11644.12,
+        -2423.58
+      ]
+    },
+    {
+      "source_id": "osm:way/1470378632",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 85.45,
+      "bounds_enu_meters": [
+        11616.87,
+        -2433.19,
+        11623.4,
+        -2419.52
+      ]
+    },
+    {
+      "source_id": "osm:way/1470378633",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 85.51,
+      "bounds_enu_meters": [
+        11616.53,
+        -2451.21,
+        11623.06,
+        -2437.54
+      ]
+    },
+    {
+      "source_id": "osm:way/1287541345",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 385.52,
+      "bounds_enu_meters": [
+        11987.46,
+        -748.06,
+        12000.0,
+        -715.76
+      ]
+    },
+    {
+      "source_id": "osm:way/1287541346",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 418.86,
+      "bounds_enu_meters": [
+        11986.41,
+        -784.27,
+        12000.0,
+        -751.94
+      ]
+    },
+    {
+      "source_id": "osm:way/1470377751",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 264.33,
+      "bounds_enu_meters": [
+        10136.71,
+        2850.28,
+        10147.93,
+        2874.26
+      ]
+    },
+    {
+      "source_id": "osm:way/1470377752",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 264.33,
+      "bounds_enu_meters": [
+        10153.48,
+        2850.19,
+        10164.7,
+        2874.17
+      ]
+    },
+    {
+      "source_id": "osm:way/1470377753",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 264.42,
+      "bounds_enu_meters": [
+        10170.32,
+        2850.28,
+        10181.55,
+        2874.25
+      ]
+    },
+    {
+      "source_id": "osm:way/1470377754",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 264.42,
+      "bounds_enu_meters": [
+        10152.89,
+        2810.75,
+        10164.12,
+        2834.72
+      ]
+    },
+    {
+      "source_id": "osm:way/1470377755",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 264.34,
+      "bounds_enu_meters": [
+        10169.74,
+        2810.71,
+        10180.96,
+        2834.69
+      ]
+    },
+    {
+      "source_id": "osm:way/1470377756",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 264.38,
+      "bounds_enu_meters": [
+        10186.71,
+        2810.66,
+        10197.93,
+        2834.64
+      ]
+    },
+    {
+      "source_id": "osm:way/543473931",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7280.76,
+      "bounds_enu_meters": [
+        9758.95,
+        2965.65,
+        9827.5,
+        3075.03
+      ]
+    },
+    {
+      "source_id": "osm:way/788290626",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 237.62,
+      "bounds_enu_meters": [
+        -2777.35,
+        6425.37,
+        -2761.09,
+        6441.64
+      ]
+    },
+    {
+      "source_id": "osm:way/788290627",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 254.28,
+      "bounds_enu_meters": [
+        -2756.99,
+        6435.1,
+        -2734.72,
+        6458.37
+      ]
+    },
+    {
+      "source_id": "osm:way/1470425976",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 264.54,
+      "bounds_enu_meters": [
+        -2772.65,
+        6383.9,
+        -2759.92,
+        6408.73
+      ]
+    },
+    {
+      "source_id": "osm:way/1470425977",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 264.64,
+      "bounds_enu_meters": [
+        -2756.44,
+        6385.04,
+        -2743.71,
+        6409.87
+      ]
+    },
+    {
+      "source_id": "osm:way/1470425978",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 82.67,
+      "bounds_enu_meters": [
+        -2770.47,
+        6398.42,
+        -2763.27,
+        6412.26
+      ]
+    },
+    {
+      "source_id": "osm:way/1470425979",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 82.67,
+      "bounds_enu_meters": [
+        -2769.14,
+        6380.4,
+        -2761.94,
+        6394.24
+      ]
+    },
+    {
+      "source_id": "osm:way/472096659",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 603.34,
+      "bounds_enu_meters": [
+        -446.61,
+        6973.36,
+        -427.22,
+        7009.85
+      ]
+    },
+    {
+      "source_id": "osm:way/686000828",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 705.52,
+      "bounds_enu_meters": [
+        1814.26,
+        5068.97,
+        1842.28,
+        5096.11
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426739",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 269.02,
+      "bounds_enu_meters": [
+        1772.22,
+        5061.02,
+        1783.6,
+        5085.25
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426740",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.92,
+      "bounds_enu_meters": [
+        1788.03,
+        5061.02,
+        1799.4,
+        5085.25
+      ]
+    },
+    {
+      "source_id": "osm:way/49673892",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 474.96,
+      "bounds_enu_meters": [
+        1770.74,
+        5153.25,
+        1787.45,
+        5181.89
+      ]
+    },
+    {
+      "source_id": "osm:way/686000829",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 244.54,
+      "bounds_enu_meters": [
+        1738.35,
+        5187.86,
+        1754.87,
+        5202.79
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426741",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.96,
+      "bounds_enu_meters": [
+        1787.84,
+        5097.59,
+        1799.22,
+        5121.81
+      ]
+    },
+    {
+      "source_id": "osm:way/1470426742",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 268.96,
+      "bounds_enu_meters": [
+        1771.98,
+        5097.45,
+        1783.36,
+        5121.67
+      ]
+    },
+    {
+      "source_id": "osm:way/49673888",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6614.04,
+      "bounds_enu_meters": [
+        1893.27,
+        5083.17,
+        1970.37,
+        5184.12
+      ]
+    },
+    {
+      "source_id": "osm:way/49673890",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6278.44,
+      "bounds_enu_meters": [
+        1892.57,
+        5185.01,
+        1970.81,
+        5277.53
+      ]
+    },
+    {
+      "source_id": "osm:way/49673887",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7125.21,
+      "bounds_enu_meters": [
+        1801.31,
+        5085.56,
+        1891.24,
+        5182.6
+      ]
+    },
+    {
+      "source_id": "osm:way/49673889",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7061.29,
+      "bounds_enu_meters": [
+        1797.18,
+        5184.77,
+        1890.06,
+        5279.35
+      ]
+    },
+    {
+      "source_id": "osm:way/958953475",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 201.57,
+      "bounds_enu_meters": [
+        1310.49,
+        6444.02,
+        1330.78,
+        6463.01
+      ]
+    },
+    {
+      "source_id": "osm:way/958953476",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 313.58,
+      "bounds_enu_meters": [
+        1271.8,
+        6469.77,
+        1288.49,
+        6492.97
+      ]
+    },
+    {
+      "source_id": "osm:way/958953477",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 381.5,
+      "bounds_enu_meters": [
+        1250.5,
+        6475.96,
+        1268.05,
+        6500.88
+      ]
+    },
+    {
+      "source_id": "osm:way/566476601",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 256.4,
+      "bounds_enu_meters": [
+        3547.67,
+        4189.19,
+        3558.73,
+        4212.56
+      ]
+    },
+    {
+      "source_id": "osm:way/1358703953",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 291.3,
+      "bounds_enu_meters": [
+        3552.69,
+        4137.43,
+        3574.77,
+        4164.25
+      ]
+    },
+    {
+      "source_id": "osm:way/743711458",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3235.65,
+      "bounds_enu_meters": [
+        3992.53,
+        5816.74,
+        4055.55,
+        5878.93
+      ]
+    },
+    {
+      "source_id": "osm:way/743711459",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2368.7,
+      "bounds_enu_meters": [
+        3997.9,
+        5734.44,
+        4053.95,
+        5795.98
+      ]
+    },
+    {
+      "source_id": "osm:way/743711460",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3524.61,
+      "bounds_enu_meters": [
+        4074.96,
+        5752.96,
+        4141.74,
+        5821.7
+      ]
+    },
+    {
+      "source_id": "osm:way/743711461",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3980.39,
+      "bounds_enu_meters": [
+        4141.72,
+        5755.23,
+        4212.78,
+        5824.85
+      ]
+    },
+    {
+      "source_id": "osm:way/743711462",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 4842.05,
+      "bounds_enu_meters": [
+        4146.42,
+        5821.96,
+        4223.26,
+        5907.92
+      ]
+    },
+    {
+      "source_id": "osm:way/743711463",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3892.41,
+      "bounds_enu_meters": [
+        4079.86,
+        5846.74,
+        4169.41,
+        5915.28
+      ]
+    },
+    {
+      "source_id": "osm:way/90289276",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5288.69,
+      "bounds_enu_meters": [
+        2469.41,
+        7697.56,
+        2546.95,
+        7775.8
+      ]
+    },
+    {
+      "source_id": "osm:way/90289277",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 7547.99,
+      "bounds_enu_meters": [
+        2547.93,
+        7794.17,
+        2643.63,
+        7915.6
+      ]
+    },
+    {
+      "source_id": "osm:way/90289278",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3987.26,
+      "bounds_enu_meters": [
+        2472.02,
+        7782.3,
+        2543.26,
+        7852.34
+      ]
+    },
+    {
+      "source_id": "osm:way/1305103622",
+      "role": "playing_surface",
+      "sport": "roller_skating;roller_hockey",
+      "leisure": "pitch",
+      "name": "Blue Skies Park Outdoor Roller Rink",
+      "area_square_meters": 768.39,
+      "bounds_enu_meters": [
+        4484.41,
+        11363.8,
+        4513.62,
+        11406.86
+      ]
+    },
+    {
+      "source_id": "osm:way/1493715270",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 291.8,
+      "bounds_enu_meters": [
+        4521.4,
+        11677.47,
+        4544.6,
+        11702.03
+      ]
+    },
+    {
+      "source_id": "osm:way/613905955",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1200.47,
+      "bounds_enu_meters": [
+        6352.89,
+        5849.16,
+        6397.76,
+        5894.95
+      ]
+    },
+    {
+      "source_id": "osm:way/613905956",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 365.77,
+      "bounds_enu_meters": [
+        6379.19,
+        5882.38,
+        6404.72,
+        5906.63
+      ]
+    },
+    {
+      "source_id": "osm:way/264693650",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 202.38,
+      "bounds_enu_meters": [
+        4698.44,
+        6732.09,
+        4714.54,
+        6748.85
+      ]
+    },
+    {
+      "source_id": "osm:way/264693651",
+      "role": "playing_surface",
+      "sport": "beachvolleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 340.89,
+      "bounds_enu_meters": [
+        4746.75,
+        6718.38,
+        4768.12,
+        6744.27
+      ]
+    },
+    {
+      "source_id": "osm:way/1228509470",
+      "role": "playing_surface",
+      "sport": "tennis;mini_tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1179.2,
+      "bounds_enu_meters": [
+        5015.37,
+        6659.08,
+        5061.41,
+        6706.42
+      ]
+    },
+    {
+      "source_id": "osm:way/600055726",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 4095.23,
+      "bounds_enu_meters": [
+        5580.96,
+        6947.36,
+        5653.06,
+        7018.72
+      ]
+    },
+    {
+      "source_id": "osm:way/816571865",
+      "role": "playing_surface",
+      "sport": "american_football;soccer",
+      "leisure": "pitch",
+      "name": "NHS Football Field",
+      "area_square_meters": 5416.8,
+      "bounds_enu_meters": [
+        7092.98,
+        6966.42,
+        7202.13,
+        7082.04
+      ]
+    },
+    {
+      "source_id": "osm:way/817669467",
+      "role": "playing_surface",
+      "sport": "tennis;pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 225.57,
+      "bounds_enu_meters": [
+        7213.77,
+        7137.63,
+        7223.99,
+        7160.2
+      ]
+    },
+    {
+      "source_id": "osm:way/817669468",
+      "role": "playing_surface",
+      "sport": "tennis;pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 225.53,
+      "bounds_enu_meters": [
+        7228.01,
+        7137.49,
+        7238.23,
+        7160.07
+      ]
+    },
+    {
+      "source_id": "osm:way/817669469",
+      "role": "playing_surface",
+      "sport": "tennis;pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 225.53,
+      "bounds_enu_meters": [
+        7243.17,
+        7137.2,
+        7253.39,
+        7159.77
+      ]
+    },
+    {
+      "source_id": "osm:way/817669470",
+      "role": "playing_surface",
+      "sport": "tennis;pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 225.53,
+      "bounds_enu_meters": [
+        7214.35,
+        7173.54,
+        7224.57,
+        7196.12
+      ]
+    },
+    {
+      "source_id": "osm:way/817669471",
+      "role": "playing_surface",
+      "sport": "tennis;pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 225.48,
+      "bounds_enu_meters": [
+        7228.59,
+        7173.4,
+        7238.81,
+        7195.98
+      ]
+    },
+    {
+      "source_id": "osm:way/817669472",
+      "role": "playing_surface",
+      "sport": "tennis;pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 225.38,
+      "bounds_enu_meters": [
+        7243.75,
+        7173.12,
+        7253.96,
+        7195.68
+      ]
+    },
+    {
+      "source_id": "osm:way/817669473",
+      "role": "playing_surface",
+      "sport": "tennis;pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 225.48,
+      "bounds_enu_meters": [
+        7184.5,
+        7173.97,
+        7194.72,
+        7196.55
+      ]
+    },
+    {
+      "source_id": "osm:way/817669474",
+      "role": "playing_surface",
+      "sport": "tennis;pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 225.57,
+      "bounds_enu_meters": [
+        7199.65,
+        7173.69,
+        7209.87,
+        7196.25
+      ]
+    },
+    {
+      "source_id": "osm:way/1469221585",
+      "role": "athletic_track",
+      "sport": "running",
+      "leisure": "track",
+      "name": null,
+      "area_square_meters": 816.01,
+      "bounds_enu_meters": [
+        7085.32,
+        7052.23,
+        7131.26,
+        7093.04
+      ]
+    },
+    {
+      "source_id": "osm:way/1469221595",
+      "role": "playing_surface",
+      "sport": "athletics",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 104.42,
+      "bounds_enu_meters": [
+        7208.46,
+        6985.54,
+        7243.67,
+        7026.12
+      ]
+    },
+    {
+      "source_id": "osm:way/1469221596",
+      "role": "playing_surface",
+      "sport": "athletics",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 128.58,
+      "bounds_enu_meters": [
+        7202.26,
+        6997.43,
+        7240.12,
+        7041.38
+      ]
+    },
+    {
+      "source_id": "osm:way/1469342011",
+      "role": "playing_surface",
+      "sport": "athletics",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 253.77,
+      "bounds_enu_meters": [
+        7150.96,
+        7182.05,
+        7168.45,
+        7206.91
+      ]
+    },
+    {
+      "source_id": "osm:way/1549175590",
+      "role": "playing_surface",
+      "sport": "athletics",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 104.24,
+      "bounds_enu_meters": [
+        7167.2,
+        6959.55,
+        7207.84,
+        6994.74
+      ]
+    },
+    {
+      "source_id": "osm:way/89766140",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 12651.55,
+      "bounds_enu_meters": [
+        7309.2,
+        7213.86,
+        7433.38,
+        7340.48
+      ]
+    },
+    {
+      "source_id": "osm:way/89766146",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 10535.35,
+      "bounds_enu_meters": [
+        7158.48,
+        7229.13,
+        7274.45,
+        7338.91
+      ]
+    },
+    {
+      "source_id": "osm:way/89769385",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5443.94,
+      "bounds_enu_meters": [
+        7055.74,
+        7248.38,
+        7145.69,
+        7330.86
+      ]
+    },
+    {
+      "source_id": "osm:way/1469221615",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 8037.71,
+      "bounds_enu_meters": [
+        7306.81,
+        6977.28,
+        7441.26,
+        7073.02
+      ]
+    },
+    {
+      "source_id": "osm:way/1469221616",
+      "role": "playing_surface",
+      "sport": "soccer",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 8043.3,
+      "bounds_enu_meters": [
+        7362.07,
+        7086.48,
+        7435.1,
+        7199.02
+      ]
+    },
+    {
+      "source_id": "osm:way/1010397006",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 644.88,
+      "bounds_enu_meters": [
+        10368.47,
+        8778.64,
+        10404.76,
+        8796.88
+      ]
+    },
+    {
+      "source_id": "osm:way/1493715303",
+      "role": "playing_surface",
+      "sport": "pickleball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 84.8,
+      "bounds_enu_meters": [
+        6454.77,
+        10287.31,
+        6461.05,
+        10300.87
+      ]
+    },
+    {
+      "source_id": "osm:way/1026879558",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3576.63,
+      "bounds_enu_meters": [
+        5142.7,
+        11961.93,
+        5262.42,
+        12000.0
+      ]
+    },
+    {
+      "source_id": "osm:way/1026878022",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 3830.97,
+      "bounds_enu_meters": [
+        5005.13,
+        11966.91,
+        5132.99,
+        12000.0
+      ]
+    },
+    {
+      "source_id": "osm:way/1026878023",
+      "role": "playing_surface",
+      "sport": "softball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 2096.76,
+      "bounds_enu_meters": [
+        4888.92,
+        11970.43,
+        4973.94,
+        12000.0
+      ]
+    },
+    {
+      "source_id": "osm:way/1026878018",
+      "role": "athletic_track",
+      "sport": "running",
+      "leisure": "track",
+      "name": null,
+      "area_square_meters": 10758.78,
+      "bounds_enu_meters": [
+        5495.86,
+        11774.68,
+        5665.72,
+        11845.49
+      ]
+    },
+    {
+      "source_id": "osm:way/1096709261",
+      "role": "playing_surface",
+      "sport": "cricket",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 110.59,
+      "bounds_enu_meters": [
+        5186.14,
+        11739.57,
+        5190.21,
+        11767.71
+      ]
+    },
+    {
+      "source_id": "osm:way/1096467479",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 180.13,
+      "bounds_enu_meters": [
+        5893.64,
+        11012.91,
+        5906.97,
+        11026.63
+      ]
+    },
+    {
+      "source_id": "osm:way/576486836",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": "Industrial Circle Basketball Court",
+      "area_square_meters": 1275.02,
+      "bounds_enu_meters": [
+        7693.09,
+        11801.3,
+        7721.77,
+        11845.86
+      ]
+    },
+    {
+      "source_id": "osm:way/378949446",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 271.45,
+      "bounds_enu_meters": [
+        8333.7,
+        11249.09,
+        8356.2,
+        11261.3
+      ]
+    },
+    {
+      "source_id": "osm:way/379115518",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 246.87,
+      "bounds_enu_meters": [
+        8719.17,
+        11371.56,
+        8740.4,
+        11383.76
+      ]
+    },
+    {
+      "source_id": "osm:way/379156540",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 247.16,
+      "bounds_enu_meters": [
+        8852.26,
+        11521.98,
+        8873.06,
+        11533.89
+      ]
+    },
+    {
+      "source_id": "osm:way/379156542",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 247.29,
+      "bounds_enu_meters": [
+        8821.75,
+        11521.78,
+        8842.53,
+        11533.71
+      ]
+    },
+    {
+      "source_id": "osm:way/379156535",
+      "role": "playing_surface",
+      "sport": "american_football",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 6144.14,
+      "bounds_enu_meters": [
+        9062.16,
+        11474.02,
+        9118.21,
+        11585.13
+      ]
+    },
+    {
+      "source_id": "osm:way/888769154",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 331.17,
+      "bounds_enu_meters": [
+        9234.56,
+        10864.7,
+        9257.73,
+        10887.8
+      ]
+    },
+    {
+      "source_id": "osm:way/939397679",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 315.97,
+      "bounds_enu_meters": [
+        9098.07,
+        10759.43,
+        9111.27,
+        10784.74
+      ]
+    },
+    {
+      "source_id": "osm:way/939446594",
+      "role": "playing_surface",
+      "sport": "roller_skating;roller_hockey",
+      "leisure": "pitch",
+      "name": "Left Hand Creek Park Roller Rink",
+      "area_square_meters": 815.1,
+      "bounds_enu_meters": [
+        9358.74,
+        10864.19,
+        9400.39,
+        10899.59
+      ]
+    },
+    {
+      "source_id": "osm:way/488325950",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 673.6,
+      "bounds_enu_meters": [
+        10473.41,
+        9612.65,
+        10492.65,
+        9649.71
+      ]
+    },
+    {
+      "source_id": "osm:way/373435096",
+      "role": "playing_surface",
+      "sport": "multi",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 161.77,
+      "bounds_enu_meters": [
+        9143.86,
+        11450.94,
+        9160.15,
+        11461.55
+      ]
+    },
+    {
+      "source_id": "osm:way/373435106",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 5046.06,
+      "bounds_enu_meters": [
+        9152.3,
+        11620.11,
+        9226.33,
+        11697.1
+      ]
+    },
+    {
+      "source_id": "osm:way/379156533",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 267.66,
+      "bounds_enu_meters": [
+        9388.83,
+        11712.37,
+        9400.03,
+        11736.93
+      ]
+    },
+    {
+      "source_id": "osm:way/379156543",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 267.76,
+      "bounds_enu_meters": [
+        9357.27,
+        11712.57,
+        9368.48,
+        11737.13
+      ]
+    },
+    {
+      "source_id": "osm:way/379156545",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 267.6,
+      "bounds_enu_meters": [
+        9373.17,
+        11712.23,
+        9384.37,
+        11736.79
+      ]
+    },
+    {
+      "source_id": "osm:way/379156547",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 578.75,
+      "bounds_enu_meters": [
+        9317.95,
+        11708.68,
+        9336.65,
+        11739.71
+      ]
+    },
+    {
+      "source_id": "osm:way/379156548",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 267.66,
+      "bounds_enu_meters": [
+        9341.5,
+        11712.23,
+        9352.7,
+        11736.79
+      ]
+    },
+    {
+      "source_id": "osm:way/546874729",
+      "role": "playing_surface",
+      "sport": "volleyball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 888.44,
+      "bounds_enu_meters": [
+        10037.23,
+        11707.68,
+        10072.27,
+        11737.88
+      ]
+    },
+    {
+      "source_id": "osm:way/546874730",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 163.71,
+      "bounds_enu_meters": [
+        10027.53,
+        11708.17,
+        10039.63,
+        11724.26
+      ]
+    },
+    {
+      "source_id": "osm:way/1447011950",
+      "role": "playing_surface",
+      "sport": "baseball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 1246.79,
+      "bounds_enu_meters": [
+        10095.97,
+        11756.32,
+        10134.59,
+        11797.15
+      ]
+    },
+    {
+      "source_id": "osm:way/379216731",
+      "role": "playing_surface",
+      "sport": "basketball",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 104.2,
+      "bounds_enu_meters": [
+        10860.49,
+        11088.2,
+        10874.17,
+        11104.37
+      ]
+    },
+    {
+      "source_id": "osm:way/683474774",
+      "role": "playing_surface",
+      "sport": "skateboard",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 659.59,
+      "bounds_enu_meters": [
+        11041.66,
+        11794.61,
+        11059.98,
+        11830.76
+      ]
+    },
+    {
+      "source_id": "osm:way/683474790",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 264.13,
+      "bounds_enu_meters": [
+        10904.68,
+        11975.55,
+        10915.71,
+        11999.6
+      ]
+    },
+    {
+      "source_id": "osm:way/683474791",
+      "role": "playing_surface",
+      "sport": "tennis",
+      "leisure": "pitch",
+      "name": null,
+      "area_square_meters": 267.02,
+      "bounds_enu_meters": [
+        10922.87,
+        11975.35,
+        10934.02,
+        11999.57
+      ]
+    }
+  ]
+}

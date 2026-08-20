@@ -17,6 +17,19 @@
       "rights": "public-data source already recorded by the aerial clipmap manifest"
     },
     {
+      "name": "KBDU full-map water reflection mask",
+      "path": "../PhotorealTerrainV1/Water/KBDU_FullMapWaterMask.png",
+      "role": "offline hard water-interior vegetation exclusion",
+      "license": "ODbL-1.0 source geometry; project-authored derived raster"
+    },
+    {
+      "name": "OpenStreetMap athletic playing surfaces",
+      "role": "offline pitch and running-track vegetation exclusion",
+      "raw_source_committed": false,
+      "license": "ODbL-1.0",
+      "derived_manifest": "KBDU_VegetationSemanticExclusionV1.json"
+    },
+    {
       "name": "Tree Small 02",
       "author": "Poly Haven",
       "url": "https://polyhaven.com/a/tree_small_02",
@@ -27,6 +40,8 @@
   "derived_assets": {
     "placement_compiler": "tools/full_map_vegetation/compile_vegetation_hlod_v3.py",
     "canopy_compiler": "tools/full_map_vegetation/build_full_map_canopy_visual.py",
+    "semantic_compiler": "tools/full_map_vegetation/build_vegetation_semantic_exclusions.py",
+    "semantic_validator": "tools/full_map_vegetation/validate_semantic_exclusions.py",
     "shrub_and_grove_meshes": "project-authored deterministic offline Unity meshes",
     "downloaded_sketchfab_models_in_runtime": false
   },
@@ -34,6 +49,7 @@
     "raw orthophotos",
     "raw high-poly Sketchfab archives",
     "Gaussian splat data",
-    "per-tree GameObjects"
+    "per-tree GameObjects",
+    "trees or shrub centers inside hard water and athletic-surface exclusions"
   ]
 }

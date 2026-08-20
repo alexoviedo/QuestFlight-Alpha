@@ -1,5 +1,5 @@
 {
-  "schema": "questflight.full-map-canopy-visual.v1",
+  "schema": "questflight.full-map-canopy-visual.v1.1",
   "contract": {
     "bounds_meters": [
       -12000.0,
@@ -24,7 +24,8 @@
     "generator": "tools/full_map_vegetation/build_full_map_canopy_visual.py",
     "analysis_meters_per_pixel": 0.6666666666666666,
     "segmentation": "source RGB texture/vegetation classifier with building-footprint exclusion",
-    "normal": "smoothed coverage gradient; aggregate far-canopy relief only"
+    "normal": "smoothed coverage gradient; aggregate far-canopy relief only",
+    "semantic_exclusion": "water interiors and verified athletic playing surfaces are cleared after all feathering"
   },
   "sources": {
     "clipmap_manifest": {
@@ -36,18 +37,27 @@
       "sha256": "5d5b7387c1e13b8f0ad9bac268ba9445a4f58e2db560c06654153ca866e34b72"
     },
     "placement_database": {
-      "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapVegetationV2\\KBDU_FullMapVegetationClipmapV2.bytes",
-      "sha256": "b56c7a0bea6e986d28e730f30fd978f7e7eb1119227a0cd3221e6b559f30af00"
+      "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapVegetationV3\\KBDU_FullMapVegetationHlodV3.bytes",
+      "sha256": "5dda526cce6c8be0b2773feef4904ccf4b72023069e5cd54e7dfbb387effd10e"
+    },
+    "semantic_exclusion_mask": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapVegetationV3\\KBDU_VegetationSemanticExclusionV1.png",
+      "sha256": "8a708641e25b01d732ea67e33ca2c6cb9c139b184333d313616ccf344302ab86"
+    },
+    "semantic_exclusion_manifest": {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\FullMapVegetationV3\\KBDU_VegetationSemanticExclusionV1.json",
+      "sha256": "bac5f5bb6ec3523f66c40afa46ba8aafe07fcc97fc2972481dc26cb524cd8bed"
     },
     "imagery_acquisition": "2020",
     "raw_imagery_committed": false
   },
   "statistics": {
     "source_pages": 1296,
-    "canopy_coverage_fraction": 0.302491,
-    "canopy_supported_texels": 7288724,
-    "shrub_supported_texels": 91958,
-    "runtime_bytes": 35760529,
-    "runtime_sha256": "0c12e4cd1801e134ba5dd3d4fae86b2bf9f6003cc4b497f249ab7a62ab0385fa"
+    "canopy_coverage_fraction": 0.291053,
+    "canopy_supported_texels": 7025250,
+    "shrub_supported_texels": 88690,
+    "runtime_bytes": 34738597,
+    "runtime_sha256": "858e3a78550ca9e238e49eb6e8032baa38d37a6b8e533b2b693fe077adc4ae75",
+    "semantic_excluded_texels": 668495
   }
 }
