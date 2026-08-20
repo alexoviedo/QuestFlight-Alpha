@@ -131,7 +131,9 @@ namespace QuestFlight.Editor
                 new Vector4(-12000f, -12000f, 1f / 24000f, 1f / 24000f));
             terrainMaterial.SetVector("_FullMapCanopyGeometryFadeStartEnd",
                 new Vector4(700f, 1450f, 0f, 0f));
-            terrainMaterial.SetFloat("_FullMapCanopyColorStrength", 0.42f);
+            // The orthophoto is the authoritative far-canopy radiance. The
+            // derivative contributes relief only, avoiding a dark camo overlay.
+            terrainMaterial.SetFloat("_FullMapCanopyColorStrength", 0f);
             terrainMaterial.SetFloat("_FullMapCanopyNormalStrength", 0.48f);
 
             PlacementManifest manifest =

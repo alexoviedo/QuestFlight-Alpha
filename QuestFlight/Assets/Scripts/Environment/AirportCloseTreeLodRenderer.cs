@@ -29,11 +29,16 @@ namespace QuestFlightLab.Environment
         public const int FarSamplesPerPage = 144;
         public const int NearSamplesPerPage = 600;
         public const int MaximumFullDensityPages = 9;
+        public const int MaximumResidentFullDensityPages = MaximumFullDensityPages * 2;
         public const float FullDensityRadiusMeters = 2400f;
         public const float ForwardCoverageMeters = 10000f;
         public const float LateralCoverageMeters = 7000f;
         public const float RearCoverageMeters = 3000f;
         public const float CoverageExitBufferMeters = 1000f;
+        public const float FullDensityPageOverlapSeconds = 2.35f;
+        public const float SelectionRefreshSeconds = 0.25f;
+        public const float SelectionRefreshDistanceMeters = 20f;
+        public const float SelectionRefreshAngleDegrees = 4f;
         private const int MaximumInstancesPerDraw = 1023;
 
         private const byte Lod0 = 0;
@@ -146,7 +151,6 @@ namespace QuestFlightLab.Environment
         private readonly float[] groveFades = new float[MaximumGroveInstances];
         private readonly float[] shrubFrames = new float[MaximumShrubInstances];
         private readonly float[] groveFrames = new float[MaximumGroveInstances];
-        private readonly Plane[] frustumPlanes = new Plane[6];
         private readonly Matrix4x4[] batchMatrices =
             new Matrix4x4[MaximumInstancesPerDraw];
         private readonly Vector4[] batchTints =
@@ -179,6 +183,8 @@ namespace QuestFlightLab.Environment
         private bool[] treeCoveragePages = Array.Empty<bool>();
         private bool[] previousTreeCoveragePages = Array.Empty<bool>();
         private bool[] fullDensityPages = Array.Empty<bool>();
+        private bool[] requestedFullDensityPages = Array.Empty<bool>();
+        private float[] fullDensityRetireTimes = Array.Empty<float>();
         private PageCandidate[] pageCandidates = Array.Empty<PageCandidate>();
         private int[] coveragePageIndices = Array.Empty<int>();
         private int coveragePageCount;
@@ -194,6 +200,10 @@ namespace QuestFlightLab.Environment
         private Candidate[] candidates = Array.Empty<Candidate>();
         private int candidateCount;
         private int loadedDatabaseInstanceId;
+        private bool selectionInitialized;
+        private float nextSelectionRefreshTime;
+        private Vector3 lastSelectionReferencePosition;
+        private Vector3 lastSelectionAircraftForward = Vector3.forward;
 
         private struct Candidate
         {
@@ -242,6 +252,7 @@ namespace QuestFlightLab.Environment
         private bool[] selectedForDraw = Array.Empty<bool>();
         private bool[] selectedLastFrame = Array.Empty<bool>();
         private bool[] farEligible = Array.Empty<bool>();
+        private bool[] activeMembership = Array.Empty<bool>();
         private float[] projectedPixels = Array.Empty<float>();
         private float[] priorities = Array.Empty<float>();
         private byte[] desiredLods = Array.Empty<byte>();
@@ -286,13 +297,13 @@ namespace QuestFlightLab.Environment
         public bool AlphaToCoverageTransition => alphaToCoverageTransition;
         public bool UsesSharedBuildingPageResidency =>
             fullMapPlacementDatabase == null || buildingClipmap != null;
-        public bool CullEntryFadeEnabled => false;
+        public bool CullEntryFadeEnabled => true;
         public int FarCoveragePageLimit => MaximumCoveragePages;
         public int FarSamplesPerCoveragePage => FarSamplesPerPage;
         public float ForwardTreeCoverageMeters => ForwardCoverageMeters;
         public float LateralTreeCoverageMeters => LateralCoverageMeters;
         public float RearTreeCoverageMeters => RearCoverageMeters;
-        public bool BuildingPagesAreMandatoryTreeCoverage => true;
+        public bool BuildingPagesAreMandatoryTreeCoverage => false;
         public int MaximumFarCoverageCandidates =>
             MaximumCoveragePages * FarSamplesPerPage;
         public int MaximumFarDrawPopulation => MaximumLod2Instances;
@@ -415,6 +426,7 @@ namespace QuestFlightLab.Environment
             selectedForDraw = new bool[count];
             selectedLastFrame = new bool[count];
             farEligible = new bool[count];
+            activeMembership = new bool[count];
             projectedPixels = new float[count];
             priorities = new float[count];
             desiredLods = new byte[count];
@@ -428,7 +440,7 @@ namespace QuestFlightLab.Environment
             {
                 activeCapacity = Mathf.Min(count, checked(
                     MaximumCoveragePages * FarSamplesPerPage +
-                    MaximumFullDensityPages * NearSamplesPerPage));
+                    MaximumResidentFullDensityPages * NearSamplesPerPage));
             }
             activeIndices = new int[activeCapacity];
             previousActiveIndices = new int[activeCapacity];
@@ -437,6 +449,8 @@ namespace QuestFlightLab.Environment
             previousActiveCount = 0;
             candidateCount = 0;
             coveragePageCount = 0;
+            selectionInitialized = false;
+            nextSelectionRefreshTime = float.NegativeInfinity;
             for (int index = 0; index < count; index++)
             {
                 desiredLods[index] = Culled;
@@ -521,6 +535,8 @@ namespace QuestFlightLab.Environment
             treeCoveragePages = new bool[pageCount];
             previousTreeCoveragePages = new bool[pageCount];
             fullDensityPages = new bool[pageCount];
+            requestedFullDensityPages = new bool[pageCount];
+            fullDensityRetireTimes = new float[pageCount];
             pageCandidates = new PageCandidate[pageCount];
             coveragePageIndices = new int[MaximumCoveragePages];
             for (int page = 0; page < pageCount; page++)
@@ -600,27 +616,33 @@ namespace QuestFlightLab.Environment
             Prepare();
             Vector3 cameraPosition = camera.transform.position;
             Vector3 cameraForward = camera.transform.forward;
+            Vector3 referencePosition = buildingClipmap != null &&
+                buildingClipmap.trackedRig != null
+                ? buildingClipmap.trackedRig.transform.position
+                : cameraPosition;
             Vector3 aircraftForward = buildingClipmap != null
                 ? buildingClipmap.StableAircraftForward
                 : cameraForward;
-            Vector3 viewForward = buildingClipmap != null
-                ? buildingClipmap.StableViewForward
-                : cameraForward;
-            GeometryUtility.CalculateFrustumPlanes(camera, frustumPlanes);
             float now = Time.realtimeSinceStartup;
-            if (!BuildActiveIndices(cameraPosition, aircraftForward, viewForward, now))
+            if (!BuildActiveIndices(referencePosition, aircraftForward, now))
                 return;
-            EvaluateVisibility(camera, cameraPosition, aircraftForward, viewForward);
-            SelectDesiredLods();
-            AdvancePersistentStates(now);
+            bool refreshSelection = ShouldRefreshSelection(
+                referencePosition, aircraftForward, now);
+            EvaluateVisibility(
+                camera, referencePosition, aircraftForward, refreshSelection);
+            if (refreshSelection)
+            {
+                SelectDesiredLods();
+                AdvancePersistentStates(now);
+            }
             BuildAndDraw(camera, cameraPosition, layer, now);
-            UpdateSelectionHistory();
+            if (refreshSelection)
+                UpdateSelectionHistory();
         }
 
         private bool BuildActiveIndices(
-            Vector3 cameraPosition,
+            Vector3 referencePosition,
             Vector3 aircraftForward,
-            Vector3 viewForward,
             float now)
         {
             int[] swap = previousActiveIndices;
@@ -632,14 +654,17 @@ namespace QuestFlightLab.Environment
             {
                 int index = previousActiveIndices[position];
                 visible[index] = false;
-                selectedForDraw[index] = false;
                 farEligible[index] = false;
+                activeMembership[index] = false;
             }
 
             if (pageOffsets.Length == 0)
             {
                 for (int index = 0; index < runtimeInstances.Length; index++)
+                {
                     activeIndices[activeCount++] = index;
+                    activeMembership[index] = true;
+                }
                 return activeCount > 0;
             }
 
@@ -647,15 +672,16 @@ namespace QuestFlightLab.Environment
 #if UNITY_EDITOR
             if (!residencyReady && !Application.isPlaying)
             {
-                BuildEditorFallbackResidency(cameraPosition, aircraftForward, viewForward, now);
+                BuildEditorFallbackResidency(
+                    referencePosition, aircraftForward, aircraftForward, now);
                 residencyReady = true;
             }
 #endif
             if (!residencyReady)
                 return false;
 
-            BuildTreeCoverage(cameraPosition, aircraftForward);
-            SelectFullDensityPages(cameraPosition);
+            BuildTreeCoverage(referencePosition, aircraftForward);
+            SelectFullDensityPages(referencePosition, now);
             for (int coverage = 0; coverage < coveragePageCount; coverage++)
             {
                 int page = coveragePageIndices[coverage];
@@ -667,6 +693,7 @@ namespace QuestFlightLab.Environment
                         throw new InvalidOperationException(
                             "Full-map vegetation active-page capacity was exceeded.");
                     activeIndices[activeCount++] = index;
+                    activeMembership[index] = true;
                     farEligible[index] = true;
                 }
                 if (!fullDensityPages[page])
@@ -680,15 +707,27 @@ namespace QuestFlightLab.Environment
                         throw new InvalidOperationException(
                             "Full-map vegetation near-density capacity was exceeded.");
                     activeIndices[activeCount++] = index;
+                    activeMembership[index] = true;
                     farEligible[index] = false;
                 }
+            }
+            for (int position = 0; position < previousActiveCount; position++)
+            {
+                int index = previousActiveIndices[position];
+                if (activeMembership[index])
+                    continue;
+                selectedForDraw[index] = false;
+                selectedLastFrame[index] = false;
+                currentLods[index] = Uninitialized;
+                previousLods[index] = Culled;
+                transitionStarts[index] = float.NegativeInfinity;
             }
             return activeCount > 0;
         }
 
-        private void SelectFullDensityPages(Vector3 cameraPosition)
+        private void SelectFullDensityPages(Vector3 referencePosition, float now)
         {
-            Array.Clear(fullDensityPages, 0, fullDensityPages.Length);
+            Array.Clear(requestedFullDensityPages, 0, requestedFullDensityPages.Length);
             int selected = 0;
             float radiusSquared = FullDensityRadiusMeters * FullDensityRadiusMeters;
             while (selected < MaximumFullDensityPages)
@@ -698,14 +737,14 @@ namespace QuestFlightLab.Environment
                 for (int coverage = 0; coverage < coveragePageCount; coverage++)
                 {
                     int page = coveragePageIndices[coverage];
-                    if (fullDensityPages[page])
+                    if (requestedFullDensityPages[page])
                         continue;
                     int column = page % databaseColumns;
                     int row = page / databaseColumns;
                     float centerX = databaseMinimumX + (column + 0.5f) * databasePageSize;
                     float centerZ = databaseMinimumZ + (row + 0.5f) * databasePageSize;
-                    float dx = centerX - cameraPosition.x;
-                    float dz = centerZ - cameraPosition.z;
+                    float dx = centerX - referencePosition.x;
+                    float dz = centerZ - referencePosition.z;
                     float distanceSquared = dx * dx + dz * dz;
                     if (distanceSquared > radiusSquared || distanceSquared >= bestDistanceSquared)
                         continue;
@@ -714,8 +753,36 @@ namespace QuestFlightLab.Environment
                 }
                 if (bestPage < 0)
                     break;
-                fullDensityPages[bestPage] = true;
+                requestedFullDensityPages[bestPage] = true;
                 selected++;
+            }
+
+            Array.Clear(fullDensityPages, 0, fullDensityPages.Length);
+            int resident = 0;
+            for (int page = 0; page < requestedFullDensityPages.Length; page++)
+            {
+                if (!requestedFullDensityPages[page])
+                    continue;
+                fullDensityPages[page] = true;
+                fullDensityRetireTimes[page] = now + FullDensityPageOverlapSeconds;
+                resident++;
+            }
+            while (resident < MaximumResidentFullDensityPages)
+            {
+                int bestPage = -1;
+                float bestRetireTime = now;
+                for (int page = 0; page < fullDensityPages.Length; page++)
+                {
+                    if (fullDensityPages[page] || !treeCoveragePages[page] ||
+                        fullDensityRetireTimes[page] <= bestRetireTime)
+                        continue;
+                    bestPage = page;
+                    bestRetireTime = fullDensityRetireTimes[page];
+                }
+                if (bestPage < 0)
+                    break;
+                fullDensityPages[bestPage] = true;
+                resident++;
             }
         }
 
@@ -741,7 +808,6 @@ namespace QuestFlightLab.Environment
                 offset.y = 0f;
                 float longitudinal = Vector3.Dot(offset, forward);
                 float lateral = Mathf.Abs(Vector3.Dot(offset, right));
-                bool mandatory = committedPages[page] || prefetchedPages[page];
                 bool insideEntry = InsideCoverageEnvelope(
                     longitudinal,
                     lateral,
@@ -755,7 +821,7 @@ namespace QuestFlightLab.Environment
                         forwardExit,
                         lateralExit,
                         rearExit);
-                if (!mandatory && !insideEntry && !insideExit)
+                if (!insideEntry && !insideExit)
                     continue;
 
                 float distance = Mathf.Max(1f, offset.magnitude);
@@ -766,7 +832,7 @@ namespace QuestFlightLab.Environment
                 pageCandidates[pageCandidateCount++] = new PageCandidate
                 {
                     page = page,
-                    mandatory = mandatory,
+                    mandatory = false,
                     priority =
                         (insideExit ? 10000f : 0f) +
                         forwardWeight * 1000f +
@@ -895,39 +961,58 @@ namespace QuestFlightLab.Environment
         }
 #endif
 
+        private bool ShouldRefreshSelection(
+            Vector3 referencePosition,
+            Vector3 aircraftForward,
+            float now)
+        {
+            Vector3 stableForward = HorizontalDirection(aircraftForward, Vector3.forward);
+            bool moved = (referencePosition - lastSelectionReferencePosition).sqrMagnitude >=
+                SelectionRefreshDistanceMeters * SelectionRefreshDistanceMeters;
+            bool turned = Vector3.Angle(lastSelectionAircraftForward, stableForward) >=
+                SelectionRefreshAngleDegrees;
+            if (selectionInitialized && now < nextSelectionRefreshTime && !moved && !turned)
+                return false;
+
+            selectionInitialized = true;
+            nextSelectionRefreshTime = now + SelectionRefreshSeconds;
+            lastSelectionReferencePosition = referencePosition;
+            lastSelectionAircraftForward = stableForward;
+            return true;
+        }
+
         private void EvaluateVisibility(
             Camera camera,
-            Vector3 cameraPosition,
+            Vector3 referencePosition,
             Vector3 aircraftForward,
-            Vector3 viewForward)
+            bool refreshSelection)
         {
+            // Selection is deliberately independent of head pose. DrawMeshInstanced
+            // submits the bounded resident set and the GPU performs ordinary camera
+            // clipping, so turning the pilot's head cannot create or destroy trees.
+            for (int active = 0; active < activeCount; active++)
+                visible[activeIndices[active]] = true;
+            if (!refreshSelection)
+                return;
+
             float focalPixels = camera.pixelHeight /
                 (2f * Mathf.Tan(camera.fieldOfView * Mathf.Deg2Rad * 0.5f));
             Vector3 stableAircraftForward = HorizontalDirection(aircraftForward, Vector3.forward);
-            Vector3 stableViewForward = HorizontalDirection(viewForward, stableAircraftForward);
-            float viewThreshold = Mathf.Cos(68f * Mathf.Deg2Rad);
             candidateCount = 0;
             for (int active = 0; active < activeCount; active++)
             {
                 int index = activeIndices[active];
                 RuntimeInstance instance = runtimeInstances[index];
-                Vector3 offset = instance.Center - cameraPosition;
+                Vector3 offset = instance.Center - referencePosition;
                 float distanceSquared = offset.sqrMagnitude;
-                Bounds bounds = new Bounds(
-                    instance.Center,
-                    Vector3.one * (instance.Radius * 2f));
-                visible[index] = GeometryUtility.TestPlanesAABB(frustumPlanes, bounds);
                 float distance = Mathf.Sqrt(Mathf.Max(0.01f, distanceSquared));
                 float pixels = instance.Radius * 2f * focalPixels / distance;
                 projectedPixels[index] = pixels;
                 Vector3 direction = HorizontalDirection(offset, stableAircraftForward);
                 float aircraftDot = Vector3.Dot(stableAircraftForward, direction);
-                float viewDot = Vector3.Dot(stableViewForward, direction);
                 float forwardWeight = Mathf.Clamp01((aircraftDot + 0.15f) / 1.15f);
-                float viewWeight = Mathf.Clamp01((viewDot - viewThreshold) /
-                    Mathf.Max(0.001f, 1f - viewThreshold));
-                priorities[index] = pixels + forwardWeight * 32f + viewWeight * 12f +
-                    (selectedLastFrame[index] ? 12f : 0f) - distance * 0.0005f +
+                priorities[index] = pixels + forwardWeight * 32f +
+                    (selectedLastFrame[index] ? 18f : 0f) - distance * 0.0005f +
                     (runtimeInstances.Length - index) * 0.0000001f;
                 selectedLod0[index] = false;
                 selectedLod1[index] = false;
@@ -935,16 +1020,13 @@ namespace QuestFlightLab.Environment
                 desiredLods[index] = currentLods[index] == Uninitialized
                     ? Lod2
                     : currentLods[index];
-                if (visible[index])
-                {
                 candidates[candidateCount++] = new Candidate
-                    {
-                        index = index,
-                        priority = priorities[index],
-                        pixels = pixels,
-                        distance = distance,
-                    };
-                }
+                {
+                    index = index,
+                    priority = priorities[index],
+                    pixels = pixels,
+                    distance = distance,
+                };
             }
             Array.Sort(candidates, 0, candidateCount, CandidateComparer.Instance);
         }
@@ -994,18 +1076,15 @@ namespace QuestFlightLab.Environment
             }
 
             int lod2Count = 0;
-            int groveCount = 0;
             for (int candidateIndex = 0;
-                 candidateIndex < candidateCount &&
-                 (lod2Count < MaximumLod2Instances || groveCount < MaximumGroveInstances);
+                 candidateIndex < candidateCount && lod2Count < MaximumLod2Instances;
                  candidateIndex++)
-                AssignFarCandidate(candidateIndex, ref lod2Count, ref groveCount);
+                AssignFarCandidate(candidateIndex, ref lod2Count);
         }
 
         private void AssignFarCandidate(
             int candidateIndex,
-            ref int individualTotal,
-            ref int groveTotal)
+            ref int individualTotal)
         {
             int index = candidates[candidateIndex].index;
             if (selectedForDraw[index] || !farEligible[index])
@@ -1013,14 +1092,10 @@ namespace QuestFlightLab.Environment
             byte kind = runtimeInstances[index].Kind;
             if (kind == 3)
             {
-                // Individual trees and the zero-draw terrain canopy are already
-                // resident before a grove aggregate retires at close range.
-                if (candidates[candidateIndex].distance < 900f ||
-                    groveTotal >= MaximumGroveInstances)
-                    return;
-                selectedForDraw[index] = true;
-                desiredLods[index] = Lod2;
-                groveTotal++;
+                // The photographed orthophoto plus crown-normal derivative is the
+                // aggregate grove representation. The old crossed-strip mesh reads
+                // as flat camo at flight-simulator oblique angles and is intentionally
+                // excluded; far individual silhouettes remain available below.
                 return;
             }
             if (kind == 2 || individualTotal >= MaximumLod2Instances ||
@@ -1037,14 +1112,6 @@ namespace QuestFlightLab.Environment
             {
                 int index = activeIndices[active];
                 byte desired = desiredLods[index];
-                if (runtimeInstances[index].Kind >= 2)
-                {
-                    currentLods[index] = desired;
-                    previousLods[index] = Culled;
-                    transitionStarts[index] = float.NegativeInfinity;
-                    lastStateChanges[index] = now;
-                    continue;
-                }
                 if (currentLods[index] == Uninitialized)
                 {
                     currentLods[index] = desired;
@@ -1055,12 +1122,11 @@ namespace QuestFlightLab.Environment
                 }
                 if (selectedForDraw[index] && !selectedLastFrame[index])
                 {
-                    // The page was prepared before it entered the visible population.
-                    // Select the correct first visible tier immediately; never expose a
-                    // Cull-to-tree alpha ramp in the pilot's view.
+                    // The resident page is already present before selection changes;
+                    // introduce only the chosen representation through bounded A2C.
                     currentLods[index] = desired;
                     previousLods[index] = Culled;
-                    transitionStarts[index] = float.NegativeInfinity;
+                    transitionStarts[index] = now;
                     lastStateChanges[index] = now;
                     continue;
                 }

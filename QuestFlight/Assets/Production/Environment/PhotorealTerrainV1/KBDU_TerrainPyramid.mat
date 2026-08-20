@@ -84,7 +84,7 @@ Material:
     - _ClipmapEnabled: 0
     - _DetailScale: 0.06666667
     - _DiagnosticMode: 0
-    - _FullMapCanopyColorStrength: 0.42
+    - _FullMapCanopyColorStrength: 0
     - _FullMapCanopyNormalStrength: 0.48
     - _FullMapWaterCrestGlintStrength: 0.12
     - _FullMapWaterDistortionStrength: 0.022

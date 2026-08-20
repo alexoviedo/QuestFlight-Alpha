@@ -51,7 +51,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(buildingClipmap.MapMinimumX, Is.EqualTo(-12000f));
             Assert.That(buildingClipmap.MapMinimumZ, Is.EqualTo(-12000f));
             Assert.That(renderer.UsesSharedBuildingPageResidency, Is.True);
-            Assert.That(renderer.CullEntryFadeEnabled, Is.False);
+            Assert.That(renderer.CullEntryFadeEnabled, Is.True);
             Assert.That(renderer.MaximumDistanceMeters, Is.EqualTo(10000f));
             Assert.That(renderer.ForwardTreeCoverageMeters, Is.EqualTo(10000f));
             Assert.That(renderer.LateralTreeCoverageMeters, Is.EqualTo(7000f));
@@ -63,7 +63,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(renderer.NearSamplesPerCoveragePage, Is.EqualTo(600));
             Assert.That(renderer.FullDensityPageLimit, Is.EqualTo(9));
             Assert.That(renderer.StablePageStratifiedFarSelection, Is.True);
-            Assert.That(renderer.BuildingPagesAreMandatoryTreeCoverage, Is.True);
+            Assert.That(renderer.BuildingPagesAreMandatoryTreeCoverage, Is.False,
+                "Head-directed building pages must not control vegetation residency.");
             Assert.That(benchmark, Is.Not.Null);
             Assert.That(benchmark.vegetationHeroCluster, Is.Not.Null);
             Assert.That(benchmark.vegetationHeroCluster.gameObject.activeSelf, Is.False,

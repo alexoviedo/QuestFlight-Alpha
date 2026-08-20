@@ -119,10 +119,10 @@ inline fixed3 QuestFlightApplyAerialCanopyColor(
     half shaded = lerp(1.0h, 0.62h, canopy.occlusion);
     fixed3 canopyColor = lerp(orthophotoColor, _AerialCanopyTint, 0.54h) * shaded;
     fixed3 result = lerp(orthophotoColor, canopyColor, saturate(localWeight));
-    // The full-map source is the same orthophoto displayed by the terrain.  It
-    // adds aggregate crown relief without painting a second green overlay.
-    half fullWeight = canopy.fullMapWeight * _FullMapCanopyColorStrength;
-    return result * lerp(1.0h, lerp(0.95h, 0.82h, canopy.occlusion), fullWeight);
+    // The full-map source is the same orthophoto displayed by the terrain.
+    // Preserve that photographed radiance exactly; the full-map derivative is
+    // allowed to contribute only subtle crown relief through the normal path.
+    return result;
 }
 
 inline half3 QuestFlightApplyAerialCanopyNormal(
