@@ -454,17 +454,19 @@ Run `AirportHeroCorridorEditModeTests` and the standard production Visual QA. De
 
 Traffic V1 validation on Unity 6000.3.8f1:
 
-- `python tools/kbdu_traffic/validate_traffic_manifest.py`: PASS; 27,948
-  source-visible parked vehicles, 361 lane routes, 788 moving vehicles, 26,225
-  terrain-sampled route points, exact source/runtime ID parity, and 378
-  contiguous 500 m parked-vehicle cells;
+- `python tools/kbdu_traffic/validate_traffic_manifest.py`: PASS; 24,347
+  source-visible parked vehicles, 361 lane routes, 788 moving vehicles, 26,918
+  terrain-sampled route points, exact source/runtime ID parity, zero retained
+  conservative rotated-footprint overlaps, and 360 contiguous 500 m
+  parked-vehicle cells;
 - the native City 2020 scan searched every one of 27,679 OSM building contexts;
   8,754 buildings contain accepted source-visible vehicles, 18,925 contain no
   supported visible vehicle, and no synthetic coverage filler was added;
-- semantic rejection counts from the complete scan were 1,567 road/highway,
-  3,762 water, 2,865 building-footprint, 19 aeroway, and 609 without building
-  context; 16 additional detections outside the 12 km product imagery were
-  excluded during final compilation;
+- the orientation refinement accepted 23,571 direct oriented-box poses and 776
+  strong local-row-consensus poses, with zero horizontal/cardinal fallback;
+  its full-footprint pass rejected 190 road/highway, 108 water, 14 building,
+  15 athletic-surface, one aeroway, and 961 overlapping candidates from the
+  already bounded native-image source authority;
 - EditMode: PASS 133/133, including traffic ownership, source-evidence,
   full-map extent, spatial-cell continuity, mesh, LOD hysteresis, lane-width,
   and hierarchy tests;

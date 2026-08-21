@@ -12,6 +12,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "QuestFlight/Assets/Production/Environment/TrafficV1/Data/KBDU_TrafficManifestV1.json"
 SOURCE = ROOT / "tools/kbdu_traffic/traffic_sources_v1.json"
+PARKED_DIMENSIONS = (
+    (1.82, 4.60),
+    (1.78, 4.35),
+    (1.92, 4.70),
+    (2.00, 5.35),
+    (1.98, 5.05),
+    (2.55, 16.20),
+)
 
 
 def sha256(path: Path) -> str:
@@ -25,6 +33,49 @@ def sha256(path: Path) -> str:
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise ValueError(message)
+
+
+def parked_rectangles_overlap(a: dict, b: dict, margin: float = 0.05) -> bool:
+    def frame(vehicle: dict):
+        angle = math.radians(float(vehicle["yaw_degrees"]))
+        return (math.sin(angle), math.cos(angle)), (math.cos(angle), -math.sin(angle))
+
+    forward_a, side_a = frame(a)
+    forward_b, side_b = frame(b)
+    width_a, length_a = PARKED_DIMENSIONS[int(a["archetype"])]
+    width_b, length_b = PARKED_DIMENSIONS[int(b["archetype"])]
+    delta = (float(b["x"]) - float(a["x"]), float(b["z"]) - float(a["z"]))
+    for axis in (forward_a, side_a, forward_b, side_b):
+        distance = abs(delta[0] * axis[0] + delta[1] * axis[1])
+        radius_a = (length_a * 0.5 + margin) * abs(
+            forward_a[0] * axis[0] + forward_a[1] * axis[1]
+        ) + (width_a * 0.5 + margin) * abs(
+            side_a[0] * axis[0] + side_a[1] * axis[1]
+        )
+        radius_b = (length_b * 0.5 + margin) * abs(
+            forward_b[0] * axis[0] + forward_b[1] * axis[1]
+        ) + (width_b * 0.5 + margin) * abs(
+            side_b[0] * axis[0] + side_b[1] * axis[1]
+        )
+        if distance >= radius_a + radius_b:
+            return False
+    return True
+
+
+def require_collision_free_parked(parked: list[dict]) -> None:
+    cell_size = 7.0
+    cells: dict[tuple[int, int], list[dict]] = {}
+    for vehicle in parked:
+        cell_x = math.floor(float(vehicle["x"]) / cell_size)
+        cell_z = math.floor(float(vehicle["z"]) / cell_size)
+        for delta_z in (-1, 0, 1):
+            for delta_x in (-1, 0, 1):
+                for other in cells.get((cell_x + delta_x, cell_z + delta_z), ()):
+                    require(
+                        not parked_rectangles_overlap(vehicle, other),
+                        f"parked vehicle footprints overlap: {vehicle['id']} / {other['id']}",
+                    )
+        cells.setdefault((cell_x, cell_z), []).append(vehicle)
 
 
 def desired_gap(vehicle: dict, speed: float, closing_speed: float) -> float:
@@ -285,6 +336,15 @@ def main() -> None:
         data["source"]["parked_authority_sha256"] == sha256(SOURCE),
         "compiled parked authority hash is stale",
     )
+    detection = authority.get("parked_detection", {})
+    require(
+        detection.get("schema") == "questflight.parked-vehicle-native-scan-v3",
+        "parked authority is not the OBB-refined V3 source",
+    )
+    require(
+        detection.get("orientation_fallback_records") == 0,
+        "parked authority retained an unmeasured orientation fallback",
+    )
     source_ids = set()
     for parked in authority["parked_vehicles"]:
         require(parked["id"] not in source_ids, "duplicate source parked id")
@@ -304,8 +364,17 @@ def main() -> None:
         )
         require(
             parked["detection_method"]
-            == "NATIVE_9IN_GEODEEP_SEMANTIC_FILTER_ORIENTED_SOURCE_FIT",
+            == "NATIVE_9IN_YOLO11_OBB_SEMANTIC_FOOTPRINT_V2",
             "parked evidence method is unsupported",
+        )
+        require(
+            parked.get("orientation_source")
+            in {"YOLO11N_OBB_DIRECT", "LOCAL_PARKING_ROW_CONSENSUS"},
+            "parked orientation is neither directly measured nor row-supported",
+        )
+        require(
+            parked.get("orientation_confidence", 0.0) > 0.0,
+            "parked orientation confidence is missing",
         )
         require(parked["confidence"] >= 0.18, "parked evidence confidence too low")
         require(parked["building_osm_id"] > 0, "parked building association missing")
@@ -314,6 +383,7 @@ def main() -> None:
         source_ids == ids,
         "compiled parked ids differ from native source authority",
     )
+    require_collision_free_parked(data["parked"])
     next_cell_start = 0
     for cell in data["parked_cells"]:
         require(cell["start"] == next_cell_start, "parked cell range is not contiguous")

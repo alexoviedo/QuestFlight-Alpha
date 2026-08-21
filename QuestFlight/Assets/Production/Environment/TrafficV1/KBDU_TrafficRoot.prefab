@@ -60,7 +60,7 @@ MonoBehaviour:
   deterministicMotion: 1
   realtimeVehicleShadows: 0
   perVehicleGameObjects: 0
-  authoredParkedCount: 27948
+  authoredParkedCount: 24347
   authoredDynamicCount: 788
   authoredRouteCount: 361
   authoredMaximumDrawCount: 9

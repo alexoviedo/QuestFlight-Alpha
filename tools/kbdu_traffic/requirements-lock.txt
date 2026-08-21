@@ -1,0 +1,11 @@
+# Offline authoring only; none of these packages enter the Quest runtime.
+geodeep==0.9.13
+ultralytics==8.3.228
+opencv-python==5.0.0.93
+numpy==2.2.6
+pyproj==3.7.2
+Pillow==11.3.0
+
+# Optional ONNX export/inference acceleration used for the recorded V2 scan.
+onnx==1.19.1
+onnxruntime-gpu==1.29.0

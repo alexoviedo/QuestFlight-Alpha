@@ -218,18 +218,21 @@ authority, and standalone Android/OpenXR ownership.
 
 `KBDU_TrafficRoot` is one explicitly serialized child of
 `ProductionEnvironmentRoot`. Its manifest is compiled offline from the bounded
-OpenStreetMap road network, the existing terrain surface, and 27,948
+OpenStreetMap road network, the existing terrain surface, and 24,347
 source-visible parked-vehicle observations recovered from the native City of
 Boulder 2020 nine-inch imagery. The offline scan searches a 100 m source
 envelope around every one of 27,679 OSM buildings in the 12 km product area,
-plus the developed Boulder Reservoir parking envelope. Candidates on roads or
-highways, aeroways, water, and building footprints are rejected. Runtime code
-never creates traffic GameObjects, modifies the product hierarchy, invokes
-physics, searches for a road, or runs the detector.
+plus the developed Boulder Reservoir parking envelope. A second offline
+oriented-box pass aligns each retained vehicle to its photographed long axis;
+only strong local parking-row consensus may resolve an unreadable orientation.
+Complete conservative vehicle footprints are rejected on roads/highways,
+aeroways, water, athletic surfaces, and buildings, then deconflicted as rotated
+rectangles. Runtime code never creates traffic GameObjects, modifies the
+product hierarchy, invokes physics, searches for a road, or runs a detector.
 
 One `KbduTrafficRuntime` parses the compact manifest once and fills preallocated
 matrix and paint arrays during camera pre-cull. The parked authority is sorted
-into 378 fixed 500 m cells; only cells intersecting the 4.5 km hysteretic
+into 360 fixed 500 m cells; only cells intersecting the 4.5 km hysteretic
 visibility envelope are visited, then allocation-free max-heaps retain at most
 64 detailed and 1,800 far-proxy vehicles. Five optimized CC0 passenger
 archetypes—sedan, hatchback, crossover/SUV, pickup, and cargo van—and one

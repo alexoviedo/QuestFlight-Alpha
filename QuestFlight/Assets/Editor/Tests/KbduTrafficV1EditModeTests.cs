@@ -164,6 +164,11 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 item.source_tile != null &&
                 item.source_tile.Length == 3 &&
                 item.source_image == "city2020_l19" &&
+                item.detection_method ==
+                    "NATIVE_9IN_YOLO11_OBB_SEMANTIC_FOOTPRINT_V2" &&
+                (item.orientation_source == "YOLO11N_OBB_DIRECT" ||
+                 item.orientation_source == "LOCAL_PARKING_ROW_CONSENSUS") &&
+                item.orientation_confidence > 0f &&
                 item.confidence >= 0.18f &&
                 item.building_osm_id > 0 &&
                 item.road_clearance_meters > 0f), Is.True);
@@ -488,6 +493,9 @@ namespace QuestFlightLab.Environment.Editor.Tests
         private sealed class ParkedSourceRecord
         {
             public string source_image;
+            public string detection_method;
+            public string orientation_source;
+            public float orientation_confidence;
             public float confidence;
             public float[] source_center_pixel;
             public float[] source_axis_pixels;

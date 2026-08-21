@@ -234,16 +234,18 @@ The airport corridor is a reference-faithful procedural approximation rather tha
 ## Bounded road traffic
 
 - Traffic V1 is a bounded life cue, not a current occupancy database. Its
-  27,948 parked records are detector-supported observations in spring/summer
+  24,347 parked records are detector-supported observations in spring/summer
   2020 City imagery, not a claim about present-day vehicles. All 27,679 OSM
   buildings in the product area received a native-source search envelope;
-  8,754 buildings had at least one accepted source-visible vehicle and 18,925
-  did not. No vehicle is invented merely to satisfy building coverage.
+  7,850 building contexts have at least one retained source-visible vehicle;
+  remaining contexts did not. No vehicle is invented merely to satisfy
+  building coverage.
 - Detection is not perfect. Small, occluded, shadowed, or low-contrast vehicles
-  may be absent, and source-pixel long-axis fitting can be ambiguous. The
-  semantic filter rejects candidates on roads/highways, aeroways, water, and
-  building footprints, but the committed poses are still an offline visual
-  approximation rather than surveyed parking inventory.
+  may be absent. Retained orientation comes from direct oriented-box evidence or
+  strong local parking-row consensus; unresolved candidates are omitted. The
+  full-footprint semantic and collision filters reduce false placement but the
+  committed poses remain an offline visual approximation rather than a surveyed
+  parking inventory.
 - Seven hundred eighty-eight deterministic moving records follow 361
   directional routes compiled from the bounded OSM road network. Traffic does
   not model every street, intersection, signal, collision, or driver decision.
