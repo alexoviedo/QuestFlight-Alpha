@@ -217,7 +217,7 @@ namespace QuestFlight.Editor
                     checked((int)renderer.AuthoredMaximumSelectedTriangleCount);
                 aerial.bakedVegetationMaterialCount = 1;
 
-                if (renderer.AuthoredMaximumDrawCount != 6 ||
+                if (renderer.AuthoredMaximumDrawCount != 17 ||
                     renderer.AuthoredMaximumSelectedTriangleCount <= 0 ||
                     renderer.AuthoredMaximumSelectedTriangleCount > 85000)
                     throw new InvalidOperationException(

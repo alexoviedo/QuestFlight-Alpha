@@ -937,36 +937,36 @@ namespace QuestFlightLab.Editor
             // Resolve QA targets from the same authored placement database that the
             // runtime renderer consumes, so the camera proof cannot silently depend
             // on geometry that is no longer in the product hierarchy.
-            Vector3[] groveTargets = RepresentativeVegetationPointsAtRadii(
+            Vector3[] canopyTargets = RepresentativeVegetationPointsAtRadii(
                 streamedCanopy[0].FullMapPlacementDatabase,
                 center,
                 new[] { 500f, 1000f, 1400f, 900f });
-            Vector3 grove500 = groveTargets[0];
-            Vector3 grove1000 = groveTargets[1];
-            Vector3 grovePattern = groveTargets[2];
-            Vector3 groveTop = groveTargets[3];
+            Vector3 canopy500 = canopyTargets[0];
+            Vector3 canopy1000 = canopyTargets[1];
+            Vector3 canopyPatternTarget = canopyTargets[2];
+            Vector3 canopyTopTarget = canopyTargets[3];
 
             CaptureCanopyMapDistanceShot(context, report, outputDir, width, height, canopy250, center,
                 250f, "pasv1_13_canopy_250m", "Terrain-map canopy at 250 m", "photoreal_canopy");
-            CaptureGroveDistanceShot(context, report, outputDir, width, height, grove500, center,
-                500f, "pasv1_14_canopy_500m", "Fixed grove volume at 500 m", "photoreal_canopy");
-            CaptureGroveDistanceShot(context, report, outputDir, width, height, grove1000, center,
-                1000f, "pasv1_15_canopy_1km", "Fixed grove volume at 1 km", "photoreal_canopy");
+            CaptureGroveDistanceShot(context, report, outputDir, width, height, canopy500, center,
+                500f, "pasv1_14_canopy_500m", "Real-placement canopy at 500 m", "photoreal_canopy");
+            CaptureGroveDistanceShot(context, report, outputDir, width, height, canopy1000, center,
+                1000f, "pasv1_15_canopy_1km", "Real-placement canopy at 1 km", "photoreal_canopy");
 
             Vector3 canopyPatternDirection = Vector3.ProjectOnPlane(
-                grovePattern - center, Vector3.up).normalized;
+                canopyPatternTarget - center, Vector3.up).normalized;
             if (canopyPatternDirection.sqrMagnitude < 0.5f)
                 throw new InvalidOperationException("Pattern-altitude grove target has no stable radial direction.");
-            Vector3 canopyPattern = grovePattern - canopyPatternDirection * 360f +
+            Vector3 canopyPattern = canopyPatternTarget - canopyPatternDirection * 360f +
                                     Vector3.up * 430f;
             Capture(context, report, outputDir, width, height, new ShotDefinition(
-                "pasv1_16_canopy_pattern", "Fixed grove volume from pattern altitude", "photoreal_canopy",
-                canopyPattern, LookAt(canopyPattern, grovePattern + Vector3.up * 8f), 50f,
+                "pasv1_16_canopy_pattern", "Real-placement canopy from pattern altitude", "photoreal_canopy",
+                canopyPattern, LookAt(canopyPattern, canopyPatternTarget + Vector3.up * 8f), 50f,
                 ViewProfile.Environment));
-            Vector3 canopyTop = groveTop + Vector3.up * 520f;
+            Vector3 canopyTop = canopyTopTarget + Vector3.up * 520f;
             Capture(context, report, outputDir, width, height, new ShotDefinition(
-                "pasv1_17_canopy_topdown", "Fixed grove volume top-down integration", "photoreal_canopy",
-                canopyTop, LookAt(canopyTop, groveTop), 44f, ViewProfile.Environment));
+                "pasv1_17_canopy_topdown", "Real-placement canopy top-down integration", "photoreal_canopy",
+                canopyTop, LookAt(canopyTop, canopyTopTarget), 44f, ViewProfile.Environment));
 
             Material diagnosticTerrain = new Material(terrain)
             {
@@ -1510,6 +1510,8 @@ namespace QuestFlightLab.Editor
                 int row = page / columns;
                 float pageX = minimumX + column * pageSize;
                 float pageZ = minimumZ + row * pageSize;
+                Vector3 pageSum = Vector3.zero;
+                int realPlacementCount = 0;
                 for (int local = 0; local < pageCounts[page]; local++)
                 {
                     float x = pageX + reader.ReadUInt16() * quantization;
@@ -1524,23 +1526,31 @@ namespace QuestFlightLab.Editor
                     reader.ReadByte(); // Stable seed.
                     byte kind = reader.ReadByte();
                     recordsRead++;
-                    if (kind != 3) continue;
+                    if (kind == 3) continue;
+                    pageSum += new Vector3(x, y + height * 0.5f, z);
+                    realPlacementCount++;
+                }
 
-                    float planarRadius = Vector2.Distance(
-                        new Vector2(x, z), new Vector2(reference.x, reference.z));
-                    for (int radiusIndex = 0; radiusIndex < radii.Length; radiusIndex++)
-                    {
-                        float score = Mathf.Abs(planarRadius - radii[radiusIndex]);
-                        if (score >= scores[radiusIndex]) continue;
-                        scores[radiusIndex] = score;
-                        best[radiusIndex] = new Vector3(x, y + height * 0.5f, z);
-                    }
+                if (realPlacementCount <= 0) continue;
+                Vector3 pageCenter = pageSum / realPlacementCount;
+                float planarRadius = Vector2.Distance(
+                    new Vector2(pageCenter.x, pageCenter.z), new Vector2(reference.x, reference.z));
+                for (int radiusIndex = 0; radiusIndex < radii.Length; radiusIndex++)
+                {
+                    // Prefer a source-faithful, densely populated page near the desired
+                    // radius. This produces useful canopy proof without requiring the
+                    // removed aggregate-grove record type.
+                    float densityPenalty = (1600f - Mathf.Min(realPlacementCount, 1600)) * 0.15f;
+                    float score = Mathf.Abs(planarRadius - radii[radiusIndex]) + densityPenalty;
+                    if (score >= scores[radiusIndex]) continue;
+                    scores[radiusIndex] = score;
+                    best[radiusIndex] = pageCenter;
                 }
             }
 
             if (recordsRead != instanceCount || scores.Any(float.IsPositiveInfinity))
                 throw new InvalidDataException(
-                    $"Full-map vegetation QA database could not resolve all grove targets " +
+                    $"Full-map vegetation QA database could not resolve real-placement canopy targets " +
                     $"({recordsRead}/{instanceCount} records)." );
             return best;
         }

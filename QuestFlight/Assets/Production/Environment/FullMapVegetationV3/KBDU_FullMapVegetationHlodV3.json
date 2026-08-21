@@ -1,5 +1,5 @@
 {
-  "schema": "questflight.full-map-vegetation-hlod.v3.1",
+  "schema": "questflight.full-map-vegetation-hlod.v3.2",
   "contract": {
     "coordinate_frame": "KBDU local AEQD; Unity +X east, +Y up, +Z north",
     "bounds_meters": [
@@ -11,23 +11,24 @@
     "runtime_page_meters": 1000.0,
     "columns": 24,
     "rows": 24,
-    "far_prefix": "all occupied 85 m grove cells, ordered before individuals",
-    "near_suffix": "stable spatially distributed individual trees and shrubs",
-    "geometry": "volumetric near trees/shrubs plus bounded multi-lobe grove HLOD",
-    "far_handoff": "full-map orthophoto-derived canopy normal/occlusion map"
+    "far_prefix": "up to 128 real trees plus 16 shrubs in stable whole-page spatial order",
+    "near_suffix": "all remaining real individual trees and shrubs in stable spatial order",
+    "geometry": "volumetric near trees/shrubs plus small eight-view individual impostors",
+    "far_handoff": "orthophoto-authoritative canopy color plus aggregate crown normals"
   },
   "processing": {
     "generator": "tools/full_map_vegetation/compile_vegetation_hlod_v3.py",
     "source_schema": "questflight.full-map-vegetation-clipmap.v2",
-    "grove_cell_meters": 85.0,
+    "far_prefix_records": 144,
+    "far_prefix_shrub_reserve": 16,
     "shrub_rule": {
       "maximum_height_meters": 7.5,
       "maximum_crown_meters": 7.0,
       "authority": "bounded low-vegetation class; no random reassignment"
     },
-    "individual_order": "stable whole-page spatial hash; confidence-prefix loss removed",
+    "individual_order": "stable real-placement spatial hash with a bounded shrub reserve",
     "semantic_exclusion": "offline hard water-interior and verified athletic-playing-surface center rejection",
-    "grove_boundary_policy": "anchor to a retained individual and clamp the aggregate crown to hard-exclusion clearance"
+    "grove_policy": "no aggregate grove geometry; grouped real placements form groves"
   },
   "sources": {
     "v2_database": {
@@ -77,15 +78,13 @@
     }
   },
   "statistics": {
-    "runtime_records": 940562,
+    "runtime_records": 868508,
     "ordinary_trees": 859138,
     "tall_narrow_trees": 676,
     "shrubs": 8694,
-    "grove_hlods": 72054,
-    "maximum_groves_per_page": 144,
-    "mean_groves_per_nonempty_page": 125.31,
-    "binary_bytes": 17875326,
-    "binary_sha256": "5dda526cce6c8be0b2773feef4904ccf4b72023069e5cd54e7dfbb387effd10e",
+    "grove_hlods": 0,
+    "binary_bytes": 16506300,
+    "binary_sha256": "4efcf16d83133d3d41e4ee99f7b9706ce77b173bd62013fb00927f6a898fe9cf",
     "source_individuals": 901744,
     "retained_individuals": 868508,
     "semantic_rejections": {
@@ -97,15 +96,11 @@
       "water_kind_0": 31689,
       "water_kind_1": 15,
       "water_kind_2": 68
-    },
-    "aggregate_boundary_adjustments": {
-      "groves_clamped_at_semantic_boundary": 2766,
-      "groves_omitted_at_semantic_boundary": 517
     }
   },
   "limitations": [
     "Orthophoto segmentation is semantic placement evidence, not an individual-tree survey.",
-    "Grove HLODs are bounded aggregate silhouettes and are never used for close inspection.",
+    "Far geometry is a bounded sample of real placements; the orthophoto owns continuous canopy fill.",
     "Raw imagery and downloaded high-poly references remain external and uncommitted."
   ]
 }

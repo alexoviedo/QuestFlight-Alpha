@@ -18,15 +18,15 @@ namespace QuestFlightLab.Environment
     [DisallowMultipleComponent]
     public sealed class AirportCloseTreeLodRenderer : MonoBehaviour
     {
-        public const int MaximumLod0Instances = 24;
-        public const int MaximumLod1Instances = 300;
-        public const int MaximumLod2Instances = 1000;
-        public const int MaximumShrubInstances = 200;
-        public const int MaximumGroveInstances = 600;
-        public const int MaximumDrawCount = 6;
-        public const int ImpostorFrameCount = 8;
         public const int MaximumCoveragePages = 96;
         public const int FarSamplesPerPage = 144;
+        public const int MaximumLod0Instances = 24;
+        public const int MaximumLod1Instances = 300;
+        public const int MaximumLod2Instances = MaximumCoveragePages * FarSamplesPerPage;
+        public const int MaximumShrubInstances = 200;
+        public const int MaximumGroveInstances = 0;
+        public const int MaximumDrawCount = 17;
+        public const int ImpostorFrameCount = 8;
         public const int NearSamplesPerPage = 600;
         public const int MaximumFullDensityPages = 9;
         public const int MaximumResidentFullDensityPages = MaximumFullDensityPages * 2;
@@ -39,6 +39,7 @@ namespace QuestFlightLab.Environment
         public const float SelectionRefreshSeconds = 0.25f;
         public const float SelectionRefreshDistanceMeters = 20f;
         public const float SelectionRefreshAngleDegrees = 4f;
+        public const float FarMinimumProjectedPixels = 0.75f;
         private const int MaximumInstancesPerDraw = 1023;
 
         private const byte Lod0 = 0;
@@ -143,14 +144,9 @@ namespace QuestFlightLab.Environment
         private readonly float[] lod2Frames = new float[Lod2ArrayCapacity];
         private readonly Matrix4x4[] shrubMatrices =
             new Matrix4x4[MaximumShrubInstances];
-        private readonly Matrix4x4[] groveMatrices =
-            new Matrix4x4[MaximumGroveInstances];
         private readonly Vector4[] shrubTints = new Vector4[MaximumShrubInstances];
-        private readonly Vector4[] groveTints = new Vector4[MaximumGroveInstances];
         private readonly float[] shrubFades = new float[MaximumShrubInstances];
-        private readonly float[] groveFades = new float[MaximumGroveInstances];
         private readonly float[] shrubFrames = new float[MaximumShrubInstances];
-        private readonly float[] groveFrames = new float[MaximumGroveInstances];
         private readonly Matrix4x4[] batchMatrices =
             new Matrix4x4[MaximumInstancesPerDraw];
         private readonly Vector4[] batchTints =
@@ -310,6 +306,10 @@ namespace QuestFlightLab.Environment
         public int NearSamplesPerCoveragePage => NearSamplesPerPage;
         public int FullDensityPageLimit => MaximumFullDensityPages;
         public bool StablePageStratifiedFarSelection => true;
+        public bool UsesSingleDrawProceduralFarPopulation => false;
+        public bool UsesProvenBatchedFarPopulation => true;
+        public int MaximumFarBatchCount =>
+            Mathf.CeilToInt((float)Lod2ArrayCapacity / MaximumInstancesPerDraw);
 
         // Compatibility properties make the intentional V1-to-V2 policy change
         // explicit to repository validators and temporal evidence.
@@ -376,8 +376,7 @@ namespace QuestFlightLab.Environment
                 (long)TriangleCount(lod2Mesh) * MaximumLod2Instances +
                 (long)TriangleCount(lod1Mesh) * MaximumLod0Instances +
                 (long)TriangleCount(lod2Mesh) * MaximumLod1Instances +
-                (long)TriangleCount(shrubMesh) * MaximumShrubInstances +
-                (long)TriangleCount(groveMesh) * MaximumGroveInstances;
+                (long)TriangleCount(shrubMesh) * MaximumShrubInstances;
             loadedDatabaseInstanceId = 0;
             Prepare();
         }
@@ -832,12 +831,15 @@ namespace QuestFlightLab.Environment
                 pageCandidates[pageCandidateCount++] = new PageCandidate
                 {
                     page = page,
-                    mandatory = false,
+                    // Current entry coverage always outranks overlap-only pages.
+                    // The previous implementation added 10,000 to every retiring
+                    // page, allowing stale residency to consume all 96 slots.
+                    mandatory = insideEntry,
                     priority =
-                        (insideExit ? 10000f : 0f) +
                         forwardWeight * 1000f +
                         sideWeight * 250f -
-                        distance * 0.01f,
+                        distance * 0.01f +
+                        (insideExit && !insideEntry ? 25f : 0f),
                 };
             }
 
@@ -1098,8 +1100,8 @@ namespace QuestFlightLab.Environment
                 // excluded; far individual silhouettes remain available below.
                 return;
             }
-            if (kind == 2 || individualTotal >= MaximumLod2Instances ||
-                candidates[candidateIndex].pixels < 1.25f)
+            if (individualTotal >= MaximumLod2Instances ||
+                candidates[candidateIndex].pixels < FarMinimumProjectedPixels)
                 return;
             selectedForDraw[index] = true;
             desiredLods[index] = Lod2;
@@ -1156,7 +1158,6 @@ namespace QuestFlightLab.Environment
             int lod2Count = 0;
             int shrubCount = 0;
             int groveCount = 0;
-
             for (int active = 0; active < activeCount; active++)
             {
                 int index = activeIndices[active];
@@ -1244,16 +1245,6 @@ namespace QuestFlightLab.Environment
                 shrubProperties,
                 camera,
                 layer);
-            DrawTier(
-                groveMesh,
-                groveMatrices,
-                groveTints,
-                groveFades,
-                groveFrames,
-                groveCount,
-                groveProperties,
-                camera,
-                layer);
         }
 
         private void UpdateSelectionHistory()
@@ -1279,7 +1270,7 @@ namespace QuestFlightLab.Environment
             if (lod == Culled || fade <= 0.001f)
                 return;
             RuntimeInstance instance = runtimeInstances[index];
-            if (instance.Kind == 2)
+            if (instance.Kind == 2 && lod != Lod2)
             {
                 if (shrubCount >= shrubMatrices.Length)
                     return;
@@ -1292,13 +1283,8 @@ namespace QuestFlightLab.Environment
             }
             if (instance.Kind == 3)
             {
-                if (groveCount >= groveMatrices.Length)
-                    return;
-                groveMatrices[groveCount] = instance.Matrix;
-                groveTints[groveCount] = instance.Tint;
-                groveFades[groveCount] = fade;
-                groveFrames[groveCount] = 0f;
-                groveCount++;
+                // V3.2 contains no aggregate grove records. Keep this guard so a
+                // stale database cannot silently reintroduce blob geometry.
                 return;
             }
             if (lod == Lod0 && lod0Count < lod0Matrices.Length)
@@ -1400,8 +1386,9 @@ namespace QuestFlightLab.Environment
                     layer,
                     camera,
                     LightProbeUsage.Off,
-                    null);
+                null);
             }
         }
+
     }
 }

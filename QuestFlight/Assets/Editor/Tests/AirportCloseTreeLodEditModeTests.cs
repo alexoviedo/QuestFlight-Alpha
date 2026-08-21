@@ -59,10 +59,13 @@ namespace QuestFlight.Editor.Tests
             Assert.That(renderer.FarCoveragePageLimit, Is.EqualTo(96));
             Assert.That(renderer.FarSamplesPerCoveragePage, Is.EqualTo(144));
             Assert.That(renderer.MaximumFarCoverageCandidates, Is.EqualTo(13824));
-            Assert.That(renderer.MaximumFarDrawPopulation, Is.EqualTo(1000));
+            Assert.That(renderer.MaximumFarDrawPopulation, Is.EqualTo(13824));
             Assert.That(renderer.NearSamplesPerCoveragePage, Is.EqualTo(600));
             Assert.That(renderer.FullDensityPageLimit, Is.EqualTo(9));
             Assert.That(renderer.StablePageStratifiedFarSelection, Is.True);
+            Assert.That(renderer.UsesSingleDrawProceduralFarPopulation, Is.False);
+            Assert.That(renderer.UsesProvenBatchedFarPopulation, Is.True);
+            Assert.That(renderer.MaximumFarBatchCount, Is.EqualTo(14));
             Assert.That(renderer.BuildingPagesAreMandatoryTreeCoverage, Is.False,
                 "Head-directed building pages must not control vegetation residency.");
             Assert.That(benchmark, Is.Not.Null);
@@ -79,9 +82,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(TriangleCount(renderer.Lod2Mesh), Is.EqualTo(2));
             Assert.That(TriangleCount(renderer.ShrubMesh), Is.EqualTo(24));
             Assert.That(TriangleCount(renderer.GroveMesh), Is.EqualTo(44));
-            Assert.That(renderer.AuthoredMaximumDrawCount, Is.EqualTo(6));
+            Assert.That(renderer.AuthoredMaximumDrawCount, Is.EqualTo(17));
             Assert.That(renderer.AuthoredMaximumSelectedTriangleCount,
-                Is.EqualTo(81584));
+                Is.EqualTo(80832));
             Assert.That(renderer.ProjectedScreenSizeSelection, Is.True);
             Assert.That(renderer.PersistentHysteresis, Is.True);
             Assert.That(renderer.CenterEyeWorldUprightImpostor, Is.True);
@@ -149,12 +152,13 @@ namespace QuestFlight.Editor.Tests
             TextAsset fullMap = AssetDatabase.LoadAssetAtPath<TextAsset>(FullMapManifestPath);
             Assert.That(fullMap, Is.Not.Null);
             Assert.That(fullMap.text,
-                Does.Contain("\"schema\": \"questflight.full-map-vegetation-hlod.v3.1\""));
+                Does.Contain("\"schema\": \"questflight.full-map-vegetation-hlod.v3.2\""));
             Assert.That(fullMap.text,
-                Does.Contain("\"geometry\": \"volumetric near trees/shrubs plus bounded multi-lobe grove HLOD\""));
-            Assert.That(fullMap.text, Does.Contain("confidence-prefix loss removed"));
+                Does.Contain("\"geometry\": \"volumetric near trees/shrubs plus small eight-view individual impostors\""));
+            Assert.That(fullMap.text, Does.Contain("stable real-placement spatial hash"));
             Assert.That(fullMap.text,
-                Does.Contain("orthophoto-derived canopy normal/occlusion map"));
+                Does.Contain("orthophoto-authoritative canopy color plus aggregate crown normals"));
+            Assert.That(fullMap.text, Does.Contain("\"grove_hlods\": 0"));
         }
 
         [Test]
@@ -235,7 +239,7 @@ namespace QuestFlight.Editor.Tests
             int instanceCount = reader.ReadInt32();
             Assert.That(columns, Is.EqualTo(24));
             Assert.That(rows, Is.EqualTo(24));
-            Assert.That(instanceCount, Is.EqualTo(975627));
+            Assert.That(instanceCount, Is.EqualTo(868508));
 
             int expectedOffset = 0;
             for (int index = 0; index < columns * rows; index++)
@@ -243,13 +247,64 @@ namespace QuestFlight.Editor.Tests
                 int offset = reader.ReadInt32();
                 int count = reader.ReadInt32();
                 Assert.That(offset, Is.EqualTo(expectedOffset));
-                Assert.That(count, Is.InRange(1, 1744));
+                Assert.That(count, Is.InRange(0, 1600));
                 expectedOffset += count;
             }
 
             Assert.That(expectedOffset, Is.EqualTo(instanceCount));
             Assert.That(bytes.Length,
                 Is.EqualTo(40 + columns * rows * 8 + instanceCount * 19));
+        }
+
+        [Test]
+        public void FarPagePrefixesContainOnlyRealPlacementsAndRetainShrubs()
+        {
+            GameObject environment =
+                AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
+            AirportCloseTreeLodRenderer renderer =
+                environment.GetComponentInChildren<AirportCloseTreeLodRenderer>(true);
+            byte[] bytes = renderer.FullMapPlacementDatabase.bytes;
+            using MemoryStream stream = new MemoryStream(bytes, false);
+            using BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true);
+            reader.ReadBytes(8);
+            reader.ReadInt32();
+            reader.ReadBytes(4 * 4);
+            int columns = reader.ReadInt32();
+            int rows = reader.ReadInt32();
+            reader.ReadInt32();
+            int pageCount = columns * rows;
+            int[] offsets = new int[pageCount];
+            int[] counts = new int[pageCount];
+            for (int page = 0; page < pageCount; page++)
+            {
+                offsets[page] = reader.ReadInt32();
+                counts[page] = reader.ReadInt32();
+            }
+
+            long recordStart = reader.BaseStream.Position;
+            int prefixRecords = 0;
+            int prefixShrubs = 0;
+            int aggregateGroves = 0;
+            for (int page = 0; page < pageCount; page++)
+            for (int local = 0; local < counts[page]; local++)
+            {
+                reader.BaseStream.Position = recordStart +
+                    (offsets[page] + local) * 19L + 18L;
+                byte kind = reader.ReadByte();
+                if (kind == 3)
+                    aggregateGroves++;
+                if (local >= AirportCloseTreeLodRenderer.FarSamplesPerPage)
+                    continue;
+                prefixRecords++;
+                if (kind == 2)
+                    prefixShrubs++;
+            }
+
+            Assert.That(aggregateGroves, Is.Zero,
+                "Aggregate grove blobs may not re-enter the runtime database.");
+            Assert.That(prefixRecords, Is.GreaterThan(80000));
+            Assert.That(prefixShrubs, Is.GreaterThan(3000),
+                "The far prefix must retain a bounded real-shrub representation.");
         }
 
         [Test]
