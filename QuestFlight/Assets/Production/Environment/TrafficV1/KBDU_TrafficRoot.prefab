@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4507544551868416270}
   - component: {fileID: 8832284638587171138}
+  - component: {fileID: 1651721666179414470}
   m_Layer: 0
   m_Name: KBDU_TrafficRoot
   m_TagString: Untagged
@@ -58,6 +59,7 @@ MonoBehaviour:
   - {fileID: 4300000, guid: 2e5b255fc319e29499517748be2a025e, type: 2}
   - {fileID: 4300000, guid: e29d10ff7197a1e42a4ee3ca85cca31e, type: 2}
   deterministicMotion: 1
+  movingTrafficEnabled: 0
   realtimeVehicleShadows: 0
   perVehicleGameObjects: 0
   authoredParkedCount: 24347
@@ -65,3 +67,24 @@ MonoBehaviour:
   authoredRouteCount: 361
   authoredMaximumDrawCount: 9
   authoredMaximumVisibleTriangles: 129312
+--- !u!114 &1651721666179414470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8487058057837095969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c924de3a6ce4f02b1930e308146cc8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.KbduTrafficV2Runtime
+  trajectoryManifest: {fileID: 4900000, guid: 601139fd9d9d4eeea7e7d25a0948bd12, type: 3}
+  sourceAndLicenseRecord: {fileID: 4900000, guid: 063566202d6e4c70b61ce1e32fb7fc79, type: 3}
+  acceptedVehicleAssets: {fileID: 8832284638587171138}
+  terrainSurface: {fileID: 11400000, guid: b2b2be77d482f4c4c8fb5ceb35614891, type: 2}
+  deterministicGlobalClock: 1
+  perVehicleGameObjects: 0
+  realtimeVehicleShadows: 0
+  authoredTrajectoryCount: 32770
+  authoredMaximumDrawCount: 18

@@ -1,0 +1,648 @@
+{
+  "schema": "questflight.traffic-system-v2-spec",
+  "schema_version": 1,
+  "contract_revision": "2026-08-21.1",
+  "status": "FROZEN",
+  "accepted_source_sha": "fda11a25eb526824d82a47330f2be80b1410bb64",
+  "shipping_target": {
+    "device": "Meta Quest 3 standalone",
+    "platform": "Android ARM64",
+    "graphics_api": "Vulkan",
+    "xr_runtime": "OpenXR",
+    "target_refresh_hz": 72
+  },
+  "scope": {
+    "coordinate_frame": "KBDU local tangent ENU; Unity +X=east, +Z=north",
+    "geodetic_origin": {
+      "latitude_degrees": 40.03936527,
+      "longitude_degrees": -105.22608958,
+      "elevation_msl_meters": 1611.7824,
+      "projection": "+proj=aeqd +lat_0=40.039365270000 +lon_0=-105.226089580000 +datum=WGS84 +units=m +no_defs"
+    },
+    "evaluation_bounds": {
+      "minimum_x_meters": -12000.0,
+      "maximum_x_meters": 12000.0,
+      "minimum_z_meters": -12000.0,
+      "maximum_z_meters": 12000.0
+    },
+    "minimum_schedule_seconds": 900,
+    "runtime_model": "offline-authored trajectories evaluated from one global clock",
+    "source_precedence": [
+      "CDOT highway geometry and traffic counts",
+      "City of Boulder street, lane, direction, speed, and signal authority",
+      "bounded full-map OpenStreetMap extraction",
+      "current orthophoto ambiguity review",
+      "accepted product building, water, runway, sports-field, vegetation, median, and terrain masks"
+    ]
+  },
+  "gate_policy": {
+    "independent_validation_owner": "D",
+    "implementation_may_start_when": "all validation methods have D_APPROVED status",
+    "phase_pass_requires": [
+      "every required evidence artifact exists",
+      "the independent validator reproduces every machine result",
+      "the lead inspects every required full-resolution image",
+      "no pass is inferred from aggregate route, vehicle, or test counts"
+    ],
+    "failure_behavior": "fail closed at the first unmet requirement; diagnose the first distinguishable contract failure before changing implementation"
+  },
+  "workstream_ownership": {
+    "A": "geospatial authority",
+    "B": "traffic performance",
+    "C": "Quest runtime",
+    "D": "independent verification",
+    "LEAD": "shared schemas, architecture, integration, serialized product assets, builds, Git, and final acceptance"
+  },
+  "benchmark_views": [
+    "cockpit_runway_takeoff",
+    "left_airport_glider_road",
+    "airport_boulevard",
+    "diagonal_highway_approach",
+    "highway_flyover",
+    "reservoir",
+    "downtown",
+    "residential",
+    "industrial",
+    "map_periphery",
+    "agl_300m_oblique",
+    "agl_800m_aerial",
+    "head_pan_90deg",
+    "rearward_glance",
+    "aircraft_turn_180deg"
+  ],
+  "prohibited_runtime_behavior": [
+    "ordinary-traffic pathfinding or route selection",
+    "invisible-agent traffic simulation",
+    "per-vehicle GameObjects, Update methods, colliders, rigid bodies, or physics",
+    "runtime product-hierarchy construction or repair",
+    "runtime source-data parsing",
+    "random spawning, visible wrapping, teleportation, or identity mutation",
+    "per-eye LOD selection or head-facing eviction"
+  ],
+  "requirements": [
+    {
+      "id": "TV2-COV-001",
+      "category": "full-map eligible-road coverage",
+      "user_visible_objective": "Eligible roads throughout the flyable map carry plausible traffic rather than an airport- or City-only patch.",
+      "source_of_truth": [
+        "independently acquired source inventories within the frozen 24 km square",
+        "source precedence and explicit eligibility/exclusion rules",
+        "hashed benchmark-camera road inventory"
+      ],
+      "implementation_owner": "A",
+      "validation_owner": "D",
+      "validation_method": "Independently reproject source centerlines, classify eligibility, intersect lane geometry with the frozen bounds, and compare represented lane-kilometers by road class and by benchmark viewport.",
+      "pass_thresholds": [
+        "100% of eligible motorway, trunk, primary, and secondary lane-kilometers represented",
+        "at least 95% of eligible tertiary and residential lane-kilometers represented",
+        "100% of roads visible from benchmark cameras classified",
+        "100% of the frozen +/-12 km bounds evaluated",
+        "every excluded road has an evidence-backed reason"
+      ],
+      "evidence_artifacts": [
+        "traffic_source_coverage.json",
+        "traffic_missing_roads.geojson",
+        "traffic_source_coverage.png",
+        "traffic_source_provenance.md"
+      ],
+      "failure_response": "Stop source compilation; resolve the authority gap or explicitly exclude the ineligible feature. Never synthesize a road to satisfy coverage."
+    },
+    {
+      "id": "TV2-LANE-002",
+      "category": "correct directed lanes",
+      "user_visible_objective": "Every moving vehicle travels in the lawful direction on its lane.",
+      "source_of_truth": [
+        "authoritative one-way and lane-direction attributes",
+        "orthophoto review for unresolved markings",
+        "directed lane multigraph"
+      ],
+      "implementation_owner": "A",
+      "validation_owner": "D",
+      "validation_method": "Reconstruct direction independently from source attributes and compare every directed edge plus sampled trajectory heading against its permitted lane direction.",
+      "pass_thresholds": [
+        "zero wrong-way directed edges",
+        "zero wrong-way trajectory samples",
+        "zero unresolved pilot-visible direction conflicts"
+      ],
+      "evidence_artifacts": [
+        "lane_direction_map.png",
+        "lane_graph_validation.json"
+      ],
+      "failure_response": "Reject the edge and every dependent trajectory until its direction is corrected from source authority."
+    },
+    {
+      "id": "TV2-LANE-003",
+      "category": "correct divided-highway carriageways",
+      "user_visible_objective": "Opposing highway traffic remains on distinct, correctly oriented carriageways.",
+      "source_of_truth": [
+        "CDOT highway geometry",
+        "source carriageway and median geometry",
+        "orthophoto ambiguity review"
+      ],
+      "implementation_owner": "A",
+      "validation_owner": "D",
+      "validation_method": "Audit each divided-road lane against the independently reconstructed carriageway polygon and median barrier; sweep the complete vehicle footprint over every highway trajectory.",
+      "pass_thresholds": [
+        "zero wrong-carriageway edges",
+        "zero artificial median crossings",
+        "zero carriageway merges lacking a source-backed legal junction"
+      ],
+      "evidence_artifacts": [
+        "lane_direction_map.png",
+        "trajectory_containment_report.json"
+      ],
+      "failure_response": "Remove the invalid movement and recompile the carriageway geometry before routing resumes."
+    },
+    {
+      "id": "TV2-GEO-004",
+      "category": "road-surface containment",
+      "user_visible_objective": "Complete vehicle footprints remain on paved traffic surfaces through lanes and turns.",
+      "source_of_truth": [
+        "road and intersection surface polygons",
+        "vehicle-specific oriented and articulated bounds",
+        "continuous authored trajectories"
+      ],
+      "implementation_owner": "A+B",
+      "validation_owner": "D",
+      "validation_method": "Use adaptive continuous swept-volume subdivision bounded by displacement and heading error, then independently test the swept polygon against the legal drivable surface.",
+      "pass_thresholds": [
+        "at least 99.5% continuous swept-footprint containment at the lane-graph gate",
+        "100% containment for the final trajectory set and every pilot-visible movement",
+        "zero sampled footprint point more than 0.10 m outside the drivable surface at <=0.5 m witness spacing",
+        "zero unclosed visible joins"
+      ],
+      "evidence_artifacts": [
+        "lane_graph_validation.json",
+        "trajectory_containment_report.json"
+      ],
+      "failure_response": "Reject and regenerate the lane or trajectory; do not hide the violation with culling."
+    },
+    {
+      "id": "TV2-GEO-005",
+      "category": "building/water/median exclusion",
+      "user_visible_objective": "Vehicles never clip buildings, water, or medians.",
+      "source_of_truth": [
+        "accepted product exclusion masks",
+        "source-backed road surfaces",
+        "vehicle swept volumes"
+      ],
+      "implementation_owner": "A+B",
+      "validation_owner": "D",
+      "validation_method": "Independently rebuild exclusion polygons, apply conservative uncertainty buffers, and continuously intersect every rigid and articulated swept volume.",
+      "pass_thresholds": [
+        "zero building intrusions",
+        "zero water intrusions",
+        "zero median intrusions"
+      ],
+      "evidence_artifacts": [
+        "trajectory_containment_report.json",
+        "trajectory_conflict_heatmap.png"
+      ],
+      "failure_response": "Reject the dependent lane and trajectories until the authority or geometry is corrected."
+    },
+    {
+      "id": "TV2-GEO-006",
+      "category": "bridge and grade-separation correctness",
+      "user_visible_objective": "Vehicles follow bridge decks and do not collide with terrain or traffic on another grade.",
+      "source_of_truth": [
+        "bridge/layer source attributes",
+        "deck or roadway elevation evidence",
+        "accepted bare-earth terrain"
+      ],
+      "implementation_owner": "A",
+      "validation_owner": "D",
+      "validation_method": "Audit every crossing for layer assignment, compare road elevation to deck authority rather than bare earth, and suppress conflict zones between separated layers.",
+      "pass_thresholds": [
+        "100% of bridge and grade-separated edges have explicit layer and elevation authority",
+        "zero bare-earth snapping on known bridge decks",
+        "absolute deck-height error is at most 0.25 m against the pinned deck authority",
+        "zero collision reservations between geometrically crossing but grade-separated lanes",
+        "zero terrain or ground-clearance penetrations"
+      ],
+      "evidence_artifacts": [
+        "lane_graph_validation.json",
+        "trajectory_containment_report.json"
+      ],
+      "failure_response": "Exclude the unresolved structure from traffic and stop the source gate if it is pilot-visible or required for major-road continuity."
+    },
+    {
+      "id": "TV2-TURN-007",
+      "category": "legal turn movements",
+      "user_visible_objective": "Vehicles make only legal, physically contained turns.",
+      "source_of_truth": [
+        "turn restrictions and lane-use attributes",
+        "intersection topology and drivable polygons",
+        "vehicle-size turn envelopes"
+      ],
+      "implementation_owner": "A+B",
+      "validation_owner": "D",
+      "validation_method": "Enumerate all authored turn arcs, independently derive permitted inbound/outbound pairs, and continuously sweep each supported vehicle class through its turn polygon.",
+      "pass_thresholds": [
+        "zero illegal turns",
+        "zero artificial U-turn closures or straight-line joins",
+        "100% of turn arcs contained for every assigned vehicle class"
+      ],
+      "evidence_artifacts": [
+        "intersection_turn_map.png",
+        "lane_graph_validation.json"
+      ],
+      "failure_response": "Remove the movement and every path using it until legal topology and containment both pass."
+    },
+    {
+      "id": "TV2-INT-008",
+      "category": "intersection right-of-way",
+      "user_visible_objective": "Signals, stops, yields, queues, and releases behave coherently without conflicts.",
+      "source_of_truth": [
+        "signal and control source records",
+        "precompiled phase plans",
+        "intersection conflict-zone reservations"
+      ],
+      "implementation_owner": "B",
+      "validation_owner": "D",
+      "validation_method": "Replay the full schedule through an independent reservation checker and verify controlled approaches, dwell, phase compatibility, queue order, and smooth entry/exit speeds.",
+      "pass_thresholds": [
+        "zero overlapping conflict-zone reservations",
+        "zero movements during a conflicting red phase",
+        "100% stop-controlled movements satisfy their authored stop dwell",
+        "100% yield movements enter only with the required temporal clearance"
+      ],
+      "evidence_artifacts": [
+        "trajectory_collision_report.json",
+        "traffic_slice_intersection_report.json"
+      ],
+      "failure_response": "Reject the schedule at the first conflicting reservation and regenerate the affected intersection plan."
+    },
+    {
+      "id": "TV2-DEM-009",
+      "category": "realistic density",
+      "user_visible_objective": "Highways and arterials look active while local streets remain plausibly intermittent across the complete map.",
+      "source_of_truth": [
+        "measured directional traffic counts",
+        "documented frozen time-of-day scenario",
+        "road class, lanes, capacity, speed, land use, and freight relevance"
+      ],
+      "implementation_owner": "B",
+      "validation_owner": "D",
+      "validation_method": "Recompute target directional flow independently, compare scheduled passage counts in rolling intervals, and audit pilot-visible occupancy by benchmark camera and flight path.",
+      "pass_thresholds": [
+        "measured-count segments stay within the documented source uncertainty band",
+        "interpolated segments stay within their documented confidence interval",
+        "GEH is below 5 for at least 85% of calibrated directional screenlines and below 10 for 100%",
+        "aggregate directional flow is within +/-10% of the frozen calibrated target",
+        "all major-road benchmark views meet their source-derived visible-density band",
+        "residential occupancy is intermittent rather than uniform",
+        "no airport-only concentration and no performance-selected global density cap"
+      ],
+      "evidence_artifacts": [
+        "traffic_demand_v2.json",
+        "traffic_count_source_comparison.csv",
+        "full_map_viewport_inventory.csv"
+      ],
+      "failure_response": "Correct demand evidence or scheduling; never lower semantic coverage to meet a render budget."
+    },
+    {
+      "id": "TV2-FLT-010",
+      "category": "regional fleet composition",
+      "user_visible_objective": "Ordinary views are passenger-dominant, with uncommon semis confined to credible freight movements.",
+      "source_of_truth": [
+        "regional registration/class evidence",
+        "corridor freight evidence",
+        "contextual road-class fleet distributions"
+      ],
+      "implementation_owner": "B",
+      "validation_owner": "D",
+      "validation_method": "Audit class ratios globally, per context, within spatial neighborhoods, and in each benchmark viewport against the frozen source-derived target bands.",
+      "pass_thresholds": [
+        "passenger cars, SUVs, and pickups form the largest combined class in every ordinary benchmark view",
+        "zero semis on residential paths",
+        "semi share on freight corridors remains within its evidence-derived band",
+        "each frozen light-vehicle archetype share is within +/-3 percentage points of its target and aggregate heavy/commercial share is within +/-2 points",
+        "source, demand, compiler, and runtime fleet weights are byte-for-byte consistent",
+        "every camera-specific class ratio remains within its frozen tolerance band"
+      ],
+      "evidence_artifacts": [
+        "fleet_distribution_v2.json",
+        "fleet_distribution_by_camera.csv"
+      ],
+      "failure_response": "Regenerate fleet assignments from the contextual distribution; do not hand-place exceptions."
+    },
+    {
+      "id": "TV2-DYN-011",
+      "category": "variable speed",
+      "user_visible_objective": "Vehicles show natural speed variation, smooth braking, turning, and acceleration.",
+      "source_of_truth": [
+        "speed limits and observed speed references",
+        "persistent driver profiles",
+        "vehicle-class acceleration and turn constraints"
+      ],
+      "implementation_owner": "B",
+      "validation_owner": "D",
+      "validation_method": "Compare complete trajectory speed distributions and event derivatives with frozen class/road targets, including within-route variance and heavy-vehicle constraints.",
+      "pass_thresholds": [
+        "every nontrivial road class has a nondegenerate source-derived speed distribution",
+        "the nonqueued empirical speed CDF has Kolmogorov-Smirnov D <= 0.10 against its frozen target and within-stratum coefficient of variation >= 0.05",
+        "zero instantaneous speed or acceleration discontinuities above the numeric interpolation tolerance",
+        "all acceleration, braking, and turn speeds remain within their driver/vehicle profile bounds",
+        "heavy-vehicle acceleration and turn-speed distributions are slower than passenger equivalents"
+      ],
+      "evidence_artifacts": [
+        "trajectory_speed_headway.csv",
+        "traffic_slice_speed_headway.png"
+      ],
+      "failure_response": "Regenerate the affected profile or trajectory; do not add runtime randomness."
+    },
+    {
+      "id": "TV2-DYN-012",
+      "category": "variable headway",
+      "user_visible_objective": "Traffic forms irregular, safe gaps and signal-created platoons instead of an evenly spaced lattice.",
+      "source_of_truth": [
+        "persistent driver headway profiles",
+        "demand arrival process",
+        "signal and queue schedule"
+      ],
+      "implementation_owner": "B",
+      "validation_owner": "D",
+      "validation_method": "Measure time and distance headways by road class over the entire schedule, compare with frozen target distributions, and test for periodic spacing artifacts.",
+      "pass_thresholds": [
+        "zero headways below the continuous collision-safe minimum",
+        "passenger desired time headways remain in [0.9, 2.2] seconds and heavy-vehicle desired headways remain in [1.4, 2.4] seconds unless the independently approved reference narrows those ranges",
+        "the empirical headway CDF has Kolmogorov-Smirnov D <= 0.10 against its frozen target",
+        "every populated road/class stratum contains at least three distinct persistent headway targets",
+        "each active major class has a nondegenerate headway distribution within its frozen target band",
+        "no statistically dominant fixed interval or repeated spatial lattice",
+        "queues preserve safe gaps through stop and release"
+      ],
+      "evidence_artifacts": [
+        "trajectory_speed_headway.csv",
+        "speed_headway_reference.md"
+      ],
+      "failure_response": "Regenerate demand arrivals or profiles while preserving calibrated flow."
+    },
+    {
+      "id": "TV2-COL-013",
+      "category": "no same-route collisions",
+      "user_visible_objective": "Following vehicles never contact or pass through one another.",
+      "source_of_truth": [
+        "oriented vehicle dimensions",
+        "continuous global-time trajectories"
+      ],
+      "implementation_owner": "B",
+      "validation_owner": "D",
+      "validation_method": "Run an independent continuous-time broadphase and conservative OBB/articulated narrowphase for every co-lane pair over max(1800 seconds, two schedule periods), including stops and schedule boundaries, at authored interpolation precision plus 0.05 s and 0.20 s stress witnesses.",
+      "pass_thresholds": [
+        "zero same-route collisions",
+        "zero interpenetrations",
+        "minimum same-route bumper clearance is at least 2.00 m at every continuous closest approach"
+      ],
+      "evidence_artifacts": [
+        "trajectory_collision_report.json"
+      ],
+      "failure_response": "Reject and reschedule the colliding trajectories."
+    },
+    {
+      "id": "TV2-COL-014",
+      "category": "no cross-route collisions",
+      "user_visible_objective": "Vehicles on different routes never collide at intersections, merges, driveways, or crossings.",
+      "source_of_truth": [
+        "all-route continuous trajectories",
+        "intersection and merge reservations",
+        "grade-separation layers"
+      ],
+      "implementation_owner": "B",
+      "validation_owner": "D",
+      "validation_method": "Spatial-temporally index all swept volumes over max(1800 seconds, two schedule periods), independently narrowphase every overlapping candidate interval at authored precision plus 0.05 s and 0.20 s stress witnesses, and audit reservation ownership.",
+      "pass_thresholds": [
+        "zero cross-route collisions",
+        "zero reservation conflicts",
+        "zero false conflicts between correctly separated grades"
+      ],
+      "evidence_artifacts": [
+        "trajectory_collision_report.json",
+        "trajectory_conflict_heatmap.png"
+      ],
+      "failure_response": "Reject the first conflicting reservation set and regenerate the affected schedules."
+    },
+    {
+      "id": "TV2-COL-015",
+      "category": "no vehicle overlap or phasing",
+      "user_visible_objective": "Moving and parked vehicles remain physically distinct under runtime interpolation and streaming.",
+      "source_of_truth": [
+        "moving trajectory bounds",
+        "accepted and reclassified parked oriented bounds",
+        "runtime interpolation contract"
+      ],
+      "implementation_owner": "B+C",
+      "validation_owner": "D",
+      "validation_method": "Validate authored precision and runtime-decoded precision separately, then collide moving/moving and moving/parked OBBs over all resident cells and relevant times.",
+      "pass_thresholds": [
+        "zero moving/moving overlap",
+        "zero moving/parked overlap",
+        "zero overlap introduced by trajectory compression or runtime interpolation"
+      ],
+      "evidence_artifacts": [
+        "trajectory_collision_report.json",
+        "parked_vehicle_overlap_report.json"
+      ],
+      "failure_response": "Reject the trajectory, parked placement, or compression precision responsible for the first overlap."
+    },
+    {
+      "id": "TV2-ID-016",
+      "category": "stable persistent identity",
+      "user_visible_objective": "A visible vehicle keeps the same model, paint, path, and identity across residency and LOD changes.",
+      "source_of_truth": [
+        "persistent vehicle IDs and immutable appearance records",
+        "runtime residency trace"
+      ],
+      "implementation_owner": "B+C",
+      "validation_owner": "D",
+      "validation_method": "Trace every benchmark-visible ID across time, cell transitions, pool pressure, and LOD transitions; compare immutable identity fields and transforms.",
+      "pass_thresholds": [
+        "100% unique persistent IDs",
+        "zero model or paint mutation for an ID",
+        "zero resolvable identity replacement during cell or capacity transitions"
+      ],
+      "evidence_artifacts": [
+        "full_map_lod_residency_report.json",
+        "traffic_slice_head_pan_sequence.png"
+      ],
+      "failure_response": "Fail the runtime gate and correct residency/selection ownership rather than increasing churn tolerance."
+    },
+    {
+      "id": "TV2-LOOP-017",
+      "category": "no visible schedule-loop discontinuity",
+      "user_visible_objective": "The 15-minute repeat has no visible disappearance, wrap, reversal, or teleportation.",
+      "source_of_truth": [
+        "global schedule boundary state",
+        "valid map-boundary, destination, driveway, parking, occlusion, and unresolved-size portals"
+      ],
+      "implementation_owner": "B+C",
+      "validation_owner": "D",
+      "validation_method": "Compare continuous state around t=0 and t=period for every vehicle, then replay all benchmark cameras across the boundary with visibility and projected-size instrumentation.",
+      "pass_thresholds": [
+        "zero visible transform discontinuities and numerical seam position jump <=0.05 m",
+        "seam tangent/yaw discontinuity <=5 degrees and speed delta <=0.10 m/s",
+        "zero visible activation/deactivation events",
+        "zero path wrapping or reversal",
+        "every discontinuous inactive interval begins and ends only at a verified portal while unresolved or occluded"
+      ],
+      "evidence_artifacts": [
+        "trajectory_loop_continuity.json"
+      ],
+      "failure_response": "Regenerate the schedule boundary or portal interval; never mask the event with a transparent fade."
+    },
+    {
+      "id": "TV2-LOD-018",
+      "category": "no head-motion LOD churn",
+      "user_visible_objective": "Brief head turns do not make existing vehicles pop, disappear, or oscillate in detail.",
+      "source_of_truth": [
+        "aircraft-centered residency contract",
+        "head-pan and rear-glance benchmark traces",
+        "LOD hysteresis state"
+      ],
+      "implementation_owner": "C",
+      "validation_owner": "D",
+      "validation_method": "Replay deterministic 90-degree pans and rear glances under capacity pressure, holding aircraft state fixed, and diff per-ID existence/LOD traces plus full-resolution image sequences.",
+      "pass_thresholds": [
+        "zero aircraft-corridor cell evictions caused solely by head direction",
+        "zero resolvable vehicle disappearances during a brief pan",
+        "zero one-frame LOD oscillations",
+        "zero head-only membership/tier changes for vehicles continuously visible inside a stable projected-size band and no A-B-A tier oscillation within 2 seconds",
+        "lead inspection finds no obvious transition in the full-resolution sequence"
+      ],
+      "evidence_artifacts": [
+        "traffic_slice_head_pan_sequence.png",
+        "full_map_lod_residency_report.json"
+      ],
+      "failure_response": "Correct residency reservations or LOD hysteresis before adding capacity."
+    },
+    {
+      "id": "TV2-LOD-019",
+      "category": "no per-eye LOD disagreement",
+      "user_visible_objective": "Both eyes see the same representation of every vehicle.",
+      "source_of_truth": [
+        "maximum projected size across both OpenXR eyes",
+        "stereo simulator instrumentation"
+      ],
+      "implementation_owner": "C",
+      "validation_owner": "D",
+      "validation_method": "Record left/right projected sizes and selected shared tier for each stereo-visible ID through head pans and cell transitions.",
+      "pass_thresholds": [
+        "zero per-eye tier disagreements",
+        "100% of tier decisions use the maximum projected size across both eyes",
+        "inspected stereo captures show no eye-specific vehicle absence"
+      ],
+      "evidence_artifacts": [
+        "full_map_lod_residency_report.json",
+        "simulator stereo capture set"
+      ],
+      "failure_response": "Fail the stereo gate and correct the shared-eye selection calculation."
+    },
+    {
+      "id": "TV2-CAP-020",
+      "category": "separate parked/moving capacity",
+      "user_visible_objective": "Dense parking cannot erase moving traffic, and moving traffic cannot erase source-backed parked context.",
+      "source_of_truth": [
+        "separate moving and parked minimum reservations",
+        "controlled overflow pool",
+        "capacity-pressure benchmark traces"
+      ],
+      "implementation_owner": "C",
+      "validation_owner": "D",
+      "validation_method": "Replay each benchmark with both candidate sets above capacity, assert category reservations before overflow borrowing, and compare visible inventories.",
+      "pass_thresholds": [
+        "moving minimum reservation is met whenever enough resolvable moving candidates exist",
+        "parked minimum reservation is met whenever enough resolvable parked candidates exist",
+        "unused capacity may be borrowed but neither category silently consumes the other's reservation",
+        "every resolvable displaced detailed vehicle retains an appropriate lower LOD"
+      ],
+      "evidence_artifacts": [
+        "traffic_slice_budget.json",
+        "full_map_lod_residency_report.json"
+      ],
+      "failure_response": "Correct pool partitioning and overflow accounting; do not tune a category score multiplier as a substitute."
+    },
+    {
+      "id": "TV2-VIS-021",
+      "category": "visible traffic from pilot cameras",
+      "user_visible_objective": "Traffic is plausibly visible from the actual flight views where mapped roads can be resolved.",
+      "source_of_truth": [
+        "frozen production-scene benchmark cameras and paths",
+        "source-derived density and fleet bands",
+        "stereo and fixed-camera full-resolution captures"
+      ],
+      "implementation_owner": "B+C",
+      "validation_owner": "D",
+      "validation_method": "Count only projected, unoccluded vehicles in each frozen viewport over time, classify road/fleet context, and pair the audit with lead inspection of exact full-resolution images.",
+      "pass_thresholds": [
+        "every benchmark-visible eligible major road meets its frozen viewport-density band",
+        "where a major road projects at least 2 pixels, at least one moving vehicle projects at least 2x2 pixels in 95% of benchmark frames",
+        "designated urban and pattern views contain at least five resolvable moving vehicles in 90% of benchmark frames, subject to their frozen count-derived upper band",
+        "every unexpectedly empty visible road is resolved or explicitly source-justified",
+        "pilot views are passenger-dominant and show no conspicuous local model/paint repetition",
+        "lead and D both approve the slice and full-map image evidence"
+      ],
+      "evidence_artifacts": [
+        "traffic_v2_baseline_contact_sheet.png",
+        "traffic_slice_contact_sheet.png",
+        "full_map_viewport_inventory.csv"
+      ],
+      "failure_response": "Correct demand, schedule, or residency at the first failed viewport; do not cite global totals."
+    },
+    {
+      "id": "TV2-PERF-022",
+      "category": "Quest 3 performance",
+      "user_visible_objective": "Traffic remains visually stable without breaking the standalone Quest 3 72 Hz product target.",
+      "source_of_truth": [
+        "accepted-baseline static and runtime metrics",
+        "exact-APK Quest 3 frame/timing/thermal evidence",
+        "managed allocation and runtime instrumentation"
+      ],
+      "implementation_owner": "C",
+      "validation_owner": "D",
+      "validation_method": "Freeze traffic ceilings only after baseline capture, then audit static cost, steady-state allocations, resident-only trajectory sampling, immutable APK timing, stale/tear counts, thermals, and failures on the physical headset.",
+      "pass_thresholds": [
+        "preserves 72 Hz on three exact-APK Quest 3 runs after 90 seconds warmup and 60 seconds traffic-stress measurement",
+        "average traffic-stress CPU and GPU frame time <=12.8 ms, p95 <=13.889 ms, over-budget frames <=5%, stale frames <=2, and tears=0",
+        "zero steady-state managed allocation attributable to traffic",
+        "zero per-vehicle GameObjects, Update methods, rigid bodies, or invisible-agent simulation",
+        "traffic draw, triangle, material, memory, and APK deltas stay within the frozen post-baseline budget",
+        "no traffic-attributable stutter at cell transitions",
+        "no thermal warning, crash, ANR, or OOM during the acceptance run"
+      ],
+      "evidence_artifacts": [
+        "traffic_slice_budget.json",
+        "full_map_lod_residency_report.json",
+        "immutable Quest performance capture"
+      ],
+      "failure_response": "Reduce mesh, decoding, compression, or scheduling cost without reducing semantic road coverage or visibly emptying roads."
+    },
+    {
+      "id": "TV2-REG-023",
+      "category": "no unrelated regression",
+      "user_visible_objective": "Traffic V2 preserves the accepted aircraft, cockpit, XR, scenery, native JSBSim, controls, audio, and product hierarchy.",
+      "source_of_truth": [
+        "fda11a2 dependency closure and serialized product scene",
+        "scope-freeze path audit",
+        "standard product validation, stereo simulator, Unity tests, and Android build"
+      ],
+      "implementation_owner": "LEAD",
+      "validation_owner": "D",
+      "validation_method": "Compare tracked paths and dependency closure against fda11a2, assert singleton XR/camera/aircraft/flight authority, inspect standard visual regressions, and run the complete product gate once after full-map acceptance.",
+      "pass_thresholds": [
+        "zero out-of-scope product changes",
+        "exactly one enabled XR Origin, tracked OpenXR Main Camera, aircraft simulation root, and native JSBSim flight authority",
+        "zero UnityPrototype or rejected-candidate dependency closure",
+        "all focused and final product validators pass",
+        "all 123 standard Visual QA views are nonblank and inspected; masked nontraffic regions have SSIM >=0.995 or an evidence-backed explanation",
+        "standard Visual QA and inspected stereo captures show no unrelated regression",
+        "Android ARM64/Vulkan/OpenXR production build succeeds"
+      ],
+      "evidence_artifacts": [
+        "traffic_v2_regression_report.md",
+        "dependency_closure_report.json",
+        "standard product gate outputs"
+      ],
+      "failure_response": "Revert or isolate the first unrelated dependency/change before traffic work continues."
+    }
+  ]
+}

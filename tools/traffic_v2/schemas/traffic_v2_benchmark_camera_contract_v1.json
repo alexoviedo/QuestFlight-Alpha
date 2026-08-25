@@ -1,0 +1,548 @@
+{
+  "accepted_source_sha": "fda11a25eb526824d82a47330f2be80b1410bb64",
+  "baseline": {
+    "bytes": 31747408,
+    "generated_utc": "2026-08-22T00:44:47.2997446Z",
+    "logical_path": "baseline/traffic_v2_baseline.json",
+    "schema": "questflight.traffic-v2.accepted-baseline.v1",
+    "sha256": "185908c0becf5491fa2dedefdc26ed799068c57faacd7882a1cd46024a5b1016",
+    "status": "CAPTURED_WITH_EXPLICIT_LIMITATIONS"
+  },
+  "camera_serialization": {
+    "aspect_ratio": 1.7777777777777777,
+    "far_clip_plane_meters": 24000.0,
+    "git_blob_sha1": "bf2a8a09ad555811e0758853a989f78c2ae25abf",
+    "near_clip_plane_meters": 0.03,
+    "path": "QuestFlight/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
+    "render_height_pixels": 720,
+    "render_width_pixels": 1280,
+    "sha256": "ffada13f82cc3d31bd3ace023f2d38d1195b73b2759053e6f08c9211b8d2d4ff"
+  },
+  "coverage_contract": {
+    "bounds_xz_meters": [
+      -12000.0,
+      -12000.0,
+      12000.0,
+      12000.0
+    ],
+    "candidate_mode": "FULL_MAP_UNIVERSE_SUPERSET",
+    "claim_scope": "TV2-COV-001 benchmark-visible road classification only",
+    "excluded_claims": [
+      "per-frame projected or unoccluded visibility",
+      "viewport density",
+      "stereo visibility or per-eye agreement",
+      "LOD stability",
+      "dynamic path-sweep coverage",
+      "Quest headset acceptance"
+    ],
+    "no_frustum_or_occlusion_exclusions": true,
+    "proof": "For every frozen view, any visible road inside the product bounds is a member of the complete canonical full-map road universe; every view binds the same universe hash.",
+    "required_universe_member_fields": [
+      "canonical_segment_id",
+      "road_class",
+      "eligibility_status_or_exclusion_reason",
+      "source_precedence_decision",
+      "represented_source_disposition",
+      "license_partition",
+      "lane_count",
+      "lane_count_authority",
+      "confidence"
+    ]
+  },
+  "frozen_specification": {
+    "bytes": 33411,
+    "path": "tools/traffic_v2/schemas/traffic_system_v2_spec.json",
+    "sha256": "8e1b3f7442652128b306a0706d3eac02b59750158839ca0443351312fcbf09c7"
+  },
+  "scene": {
+    "bytes": 12460,
+    "git_blob_sha1": "1033c451c2b25bb5c03381c8a569e0f2c8f7c363",
+    "path": "QuestFlight/Assets/Scenes/ProductionVerticalSlice.unity",
+    "sha256": "9d42816933bb7dccc9986abf4be73cbc8239ccf52bf597b6b1a410bd6928c3c9"
+  },
+  "schema": "questflight.traffic-v2-benchmark-camera-contract.v1",
+  "status": "FROZEN",
+  "view_count": 15,
+  "views": [
+    {
+      "field_of_view_degrees": 72.0,
+      "frozen_euler_degrees": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "id": "cockpit_runway_takeoff",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_MAIN_CAMERA_RELATIVE",
+      "resolved_euler_degrees": {
+        "x": 0.13375312089920044,
+        "y": 89.97172546386719,
+        "z": -6.6701248968570326e-09
+      },
+      "resolved_position_meters": {
+        "x": -554.9619140625,
+        "y": 1.9680060148239136,
+        "z": -30.35409164428711
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 792911,
+        "logical_path": "baseline/screenshots/cockpit_runway_takeoff.png",
+        "sha256": "a4385beaf8795053b61d308952a5d367a78f3a5a6ec372f8755b1ce6033b4939"
+      }
+    },
+    {
+      "field_of_view_degrees": 72.0,
+      "frozen_euler_degrees": {
+        "x": 0.0,
+        "y": -90.0,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "id": "left_airport_glider_road",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_MAIN_CAMERA_RELATIVE",
+      "resolved_euler_degrees": {
+        "x": -4.1329908384568625e-09,
+        "y": 359.97174072265625,
+        "z": 359.8662414550781
+      },
+      "resolved_position_meters": {
+        "x": -554.9619140625,
+        "y": 1.9680060148239136,
+        "z": -30.35409164428711
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 564292,
+        "logical_path": "baseline/screenshots/left_airport_glider_road.png",
+        "sha256": "18980e72323caa2851304649f7072f8978bf97c2af1578db6c6029815b527651"
+      }
+    },
+    {
+      "field_of_view_degrees": 52.0,
+      "frozen_euler_degrees": {
+        "x": 32.5,
+        "y": 342.5,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": -30.0,
+        "y": 120.0,
+        "z": -650.0
+      },
+      "id": "airport_boulevard",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_KBDU_ENU_ABSOLUTE",
+      "resolved_euler_degrees": {
+        "x": 32.50000762939453,
+        "y": 342.5,
+        "z": 0.0
+      },
+      "resolved_position_meters": {
+        "x": -30.0,
+        "y": 120.0,
+        "z": -650.0
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 1258269,
+        "logical_path": "baseline/screenshots/airport_boulevard.png",
+        "sha256": "926a2bf9cc77a7aca65277d358829af8f806112c70fd0d57c9bc07cd6b7b006f"
+      }
+    },
+    {
+      "field_of_view_degrees": 40.0,
+      "frozen_euler_degrees": {
+        "x": 16.200000762939453,
+        "y": 326.79998779296875,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": -312.0,
+        "y": 8.199999809265137,
+        "z": 1578.0
+      },
+      "id": "diagonal_highway_approach",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_KBDU_ENU_ABSOLUTE",
+      "resolved_euler_degrees": {
+        "x": 16.200000762939453,
+        "y": 326.79998779296875,
+        "z": 4.445377896900027e-07
+      },
+      "resolved_position_meters": {
+        "x": -312.0,
+        "y": 8.199999809265137,
+        "z": 1578.0
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 815943,
+        "logical_path": "baseline/screenshots/diagonal_highway_approach.png",
+        "sha256": "12f80bae623b3c490a0d6d84444caabbce112105590d4bd080ebc921d0805db9"
+      }
+    },
+    {
+      "field_of_view_degrees": 55.0,
+      "frozen_euler_degrees": {
+        "x": 62.0,
+        "y": 45.0,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": -899.0,
+        "y": 240.0,
+        "z": 1058.0
+      },
+      "id": "highway_flyover",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_KBDU_ENU_ABSOLUTE",
+      "resolved_euler_degrees": {
+        "x": 61.999996185302734,
+        "y": 44.999996185302734,
+        "z": -3.637168902059784e-06
+      },
+      "resolved_position_meters": {
+        "x": -899.0,
+        "y": 240.0,
+        "z": 1058.0
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 1347175,
+        "logical_path": "baseline/screenshots/highway_flyover.png",
+        "sha256": "9b748237d8798748cd2bfbbb6e74ccb9a96391050b8cbdc47f7e25e4f16ad7f6"
+      }
+    },
+    {
+      "field_of_view_degrees": 50.0,
+      "frozen_euler_degrees": {
+        "x": 20.0,
+        "y": 320.20001220703125,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": 400.0,
+        "y": 58.0,
+        "z": 3220.0
+      },
+      "id": "reservoir",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_KBDU_ENU_ABSOLUTE",
+      "resolved_euler_degrees": {
+        "x": 20.0000057220459,
+        "y": 320.20001220703125,
+        "z": 4.5428345174514106e-07
+      },
+      "resolved_position_meters": {
+        "x": 400.0,
+        "y": 58.0,
+        "z": 3220.0
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 830764,
+        "logical_path": "baseline/screenshots/reservoir.png",
+        "sha256": "9aa41de8cf8cc1eed2f17c7a7d1fd074c62e16dda084be1ba650d78acf5b39fe"
+      }
+    },
+    {
+      "field_of_view_degrees": 55.0,
+      "frozen_euler_degrees": {
+        "x": 44.29999923706055,
+        "y": 225.0,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": -3400.0,
+        "y": 550.0,
+        "z": -2300.0
+      },
+      "id": "downtown",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_KBDU_ENU_ABSOLUTE",
+      "resolved_euler_degrees": {
+        "x": 44.29999923706055,
+        "y": 225.0,
+        "z": -1.1929332686122507e-06
+      },
+      "resolved_position_meters": {
+        "x": -3400.0,
+        "y": 550.0,
+        "z": -2300.0
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 1578879,
+        "logical_path": "baseline/screenshots/downtown.png",
+        "sha256": "cff01b520dba3a8e2cf9ec47a6413a8449daac13e11688b0335ae766bfd5eec0"
+      }
+    },
+    {
+      "field_of_view_degrees": 55.0,
+      "frozen_euler_degrees": {
+        "x": 26.299999237060547,
+        "y": 225.0,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": -2000.0,
+        "y": 350.0,
+        "z": -1000.0
+      },
+      "id": "residential",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_KBDU_ENU_ABSOLUTE",
+      "resolved_euler_degrees": {
+        "x": 26.30000114440918,
+        "y": 224.99998474121094,
+        "z": 0.0
+      },
+      "resolved_position_meters": {
+        "x": -2000.0,
+        "y": 350.0,
+        "z": -1000.0
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 1478768,
+        "logical_path": "baseline/screenshots/residential.png",
+        "sha256": "f94903037db6253b9bbcf0fe457f14629c3112891c90232d54f8da12f0c4796d"
+      }
+    },
+    {
+      "field_of_view_degrees": 55.0,
+      "frozen_euler_degrees": {
+        "x": 22.899999618530273,
+        "y": 230.6999969482422,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": -1250.0,
+        "y": 300.0,
+        "z": -850.0
+      },
+      "id": "industrial",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_KBDU_ENU_ABSOLUTE",
+      "resolved_euler_degrees": {
+        "x": 22.899999618530273,
+        "y": 230.69998168945312,
+        "z": 9.268206895285402e-07
+      },
+      "resolved_position_meters": {
+        "x": -1250.0,
+        "y": 300.0,
+        "z": -850.0
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 1497471,
+        "logical_path": "baseline/screenshots/industrial.png",
+        "sha256": "f5f2b94fa150d85450d3999be8ca462f84fbc75be0f0ff826b7700e20c41550a"
+      }
+    },
+    {
+      "field_of_view_degrees": 58.0,
+      "frozen_euler_degrees": {
+        "x": 3.5999999046325684,
+        "y": 226.39999389648438,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": 10500.0,
+        "y": 900.0,
+        "z": 10000.0
+      },
+      "id": "map_periphery",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_KBDU_ENU_ABSOLUTE",
+      "resolved_euler_degrees": {
+        "x": 3.6000006198883057,
+        "y": 226.39999389648438,
+        "z": 0.0
+      },
+      "resolved_position_meters": {
+        "x": 10500.0,
+        "y": 900.0,
+        "z": 10000.0
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 933494,
+        "logical_path": "baseline/screenshots/map_periphery.png",
+        "sha256": "aa0e589c38c9552ed35a272918fafd7f45e0e7e8d25af4038bd7b5b9a1779ab3"
+      }
+    },
+    {
+      "field_of_view_degrees": 58.0,
+      "frozen_euler_degrees": {
+        "x": 9.0,
+        "y": 3.0,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": -450.0,
+        "y": 300.0,
+        "z": -340.0
+      },
+      "id": "agl_300m_oblique",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_KBDU_ENU_ABSOLUTE",
+      "resolved_euler_degrees": {
+        "x": 9.000000953674316,
+        "y": 3.000000238418579,
+        "z": 2.7013001613340748e-08
+      },
+      "resolved_position_meters": {
+        "x": -450.0,
+        "y": 300.0,
+        "z": -340.0
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 1107891,
+        "logical_path": "baseline/screenshots/agl_300m_oblique.png",
+        "sha256": "85be2bfaefbeda48fbad59103992bbb0e335d18b2d5ce8eea55cb06c5a990110"
+      }
+    },
+    {
+      "field_of_view_degrees": 58.0,
+      "frozen_euler_degrees": {
+        "x": 40.400001525878906,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": -450.0,
+        "y": 800.0,
+        "z": -340.0
+      },
+      "id": "agl_800m_aerial",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_KBDU_ENU_ABSOLUTE",
+      "resolved_euler_degrees": {
+        "x": 40.400001525878906,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "resolved_position_meters": {
+        "x": -450.0,
+        "y": 800.0,
+        "z": -340.0
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 1460827,
+        "logical_path": "baseline/screenshots/agl_800m_aerial.png",
+        "sha256": "069405a1f8af3bca88cecfcf6464605a7bab8caf19455e9f5e5baed7779cea87"
+      }
+    },
+    {
+      "field_of_view_degrees": 72.0,
+      "frozen_euler_degrees": {
+        "x": 0.0,
+        "y": 90.0,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "id": "head_pan_90deg",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_MAIN_CAMERA_RELATIVE",
+      "resolved_euler_degrees": {
+        "x": 4.1329908384568625e-09,
+        "y": 179.9717254638672,
+        "z": 0.13375313580036163
+      },
+      "resolved_position_meters": {
+        "x": -554.9619140625,
+        "y": 1.9680060148239136,
+        "z": -30.35409164428711
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 467213,
+        "logical_path": "baseline/screenshots/head_pan_90deg.png",
+        "sha256": "d3bb71a4432af5bfea6ed3891bff8ab4969d04c10c7f40fc0631cfc4618aaf99"
+      }
+    },
+    {
+      "field_of_view_degrees": 72.0,
+      "frozen_euler_degrees": {
+        "x": 0.0,
+        "y": 180.0,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "id": "rearward_glance",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_MAIN_CAMERA_RELATIVE",
+      "resolved_euler_degrees": {
+        "x": 359.8662414550781,
+        "y": 269.97174072265625,
+        "z": -2.001037202603584e-08
+      },
+      "resolved_position_meters": {
+        "x": -554.9619140625,
+        "y": 1.9680060148239136,
+        "z": -30.35409164428711
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 623008,
+        "logical_path": "baseline/screenshots/rearward_glance.png",
+        "sha256": "eb78baf064b98dd50c9fdefddff18901f1e5e3ca017c32d7bcfc70ab9a43c8cf"
+      }
+    },
+    {
+      "field_of_view_degrees": 58.0,
+      "frozen_euler_degrees": {
+        "x": 9.0,
+        "y": 183.0,
+        "z": 0.0
+      },
+      "frozen_position_or_offset_meters": {
+        "x": -450.0,
+        "y": 300.0,
+        "z": -340.0
+      },
+      "id": "aircraft_turn_180deg",
+      "origin_inside_frozen_bounds": true,
+      "pose_authority": "FROZEN_KBDU_ENU_ABSOLUTE",
+      "resolved_euler_degrees": {
+        "x": 9.000000953674316,
+        "y": 183.0,
+        "z": 0.0
+      },
+      "resolved_position_meters": {
+        "x": -450.0,
+        "y": 300.0,
+        "z": -340.0
+      },
+      "road_candidate_set": "FULL_MAP_UNIVERSE_SUPERSET",
+      "screenshot": {
+        "bytes": 1236381,
+        "logical_path": "baseline/screenshots/aircraft_turn_180deg.png",
+        "sha256": "a7ec73a16bcda6a77fbe04e3a6ee512743400e1a683a745a44766f839829092f"
+      }
+    }
+  ]
+}

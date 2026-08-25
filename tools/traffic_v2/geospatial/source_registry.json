@@ -1,0 +1,1353 @@
+{
+  "accepted_source_sha": "fda11a25eb526824d82a47330f2be80b1410bb64",
+  "authority_model": {
+    "automatic_conflation_max_distance_meters": 0.25,
+    "benchmark_approval_path": "tools/traffic_v2/schemas/traffic_v2_geospatial_universe_approval_v1.json",
+    "benchmark_approval_contract": {
+      "d_report_decision_marker": "TRAFFIC_V2_PHASE3_SOURCE_GATE_DECISION",
+      "d_result_schema": "questflight.traffic-v2-phase3-source-gate-verification-result.v1",
+      "lead_inspection_schema": "questflight.traffic-v2-geospatial-universe-inspection.v1",
+      "required_d_checks": [
+        "approval_candidate_immutability",
+        "canonical_universe_reproduction",
+        "coverage_lane_kilometer_math",
+        "five_artifact_hashes",
+        "source_disposition_completeness",
+        "toolchain_and_input_bindings"
+      ]
+    },
+    "benchmark_approval_witnesses": {
+      "d_report": {"path": "docs/evidence/traffic_v2/TRAFFIC_V2_PHASE3_SOURCE_GATE_VERIFICATION.md"},
+      "d_result": {"path": "docs/evidence/traffic_v2/TRAFFIC_V2_PHASE3_SOURCE_GATE_VERIFICATION.json"},
+      "d_verifier": {"path": "tools/traffic_v2/validation/verify_phase3_source_gate.py"},
+      "lead_inspection": {"path": "tools/traffic_v2/schemas/traffic_v2_geospatial_universe_inspection_v1.json"}
+    },
+    "benchmark_camera_contract": {
+      "path": "tools/traffic_v2/schemas/traffic_v2_benchmark_camera_contract_v1.json",
+      "sha256": "ecd7a76e909d311b4c7665ec91b980affe6009eac798473edd4acad4f9379d20"
+    },
+    "canonical_centerline_precedence": [
+      {"priority": 10, "source_id": "cdot_highways"},
+      {"priority": 11, "source_id": "cdot_ramps"},
+      {"priority": 20, "source_id": "city_street_centerlines"},
+      {"priority": 30, "source_id": "county_street_centerlines"},
+      {"priority": 40, "source_id": "county_road_map"},
+      {"priority": 100, "source_id": "osm_bounded_roads"}
+    ],
+    "class_evidence": {
+      "cdot_highways": {
+        "confidence": "AUTHORITATIVE_FUNCTIONAL_CLASS",
+        "field": "FUNCCLASS",
+        "values": {
+          "2 principal arterial - fwys and expwys": "motorway",
+          "3 principal arterial - other": "primary",
+          "4 minor arterial": "secondary",
+          "5 major collector": "tertiary"
+        }
+      },
+      "cdot_ramps": {
+        "confidence": "AUTHORITATIVE_LAYER_ROLE",
+        "fixed_value": "trunk"
+      },
+      "city_street_centerlines": {
+        "confidence": "AUTHORITATIVE_STREET_CLASS",
+        "excluded_values": {
+          "alley": "EXCLUDED_ALLEY",
+          "pedestrian mall": "EXCLUDED_NON_MOTOR",
+          "private": "EXCLUDED_PRIVATE"
+        },
+        "field": "STREETCLASS",
+        "values": {
+          "collector": "tertiary",
+          "expressway": "trunk",
+          "freeway": "motorway",
+          "minor arterial": "secondary",
+          "principal arterial": "primary",
+          "ramp": "trunk",
+          "residential": "residential"
+        }
+      },
+      "county_road_map": {
+        "confidence": "AUTHORITATIVE_FUNCTIONAL_CLASS",
+        "excluded_values": {
+          "jeep": "EXCLUDED_NON_STANDARD_VEHICLE",
+          "private": "EXCLUDED_PRIVATE"
+        },
+        "field": "FUNCTIONAL_CLASS",
+        "values": {
+          "collector": "tertiary",
+          "local": "residential",
+          "local secondary": "residential",
+          "minor arterial": "secondary",
+          "principal arterial": "primary",
+          "residential collector": "tertiary"
+        }
+      },
+      "county_street_centerlines": {
+        "confidence": "AUTHORITATIVE_FEATURE_TYPE",
+        "excluded_values": {
+          "A50": "EXCLUDED_NON_MOTOR_OR_TRAIL",
+          "A70": "EXCLUDED_CENSUS_ARTIFACT",
+          "A71": "EXCLUDED_WALKWAY_OR_STAIR",
+          "A73": "EXCLUDED_ALLEY",
+          "ROW": "EXCLUDED_RIGHT_OF_WAY_ONLY"
+        },
+        "field": "FEATURETYPECODE",
+        "values": {
+          "A21": "motorway",
+          "A25": "trunk",
+          "A30": "secondary",
+          "A31": "secondary",
+          "A34": "secondary",
+          "A35": "secondary",
+          "A40": "residential",
+          "A41": "residential",
+          "A45": "residential"
+        }
+      }
+    },
+    "conflation_tolerance_meters": 12.0,
+    "correspondence_identity_fields": {
+      "cdot_highways": ["ROUTE", "DESCRIPTION", "ALIAS"],
+      "cdot_ramps": ["RAMPNAME", "EXITNAMES", "EXITNUMBERS", "FROMFEATURE", "TOFEATURE"],
+      "city_street_centerlines": ["STREETNAME", "LABEL"],
+      "county_road_map": ["STREET_NAME", "CR", "ALIAS_NAME_1", "ALIAS_NAME_2"],
+      "county_street_centerlines": ["NAME", "STREETNAME", "LABELNAME", "ALIASNAME"],
+      "osm_bounded_roads": ["name", "ref"]
+    },
+    "correspondence_directed_identity_field_pairs": {
+      "cdot_ramps": [
+        {
+          "from_field": "FROMFEATURE",
+          "to_field": "TOFEATURE"
+        }
+      ]
+    },
+    "correspondence_identity_field_roles": {
+      "cdot_highways": {"ALIAS": "alias", "DESCRIPTION": "primary_name", "ROUTE": "route_ref"},
+      "cdot_ramps": {"EXITNAMES": "alias", "EXITNUMBERS": "exit_ref", "FROMFEATURE": "directed_from", "RAMPNAME": "primary_name", "TOFEATURE": "directed_to"},
+      "city_street_centerlines": {"LABEL": "label", "STREETNAME": "primary_name"},
+      "county_road_map": {"ALIAS_NAME_1": "alias", "ALIAS_NAME_2": "alias", "CR": "route_ref", "STREET_NAME": "primary_name"},
+      "county_street_centerlines": {"ALIASNAME": "alias", "LABELNAME": "label", "NAME": "primary_name", "STREETNAME": "primary_name"},
+      "osm_bounded_roads": {"name": "primary_name", "ref": "route_ref"}
+    },
+    "correspondence_identity_role_compatibility": {
+      "alias": ["alias", "label", "primary_name"],
+      "directed_from": [],
+      "directed_to": [],
+      "exit_ref": ["exit_ref"],
+      "label": ["alias", "label", "primary_name"],
+      "primary_name": ["alias", "label", "primary_name"],
+      "route_ref": ["route_ref"]
+    },
+    "correspondence_identity_strong_roles": ["exit_ref", "label", "primary_name", "route_ref"],
+    "correspondence_semantics": {
+      "city_street_centerlines": {
+        "carriageway_field": "CENTERLINE",
+        "carriageway_values": {
+          "Dual": {"confidence": "AUTHORITATIVE_CODED_DOMAIN", "value": "DIRECTIONAL_CARRIAGEWAY"},
+          "Single": {"confidence": "AUTHORITATIVE_CODED_DOMAIN", "value": "SINGLE_CENTERLINE"}
+        },
+        "direction_field": "ONEWAY",
+        "direction_values": {
+          "B": {"confidence": "AUTHORITATIVE_CODED_DOMAIN", "usable_for_correspondence": true, "value": "BIDIRECTIONAL"},
+          "FT": {"confidence": "AUTHORITATIVE_CODED_DOMAIN", "usable_for_correspondence": true, "value": "FORWARD"},
+          "N": {"confidence": "CODE_DESCRIPTION_AMBIGUOUS_FAIL_CLOSED", "usable_for_correspondence": false, "value": "UNKNOWN"},
+          "TF": {"confidence": "AUTHORITATIVE_CODED_DOMAIN", "usable_for_correspondence": true, "value": "REVERSE"}
+        }
+      },
+      "county_street_centerlines": {
+        "direction_field": "ONEWAYCODE",
+        "direction_values": {
+          "B": {"confidence": "UNDOCUMENTED_CODE_ASSUMPTION_FAIL_CLOSED", "usable_for_correspondence": false, "value": "BIDIRECTIONAL"},
+          "F": {"confidence": "UNDOCUMENTED_CODE_ASSUMPTION_FAIL_CLOSED", "usable_for_correspondence": false, "value": "FORWARD"},
+          "T": {"confidence": "UNDOCUMENTED_CODE_ASSUMPTION_FAIL_CLOSED", "usable_for_correspondence": false, "value": "REVERSE"}
+        },
+        "from_elevation_field": "FROMELEVATION",
+        "to_elevation_field": "TOELEVATION"
+      },
+      "osm_bounded_roads": {
+        "direction_field": "oneway",
+        "direction_values": {
+          "-1": {"confidence": "DECLARED_ODBL_TAG", "usable_for_correspondence": true, "value": "REVERSE"},
+          "0": {"confidence": "DECLARED_ODBL_TAG", "usable_for_correspondence": true, "value": "BIDIRECTIONAL"},
+          "1": {"confidence": "DECLARED_ODBL_TAG", "usable_for_correspondence": true, "value": "FORWARD"},
+          "false": {"confidence": "DECLARED_ODBL_TAG", "usable_for_correspondence": true, "value": "BIDIRECTIONAL"},
+          "no": {"confidence": "DECLARED_ODBL_TAG", "usable_for_correspondence": true, "value": "BIDIRECTIONAL"},
+          "reverse": {"confidence": "DECLARED_ODBL_TAG", "usable_for_correspondence": true, "value": "REVERSE"},
+          "true": {"confidence": "DECLARED_ODBL_TAG", "usable_for_correspondence": true, "value": "FORWARD"},
+          "yes": {"confidence": "DECLARED_ODBL_TAG", "usable_for_correspondence": true, "value": "FORWARD"}
+        },
+        "implicit_forward_highways": ["motorway", "motorway_link"],
+        "implicit_forward_junctions": ["roundabout"],
+        "ordinary_missing_default": "BIDIRECTIONAL"
+      }
+    },
+    "lane_evidence": [
+      {"confidence": "AUTHORITATIVE_REPORTED_TOTAL", "field": "THRULNQTY", "priority": 10, "source_id": "cdot_highways"},
+      {"confidence": "AUTHORITATIVE_REPORTED_TOTAL", "field": "NUMLANES", "priority": 20, "source_id": "city_street_centerlines"},
+      {"confidence": "DECLARED_ODBL_FALLBACK", "priority": 100, "source_id": "osm_bounded_roads", "tag_fields": ["lanes", "lanes:conditional", "lanes:forward", "lanes:forward:conditional", "lanes:backward", "lanes:backward:conditional", "lanes:both_ways", "lanes:both_ways:conditional"]}
+    ],
+    "lane_match_tolerance_meters": 12.0,
+    "minimum_lane_match_ratio": 0.8,
+    "minimum_reference_coverage_ratio": 0.95,
+    "osm_access_key_precedence": ["motorcar", "motor_vehicle", "vehicle", "access"],
+    "osm_access_lane_key_precedence": ["motorcar", "motor_vehicle", "vehicle", "access"],
+    "osm_access_lane_value_crosswalk": {
+      "": {"decision": "ALLOW", "reason": "NO_LANE_SPECIFIC_RESTRICTION"},
+      "designated": {"decision": "ALLOW", "reason": "LANE_MOTOR_ACCESS_DESIGNATED"},
+      "no": {"decision": "NO", "reason": "LANE_MOTOR_ACCESS_NO"},
+      "permissive": {"decision": "ALLOW", "reason": "LANE_MOTOR_ACCESS_PERMISSIVE"},
+      "yes": {"decision": "ALLOW", "reason": "LANE_MOTOR_ACCESS_ALLOWED"},
+      "agricultural": {"decision": "RESTRICTED", "reason": "LANE_MOTOR_ACCESS_AGRICULTURAL"},
+      "customers": {"decision": "RESTRICTED", "reason": "LANE_MOTOR_ACCESS_CUSTOMERS"},
+      "delivery": {"decision": "RESTRICTED", "reason": "LANE_MOTOR_ACCESS_DELIVERY"},
+      "destination": {"decision": "RESTRICTED", "reason": "LANE_MOTOR_ACCESS_DESTINATION"},
+      "emergency": {"decision": "RESTRICTED", "reason": "LANE_MOTOR_ACCESS_EMERGENCY"},
+      "employees": {"decision": "RESTRICTED", "reason": "LANE_MOTOR_ACCESS_EMPLOYEES"},
+      "forestry": {"decision": "RESTRICTED", "reason": "LANE_MOTOR_ACCESS_FORESTRY"},
+      "official": {"decision": "RESTRICTED", "reason": "LANE_MOTOR_ACCESS_OFFICIAL"},
+      "permit": {"decision": "RESTRICTED", "reason": "LANE_MOTOR_ACCESS_PERMIT"},
+      "private": {"decision": "RESTRICTED", "reason": "LANE_MOTOR_ACCESS_PRIVATE"}
+    },
+    "osm_access_value_crosswalk": {
+      "agricultural": {"decision": "RESTRICTED", "reason": "RESTRICTED_AGRICULTURAL_ACCESS"},
+      "customers": {"decision": "RESTRICTED", "reason": "RESTRICTED_CUSTOMER_ACCESS"},
+      "delivery": {"decision": "RESTRICTED", "reason": "RESTRICTED_DELIVERY_ACCESS"},
+      "designated": {"decision": "ALLOW", "reason": "EXPLICIT_MOTOR_ACCESS_DESIGNATED"},
+      "destination": {"decision": "RESTRICTED", "reason": "RESTRICTED_DESTINATION_ACCESS"},
+      "emergency": {"decision": "RESTRICTED", "reason": "RESTRICTED_EMERGENCY_ACCESS"},
+      "employees": {"decision": "RESTRICTED", "reason": "RESTRICTED_EMPLOYEE_ACCESS"},
+      "forestry": {"decision": "RESTRICTED", "reason": "RESTRICTED_FORESTRY_ACCESS"},
+      "no": {"decision": "EXCLUDE", "reason": "EXCLUDED_NO_MOTOR_ACCESS"},
+      "official": {"decision": "RESTRICTED", "reason": "RESTRICTED_OFFICIAL_ACCESS"},
+      "permit": {"decision": "RESTRICTED", "reason": "RESTRICTED_PERMIT_ACCESS"},
+      "permissive": {"decision": "ALLOW", "reason": "EXPLICIT_PERMISSIVE_MOTOR_ACCESS"},
+      "private": {"decision": "EXCLUDE", "reason": "EXCLUDED_PRIVATE_MOTOR_ACCESS"},
+      "yes": {"decision": "ALLOW", "reason": "EXPLICIT_MOTOR_ACCESS_ALLOWED"}
+    },
+    "osm_service_crosswalk": {
+      "alley": {"decision": "EXCLUDED", "reason": "EXCLUDED_SERVICE_ALLEY"},
+      "bus": {"decision": "EXCLUDED", "reason": "EXCLUDED_TRANSIT_ONLY_SERVICE"},
+      "drive-through": {"decision": "EXCLUDED", "reason": "EXCLUDED_DRIVE_THROUGH_SERVICE"},
+      "driveway": {"decision": "EXCLUDED", "reason": "EXCLUDED_SERVICE_DRIVEWAY"},
+      "emergency_access": {"decision": "EXCLUDED", "reason": "EXCLUDED_EMERGENCY_SERVICE_ACCESS"},
+      "parking": {"decision": "EXCLUDED", "reason": "EXCLUDED_PARKING_SERVICE"},
+      "parking_aisle": {"decision": "EXCLUDED", "reason": "EXCLUDED_PARKING_AISLE"},
+      "slipway": {"decision": "EXCLUDED", "reason": "EXCLUDED_NON_ROAD_SLIPWAY_SERVICE"}
+    },
+    "osm_oneway_key_precedence": ["oneway:motorcar", "oneway:motor_vehicle", "oneway:vehicle", "oneway"],
+    "road_kind_evidence": {
+      "cdot_highways": {"confidence": "AUTHORITATIVE_LAYER_ROLE", "fixed_value": "MAINLINE"},
+      "cdot_ramps": {"confidence": "AUTHORITATIVE_LAYER_ROLE", "fixed_value": "RAMP_OR_LINK"},
+      "city_street_centerlines": {
+        "confidence": "AUTHORITATIVE_STREET_CLASS",
+        "field": "STREETCLASS",
+        "mainline_values": ["collector", "expressway", "freeway", "minor arterial", "principal arterial", "residential"],
+        "ramp_or_link_values": ["ramp"]
+      },
+      "county_street_centerlines": {"confidence": "AUTHORITATIVE_LAYER_ROLE", "fixed_value": "MAINLINE"},
+      "county_road_map": {"confidence": "AUTHORITATIVE_LAYER_ROLE", "fixed_value": "MAINLINE"},
+      "osm_bounded_roads": {
+        "confidence": "DECLARED_ODBL_HIGHWAY_KIND",
+        "field": "highway",
+        "link_suffix": "_link",
+        "mainline_values": ["living_street", "motorway", "primary", "residential", "secondary", "service", "tertiary", "trunk"]
+      }
+    },
+    "osm_highway_crosswalk": {
+      "bus_guideway": {"decision": "EXCLUDED", "reason": "EXCLUDED_TRANSIT_ONLY"},
+      "busway": {"decision": "EXCLUDED", "reason": "EXCLUDED_TRANSIT_ONLY"},
+      "construction": {"decision": "EXCLUDED", "reason": "EXCLUDED_NOT_OPEN"},
+      "cycleway": {"decision": "EXCLUDED", "reason": "EXCLUDED_NON_MOTOR"},
+      "footway": {"decision": "EXCLUDED", "reason": "EXCLUDED_NON_MOTOR"},
+      "living_street": {"decision": "ELIGIBLE", "road_class": "residential"},
+      "motorway": {"decision": "ELIGIBLE", "road_class": "motorway"},
+      "motorway_link": {"decision": "ELIGIBLE", "road_class": "motorway"},
+      "path": {"decision": "EXCLUDED", "reason": "EXCLUDED_NON_MOTOR"},
+      "pedestrian": {"decision": "EXCLUDED", "reason": "EXCLUDED_NON_MOTOR"},
+      "primary": {"decision": "ELIGIBLE", "road_class": "primary"},
+      "primary_link": {"decision": "ELIGIBLE", "road_class": "primary"},
+      "proposed": {"decision": "EXCLUDED", "reason": "EXCLUDED_NOT_OPEN"},
+      "residential": {"decision": "ELIGIBLE", "road_class": "residential"},
+      "secondary": {"decision": "ELIGIBLE", "road_class": "secondary"},
+      "secondary_link": {"decision": "ELIGIBLE", "road_class": "secondary"},
+      "service": {"decision": "SERVICE_RULE", "reason": "SERVICE_SUBTYPE_AND_ACCESS_REQUIRED"},
+      "steps": {"decision": "EXCLUDED", "reason": "EXCLUDED_NON_MOTOR"},
+      "tertiary": {"decision": "ELIGIBLE", "road_class": "tertiary"},
+      "tertiary_link": {"decision": "ELIGIBLE", "road_class": "tertiary"},
+      "track": {"decision": "EXCLUDED", "reason": "EXCLUDED_UNPAVED_OR_AGRICULTURAL_TRACK"},
+      "trunk": {"decision": "ELIGIBLE", "road_class": "trunk"},
+      "trunk_link": {"decision": "ELIGIBLE", "road_class": "trunk"},
+      "unclassified": {"decision": "UNKNOWN_BLOCKING", "reason": "UNKNOWN_GATE_ROAD_CLASS"}
+    },
+    "reference_sources": [
+      {"reference_role": "road_centerline", "source_id": "cdot_highways"},
+      {"reference_role": "road_centerline", "source_id": "cdot_ramps"},
+      {"reference_role": "road_centerline", "source_id": "city_street_centerlines"},
+      {"reference_role": "road_centerline", "source_id": "county_street_centerlines"},
+      {"reference_role": "road_centerline", "source_id": "county_road_map"},
+      {"reference_role": "surface_observation", "source_id": "drcog_pavement_polygons_2024"},
+      {"reference_role": "surface_edge_observation", "source_id": "drcog_pavement_lines_2024"}
+    ],
+    "semantic_authorities": [
+      {"license_partition": "CC-BY-SA-2.0", "subject": "OSM motor access key hierarchy, lane suffixes, and values", "url": "https://wiki.openstreetmap.org/wiki/Key:access"},
+      {"license_partition": "CC-BY-SA-2.0", "subject": "OSM oneway values and motorway/roundabout defaults", "url": "https://wiki.openstreetmap.org/wiki/Key:oneway"},
+      {"license_partition": "CC-BY-SA-2.0", "subject": "OSM service subtype semantics", "url": "https://wiki.openstreetmap.org/wiki/Key:service"},
+      {"license_partition": "CC-BY-SA-2.0", "subject": "OSM unqualified service-road ambiguity", "url": "https://wiki.openstreetmap.org/wiki/Service_road"}
+    ]
+  },
+  "arcgis_query": {
+    "batch_size_cap": 500,
+    "bbox_wgs84_xyxy": [
+      -105.3669180624,
+      39.931205495,
+      -105.0852610976,
+      40.1473524046
+    ],
+    "out_sr": 4326
+  },
+  "coordinate_contract": {
+    "bounds_xz_meters": [
+      -12000.0,
+      -12000.0,
+      12000.0,
+      12000.0
+    ],
+    "origin_elevation_msl_meters": 1611.7824,
+    "origin_latitude_degrees": 40.03936527,
+    "origin_longitude_degrees": -105.22608958,
+    "projection": "+proj=aeqd +lat_0=40.039365270000 +lon_0=-105.226089580000 +datum=WGS84 +units=m +no_defs"
+  },
+  "license_snapshots": [
+    {
+      "id": "city_open_data_policy",
+      "required_contains": [
+        "Creative Commons CC Zero",
+        "CC0 1.0"
+      ],
+      "url": "https://bouldercolorado.gov/services/open-data"
+    },
+    {
+      "id": "drcog_about",
+      "required_contains": [
+        "Creative Commons Attribution 3.0"
+      ],
+      "url": "https://data.drcog.org/about"
+    },
+    {
+      "id": "drcog_legal_terms",
+      "required_contains": [],
+      "url": "https://drcog.org/legal-terms"
+    },
+    {
+      "id": "osm_copyright",
+      "required_contains": [
+        "Open Data Commons Open Database License"
+      ],
+      "url": "https://www.openstreetmap.org/copyright"
+    },
+    {
+      "id": "usgs_copyright",
+      "required_contains": [
+        "Public Domain"
+      ],
+      "url": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    },
+    {
+      "id": "usgs_tnm_terms",
+      "required_contains": [
+        "free and in the public domain",
+        "There are no restrictions"
+      ],
+      "url": "https://www.usgs.gov/faqs/what-are-terms-uselicensing-map-services-and-data-national-map"
+    },
+    {
+      "id": "usda_fpac_imagery_public_domain",
+      "required_contains": [
+        "Aerial photography and digital orthophotography acquired by the USDA",
+        "public domain"
+      ],
+      "url": "https://www.fpacbc.usda.gov/geospatial-services/customer-services"
+    }
+  ],
+  "document_sources": [
+    {
+      "documents": [
+        {
+          "id": "city_transportation_data_page",
+          "media_type": "text/html",
+          "minimum_bytes": 50000,
+          "path": "transportation_data_and_maps.html",
+          "required_contains": [
+            "City of Boulder Traffic Count Data",
+            "maps.bouldercolorado.gov/traffic-counts"
+          ],
+          "url": "https://bouldercolorado.gov/services/transportation-data-and-maps"
+        },
+        {
+          "id": "city_traffic_counts_experience_item",
+          "media_type": "application/json",
+          "minimum_bytes": 1500,
+          "path": "city_traffic_counts_experience_item.json",
+          "required_contains": [
+            "3fc2ac13cf194cc694121057e8463d2d",
+            "Traffic Counts",
+            "bouldercolorado.gov/services/open-data"
+          ],
+          "url": "https://www.arcgis.com/sharing/rest/content/items/3fc2ac13cf194cc694121057e8463d2d?f=pjson"
+        },
+        {
+          "id": "city_traffic_counts_experience_data",
+          "media_type": "application/json",
+          "minimum_bytes": 50000,
+          "path": "city_traffic_counts_experience_data.json",
+          "required_contains": [
+            "gis.bouldercolorado.gov/TrafficCounts/ART%20Summary.pdf",
+            "gis.bouldercolorado.gov/TrafficCounts/BVP%20Summary.pdf",
+            "TrafficCountLocations/MapServer"
+          ],
+          "url": "https://www.arcgis.com/sharing/rest/content/items/3fc2ac13cf194cc694121057e8463d2d/data?f=json"
+        },
+        {
+          "id": "traffic_counts_root_index",
+          "media_type": "text/html",
+          "minimum_bytes": 1000,
+          "path": "traffic_counts_root.html",
+          "required_contains": [
+            "/TrafficCounts/ART/",
+            "/TrafficCounts/BVP/",
+            "/TrafficCounts/TMC/"
+          ],
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/"
+        },
+        {
+          "id": "art_index",
+          "media_type": "text/html",
+          "minimum_bytes": 2000,
+          "path": "art_index.html",
+          "required_contains": [
+            "/TrafficCounts/ART/CNT7001/"
+          ],
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/ART/"
+        },
+        {
+          "id": "art_summary",
+          "magic_ascii": "%PDF",
+          "media_type": "application/pdf",
+          "minimum_bytes": 1000,
+          "path": "ART_Summary.pdf",
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/ART%20Summary.pdf"
+        },
+        {
+          "id": "art_sample_index",
+          "media_type": "text/html",
+          "minimum_bytes": 1000,
+          "path": "CNT7001_2025_index.html",
+          "required_contains": [
+            "7001.pdf"
+          ],
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/ART/CNT7001/2025/"
+        },
+        {
+          "id": "art_directional_hourly_sample_2025",
+          "magic_ascii": "%PDF",
+          "media_type": "application/pdf",
+          "minimum_bytes": 1000,
+          "path": "CNT7001_2025_7001.pdf",
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/ART/CNT7001/2025/7001.pdf"
+        },
+        {
+          "id": "bvp_index",
+          "media_type": "text/html",
+          "minimum_bytes": 2000,
+          "path": "bvp_index.html",
+          "required_contains": [
+            "/TrafficCounts/BVP/CNT2401/"
+          ],
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/BVP/"
+        },
+        {
+          "id": "bvp_summary",
+          "magic_ascii": "%PDF",
+          "media_type": "application/pdf",
+          "minimum_bytes": 1000,
+          "path": "BVP_Summary.pdf",
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/BVP%20Summary.pdf"
+        },
+        {
+          "id": "bvp_sample_index",
+          "media_type": "text/html",
+          "minimum_bytes": 1000,
+          "path": "CNT2401_2026_index.html",
+          "required_contains": [
+            "2401.pdf"
+          ],
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/BVP/CNT2401/2026/"
+        },
+        {
+          "id": "bvp_directional_hourly_sample_2026",
+          "magic_ascii": "%PDF",
+          "media_type": "application/pdf",
+          "minimum_bytes": 1000,
+          "path": "CNT2401_2026_2401.pdf",
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/BVP/CNT2401/2026/2401.pdf"
+        },
+        {
+          "id": "tmc_index",
+          "media_type": "text/html",
+          "minimum_bytes": 10000,
+          "path": "tmc_index.html",
+          "required_contains": [
+            "/TrafficCounts/TMC/TSIG48/"
+          ],
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/TMC/"
+        },
+        {
+          "id": "tmc_sample_index",
+          "media_type": "text/html",
+          "minimum_bytes": 1000,
+          "path": "TSIG48_index.html",
+          "required_contains": [
+            "/TrafficCounts/TMC/TSIG48/2024.pdf"
+          ],
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/TMC/TSIG48/"
+        },
+        {
+          "id": "tmc_15_minute_turn_sample_2024",
+          "magic_ascii": "%PDF",
+          "media_type": "application/pdf",
+          "minimum_bytes": 1000,
+          "path": "TSIG48_2024.pdf",
+          "url": "https://gis.bouldercolorado.gov/TrafficCounts/TMC/TSIG48/2024.pdf"
+        }
+      ],
+      "id": "city_traffic_count_documents",
+      "license_partition": "CC0-1.0",
+      "license_snapshot_ids": [
+        "city_open_data_policy"
+      ],
+      "required": true,
+      "role": "directional_hourly_turn_count_forward_authority"
+    },
+    {
+      "documents": [
+        {
+          "id": "usgs_3dep_lpc_bounded_inventory",
+          "media_type": "application/json",
+          "minimum_bytes": 100000,
+          "params": {
+            "f": "json",
+            "geometry": "-105.3669180624,39.9312054950,-105.0852610976,40.1473524046",
+            "geometryType": "esriGeometryEnvelope",
+            "inSR": "4326",
+            "orderByFields": "OBJECTID ASC",
+            "outFields": "OBJECTID,workunit,project,collect_start,collect_end,ql,spec,p_method,horiz_crs,vert_crs,geoid,lpc_pub_date,lpc_category,lpc_reason,lpc_link,metadata_link",
+            "outSR": "4326",
+            "resultRecordCount": "2000",
+            "returnGeometry": "true",
+            "spatialRel": "esriSpatialRelIntersects",
+            "where": "1=1"
+          },
+          "path": "usgs_3dep_lpc_bounded_inventory.json",
+          "required_contains": [
+            "CO_DRCOG_2020_B20",
+            "CO_DRCOG_1_2020",
+            "CO_DRCOG_2_2020",
+            "USGS Lidar Base Specification 2.1",
+            "Meets 3DEP LPC requirements"
+          ],
+          "url": "https://index.nationalmap.gov/arcgis/rest/services/3DEPElevationIndex/MapServer/24/query"
+        },
+        {
+          "id": "drcog_2020_project_metadata_listing",
+          "media_type": "application/xml",
+          "minimum_bytes": 100000,
+          "path": "drcog_2020_project_metadata_listing.xml",
+          "required_contains": [
+            "USGS_CO_DRCOG_1_2020_Summary_Report.pdf",
+            "312020336_USGS_DRCOG_Lidar_ClassifiedPointCloud.xml"
+          ],
+          "url": "https://prd-tnm.s3.amazonaws.com/?list-type=2&prefix=StagedProducts/Elevation/metadata/CO_DRCOG_2020_B20/CO_DRCOG_1_2020&max-keys=1000"
+        },
+        {
+          "id": "drcog_2020_classified_point_metadata",
+          "media_type": "application/xml",
+          "minimum_bytes": 10000,
+          "path": "312020336_USGS_DRCOG_Lidar_ClassifiedPointCloud.xml",
+          "required_contains": [
+            "<clascode>17</clascode>",
+            "<clasitem>Bridge Decks</clasitem>",
+            "10-cm RMSEz Vertical Accuracy Class"
+          ],
+          "url": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/metadata/CO_DRCOG_2020_B20/CO_DRCOG_1_2020/reports/vendor_provided_xml/312020336_USGS_DRCOG_Lidar_ClassifiedPointCloud.xml"
+        },
+        {
+          "id": "drcog_2020_laz_qc",
+          "media_type": "text/plain",
+          "minimum_bytes": 5000,
+          "path": "USGS_CO_DRCOG_1_2020_FINAL_Laz_QC.txt",
+          "required_contains": [
+            "(17) Bridge Deck"
+          ],
+          "url": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/metadata/CO_DRCOG_2020_B20/CO_DRCOG_1_2020/reports/USGS_CO_DRCOG_1_2020_FINAL_Laz_QC.txt"
+        },
+        {
+          "id": "drcog_2020_lidar_report",
+          "magic_ascii": "%PDF",
+          "media_type": "application/pdf",
+          "minimum_bytes": 10000,
+          "path": "312020336_USGS_DRCOG_Lidar_LidarReport_QL1.pdf",
+          "timeout_seconds": 300,
+          "url": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/metadata/CO_DRCOG_2020_B20/CO_DRCOG_1_2020/reports/312020336_USGS_DRCOG_Lidar_LidarReport_QL1.pdf"
+        },
+        {
+          "id": "drcog_2020_summary_report",
+          "magic_ascii": "%PDF",
+          "media_type": "application/pdf",
+          "minimum_bytes": 10000,
+          "path": "USGS_CO_DRCOG_1_2020_Summary_Report.pdf",
+          "timeout_seconds": 300,
+          "url": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/metadata/CO_DRCOG_2020_B20/CO_DRCOG_1_2020/reports/USGS_CO_DRCOG_1_2020_Summary_Report.pdf"
+        },
+        {
+          "id": "current_lidar_base_specification_index",
+          "media_type": "text/html",
+          "minimum_bytes": 50000,
+          "path": "lidar_base_specification_online.html",
+          "required_contains": [
+            "Lidar Base Specification 2025 Rev. A"
+          ],
+          "url": "https://www.usgs.gov/ngp-standards-and-specifications/lidar-base-specification-online"
+        },
+        {
+          "id": "current_lidar_base_specification_media_page",
+          "media_type": "text/html",
+          "minimum_bytes": 50000,
+          "path": "lidar_base_specification_2025_rev_a.html",
+          "required_contains": [
+            "Lidar-Base-Specification-2025-rev-A.docx"
+          ],
+          "url": "https://www.usgs.gov/media/files/lidar-base-specification-2025-rev-a"
+        },
+        {
+          "id": "current_lidar_base_specification_docx",
+          "magic_ascii": "PK",
+          "media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "minimum_bytes": 100000,
+          "path": "Lidar-Base-Specification-2025-rev-A.docx",
+          "timeout_seconds": 300,
+          "url": "https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/media/files/Lidar-Base-Specification-2025-rev-A.docx"
+        }
+      ],
+      "id": "usgs_3dep_bridge_metadata",
+      "license_partition": "US-Government-Work-Public-Domain",
+      "license_snapshot_ids": [
+        "usgs_copyright",
+        "usgs_tnm_terms"
+      ],
+      "required": true,
+      "role": "bridge_deck_forward_authority"
+    },
+    {
+      "documents": [
+        {
+          "id": "usda_naip_colorado_2021_quarter_quad_archive",
+          "media_type": "application/zip",
+          "minimum_bytes": 994968,
+          "params": null,
+          "path": "co_naip21qq-1.zip",
+          "required_contains": [],
+          "timeout_seconds": 180,
+          "url": "https://www.fpacbc.usda.gov/sites/default/files/2024-10/co_naip21qq-1.zip"
+        },
+        {
+          "id": "usda_naip_most_recent_coverage_page",
+          "media_type": "text/html",
+          "minimum_bytes": 40000,
+          "params": null,
+          "path": "naip_most_recent_coverage.html",
+          "required_contains": [
+            "most recent year available",
+            "NAIP CONUS 2021-2022",
+            "Colorado",
+            "co_naip21qq-1.zip"
+          ],
+          "timeout_seconds": 180,
+          "url": "https://www.fpacbc.usda.gov/geospatial-services/customer-services/naip-coverage-map"
+        }
+      ],
+      "id": "usda_naip_current_colorado_orthophoto_metadata",
+      "license_partition": "US-Government-Work-Public-Domain",
+      "license_snapshot_ids": [
+        "usda_fpac_imagery_public_domain"
+      ],
+      "metadata_only": true,
+      "orthophoto_authority_contract": {
+        "accepted_state": "CO",
+        "accepted_year": 2021,
+        "allowed_use": "VISUAL_AMBIGUITY_RESOLUTION_ONLY",
+        "archive_bytes": 994968,
+        "archive_document_id": "usda_naip_colorado_2021_quarter_quad_archive",
+        "archive_sha256": "bdf40ca7de8e78d21e3dd27726c9719202587f3531d0abced64465d1b4ef9a45",
+        "coverage_bbox_wgs84_xyxy": [
+          -105.3669180624,
+          39.931205495,
+          -105.0852610976,
+          40.1473524046
+        ],
+        "coverage_union_bounds_wgs84_xyxy": [
+          -105.37499975935506,
+          39.87499975234054,
+          -105.06249975806364,
+          40.187499753355716
+        ],
+        "expected_primary_footprint_count": 25,
+        "expected_selected_record_numbers": [
+          2483,
+          2484,
+          2485,
+          2486,
+          2487,
+          2579,
+          2580,
+          2581,
+          2582,
+          2583,
+          2675,
+          2676,
+          2677,
+          2678,
+          2679,
+          2771,
+          2772,
+          2773,
+          2774,
+          2775,
+          2867,
+          2868,
+          2869,
+          2870,
+          2871
+        ],
+        "expected_statewide_footprint_count": 7423,
+        "expected_anchor_label": "Shapefile (zip, 442KB)",
+        "expected_raw_href": "/sites/default/files/2024-10/co_naip21qq-1.zip",
+        "expected_resolved_href": "https://www.fpacbc.usda.gov/sites/default/files/2024-10/co_naip21qq-1.zip",
+        "forbidden_uses": [
+          "LANE_COUNT_AUTHORITY",
+          "LANE_DIRECTION_AUTHORITY",
+          "ROAD_CENTERLINE_OR_GEOMETRY_CREATION"
+        ],
+        "latest_coverage_document_id": "usda_naip_most_recent_coverage_page",
+        "license_snapshot_id": "usda_fpac_imagery_public_domain",
+        "schema": "questflight.traffic-v2-naip-orthophoto-authority.v1",
+        "selected_record_inventory_sha256": "0dd8e8afef072af28158769c55d7e3b8da6ac29ad0be73259a527792dd8901b9"
+      },
+      "required": true,
+      "role": "orthophoto_ambiguity_resolution_only"
+    }
+  ],
+  "osm": {
+    "attribution": "© OpenStreetMap contributors",
+    "copyright_url": "https://www.openstreetmap.org/copyright",
+    "endpoints": [
+      "https://overpass-api.de/api/interpreter",
+      "https://overpass.kumi.systems/api/interpreter"
+    ],
+    "id": "osm_bounded_roads",
+    "license_partition": "ODbL-1.0",
+    "query": "[out:json][timeout:180];\nway[\"highway\"](39.9312054950,-105.3669180624,40.1473524046,-105.0852610976)->.roads;\nrel(bw.roads)[\"type\"~\"^(restriction|connectivity)$\"]->.rels;\n(.roads;.rels;);\nout meta;\n>;\nout meta qt;\n",
+    "required": true
+  },
+  "external_package": {
+    "active_roots": ["approval_candidate", "evidence", "intermediates", "metadata", "normalized", "raw", "receipts", "requests"],
+    "archive_roots": ["attempts", "failures", "quarantine"],
+    "outer_index_path": "package_index.json",
+    "support_roots": ["toolchain"]
+  },
+  "product_bindings": [
+    {
+      "bindings": [
+        {
+          "line": 42,
+          "path": "QuestFlight/Assets/Production/Environment/FullMapVegetationV2/KBDU_FullMapVegetationClipmapV2.json"
+        },
+        {
+          "line": 37,
+          "path": "QuestFlight/Assets/Production/Environment/FullMapVegetationV3/KBDU_FullMapCanopyVisual.json"
+        },
+        {
+          "line": 49,
+          "path": "QuestFlight/Assets/Production/Environment/FullMapVegetationV3/KBDU_FullMapVegetationHlodV3.json"
+        }
+      ],
+      "git_blob_sha1": "99ca4cd5c8947489be28c5bf1d1f8e1e7df778c2",
+      "historical_warning": {
+        "expected_sha256": "2298f3c861a6fcf46d0ef9f96860d60cd4c5c629e3bfa8d2da178dbfe68c0f46",
+        "locations": [
+          "QuestFlight/Assets/Production/Environment/FullMapBuildingsV1/KBDU_FullMapBuildingDatabaseV1_PROVENANCE.json:53-54",
+          "docs/evidence/FULL_MAP_BUILDING_CLIPMAP_V1_2026-08-14.md:25-26"
+        ]
+      },
+      "id": "accepted_building_exclusion",
+      "license_partition": "Accepted-product mixed-source derivative; underlying notices retained",
+      "path": "QuestFlight/Assets/Production/Environment/FullMapBuildingsV1/KBDU_FullMapBuildingDatabaseV1.json",
+      "role": "building_exclusion",
+      "sha256": "5d5b7387c1e13b8f0ad9bac268ba9445a4f58e2db560c06654153ca866e34b72"
+    },
+    {
+      "bindings": [
+        {
+          "line": 34,
+          "path": "QuestFlight/Assets/Production/Environment/FullMapBuildingsV1/KBDU_FullMapBuildingDatabaseV1_PROVENANCE.json"
+        },
+        {
+          "line": 56,
+          "path": "QuestFlight/Assets/Production/Environment/FullMapVegetationV2/KBDU_FullMapVegetationClipmapV2.json"
+        },
+        {
+          "line": 63,
+          "path": "QuestFlight/Assets/Production/Environment/FullMapVegetationV3/KBDU_FullMapVegetationHlodV3.json"
+        }
+      ],
+      "git_blob_sha1": "a0464b113178408199cce0678414f133111e9a45",
+      "historical_warning": {
+        "expected_sha256": "9b9e17be98b15d4f9ddb42a5662f54f54936581ba7c4c17043103e912e6cd2d2",
+        "locations": [
+          "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ProductionTerrainSurfaceV2_SourceManifest.json:6"
+        ]
+      },
+      "id": "accepted_terrain",
+      "license_partition": "US-Government-Work-Public-Domain",
+      "path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ProductionTerrainSurfaceV2.json",
+      "role": "terrain_height",
+      "sha256": "0d821e47766bd355e145b59f45cb56fcb3e67e709e72d054432fc8680a3ce7b1"
+    },
+    {
+      "git_blob_sha1": "772756751663909c02b0a34a623f6d3435d5c5ea",
+      "id": "accepted_water_vectors",
+      "license_partition": "ODbL-1.0",
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Water/KBDU_FullMapWaterReflectionManifest.json",
+      "role": "water_exclusion",
+      "sha256": "57afc01855be22a495c63ef6acc5f7b199d8a1badf50ec3408a122ff6911d19e"
+    },
+    {
+      "git_blob_sha1": "17d60b1f14df0cb7e7b795c6731490679221417a",
+      "id": "accepted_water_mask",
+      "license_partition": "ODbL-1.0",
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealTerrainV1/Water/KBDU_FullMapWaterMask.png",
+      "role": "water_exclusion_audit_raster",
+      "sha256": "328ecb8673cb27bb5d8bb8a30799664c2a1da43606bd1ee5d461e9ec31fe3a76"
+    },
+    {
+      "git_blob_sha1": "55ad1c1790e643bab5656b18d432c0ef99ad1dce",
+      "id": "accepted_semantic_exclusion_contract",
+      "license_partition": "ODbL-1.0",
+      "path": "QuestFlight/Assets/Production/Environment/FullMapVegetationV3/KBDU_VegetationSemanticExclusionV1.json",
+      "role": "water_sports_exclusion_contract",
+      "sha256": "68cb9550b680c709ef95f91cef9895360655399517fde4b575f72efac21e6ac9"
+    },
+    {
+      "git_blob_sha1": "7cfa19639955aa083a0d05b7b41521a941c2af62",
+      "id": "accepted_semantic_exclusion_mask",
+      "license_partition": "ODbL-1.0",
+      "path": "QuestFlight/Assets/Production/Environment/FullMapVegetationV3/KBDU_VegetationSemanticExclusionV1.png",
+      "role": "water_sports_exclusion_audit_raster",
+      "sha256": "8a708641e25b01d732ea67e33ca2c6cb9c139b184333d313616ccf344302ab86"
+    },
+    {
+      "git_blob_sha1": "20bfd1d1e25c1f31635a0cd98d2d7cabb331ccc8",
+      "id": "accepted_faa_runway_context",
+      "license_partition": "US-Government-Work-Public-Domain",
+      "path": "QuestFlight/Assets/Resources/QuestFlightLab/Environment/KBDU/kbdu_reference_context.json",
+      "role": "runway_exclusion",
+      "sha256": "5d0d0c3c71532b5106119b8e647e303e12bdeb662960ef78543050166bb8e3e0"
+    },
+    {
+      "git_blob_sha1": "6db1310109d8e7bdb329141e21d4701b6481664c",
+      "id": "accepted_city_2020_orthophoto_manifest",
+      "license_partition": "CC0-1.0",
+      "path": "QuestFlight/Assets/Production/Environment/AerialSurfaceV1/Ground/KBDU_AerialSurfaceV1_SourceManifest.json",
+      "role": "orthophoto_ambiguity_review",
+      "sha256": "e4b8765a3bc0fc0c0f23a1099926569ac1fa90e636569f663c07cc46b636c061"
+    }
+  ],
+  "rejected_sources": [
+    {
+      "id": "cdot_detailed_geometrics_layer_12",
+      "reason": "No clear item-level license authority; fail closed."
+    },
+    {
+      "id": "city_enterprise_road_area_intersection_counts_bridges",
+      "reason": "Blank license metadata; fail closed."
+    },
+    {
+      "id": "city_2024_orthophoto",
+      "reason": "Current license/capture authority remains unclear; no acquisition or derivation permitted."
+    },
+    {
+      "id": "city_2023_naip_full_bounds_authority",
+      "reason": "The City-hosted 2023 NAIP layer omits west/east portions of the exact full-map bounds; it may corroborate only central-area ambiguity and cannot clear complete-bounds authority."
+    },
+    {
+      "id": "drcog_current_orthophoto_purchase",
+      "reason": "Current DRCOG imagery is advertised as a purchase product and has no frozen public-data license/complete-bounds payload authority; excluded fail-closed."
+    },
+    {
+      "id": "cdot_otis_hourly_api",
+      "reason": "No redistribution license frozen; annual licensed counts only."
+    }
+  ],
+  "rejected_freezes": [
+    {
+      "reason": "Failed deterministic rebuild because the coverage record embedded a temporary rebuild-check path.",
+      "sha256": "fff0906c8cc1deb615741ea5d56ed80ee59b2e9e524b5bd70af842f345e4cd23",
+      "status": "FAILED_DETERMINISM_ATTEMPT"
+    },
+    {
+      "reason": "Rejected after independent D audit found duplicate OSM IDs, centerline rather than lane-km totals, identity coverage, incomplete dispositions, and unbound package files.",
+      "sha256": "178ac781ea094e4f09af9a38493babace8f78e8942301b86927e414f2675ca3d",
+      "status": "FAILED_INDEPENDENT_SOURCE_AUDIT"
+    },
+    {
+      "reason": "Superseded before compilation because the frozen compiler used an unbounded quadratic full-map conflation scan; the replacement preserves exact decisions behind a conservative deterministic spatial candidate filter.",
+      "sha256": "d90132cf96e919406f52c32abbc19bf0b1936d3578ad0ace29cc693ca2e06817",
+      "status": "SUPERSEDED_COMPILER_PERFORMANCE_FIX"
+    },
+    {
+      "reason": "Superseded after the first optimized full-map compile exposed a fail-closed null endpoint-elevation correspondence defect; no staged output was promoted.",
+      "sha256": "f5fa99a5a607054991caf1a9fd9ebb6f2bdb0bd6380cfd80587a1d42379c5ad1",
+      "status": "SUPERSEDED_ENDPOINT_ELEVATION_FIX"
+    },
+    {
+      "reason": "Superseded after the bounded recovery compile was stopped at 144.6 minutes in the unoptimized independent lane-kilometer support scan; no staged output was promoted, and the replacement preserves exact decisions behind a deterministic STRtree candidate filter.",
+      "sha256": "c7cd7b9362d01bacbeb7c23833cae65882bceaaaab767dcb00f9b8c0904e07b6",
+      "status": "SUPERSEDED_INDEPENDENT_SUPPORT_PERFORMANCE_FIX"
+    },
+    {
+      "reason": "Superseded before compilation because a normal archived receipt at 271 characters exposed incomplete Windows extended-length path handling in topology and package indexing; no staged output was promoted.",
+      "sha256": "e371e027d1ef9f2fa3b7a6f534e0e23842e8f63a5cc6b7202eee85bb82eb7dc2",
+      "status": "SUPERSEDED_WINDOWS_EXTENDED_PATH_FIX"
+    },
+    {
+      "reason": "Superseded after a bounded 17.7-minute compile completed canonical conflation and the optimized independent-support ledger but exceeded the 4 GB private-memory stop limit during unindexed reference-to-canonical matching; no staged output was promoted.",
+      "sha256": "80ccf33a89eb718ffb2e64755f41df6d900d39bca8894e790bf7fde1395d9306",
+      "status": "SUPERSEDED_REFERENCE_MATCHING_PERFORMANCE_FIX"
+    },
+    {
+      "reason": "Superseded before compilation after the completed prior-stage evidence proved that serialized 515 MB support and lane object graphs remained live into reference matching; the replacement releases those graphs before the indexed reference phase and no staged output was promoted.",
+      "sha256": "2211980332dbdb4e09bcbba0a38350ced92f7f14086885f1066cebdc7cc71501",
+      "status": "SUPERSEDED_COMPILE_PEAK_MEMORY_FIX"
+    }
+  ],
+  "schema": "questflight.traffic-v2-geospatial-source-registry.v2",
+  "sources": [
+    {
+      "id": "cdot_highways",
+      "item_id": "c4950c389d0e4c759c821993d9c38e98",
+      "layer_url": "https://dtdapps.codot.gov/server/rest/services/Webapps/open_data_sde/FeatureServer/7",
+      "license_partition": "CC-BY-SA-4.0",
+      "license_required_any": ["creativecommons.org/licenses/by-sa/4.0", "CC BY-SA 4.0", "CC-BY-SA-4.0"],
+      "required": true,
+      "role": "road_authority"
+    },
+    {
+      "id": "cdot_traffic_counts",
+      "item_id": "723375d00be646b0bf87313d4c474a25",
+      "layer_url": "https://dtdapps.codot.gov/server/rest/services/Webapps/open_data_sde/FeatureServer/13",
+      "license_partition": "CC-BY-SA-4.0",
+      "license_required_any": ["creativecommons.org/licenses/by-sa/4.0", "CC BY-SA 4.0", "CC-BY-SA-4.0"],
+      "required": true,
+      "role": "count_authority"
+    },
+    {
+      "id": "cdot_ramps",
+      "item_id": "65e3e144022a4a59b4f0c8940147c262",
+      "layer_url": "https://dtdapps.codot.gov/server/rest/services/Webapps/open_data_sde/FeatureServer/28",
+      "license_partition": "CC-BY-SA-4.0",
+      "license_required_any": ["creativecommons.org/licenses/by-sa/4.0", "CC BY-SA 4.0", "CC-BY-SA-4.0"],
+      "required": true,
+      "role": "road_authority"
+    },
+    {
+      "id": "cdot_bridges",
+      "item_id": "746b1aa69ce34dd2ae5f559d58db2b6f",
+      "layer_url": "https://dtdapps.codot.gov/server/rest/services/Webapps/open_data_sde/FeatureServer/0",
+      "license_partition": "CC-BY-SA-4.0",
+      "license_required_any": ["creativecommons.org/licenses/by-sa/4.0", "CC BY-SA 4.0", "CC-BY-SA-4.0"],
+      "required": true,
+      "role": "structure_authority"
+    },
+    {
+      "id": "cdot_interchanges",
+      "item_id": "c3d6425896524934bf31954b7bf72ab5",
+      "layer_url": "https://dtdapps.codot.gov/server/rest/services/Webapps/open_data_sde/FeatureServer/8",
+      "license_partition": "CC-BY-SA-4.0",
+      "license_required_any": ["creativecommons.org/licenses/by-sa/4.0", "CC BY-SA 4.0", "CC-BY-SA-4.0"],
+      "required": true,
+      "role": "structure_authority"
+    },
+    {
+      "id": "city_street_centerlines",
+      "item_id": "02ff7a69de4040e7a26ce8401506d495",
+      "layer_url": "https://services.arcgis.com/ePKBjXrBZ2vEEgWd/arcgis/rest/services/StreetCenterlinesOpenData/FeatureServer/0",
+      "license_partition": "CC0-1.0",
+      "license_required_any": ["bouldercolorado.gov/open-data/terms-of-use", "bouldercolorado.gov/services/open-data", "creativecommons.org/publicdomain/zero/1.0", "CC0 1.0", "CC0-1.0"],
+      "license_snapshot_ids": ["city_open_data_policy"],
+      "required": true,
+      "role": "road_authority"
+    },
+    {
+      "batch_size_cap": 100,
+      "discover_item_from_service": true,
+      "feature_query_mode": "oid_where",
+      "id": "city_signals",
+      "layer_url": "https://gis.bouldercolorado.gov/ags_svr3/rest/services/trans/Signals/MapServer/0",
+      "license_partition": "CC0-1.0",
+      "license_required_any": ["bouldercolorado.gov/open-data/terms-of-use", "bouldercolorado.gov/services/open-data", "creativecommons.org/publicdomain/zero/1.0", "CC0 1.0", "CC0-1.0"],
+      "license_snapshot_ids": ["city_open_data_policy"],
+      "required": true,
+      "role": "control_authority"
+    },
+    {
+      "id": "county_street_centerlines",
+      "item_id": "775ce17cc6ba47fea649e8bdd7d27781",
+      "layer_url": "https://maps.bouldercounty.org/arcgisadmin/rest/services/Transportation/STREETS/MapServer/0",
+      "license_partition": "CC-BY-4.0",
+      "license_required_any": ["creativecommons.org/licenses/by/4.0", "CC BY 4.0", "CC-BY-4.0"],
+      "required": true,
+      "role": "road_corroboration"
+    },
+    {
+      "id": "county_road_map",
+      "item_id": "f8292cbf379e4df7b9b8f62e21120ea7",
+      "layer_url": "https://amsagsprod1-bouldercounty.msappproxy.net/server/rest/services/PW/genRoad_Map_Roads/FeatureServer/0",
+      "license_partition": "CC-BY-4.0",
+      "license_required_any": ["creativecommons.org/licenses/by/4.0", "CC BY 4.0", "CC-BY-4.0"],
+      "required": true,
+      "role": "road_corroboration"
+    },
+    {
+      "id": "county_bridge_structures",
+      "item_id": "1f32f79a17954b4a8160fff5d462798c",
+      "layer_index": 0,
+      "license_partition": "CC-BY-4.0",
+      "license_required_any": ["creativecommons.org/licenses/by/4.0", "CC BY 4.0", "CC-BY-4.0"],
+      "required": true,
+      "role": "structure_corroboration"
+    },
+    {
+      "id": "county_traffic_controls",
+      "item_id": "fde56db9b92a46d78b9da4e827489b35",
+      "layer_index": 0,
+      "license_partition": "CC-BY-4.0",
+      "license_required_any": ["creativecommons.org/licenses/by/4.0", "CC BY 4.0", "CC-BY-4.0"],
+      "required": true,
+      "role": "control_corroboration"
+    },
+    {
+      "count_query_mode": "ids_length",
+      "id": "county_traffic_stations",
+      "item_id": "aeb2b2385dec4ffea0320318e3f2248a",
+      "layer_index": 0,
+      "license_partition": "CC-BY-4.0",
+      "license_required_any": ["creativecommons.org/licenses/by/4.0", "CC BY 4.0", "CC-BY-4.0"],
+      "required": true,
+      "role": "count_corroboration"
+    },
+    {
+      "catalog_url": "https://data.drcog.org/dataset/edge-of-pavement-polygons-2024",
+      "count_query_mode": "server_count_advisory",
+      "expected_server_count_minus_ids": 2,
+      "id": "drcog_pavement_polygons_2024",
+      "layer_url": "https://gis.drcog.org/server/rest/services/RDC/PLANIMETRICS_2024_EDGE_PAVEMENT_POLYGON_TOTAL/MapServer/0",
+      "license_partition": "LicenseRef-DRCOG-CC-BY-3.0-linked-4.0",
+      "license_snapshot_ids": ["drcog_about", "drcog_legal_terms"],
+      "required": true,
+      "role": "surface_median_authority"
+    },
+    {
+      "catalog_url": "https://data.drcog.org/dataset/edge-of-pavement-lines-2024",
+      "id": "drcog_pavement_lines_2024",
+      "layer_url": "https://gis.drcog.org/server/rest/services/RDC/PLANIMETRICS_2024_EDGE_PAVEMENT_LINE_TOTAL/MapServer/0",
+      "license_partition": "LicenseRef-DRCOG-CC-BY-3.0-linked-4.0",
+      "license_snapshot_ids": ["drcog_about", "drcog_legal_terms"],
+      "required": true,
+      "role": "surface_vertical_corroboration"
+    },
+    {
+      "id": "city_orthophoto_2020_metadata",
+      "item_id": "22b7c93a74394696824258f807f345ba",
+      "license_partition": "CC0-1.0",
+      "license_required_any": ["creativecommons.org/publicdomain/zero/1.0", "CC0 1.0", "CC0-1.0"],
+      "license_snapshot_ids": ["city_open_data_policy"],
+      "metadata_only": true,
+      "required": true,
+      "role": "orthophoto_ambiguity_review"
+    }
+  ],
+  "specification": {
+    "path": "tools/traffic_v2/schemas/traffic_system_v2_spec.json",
+    "sha256": "8e1b3f7442652128b306a0706d3eac02b59750158839ca0443351312fcbf09c7"
+  },
+  "toolchain": {
+    "distributions": {
+      "Pillow": "11.3.0",
+      "Pygments": "2.21.0",
+      "certifi": "2026.7.22",
+      "colorama": "0.4.6",
+      "iniconfig": "2.3.0",
+      "numpy": "2.3.5",
+      "packaging": "26.3",
+      "pluggy": "1.6.0",
+      "pyproj": "3.7.2",
+      "pytest": "8.4.2",
+      "shapely": "2.1.2"
+    },
+    "manifest_path": "toolchain/traffic_v2_geospatial_toolchain_manifest.json",
+    "native_libraries": {
+      "GEOS": "3.13.1",
+      "Pillow_zlib": "1.3.1.zlib-ng",
+      "PROJ": "9.5.1",
+      "PROJ_runtime": {
+        "data_directory": "environment/Lib/site-packages/pyproj/proj_dir/share/proj",
+        "data_payload": {
+          "file_count": 28,
+          "inventory_sha256": "e4e0be22288abaaa9f7499f0da9a1e0bd6a17ce60051d1bbc6c13ca83b55d815",
+          "total_bytes": 9426632
+        },
+        "network_enabled": false
+      },
+      "zlib_compile": "1.3.1",
+      "zlib_runtime": "1.3.1"
+    },
+    "payload_identity": {
+      "distribution_payloads": {
+        "certifi": {"file_count": 13, "inventory_sha256": "903c27a7c3d716f50b3d0f08e96d7f5a783547a23a74daed4e73e1d0b83ec341", "total_bytes": 249281},
+        "cffi": {"file_count": 33, "inventory_sha256": "a59e3ff16eacd84c20f6f19e9d2029bce521f8c8134408c5d3a40496501bad15", "total_bytes": 676632},
+        "charset-normalizer": {"file_count": 23, "inventory_sha256": "6e17bb67f4555e85c8f288f1efd81d64d4508b1ce1f416399606dfddc5ee4b6d", "total_bytes": 664725},
+        "colorama": {"file_count": 18, "inventory_sha256": "2daeb4de5c3a0108390990e5752621d3391b6cc9d9736942d10c1bde2068a766", "total_bytes": 78475},
+        "cryptography": {"file_count": 121, "inventory_sha256": "5142df1a112385f4e08299cdaddec4d528c80dc05944260d869584af4deb426e", "total_bytes": 10506168},
+        "iniconfig": {"file_count": 11, "inventory_sha256": "bbac12fa3bfea764bf74445c46d003a4755aa5d5cb243083a2e849bcac2d9fd5", "total_bytes": 18639},
+        "numpy": {"file_count": 923, "inventory_sha256": "c58652821cd1d75ea97c55dcf3a8ebb235846b290bde3fba0dcbffc3eb8be05c", "total_bytes": 43167163},
+        "packaging": {"file_count": 30, "inventory_sha256": "2367b25c9c37ba0bf954f4a43e4a4e77fceb29f3a49bcc31651c0113e202795d", "total_bytes": 500425},
+        "pdfminer-six": {"file_count": 190, "inventory_sha256": "fd923c89927e6e9814198ed7ef70219153ebc63e9902e9399f529fbe3cc3abf6", "total_bytes": 7217557},
+        "pdfplumber": {"file_count": 31, "inventory_sha256": "68d009499bd8552d0b15496afedeef21113e3f68cb5ceaaa5803c12b718b1501", "total_bytes": 304059},
+        "pillow": {"file_count": 121, "inventory_sha256": "1bf1893088c426966186254ade89dcb80845ff12045f7b2c9716ffc40c28394c", "total_bytes": 14338571},
+        "pip": {"file_count": 458, "inventory_sha256": "937f21a8ee4c81c29cd430a1f489ef0aa9f700074bdb52cbeb65ec9c139a7f7b", "total_bytes": 5712372},
+        "pluggy": {"file_count": 15, "inventory_sha256": "bdffd7f56308b6834dcc0d42c2d97175b0ecd6f7f3729a7748f1625050120ba4", "total_bytes": 66302},
+        "pycparser": {"file_count": 14, "inventory_sha256": "29ecb41a8b56c2088c830bb4bb7b8f32bc26063d2cdac0a0dfd540df629c6e9b", "total_bytes": 204205},
+        "pygments": {"file_count": 351, "inventory_sha256": "076896588d812cf52142119a79aa8ce4f9412957c0fd6cd86087c246aa5dba2e", "total_bytes": 4748853},
+        "pypdf": {"file_count": 61, "inventory_sha256": "75c1ae41755ab0362c499077a21a5b5b567b5ef1915d3dadee15b4a60b33ba92", "total_bytes": 1265798},
+        "pypdfium2": {"file_count": 49, "inventory_sha256": "6887193375bd9a545a6b806f6d0638ebb933fdb2636c7dd25c1d06a9415bb574", "total_bytes": 5981414},
+        "pyproj": {"file_count": 115, "inventory_sha256": "17089c9ca529451b4b0ab580cec5f258c663f30b3c3d84da363d56edb6331d7e", "total_bytes": 25306904},
+        "pytest": {"file_count": 85, "inventory_sha256": "1d5b3b38b0a6f37790500f20259b1b52f26c17eb9ffd8d5bc4fba73d35f41762", "total_bytes": 1509687},
+        "shapely": {"file_count": 144, "inventory_sha256": "8eb0fb38a6635c95db357731993fb398be1e247abb7c3325c48ee17cb884f7a5", "total_bytes": 5103758}
+      },
+      "import_origins": {
+        "PIL": "environment/Lib/site-packages/PIL/__init__.py",
+        "PIL.Image": "environment/Lib/site-packages/PIL/Image.py",
+        "PIL.ImageDraw": "environment/Lib/site-packages/PIL/ImageDraw.py",
+        "PIL.ImageFont": "environment/Lib/site-packages/PIL/ImageFont.py",
+        "PIL.features": "environment/Lib/site-packages/PIL/features.py",
+        "argparse": "base_runtime/Lib/argparse.py",
+        "collections": "base_runtime/Lib/collections/__init__.py",
+        "contextlib": "base_runtime/Lib/contextlib.py",
+        "ctypes": "base_runtime/Lib/ctypes/__init__.py",
+        "datetime": "base_runtime/Lib/datetime.py",
+        "gc": "built-in",
+        "hashlib": "base_runtime/Lib/hashlib.py",
+        "html": "base_runtime/Lib/html/__init__.py",
+        "html.parser": "base_runtime/Lib/html/parser.py",
+        "importlib": "base_runtime/Lib/importlib/__init__.py",
+        "importlib.metadata": "base_runtime/Lib/importlib/metadata/__init__.py",
+        "json": "base_runtime/Lib/json/__init__.py",
+        "locale": "base_runtime/Lib/locale.py",
+        "math": "built-in",
+        "numpy": "environment/Lib/site-packages/numpy/__init__.py",
+        "os": "frozen",
+        "pathlib": "base_runtime/Lib/pathlib/__init__.py",
+        "platform": "base_runtime/Lib/platform.py",
+        "pyproj": "environment/Lib/site-packages/pyproj/__init__.py",
+        "re": "base_runtime/Lib/re/__init__.py",
+        "shapely": "environment/Lib/site-packages/shapely/__init__.py",
+        "shapely.geometry": "environment/Lib/site-packages/shapely/geometry/__init__.py",
+        "shapely.ops": "environment/Lib/site-packages/shapely/ops.py",
+        "shapely.strtree": "environment/Lib/site-packages/shapely/strtree.py",
+        "shutil": "base_runtime/Lib/shutil.py",
+        "site": "frozen",
+        "subprocess": "base_runtime/Lib/subprocess.py",
+        "sys": "built-in",
+        "sysconfig": "base_runtime/Lib/sysconfig/__init__.py",
+        "tempfile": "base_runtime/Lib/tempfile.py",
+        "time": "built-in",
+        "typing": "base_runtime/Lib/typing.py",
+        "urllib.error": "base_runtime/Lib/urllib/error.py",
+        "urllib.parse": "base_runtime/Lib/urllib/parse.py",
+        "urllib.request": "base_runtime/Lib/urllib/request.py",
+        "zlib": "built-in"
+      },
+      "installed_distributions": {
+        "certifi": "2026.7.22",
+        "cffi": "2.1.1",
+        "charset-normalizer": "3.5.1",
+        "colorama": "0.4.6",
+        "cryptography": "50.0.0",
+        "iniconfig": "2.3.0",
+        "numpy": "2.3.5",
+        "packaging": "26.3",
+        "pdfminer-six": "20250506",
+        "pdfplumber": "0.11.7",
+        "pillow": "11.3.0",
+        "pip": "25.2",
+        "pluggy": "1.6.0",
+        "pycparser": "3.0",
+        "pygments": "2.21.0",
+        "pypdf": "6.0.0",
+        "pypdfium2": "4.30.0",
+        "pyproj": "3.7.2",
+        "pytest": "8.4.2",
+        "shapely": "2.1.2"
+      },
+      "runtime_payload": {"file_count": 2370, "inventory_sha256": "8f3c9d479d407eb51b6bfb51d986cbbf12f1612c89ddc9d83029805a610b6f8b", "total_bytes": 69865871},
+      "schema": "questflight.traffic-v2-geospatial-installed-payload.v1",
+      "site_packages": {
+        "exceptions": [],
+        "executable_pth_files": [],
+        "payload": {
+          "file_count": 2791,
+          "inventory_sha256": "d8710434ea6bdba1eeabd0380898082dc8bee89fc19c2c7ec0ab294bd85adcf5",
+          "total_bytes": 126186553
+        },
+        "roots": ["environment/Lib/site-packages"],
+        "startup_module_files": []
+      }
+    },
+    "requirements_lock": {
+      "bytes": 388,
+      "path": "tools/traffic_v2/geospatial/requirements-lock.txt",
+      "sha256": "74ea30f283e97a60ffb31611fcb81c606fb0b2c2cd35df67e0f1b6de1b7a5c24"
+    },
+    "runtime_identity": {
+      "abi": "cp313-win_amd64",
+      "cache_tag": "cpython-313",
+      "implementation": "CPython",
+      "launcher": {
+        "encodings": {
+          "default": "utf-8",
+          "filesystem": "utf-8",
+          "filesystem_errors": "surrogatepass"
+        },
+        "flags": {
+          "bytes_warning": 0,
+          "debug": 0,
+          "dev_mode": false,
+          "dont_write_bytecode": 1,
+          "gil": 1,
+          "hash_randomization": 1,
+          "ignore_environment": 1,
+          "inspect": 0,
+          "int_max_str_digits": 4300,
+          "interactive": 0,
+          "isolated": 1,
+          "no_site": 0,
+          "no_user_site": 1,
+          "optimize": 0,
+          "quiet": 0,
+          "safe_path": true,
+          "utf8_mode": 0,
+          "verbose": 0,
+          "warn_default_encoding": 0
+        },
+        "host": {
+          "byteorder": "little",
+          "machine": "AMD64",
+          "os_name": "nt",
+          "pointer_bits": 64,
+          "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel",
+          "system": "Windows",
+          "system_release": "11",
+          "system_version": "10.0.26200",
+          "windows_version": {
+            "build": 26200,
+            "major": 10,
+            "minor": 0,
+            "platform": 2,
+            "product_type": 1,
+            "service_pack": "",
+            "service_pack_major": 0,
+            "service_pack_minor": 0,
+            "suite_mask": 768
+          }
+        },
+        "locale": {
+          "ctype": "English_United States.1252",
+          "encoding": "cp1252",
+          "preferred_encoding": "cp1252"
+        },
+        "semantic_environment": {
+          "PROJ_DATA": null,
+          "PROJ_LIB": null,
+          "PROJ_NETWORK": null,
+          "PYTHONASYNCIODEBUG": null,
+          "PYTHONBREAKPOINT": null,
+          "PYTHONCASEOK": null,
+          "PYTHONCOERCECLOCALE": null,
+          "PYTHONDEBUG": null,
+          "PYTHONDEVMODE": null,
+          "PYTHONDONTWRITEBYTECODE": null,
+          "PYTHONEXECUTABLE": null,
+          "PYTHONFAULTHANDLER": null,
+          "PYTHONHASHSEED": null,
+          "PYTHONHISTORY": null,
+          "PYTHONHOME": null,
+          "PYTHONINSPECT": null,
+          "PYTHONINTMAXSTRDIGITS": null,
+          "PYTHONIOENCODING": null,
+          "PYTHONLEGACYWINDOWSFSENCODING": null,
+          "PYTHONLEGACYWINDOWSSTDIO": null,
+          "PYTHONMALLOC": null,
+          "PYTHONMALLOCSTATS": null,
+          "PYTHONNODEBUGRANGES": null,
+          "PYTHONNOUSERSITE": null,
+          "PYTHONOPTIMIZE": null,
+          "PYTHONPATH": null,
+          "PYTHONPERFSUPPORT": null,
+          "PYTHONPLATLIBDIR": null,
+          "PYTHONPROFILEIMPORTTIME": null,
+          "PYTHONPYCACHEPREFIX": null,
+          "PYTHONSAFEPATH": null,
+          "PYTHONSTARTUP": null,
+          "PYTHONTHREADDEBUG": null,
+          "PYTHONTRACEMALLOC": null,
+          "PYTHONUNBUFFERED": null,
+          "PYTHONUSERBASE": null,
+          "PYTHONUTF8": null,
+          "PYTHONVERBOSE": null,
+          "PYTHONWARNDEFAULTENCODING": null,
+          "PYTHONWARNINGS": null,
+          "PYTHON_BASIC_REPL": null,
+          "PYTHON_CPU_COUNT": null,
+          "PYTHON_GIL": null
+        },
+        "site_enable_user_site": false,
+        "sys_path": [
+          {"kind": "absent", "path": "base_runtime/python313.zip"},
+          {"kind": "directory", "path": "base_runtime/DLLs"},
+          {"kind": "directory", "path": "base_runtime/Lib"},
+          {"kind": "directory", "path": "base_runtime"},
+          {"kind": "directory", "path": "environment"},
+          {"kind": "directory", "path": "environment/Lib/site-packages"}
+        ]
+      },
+      "machine": "AMD64",
+      "platform": "win32",
+      "python_version": "3.13.13",
+      "sysconfig_platform": "win-amd64"
+    },
+    "schema": "questflight.traffic-v2-geospatial-toolchain-contract.v1",
+    "source_registry_path": "tools/traffic_v2/geospatial/source_registry.json",
+    "source_tool_path": "tools/traffic_v2/geospatial/source_gate.py"
+  }
+}

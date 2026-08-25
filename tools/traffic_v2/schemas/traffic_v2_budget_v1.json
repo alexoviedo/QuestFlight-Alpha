@@ -1,0 +1,212 @@
+{
+  "schema": "questflight.traffic-v2.frozen-budget.v1",
+  "schema_version": 1,
+  "status": "FROZEN_MACHINE_PLANNING_BUDGET_HEADSET_NOT_ESTABLISHED",
+  "accepted_source_sha": "fda11a25eb526824d82a47330f2be80b1410bb64",
+  "frozen_spec_sha256": "8e1b3f7442652128b306a0706d3eac02b59750158839ca0443351312fcbf09c7",
+  "baseline_generated_utc": "2026-08-22T00:44:47.2997446Z",
+  "baseline_artifact_root": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\traffic_system_v2_20260821_170722\\baseline",
+  "classification_boundaries": [
+    "Editor diagnostic-camera render, timing, allocation, and memory observations are regression evidence only and do not establish standalone Quest 3 performance.",
+    "The baseline APK is a non-development Android ARM64/Vulkan/OpenXR/IL2CPP build signed with the Android debug signer; it is size and buildability evidence, not a distribution artifact.",
+    "The physical Quest 3 frame-time, thermal, worn-visual, and stereo contracts remain NOT RUN.",
+    "The existing static audit omits procedural Traffic V1; all candidate comparisons must use the explicit static-plus-traffic aggregate accounting below."
+  ],
+  "baseline_evidence": {
+    "core_json": {
+      "relative_path": "traffic_v2_baseline.json",
+      "bytes": 31747408,
+      "sha256": "185908c0becf5491fa2dedefdc26ed799068c57faacd7882a1cd46024a5b1016"
+    },
+    "contact_sheet": {
+      "relative_path": "traffic_v2_baseline_contact_sheet.png",
+      "bytes": 1470446,
+      "sha256": "ec43813010e6b1e471be989941367929a4432d805499618832f30a9aa2f30600"
+    },
+    "fleet_by_camera": {
+      "relative_path": "traffic_v2_baseline_fleet_by_camera.csv",
+      "bytes": 1614,
+      "sha256": "cd0435a9cec211507e60ede96f5beedd450212080e59cc92626e6610450e0f59"
+    },
+    "static_budget": {
+      "relative_path": "static_budget/performance_budget_report.json",
+      "bytes": 3638,
+      "sha256": "4616461e26609404f7ae1dde45123da5be1fbf3dde63441f87552c791ce40cde"
+    },
+    "standard_visual_qa": {
+      "relative_path": "standard_visual_qa/visual_qa_report.json",
+      "bytes": 184456,
+      "sha256": "259b69631ed7c8ebdeab08f0b082e2ab1fc8f8d8b895a8cde941880c4a61f870",
+      "classification": "FAIL_MACHINE_QA",
+      "captured_views": 123,
+      "nonblank_views": 123
+    },
+    "baseline_apk": {
+      "bytes": 223115247,
+      "sha256": "3d39d066bf2a8f6d487e6457b6cea6e6725e3d7de59bb3107bfcce07f70bbeec",
+      "application_identifier": "com.alexoviedo.t2.questflight",
+      "development": false,
+      "signer": "Android Debug",
+      "architecture": "ARM64",
+      "graphics_api": "Vulkan",
+      "xr": "OpenXR SinglePassInstanced",
+      "scripting_backend": "IL2CPP"
+    }
+  },
+  "accepted_baseline": {
+    "manifest": {
+      "bytes": 8577943,
+      "sha256": "3b8ac16873bdc4c2a436f6f9751c8466e97d4b07eb171ddaa664593347f19705",
+      "parked_count": 24347,
+      "moving_count": 788,
+      "route_count": 361,
+      "near_capacity": 64,
+      "far_capacity": 1800,
+      "near_enter_m": 800.0,
+      "near_exit_m": 1000.0,
+      "far_enter_m": 4200.0,
+      "far_exit_m": 4500.0
+    },
+    "traffic_render_authored_ceiling": {
+      "draw_calls": 9,
+      "triangles": 129312,
+      "distinct_opaque_materials": 1,
+      "transparent_material_slots": 0
+    },
+    "frozen_15_view_observation": {
+      "maximum_static_draw_calls": 105,
+      "maximum_static_triangles": 675212,
+      "maximum_static_visible_materials": 37,
+      "maximum_selected_traffic_draw_calls": 9,
+      "maximum_selected_traffic_triangles": 123936,
+      "maximum_selected_traffic_visible_materials": 1,
+      "maximum_observed_aggregate_draw_calls": 112,
+      "maximum_observed_aggregate_triangles": 798068,
+      "maximum_observed_aggregate_visible_materials": 38,
+      "conservative_authored_aggregate_draw_calls": 114,
+      "conservative_authored_aggregate_triangles": 804524,
+      "conservative_authored_aggregate_visible_materials": 38,
+      "maximum_observed_far_batch": 907
+    },
+    "active_product_closure_with_traffic": {
+      "materials": 39,
+      "shaders": 23,
+      "shader_keyword_combinations": 28,
+      "textures": 78,
+      "estimated_texture_bytes": 296332790,
+      "transparent_material_slots": 18
+    },
+    "editor_only_planning_observation": {
+      "simulation_step_mean_us": 219.5879,
+      "simulation_step_p95_us": 249.5,
+      "visibility_preparation_mean_us": 6046.823111111112,
+      "visibility_preparation_p95_us": 7609.400000000001,
+      "worst_pose_p95_us": 10680.900000000001,
+      "worst_pose_id": "residential",
+      "steady_state_current_thread_allocated_bytes": 0,
+      "enumerated_traffic_asset_runtime_bytes": 9347428,
+      "enumerated_traffic_asset_disk_bytes": 9373115
+    }
+  },
+  "candidate_contract": {
+    "static_environment_invariant": {
+      "rule": "Traffic V2 may not change the accepted static environment, aircraft, cockpit, XR hierarchy, render pipeline, or static budget targets.",
+      "legacy_static_targets_remain": {
+        "draw_calls": 77,
+        "visible_triangles": 692871,
+        "materials": 38,
+        "estimated_texture_bytes": 307507088,
+        "transparent_material_slots": 18
+      },
+      "comparison_rule": "Record the legacy static audit and separately compute procedural traffic plus static per frozen view; never present the static-only totals as aggregate product cost."
+    },
+    "traffic_render_ceiling": {
+      "draw_calls": 9,
+      "triangles": 129312,
+      "distinct_opaque_materials": 1,
+      "transparent_material_slots": 0,
+      "maximum_instances_per_DrawMeshInstanced_call": 1023,
+      "draw_chunking_must_be_fail_closed": true
+    },
+    "aggregate_frozen_view_ceiling": {
+      "draw_calls": 114,
+      "triangles": 804524,
+      "visible_materials": 38,
+      "rule": "No one frozen view may exceed these independent conservative maxima, and no view may regress from its own accepted baseline without an inspected and approved explanation."
+    },
+    "selection_capacity": {
+      "detailed_total": 64,
+      "detailed_moving_reserved": 32,
+      "detailed_parked_reserved": 24,
+      "detailed_controlled_overflow": 8,
+      "proxy_total": 1800,
+      "proxy_moving_reserved": 640,
+      "proxy_parked_reserved": 1000,
+      "proxy_controlled_overflow": 160,
+      "borrowing_rule": "Unused reserved capacity may be borrowed through the controlled overflow policy; neither category may silently evict all resolvable members of the other category."
+    },
+    "active_product_closure_ceiling": {
+      "materials": 39,
+      "shaders": 23,
+      "shader_keyword_combinations": 28,
+      "textures": 78,
+      "estimated_texture_bytes": 296332790,
+      "transparent_material_slots": 18
+    },
+    "payload_and_memory": {
+      "serialized_runtime_payload_max_bytes": 8577943,
+      "serialized_runtime_payload_design_target_bytes": 4194304,
+      "enumerated_traffic_asset_runtime_max_bytes": 9347428,
+      "enumerated_traffic_asset_disk_max_bytes": 9373115,
+      "qualification": "These are asset/payload regression ceilings. Android resident and peak decoded memory require exact-APK headset evidence."
+    },
+    "apk": {
+      "candidate_max_bytes": 224163823,
+      "allowed_delta_from_baseline_bytes": 1048576,
+      "qualification": "The exact candidate must replace the accepted V1 payload and reuse accepted vehicle assets; a larger delta fails pending root-cause evidence."
+    },
+    "editor_only_planning_regression": {
+      "aggregate_traffic_update_mean_us_max": 6500.0,
+      "aggregate_traffic_update_p95_us_max": 8500.0,
+      "worst_frozen_pose_p95_us_max": 11750.0,
+      "steady_state_current_thread_allocated_bytes": 0,
+      "qualification": "Same-host Editor regression guard only; not Quest acceptance and not a substitute for hardware timing."
+    },
+    "quest3_hardware_acceptance": {
+      "run_count": 3,
+      "refresh_hz": 72,
+      "warmup_seconds": 90,
+      "traffic_stress_measurement_seconds": 60,
+      "average_cpu_frame_ms_max": 12.8,
+      "average_gpu_frame_ms_max": 12.8,
+      "p95_frame_ms_max": 13.889,
+      "over_budget_frames_percent_max": 5.0,
+      "stale_frames_max": 2,
+      "tears_max": 0,
+      "traffic_steady_state_managed_allocation_bytes": 0,
+      "thermal_warnings_max": 0,
+      "crashes_anrs_ooms_max": 0,
+      "status": "NOT_RUN"
+    },
+    "architecture": {
+      "per_vehicle_gameobjects": 0,
+      "per_vehicle_update_methods": 0,
+      "per_vehicle_rigidbodies": 0,
+      "runtime_pathfinding": false,
+      "runtime_invisible_agent_simulation": false,
+      "runtime_source_data_parsing": false,
+      "ordinary_traffic_runtime_route_selection": false,
+      "global_traffic_clock_count": 1,
+      "minimum_schedule_seconds_before_repeat": 900,
+      "stereo_lod_uses_max_projected_size_both_eyes": true,
+      "main_camera_writes": 0
+    }
+  },
+  "known_baseline_failures": [
+    "Standard Visual QA captured 123/123 nonblank images but classified FAIL_MACHINE_QA because six accepted-product views estimate 78-87 draws against the existing 77-draw static threshold; this budget records, but does not waive or relabel, that failure.",
+    "Accepted Traffic V1 can author a far proxy batch of 1,800 but does not chunk DrawMeshInstanced calls at 1,023.",
+    "Accepted Traffic V1 is one-camera, airport-centered, route-looping evidence and does not satisfy the frozen Traffic V2 semantic, stereo, full-map, or schedule contracts.",
+    "No physical Quest 3 performance or worn visual result was produced in Phase 2."
+  ],
+  "failure_response": "Fail the candidate gate and reduce traffic render, payload, decoding, compression, or scheduling cost. Do not lower semantic coverage, empty pilot-visible roads, remove parked traffic, shorten forward visibility to hide traffic, or rebaseline a failed hardware result without new evidence."
+}

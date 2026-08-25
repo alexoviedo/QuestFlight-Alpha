@@ -126,6 +126,7 @@ namespace QuestFlightLab.Environment
         [SerializeField] private Mesh[] nearArchetypeMeshes = Array.Empty<Mesh>();
         [SerializeField] private Mesh[] farProxyMeshes = Array.Empty<Mesh>();
         [SerializeField] private bool deterministicMotion = true;
+        [SerializeField] private bool movingTrafficEnabled = true;
         [SerializeField] private bool realtimeVehicleShadows;
         [SerializeField] private bool perVehicleGameObjects;
         [SerializeField] private int authoredParkedCount;
@@ -253,6 +254,7 @@ namespace QuestFlightLab.Environment
         public int AuthoredMaximumDrawCount => authoredMaximumDrawCount;
         public int AuthoredMaximumVisibleTriangles => authoredMaximumVisibleTriangles;
         public bool DeterministicMotion => deterministicMotion;
+        public bool MovingTrafficEnabled => movingTrafficEnabled;
         public bool RealtimeVehicleShadows => realtimeVehicleShadows;
         public bool PerVehicleGameObjects => perVehicleGameObjects;
 
@@ -267,6 +269,7 @@ namespace QuestFlightLab.Environment
             nearArchetypeMeshes = nearMeshes ?? Array.Empty<Mesh>();
             farProxyMeshes = proxyMeshes ?? Array.Empty<Mesh>();
             deterministicMotion = true;
+            movingTrafficEnabled = true;
             realtimeVehicleShadows = false;
             perVehicleGameObjects = false;
             ParseManifest();
@@ -275,6 +278,15 @@ namespace QuestFlightLab.Environment
             authoredRouteCount = parsedManifest?.routes?.Length ?? 0;
             authoredMaximumDrawCount = MaximumDrawCalls;
             authoredMaximumVisibleTriangles = ComputeMaximumVisibleTriangles();
+        }
+
+        public void ConfigureMovingTraffic(bool enabled)
+        {
+            movingTrafficEnabled = enabled;
+            simulationInitialized = false;
+            simulationAccumulator = 0f;
+            lastPreparedFrame = -1;
+            lastPreparedCamera = null;
         }
 
         public bool TryValidateContract(out string report)
@@ -379,7 +391,7 @@ namespace QuestFlightLab.Environment
         private void OnEnable()
         {
             ParseManifest();
-            if (Application.isPlaying)
+            if (Application.isPlaying && movingTrafficEnabled)
             {
                 InitializeSimulation();
             }
@@ -398,7 +410,7 @@ namespace QuestFlightLab.Environment
 
         private void Update()
         {
-            if (!Application.isPlaying || parsedManifest == null)
+            if (!Application.isPlaying || parsedManifest == null || !movingTrafficEnabled)
             {
                 return;
             }
@@ -1003,36 +1015,39 @@ namespace QuestFlightLab.Environment
                 }
             }
 
-            DynamicRecord[] dynamicVehicles = parsedManifest.moving;
-            RouteRecord[] routes = parsedManifest.routes;
-            float interpolation = simulationInitialized
-                ? Mathf.Clamp01(
-                    simulationAccumulator / SimulationStepSeconds)
-                : 0f;
-            for (int index = 0; index < dynamicVehicles.Length; index++)
+            if (movingTrafficEnabled)
             {
-                DynamicRecord vehicle = dynamicVehicles[index];
-                RouteRecord route = routes[vehicle.route_index];
-                float distance = vehicle.initial_distance_meters;
-                if (simulationInitialized)
+                DynamicRecord[] dynamicVehicles = parsedManifest.moving;
+                RouteRecord[] routes = parsedManifest.routes;
+                float interpolation = simulationInitialized
+                    ? Mathf.Clamp01(
+                        simulationAccumulator / SimulationStepSeconds)
+                    : 0f;
+                for (int index = 0; index < dynamicVehicles.Length; index++)
                 {
-                    float forwardDelta = Mathf.Repeat(
-                        currentDistances[index] - previousDistances[index],
-                        route.length_meters);
-                    distance = Mathf.Repeat(
-                        previousDistances[index] +
-                        forwardDelta * interpolation,
-                        route.length_meters);
+                    DynamicRecord vehicle = dynamicVehicles[index];
+                    RouteRecord route = routes[vehicle.route_index];
+                    float distance = vehicle.initial_distance_meters;
+                    if (simulationInitialized)
+                    {
+                        float forwardDelta = Mathf.Repeat(
+                            currentDistances[index] - previousDistances[index],
+                            route.length_meters);
+                        distance = Mathf.Repeat(
+                            previousDistances[index] +
+                            forwardDelta * interpolation,
+                            route.length_meters);
+                    }
+                    EvaluateRoute(route, distance, out Vector3 position, out Quaternion rotation);
+                    Matrix4x4 matrix = Matrix4x4.TRS(position, rotation, Vector3.one);
+                    ConsiderVisible(
+                        camera,
+                        position,
+                        vehicle.archetype,
+                        vehicle.paint_index,
+                        matrix,
+                        parked.Length + index);
                 }
-                EvaluateRoute(route, distance, out Vector3 position, out Quaternion rotation);
-                Matrix4x4 matrix = Matrix4x4.TRS(position, rotation, Vector3.one);
-                ConsiderVisible(
-                    camera,
-                    position,
-                    vehicle.archetype,
-                    vehicle.paint_index,
-                    matrix,
-                    parked.Length + index);
             }
 
             for (int index = 0; index < selectedCount; index++)

@@ -1,0 +1,15 @@
+# Offline Traffic V2 geospatial authoring/validation pins used for this run.
+# The interpreter and environment remain external to the repository and do not
+# enter the Quest runtime dependency closure.
+python==3.13.13
+numpy==2.3.5
+Pillow==11.3.0
+pyproj==3.7.2
+shapely==2.1.2
+pytest==8.4.2
+certifi==2026.7.22
+colorama==0.4.6
+iniconfig==2.3.0
+packaging==26.3
+pluggy==1.6.0
+Pygments==2.21.0

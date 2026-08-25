@@ -163,7 +163,15 @@ namespace QuestFlightLab.Environment
             Require(trafficRoot != null, "TrafficRoot is not bound", failures);
             Require(trafficRoot == null ||
                     trafficRoot.GetComponentsInChildren<KbduTrafficRuntime>(true).Length == 1,
-                "TrafficRoot must contain exactly one authored traffic runtime", failures);
+                "TrafficRoot must contain exactly one authored parked-traffic runtime", failures);
+            Require(trafficRoot == null ||
+                    trafficRoot.GetComponentsInChildren<KbduTrafficV2Runtime>(true).Length == 1,
+                "TrafficRoot must contain exactly one authored Traffic V2 moving runtime", failures);
+            KbduTrafficRuntime parkedTraffic = trafficRoot == null
+                ? null
+                : trafficRoot.GetComponentInChildren<KbduTrafficRuntime>(true);
+            Require(parkedTraffic == null || !parkedTraffic.MovingTrafficEnabled,
+                "Traffic V1 moving traffic must be disabled when Traffic V2 owns motion", failures);
             Require(wildlifeRoot != null, "WildlifeRoot is not bound", failures);
             Require(goldenEagleThermalSoaring != null,
                 "Golden Eagle thermal cue is not bound", failures);

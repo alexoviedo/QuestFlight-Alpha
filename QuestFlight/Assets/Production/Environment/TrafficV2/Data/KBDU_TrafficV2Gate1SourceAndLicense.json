@@ -1,0 +1,20 @@
+{
+  "schema": "questflight.traffic-v2.gate1-source-and-license.v1",
+  "status": "GATE1_WALKING_SKELETON_ONLY",
+  "product_asset": "Assets/Production/Environment/TrafficV2/Data/KBDU_TrafficV2Gate1TrajectoryManifest.json",
+  "product_asset_bytes": 131675,
+  "product_asset_sha256": "dd687bc7de331cefc439f755de643a79bad6e54ecb2772a71efefbdddde3a469",
+  "source_freeze_manifest_sha256": "c7cd7b9362d01bacbeb7c23833cae65882bceaaaab767dcb00f9b8c0904e07b6",
+  "source_record": "osm_bounded_roads",
+  "source_name": "OpenStreetMap bounded road network",
+  "source_url": "https://www.openstreetmap.org/",
+  "source_license": "Open Database License 1.0 (ODbL-1.0)",
+  "attribution": "© OpenStreetMap contributors",
+  "accepted_source_git_sha": "fda11a25eb526824d82a47330f2be80b1410bb64",
+  "compiler": "tools/traffic_v2/performance/compile_walking_skeleton.py",
+  "limitations": [
+    "This is a 12-trip, three-area walking skeleton, not full-map traffic coverage.",
+    "It is not demand calibrated and has no intersection-turn authority.",
+    "It is not Quest performance, visual acceptance, or collision-clearance evidence."
+  ]
+}

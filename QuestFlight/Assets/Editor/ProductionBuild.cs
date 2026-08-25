@@ -1,12 +1,15 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEditor.Android;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.XR.OpenXR;
+using AlexOviedo.QuestFlight.JSBSim.Editor;
 
 namespace QuestFlight.Editor
 {
@@ -18,6 +21,10 @@ namespace QuestFlight.Editor
         [MenuItem("QuestFlight/Product/Build Quest APK")]
         public static void PerformAndroidBuild()
         {
+            // A failed player build can skip Unity's post-build callback and leave
+            // the package-owned, ignored JSBSim staging copy behind. Remove only a
+            // correctly marked prior injection before the repository integrity gate.
+            JSBSimBuildDataInjector.RemoveOwnedInjection();
             ProductProjectConfigurator.ConfigureProject();
             // The scene owns a fixed renderer pool; only deterministic offline page bundles
             // are generated here. No runtime hierarchy or geometry authoring is permitted.
@@ -59,7 +66,8 @@ namespace QuestFlight.Editor
                 // Restore the exact serialized objects (including their local file
                 // IDs) so batch builds cannot mutate tracked ProjectSettings.
                 PlayerSettings.SetPreloadedAssets(authoredPreloadedAssets);
-                signingState.Restore();
+                if (customSigning) signingState.Restore();
+                JSBSimBuildDataInjector.RemoveOwnedInjection();
                 AssetDatabase.SaveAssets();
             }
             WriteBuildEvidence(report, apkPath, development, customSigning, integrity);
@@ -284,6 +292,57 @@ namespace QuestFlight.Editor
                 PlayerSettings.Android.keystorePass = keystorePass;
                 PlayerSettings.Android.keyaliasName = keyaliasName;
                 PlayerSettings.Android.keyaliasPass = keyaliasPass;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Unity 6 can stage the Unity OpenXR loader AAR even after its plugin importer
+    /// include delegate rejects it. Meta's OVRPlugin AAR already contains the Quest
+    /// OpenXR loader, so keeping both makes Gradle fail on duplicate native libraries.
+    /// Remove exactly the redundant Unity dependency from the generated project and
+    /// fail closed if the generated dependency shape is not the one we audited.
+    /// </summary>
+    internal sealed class MetaOpenXrLoaderGradleDeduplicator : IPostGenerateGradleAndroidProject
+    {
+        private static readonly Regex UnityLoaderDependency = new Regex(
+            "(?m)^[ \\t]*implementation\\(name:\\s*['\\\"]openxr_loader['\\\"],\\s*ext:\\s*['\\\"]aar['\\\"]\\)\\s*\\r?\\n?",
+            RegexOptions.CultureInvariant);
+
+        private static readonly Regex MetaLoaderDependency = new Regex(
+            "(?m)^[ \\t]*implementation\\(name:\\s*['\\\"]OVRPlugin['\\\"],\\s*ext:\\s*['\\\"]aar['\\\"]\\)\\s*$",
+            RegexOptions.CultureInvariant);
+
+        public int callbackOrder => int.MaxValue;
+
+        public void OnPostGenerateGradleAndroidProject(string basePath)
+        {
+            string gradlePath = Path.Combine(basePath, "build.gradle");
+            if (!File.Exists(gradlePath))
+                throw new BuildFailedException(
+                    "Generated unityLibrary/build.gradle is missing; cannot establish one OpenXR loader source.");
+
+            string gradle = File.ReadAllText(gradlePath);
+            MatchCollection unityMatches = UnityLoaderDependency.Matches(gradle);
+            MatchCollection metaMatches = MetaLoaderDependency.Matches(gradle);
+            if (unityMatches.Count > 1 || metaMatches.Count != 1)
+                throw new BuildFailedException(
+                    "Unexpected generated OpenXR loader dependencies. " +
+                    $"unityOpenXrAar={unityMatches.Count}; metaOvrPluginAar={metaMatches.Count}");
+
+            if (unityMatches.Count == 1)
+            {
+                string corrected = UnityLoaderDependency.Replace(gradle, string.Empty, 1);
+                File.WriteAllText(gradlePath, corrected);
+                Debug.Log(
+                    "[QuestFlight][Build] Removed the redundant Unity openxr_loader AAR dependency; " +
+                    "Meta OVRPlugin remains the sole Android OpenXR native-loader source.");
+            }
+            else
+            {
+                Debug.Log(
+                    "[QuestFlight][Build] Unity openxr_loader AAR was already excluded; " +
+                    "Meta OVRPlugin remains the sole Android OpenXR native-loader source.");
             }
         }
     }

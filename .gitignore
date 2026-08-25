@@ -5,6 +5,7 @@
 /QuestFlight/[Ll]ogs/
 /QuestFlight/[Bb]uild/
 /QuestFlight/[Bb]uilds/
+/build/
 /QuestFlight/[Uu]ser[Ss]ettings/
 /QuestFlight/MemoryCaptures/
 /QuestFlight/Recordings/
@@ -68,6 +69,8 @@ htmlcov/
 # Unity may externalize an unused material beside the committed Blender source.
 /QuestFlight/Assets/ArtSource/Blender/AerialSceneryV1/Materials/
 /QuestFlight/Assets/ArtSource/Blender/AerialSceneryV1/Materials.meta
+/QuestFlight/Assets/ArtSource/Blender/KBDU/Materials/
+/QuestFlight/Assets/ArtSource/Blender/KBDU/Materials.meta
 *.zip
 *.7z
 *.rar

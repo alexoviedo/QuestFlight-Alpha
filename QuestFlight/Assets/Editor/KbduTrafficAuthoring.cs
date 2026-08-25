@@ -122,10 +122,39 @@ namespace QuestFlightLab.Environment.Editor
                     material,
                     vehicleMeshes,
                     proxyMeshes);
+                runtime.ConfigureMovingTraffic(false);
+                GameObject environmentPrefab =
+                    AssetDatabase.LoadAssetAtPath<GameObject>(ProductEnvironmentPath);
+                ProductionEnvironmentRoot environment =
+                    environmentPrefab != null
+                        ? environmentPrefab.GetComponent<ProductionEnvironmentRoot>()
+                        : null;
+                TextAsset v2Manifest = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                    TrafficV2Gate2Authoring.ManifestPath);
+                TextAsset v2Provenance = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                    TrafficV2Gate2Authoring.ProvenancePath);
+                if (environment == null || environment.authoritativeTerrainSurface == null ||
+                    v2Manifest == null || v2Provenance == null)
+                {
+                    throw new InvalidOperationException(
+                        "Traffic V2 Gate-2 bindings are missing; refusing to rebuild a V1-only product root.");
+                }
+                KbduTrafficV2Runtime v2 =
+                    trafficRoot.AddComponent<KbduTrafficV2Runtime>();
+                v2.Configure(
+                    v2Manifest,
+                    v2Provenance,
+                    runtime,
+                    environment.authoritativeTerrainSurface);
                 if (!runtime.TryValidateContract(out string report))
                 {
                     throw new InvalidOperationException(
                         "Authored traffic runtime failed: " + report);
+                }
+                if (!v2.TryValidateContract(out string v2Report))
+                {
+                    throw new InvalidOperationException(
+                        "Authored Traffic V2 runtime failed: " + v2Report);
                 }
                 PrefabUtility.SaveAsPrefabAsset(trafficRoot, PrefabPath);
             }
