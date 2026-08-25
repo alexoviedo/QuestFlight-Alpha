@@ -5803,11 +5803,11 @@ MonoBehaviour:
   - {fileID: 5647493251231481069}
   - {fileID: 8853359896272806083}
   - {fileID: 4934532480890289504}
-  bakedRendererCount: 71
-  bakedSelectedTriangleCount: 638912
+  bakedRendererCount: 61
+  bakedSelectedTriangleCount: 618848
   bakedMaterialCount: 12
-  bakedVegetationRendererCount: 17
-  bakedVegetationTriangleCount: 80832
+  bakedVegetationRendererCount: 7
+  bakedVegetationTriangleCount: 60768
   bakedVegetationMaterialCount: 1
   bakeToolVersion: full-map-building-clipmap-v1.5
   bakeUtc: 2026-08-17T06:19:49.3399390Z
@@ -6386,8 +6386,8 @@ MonoBehaviour:
     bounded derivatives
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
-  bakedRendererCount: 71
-  bakedTriangleCount: 638912
+  bakedRendererCount: 61
+  bakedTriangleCount: 618848
   bakedMaterialCount: 12
   bakedTextureCount: 28
   bakeUtc: 2026-08-12T08:42:04.7392327Z
@@ -33069,8 +33069,8 @@ MonoBehaviour:
   transitionDurationSeconds: 0.35
   minimumResidencySeconds: 2
   impostorAngularHysteresisDegrees: 6
-  authoredMaximumDrawCount: 17
-  authoredMaximumSelectedTriangleCount: 80832
+  authoredMaximumDrawCount: 7
+  authoredMaximumSelectedTriangleCount: 60768
   projectedScreenSizeSelection: 1
   persistentHysteresis: 1
   centerEyeWorldUprightImpostor: 1

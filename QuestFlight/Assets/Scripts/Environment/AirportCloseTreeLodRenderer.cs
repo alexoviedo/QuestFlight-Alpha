@@ -18,14 +18,18 @@ namespace QuestFlightLab.Environment
     [DisallowMultipleComponent]
     public sealed class AirportCloseTreeLodRenderer : MonoBehaviour
     {
+        private const int MaximumInstancesPerDraw = 1023;
+
         public const int MaximumCoveragePages = 96;
         public const int FarSamplesPerPage = 144;
         public const int MaximumLod0Instances = 24;
         public const int MaximumLod1Instances = 300;
-        public const int MaximumLod2Instances = MaximumCoveragePages * FarSamplesPerPage;
+        public const int MaximumFarDrawBatchBudget = 4;
+        public const int MaximumLod2Instances =
+            MaximumInstancesPerDraw * MaximumFarDrawBatchBudget - MaximumLod1Instances;
         public const int MaximumShrubInstances = 200;
         public const int MaximumGroveInstances = 0;
-        public const int MaximumDrawCount = 17;
+        public const int MaximumDrawCount = MaximumFarDrawBatchBudget + 3;
         public const int ImpostorFrameCount = 8;
         public const int NearSamplesPerPage = 600;
         public const int MaximumFullDensityPages = 9;
@@ -40,8 +44,6 @@ namespace QuestFlightLab.Environment
         public const float SelectionRefreshDistanceMeters = 20f;
         public const float SelectionRefreshAngleDegrees = 4f;
         public const float FarMinimumProjectedPixels = 0.75f;
-        private const int MaximumInstancesPerDraw = 1023;
-
         private const byte Lod0 = 0;
         private const byte Lod1 = 1;
         private const byte Lod2 = 2;
@@ -309,7 +311,12 @@ namespace QuestFlightLab.Environment
         public bool UsesSingleDrawProceduralFarPopulation => false;
         public bool UsesProvenBatchedFarPopulation => true;
         public int MaximumFarBatchCount =>
-            Mathf.CeilToInt((float)Lod2ArrayCapacity / MaximumInstancesPerDraw);
+            BatchCountForCapacity(Lod2ArrayCapacity);
+        public int MaximumImplementationDrawCount =>
+            BatchCountForCapacity(Lod0ArrayCapacity) +
+            BatchCountForCapacity(Lod1ArrayCapacity) +
+            BatchCountForCapacity(Lod2ArrayCapacity) +
+            BatchCountForCapacity(MaximumShrubInstances);
 
         // Compatibility properties make the intentional V1-to-V2 policy change
         // explicit to repository validators and temporal evidence.
@@ -387,6 +394,9 @@ namespace QuestFlightLab.Environment
                 ? 0
                 : checked((int)(mesh.GetIndexCount(0) / 3u));
         }
+
+        private static int BatchCountForCapacity(int capacity) =>
+            (capacity + MaximumInstancesPerDraw - 1) / MaximumInstancesPerDraw;
 
         private void OnEnable()
         {

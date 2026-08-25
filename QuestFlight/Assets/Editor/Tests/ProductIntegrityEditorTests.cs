@@ -4,8 +4,10 @@ using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Build;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 using QuestFlight.Product;
 using QuestFlightLab.Input;
 using QuestFlightLab.Runtime;
@@ -28,6 +30,36 @@ namespace QuestFlight.Editor.Tests
                 "The historical/default product-integrity ceiling is frozen.");
             Assert.That(report.triangleCount, Is.LessThanOrEqualTo(report.serializedTriangleCeiling));
             Assert.That(report.materialCount, Is.LessThanOrEqualTo(40));
+        }
+
+        [Test]
+        public void ProductIntegrityValidationPreservesEditorAndGlobalState()
+        {
+            string[] sceneSetup = EditorSceneManager.GetSceneManagerSetup()
+                .Select(item => $"{item.path}|{item.isLoaded}|{item.isActive}")
+                .ToArray();
+            Scene activeScene = SceneManager.GetActiveScene();
+            string activeScenePath = activeScene.path;
+            string activeSceneName = activeScene.name;
+            bool activeSceneLoaded = activeScene.isLoaded;
+            bool activeSceneDirty = activeScene.isDirty;
+            int qualityLevel = QualitySettings.GetQualityLevel();
+            float timeScale = Time.timeScale;
+            int targetFrameRate = Application.targetFrameRate;
+
+            ProductIntegrityValidator.Validate();
+
+            Assert.That(EditorSceneManager.GetSceneManagerSetup()
+                .Select(item => $"{item.path}|{item.isLoaded}|{item.isActive}"),
+                Is.EqualTo(sceneSetup), "Integrity validation changed the open-scene setup.");
+            Scene activeSceneAfterValidation = SceneManager.GetActiveScene();
+            Assert.That(activeSceneAfterValidation.path, Is.EqualTo(activeScenePath));
+            Assert.That(activeSceneAfterValidation.name, Is.EqualTo(activeSceneName));
+            Assert.That(activeSceneAfterValidation.isLoaded, Is.EqualTo(activeSceneLoaded));
+            Assert.That(activeSceneAfterValidation.isDirty, Is.EqualTo(activeSceneDirty));
+            Assert.That(QualitySettings.GetQualityLevel(), Is.EqualTo(qualityLevel));
+            Assert.That(Time.timeScale, Is.EqualTo(timeScale));
+            Assert.That(Application.targetFrameRate, Is.EqualTo(targetFrameRate));
         }
 
         [Test]

@@ -20,6 +20,9 @@ namespace QuestFlight.Editor.Tests
         private const string FullMapManifestPath =
             "Assets/Production/Environment/FullMapVegetationV3/" +
             "KBDU_FullMapVegetationHlodV3.json";
+        private const string FullMapDatabasePath =
+            "Assets/Production/Environment/FullMapVegetationV3/" +
+            "KBDU_FullMapVegetationHlodV3.bytes";
         private const string FullMapCanopyTexturePath =
             "Assets/Production/Environment/FullMapVegetationV3/" +
             "KBDU_FullMapCanopyVisual_RGBA.png";
@@ -59,13 +62,13 @@ namespace QuestFlight.Editor.Tests
             Assert.That(renderer.FarCoveragePageLimit, Is.EqualTo(96));
             Assert.That(renderer.FarSamplesPerCoveragePage, Is.EqualTo(144));
             Assert.That(renderer.MaximumFarCoverageCandidates, Is.EqualTo(13824));
-            Assert.That(renderer.MaximumFarDrawPopulation, Is.EqualTo(13824));
+            Assert.That(renderer.MaximumFarDrawPopulation, Is.EqualTo(3792));
             Assert.That(renderer.NearSamplesPerCoveragePage, Is.EqualTo(600));
             Assert.That(renderer.FullDensityPageLimit, Is.EqualTo(9));
             Assert.That(renderer.StablePageStratifiedFarSelection, Is.True);
             Assert.That(renderer.UsesSingleDrawProceduralFarPopulation, Is.False);
             Assert.That(renderer.UsesProvenBatchedFarPopulation, Is.True);
-            Assert.That(renderer.MaximumFarBatchCount, Is.EqualTo(14));
+            Assert.That(renderer.MaximumFarBatchCount, Is.EqualTo(4));
             Assert.That(renderer.BuildingPagesAreMandatoryTreeCoverage, Is.False,
                 "Head-directed building pages must not control vegetation residency.");
             Assert.That(benchmark, Is.Not.Null);
@@ -82,9 +85,15 @@ namespace QuestFlight.Editor.Tests
             Assert.That(TriangleCount(renderer.Lod2Mesh), Is.EqualTo(2));
             Assert.That(TriangleCount(renderer.ShrubMesh), Is.EqualTo(24));
             Assert.That(TriangleCount(renderer.GroveMesh), Is.EqualTo(44));
-            Assert.That(renderer.AuthoredMaximumDrawCount, Is.EqualTo(17));
+            Assert.That(AerialSceneryRoot.MaximumVegetationRenderers, Is.EqualTo(7),
+                "The accepted vegetation draw ceiling is frozen pending physical Quest evidence.");
+            Assert.That(renderer.MaximumImplementationDrawCount,
+                Is.LessThanOrEqualTo(AerialSceneryRoot.MaximumVegetationRenderers));
+            Assert.That(renderer.AuthoredMaximumDrawCount,
+                Is.EqualTo(renderer.MaximumImplementationDrawCount));
+            Assert.That(renderer.AuthoredMaximumDrawCount, Is.EqualTo(7));
             Assert.That(renderer.AuthoredMaximumSelectedTriangleCount,
-                Is.EqualTo(80832));
+                Is.EqualTo(60768));
             Assert.That(renderer.ProjectedScreenSizeSelection, Is.True);
             Assert.That(renderer.PersistentHysteresis, Is.True);
             Assert.That(renderer.CenterEyeWorldUprightImpostor, Is.True);
@@ -150,15 +159,45 @@ namespace QuestFlight.Editor.Tests
                 Does.Contain("\"schema\": \"questflight.airport-close-tree-instances.v1\""));
             Assert.That(placements.text, Does.Contain("\"instance_count\": 1047"));
             TextAsset fullMap = AssetDatabase.LoadAssetAtPath<TextAsset>(FullMapManifestPath);
+            TextAsset fullMapDatabase =
+                AssetDatabase.LoadAssetAtPath<TextAsset>(FullMapDatabasePath);
             Assert.That(fullMap, Is.Not.Null);
-            Assert.That(fullMap.text,
-                Does.Contain("\"schema\": \"questflight.full-map-vegetation-hlod.v3.2\""));
-            Assert.That(fullMap.text,
-                Does.Contain("\"geometry\": \"volumetric near trees/shrubs plus small eight-view individual impostors\""));
-            Assert.That(fullMap.text, Does.Contain("stable real-placement spatial hash"));
-            Assert.That(fullMap.text,
-                Does.Contain("orthophoto-authoritative canopy color plus aggregate crown normals"));
-            Assert.That(fullMap.text, Does.Contain("\"grove_hlods\": 0"));
+            Assert.That(fullMapDatabase, Is.Not.Null);
+            Assert.That(FullMapVegetationManifestValidator.TryValidate(
+                fullMap, fullMapDatabase, out string fullMapReport), Is.True, fullMapReport);
+        }
+
+        [Test]
+        public void FullMapManifestValidatorRejectsLegacyGrovesAndDatabaseMismatch()
+        {
+            TextAsset acceptedManifest =
+                AssetDatabase.LoadAssetAtPath<TextAsset>(FullMapManifestPath);
+            TextAsset acceptedDatabase =
+                AssetDatabase.LoadAssetAtPath<TextAsset>(FullMapDatabasePath);
+            Assert.That(FullMapVegetationManifestValidator.TryValidate(
+                acceptedManifest, acceptedDatabase, out string acceptedReport),
+                Is.True, acceptedReport);
+
+            TextAsset legacyManifest = new TextAsset(acceptedManifest.text.Replace(
+                FullMapVegetationManifestValidator.AcceptedGrovePolicy,
+                "bounded multi-lobe grove HLOD"));
+            TextAsset wrongDatabase = new TextAsset("not the accepted database");
+            try
+            {
+                Assert.That(FullMapVegetationManifestValidator.TryValidate(
+                    legacyManifest, acceptedDatabase, out string legacyReport),
+                    Is.False, legacyReport);
+                Assert.That(legacyReport, Does.Contain("no-aggregate-grove policy"));
+                Assert.That(FullMapVegetationManifestValidator.TryValidate(
+                    acceptedManifest, wrongDatabase, out string databaseReport),
+                    Is.False, databaseReport);
+                Assert.That(databaseReport, Does.Contain("database"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(legacyManifest);
+                UnityEngine.Object.DestroyImmediate(wrongDatabase);
+            }
         }
 
         [Test]

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -443,13 +444,35 @@ namespace QuestFlightLab.Environment.Editor.Tests
             Assert.That(File.Exists(preparer), Is.True);
             Assert.That(File.Exists(parkedDetector), Is.True);
             string sourceText = File.ReadAllText(source);
-            Assert.That(sourceText, Does.Contain("© OpenStreetMap contributors"));
+            SourceAuthority authority =
+                JsonUtility.FromJson<SourceAuthority>(sourceText);
+            Assert.That(authority, Is.Not.Null);
+            Assert.That(authority.road_source, Is.Not.Null);
+            Assert.That(authority.road_source.attribution,
+                Is.EqualTo("© OpenStreetMap contributors"));
+            Assert.That(authority.road_source.license,
+                Is.EqualTo("Open Database License 1.0"));
             Assert.That(sourceText, Does.Contain("Open Database License 1.0"));
             Assert.That(sourceText, Does.Contain("RGSDev Free Low Poly Vehicles Pack"));
             Assert.That(sourceText, Does.Contain("CC0 1.0 Universal"));
             Assert.That(sourceText, Does.Contain("9091e478bd211a7cf8b562f04e8f061a2188d323e2fa0878f3f1641e5e67c800"));
             Assert.That(sourceText, Does.Contain("Project-owned"));
             Assert.That(sourceText, Does.Contain("143c4946c06464dbdea1567cd5fe284acc4c5ba7718a38900a2e83a8eccbfb53"));
+
+            TextAsset compiledAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(Manifest);
+            ManifestRecord compiled =
+                JsonUtility.FromJson<ManifestRecord>(compiledAsset.text);
+            Assert.That(compiled.source.parked_authority_path,
+                Is.EqualTo("tools/kbdu_traffic/traffic_sources_v1.json"));
+            using (SHA256 sha = SHA256.Create())
+            {
+                string actualHash = string.Concat(
+                    sha.ComputeHash(File.ReadAllBytes(source))
+                        .Select(value => value.ToString("x2")));
+                Assert.That(compiled.source.parked_authority_sha256,
+                    Is.EqualTo(actualHash),
+                    "The compiled traffic manifest must bind the exact source-authority bytes.");
+            }
             Assert.That(
                 Directory.GetFiles(
                     Path.Combine(
@@ -472,6 +495,14 @@ namespace QuestFlightLab.Environment.Editor.Tests
             public ParkedCellRecord[] parked_cells;
             public RouteRecord[] routes;
             public MovingRecord[] moving;
+            public ManifestSourceRecord source;
+        }
+
+        [Serializable]
+        private sealed class ManifestSourceRecord
+        {
+            public string parked_authority_path;
+            public string parked_authority_sha256;
         }
 
         [Serializable]
@@ -486,7 +517,15 @@ namespace QuestFlightLab.Environment.Editor.Tests
         [Serializable]
         private sealed class SourceAuthority
         {
+            public RoadSourceRecord road_source;
             public ParkedSourceRecord[] parked_vehicles;
+        }
+
+        [Serializable]
+        private sealed class RoadSourceRecord
+        {
+            public string license;
+            public string attribution;
         }
 
         [Serializable]

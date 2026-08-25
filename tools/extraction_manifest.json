@@ -662,6 +662,11 @@
       "path": "Assets/Scripts/Environment/KbduTrafficRuntime.cs",
       "classification": "approved_product_authored",
       "reason": "Product-authored bounded traffic presenter; it advances only precompiled road-route state and submits opaque instanced vehicle draws without constructing hierarchy, physics agents, or per-vehicle objects."
+    },
+    {
+      "path": "Assets/Scripts/Environment/KbduTrafficV2Runtime.cs",
+      "classification": "approved_product_authored",
+      "reason": "Product-authored full-map moving-traffic presenter; it consumes the frozen corridor schedule, performs bounded tile-indexed selection, and submits opaque instanced draws without constructing hierarchy, physics agents, or per-vehicle objects."
     }
   ],
   "product_replacements": [

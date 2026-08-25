@@ -68,12 +68,10 @@ namespace QuestFlight.Editor.Tests
             Assert.That(closeTrees[0].ProjectedScreenSizeSelection, Is.True);
             Assert.That(closeTrees[0].PersistentHysteresis, Is.True);
             Assert.That(closeTrees[0].AlphaToCoverageTransition, Is.True);
-            Assert.That(surface.canopySurfaceManifest.text,
-                Does.Contain("questflight.full-map-vegetation-hlod.v3"));
-            Assert.That(surface.canopySurfaceManifest.text,
-                Does.Contain("bounded multi-lobe grove HLOD"));
-            Assert.That(surface.canopySurfaceManifest.text,
-                Does.Contain("\"bounds_meters\": ["));
+            Assert.That(FullMapVegetationManifestValidator.TryValidate(
+                surface.canopySurfaceManifest,
+                closeTrees[0].FullMapPlacementDatabase,
+                out string vegetationReport), Is.True, vegetationReport);
         }
 
         [Test]

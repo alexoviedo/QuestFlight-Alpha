@@ -383,12 +383,11 @@ namespace QuestFlight.Editor
 
         private static void ValidateAuthoredScene(ProductIntegrityReport report)
         {
-            SceneSetup[] previousSetup = EditorSceneManager.GetSceneManagerSetup();
+            Scene scene = default;
             try
             {
-                Scene scene = EditorSceneManager.OpenScene(
-                    ProductProjectConfigurator.ProductionScenePath,
-                    OpenSceneMode.Single);
+                scene = EditorSceneManager.OpenPreviewScene(
+                    ProductProjectConfigurator.ProductionScenePath);
                 GameObject[] roots = scene.GetRootGameObjects();
                 Transform[] transforms = roots.SelectMany(root => root.GetComponentsInChildren<Transform>(true)).ToArray();
                 report.sceneObjectCount = transforms.Length;
@@ -617,7 +616,7 @@ namespace QuestFlight.Editor
             }
             finally
             {
-                if (previousSetup.Length > 0) EditorSceneManager.RestoreSceneManagerSetup(previousSetup);
+                if (scene.IsValid()) EditorSceneManager.ClosePreviewScene(scene);
             }
         }
 
