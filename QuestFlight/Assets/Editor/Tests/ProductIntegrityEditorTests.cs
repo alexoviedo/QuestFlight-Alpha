@@ -17,6 +17,7 @@ namespace QuestFlight.Editor.Tests
     public sealed class ProductIntegrityEditorTests
     {
         [Test]
+        [Timeout(600000)]
         public void FullProductIntegrityGatePasses()
         {
             // Android texture-compression selection is Editor session state. Make

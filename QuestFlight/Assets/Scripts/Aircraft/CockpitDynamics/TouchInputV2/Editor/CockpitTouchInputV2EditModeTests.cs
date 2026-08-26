@@ -5,6 +5,7 @@ using NUnit.Framework;
 using QuestFlightLab.Aircraft.CockpitDynamics.SystemsV2;
 using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Input;
+using QuestFlightLab.Training.FlightLessonV1;
 using UnityEngine;
 
 namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
@@ -132,7 +133,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
         }
 
         [Test]
-        public void EngineControlsUseProvenTravelClampAndSafeRelease()
+        public void EngineControlsUseProvenTravelClampAndRetainManualPosition()
         {
             Vector3 axis = CockpitTouchInputV2Bridge
                 .AuthoredEngineFullForwardAxisLocal.normalized;
@@ -171,7 +172,10 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                 Is.True);
             Assert.That(
                 _input.Current.throttle,
-                Is.EqualTo(0.25f).Within(0.001f));
+                Is.EqualTo(1f).Within(0.001f));
+            Assert.That(
+                PrivateFloat(_input, "_throttle"),
+                Is.EqualTo(1f).Within(0.001f));
 
             _input.Current.mixture = 0.8f;
             Assert.That(
@@ -197,6 +201,55 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
             Assert.That(
                 _input.Current.mixture,
                 Is.EqualTo(0.4f).Within(0.001f));
+            Assert.That(
+                _bridge.TryConsumeCockpitTouchCommand(
+                    Command(
+                        "mixture_grab",
+                        CockpitTouchInteractionV2Target.Mixture,
+                        CockpitTouchInteractionV2Hand.Right,
+                        CockpitTouchInteractionV2Operation.EndGrab,
+                        Vector3.zero,
+                        Quaternion.identity)),
+                Is.True);
+            Assert.That(
+                _input.Current.mixture,
+                Is.EqualTo(0.4f).Within(0.001f));
+            Assert.That(
+                PrivateFloat(_input, "_mixture"),
+                Is.EqualTo(0.4f).Within(0.001f));
+        }
+
+        [Test]
+        public void GuidedThrottleReleaseKeepsExistingHandoffAccumulator()
+        {
+            float accumulatorBeforeRelease =
+                PrivateFloat(_input, "_throttle");
+            _input.SetFlightLessonGuidance(
+                true,
+                new FlightLessonControlCommand
+                {
+                    throttle = 0.55f,
+                    mixture = 1f
+                });
+            Assert.That(
+                _input.TryBeginTouchOverride(
+                    ProductTouchControlChannel.Throttle,
+                    301,
+                    0.75f),
+                Is.True);
+            Assert.That(
+                _input.TryEndTouchOverride(
+                    ProductTouchControlChannel.Throttle,
+                    301),
+                Is.True);
+
+            Assert.That(
+                _input.Current.throttle,
+                Is.EqualTo(0.75f).Within(0.001f));
+            Assert.That(
+                PrivateFloat(_input, "_throttle"),
+                Is.EqualTo(accumulatorBeforeRelease).Within(0.001f),
+                "Guided Demo/lesson release must not commit into the manual accumulator.");
         }
 
         [Test]
@@ -519,7 +572,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
         }
 
         [Test]
-        public void StaleGrabLeaseRestoresUnderlyingInput()
+        public void StaleGrabLeaseRetainsLastValidThrottlePosition()
         {
             _input.Current.throttle = 0.35f;
             const int owner = 303;
@@ -549,7 +602,10 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
             Assert.That(_input.ActiveTouchOverrideCount, Is.Zero);
             Assert.That(
                 _input.Current.throttle,
-                Is.EqualTo(0.35f).Within(0.001f));
+                Is.EqualTo(0.9f).Within(0.001f));
+            Assert.That(
+                PrivateFloat(_input, "_throttle"),
+                Is.EqualTo(0.9f).Within(0.001f));
         }
 
         [Test]
@@ -731,6 +787,15 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                 mixture = 1f,
                 flaps = 0f
             };
+        }
+
+        private static float PrivateFloat(object target, string fieldName)
+        {
+            FieldInfo field = target.GetType().GetField(
+                fieldName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null, fieldName);
+            return (float)field.GetValue(target);
         }
 
         private static Transform Child(

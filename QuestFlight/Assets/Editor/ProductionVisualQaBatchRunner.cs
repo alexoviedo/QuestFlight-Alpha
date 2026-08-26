@@ -4,9 +4,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using QuestFlight.Product;
 using QuestFlightLab.Aircraft;
 using QuestFlightLab.Environment;
 using QuestFlightLab.Flight;
+using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor;
 using QuestFlightLab.Runtime;
 using Unity.XR.CoreUtils;
@@ -27,7 +29,7 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 123;
+        private const int RequiredShotCount = 124;
         // The accepted pre-V3 product reached 77 estimated draws and 659,877
         // visible triangles in the complete camera set.  This milestone must
         // hold draws/materials and may add at most five percent triangles for
@@ -399,6 +401,30 @@ namespace QuestFlightLab.Editor
             Bounds hangarBounds = CombinedNamedRendererBounds(
                 context.environment.airportContext,
                 AirportCoreBenchmarkRoot.GameObjectName);
+
+            ProductFlightModeCoordinator modeCoordinator = context.scene
+                .GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<ProductFlightModeCoordinator>(true))
+                .SingleOrDefault();
+            if (modeCoordinator == null || !modeCoordinator.HasAuthoredReferences)
+                throw new InvalidOperationException(
+                    "The serialized ProductFlightModeCoordinator is unavailable for selector QA.");
+            modeCoordinator.AuthoredModePanelRoot.SetActive(true);
+            modeCoordinator.AuthoredModePanelText.text = ProductFlightModeCoordinator.SelectionText;
+            CaptureStereoSelector(context, report, outputDir, width, height, modeCoordinator);
+            FlightDynamicsCoordinator flightCoordinator =
+                modeCoordinator.AuthoredFlightCoordinator;
+            if (!flightCoordinator.IsInitialized &&
+                !flightCoordinator.InitializeSelectedBackend())
+                throw new InvalidOperationException(
+                    "Native JSBSim could not initialize before Visual-QA Demo selection: " +
+                    flightCoordinator.LastError);
+            modeCoordinator.SelectDemo();
+            if (modeCoordinator.State !=
+                    ProductFlightModeCoordinator.FlightModeState.Demo ||
+                !modeCoordinator.AuthoredDemoPilot.IsRunning)
+                throw new InvalidOperationException(
+                    "The public Demo selection did not establish the existing Demo lifecycle for Visual QA.");
 
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "01_default_cockpit", "Default cockpit", "cockpit", pilotEye, pilotForward, 72f, ViewProfile.Cockpit));
@@ -1895,6 +1921,109 @@ namespace QuestFlightLab.Editor
                     qaDisabledSunOcclusion.enabled = qaDisabledSunOcclusionState;
                 validationCloudField?.RestoreAtmosphereForValidation();
                 if (texture != null) Object.DestroyImmediate(texture);
+            }
+        }
+
+        private static void CaptureStereoSelector(
+            VisualContext context,
+            ProductionVisualQaReport report,
+            string outputDir,
+            int width,
+            int height,
+            ProductFlightModeCoordinator modeCoordinator)
+        {
+            const string id = "flight_modes_selector";
+            string path = Path.Combine(outputDir, "screenshots", id + ".png");
+            Texture2D left = null;
+            Texture2D right = null;
+            Texture2D stereo = null;
+            try
+            {
+                context.visibility?.SetCockpitView();
+                Vector3 centerEye = context.rig.PilotSeatAnchor.position;
+                Vector3 target = modeCoordinator.AuthoredModePanelText.transform.position;
+                Vector3 forward = (target - centerEye).normalized;
+                Vector3 eyeRight = Vector3.Cross(Vector3.up, forward).normalized;
+                if (eyeRight.sqrMagnitude < 0.5f)
+                    eyeRight = context.rig.transform.right;
+                const float halfIpdMeters = 0.032f;
+                Vector3 leftEye = centerEye - eyeRight * halfIpdMeters;
+                Vector3 rightEye = centerEye + eyeRight * halfIpdMeters;
+
+                context.camera.fieldOfView = 60f;
+                context.camera.transform.SetPositionAndRotation(
+                    leftEye, LookAt(leftEye, target));
+                if (!context.cockpitLighting.RenderCockpitLocalShadowNow())
+                    throw new InvalidOperationException(
+                        "Cockpit-local shadow did not render for the selector's left eye.");
+                left = Render(context.camera, width, height, out EditorFrameRenderStats leftStats);
+
+                context.camera.transform.SetPositionAndRotation(
+                    rightEye, LookAt(rightEye, target));
+                if (!context.cockpitLighting.RenderCockpitLocalShadowNow())
+                    throw new InvalidOperationException(
+                        "Cockpit-local shadow did not render for the selector's right eye.");
+                right = Render(context.camera, width, height, out EditorFrameRenderStats rightStats);
+
+                stereo = new Texture2D(width * 2, height, TextureFormat.RGBA32, false);
+                stereo.SetPixels32(0, 0, width, height, left.GetPixels32());
+                stereo.SetPixels32(width, 0, width, height, right.GetPixels32());
+                stereo.Apply();
+                File.WriteAllBytes(path, stereo.EncodeToPNG());
+
+                ImageStats image = Analyze(stereo);
+                RenderBudgetSnapshot budget = QuestRenderBudgetAudit.Capture(context.camera);
+                ProductionVisualQaShot result = new ProductionVisualQaShot
+                {
+                    id = id,
+                    title = "Flight Modes Foundation V1 selector (left/right stereo)",
+                    category = "flight_mode_selector_stereo",
+                    screenshotPath = path,
+                    cameraPosition = centerEye,
+                    cameraEuler = LookAt(centerEye, target).eulerAngles,
+                    fov = 60f,
+                    width = image.width,
+                    height = image.height,
+                    colorVariance = image.colorVariance,
+                    nonBackgroundRatio = image.nonBackgroundRatio,
+                    outsideViewRatio = image.outsideViewRatio,
+                    editorRenderStats = rightStats.available ? rightStats : leftStats,
+                    estimatedDrawCalls = budget.estimatedInstancedDrawCalls,
+                    estimatedVisibleTriangles = budget.estimatedFrustumTriangles,
+                    sceneMaterialCount = budget.uniqueMaterialCount,
+                    imageNotBlank = image.colorVariance > 18f &&
+                                    image.nonBackgroundRatio > 0.035f
+                };
+                if (!result.imageNotBlank)
+                    result.warnings.Add("Stereo selector capture looks blank or solid.");
+                if (budget.estimatedInstancedDrawCalls > DrawCallTarget)
+                    result.warnings.Add(
+                        $"Estimated draw calls {budget.estimatedInstancedDrawCalls} exceed {DrawCallTarget}.");
+                if (budget.estimatedFrustumTriangles > VisibleTriangleTarget)
+                    result.warnings.Add(
+                        $"Estimated visible triangles {budget.estimatedFrustumTriangles:N0} exceed {VisibleTriangleTarget:N0}.");
+                result.passed = result.imageNotBlank &&
+                                budget.estimatedInstancedDrawCalls <= DrawCallTarget &&
+                                budget.estimatedFrustumTriangles <= VisibleTriangleTarget;
+                report.shots.Add(result);
+            }
+            catch (Exception exception)
+            {
+                report.shots.Add(new ProductionVisualQaShot
+                {
+                    id = id,
+                    title = "Flight Modes Foundation V1 selector (left/right stereo)",
+                    category = "flight_mode_selector_stereo",
+                    screenshotPath = path,
+                    passed = false,
+                    error = exception.Message
+                });
+            }
+            finally
+            {
+                if (left != null) Object.DestroyImmediate(left);
+                if (right != null) Object.DestroyImmediate(right);
+                if (stereo != null) Object.DestroyImmediate(stereo);
             }
         }
 

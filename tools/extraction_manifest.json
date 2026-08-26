@@ -494,6 +494,11 @@
       "reason": "Minimal deterministic product demo loop replacing the R&D demo pilot."
     },
     {
+      "path": "Assets/Scripts/Product/ProductFlightModeCoordinator.cs",
+      "classification": "approved_product_authored",
+      "reason": "Serialized startup-only flight-mode coordinator that uses the existing demo lifecycle, product input boundary, and native JSBSim authority without constructing runtime hierarchy or writing flight controls."
+    },
+    {
       "path": "Assets/Scripts/Product/ProductAttribution.cs",
       "classification": "approved_product_authored",
       "reason": "Runtime-accessible Credits/About attribution metadata."

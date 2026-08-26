@@ -193,6 +193,54 @@ namespace QuestFlight.Editor.Tests
             }
         }
 
+        [Test]
+        public void CameraCaptureCountsLegacyTextMeshWithoutRequiringMeshFilter()
+        {
+            GameObject cameraObject = new GameObject("QuestRenderBudgetAudit_TextMeshCamera");
+            Camera camera = cameraObject.AddComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.cullingMask = 1 << 0;
+            GameObject target = new GameObject("QuestRenderBudgetAudit_TextMesh");
+            Material material = CreateMaterial();
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            try
+            {
+                RenderBudgetSnapshot baseline = QuestRenderBudgetAudit.Capture(camera);
+                TextMesh text = target.AddComponent<TextMesh>();
+                text.text = "AB C\nD";
+                MeshRenderer renderer = target.GetComponent<MeshRenderer>();
+                Assert.That(renderer, Is.Not.Null);
+                Assert.That(target.GetComponent<MeshFilter>(), Is.Null,
+                    "Legacy TextMesh legitimately owns generated glyph geometry without a MeshFilter.");
+                renderer.sharedMaterial = material;
+
+                RenderBudgetSnapshot visible = QuestRenderBudgetAudit.Capture(camera);
+                Assert.That(visible.activeRendererCount - baseline.activeRendererCount, Is.EqualTo(1));
+                Assert.That(visible.estimatedVisibleRendererCount - baseline.estimatedVisibleRendererCount,
+                    Is.EqualTo(1));
+                Assert.That(visible.estimatedInstancedDrawCalls - baseline.estimatedInstancedDrawCalls,
+                    Is.EqualTo(1));
+                Assert.That(visible.estimatedFrustumTriangles - baseline.estimatedFrustumTriangles,
+                    Is.EqualTo(8), "Four non-whitespace glyphs conservatively contribute two triangles each.");
+                Assert.That(visible.uniqueMaterialCount - baseline.uniqueMaterialCount, Is.EqualTo(1));
+                Assert.That(visible.transparentMaterialSlots - baseline.transparentMaterialSlots,
+                    Is.EqualTo(1));
+
+                target.layer = 1;
+                RenderBudgetSnapshot masked = QuestRenderBudgetAudit.Capture(camera);
+                Assert.That(masked.activeRendererCount - baseline.activeRendererCount, Is.EqualTo(1));
+                Assert.That(masked.estimatedVisibleRendererCount, Is.EqualTo(baseline.estimatedVisibleRendererCount));
+                Assert.That(masked.estimatedInstancedDrawCalls, Is.EqualTo(baseline.estimatedInstancedDrawCalls));
+                Assert.That(masked.estimatedFrustumTriangles, Is.EqualTo(baseline.estimatedFrustumTriangles));
+            }
+            finally
+            {
+                Object.DestroyImmediate(target);
+                Object.DestroyImmediate(cameraObject);
+                Object.DestroyImmediate(material);
+            }
+        }
+
         private static Mesh CreateTwoTriangleSubmeshMesh()
         {
             Mesh mesh = new Mesh { name = "QuestRenderBudgetAudit_TwoSubmeshes" };

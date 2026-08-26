@@ -250,7 +250,8 @@ namespace QuestFlightLab.Input
         /// <summary>
         /// Begins an owner-checked override for one represented cockpit
         /// control. The current gamepad/deterministic value is retained as the
-        /// underlying base and is restored immediately on release.
+        /// underlying base. Unguided position-holding engine controls commit
+        /// their final value on release; self-centering controls restore the base.
         /// </summary>
         public bool TryBeginTouchOverride(
             ProductTouchControlChannel channel,
@@ -722,9 +723,26 @@ namespace QuestFlightLab.Input
                         break;
                 }
             }
-            state = default;
             if (!_flightLessonGuidanceActive)
-                RestoreBaseForChannel(channel);
+            {
+                switch (channel)
+                {
+                    case ProductTouchControlChannel.Throttle:
+                        _throttle = Mathf.Clamp01(state.primary);
+                        _baseThrottle = _throttle;
+                        Current.throttle = _throttle;
+                        break;
+                    case ProductTouchControlChannel.Mixture:
+                        _mixture = Mathf.Clamp01(state.primary);
+                        _baseMixture = _mixture;
+                        Current.mixture = _mixture;
+                        break;
+                    default:
+                        RestoreBaseForChannel(channel);
+                        break;
+                }
+            }
+            state = default;
         }
 
         private void ApplyFlightLessonGuidance(

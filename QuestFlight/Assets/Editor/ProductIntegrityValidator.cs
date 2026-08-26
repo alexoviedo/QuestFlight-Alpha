@@ -409,8 +409,11 @@ namespace QuestFlight.Editor
                         Require(credits.Contains(ProductAttribution.OsmCredit) && credits.Contains(ProductAttribution.OsmLicenseUrl),
                             "runtime Credits/About metadata is missing OpenStreetMap/ODbL attribution", report);
                     }
-                    Require(productRoot.transform.Find("AircraftSimulationRoot") != null,
-                        "ProductionWorldRoot/AircraftSimulationRoot is missing", report);
+                    Transform[] simulationRoots = transforms.Where(transform =>
+                        transform.name == "AircraftSimulationRoot" &&
+                        transform.parent == productRoot.transform).ToArray();
+                    Require(simulationRoots.Length == 1,
+                        $"ProductionWorldRoot must contain exactly one AircraftSimulationRoot, found {simulationRoots.Length}", report);
                     Require(productRoot.transform.Find("AircraftSimulationRoot/CenterOfGravityReference") != null,
                         "CenterOfGravityReference is missing", report);
                     Require(productRoot.transform.Find("AircraftSimulationRoot/AircraftVisualRoot") != null,
@@ -456,8 +459,8 @@ namespace QuestFlight.Editor
                 {
                     Require(demos[0].HasAuthoredSources,
                         "ProductDemoPilot input references are not serialized", report);
-                    Require(demos[0].AutoStartDemo,
-                        "ProductDemoPilot must auto-start the installed acceptance route", report);
+                    Require(!demos[0].AutoStartDemo,
+                        "ProductDemoPilot auto-start must be disabled; ProductFlightModeCoordinator owns startup", report);
                 }
 
                 ProductionSeatCalibrationController[] seatControllers = behaviours
@@ -487,25 +490,71 @@ namespace QuestFlight.Editor
                     if (behaviours.Any(behaviour => behaviour != null && behaviour.GetType().Name == forbidden))
                         report.failures.Add("forbidden production-scene component is present: " + forbidden);
 
-                FlightDynamicsCoordinator[] coordinators = behaviours
+                FlightDynamicsCoordinator[] flightCoordinators = behaviours
                     .OfType<FlightDynamicsCoordinator>()
                     .Where(coordinator => coordinator.enabled)
                     .ToArray();
-                Require(coordinators.Length == 1,
-                    $"exactly one enabled FlightDynamicsCoordinator authority is required, found {coordinators.Length}", report);
-                if (coordinators.Length == 1)
+                Require(flightCoordinators.Length == 1,
+                    $"exactly one enabled FlightDynamicsCoordinator authority is required, found {flightCoordinators.Length}", report);
+                if (flightCoordinators.Length == 1)
                 {
-                    Require(coordinators[0].requestedBackend == FlightDynamicsBackendKind.JSBSimNativeDevelopment,
+                    Require(flightCoordinators[0].requestedBackend == FlightDynamicsBackendKind.JSBSimNativeDevelopment,
                         "the sole coordinator must request native JSBSim", report);
-                    Require(coordinators[0].aircraftConfiguration != null,
+                    Require(flightCoordinators[0].aircraftConfiguration != null,
                         "the sole coordinator must serialize its C172 reference configuration", report);
                     int prototypes = behaviours.Count(behaviour => behaviour != null &&
                         string.Equals(behaviour.GetType().Name, "SimpleAircraftPhysics",
                             StringComparison.Ordinal));
                     Require(prototypes == 0,
                         $"the product dependency must contain no UnityPrototype physics component, found {prototypes}", report);
-                    Require(coordinators[0].HasAuthoredReferences(out string authorityBindingError),
+                    Require(flightCoordinators[0].HasAuthoredReferences(out string authorityBindingError),
                         "flight-authority references are not fully serialized: " + authorityBindingError, report);
+                    Require(flightCoordinators[0].initialConditionProvider != null &&
+                            flightCoordinators[0].initialConditionProvider.engineRunning,
+                        "the serialized native initial condition must be engine-running", report);
+                }
+
+                ProductFlightModeCoordinator[] modeCoordinators = behaviours
+                    .OfType<ProductFlightModeCoordinator>().ToArray();
+                Require(modeCoordinators.Length == 1,
+                    $"scene must contain exactly one ProductFlightModeCoordinator, found {modeCoordinators.Length}", report);
+                Transform calibrationOffset = productRoot != null
+                    ? productRoot.transform.Find(
+                        "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset")
+                    : null;
+                Transform[] modePanels = calibrationOffset != null
+                    ? calibrationOffset.GetComponentsInChildren<Transform>(true)
+                        .Where(transform => transform.name ==
+                            ProductFlightModesFoundationAuthoring.PanelName).ToArray()
+                    : Array.Empty<Transform>();
+                Require(modePanels.Length == 1 &&
+                        modePanels[0].parent == calibrationOffset,
+                    $"exactly one mode panel must be directly under UserViewCalibrationOffset, found {modePanels.Length}", report);
+                if (modeCoordinators.Length == 1)
+                {
+                    ProductFlightModeCoordinator mode = modeCoordinators[0];
+                    Require(mode.HasAuthoredReferences,
+                        "ProductFlightModeCoordinator references are not fully serialized", report);
+                    Require(mode.transform.name == "ProductionInputRoot",
+                        "ProductFlightModeCoordinator must remain on ProductionInputRoot", report);
+                    Require(demos.Length == 1 && mode.AuthoredDemoPilot == demos[0],
+                        "mode coordinator does not reference the accepted ProductDemoPilot", report);
+                    Require(productInputs.Length == 1 && mode.AuthoredProductInput == productInputs[0],
+                        "mode coordinator does not reference the accepted ProductControlInput", report);
+                    Require(flightCoordinators.Length == 1 &&
+                            mode.AuthoredFlightCoordinator == flightCoordinators[0],
+                        "mode coordinator does not reference the sole native flight authority", report);
+                    Require(seatControllers.Length == 1 &&
+                            mode.AuthoredSeatCalibration == seatControllers[0],
+                        "mode coordinator does not reference the accepted seat calibration controller", report);
+                    Require(modePanels.Length == 1 &&
+                            mode.AuthoredModePanelRoot == modePanels[0].gameObject,
+                        "mode coordinator does not reference the accepted mode-panel root", report);
+                    Require(modePanels.Length == 1 &&
+                            modePanels[0].GetComponentsInChildren<TextMesh>(true).Length == 1 &&
+                            mode.AuthoredModePanelText ==
+                            modePanels[0].GetComponentInChildren<TextMesh>(true),
+                        "mode coordinator does not reference the sole mode-panel TextMesh", report);
                 }
 
                 int missingScripts = transforms.Sum(transform =>

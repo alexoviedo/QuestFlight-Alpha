@@ -87,9 +87,7 @@ namespace QuestFlightLab.Runtime
                 }
             }
             Renderer[] visible = renderers.Where(renderer =>
-                    (camera == null ||
-                     ((camera.cullingMask & (1 << renderer.gameObject.layer)) != 0 &&
-                      GeometryUtility.TestPlanesAABB(frustum, renderer.bounds))) &&
+                    IsVisibleForAudit(renderer, camera, frustum) &&
                     IsSelectedLodRenderer(renderer, rendererLodIndices, selectedLodIndices))
                 .ToArray();
             HashSet<Material> materials = new HashSet<Material>();
@@ -101,6 +99,21 @@ namespace QuestFlightLab.Runtime
                 Material[] sharedMaterials = renderer.sharedMaterials;
                 foreach (Material material in sharedMaterials)
                     if (material != null) materials.Add(material);
+
+                TextMesh textMesh = renderer.GetComponent<TextMesh>();
+                if (textMesh != null)
+                {
+                    long glyphTriangles = 2L * (textMesh.text ?? string.Empty)
+                        .Count(character => !char.IsWhiteSpace(character));
+                    foreach (Material material in sharedMaterials)
+                    {
+                        if (material == null) continue;
+                        drawCalls++;
+                        triangles += glyphTriangles;
+                        if (IsTransparent(material)) transparentSlots++;
+                    }
+                    continue;
+                }
 
                 Mesh mesh = renderer is SkinnedMeshRenderer skinned
                     ? skinned.sharedMesh
@@ -117,12 +130,7 @@ namespace QuestFlightLab.Runtime
                 {
                     Material material = sharedMaterials[materialSlot];
                     if (material == null) continue;
-                    if (material.renderQueue >= (int)RenderQueue.Transparent ||
-                        string.Equals(
-                            material.GetTag("RenderType", false, string.Empty),
-                            "Transparent",
-                            StringComparison.OrdinalIgnoreCase))
-                        transparentSlots++;
+                    if (IsTransparent(material)) transparentSlots++;
                     int subMesh = Mathf.Min(materialSlot, mesh.subMeshCount - 1);
                     drawCalls++;
                     if (mesh.GetTopology(subMesh) == MeshTopology.Triangles)
@@ -141,12 +149,7 @@ namespace QuestFlightLab.Runtime
                 drawCalls += batchDraws;
                 triangles += batch.FullyInstancedTriangleCount;
                 materials.Add(material);
-                if (material.renderQueue >= (int)RenderQueue.Transparent ||
-                    string.Equals(
-                        material.GetTag("RenderType", false, string.Empty),
-                        "Transparent",
-                        StringComparison.OrdinalIgnoreCase))
-                    transparentSlots += batchDraws;
+                if (IsTransparent(material)) transparentSlots += batchDraws;
             }
             int visibleCloseTreeDraws = 0;
             foreach (AirportCloseTreeLodRenderer closeTree in closeTreeLods)
@@ -160,24 +163,14 @@ namespace QuestFlightLab.Runtime
                 drawCalls += batchDraws;
                 triangles += closeTree.AuthoredMaximumSelectedTriangleCount;
                 materials.Add(material);
-                if (material.renderQueue >= (int)RenderQueue.Transparent ||
-                    string.Equals(
-                        material.GetTag("RenderType", false, string.Empty),
-                        "Transparent",
-                        StringComparison.OrdinalIgnoreCase))
-                    transparentSlots += batchDraws;
+                if (IsTransparent(material)) transparentSlots += batchDraws;
             }
             if (camera != null && camera.clearFlags == CameraClearFlags.Skybox && RenderSettings.skybox != null)
             {
                 Material skybox = RenderSettings.skybox;
                 materials.Add(skybox);
                 drawCalls++;
-                if (skybox.renderQueue >= (int)RenderQueue.Transparent ||
-                    string.Equals(
-                        skybox.GetTag("RenderType", false, string.Empty),
-                        "Transparent",
-                        StringComparison.OrdinalIgnoreCase))
-                    transparentSlots++;
+                if (IsTransparent(skybox)) transparentSlots++;
             }
             return new RenderBudgetSnapshot
             {
@@ -190,10 +183,34 @@ namespace QuestFlightLab.Runtime
                 estimatedFrustumTriangles = triangles,
                 uniqueMaterialCount = materials.Count,
                 transparentMaterialSlots = transparentSlots,
-                drawCountSemantics = "Camera-layer/frustum and selected-LOD non-null MeshRenderer/SkinnedMeshRenderer material-submesh slots, plus conservative authored aerial-vegetation and bounded airport-close tree LOD draws, before Unity batching.",
-                triangleCountSemantics = "Triangle topology indices for the same effective renderer slots plus conservative authored maxima for instanced aerial vegetation and airport-close tree LODs."
+                drawCountSemantics = "Camera-layer/frustum and selected-LOD non-null MeshRenderer/SkinnedMeshRenderer material-submesh slots; active layer-visible legacy TextMesh material slots are counted conservatively without requiring a MeshFilter; plus conservative authored aerial-vegetation and bounded airport-close tree LOD draws, before Unity batching.",
+                triangleCountSemantics = "Triangle topology indices for the same effective renderer slots; two triangles per non-whitespace legacy TextMesh glyph and material slot; plus conservative authored maxima for instanced aerial vegetation and airport-close tree LODs."
             };
         }
+
+        private static bool IsVisibleForAudit(Renderer renderer, Camera camera, Plane[] frustum)
+        {
+            if (camera == null) return true;
+            if ((camera.cullingMask & (1 << renderer.gameObject.layer)) == 0) return false;
+
+            if (renderer is MeshRenderer && renderer.GetComponent<MeshFilter>() == null)
+            {
+                // Unity's legacy TextMesh owns generated glyph geometry internally and
+                // legitimately has no MeshFilter. Querying MeshRenderer.bounds in that
+                // configuration throws, so count an active layer-visible TextMesh
+                // conservatively instead of allowing a diagnostic audit to fail.
+                return renderer.GetComponent<TextMesh>() != null;
+            }
+
+            return GeometryUtility.TestPlanesAABB(frustum, renderer.bounds);
+        }
+
+        private static bool IsTransparent(Material material) =>
+            material.renderQueue >= (int)RenderQueue.Transparent ||
+            string.Equals(
+                material.GetTag("RenderType", false, string.Empty),
+                "Transparent",
+                StringComparison.OrdinalIgnoreCase);
 
         private static bool IsSelectedLodRenderer(
             Renderer renderer,

@@ -1,0 +1,165 @@
+FLIGHT MODES FOUNDATION V1 - VALIDATION EVIDENCE
+Date (UTC): 2026-08-26
+Outcome: COMPLETE WITH ONE DISCLOSED, USER-ACCEPTED EDITMODE QUARANTINE
+
+SOURCE AND REPOSITORY
+
+Requested origin baseline: 41523152a2e8d38e24d0a56c5a6ea4b84c9d4947
+Local prerequisite baseline: 4670a3dd26daac6caae12d03706c58787e066461
+Feature branch: feature/flight-modes-foundation-v1-r2
+Candidate commit: the single local commit containing this report
+External artifact root:
+C:\Users\ovied\Dev\T2\T2-QuestFlight-product-extraction-artifacts\flight_modes_foundation_v1_final_20260825T233253Z
+
+DELIVERED
+
+- Serialized startup selector with Selection, Demo, FreeFlight, and Blocked states.
+- Serialized mode panel under UserViewCalibrationOffset with Demo, Free Flight,
+  Flight Lessons (Coming Next), and seat-calibration choices.
+- ProductDemoPilot auto-start disabled; ProductFlightModeCoordinator owns startup.
+- Demo starts only through the existing ProductDemoPilot lifecycle. Its route,
+  recovery, shared-control handoff, guidance, and control behavior were not changed.
+- Free Flight starts only after native JSBSim initialization and uses the existing
+  ProductControlInput boundary without a new flight-control writer or authority.
+- In unguided manual flight, throttle and mixture now retain their last valid touch
+  position after release. Flaps retain their selected position; the yoke continues
+  to restore its base position. Guided Demo/lesson release behavior is unchanged.
+- Flight Lessons remains unavailable and does not activate lesson systems.
+- Fail-closed production-build preflight rejects unexpected StreamingAssets and
+  overlong Unity input paths before launching Unity.
+- One non-development Android ARM64/Vulkan/OpenXR APK was built from the preserved
+  clean external stage and installed on the detected Quest.
+
+EXPLICITLY DEFERRED
+
+- Any lesson, evaluator, curriculum, persistence, narration, or CFI/SME content.
+- Demo route expansion or changed handoff behavior.
+- Live in-flight mode changes or return-to-menu behavior.
+- Cold-and-dark or full procedural aircraft systems.
+- Any new flight authority, stabilization, autopilot, or control arbiter.
+- Quantified Quest frame-rate, thermal, endurance, or broad-compatibility claims.
+
+VALIDATION
+
+Tier / result                         Duration          Exit  Evidence
+------------------------------------  ----------------  ----  ----------------------------------------------
+1 Static freeze and diff checks       PASS, 0.5 s       0     21_candidate_v4_freeze.log
+1 Authoring second-run idempotence     PASS, ~24.0 s     0     02_authoring_idempotence_unity.log
+2 Baseline complete EditMode           PASS, 201.175 s   0     03_complete_editmode/unity_EditMode_test_results.xml
+2 Correction focused EditMode          PASS 15/15,
+                                       36.883 s wall     0     18_focused_control_tests/editmode_retry1/results.xml
+2 Correction complete EditMode         QUARANTINED,
+                                       346/347,
+                                       238.236 s wall    2     19_complete_editmode_control_retention/results.xml
+3 Correction complete PlayMode         PASS 18/18,
+                                       44.865 s wall     0     20_complete_playmode_control_retention/results.xml
+4 Product Integrity                    PASS, ~24.4 s     0     05_product_integrity.log
+4 Dependency closure                   PASS, ~20.9 s     0     06_dependency_closure.log
+5 Standard Visual QA                   PASS 124/124,
+                                       ~65.8 s capture   0     07_visual_qa/visual_qa_report.json
+6 Final Android production build       PASS, 169.627 s   0     22_control_retention_android_build/command_timing.json
+6 APK validation                       PASS, 1.9 s total  0*    23_control_retention_apk_gate/apk_gate_corrected.json
+7 ADB replacement install              PASS, 19.131 s    0     24_control_retention_adb_install.log
+7 Physical Quest acceptance            PASS, user-run    N/A   User response: PASS
+
+* The first APK evidence invocation returned 2 because its evidence matcher accepted
+  android.hardware.vulkan.level but not the APK's standard
+  android.hardware.vulkan.version declaration. The corrected matcher passed against
+  the unchanged APK. Unity and the Android build were not rerun.
+
+EDITMODE QUARANTINE
+
+The post-control-correction complete EditMode run had one failure:
+QuestFlightLab.Environment.Editor.Tests.KbduTrafficV2Gate2EditModeTests.
+ProductEnvironment_BindsOneV1ParkedAndOneV2MovingRuntime
+
+Failure text: shared terrain material is not bound to the full-map water mask.
+
+That test passed in the immediately preceding 346/346 complete EditMode run. All
+environment, traffic, material, and ProductionWorldRoot inputs relevant to the
+failure remained unchanged by the four-file control-retention correction. The user
+explicitly approved evidence-backed quarantine without a repeat or unrelated
+environment edit. This remains a test-reliability uncertainty and is not reported
+as a green post-correction complete EditMode suite.
+
+FROZEN FILES
+
+The final re-frozen set passed 25/25 hashes. Relative to the original freeze, 24/25
+files remained byte-identical. ProductControlInput.cs was the sole explicitly
+authorized exception for the headset-proven Free Flight retention defect.
+
+ProductControlInput.cs original SHA-256:
+24df6640e8151abdf357b6b53b0bf5add3d6a619edc2d5783d2d893a2542f2e9
+
+ProductControlInput.cs final SHA-256:
+b0b3e95408a677c5654d8e23678fddc345e368c9af6015fd2f1ce47259804204
+
+ProductDemoPilot.cs remained byte-identical:
+abe5d66c66350101d26e5e469b70b6fb699d3ce4aea8a2a0a25432d5f31fb3c5
+
+FlightDynamicsCoordinator, GoldenEagleThermalSoaring, the lesson profile, and all
+FlightLessonV1 files remained byte-identical to their recorded baselines.
+
+VISUAL QA
+
+Machine Visual QA passed 124/124 captures. The inspected set included:
+
+- 07_visual_qa/visual_qa_contact_sheet.png
+- 07_visual_qa/screenshots/flight_modes_selector.png
+- 07_visual_qa/screenshots/01_default_cockpit.png
+- 07_visual_qa/screenshots/03_instrument_yoke.png
+- 07_visual_qa/screenshots/04_runway_from_cockpit.png
+- 07_visual_qa/screenshots/13_takeoff_roll.png
+- 07_visual_qa/screenshots/14_climb.png
+- 07_visual_qa/screenshots/16_approach.png
+
+No visible selector, cockpit, scenery, or camera regression was identified. The
+selector capture is a stereo composite, not performance evidence. The final
+control-retention correction did not change visual, camera, XR, aircraft-transform,
+or scenery inputs, so the already-passing Visual QA tier was not repeated.
+
+APK AND HEADSET
+
+APK:
+C:\Users\ovied\Dev\T2\T2-QuestFlight-product-extraction-artifacts\flight_modes_foundation_v1_final_20260825T233253Z\10_corrective_build_stage\QuestFlight\Builds\Android\QuestFlight-production.apk
+
+Bytes: 226245094
+SHA-256: b2b8243c4d0f263e90ee26f887aad16dc2829ac6fe5adbe8d7a9b551bb80499d
+Application ID: com.alexoviedo.t2.questflight
+Development build: false
+Native ABI: arm64-v8a only
+Native JSBSim: present
+Vulkan feature: present
+OpenXR libraries: present
+Quest detected: yes, serial 2G0YC5ZG8907TD
+ADB install: Success
+
+The user reported PASS after checking Free Flight throttle, mixture, flaps, and yoke
+release behavior plus a Demo relaunch/regression check. This is qualitative physical
+acceptance. No instrumented Quest frame-rate or thermal run was performed.
+
+CHANGED FILES
+
+1. QuestFlight/Assets/Editor/ProductFlightModesFoundationAuthoring.cs
+2. QuestFlight/Assets/Editor/ProductFlightModesFoundationAuthoring.cs.meta
+3. QuestFlight/Assets/Editor/ProductIntegrityValidator.cs
+4. QuestFlight/Assets/Editor/ProductionVisualQaBatchRunner.cs
+5. QuestFlight/Assets/Editor/Tests/ProductFlightModesFoundationEditModeTests.cs
+6. QuestFlight/Assets/Editor/Tests/ProductFlightModesFoundationEditModeTests.cs.meta
+7. QuestFlight/Assets/Editor/Tests/ProductIntegrityEditorTests.cs
+8. QuestFlight/Assets/Editor/Tests/QuestRenderBudgetAuditEditorTests.cs
+9. QuestFlight/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab
+10. QuestFlight/Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab
+11. QuestFlight/Assets/Scripts/Aircraft/CockpitDynamics/TouchInputV2/Editor/CockpitTouchInputV2EditModeTests.cs
+12. QuestFlight/Assets/Scripts/Input/ProductControlInput.cs
+13. QuestFlight/Assets/Scripts/Product/ProductFlightModeCoordinator.cs
+14. QuestFlight/Assets/Scripts/Product/ProductFlightModeCoordinator.cs.meta
+15. QuestFlight/Assets/Scripts/Runtime/QuestTemporalVisualGateRecorder.cs
+16. QuestFlight/Assets/Tests/PlayMode/ProductFlightModesFoundationPlayModeTests.cs
+17. QuestFlight/Assets/Tests/PlayMode/ProductFlightModesFoundationPlayModeTests.cs.meta
+18. scripts/build_production_quest.ps1
+19. tools/extraction_manifest.json
+20. docs/evidence/FLIGHT_MODES_FOUNDATION_V1_2026-08-26.txt
+
+No scene, package, APK, capture, log, Library, Temp, build output, cache, or binary
+evidence file is included in the candidate commit.

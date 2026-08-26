@@ -199,6 +199,7 @@ GameObject:
   - component: {fileID: 1171423066720843826}
   - component: {fileID: 5025774026687160251}
   - component: {fileID: 4392029217008093521}
+  - component: {fileID: 6406045178022147876}
   m_Layer: 0
   m_Name: ProductionInputRoot
   m_TagString: Untagged
@@ -285,7 +286,7 @@ MonoBehaviour:
   deterministicInput: {fileID: 9105462521216613047}
   flightCoordinator: {fileID: 742791276885309778}
   routeProfile: {fileID: 11400000, guid: f3ef2c193b64693478841b149d4ec8d2, type: 2}
-  autoStartDemo: 1
+  autoStartDemo: 0
   runwayHeadingGain: 0.025
   runwayCrossTrackGain: 0.015
   maximumRunwayRudder: 0.14
@@ -305,6 +306,25 @@ MonoBehaviour:
   productInput: {fileID: 1171423066720843826}
   flightCoordinator: {fileID: 742791276885309778}
   terrainSurface: {fileID: 11400000, guid: b2b2be77d482f4c4c8fb5ceb35614891, type: 2}
+--- !u!114 &6406045178022147876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3972055758679815465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62f13968d80d44b991cf1d6380a72f11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.ProductFlightModeCoordinator
+  demoPilot: {fileID: 5025774026687160251}
+  productInput: {fileID: 1171423066720843826}
+  flightCoordinator: {fileID: 742791276885309778}
+  seatCalibration: {fileID: 5763377087430501911}
+  modePanelRoot: {fileID: 5268569750595006277}
+  modePanelText: {fileID: 9212180736242699862}
+  lessonsMessageSeconds: 2.5
 --- !u!1 &3983972066274778650
 GameObject:
   m_ObjectHideFlags: 0
@@ -695,6 +715,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83c4f48774e3c3f47b13c31bec1848d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.ProductionAircraftControlAnimator
+--- !u!1 &5268569750595006277 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7702936834437761622, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &5376976391610670570 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7594537855643793657, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -720,6 +745,11 @@ MonoBehaviour:
 --- !u!4 &7286426379529828188 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5108623857352381007, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+--- !u!102 &9212180736242699862 stripped
+TextMesh:
+  m_CorrespondingSourceObject: {fileID: 6639381075456650053, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6183554003487197170
