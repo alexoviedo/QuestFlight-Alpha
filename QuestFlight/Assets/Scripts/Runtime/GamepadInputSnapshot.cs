@@ -38,6 +38,19 @@ namespace QuestFlightLab.Runtime
         public bool leftStickButton;
         public bool rightStickButton;
 
+        // Optional, position-holding flight controls. Standard gamepads leave
+        // these false and retain the established rate/button behavior.
+        public bool externalFlightController;
+        public bool hasThrottlePosition;
+        public float throttlePosition;
+        public bool throttlePositionChanged;
+        public bool hasMixturePosition;
+        public float mixturePosition;
+        public bool mixturePositionChanged;
+        public bool hasFlapsPosition;
+        public float flapsPosition;
+        public bool flapsPositionChanged;
+
         public static GamepadInputSnapshot Disconnected(float now, float sampleRate)
         {
             GamepadInputSnapshot snapshot = new GamepadInputSnapshot();
@@ -76,6 +89,16 @@ namespace QuestFlightLab.Runtime
             selectButton = false;
             leftStickButton = false;
             rightStickButton = false;
+            externalFlightController = false;
+            hasThrottlePosition = false;
+            throttlePosition = 0f;
+            throttlePositionChanged = false;
+            hasMixturePosition = false;
+            mixturePosition = 0f;
+            mixturePositionChanged = false;
+            hasFlapsPosition = false;
+            flapsPosition = 0f;
+            flapsPositionChanged = false;
         }
 
         public void CopyInputFrom(GamepadInputSnapshot source)
@@ -115,6 +138,16 @@ namespace QuestFlightLab.Runtime
             selectButton = source.selectButton;
             leftStickButton = source.leftStickButton;
             rightStickButton = source.rightStickButton;
+            externalFlightController = source.externalFlightController;
+            hasThrottlePosition = source.hasThrottlePosition;
+            throttlePosition = source.throttlePosition;
+            throttlePositionChanged = source.throttlePositionChanged;
+            hasMixturePosition = source.hasMixturePosition;
+            mixturePosition = source.mixturePosition;
+            mixturePositionChanged = source.mixturePositionChanged;
+            hasFlapsPosition = source.hasFlapsPosition;
+            flapsPosition = source.flapsPosition;
+            flapsPositionChanged = source.flapsPositionChanged;
         }
 
         public bool HasDifferentInput(GamepadInputSnapshot other, float axisEpsilon = 0.01f)
@@ -129,6 +162,13 @@ namespace QuestFlightLab.Runtime
             if (Mathf.Abs(rightTrigger - other.rightTrigger) > axisEpsilon) return true;
             if (Mathf.Abs(dpadX - other.dpadX) > axisEpsilon) return true;
             if (Mathf.Abs(dpadY - other.dpadY) > axisEpsilon) return true;
+            if (externalFlightController != other.externalFlightController) return true;
+            if (hasThrottlePosition != other.hasThrottlePosition) return true;
+            if (Mathf.Abs(throttlePosition - other.throttlePosition) > axisEpsilon) return true;
+            if (hasMixturePosition != other.hasMixturePosition) return true;
+            if (Mathf.Abs(mixturePosition - other.mixturePosition) > axisEpsilon) return true;
+            if (hasFlapsPosition != other.hasFlapsPosition) return true;
+            if (Mathf.Abs(flapsPosition - other.flapsPosition) > axisEpsilon) return true;
 
             return buttonSouth != other.buttonSouth
                    || buttonEast != other.buttonEast

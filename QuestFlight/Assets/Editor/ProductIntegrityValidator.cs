@@ -452,6 +452,26 @@ namespace QuestFlight.Editor
                     Require(productInputs[0].HasAuthoredSources,
                         "ProductControlInput gamepad/deterministic references are not serialized", report);
 
+                GamepadInputReader[] gamepadReaders = behaviours
+                    .OfType<GamepadInputReader>().ToArray();
+                Require(gamepadReaders.Length == 1,
+                    $"scene must contain one GamepadInputReader, found {gamepadReaders.Length}", report);
+                if (gamepadReaders.Length == 1)
+                {
+                    GamepadInputReader reader = gamepadReaders[0];
+                    Require(reader.transform.name == "ProductionInputRoot",
+                        "GamepadInputReader must remain on ProductionInputRoot", report);
+                    Require(ProductExternalControllerCompatibilityAuthoring.IsConfigured(reader),
+                        "serialized six-axis external-controller mapping is missing or invalid", report);
+                    Require(File.ReadAllText(
+                            ProductExternalControllerCompatibilityAuthoring.WorldPrefabPath)
+                            .Contains("externalFlightControllersEnabled:"),
+                        "external-controller mapping relies on code defaults instead of serialized product data", report);
+                    Require(productInputs.Length == 1 &&
+                            productInputs[0].AuthoredGamepad == reader,
+                        "ProductControlInput does not reference the accepted GamepadInputReader", report);
+                }
+
                 ProductDemoPilot[] demos = behaviours.OfType<ProductDemoPilot>().ToArray();
                 Require(demos.Length == 1,
                     $"scene must contain one minimal ProductDemoPilot acceptance route, found {demos.Length}", report);

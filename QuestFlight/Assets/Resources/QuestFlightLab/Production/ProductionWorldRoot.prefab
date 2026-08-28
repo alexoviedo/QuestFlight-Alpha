@@ -235,6 +235,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Input.GamepadInputReader
   preferMostRecentGamepad: 1
+  externalFlightControllersEnabled: 1
+  externalMapping:
+    aileronAxis: 1
+    invertAileron: 0
+    elevatorAxis: 2
+    invertElevator: 1
+    throttleAxis: 3
+    invertThrottle: 0
+    rudderAxis: 4
+    invertRudder: 0
+    leftToeBrakeAxis: 5
+    invertLeftToeBrake: 0
+    rightToeBrakeAxis: 6
+    invertRightToeBrake: 0
+    mixtureAxis: 0
+    invertMixture: 0
+    flapsAxis: 0
+    invertFlaps: 0
+    primaryAxisDeadzone: 0.04
+    positionChangeEpsilon: 0.01
 --- !u!114 &9105462521216613047
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -486,7 +486,17 @@
     {
       "path": "Assets/Scripts/Input/ProductControlInput.cs",
       "classification": "approved_product_authored",
-      "reason": "Clean control adapter replacing the excluded USB2BLE mapper."
+      "reason": "Clean product control boundary for standard and serialized external-controller input semantics."
+    },
+    {
+      "path": "Assets/Scripts/Input/ProductExternalControllerLayout.cs",
+      "classification": "approved_product_authored",
+      "reason": "Android Input System layout exposing T2's six HID motion axes without introducing a firmware or PC runtime dependency; ordinary gamepads retain Unity's standard layout."
+    },
+    {
+      "path": "Assets/Scripts/Input/ProductExternalControllerMapping.cs",
+      "classification": "approved_product_authored",
+      "reason": "Serialized application-level six-axis flight-control mapping with explicit position-holding controls and validation."
     },
     {
       "path": "Assets/Scripts/Product/ProductDemoPilot.cs",

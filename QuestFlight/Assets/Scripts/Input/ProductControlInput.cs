@@ -133,6 +133,8 @@ namespace QuestFlightLab.Input
                 $"Blend=A{_aileronGuidanceBlend:F3}/E{_elevatorGuidanceBlend:F3}/" +
                 $"R{_rudderGuidanceBlend:F3}/T{_throttleGuidanceBlend:F3} " +
                 $"AccumulatorThrottle={_throttle:F3} ManualThrottleUntil={_manualThrottleOwnedUntil:F3} " +
+                $"PositionThrottle={snapshot?.hasThrottlePosition ?? false}/" +
+                $"{snapshot?.throttlePosition ?? 0f:F3} " +
                 $"Touch=Y{_touchYoke.active}({ _touchYoke.primary:F3},{_touchYoke.secondary:F3})/" +
                 $"T{_touchThrottle.active}({_touchThrottle.primary:F3})/" +
                 $"M{_touchMixture.active}({_touchMixture.primary:F3})]";
@@ -472,8 +474,21 @@ namespace QuestFlightLab.Input
             }
             else
             {
-                // Right-stick Y is intentionally rate-based so it can share the stick with rudder X.
-                _throttle = Mathf.Clamp01(_throttle + snapshot.rightStickY * throttleRatePerSecond * Time.unscaledDeltaTime);
+                // Standard gamepads retain the established rate control. A
+                // serialized external flight-controller map may instead
+                // provide physical position controls that must hold without
+                // continuous user force.
+                bool absoluteThrottle = snapshot.connected &&
+                                        snapshot.hasThrottlePosition;
+                ApplyPositionControls(
+                    snapshot,
+                    ref _throttle,
+                    ref _mixture,
+                    ref _flaps);
+                if (!absoluteThrottle)
+                    _throttle = Mathf.Clamp01(
+                        _throttle + snapshot.rightStickY *
+                        throttleRatePerSecond * Time.unscaledDeltaTime);
                 _trim = Mathf.Clamp(_trim + snapshot.dpadY * trimRatePerSecond * Time.unscaledDeltaTime, -1f, 1f);
             }
 
@@ -484,6 +499,7 @@ namespace QuestFlightLab.Input
             if (flapDown) _flaps = Mathf.Clamp01(_flaps + flapStep);
             if (flapUp) _flaps = Mathf.Clamp01(_flaps - flapStep);
             if (flapDown || flapUp) _flapsManuallyOwned = true;
+            if (snapshot.flapsPositionChanged) _flapsManuallyOwned = true;
             if (Mathf.Abs(snapshot.dpadY) > 0.01f) _trimManuallyOwned = true;
             if (reset)
             {
@@ -526,6 +542,22 @@ namespace QuestFlightLab.Input
             AircraftControlState result = new AircraftControlState();
             MapSnapshotInto(snapshot, invertElevator, throttle, trim, flaps, mixture, carbHeat, result);
             return result;
+        }
+
+        public static void ApplyPositionControls(
+            GamepadInputSnapshot snapshot,
+            ref float throttle,
+            ref float mixture,
+            ref float flaps)
+        {
+            if (snapshot == null || !snapshot.connected)
+                return;
+            if (snapshot.hasThrottlePosition)
+                throttle = Mathf.Clamp01(snapshot.throttlePosition);
+            if (snapshot.hasMixturePosition)
+                mixture = Mathf.Clamp01(snapshot.mixturePosition);
+            if (snapshot.hasFlapsPosition)
+                flaps = Mathf.Clamp01(snapshot.flapsPosition);
         }
 
         public static void MapSnapshotInto(
@@ -791,8 +823,11 @@ namespace QuestFlightLab.Input
                 out guidance.rudder);
 
             bool throttleMoved = snapshot != null &&
-                                 Mathf.Abs(snapshot.rightStickY) >=
-                                 Mathf.Max(0.01f, manualEngineAxisDeadzone);
+                                 (snapshot.hasThrottlePosition
+                                     ? snapshot.throttlePositionChanged
+                                     : Mathf.Abs(snapshot.rightStickY) >=
+                                       Mathf.Max(0.01f,
+                                           manualEngineAxisDeadzone));
             if (throttleMoved)
             {
                 _manualThrottleOwnedUntil = unscaledTime +
@@ -813,21 +848,32 @@ namespace QuestFlightLab.Input
                     _throttleGuidanceBlend);
             }
 
-            _mixtureGuidanceBlend = Mathf.MoveTowards(
-                _mixtureGuidanceBlend,
-                1f,
-                reacquisitionStep);
-            guidance.mixture = Mathf.Lerp(
-                _mixtureReacquireFrom,
-                guidance.mixture,
-                _mixtureGuidanceBlend);
+            bool mixtureMoved = snapshot != null &&
+                                snapshot.hasMixturePosition &&
+                                snapshot.mixturePositionChanged;
+            if (mixtureMoved)
+            {
+                _mixtureReacquireFrom = manual.mixture;
+                _mixtureGuidanceBlend = 0f;
+            }
+            else
+            {
+                _mixtureGuidanceBlend = Mathf.MoveTowards(
+                    _mixtureGuidanceBlend,
+                    1f,
+                    reacquisitionStep);
+                guidance.mixture = Mathf.Lerp(
+                    _mixtureReacquireFrom,
+                    guidance.mixture,
+                    _mixtureGuidanceBlend);
+            }
 
             FlightLessonPlayerInput player = new FlightLessonPlayerInput
             {
                 command = manual,
                 primaryAxesAvailable = manualPrimaryAvailable,
                 throttleOwned = throttleOwned,
-                mixtureOwned = false,
+                mixtureOwned = mixtureMoved,
                 trimOwned = _trimManuallyOwned,
                 flapsOwned = _flapsManuallyOwned,
                 brakesOwned = manual.leftToeBrake > 0.01f ||
