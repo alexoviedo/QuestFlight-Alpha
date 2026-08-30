@@ -58167,6 +58167,7 @@ GameObject:
   - component: {fileID: 6359115581002838600}
   - component: {fileID: 4592732690923725719}
   - component: {fileID: 6242808035118616955}
+  - component: {fileID: 7418529630741852963}
   m_Layer: 0
   m_Name: OVR_pilot_yoke_grab
   m_TagString: Untagged
@@ -58300,6 +58301,18 @@ MonoBehaviour:
   grabbable: {fileID: 6359115581002838600}
   pointables:
   - {fileID: 3795509972094303902}
+--- !u!114 &7418529630741852963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6011791618770587766}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d3f2a6b9c1e4f50a8b7c6d5e4f32109, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.ControllerOnlyYokeGrabFilter
 --- !u!1 &6012539934813457340
 GameObject:
   m_ObjectHideFlags: 0
@@ -58555,7 +58568,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9a7676b01585ce43908639a27765dfc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _interactorFilters: []
+  _interactorFilters:
+  - {fileID: 7418529630741852963}
   _maxInteractors: -1
   _maxSelectingInteractors: -1
   _data: {fileID: 0}

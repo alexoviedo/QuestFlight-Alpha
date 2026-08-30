@@ -464,6 +464,11 @@
       "reason": "Owner-checked bridge from represented Touch grabs into the existing ProductControlInput authority."
     },
     {
+      "path": "Assets/Scripts/Aircraft/CockpitDynamics/TouchInputV2/ControllerOnlyYokeGrabFilter.cs",
+      "classification": "approved_product_authored",
+      "reason": "Yoke-local filter that accepts Touch-controller grab interactors and rejects tracked-hand grab interactors without changing other cockpit interactions or flight authority."
+    },
+    {
       "path": "Assets/Scripts/Aircraft/ProductionAircraftNoseSteeringAnimator.cs",
       "classification": "approved_product_authored",
       "reason": "Serialized low-speed, weight-on-wheels nose-steering presentation for the fixed-gear aircraft."
