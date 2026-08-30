@@ -4717,7 +4717,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.Surfaces.BoundsClipper
   _position: {x: 0, y: 0, z: 0}
-  _size: {x: 0.038775936, y: 0.02898015, z: 0.060594313}
+  _size: {x: 0.058775935, y: 0.04898015, z: 0.08059431}
 --- !u!114 &3445697727983824963
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51949,7 +51949,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.038775936, y: 0.02898015, z: 0.060594313}
+  m_Size: {x: 0.058775935, y: 0.04898015, z: 0.08059431}
   m_Center: {x: 0.000000039115548, y: -0.00000011129305, z: 0.00000006891787}
 --- !u!1 &5223354177025128869
 GameObject:

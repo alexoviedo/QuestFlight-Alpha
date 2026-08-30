@@ -35,6 +35,7 @@ namespace QuestFlight.Editor
         public const int ExpectedBindingCount = 9;
         public const int QueueCapacity = 32;
         public const float ColliderPaddingMeters = 0.008f;
+        public const float FlapSelectorColliderPaddingMeters = 0.018f;
         public const float MaximumRayDistanceMeters = 0.8f;
 
         public static void AuthorPrefabContents(
@@ -88,7 +89,9 @@ namespace QuestFlight.Editor
             BoxCollider avionicsCollider =
                 EnsureBoundedInteractionCollider(avionics);
             BoxCollider flapCollider =
-                EnsureBoundedInteractionCollider(flapSelector);
+                EnsureBoundedInteractionCollider(
+                    flapSelector,
+                    FlapSelectorColliderPaddingMeters);
             BoxCollider fuelCollider =
                 EnsureBoundedInteractionCollider(fuelSelector);
             LayerMask layers =
@@ -303,7 +306,8 @@ namespace QuestFlight.Editor
         }
 
         private static BoxCollider EnsureBoundedInteractionCollider(
-            Transform target)
+            Transform target,
+            float paddingMeters = ColliderPaddingMeters)
         {
             BoxCollider[] colliders =
                 target.GetComponents<BoxCollider>();
@@ -318,7 +322,7 @@ namespace QuestFlight.Editor
             collider.center = bounds.center;
             collider.size =
                 bounds.size +
-                Vector3.one * (ColliderPaddingMeters * 2f);
+                Vector3.one * (paddingMeters * 2f);
             collider.isTrigger = true;
             collider.enabled = true;
             return collider;
