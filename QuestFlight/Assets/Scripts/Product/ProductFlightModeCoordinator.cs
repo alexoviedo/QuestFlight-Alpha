@@ -38,6 +38,7 @@ namespace QuestFlight.Product
         [SerializeField] private ProductionSeatCalibrationController seatCalibration;
         [SerializeField] private GameObject modePanelRoot;
         [SerializeField] private TextMesh modePanelText;
+        [SerializeField] private ProductFlightModeMenuView modeMenuView;
         [SerializeField, Min(0.1f)] private float lessonsMessageSeconds = 2.5f;
 
         public FlightModeState State { get; private set; } = FlightModeState.Selection;
@@ -48,6 +49,7 @@ namespace QuestFlight.Product
         public ProductionSeatCalibrationController AuthoredSeatCalibration => seatCalibration;
         public GameObject AuthoredModePanelRoot => modePanelRoot;
         public TextMesh AuthoredModePanelText => modePanelText;
+        public ProductFlightModeMenuView AuthoredModeMenuView => modeMenuView;
         public bool OwnsTimeScalePause => _ownsTimeScalePause;
         public float SavedTimeScale => _savedTimeScale;
         public bool HasAuthoredReferences =>
@@ -56,7 +58,9 @@ namespace QuestFlight.Product
             flightCoordinator != null &&
             seatCalibration != null &&
             modePanelRoot != null &&
-            modePanelText != null;
+            modePanelText != null &&
+            modeMenuView != null &&
+            modeMenuView.HasAuthoredReferences;
 
         private float _savedTimeScale;
         private float _lessonsMessageUntil;
@@ -73,7 +77,8 @@ namespace QuestFlight.Product
             FlightDynamicsCoordinator authoredFlightCoordinator,
             ProductionSeatCalibrationController authoredSeatCalibration,
             GameObject authoredModePanelRoot,
-            TextMesh authoredModePanelText)
+            TextMesh authoredModePanelText,
+            ProductFlightModeMenuView authoredModeMenuView)
         {
             demoPilot = authoredDemoPilot;
             productInput = authoredProductInput;
@@ -81,6 +86,7 @@ namespace QuestFlight.Product
             seatCalibration = authoredSeatCalibration;
             modePanelRoot = authoredModePanelRoot;
             modePanelText = authoredModePanelText;
+            modeMenuView = authoredModeMenuView;
         }
 
         private void Awake()
@@ -133,11 +139,13 @@ namespace QuestFlight.Product
             if (seatCalibration != null && seatCalibration.IsOpen)
             {
                 SetPanelVisible(false);
+                modeMenuView?.ReadTouchNavigationInput(true);
                 ReadSelectionButtons(out _, out _, out _);
                 return;
             }
 
             SetPanelVisible(true);
+            modeMenuView?.ReadTouchNavigationInput(false);
             if (flightCoordinator == null)
             {
                 EnterBlocked("The native flight authority reference is missing.");
@@ -187,9 +195,9 @@ namespace QuestFlight.Product
                 return;
             }
 
-            SetPanelVisible(false);
-            RestoreSavedTimeScaleOnce();
             State = FlightModeState.Demo;
+            RestoreSavedTimeScaleOnce();
+            BeginSuccessfulTransition("DEMO FLIGHT");
         }
 
         public void SelectFreeFlight()
@@ -210,9 +218,9 @@ namespace QuestFlight.Product
                 return;
             }
 
-            SetPanelVisible(false);
-            RestoreSavedTimeScaleOnce();
             State = FlightModeState.FreeFlight;
+            RestoreSavedTimeScaleOnce();
+            BeginSuccessfulTransition("FREE FLIGHT");
         }
 
         public void ShowLessonsUnavailable()
@@ -334,6 +342,15 @@ namespace QuestFlight.Product
         {
             if (modePanelText != null && modePanelText.text != value)
                 modePanelText.text = value;
+            modeMenuView?.SetMessage(value);
+        }
+
+        private void BeginSuccessfulTransition(string selectedMode)
+        {
+            if (modeMenuView != null)
+                modeMenuView.BeginModeTransition(selectedMode);
+            else
+                SetPanelVisible(false);
         }
     }
 }

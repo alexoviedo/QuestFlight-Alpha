@@ -1,0 +1,15 @@
+{
+  "schema": "questflight.project-authored-startup-showroom.v1",
+  "asset": "Assets/Production/UI/StartupShowroomBackdrop.png",
+  "bytes": 1488031,
+  "sha256": "3d1c6e45747b408cdfd7ae72beab9e5e4ae16e6ca5aa2eea8ffe40331da116b8",
+  "source": {
+    "classification": "project-owned generated output",
+    "generator": "OpenAI built-in image generation tool",
+    "generated_utc": "2026-08-30T22:00:00Z",
+    "external_reference_images": [],
+    "license": "Project-owned output; no third-party reference image was supplied. Use remains subject to applicable OpenAI output terms."
+  },
+  "prompt": "Create a premium AAA-game-quality cinematic aviation showroom background for a Cessna 172 flight simulator: a dark modern aircraft hangar at blue hour, subtle runway centerline lighting and distant Colorado foothill silhouette, one accurate generic red-and-white high-wing four-seat single-engine trainer on the right 45 percent, and dark low-detail negative space on the left 55 percent for interactive menu cards. No people, logos, UI, lettering, watermark, extra aircraft, or distorted geometry.",
+  "runtime_policy": "Visual-only startup-menu backdrop. It carries no flight, navigation, procedural, aircraft-identity, or performance authority. Android import is pinned to ASTC 6x6 with no mip chain."
+}

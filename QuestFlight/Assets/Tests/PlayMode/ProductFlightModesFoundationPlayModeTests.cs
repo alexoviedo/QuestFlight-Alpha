@@ -1,5 +1,6 @@
 #if UNITY_INCLUDE_TESTS
 using System;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using QuestFlight.Product;
@@ -39,6 +40,7 @@ namespace QuestFlight.PlayModeTests
             _input = _world.GetComponentInChildren<ProductControlInput>(true);
             _flight = _world.GetComponentInChildren<FlightDynamicsCoordinator>(true);
             _seat = _world.GetComponentInChildren<ProductionSeatCalibrationController>(true);
+            InvokePrivate(_mode.AuthoredModeMenuView, "Start");
         }
 
         [TearDown]
@@ -74,6 +76,172 @@ namespace QuestFlight.PlayModeTests
         }
 
         [Test]
+        public void StartupShowroomHidesAndExactlyRestoresAircraftPresentationRenderers()
+        {
+            ProductFlightModeMenuView view = _mode.AuthoredModeMenuView;
+            Assert.That(view.FadeOverlayRenderer.enabled, Is.False,
+                "A zero-opacity viewer-enclosing fade must have no renderable geometry.");
+            Renderer[] renderers = (Renderer[])typeof(ProductFlightModeMenuView)
+                .GetField("aircraftPresentationRenderers",
+                    BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.GetValue(view);
+            Renderer[] interactionRenderers = (Renderer[])typeof(ProductFlightModeMenuView)
+                .GetField("interactionPresentationRenderers",
+                    BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.GetValue(view);
+            Renderer[] worldRenderers = (Renderer[])typeof(ProductFlightModeMenuView)
+                .GetField("worldPresentationRenderers",
+                    BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.GetValue(view);
+            bool[] priorStates = (bool[])typeof(ProductFlightModeMenuView)
+                .GetField("_aircraftForceRenderingOffStates",
+                    BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.GetValue(view);
+            bool[] priorWorldStates = (bool[])typeof(ProductFlightModeMenuView)
+                .GetField("_worldForceRenderingOffStates",
+                    BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.GetValue(view);
+            Assert.That(renderers, Is.Not.Null.And.Not.Empty);
+            Assert.That(priorStates, Is.Not.Null);
+            Assert.That(renderers, Has.Length.EqualTo(priorStates.Length));
+            Assert.That(interactionRenderers, Has.Length.EqualTo(2));
+            Assert.That(worldRenderers, Is.Not.Null.And.Not.Empty);
+            Assert.That(priorWorldStates, Has.Length.EqualTo(worldRenderers.Length));
+            Assert.That(interactionRenderers.Intersect(renderers), Is.Empty);
+            Assert.That(interactionRenderers.All(renderer =>
+                    renderer.name == "Cube" &&
+                    HasAncestorNamed(renderer.transform, "ControllerRayInteractor")),
+                Is.True);
+            Renderer[] controllerCursorRenderers = renderers
+                .Where(renderer => renderer.name == "OculusCursor" &&
+                    HasAncestorNamed(renderer.transform, "ControllerRayInteractor"))
+                .ToArray();
+            Assert.That(controllerCursorRenderers, Has.Length.EqualTo(2));
+            Renderer[] handRayRenderers = renderers
+                .Where(renderer => HasAncestorNamed(
+                    renderer.transform, "Hand and No Controller") &&
+                    (renderer.name == "Cube" || renderer.name == "OculusCursor"))
+                .ToArray();
+            Assert.That(handRayRenderers, Has.Length.EqualTo(4));
+            for (int index = 0; index < renderers.Length; index++)
+                Assert.That(renderers[index].forceRenderingOff, Is.True,
+                    renderers[index].name);
+            for (int index = 0; index < interactionRenderers.Length; index++)
+                Assert.That(interactionRenderers[index].forceRenderingOff, Is.False,
+                    interactionRenderers[index].name);
+            for (int index = 0; index < worldRenderers.Length; index++)
+                Assert.That(worldRenderers[index].forceRenderingOff, Is.True,
+                    worldRenderers[index].name);
+
+            _mode.AuthoredModePanelRoot.SetActive(false);
+
+            for (int index = 0; index < renderers.Length; index++)
+                Assert.That(renderers[index].forceRenderingOff,
+                    Is.EqualTo(priorStates[index]),
+                    renderers[index].name);
+            for (int index = 0; index < interactionRenderers.Length; index++)
+                Assert.That(interactionRenderers[index].forceRenderingOff, Is.False,
+                    interactionRenderers[index].name);
+            for (int index = 0; index < worldRenderers.Length; index++)
+                Assert.That(worldRenderers[index].forceRenderingOff,
+                    Is.EqualTo(priorWorldStates[index]),
+                    worldRenderers[index].name);
+        }
+
+        [Test]
+        public void StartupComfortFadeRendererExistsOnlyDuringVisibleTransition()
+        {
+            ProductFlightModeMenuView view = _mode.AuthoredModeMenuView;
+            Renderer fade = view.FadeOverlayRenderer;
+            MethodInfo setFadeOpacity = typeof(ProductFlightModeMenuView)
+                .GetMethod("SetFadeOpacity",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(setFadeOpacity, Is.Not.Null);
+            Assert.That(fade.enabled, Is.False);
+
+            setFadeOpacity.Invoke(view, new object[] { 0.5f });
+            Assert.That(fade.enabled, Is.True);
+            MaterialPropertyBlock properties = new MaterialPropertyBlock();
+            fade.GetPropertyBlock(properties);
+            Assert.That(properties.GetFloat(Shader.PropertyToID("_Opacity")),
+                Is.EqualTo(0.5f).Within(0.000001f));
+
+            setFadeOpacity.Invoke(view, new object[] { 0f });
+            Assert.That(fade.enabled, Is.False);
+        }
+
+        private static bool HasAncestorNamed(Transform transform, string name)
+        {
+            for (Transform current = transform; current != null; current = current.parent)
+            {
+                if (current.name == name) return true;
+            }
+            return false;
+        }
+
+        [Test]
+        public void StartupMenuFocusIsPersistentAndNavigationIsDeterministic()
+        {
+            ProductFlightModeMenuView view = _mode.AuthoredModeMenuView;
+            ProductFlightModeMenuButton[] buttons = (ProductFlightModeMenuButton[])
+                typeof(ProductFlightModeMenuView)
+                    .GetField("menuButtons",
+                        BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.GetValue(view);
+            Assert.That(buttons, Has.Length.EqualTo(4));
+            Assert.That(view.FocusedIndex, Is.Zero);
+            Assert.That(buttons[0].IsFocused, Is.True);
+
+            view.ProcessNavigationSample(-0.2f, false, false, 0f, false);
+            Assert.That(view.FocusedIndex, Is.Zero, "Dead-zone noise moved focus.");
+            view.ProcessNavigationSample(-1f, false, false, 0.1f, false);
+            Assert.That(view.FocusedIndex, Is.EqualTo(1));
+            view.ProcessNavigationSample(-1f, false, false, 0.2f, false);
+            Assert.That(view.FocusedIndex, Is.EqualTo(1),
+                "A held stick repeated before the authored delay.");
+            view.ProcessNavigationSample(-1f, false, false, 0.6f, false);
+            Assert.That(view.FocusedIndex, Is.EqualTo(2));
+            view.ProcessNavigationSample(0f, false, false, 0.61f, false);
+            view.ProcessNavigationSample(1f, false, false, 0.7f, false);
+            Assert.That(view.FocusedIndex, Is.EqualTo(1));
+
+            view.FocusButton(buttons[2]);
+            Assert.That(view.FocusedIndex, Is.EqualTo(2));
+            Assert.That(buttons[2].IsFocused, Is.True);
+            Assert.That(buttons[1].IsFocused, Is.False);
+
+            view.ProcessNavigationSample(-1f, true, false, 0.8f, true);
+            view.ProcessNavigationSample(-1f, true, false, 1.4f, false);
+            Assert.That(view.FocusedIndex, Is.EqualTo(2),
+                "Suppressed input was not drained until release.");
+            Assert.That(_mode.State,
+                Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Selection));
+            view.ProcessNavigationSample(0f, false, false, 1.5f, false);
+            view.ProcessNavigationSample(-1f, false, false, 1.6f, false);
+            Assert.That(view.FocusedIndex, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void FocusedActivationUsesTheExistingFreeFlightLifecycleExactlyOnce()
+        {
+            MakeNativeReady();
+            ProductFlightModeMenuView view = _mode.AuthoredModeMenuView;
+            view.MoveFocus(1);
+            Assert.That(view.FocusedButton.Action,
+                Is.EqualTo(ProductFlightModeMenuButton.MenuAction.FreeFlight));
+
+            view.ActivateFocused();
+            view.ActivateFocused();
+
+            Assert.That(_mode.State,
+                Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.FreeFlight));
+            Assert.That(_demo.IsRunning, Is.False);
+            Assert.That(_input.DeterministicMode, Is.False);
+            Assert.That(_input.FlightLessonGuidanceActive, Is.False);
+            Assert.That(_input.FlightLessonInputSuppressed, Is.False);
+        }
+
+        [Test]
         public void LessonsChoiceStaysPausedInSelectionWithoutActivatingLessonControlState()
         {
             MakeNativeReady();
@@ -102,7 +270,11 @@ namespace QuestFlight.PlayModeTests
             Assert.That(_input.DeterministicMode, Is.True);
             Assert.That(_input.FlightLessonGuidanceActive, Is.True);
             Assert.That(_input.FlightLessonInputSuppressed, Is.False);
-            Assert.That(_mode.AuthoredModePanelRoot.activeSelf, Is.False);
+            Assert.That(_mode.AuthoredModePanelRoot.activeSelf, Is.True,
+                "The showroom must remain until cockpit presentation is authoritative.");
+            Assert.That(_mode.AuthoredModeMenuView.TransitionPending, Is.True);
+            Assert.That(_mode.AuthoredModeMenuView.SelectionContentRoot.activeSelf,
+                Is.False);
             Assert.That(Time.timeScale, Is.EqualTo(FixtureTimeScale).Within(0.000001f));
 
             _mode.SelectDemo();
@@ -137,7 +309,11 @@ namespace QuestFlight.PlayModeTests
             Assert.That(_flight.IsInitialized, Is.True);
             Assert.That(_flight.LastResetInitialConditions.engineRunning, Is.True);
             Assert.That(_flight.initialConditionProvider.engineRunning, Is.True);
-            Assert.That(_mode.AuthoredModePanelRoot.activeSelf, Is.False);
+            Assert.That(_mode.AuthoredModePanelRoot.activeSelf, Is.True,
+                "The showroom must remain until cockpit presentation is authoritative.");
+            Assert.That(_mode.AuthoredModeMenuView.TransitionPending, Is.True);
+            Assert.That(_mode.AuthoredModeMenuView.SelectionContentRoot.activeSelf,
+                Is.False);
             Assert.That(Time.timeScale, Is.EqualTo(FixtureTimeScale).Within(0.000001f));
 
             _mode.SelectFreeFlight();

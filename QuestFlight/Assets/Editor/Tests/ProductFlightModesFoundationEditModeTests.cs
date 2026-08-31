@@ -82,10 +82,25 @@ namespace QuestFlight.Editor.Tests
             Assert.That(panels[0].parent, Is.EqualTo(calibration));
             Assert.That(panels[0].gameObject.activeSelf, Is.False,
                 "The serialized selector stays inactive until the early startup coordinator owns it.");
-            Assert.That(panels[0].GetComponentsInChildren<TextMesh>(true), Has.Length.EqualTo(1));
+            ProductFlightModeMenuView view =
+                panels[0].GetComponent<ProductFlightModeMenuView>();
+            Assert.That(view, Is.Not.Null);
+            Assert.That(view.HasAuthoredReferences, Is.True);
+            Assert.That(view.LayoutVersion,
+                Is.EqualTo(ProductFlightModeMenuView.CurrentLayoutVersion));
+            Assert.That(panels[0]
+                .GetComponentsInChildren<ProductFlightModeMenuButton>(true),
+                Has.Length.EqualTo(4));
+            TextMesh[] contracts = panels[0]
+                .GetComponentsInChildren<TextMesh>(true)
+                .Where(text => text.name ==
+                    ProductStartupShowroomAuthoring.StateContractName)
+                .ToArray();
+            Assert.That(contracts, Has.Length.EqualTo(1));
+            Assert.That(contracts[0].GetComponent<Renderer>().enabled, Is.False);
             Assert.That(modes[0].AuthoredModePanelRoot, Is.EqualTo(panels[0].gameObject));
-            Assert.That(modes[0].AuthoredModePanelText,
-                Is.EqualTo(panels[0].GetComponentInChildren<TextMesh>(true)));
+            Assert.That(modes[0].AuthoredModePanelText, Is.EqualTo(contracts[0]));
+            Assert.That(modes[0].AuthoredModeMenuView, Is.EqualTo(view));
         }
 
         [Test]
@@ -94,7 +109,13 @@ namespace QuestFlight.Editor.Tests
             string[] paths =
             {
                 ProductFlightModesFoundationAuthoring.WorldPrefabPath,
-                ProductFlightModesFoundationAuthoring.AircraftPrefabPath
+                ProductFlightModesFoundationAuthoring.AircraftPrefabPath,
+                ProductStartupShowroomAuthoring.ShellMaterialPath,
+                ProductStartupShowroomAuthoring.SurfaceMaterialPath,
+                ProductStartupShowroomAuthoring.AccentMaterialPath,
+                ProductStartupShowroomAuthoring.OverlayMaterialPath,
+                ProductStartupShowroomAuthoring.BackdropMaterialPath,
+                ProductStartupShowroomAuthoring.TextMaterialPath
             };
             string[] before = paths.Select(Sha256).ToArray();
             ProductFlightModesFoundationAuthoring.Apply();
@@ -117,6 +138,130 @@ namespace QuestFlight.Editor.Tests
             Assert.That(source, Does.Not.Contain("AircraftControlState"));
             Assert.That(source, Does.Not.Contain("Main Camera"));
             Assert.That(source, Does.Not.Contain("XR Origin"));
+
+            foreach (string menuSourcePath in new[]
+                     {
+                         "Assets/Scripts/Product/ProductFlightModeMenuView.cs",
+                         "Assets/Scripts/Product/ProductFlightModeMenuButton.cs"
+                     })
+            {
+                string menuSource = File.ReadAllText(menuSourcePath);
+                foreach (string forbidden in new[]
+                         {
+                             "Find(", "FindObjectOfType", "FindObjectsOfType",
+                             "Resources.Load", "Instantiate(", "new GameObject",
+                             "AddComponent", "SetPositionAndRotation",
+                             ".position =", ".rotation =", ".localPosition =",
+                             ".localRotation ="
+                         })
+                    Assert.That(menuSource, Does.Not.Contain(forbidden),
+                        menuSourcePath + ": " + forbidden);
+            }
+        }
+
+        [Test]
+        public void StartupShowroomUsesOneRendererOnlyBackdropAndFourDistinctMetaActions()
+        {
+            GameObject world = AssetDatabase.LoadAssetAtPath<GameObject>(
+                ProductFlightModesFoundationAuthoring.WorldPrefabPath);
+            Assert.That(world, Is.Not.Null);
+            ProductFlightModeMenuView view = world
+                .GetComponentsInChildren<ProductFlightModeMenuView>(true)
+                .Single();
+            ProductFlightModeMenuButton[] buttons = view
+                .GetComponentsInChildren<ProductFlightModeMenuButton>(true);
+            Assert.That(buttons.Select(button => button.Action).Distinct().Count(),
+                Is.EqualTo(4));
+            Assert.That(buttons.All(button => button.HasAuthoredReferences), Is.True);
+            Assert.That(buttons.All(button => button.AuthoredMenuView == view), Is.True);
+            Assert.That(buttons.All(button => button.PointableCount == 2), Is.True);
+            Assert.That(view.GetComponentsInChildren<Camera>(true), Is.Empty);
+            Assert.That(view.GetComponentsInChildren<Rigidbody>(true), Is.Empty);
+            Assert.That(view.GetComponentsInChildren<Collider>(true),
+                Has.Length.EqualTo(4));
+            Assert.That(view.AircraftPresentationRendererCount,
+                Is.GreaterThan(0));
+            Assert.That(view.InteractionPresentationRendererCount, Is.EqualTo(2));
+            Assert.That(view.WorldPresentationRendererCount, Is.GreaterThan(0));
+            Assert.That(view.ValidateWorldPresentationReferences(out string worldError),
+                Is.True, worldError);
+            Assert.That(view.MenuButtonCount, Is.EqualTo(4));
+
+            Renderer[] suppressedRenderers = (Renderer[])typeof(ProductFlightModeMenuView)
+                .GetField("aircraftPresentationRenderers",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic)
+                ?.GetValue(view);
+            Renderer[] interactionRenderers = (Renderer[])typeof(ProductFlightModeMenuView)
+                .GetField("interactionPresentationRenderers",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic)
+                ?.GetValue(view);
+            Assert.That(suppressedRenderers, Is.Not.Null.And.Not.Empty);
+            Assert.That(interactionRenderers, Has.Length.EqualTo(2));
+            Assert.That(interactionRenderers.Intersect(suppressedRenderers), Is.Empty,
+                "Touch-controller beams must remain visible in the showroom.");
+            Assert.That(interactionRenderers.All(renderer =>
+                    renderer.name == "Cube" &&
+                    HasAncestorNamed(renderer.transform, "ControllerRayInteractor")),
+                Is.True, "Only Touch-controller beams may bypass suppression.");
+            Renderer[] controllerCursorRenderers = view.transform.root
+                .GetComponentsInChildren<Renderer>(true)
+                .Where(renderer => renderer.name == "OculusCursor" &&
+                    HasAncestorNamed(renderer.transform, "ControllerRayInteractor"))
+                .ToArray();
+            Assert.That(controllerCursorRenderers, Has.Length.EqualTo(2));
+            Assert.That(controllerCursorRenderers.All(renderer =>
+                    suppressedRenderers.Contains(renderer)),
+                Is.True,
+                "Meta Touch cursor quads must remain suppressed in the showroom.");
+            Renderer[] handRayRenderers = view.transform.root
+                .GetComponentsInChildren<Renderer>(true)
+                .Where(renderer => HasAncestorNamed(
+                    renderer.transform, "Hand and No Controller") &&
+                    (renderer.name == "Cube" || renderer.name == "OculusCursor"))
+                .ToArray();
+            Assert.That(handRayRenderers, Has.Length.EqualTo(4));
+            Assert.That(handRayRenderers.All(renderer =>
+                    suppressedRenderers.Contains(renderer)),
+                Is.True,
+                "Bare-hand ray/cursor geometry must remain suppressed in the showroom.");
+
+            Transform backdrop = view.GetComponentsInChildren<Transform>(true)
+                .Single(transform => transform.name ==
+                    ProductStartupShowroomAuthoring.BackdropName);
+            Assert.That(backdrop.GetComponentsInChildren<Renderer>(true),
+                Has.Length.EqualTo(1));
+            Assert.That(backdrop.GetComponentsInChildren<MonoBehaviour>(true), Is.Empty);
+
+            Transform shell = view.GetComponentsInChildren<Transform>(true)
+                .Single(transform => transform.name ==
+                    ProductStartupShowroomAuthoring.ShellName);
+            Assert.That(shell.GetComponentsInChildren<Renderer>(true),
+                Has.Length.EqualTo(1));
+            Assert.That(shell.GetComponentsInChildren<Collider>(true), Is.Empty);
+
+            Material backdropMaterial = AssetDatabase.LoadAssetAtPath<Material>(
+                ProductStartupShowroomAuthoring.BackdropMaterialPath);
+            Material surfaceMaterial = AssetDatabase.LoadAssetAtPath<Material>(
+                ProductStartupShowroomAuthoring.SurfaceMaterialPath);
+            Material overlayMaterial = AssetDatabase.LoadAssetAtPath<Material>(
+                ProductStartupShowroomAuthoring.OverlayMaterialPath);
+            Assert.That(backdropMaterial.GetTag("RenderType", false),
+                Is.EqualTo("Opaque"));
+            Assert.That(surfaceMaterial.GetTag("RenderType", false),
+                Is.EqualTo("Opaque"));
+            Assert.That(overlayMaterial.GetTag("RenderType", false),
+                Is.EqualTo("Transparent"));
+        }
+
+        private static bool HasAncestorNamed(Transform transform, string name)
+        {
+            for (Transform current = transform; current != null; current = current.parent)
+            {
+                if (current.name == name) return true;
+            }
+            return false;
         }
 
         [Test]

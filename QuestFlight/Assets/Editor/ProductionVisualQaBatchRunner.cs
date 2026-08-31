@@ -105,6 +105,56 @@ namespace QuestFlightLab.Editor
                 Debug.LogWarning("[QuestFlightLab][ProductionVisualQA] Machine QA did not pass; see visual_qa_summary.md.");
         }
 
+        public static void RunStartupSelectorVisualQa()
+        {
+            string outputDir = System.Environment.GetEnvironmentVariable(
+                "QFL_PRODUCTION_VISUAL_QA_DIR");
+            if (string.IsNullOrWhiteSpace(outputDir))
+                throw new InvalidOperationException(
+                    "QFL_PRODUCTION_VISUAL_QA_DIR is required for selector-only QA.");
+            int width = ReadInt("QFL_PRODUCTION_VISUAL_QA_WIDTH", DefaultWidth);
+            int height = ReadInt("QFL_PRODUCTION_VISUAL_QA_HEIGHT", DefaultHeight);
+            Directory.CreateDirectory(outputDir);
+            Directory.CreateDirectory(Path.Combine(outputDir, "screenshots"));
+            ProductionVisualQaReport report = new ProductionVisualQaReport
+            {
+                generatedUtc = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+                unityVersion = Application.unityVersion,
+                scenePath = ProductionScenePath,
+                outputDirectory = outputDir,
+                renderWidth = width,
+                renderHeight = height,
+                humanHeadsetAcceptance = "NOT_RUN_NO_USER_AVAILABLE",
+                flightPhaseImageSemantics =
+                    "Selector-only corrective stereo capture; standard Visual QA is independently preserved."
+            };
+            try
+            {
+                VisualContext context = LoadContext(width, height, report);
+                ProductFlightModeCoordinator modeCoordinator = context.scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root
+                        .GetComponentsInChildren<ProductFlightModeCoordinator>(true))
+                    .Single();
+                modeCoordinator.AuthoredModeMenuView.ShowSelectionForVisualQa();
+                CaptureStereoSelector(
+                    context, report, outputDir, width, height, modeCoordinator);
+                report.passed = report.shots.Count == 1 && report.shots[0].passed;
+                report.classification = report.passed
+                    ? "PASS_SELECTOR_MACHINE_QA_HUMAN_HEADSET_REQUIRED"
+                    : "FAIL_SELECTOR_MACHINE_QA";
+            }
+            catch (Exception exception)
+            {
+                report.errors.Add(exception.ToString());
+                report.passed = false;
+                report.classification = "FAIL_SELECTOR_MACHINE_QA";
+            }
+            WriteReportFiles(report, outputDir);
+            Debug.Log($"[QuestFlightLab][ProductionVisualQA] selector-only " +
+                      $"classification={report.classification} output={outputDir}");
+        }
+
         [MenuItem("Quest Flight Lab/Production Vertical Slice V2/Trace Visual Artifacts")]
         public static void TraceProductionVisualArtifacts()
         {
@@ -409,8 +459,7 @@ namespace QuestFlightLab.Editor
             if (modeCoordinator == null || !modeCoordinator.HasAuthoredReferences)
                 throw new InvalidOperationException(
                     "The serialized ProductFlightModeCoordinator is unavailable for selector QA.");
-            modeCoordinator.AuthoredModePanelRoot.SetActive(true);
-            modeCoordinator.AuthoredModePanelText.text = ProductFlightModeCoordinator.SelectionText;
+            modeCoordinator.AuthoredModeMenuView.ShowSelectionForVisualQa();
             CaptureStereoSelector(context, report, outputDir, width, height, modeCoordinator);
             FlightDynamicsCoordinator flightCoordinator =
                 modeCoordinator.AuthoredFlightCoordinator;
@@ -425,6 +474,7 @@ namespace QuestFlightLab.Editor
                 !modeCoordinator.AuthoredDemoPilot.IsRunning)
                 throw new InvalidOperationException(
                     "The public Demo selection did not establish the existing Demo lifecycle for Visual QA.");
+            modeCoordinator.AuthoredModePanelRoot.SetActive(false);
 
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "01_default_cockpit", "Default cockpit", "cockpit", pilotEye, pilotForward, 72f, ViewProfile.Cockpit));
@@ -1940,8 +1990,11 @@ namespace QuestFlightLab.Editor
             try
             {
                 context.visibility?.SetCockpitView();
+                modeCoordinator.AuthoredModeMenuView.ShowSelectionForVisualQa();
                 Vector3 centerEye = context.rig.PilotSeatAnchor.position;
-                Vector3 target = modeCoordinator.AuthoredModePanelText.transform.position;
+                Vector3 target = modeCoordinator.AuthoredModeMenuView
+                    .ShowroomContentRoot.transform.TransformPoint(
+                        new Vector3(0f, 0.02f, 1.45f));
                 Vector3 forward = (target - centerEye).normalized;
                 Vector3 eyeRight = Vector3.Cross(Vector3.up, forward).normalized;
                 if (eyeRight.sqrMagnitude < 0.5f)

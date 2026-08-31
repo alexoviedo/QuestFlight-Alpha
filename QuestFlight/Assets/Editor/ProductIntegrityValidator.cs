@@ -571,10 +571,44 @@ namespace QuestFlight.Editor
                             mode.AuthoredModePanelRoot == modePanels[0].gameObject,
                         "mode coordinator does not reference the accepted mode-panel root", report);
                     Require(modePanels.Length == 1 &&
-                            modePanels[0].GetComponentsInChildren<TextMesh>(true).Length == 1 &&
-                            mode.AuthoredModePanelText ==
-                            modePanels[0].GetComponentInChildren<TextMesh>(true),
-                        "mode coordinator does not reference the sole mode-panel TextMesh", report);
+                            modePanels[0].GetComponentsInChildren<TextMesh>(true)
+                                .Count(text => text.name ==
+                                    ProductStartupShowroomAuthoring.StateContractName) == 1 &&
+                            mode.AuthoredModePanelText != null &&
+                            mode.AuthoredModePanelText.name ==
+                                ProductStartupShowroomAuthoring.StateContractName,
+                        "mode coordinator does not reference the sole hidden mode-state contract", report);
+                    ProductFlightModeMenuView[] menuViews = modePanels.Length == 1
+                        ? modePanels[0].GetComponentsInChildren<ProductFlightModeMenuView>(true)
+                        : Array.Empty<ProductFlightModeMenuView>();
+                    string worldPresentationError =
+                        "world-presentation renderer references are missing";
+                    if (menuViews.Length == 1 &&
+                        menuViews[0].ValidateWorldPresentationReferences(
+                            out worldPresentationError))
+                        worldPresentationError = string.Empty;
+                    Require(menuViews.Length == 1 &&
+                            menuViews[0].HasAuthoredReferences &&
+                            string.IsNullOrEmpty(worldPresentationError) &&
+                            mode.AuthoredModeMenuView == menuViews[0],
+                        "mode coordinator does not reference one valid serialized startup showroom: " +
+                        worldPresentationError, report);
+                    ProductFlightModeMenuButton[] menuButtons = modePanels.Length == 1
+                        ? modePanels[0].GetComponentsInChildren<ProductFlightModeMenuButton>(true)
+                        : Array.Empty<ProductFlightModeMenuButton>();
+                    Require(menuButtons.Length == 4 &&
+                            menuButtons.All(button => button.HasAuthoredReferences) &&
+                            menuButtons.Select(button => button.Action).Distinct().Count() == 4,
+                        "startup showroom must contain four distinct fully serialized Meta actions", report);
+                    Transform backdrop = modePanels.Length == 1
+                        ? modePanels[0].GetComponentsInChildren<Transform>(true)
+                            .SingleOrDefault(transform => transform.name ==
+                                ProductStartupShowroomAuthoring.BackdropName)
+                        : null;
+                    Require(backdrop != null &&
+                            backdrop.GetComponentsInChildren<MonoBehaviour>(true).Length == 0 &&
+                            backdrop.GetComponentsInChildren<Renderer>(true).Length == 1,
+                        "startup showroom backdrop must remain one renderer-only object", report);
                 }
 
                 int missingScripts = transforms.Sum(transform =>

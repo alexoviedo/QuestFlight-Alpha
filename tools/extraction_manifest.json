@@ -514,6 +514,36 @@
       "reason": "Serialized startup-only flight-mode coordinator that uses the existing demo lifecycle, product input boundary, and native JSBSim authority without constructing runtime hierarchy or writing flight controls."
     },
     {
+      "path": "Assets/Scripts/Product/ProductFlightModeMenuView.cs",
+      "classification": "approved_product_authored",
+      "reason": "Serialized presentation-only startup showroom and readiness-gated comfort transition; it never constructs hierarchy or writes flight, aircraft, XR, camera, seat, or calibration state."
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductFlightModeMenuButton.cs",
+      "classification": "approved_product_authored",
+      "reason": "Serialized Meta pointable adapter that forwards the four authored startup-menu actions to existing public lifecycle APIs."
+    },
+    {
+      "path": "Assets/Production/Materials/StartupShowroomUnlit.shader",
+      "classification": "approved_product_authored",
+      "reason": "Project-authored opaque unlit shell, backdrop, and panel shader for the bounded startup showroom."
+    },
+    {
+      "path": "Assets/Production/Materials/StartupShowroomFade.shader",
+      "classification": "approved_product_authored",
+      "reason": "Project-authored transparent comfort-fade shader used only during the bounded transition from the startup showroom."
+    },
+    {
+      "path": "Assets/Production/UI/StartupShowroomBackdrop.png",
+      "classification": "approved_project_generated",
+      "reason": "Project-directed, source-and-license-recorded cinematic startup backdrop generated without a third-party reference image."
+    },
+    {
+      "path": "Assets/Production/UI/StartupShowroomSourceManifest.json",
+      "classification": "approved_provenance",
+      "reason": "Hash, prompt, generator, license, and runtime-policy record for the project-generated startup backdrop."
+    },
+    {
       "path": "Assets/Scripts/Product/ProductAttribution.cs",
       "classification": "approved_product_authored",
       "reason": "Runtime-accessible Credits/About attribution metadata."
