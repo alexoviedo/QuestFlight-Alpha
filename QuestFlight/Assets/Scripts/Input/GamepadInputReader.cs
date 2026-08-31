@@ -45,14 +45,24 @@ namespace QuestFlightLab.Input
         private float _previousThrottlePosition;
         private float _previousMixturePosition;
         private float _previousFlapsPosition;
+        private bool _activeGamepadHasPhysicalState;
         private readonly Dictionary<int, bool> _sixAxisByDeviceId =
             new Dictionary<int, bool>();
 
         [Serializable]
         private sealed class AndroidControllerCapabilities
         {
+            public int productId;
+            public int vendorId;
             public int[] motionAxes;
         }
+
+        // Quest Touch input is already consumed through OVRInput and the
+        // serialized cockpit-interaction path. Horizon exposes the same internal
+        // peripheral as an Android gamepad; accepting it here lets menu
+        // thumbstick events replace the user's T2/generic flight controller.
+        private const int MetaVendorId = 0x2833;
+        private const int QuestVrPeripheralProductId = 0x0160;
 
         public void ConfigureExternalFlightControllers(
             bool enabled,
@@ -95,9 +105,25 @@ namespace QuestFlightLab.Input
                 _hasExternalPositions = false;
             }
             else if (externalFlightControllersEnabled &&
-                     IsSixAxis(_activeGamepad))
+                      IsSixAxis(_activeGamepad))
             {
-                ReadExternalFlightSnapshot(_activeGamepad, Current);
+                // Android creates a newly discovered gamepad with zero-filled
+                // state. Zero is a valid centered primary axis, but it is the
+                // midpoint (50%) of signed throttle and brake axes. Do not
+                // publish that synthetic state as physical input. T2's real
+                // idle report contains non-zero signed position axes (notably
+                // released toe brakes at -1), so the first non-default full
+                // report safely establishes all six real axes.
+                if (!_activeGamepadHasPhysicalState)
+                    _activeGamepadHasPhysicalState =
+                        HasNonDefaultExternalState(_activeGamepad);
+                if (_activeGamepadHasPhysicalState)
+                    ReadExternalFlightSnapshot(_activeGamepad, Current);
+                else
+                {
+                    Current.SetDisconnected(Time.unscaledTime, _sampleRateHz);
+                    _hasExternalPositions = false;
+                }
             }
             else
             {
@@ -160,8 +186,34 @@ namespace QuestFlightLab.Input
         {
             if (gamepad == null)
                 return false;
+            if (IsQuestVrPeripheral(gamepad))
+                return false;
             return externalFlightControllersEnabled ||
                    !IsSixAxis(gamepad);
+        }
+
+        public static bool IsQuestVrPeripheral(InputDevice device)
+        {
+            if (device == null ||
+                !string.Equals(device.description.interfaceName, "Android",
+                    StringComparison.OrdinalIgnoreCase) ||
+                string.IsNullOrWhiteSpace(device.description.capabilities))
+                return false;
+
+            AndroidControllerCapabilities capabilities;
+            try
+            {
+                capabilities = JsonUtility.FromJson<AndroidControllerCapabilities>(
+                    device.description.capabilities);
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+
+            return capabilities != null &&
+                   capabilities.vendorId == MetaVendorId &&
+                   capabilities.productId == QuestVrPeripheralProductId;
         }
 
         private void SetActiveGamepad(Gamepad gamepad)
@@ -169,7 +221,26 @@ namespace QuestFlightLab.Input
             if (_activeGamepad == gamepad)
                 return;
             _activeGamepad = gamepad;
+            _activeGamepadHasPhysicalState = false;
             _hasExternalPositions = false;
+        }
+
+        private static bool HasNonDefaultExternalState(InputDevice device)
+        {
+            const float stateEpsilon = 0.0001f;
+            return
+                Mathf.Abs(ReadMappedAxis(device,
+                    ProductExternalControllerAxis.X)) > stateEpsilon ||
+                Mathf.Abs(ReadMappedAxis(device,
+                    ProductExternalControllerAxis.Y)) > stateEpsilon ||
+                Mathf.Abs(ReadMappedAxis(device,
+                    ProductExternalControllerAxis.Z)) > stateEpsilon ||
+                Mathf.Abs(ReadMappedAxis(device,
+                    ProductExternalControllerAxis.Rx)) > stateEpsilon ||
+                Mathf.Abs(ReadMappedAxis(device,
+                    ProductExternalControllerAxis.Ry)) > stateEpsilon ||
+                Mathf.Abs(ReadMappedAxis(device,
+                    ProductExternalControllerAxis.Rz)) > stateEpsilon;
         }
 
         private void ReadStandardGamepadSnapshot(

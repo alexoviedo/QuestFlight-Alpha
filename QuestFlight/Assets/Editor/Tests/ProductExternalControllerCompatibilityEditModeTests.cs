@@ -101,6 +101,35 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
+        public void ExternalControllerWithoutFreshReportPublishesDisconnectedNeutralSnapshot()
+        {
+            ProductExternalControllerLayout.EnsureRegistered();
+            _device = InputSystem.AddDevice(SixAxisDescription());
+            _target = new GameObject("ExternalControllerInitialStateTest");
+            GamepadInputReader reader = _target.AddComponent<GamepadInputReader>();
+            reader.ConfigureExternalFlightControllers(
+                true,
+                ProductExternalControllerMapping.SixAxisFlightDefault());
+
+            reader.SampleInput();
+
+            Assert.That(reader.Current.connected, Is.False,
+                "A zero-filled Android device state is not a physical HID report.");
+            Assert.That(reader.Current.hasThrottlePosition, Is.False);
+            Assert.That(reader.Current.leftTrigger, Is.Zero);
+            Assert.That(reader.Current.rightTrigger, Is.Zero,
+                "Synthetic startup state must never apply half toe brakes.");
+
+            QueueSixAxisState(0f, 0f, 0f, 0f, -1f, -1f);
+            reader.SampleInput();
+
+            Assert.That(reader.Current.connected, Is.True);
+            Assert.That(reader.Current.hasThrottlePosition, Is.True);
+            Assert.That(reader.Current.leftTrigger, Is.Zero.Within(0.001f));
+            Assert.That(reader.Current.rightTrigger, Is.Zero.Within(0.001f));
+        }
+
+        [Test]
         public void DisabledExternalMappingDoesNotCaptureSixAxisDevice()
         {
             ProductExternalControllerLayout.EnsureRegistered();
@@ -150,6 +179,44 @@ namespace QuestFlight.Editor.Tests
                 Is.EqualTo(gamepad.leftTrigger.ReadValue()).Within(0.001f));
             Assert.That(reader.Current.rightTrigger,
                 Is.EqualTo(gamepad.rightTrigger.ReadValue()).Within(0.001f));
+        }
+
+        [Test]
+        public void QuestVrPeripheralCannotDisplaceExternalFlightController()
+        {
+            ProductExternalControllerLayout.EnsureRegistered();
+            _device = InputSystem.AddDevice(SixAxisDescription());
+            _target = new GameObject("QuestVrPeripheralExclusionTest");
+            GamepadInputReader reader = _target.AddComponent<GamepadInputReader>();
+            reader.ConfigureExternalFlightControllers(
+                true,
+                ProductExternalControllerMapping.SixAxisFlightDefault());
+
+            QueueSixAxisState(0.15f, -0.2f, 0.4f, 0.1f, -1f, -1f);
+            reader.SampleInput();
+            Assert.That(reader.UsingExternalFlightController, Is.True);
+            int externalDeviceId = reader.Current.deviceId;
+
+            InputDevice questPeripheral = InputSystem.AddDevice(
+                QuestVrPeripheralDescription());
+            Assert.That(questPeripheral, Is.InstanceOf<Gamepad>());
+            Assert.That(GamepadInputReader.IsQuestVrPeripheral(questPeripheral),
+                Is.True);
+            InputSystem.QueueStateEvent(
+                questPeripheral,
+                new AndroidGameControllerState()
+                    .WithAxis(AndroidAxis.X, -1f)
+                    .WithAxis(AndroidAxis.Y, -1f)
+                    .WithAxis(AndroidAxis.Rx, -1f)
+                    .WithAxis(AndroidAxis.Ry, -1f)
+                    .WithAxis(AndroidAxis.HatX, 0f)
+                    .WithAxis(AndroidAxis.HatY, 0f));
+            InputSystem.Update();
+            reader.SampleInput();
+
+            Assert.That(reader.UsingExternalFlightController, Is.True);
+            Assert.That(reader.Current.deviceId, Is.EqualTo(externalDeviceId),
+                "Menu input from Quest's internal VR peripheral must not replace T2 or another external flight controller.");
         }
 
         [Test]
@@ -221,6 +288,10 @@ namespace QuestFlight.Editor.Tests
             Assert.That(reader.UsingExternalFlightController, Is.True);
             Assert.That(input.Current.aileron, Is.GreaterThan(0.25f),
                 "Guided/Demo mode must continue sampling enabled external primary controls.");
+            Assert.That(input.Current.throttle, Is.EqualTo(0.6f).Within(0.001f),
+                "An untouched external throttle must not suppress the Demo pilot's takeoff power.");
+            Assert.That(input.Current.leftToeBrake, Is.LessThan(0.001f));
+            Assert.That(input.Current.rightToeBrake, Is.LessThan(0.001f));
             Assert.That(input.DeterministicMode, Is.True,
                 "External input must not rewrite the established Demo lifecycle flag.");
             Assert.That(input.FlightLessonGuidanceActive, Is.True);
@@ -278,6 +349,20 @@ namespace QuestFlight.Editor.Tests
                     "\"productId\":16385,\"vendorId\":12346," +
                     "\"isVirtual\":false," +
                     "\"motionAxes\":[0,1,11,12,13,14,15,16]," +
+                    "\"inputSources\":16778257}"
+            };
+
+        private static InputDeviceDescription QuestVrPeripheralDescription() =>
+            new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidGameController",
+                product = "Device 0xA61A6F6535F7E81A",
+                capabilities =
+                    "{\"deviceDescriptor\":\"quest-vr-peripheral\"," +
+                    "\"productId\":352,\"vendorId\":10291," +
+                    "\"isVirtual\":false," +
+                    "\"motionAxes\":[0,1,11,12,15,16]," +
                     "\"inputSources\":16778257}"
             };
 

@@ -70,6 +70,8 @@ namespace QuestFlight.Product
         private bool _demoWasPressed;
         private bool _freeFlightWasPressed;
         private bool _lessonsWasPressed;
+        private bool _demoCheckpointPending;
+        private float _demoCheckpointAtUnscaledTime;
 
         public void ConfigureAuthoredReferences(
             ProductDemoPilot authoredDemoPilot,
@@ -133,6 +135,11 @@ namespace QuestFlight.Product
 
         private void Update()
         {
+            if (State == FlightModeState.Demo)
+            {
+                LogDemoCheckpointWhenDue();
+                return;
+            }
             if (State != FlightModeState.Selection)
                 return;
 
@@ -197,7 +204,32 @@ namespace QuestFlight.Product
 
             State = FlightModeState.Demo;
             RestoreSavedTimeScaleOnce();
+            _demoCheckpointAtUnscaledTime = Time.unscaledTime + 3f;
+            _demoCheckpointPending = true;
             BeginSuccessfulTransition("DEMO FLIGHT");
+        }
+
+        private void LogDemoCheckpointWhenDue()
+        {
+            if (!_demoCheckpointPending ||
+                Time.unscaledTime < _demoCheckpointAtUnscaledTime)
+                return;
+
+            _demoCheckpointPending = false;
+            FlightDynamicsControlSnapshot controls =
+                flightCoordinator.LastAppliedControls;
+            FlightDynamicsState flight = flightCoordinator.CurrentState;
+            Debug.Log(
+                $"[QuestFlight][DemoCheckpoint] State={State} Running={demoPilot.IsRunning} " +
+                $"TimeScale={Time.timeScale:F3} Initialized={flightCoordinator.IsInitialized} " +
+                $"Applied=A{controls.aileron:F3}/E{controls.elevator:F3}/" +
+                $"R{controls.rudder:F3}/T{controls.throttle:F3}/M{controls.mixture:F3}/" +
+                $"LB{controls.leftToeBrake:F3}/RB{controls.rightToeBrake:F3} " +
+                $"Flight=GS{flight.groundSpeedKnots:F2}/CAS{flight.calibratedAirspeedKnots:F2}/" +
+                $"RPM{flight.engineRpm:F0}/WOW{flight.weightOnWheels} " +
+                demoPilot.BuildFailureDiagnostic() + " " +
+                productInput.BuildFlightLessonFailureDiagnostic(),
+                this);
         }
 
         public void SelectFreeFlight()
