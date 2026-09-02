@@ -514,6 +514,11 @@
       "reason": "Serialized startup-only flight-mode coordinator that uses the existing demo lifecycle, product input boundary, and native JSBSim authority without constructing runtime hierarchy or writing flight controls."
     },
     {
+      "path": "Assets/Scripts/Product/ProductMapBoundaryRecovery.cs",
+      "classification": "approved_product_authored",
+      "reason": "Serialized Free Flight comfort recovery that intercepts the finite authored terrain boundary and delegates a faded inward reset to the sole native JSBSim authority without writing product transforms or constructing runtime hierarchy."
+    },
+    {
       "path": "Assets/Scripts/Product/ProductFlightModeMenuView.cs",
       "classification": "approved_product_authored",
       "reason": "Serialized presentation-only startup showroom and readiness-gated comfort transition; it never constructs hierarchy or writes flight, aircraft, XR, camera, seat, or calibration state."

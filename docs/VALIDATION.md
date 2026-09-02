@@ -15,6 +15,14 @@ Run from the repository root:
 
 `validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current feature candidate captures 81 Visual-QA views; every full-resolution image requires inspection. Historical milestones below retain their original capture counts. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. The accepted-baseline hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. Historical and feature-scoped values below are evidence only.
 
+Run Android builds from the canonical `QuestFlight` project directory. Do not
+copy or junction its `Library` into a second project root: Unity's AssetDatabase
+is tied to the absolute project path. The build wrapper rejects linked or
+wrong-root Libraries, transactionally preserves the recognized local-only aerial
+StreamingAssets with a SHA-256 inventory, and restores them on every exit path.
+After an interrupted build, rerun the same build command; its fixed recovery
+journal restores the preserved files before preflight.
+
 ## Full-map building clipmap V1
 
 - source/database validation: PASS, 57,407 components, 576 pages, 482 nonempty,

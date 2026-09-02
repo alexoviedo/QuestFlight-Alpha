@@ -17,6 +17,8 @@ namespace QuestFlight.Editor
     public static class ProductionBuild
     {
         public const string ApkRelativePath = "Builds/Android/QuestFlight-production.apk";
+        private const string ProductionAircraftRigPath =
+            "Assets/Production/Prefabs/ProductionC172AircraftRig.prefab";
 
         [MenuItem("QuestFlight/Product/Build Quest APK")]
         public static void PerformAndroidBuild()
@@ -29,6 +31,7 @@ namespace QuestFlight.Editor
             // The scene owns a fixed renderer pool; only deterministic offline page bundles
             // are generated here. No runtime hierarchy or geometry authoring is permitted.
             FullMapBuildingClipmapAssetAuthoring.EnsureBuildArtifacts();
+            RefreshSerializedProductClosure();
             ConfigureMetaOpenXrNativePluginSelection();
             ProductIntegrityReport integrity = ProductIntegrityValidator.Validate();
             if (!integrity.passed) throw new InvalidOperationException(integrity.ToString());
@@ -78,6 +81,31 @@ namespace QuestFlight.Editor
             Debug.Log(
                 $"[QuestFlight][Build] SUCCESS apk={apkPath}; bytes={report.summary.totalSize}; " +
                 $"duration={report.summary.totalTime}; development={development}");
+        }
+
+        /// <summary>
+        /// Reimport the small serialized product closure synchronously before validation.
+        /// This prevents a stale AssetDatabase artifact from presenting valid MonoBehaviour
+        /// GUIDs as missing after a project directory has been copied for diagnostics. It
+        /// does not author, repair, or reserialize any product object.
+        /// </summary>
+        private static void RefreshSerializedProductClosure()
+        {
+            ImportAssetOptions options = ImportAssetOptions.ForceUpdate |
+                ImportAssetOptions.ForceSynchronousImport;
+            string[] paths =
+            {
+                ProductProjectConfigurator.ProductionScenePath,
+                ProductFlightModesFoundationAuthoring.WorldPrefabPath,
+                ProductionAircraftRigPath
+            };
+            foreach (string path in paths)
+            {
+                if (!File.Exists(path))
+                    throw new FileNotFoundException(
+                        "Serialized product build dependency is missing.", path);
+                AssetDatabase.ImportAsset(path, options);
+            }
         }
 
         /// <summary>

@@ -85,6 +85,10 @@ namespace QuestFlight.Editor
                     .GetComponentsInChildren<ProductFlightModeCoordinator>(true);
                 Require(coordinators.Length <= 1,
                     $"Refusing duplicate ProductFlightModeCoordinator components; found {coordinators.Length}.");
+                ProductMapBoundaryRecovery[] boundaryRecoveries = root
+                    .GetComponentsInChildren<ProductMapBoundaryRecovery>(true);
+                Require(boundaryRecoveries.Length <= 1,
+                    $"Refusing duplicate ProductMapBoundaryRecovery components; found {boundaryRecoveries.Length}.");
 
                 ProductDemoPilot demo = RequireSingle<ProductDemoPilot>(root);
                 ProductControlInput input = RequireSingle<ProductControlInput>(root);
@@ -146,11 +150,23 @@ namespace QuestFlight.Editor
                     panels[0].gameObject,
                     stateContracts[0],
                     view);
+                ProductMapBoundaryRecovery boundaryRecovery =
+                    boundaryRecoveries.Length == 1
+                        ? boundaryRecoveries[0]
+                        : inputRoot.gameObject.AddComponent<ProductMapBoundaryRecovery>();
+                Require(boundaryRecovery.transform == inputRoot,
+                    "ProductMapBoundaryRecovery must be serialized on ProductionInputRoot.");
+                boundaryRecovery.ConfigureAuthoredReferences(
+                    coordinator,
+                    input,
+                    flight,
+                    flight.terrainSurface);
                 ProductStartupShowroomAuthoring.BindWorldAuthority(
                     coordinator,
                     view);
                 demo.ConfigureAuthoredAutoStart(false);
                 EditorUtility.SetDirty(coordinator);
+                EditorUtility.SetDirty(boundaryRecovery);
                 EditorUtility.SetDirty(demo);
                 PrefabUtility.SaveAsPrefabAsset(root, WorldPrefabPath);
             }

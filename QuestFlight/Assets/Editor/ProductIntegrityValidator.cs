@@ -538,6 +538,10 @@ namespace QuestFlight.Editor
                     .OfType<ProductFlightModeCoordinator>().ToArray();
                 Require(modeCoordinators.Length == 1,
                     $"scene must contain exactly one ProductFlightModeCoordinator, found {modeCoordinators.Length}", report);
+                ProductMapBoundaryRecovery[] boundaryRecoveries = behaviours
+                    .OfType<ProductMapBoundaryRecovery>().ToArray();
+                Require(boundaryRecoveries.Length == 1,
+                    $"scene must contain exactly one ProductMapBoundaryRecovery, found {boundaryRecoveries.Length}", report);
                 Transform calibrationOffset = productRoot != null
                     ? productRoot.transform.Find(
                         "AircraftSimulationRoot/AircraftVisualRoot/PilotSeatAnchor/UserViewCalibrationOffset")
@@ -609,6 +613,22 @@ namespace QuestFlight.Editor
                             backdrop.GetComponentsInChildren<MonoBehaviour>(true).Length == 0 &&
                             backdrop.GetComponentsInChildren<Renderer>(true).Length == 1,
                         "startup showroom backdrop must remain one renderer-only object", report);
+                    if (boundaryRecoveries.Length == 1)
+                    {
+                        ProductMapBoundaryRecovery boundary = boundaryRecoveries[0];
+                        Require(boundary.HasAuthoredReferences,
+                            "ProductMapBoundaryRecovery references or policy are invalid", report);
+                        Require(boundary.transform.name == "ProductionInputRoot",
+                            "ProductMapBoundaryRecovery must remain on ProductionInputRoot", report);
+                        Require(boundary.AuthoredModeCoordinator == mode,
+                            "map-boundary recovery does not reference the accepted mode coordinator", report);
+                        Require(productInputs.Length == 1 &&
+                                boundary.AuthoredProductInput == productInputs[0],
+                            "map-boundary recovery does not reference the accepted product input", report);
+                        Require(flightCoordinators.Length == 1 &&
+                                boundary.AuthoredFlightCoordinator == flightCoordinators[0],
+                            "map-boundary recovery does not reference the sole native flight authority", report);
+                    }
                 }
 
                 int missingScripts = transforms.Sum(transform =>

@@ -358,9 +358,8 @@ namespace QuestFlightLab.Environment
                         .sharedMaterial;
                     Require(terrainMaterial != null &&
                             terrainMaterial.HasProperty("_FullMapWaterMask") &&
-                            ReferenceEquals(
-                                terrainMaterial.GetTexture("_FullMapWaterMask"),
-                                fullMapWaterMask),
+                            terrainMaterial.GetTexture("_FullMapWaterMask") ==
+                                fullMapWaterMask,
                         "shared terrain material is not bound to the full-map water mask", failures);
                     Require(terrainMaterial != null &&
                             terrainMaterial.HasProperty("_FullMapWaterReflectionStrength") &&

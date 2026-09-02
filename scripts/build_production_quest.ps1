@@ -55,6 +55,38 @@ function Test-ProductProjectPathLength {
   }
 }
 
+function Test-ProductLibraryIsolation {
+  param([Parameter(Mandatory = $true)][string]$UnityProjectPath)
+
+  $libraryPath = Join-Path $UnityProjectPath 'Library'
+  if (-not (Test-Path -LiteralPath $libraryPath -PathType Container)) {
+    throw "Production Library preflight failed: Library is missing. Open the canonical project once to complete its import before building: $UnityProjectPath"
+  }
+  $libraryItem = Get-Item -LiteralPath $libraryPath -Force
+  if (($libraryItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+    throw "Production Library preflight failed: Library must belong to this project root and may not be a junction or symbolic link. project=$UnityProjectPath library=$libraryPath target=$($libraryItem.Target -join ',')"
+  }
+
+  # A Unity Library is tied to the absolute project root. Persist that identity
+  # inside the ignored cache so a copied/shared Library cannot silently load
+  # serialized product scripts as missing again.
+  $identityPath = Join-Path $libraryPath 'QuestFlightProjectRoot.txt'
+  if (Test-Path -LiteralPath $identityPath -PathType Leaf) {
+    $recordedProjectPath = (Get-Content -LiteralPath $identityPath -Raw).Trim()
+    if (-not [string]::Equals($recordedProjectPath, $UnityProjectPath, [StringComparison]::OrdinalIgnoreCase)) {
+      throw "Production Library preflight failed: Library belongs to a different project root. recorded=$recordedProjectPath requested=$UnityProjectPath marker=$identityPath"
+    }
+  } else {
+    Set-Content -LiteralPath $identityPath -Value $UnityProjectPath -Encoding UTF8 -NoNewline
+  }
+
+  [ordered]@{
+    path = $libraryPath
+    identityPath = $identityPath
+    projectPath = $UnityProjectPath
+  }
+}
+
 function Test-ProductStreamingAssets {
   param([Parameter(Mandatory = $true)][string]$UnityProjectPath)
 
@@ -71,6 +103,7 @@ function Test-ProductStreamingAssets {
     'QuestFlightBuildingClipmap.meta'
   )
   $allowedEntries = @($requiredEntries)
+  $localOnlyEntries = @()
   $ownedJsbsimDirectory = Join-Path $streamingRoot 'JSBSim-1.3.1'
   if (Test-Path -LiteralPath $ownedJsbsimDirectory -PathType Container) {
     $ownershipMarker = Join-Path $ownedJsbsimDirectory '.questflight_jsbsim_package_injection'
@@ -88,6 +121,22 @@ function Test-ProductStreamingAssets {
     }
   }
 
+  # Full-resolution aerial AssetBundles are retained locally for authoring and
+  # visual work, but are not part of the accepted standalone product payload.
+  # The build transaction below preserves this exact pair outside Assets while
+  # Unity builds from the canonical project, then restores and verifies it.
+  $aerialDirectory = Join-Path $streamingRoot 'QuestFlightAerialClipmap'
+  $aerialMeta = $aerialDirectory + '.meta'
+  $aerialDirectoryPresent = Test-Path -LiteralPath $aerialDirectory -PathType Container
+  $aerialMetaPresent = Test-Path -LiteralPath $aerialMeta -PathType Leaf
+  if ($aerialDirectoryPresent -ne $aerialMetaPresent) {
+    throw "Production StreamingAssets preflight failed: QuestFlightAerialClipmap and its paired .meta must either both exist or both be absent. Root: $streamingRoot"
+  }
+  if ($aerialDirectoryPresent) {
+    $localOnlyEntries = @('QuestFlightAerialClipmap', 'QuestFlightAerialClipmap.meta')
+    $allowedEntries += $localOnlyEntries
+  }
+
   $entryNames = @(Get-ChildItem -LiteralPath $streamingRoot -Force |
       ForEach-Object { $_.Name } |
       Sort-Object -Unique)
@@ -96,21 +145,163 @@ function Test-ProductStreamingAssets {
   if ($missing.Count -ne 0 -or $unexpected.Count -ne 0) {
     $missingText = if ($missing.Count -eq 0) { '<none>' } else { $missing -join ', ' }
     $unexpectedText = if ($unexpected.Count -eq 0) { '<none>' } else { $unexpected -join ', ' }
-    throw "Production StreamingAssets preflight failed. missing=[$missingText]; unexpected=[$unexpectedText]. Build from a clean accepted product stage; the build wrapper will not delete, move, or silently exclude local data. Root: $streamingRoot"
+    throw "Production StreamingAssets preflight failed. missing=[$missingText]; unexpected=[$unexpectedText]. Only the explicitly recognized local aerial pair may be transactionally excluded; all other entries fail closed. Root: $streamingRoot"
   }
 
   [ordered]@{
     root = $streamingRoot
     entries = $entryNames
+    buildIncludedEntries = @($entryNames | Where-Object { $_ -notin $localOnlyEntries })
     requiredEntries = $requiredEntries
+    localOnlyEntries = $localOnlyEntries
     packageOwnedJsbsimRecoveryPresent = [bool](Test-Path -LiteralPath $ownedJsbsimDirectory -PathType Container)
   }
 }
 
+function Get-StreamingAssetInventory {
+  param(
+    [Parameter(Mandatory = $true)][string]$Root,
+    [Parameter(Mandatory = $true)][string[]]$EntryNames
+  )
+
+  $records = @()
+  foreach ($entryName in $EntryNames) {
+    $entryPath = Join-Path $Root $entryName
+    if (Test-Path -LiteralPath $entryPath -PathType Leaf) {
+      $item = Get-Item -LiteralPath $entryPath -Force
+      $records += [ordered]@{
+        path = $entryName.Replace('\', '/')
+        bytes = $item.Length
+        sha256 = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+      }
+      continue
+    }
+    if (-not (Test-Path -LiteralPath $entryPath -PathType Container)) {
+      throw "StreamingAssets transaction inventory is missing expected entry: $entryPath"
+    }
+    foreach ($item in Get-ChildItem -LiteralPath $entryPath -Recurse -File -Force | Sort-Object FullName) {
+      $relative = [IO.Path]::GetRelativePath($Root, $item.FullName).Replace('\', '/')
+      $records += [ordered]@{
+        path = $relative
+        bytes = $item.Length
+        sha256 = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+      }
+    }
+  }
+  @($records)
+}
+
+function Write-StreamingAssetsTransactionJournal {
+  param(
+    [Parameter(Mandatory = $true)]$Transaction,
+    [Parameter(Mandatory = $true)][string]$Phase
+  )
+
+  $Transaction.phase = $Phase
+  $Transaction.updatedUtc = [DateTime]::UtcNow.ToString('O')
+  $Transaction | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $Transaction.journalPath -Encoding UTF8
+}
+
+function Restore-ProductStreamingAssetsTransaction {
+  param([Parameter(Mandatory = $true)]$Transaction)
+
+  foreach ($entryName in $Transaction.entryNames) {
+    $sourcePath = Join-Path $Transaction.sourceRoot $entryName
+    $preservedPath = Join-Path $Transaction.preservationRoot $entryName
+    $sourcePresent = Test-Path -LiteralPath $sourcePath
+    $preservedPresent = Test-Path -LiteralPath $preservedPath
+    if ($sourcePresent -and $preservedPresent) {
+      throw "StreamingAssets transaction recovery found a collision and will not overwrite either copy. source=$sourcePath preserved=$preservedPath"
+    }
+    if (-not $sourcePresent -and -not $preservedPresent) {
+      throw "StreamingAssets transaction recovery cannot find either copy of: $entryName"
+    }
+    if ($preservedPresent) {
+      Move-Item -LiteralPath $preservedPath -Destination $sourcePath
+    }
+  }
+
+  $restoredInventory = @(Get-StreamingAssetInventory -Root $Transaction.sourceRoot -EntryNames $Transaction.entryNames)
+  $expectedJson = @($Transaction.inventory) | ConvertTo-Json -Depth 6 -Compress
+  $restoredJson = $restoredInventory | ConvertTo-Json -Depth 6 -Compress
+  if (-not [string]::Equals($expectedJson, $restoredJson, [StringComparison]::Ordinal)) {
+    throw "StreamingAssets transaction restored its entries, but the SHA-256 inventory differs. Journal: $($Transaction.journalPath)"
+  }
+  Write-StreamingAssetsTransactionJournal -Transaction $Transaction -Phase 'restored'
+}
+
+function Restore-InterruptedStreamingAssetsTransaction {
+  param(
+    [Parameter(Mandatory = $true)][string]$TransactionRoot,
+    [Parameter(Mandatory = $true)][string]$ExpectedProjectPath
+  )
+
+  $journalPath = Join-Path $TransactionRoot 'transaction.json'
+  if (-not (Test-Path -LiteralPath $journalPath -PathType Leaf)) { return }
+  $transaction = Get-Content -LiteralPath $journalPath -Raw | ConvertFrom-Json
+  if (-not [string]::Equals($transaction.projectPath, $ExpectedProjectPath, [StringComparison]::OrdinalIgnoreCase)) {
+    throw "StreamingAssets recovery journal belongs to a different project. expected=$ExpectedProjectPath actual=$($transaction.projectPath) journal=$journalPath"
+  }
+  if ($transaction.phase -eq 'restored') { return }
+  Write-Host "Recovering interrupted StreamingAssets build transaction: $journalPath"
+  Restore-ProductStreamingAssetsTransaction -Transaction $transaction
+  Write-Host 'Interrupted StreamingAssets build transaction restored and verified.'
+}
+
+function Begin-ProductStreamingAssetsTransaction {
+  param(
+    [Parameter(Mandatory = $true)][string]$UnityProjectPath,
+    [Parameter(Mandatory = $true)][string[]]$EntryNames,
+    [Parameter(Mandatory = $true)][string]$TransactionRoot
+  )
+
+  if ($EntryNames.Count -eq 0) { return $null }
+  $sourceRoot = Join-Path $UnityProjectPath 'Assets\StreamingAssets'
+  $preservationRoot = Join-Path $TransactionRoot 'preserved'
+  New-Item -ItemType Directory -Force -Path $TransactionRoot | Out-Null
+  if (Test-Path -LiteralPath $preservationRoot) {
+    $existing = @(Get-ChildItem -LiteralPath $preservationRoot -Force)
+    if ($existing.Count -ne 0) {
+      throw "StreamingAssets transaction preservation directory is not empty after recovery: $preservationRoot"
+    }
+  } else {
+    New-Item -ItemType Directory -Path $preservationRoot | Out-Null
+  }
+
+  $transaction = [pscustomobject][ordered]@{
+    schemaVersion = 1
+    projectPath = $UnityProjectPath
+    sourceRoot = $sourceRoot
+    preservationRoot = $preservationRoot
+    journalPath = (Join-Path $TransactionRoot 'transaction.json')
+    entryNames = @($EntryNames)
+    inventory = @(Get-StreamingAssetInventory -Root $sourceRoot -EntryNames $EntryNames)
+    phase = 'preparing'
+    updatedUtc = [DateTime]::UtcNow.ToString('O')
+  }
+  Write-StreamingAssetsTransactionJournal -Transaction $transaction -Phase 'preserving'
+  try {
+    foreach ($entryName in $EntryNames) {
+      Move-Item -LiteralPath (Join-Path $sourceRoot $entryName) -Destination (Join-Path $preservationRoot $entryName)
+    }
+    Write-StreamingAssetsTransactionJournal -Transaction $transaction -Phase 'preserved'
+    return $transaction
+  } catch {
+    Restore-ProductStreamingAssetsTransaction -Transaction $transaction
+    throw
+  }
+}
+
+$libraryIsolationPreflight = Test-ProductLibraryIsolation -UnityProjectPath $ProjectPath
+Write-Host "Production Library isolation preflight: PASS ($($libraryIsolationPreflight.path))"
 $projectPathPreflight = Test-ProductProjectPathLength -UnityProjectPath $ProjectPath
 Write-Host "Production project-path preflight: PASS ($($projectPathPreflight.longestInputPathLength)/$($projectPathPreflight.maximumInputPathLength) characters)"
+$repositoryRoot = Split-Path -Parent $ProjectPath
+$defaultArtifactBase = $repositoryRoot + '-product-extraction-artifacts'
+$streamingAssetsTransactionRoot = Join-Path $defaultArtifactBase '_streaming_assets_build_transaction'
+Restore-InterruptedStreamingAssetsTransaction -TransactionRoot $streamingAssetsTransactionRoot -ExpectedProjectPath $ProjectPath
 $streamingAssetsPreflight = Test-ProductStreamingAssets -UnityProjectPath $ProjectPath
-Write-Host "Production StreamingAssets preflight: PASS ($($streamingAssetsPreflight.entries -join ', '))"
+Write-Host "Production StreamingAssets preflight: PASS (included=$($streamingAssetsPreflight.buildIncludedEntries -join ', '); local-preserved=$($streamingAssetsPreflight.localOnlyEntries -join ', '))"
 if ($PreflightOnly) { return }
 
 if (-not (Test-Path -LiteralPath $UnityExe)) { throw "Unity not found: $UnityExe" }
@@ -134,7 +325,7 @@ function Get-Sha256Hex {
 
 if ([string]::IsNullOrWhiteSpace($ArtifactDir)) {
   $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-  $ArtifactDir = "C:\Users\ovied\Dev\T2\T2-QuestFlight-product-extraction-artifacts\product_build_$stamp"
+  $ArtifactDir = Join-Path $defaultArtifactBase "product_build_$stamp"
 }
 New-Item -ItemType Directory -Force -Path $ArtifactDir | Out-Null
 $ArtifactDir = (Resolve-Path -LiteralPath $ArtifactDir).Path
@@ -155,17 +346,31 @@ $arguments = @(
   '-logFile', $log
 )
 $previousDevelopment = $env:QUESTFLIGHT_DEVELOPMENT_BUILD
+$process = $null
+$streamingAssetsTransaction = $null
 try {
-  $env:QUESTFLIGHT_DEVELOPMENT_BUILD = if ($Development) { '1' } else { '0' }
-  $process = Start-Process -FilePath $UnityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
-  if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
-    Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
-    throw "Product Quest build exceeded ${TimeoutSeconds}s and was stopped. Log: $log"
+  $streamingAssetsTransaction = Begin-ProductStreamingAssetsTransaction `
+    -UnityProjectPath $ProjectPath `
+    -EntryNames @($streamingAssetsPreflight.localOnlyEntries) `
+    -TransactionRoot $streamingAssetsTransactionRoot
+  try {
+    $env:QUESTFLIGHT_DEVELOPMENT_BUILD = if ($Development) { '1' } else { '0' }
+    $process = Start-Process -FilePath $UnityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+    if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
+      Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+      throw "Product Quest build exceeded ${TimeoutSeconds}s and was stopped. Log: $log"
+    }
+  } finally {
+    $env:QUESTFLIGHT_DEVELOPMENT_BUILD = $previousDevelopment
   }
 } finally {
-  $env:QUESTFLIGHT_DEVELOPMENT_BUILD = $previousDevelopment
+  if ($null -ne $streamingAssetsTransaction) {
+    Restore-ProductStreamingAssetsTransaction -Transaction $streamingAssetsTransaction
+    Write-Host "Local-only StreamingAssets restored and SHA-256 verified. Journal: $($streamingAssetsTransaction.journalPath)"
+  }
 }
 
+if ($null -eq $process) { throw "Unity product build did not start. Log: $log" }
 $exitCode = [int]$process.ExitCode
 $logText = if (Test-Path -LiteralPath $log) { Get-Content -LiteralPath $log -Raw } else { '' }
 if ($logText -match 'Application will terminate with return code ([1-9][0-9]*)') {
@@ -187,10 +392,14 @@ $hash = Get-Sha256Hex -LiteralPath $apk
   nativeJsbsimRequired = $true
   unityPrototypeAllowed = $false
   projectPathPreflightPassed = $true
+  libraryIsolationPreflightPassed = $true
+  libraryProjectIdentity = $libraryIsolationPreflight.projectPath
   longestUnityInputPathLength = $projectPathPreflight.longestInputPathLength
   maximumUnityInputPathLength = $projectPathPreflight.maximumInputPathLength
   streamingAssetsPreflightPassed = $true
-  persistentStreamingAssetEntries = @($streamingAssetsPreflight.entries)
+  persistentStreamingAssetEntries = @($streamingAssetsPreflight.buildIncludedEntries)
+  locallyPreservedStreamingAssetEntries = @($streamingAssetsPreflight.localOnlyEntries)
+  streamingAssetsTransactionJournal = if ($null -eq $streamingAssetsTransaction) { $null } else { $streamingAssetsTransaction.journalPath }
 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $ArtifactDir 'product_apk_manifest.json') -Encoding UTF8
 
 Write-Host "Product APK: $apk"

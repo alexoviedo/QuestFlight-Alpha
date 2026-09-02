@@ -200,6 +200,7 @@ GameObject:
   - component: {fileID: 5025774026687160251}
   - component: {fileID: 4392029217008093521}
   - component: {fileID: 6406045178022147876}
+  - component: {fileID: 6510393798299555109}
   m_Layer: 0
   m_Name: ProductionInputRoot
   m_TagString: Untagged
@@ -346,6 +347,29 @@ MonoBehaviour:
   modePanelText: {fileID: 7493758174900244211}
   modeMenuView: {fileID: 220972219065162625}
   lessonsMessageSeconds: 2.5
+--- !u!114 &6510393798299555109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3972055758679815465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 224646c34ee14bbf8f8eb1e77c19a449, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.ProductMapBoundaryRecovery
+  modeCoordinator: {fileID: 6406045178022147876}
+  productInput: {fileID: 1171423066720843826}
+  flightCoordinator: {fileID: 742791276885309778}
+  terrainSurface: {fileID: 11400000, guid: b2b2be77d482f4c4c8fb5ceb35614891, type: 2}
+  triggerInsetMeters: 1500
+  returnInsetMeters: 3000
+  minimumRecoveryAglMeters: 300
+  minimumRecoveryAirspeedKnots: 70
+  fadeOutSeconds: 0.25
+  stabilizationSeconds: 0.5
+  fadeInSeconds: 0.35
 --- !u!1 &3983972066274778650
 GameObject:
   m_ObjectHideFlags: 0
