@@ -29,7 +29,7 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 124;
+        private const int RequiredShotCount = 125;
         // The accepted pre-V3 product reached 77 estimated draws and 659,877
         // visible triangles in the complete camera set.  This milestone must
         // hold draws/materials and may add at most five percent triangles for
@@ -808,6 +808,14 @@ namespace QuestFlightLab.Editor
                 "28_hero_corridor_takeoff_view", "Hero airport corridor takeoff and landing view",
                 "airport_hero_corridor", corridorOverviewCamera,
                 LookAt(corridorOverviewCamera, corridorOverviewTarget), 50f, ViewProfile.Environment));
+
+            Vector3 rightDepartureTarget = new Vector3(150f, 8f, -260f);
+            Vector3 rightDepartureCamera = new Vector3(-520f, 65f, -20f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "28b_runway08_right_building_corridor",
+                "Runway 08 departure — right-side industrial building corridor",
+                "airport_gap_fill", rightDepartureCamera,
+                LookAt(rightDepartureCamera, rightDepartureTarget), 52f, ViewProfile.Environment));
 
             Vector3 poweredAircraftTarget = new Vector3(-485f, 2.8f, -168f);
             Vector3 poweredAircraftCamera = new Vector3(-485f, 7.5f, -38f);

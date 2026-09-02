@@ -30,11 +30,11 @@ namespace QuestFlight.Editor.Tests
                 renderer.shadowCastingMode == ShadowCastingMode.Off), Is.True);
             Assert.That(controller.GetComponentsInChildren<LODGroup>(true), Is.Empty);
             Assert.That(controller.authoredContractVersion, Is.EqualTo(AircraftCenteredBuildingClipmapController.ContractVersion));
-            Assert.That(controller.authoredMaximumSelectedTriangles, Is.EqualTo(233298));
+            Assert.That(controller.authoredMaximumSelectedTriangles, Is.EqualTo(233316));
             Assert.That(controller.pageTriangleCounts, Has.Length.EqualTo(576));
             Assert.That(controller.pageBuildingCounts, Has.Length.EqualTo(576));
             Assert.That(controller.pageRoofAreasSquareMeters, Has.Length.EqualTo(576));
-            Assert.That(controller.pageBuildingCounts.Sum(), Is.EqualTo(57407));
+            Assert.That(controller.pageBuildingCounts.Sum(), Is.EqualTo(57441));
 
             var scene = EditorSceneManager.OpenScene(
                 FullMapBuildingClipmapAssetAuthoring.ScenePath, OpenSceneMode.Single);
@@ -50,18 +50,34 @@ namespace QuestFlight.Editor.Tests
             TextAsset database = AssetDatabase.LoadAssetAtPath<TextAsset>(
                 FullMapBuildingClipmapAssetAuthoring.DatabasePath);
             Assert.That(database, Is.Not.Null);
-            Assert.That(Occurrences(database.text, "\"source_id\":"), Is.EqualTo(57407));
+            Assert.That(Occurrences(database.text, "\"source_id\":"), Is.EqualTo(57441));
             Assert.That(Occurrences(database.text, "\"column\":"), Is.EqualTo(576));
             Assert.That(database.text, Does.Contain("\"contract_version\":\"full-map-building-clipmap-v1\""));
             Assert.That(database.text, Does.Contain("\"facade_contract_version\":\"boulder-semantic-facades-v2\""));
-            Assert.That(Occurrences(database.text, "\"material_id\":"), Is.EqualTo(57407));
-            Assert.That(Occurrences(database.text, "\"facade_style_id\":"), Is.EqualTo(57407));
-            Assert.That(Occurrences(database.text, "\"material_confidence\":"), Is.EqualTo(57407));
-            Assert.That(Occurrences(database.text, "\"semantic_class_id\":"), Is.EqualTo(57407));
-            Assert.That(Occurrences(database.text, "\"semantic_region_id\":"), Is.EqualTo(57407));
-            Assert.That(Occurrences(database.text, "\"material_rule_id\":"), Is.EqualTo(57407));
+            Assert.That(Occurrences(database.text, "\"material_id\":"), Is.EqualTo(57441));
+            Assert.That(Occurrences(database.text, "\"facade_style_id\":"), Is.EqualTo(57441));
+            Assert.That(Occurrences(database.text, "\"material_confidence\":"), Is.EqualTo(57441));
+            Assert.That(Occurrences(database.text, "\"semantic_class_id\":"), Is.EqualTo(57441));
+            Assert.That(Occurrences(database.text, "\"semantic_region_id\":"), Is.EqualTo(57441));
+            Assert.That(Occurrences(database.text, "\"material_rule_id\":"), Is.EqualTo(57441));
             Assert.That(database.text, Does.Contain("\"roof_id\":1"));
             Assert.That(database.text, Does.Contain("\"roof_id\":2"));
+
+            string[] airportGapFillSourceIds =
+            {
+                "563214886", "563214887", "77499385", "77499386", "77499387", "77499388",
+                "77499394", "77513656", "78054436", "78054447", "78054451", "78054452",
+                "78054454", "78054456", "78054458", "78054459", "78054461", "78054465",
+                "78054470", "78054473", "78060787", "916029512",
+                "48257466", "48257474", "339395538", "78062108", "78062109", "78062110",
+                "78062111", "78062112", "78062113", "78062114", "78062115", "78062116"
+            };
+            foreach (string sourceId in airportGapFillSourceIds)
+                Assert.That(database.text, Does.Contain($"\"source_id\":\"OSM:way:{sourceId}:geometry:0\""), sourceId);
+            Assert.That(database.text, Does.Not.Contain("\"source_id\":\"OSM:way:77434544:geometry:0\""),
+                "The hand-authored Executive Terminal replacement must not receive a map-fidelity duplicate.");
+            Assert.That(database.text, Does.Not.Contain("\"source_id\":\"OSM:way:78054463:geometry:0\""),
+                "The hand-authored T-hangar row replacement must not receive a map-fidelity duplicate.");
 
             string source = Read("Assets/Scripts/Environment/AircraftCenteredBuildingClipmapController.cs");
             Assert.That(source, Does.Not.Contain("new GameObject"));
@@ -257,6 +273,7 @@ namespace QuestFlight.Editor.Tests
             int maximum = stable.Cast<int>().OrderByDescending(value => value)
                 .Take(AircraftCenteredBuildingClipmapController.SlotCount).Sum();
             Assert.That(maximum, Is.EqualTo(233298));
+            Assert.That(maximum, Is.LessThanOrEqualTo(233316));
         }
 
         private static int Occurrences(string source, string value)

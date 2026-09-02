@@ -53,6 +53,21 @@ The database records a confidence level for every assignment: assessor exterior
 wall evidence, parcel construction evidence, or deterministic semantic inference.
 Inferred assignments are never represented as surveyed architectural truth.
 
+The official-footprint build deliberately retains its broad airport hero
+exclusion. After facade enrichment, restore the pinned non-residential OSM
+footprints inside the KBDU aerodrome boundary and the exact 12-building
+industrial corridor south/right of the serialized Runway 08 departure path.
+This post-process excludes the two exact hand-authored replacements and updates
+the database provenance and facade inventory atomically:
+
+```powershell
+python tools/full_map_buildings/apply_airport_gap_fill.py `
+  --database QuestFlight/Assets/Production/Environment/FullMapBuildingsV1/KBDU_FullMapBuildingDatabaseV1.json `
+  --provenance QuestFlight/Assets/Production/Environment/FullMapBuildingsV1/KBDU_FullMapBuildingDatabaseV1_PROVENANCE.json `
+  --facade-manifest QuestFlight/Assets/Production/Environment/FullMapBuildingsV1/KBDU_FullMapBuildingFacadeManifestV2.json `
+  --report "<artifact-root>\airport_gap_fill_report.json"
+```
+
 Validate the committed compact derivative and its worst sampled 4 x 4 runtime window:
 
 ```powershell

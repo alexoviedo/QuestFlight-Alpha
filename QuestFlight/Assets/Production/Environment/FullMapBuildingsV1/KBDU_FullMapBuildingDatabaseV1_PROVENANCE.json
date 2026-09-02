@@ -5,7 +5,10 @@
   "temporal_authority": "City of Boulder 2020 aerial imagery",
   "coordinate_contract": {
     "frame": "local AEQD east-north-up",
-    "origin_wgs84": [40.03936527, -105.22608958],
+    "origin_wgs84": [
+      40.03936527,
+      -105.22608958
+    ],
     "origin_elevation_meters": 1611.7824,
     "unity_mapping": "+X east, +Y up, +Z north"
   },
@@ -33,10 +36,17 @@
       "path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ProductionTerrainSurfaceV2.json",
       "sha256": "0d821e47766bd355e145b59f45cb56fcb3e67e709e72d054432fc8680a3ce7b1",
       "rights_record": "Project derivative of previously recorded public-domain USGS 3DEP terrain data."
+    },
+    {
+      "name": "Pinned OSM KBDU airport gap fill",
+      "path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ReferenceContextV2.json",
+      "sha256": "584a47ebde144760bb70c4f4a20bfd58baa591e368a1093164cc464506a8f104",
+      "retained_components": 34,
+      "rights_record": "OpenStreetMap ODbL-1.0; attribution retained in the committed source context."
     }
   ],
   "selection": {
-    "compiled_components": 57407,
+    "compiled_components": 57441,
     "city_components": 42780,
     "county_components": 14627,
     "post_2020_excluded": 4728,
@@ -47,11 +57,13 @@
     "landmark_components": 155,
     "pitched_roof_components": 28726,
     "pages": 576,
-    "nonempty_pages": 482
+    "nonempty_pages": 482,
+    "airport_gap_fill_components": 34,
+    "airport_gap_fill_contract": "Pinned OSM snapshot; restore non-residential building footprints inside the serialized KBDU aerodrome boundary plus the exact 12-building industrial corridor south/right of the serialized Runway 08 departure path, excluding exact hand-authored replacement footprints"
   },
   "derivative": {
     "path": "QuestFlight/Assets/Production/Environment/FullMapBuildingsV1/KBDU_FullMapBuildingDatabaseV1.json",
-    "sha256": "2298f3c861a6fcf46d0ef9f96860d60cd4c5c629e3bfa8d2da178dbfe68c0f46",
+    "sha256": "3f7d4c48eb037fe159c83aa62993cd3fa974b49553ee7bca58bb9ba7c741800a",
     "license_boundary": "Compact project-authored procedural derivative for QuestFlight; underlying source attributions and terms remain applicable."
   },
   "raw_data_policy": "Raw service responses and caches are external and uncommitted."

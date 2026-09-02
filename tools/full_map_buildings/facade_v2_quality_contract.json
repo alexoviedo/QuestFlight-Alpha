@@ -1,6 +1,6 @@
 {
   "contract": "full-map-building-facade-quality-v2",
-  "expected_buildings": 57407,
+  "expected_buildings": 57441,
   "expected_pages": 576,
   "expected_materials": 16,
   "minimum_used_materials": 14,

@@ -98,6 +98,7 @@ $required = @(
   '21_reservoir_cockpit',
   '22_reservoir_aerial',
   '23_airport_buildings_ramp',
+  '28b_runway08_right_building_corridor',
   '24_vegetation_aircraft_scale',
   '32_traffic_reservoir_parking',
   '33_traffic_airport_parking',

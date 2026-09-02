@@ -7,6 +7,18 @@
   "map_half_extent_meters": 12000.0,
   "page_size_meters": 1000.0,
   "authored_hero_exclusion_bounds_xz": [-800.0, -500.0, 950.0, 750.0],
+  "airport_gap_fill": {
+    "source_context_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ReferenceContextV2.json",
+    "hero_replacements_path": "tools/kbdu_airport_core_v4/buildings/airport_core_replacement_footprints.json",
+    "aerodrome_name": "Boulder Municipal Airport",
+    "minimum_component_area_square_meters": 9.0,
+    "excluded_building_classes": ["apartments", "house", "residential"],
+    "right_runway_08_departure_source_ids": [48257466, 48257474, 339395538, 78062108, 78062109, 78062110, 78062111, 78062112, 78062113, 78062114, 78062115, 78062116],
+    "expected_aerodrome_building_count": 22,
+    "expected_right_departure_building_count": 12,
+    "expected_building_count": 34,
+    "source_contract": "Pinned OSM snapshot; restore non-residential building footprints inside the serialized KBDU aerodrome boundary plus the exact 12-building industrial corridor south/right of the serialized Runway 08 departure path, excluding exact hand-authored replacement footprints"
+  },
   "runtime_window_cells": 4,
   "quantization_meters": 0.1,
   "imagery_authority_year": 2020,

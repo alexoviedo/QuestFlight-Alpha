@@ -1,9 +1,9 @@
 {
   "facade_contract_version": "boulder-semantic-facades-v2",
-  "building_count": 57407,
+  "building_count": 57441,
   "page_count": 576,
-  "geometry_hash_before": "6dcbc03e76dd8d23a1fd6e0dcbada0de00db25a2fcdcc67c5b85cbcc0942e62c",
-  "geometry_hash_after": "6dcbc03e76dd8d23a1fd6e0dcbada0de00db25a2fcdcc67c5b85cbcc0942e62c",
+  "geometry_hash_before": "692c0da8af80479497936ec07522461ee4138daa2fc0645f127e36ed1a730c6c",
+  "geometry_hash_after": "692c0da8af80479497936ec07522461ee4138daa2fc0645f127e36ed1a730c6c",
   "parcel_feature_count": 15995,
   "parcel_match_count": 19770,
   "assessor_match_count": 19720,
@@ -11,36 +11,36 @@
   "blue_facade_count": 0,
   "material_counts": {
     "boulder_sandstone": 3997,
-    "brown_brick": 4636,
+    "brown_brick": 4637,
     "cedar_siding": 3610,
-    "charcoal_metal_panel": 1059,
+    "charcoal_metal_panel": 1063,
     "cream_stucco": 3919,
-    "galvanized_corrugated_metal": 1104,
-    "red_brick": 6363,
-    "tan_brick": 6136,
-    "tan_metal_panel": 1014,
+    "galvanized_corrugated_metal": 1113,
+    "red_brick": 6364,
+    "tan_brick": 6137,
+    "tan_metal_panel": 1021,
     "warm_beige_stucco": 3814,
-    "warm_concrete_block": 2563,
+    "warm_concrete_block": 2565,
     "warm_fiber_cement": 5746,
-    "warm_painted_block": 2045,
-    "warm_precast_concrete": 2235,
+    "warm_painted_block": 2047,
+    "warm_precast_concrete": 2242,
     "warm_white_wood_siding": 6876,
     "weathered_wood_siding": 2290
   },
   "style_counts": {
     "0": 28376,
-    "1": 2524,
-    "2": 695,
+    "1": 2529,
+    "2": 724,
     "3": 757,
     "4": 245,
     "5": 24810
   },
   "semantic_counts": {
     "agricultural_outbuilding": 5407,
-    "commercial": 2524,
+    "commercial": 2529,
     "commercial_accessory": 158,
     "generic": 14970,
-    "industrial": 679,
+    "industrial": 708,
     "industrial_accessory": 16,
     "institutional": 757,
     "residential": 28376,
@@ -48,7 +48,7 @@
     "utility": 87
   },
   "region_counts": {
-    "airport_service": 1707,
+    "airport_service": 1741,
     "boulder_residential": 21240,
     "commercial_mixed": 1141,
     "cu_campus": 3776,
@@ -58,18 +58,18 @@
   },
   "rule_counts": {
     "assessor_exterior_wall_evidence": 12116,
-    "deterministic_geometry_fallback": 15045,
+    "deterministic_geometry_fallback": 15079,
     "official_footprint_use_fallback": 25315,
     "parcel_construction_evidence": 537,
     "parcel_primary_material_inheritance": 4394
   },
   "material_confidence_counts": {
-    "0": 40360,
+    "0": 40394,
     "1": 4931,
     "2": 12116
   },
   "parcel_role_counts": {
-    "0": 37637,
+    "0": 37671,
     "1": 12129,
     "2": 7641
   },
@@ -2722,19 +2722,24 @@
       "boulder_sandstone": 48,
       "brown_brick": 23,
       "cedar_siding": 35,
-      "charcoal_metal_panel": 2,
+      "charcoal_metal_panel": 6,
       "cream_stucco": 34,
-      "galvanized_corrugated_metal": 1,
+      "galvanized_corrugated_metal": 9,
       "red_brick": 34,
       "tan_brick": 26,
-      "tan_metal_panel": 4,
+      "tan_metal_panel": 10,
       "warm_beige_stucco": 27,
-      "warm_concrete_block": 2,
+      "warm_concrete_block": 4,
       "warm_fiber_cement": 49,
       "warm_painted_block": 3,
-      "warm_precast_concrete": 8,
+      "warm_precast_concrete": 10,
       "warm_white_wood_siding": 68,
       "weathered_wood_siding": 4
+    },
+    "11_12": {
+      "galvanized_corrugated_metal": 1,
+      "red_brick": 1,
+      "tan_brick": 1
     },
     "11_13": {
       "boulder_sandstone": 8,
@@ -3006,19 +3011,19 @@
     },
     "12_11": {
       "boulder_sandstone": 22,
-      "brown_brick": 12,
+      "brown_brick": 13,
       "cedar_siding": 16,
       "charcoal_metal_panel": 16,
       "cream_stucco": 13,
       "galvanized_corrugated_metal": 17,
       "red_brick": 15,
       "tan_brick": 17,
-      "tan_metal_panel": 12,
+      "tan_metal_panel": 13,
       "warm_beige_stucco": 32,
       "warm_concrete_block": 25,
       "warm_fiber_cement": 25,
-      "warm_painted_block": 14,
-      "warm_precast_concrete": 17,
+      "warm_painted_block": 16,
+      "warm_precast_concrete": 22,
       "warm_white_wood_siding": 53,
       "weathered_wood_siding": 5
     },
@@ -5743,6 +5748,9 @@
     "assessor_buildings_url": "https://assessor.boco.solutions/ASR_PublicDataFiles/Buildings.csv",
     "assessor_buildings_sha256": "4ee0804ce736aa09881d26b0bdbe265609108a79bd953fa6af9762f7e8c3090e",
     "parcels_url": "https://maps.bouldercounty.org/arcgis/rest/services/PARCELS/PARCELS_OWNER/FeatureServer/0/query",
-    "parcels_sha256": "93900a51a5f08cd65eebc1a4366668b834973692f89cb0e98b2f765787b54838"
-  }
+    "parcels_sha256": "93900a51a5f08cd65eebc1a4366668b834973692f89cb0e98b2f765787b54838",
+    "airport_gap_fill_context_path": "QuestFlight/Assets/Production/Environment/ReconstructionV2/KBDU_ReferenceContextV2.json",
+    "airport_gap_fill_context_sha256": "584a47ebde144760bb70c4f4a20bfd58baa591e368a1093164cc464506a8f104"
+  },
+  "airport_gap_fill_building_count": 34
 }

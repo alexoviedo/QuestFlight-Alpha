@@ -8,6 +8,8 @@ import json
 import math
 import pathlib
 
+from apply_airport_gap_fill import select_features, source_identity
+
 
 def selected(building: dict, lod: int) -> bool:
     if lod == 0 or building["landmark"]:
@@ -78,7 +80,7 @@ def validate(database: dict, config: dict) -> dict:
     extent = database["map_half_extent_meters"]
     size = database["page_size_meters"]
     quantum = database["quantization_meters"]
-    hero_centroids = 0
+    hero_components = []
     for page in pages:
         page_x = -extent + page["column"] * size
         page_z = -extent + page["row"] * size
@@ -88,9 +90,20 @@ def validate(database: dict, config: dict) -> dict:
             zs = [page_z + value * quantum for value in ring[1::2]]
             x, z = sum(xs) / len(xs), sum(zs) / len(zs)
             if hero[0] <= x <= hero[2] and hero[1] <= z <= hero[3]:
-                hero_centroids += 1
-    if hero_centroids:
-        failures.append(f"{hero_centroids} generic components overlap the airport hero exclusion")
+                hero_components.append(item)
+    gap = config["airport_gap_fill"]
+    context = json.loads(pathlib.Path(gap["source_context_path"]).read_text(encoding="utf-8"))
+    replacements = json.loads(pathlib.Path(gap["hero_replacements_path"]).read_text(encoding="utf-8"))
+    selected_gap, _, _, _ = select_features(config, context, replacements)
+    expected_gap_ids = {source_identity(feature) for feature, _ in selected_gap}
+    actual_gap_ids = {item["source_id"] for item in hero_components if item["source_id"].startswith("OSM:")}
+    unexpected_hero_ids = {item["source_id"] for item in hero_components} - expected_gap_ids
+    if actual_gap_ids != expected_gap_ids:
+        failures.append(
+            f"airport gap fill differs from its pinned selection: missing={len(expected_gap_ids - actual_gap_ids)}, "
+            f"unexpected={len(actual_gap_ids - expected_gap_ids)}")
+    if unexpected_hero_ids:
+        failures.append(f"{len(unexpected_hero_ids)} unapproved components overlap the airport hero region")
 
     worst = {"draws": 0, "triangles": 0, "position": [0.0, 0.0]}
     samples = []
@@ -118,7 +131,8 @@ def validate(database: dict, config: dict) -> dict:
         "nonempty_pages": sum(bool(page["buildings"]) for page in pages),
         "landmark_components": sum(bool(item["landmark"]) for item in buildings),
         "pitched_roof_components": sum(item["roof_id"] != 0 for item in buildings),
-        "hero_overlap_centroids": hero_centroids,
+        "hero_overlap_centroids": len(hero_components),
+        "airport_gap_fill_components": len(actual_gap_ids),
         "sampled_window_count": len(samples),
         "median_active_triangles": sorted(samples)[len(samples) // 2],
         "maximum_active_draws": worst["draws"],

@@ -41,7 +41,8 @@ namespace QuestFlight.Editor
         private const string MeshCompilerVersion = "full-height-forward-residency-compiler-v11-20260817";
         private const string FacadeContractVersion = "boulder-semantic-facades-v2";
         private const int MaximumSelectedTriangleCeiling = 235000;
-        private const int AuthoredMaximumSelectedTriangles = 233298;
+        private const int AuthoredMaximumSelectedTriangles = 233316;
+        private const int ExpectedRepresentedBuildings = 57441;
         private const int OrdinaryFootprintVertexLimit = 4;
         private const int LargeFootprintVertexLimit = 6;
         private const float LargeFootprintAreaSquareMeters = 1000f;
@@ -226,6 +227,29 @@ namespace QuestFlight.Editor
             {
                 RebuildGeometryAndBundles();
                 Debug.Log("[QuestFlight][BuildingClipmap] GEOMETRY/BUNDLES SUCCESS");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception error)
+            {
+                Debug.LogException(error);
+                EditorApplication.Exit(1);
+            }
+        }
+
+        /// <summary>
+        /// Refreshes database-derived counts on the existing serialized renderer pool.
+        /// Unlike full authoring, this preserves every page object and scene reference.
+        /// </summary>
+        public static void RefreshSerializedPageMetadataBatch()
+        {
+            try
+            {
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                Database database = LoadDatabase();
+                RefreshSerializedPageMetadata(database);
+                AssetDatabase.SaveAssets();
+                ValidateAuthoredProduct(database);
+                Debug.Log("[QuestFlight][BuildingClipmap] METADATA REFRESH SUCCESS");
                 EditorApplication.Exit(0);
             }
             catch (Exception error)
@@ -1046,7 +1070,7 @@ namespace QuestFlight.Editor
             report.roof_sealed_wall_vertices = watertight.roofSealedWallVertices;
             report.maximum_roof_wall_seam_meters = watertight.maximumRoofWallSeamMeters;
             report.maximum_vertical_corner_seam_meters = watertight.maximumVerticalCornerSeamMeters;
-            if (report.represented_buildings != 57407)
+            if (report.represented_buildings != ExpectedRepresentedBuildings)
                 throw new InvalidOperationException("Stable shell compilation lost source buildings.");
             if (report.maximum_active_window_triangles > MaximumSelectedTriangleCeiling)
                 throw new InvalidOperationException($"Stable shell window exceeds {MaximumSelectedTriangleCeiling:N0} triangles: {report.maximum_active_window_triangles:N0}.");
@@ -1237,6 +1261,59 @@ namespace QuestFlight.Editor
                 PrefabUtility.SaveAsPrefabAsset(environment, EnvironmentPath);
             }
             finally { PrefabUtility.UnloadPrefabContents(environment); }
+        }
+
+        private static void RefreshSerializedPageMetadata(Database database)
+        {
+            GameObject environment = PrefabUtility.LoadPrefabContents(EnvironmentPath);
+            try
+            {
+                AircraftCenteredBuildingClipmapController controller =
+                    environment.GetComponentInChildren<AircraftCenteredBuildingClipmapController>(true) ??
+                    throw new InvalidOperationException("Serialized full-map building controller is missing.");
+                PhotorealAerialSurfaceRoot surface =
+                    environment.GetComponentInChildren<PhotorealAerialSurfaceRoot>(true) ??
+                    throw new InvalidOperationException("Photoreal aerial-surface contract is missing.");
+                controller.pageTriangleCounts = new int[database.columns * database.rows];
+                controller.pageBuildingCounts = new int[database.columns * database.rows];
+                controller.pageRoofAreasSquareMeters = new float[database.columns * database.rows];
+                foreach (Page page in database.pages)
+                {
+                    int index = page.row * database.columns + page.column;
+                    Mesh pageMesh = LoadRequired<Mesh>(MeshPath(page.column, page.row));
+                    controller.pageTriangleCounts[index] = (int)pageMesh.GetIndexCount(0) / 3;
+                    Building[] buildings = page.buildings ?? Array.Empty<Building>();
+                    controller.pageBuildingCounts[index] = buildings.Length;
+                    controller.pageRoofAreasSquareMeters[index] = buildings.Sum(building =>
+                        Mathf.Max(0f, building.area_m2));
+                }
+                controller.authoredMaximumSelectedTriangles = AuthoredMaximumSelectedTriangles;
+                controller.authoredContractVersion = AircraftCenteredBuildingClipmapController.ContractVersion;
+                surface.representedBuildingCount = database.pages.Sum(page => page.buildings?.Length ?? 0);
+                surface.bakedBuildingTriangleCount = AuthoredMaximumSelectedTriangles;
+                ProductionEnvironmentRoot contract =
+                    environment.GetComponent<ProductionEnvironmentRoot>() ??
+                    throw new InvalidOperationException("Production environment contract is missing.");
+                AerialSceneryRoot aerial =
+                    environment.GetComponentInChildren<AerialSceneryRoot>(true) ??
+                    throw new InvalidOperationException("Aerial scenery root is missing.");
+                ProductionEnvironmentBudget budget = contract.CalculateBudget();
+                contract.bakedRendererCount = budget.rendererCount;
+                contract.bakedTriangleCount = budget.triangleCount;
+                contract.bakedMaterialCount = budget.materialCount;
+                aerial.bakedRendererCount = budget.rendererCount;
+                aerial.bakedSelectedTriangleCount = budget.triangleCount;
+                aerial.bakedMaterialCount = budget.materialCount;
+                EditorUtility.SetDirty(controller);
+                EditorUtility.SetDirty(surface);
+                EditorUtility.SetDirty(contract);
+                EditorUtility.SetDirty(aerial);
+                PrefabUtility.SaveAsPrefabAsset(environment, EnvironmentPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(environment);
+            }
         }
 
         private static void BindSceneAircraftReference()
