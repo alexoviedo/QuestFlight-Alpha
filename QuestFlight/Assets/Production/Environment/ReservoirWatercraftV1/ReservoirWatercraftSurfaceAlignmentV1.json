@@ -1,0 +1,737 @@
+{
+    "schema": "questflight.reservoir-watercraft-surface-alignment-v1",
+    "classification": "PASS_ACTIVE_RENDERED_SURFACE_ALIGNMENT",
+    "vertical_surface_authority": "ACTIVE_RENDERED_TERRAIN_MESH",
+    "surface_mesh_asset_path": "Assets/Production/Environment/Generated/Terrain_Mid12km_USGS_Mesh.asset",
+    "surface_mesh_dependency_hash": "28d6665e48c3571e6bc57dd46fff4066",
+    "placement_manifest_sha256": "a16459735049bfda3979365ca26beeaf1b3956702cba777d461bbf84c1d9b15b",
+    "maximum_surface_tilt_degrees": 6.0,
+    "maximum_plane_residual_meters": 0.03500000014901161,
+    "records": [
+        {
+            "stable_id": "RWV1_001_MW01",
+            "placement_mode": "MOORED_DAY_SAILER",
+            "anchor_mode": "MODEL_WATERLINE",
+            "surface_center_y_meters": -33.963069915771487,
+            "surface_normal": {
+                "x": -0.0000013882101939088898,
+                "y": 0.9987189769744873,
+                "z": 0.05060147866606712
+            },
+            "surface_tilt_degrees": 2.900430679321289,
+            "maximum_plane_residual_meters": 0.000003814697265625,
+            "anchor_local_y_meters": 0.41999998688697817,
+            "surface_clearance_meters": 0.019999999552965165,
+            "scaled_anchor_y_meters": 0.3925567865371704,
+            "model_origin": {
+                "x": 97.15699768066406,
+                "y": -34.33515167236328,
+                "z": 3593.331298828125
+            },
+            "model_rotation": {
+                "x": 0.02431950718164444,
+                "y": 0.27674877643585207,
+                "z": 0.00700710155069828,
+                "w": 0.9606090188026428
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_002_MW02",
+            "placement_mode": "MOORED_DAY_SAILER",
+            "anchor_mode": "MODEL_WATERLINE",
+            "surface_center_y_meters": -33.85920333862305,
+            "surface_normal": {
+                "x": 0.0000043326949707989119,
+                "y": 0.9987188577651978,
+                "z": 0.050601776689291
+            },
+            "surface_tilt_degrees": 2.900498151779175,
+            "maximum_plane_residual_meters": 0.00000762939453125,
+            "anchor_local_y_meters": 0.41999998688697817,
+            "surface_clearance_meters": 0.019999999552965165,
+            "scaled_anchor_y_meters": 0.4137357771396637,
+            "model_origin": {
+                "x": 134.45199584960938,
+                "y": -34.25243377685547,
+                "z": 3591.280029296875
+            },
+            "model_rotation": {
+                "x": 0.024626636877655984,
+                "y": 0.23065051436424256,
+                "z": 0.005837295204401016,
+                "w": 0.9727074503898621
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_003_MW03",
+            "placement_mode": "MOORED_DAY_SAILER",
+            "anchor_mode": "MODEL_WATERLINE",
+            "surface_center_y_meters": -33.09257125854492,
+            "surface_normal": {
+                "x": 0.0000031230299555318199,
+                "y": 0.9990910291671753,
+                "z": 0.04262736812233925
+            },
+            "surface_tilt_degrees": 2.4431238174438478,
+            "maximum_plane_residual_meters": 0.00000762939453125,
+            "anchor_local_y_meters": 0.41999998688697817,
+            "surface_clearance_meters": 0.019999999552965165,
+            "scaled_anchor_y_meters": 0.3910653293132782,
+            "model_origin": {
+                "x": 197.83200073242188,
+                "y": -33.46329879760742,
+                "z": 3571.68505859375
+            },
+            "model_rotation": {
+                "x": 0.020777476951479913,
+                "y": 0.22388358414173127,
+                "z": 0.0047724307514727119,
+                "w": 0.9743826985359192
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_004_MW04",
+            "placement_mode": "MOORED_DAY_SAILER",
+            "anchor_mode": "MODEL_WATERLINE",
+            "surface_center_y_meters": -34.29999923706055,
+            "surface_normal": {
+                "x": 0.000003247649146942422,
+                "y": 1.0,
+                "z": 4.129200803504318e-8
+            },
+            "surface_tilt_degrees": 0.0,
+            "maximum_plane_residual_meters": 0.00000762939453125,
+            "anchor_local_y_meters": 0.41999998688697817,
+            "surface_clearance_meters": 0.019999999552965165,
+            "scaled_anchor_y_meters": 0.3764488399028778,
+            "model_origin": {
+                "x": 204.23699951171876,
+                "y": -34.65644836425781,
+                "z": 3605.658935546875
+            },
+            "model_rotation": {
+                "x": 3.9434013388017777e-7,
+                "y": 0.2304743528366089,
+                "z": -0.0000015753502111692797,
+                "w": 0.9730784296989441
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_005_MW05",
+            "placement_mode": "MOORED_DAY_SAILER",
+            "anchor_mode": "MODEL_WATERLINE",
+            "surface_center_y_meters": -34.29999923706055,
+            "surface_normal": {
+                "x": 1.520287185030611e-7,
+                "y": 1.0,
+                "z": -2.2921018683064177e-7
+            },
+            "surface_tilt_degrees": 0.0,
+            "maximum_plane_residual_meters": 0.0,
+            "anchor_local_y_meters": 0.41999998688697817,
+            "surface_clearance_meters": 0.019999999552965165,
+            "scaled_anchor_y_meters": 0.41045451164245608,
+            "model_origin": {
+                "x": 220.48199462890626,
+                "y": -34.690452575683597,
+                "z": 3618.422119140625
+            },
+            "model_rotation": {
+                "x": -9.691140689938038e-8,
+                "y": 0.20176173746585847,
+                "z": -9.75740164221861e-8,
+                "w": 0.979434609413147
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_006_MW06",
+            "placement_mode": "MOORED_DAY_SAILER",
+            "anchor_mode": "MODEL_WATERLINE",
+            "surface_center_y_meters": -33.851104736328128,
+            "surface_normal": {
+                "x": -0.0000013333410606719554,
+                "y": 0.9990910291671753,
+                "z": 0.042628221213817599
+            },
+            "surface_tilt_degrees": 2.4431238174438478,
+            "maximum_plane_residual_meters": 0.000003814697265625,
+            "anchor_local_y_meters": 0.41999998688697817,
+            "surface_clearance_meters": 0.019999999552965165,
+            "scaled_anchor_y_meters": 0.42507100105285647,
+            "model_origin": {
+                "x": 241.99000549316407,
+                "y": -34.25580978393555,
+                "z": 3589.461669921875
+            },
+            "model_rotation": {
+                "x": 0.0208369679749012,
+                "y": 0.2113586813211441,
+                "z": 0.0045076217502355579,
+                "w": 0.9771760702133179
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_007_PA01",
+            "placement_mode": "POWERBOAT_AFLOAT",
+            "anchor_mode": "MODEL_WATERLINE",
+            "surface_center_y_meters": -34.29999923706055,
+            "surface_normal": {
+                "x": 0.000006188121915329248,
+                "y": 1.0,
+                "z": 1.709784527292868e-7
+            },
+            "surface_tilt_degrees": 0.0,
+            "maximum_plane_residual_meters": 0.00000762939453125,
+            "anchor_local_y_meters": 0.4000000059604645,
+            "surface_clearance_meters": 0.019999999552965165,
+            "scaled_anchor_y_meters": 0.35299766063690188,
+            "model_origin": {
+                "x": 365.31500244140627,
+                "y": -34.63299560546875,
+                "z": 3611.819091796875
+            },
+            "model_rotation": {
+                "x": 2.5805316994365058e-8,
+                "y": -0.019284695386886598,
+                "z": -0.0000030951343887863915,
+                "w": 0.9998140931129456
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_008_PA02",
+            "placement_mode": "POWERBOAT_AFLOAT",
+            "anchor_mode": "MODEL_WATERLINE",
+            "surface_center_y_meters": -34.89938735961914,
+            "surface_normal": {
+                "x": 0.023328552022576333,
+                "y": 0.9997278451919556,
+                "z": -9.878332321022754e-7
+            },
+            "surface_tilt_degrees": 1.3367663621902466,
+            "maximum_plane_residual_meters": 0.000003814697265625,
+            "anchor_local_y_meters": 0.4000000059604645,
+            "surface_clearance_meters": 0.019999999552965165,
+            "scaled_anchor_y_meters": 0.3811943531036377,
+            "model_origin": {
+                "x": 625.6795654296875,
+                "y": -35.2604866027832,
+                "z": 3675.64892578125
+            },
+            "model_rotation": {
+                "x": 0.004473183304071426,
+                "y": 0.3834812343120575,
+                "z": -0.010773323476314545,
+                "w": 0.9234750270843506
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_009_PA03",
+            "placement_mode": "POWERBOAT_AFLOAT",
+            "anchor_mode": "MODEL_WATERLINE",
+            "surface_center_y_meters": -34.09085464477539,
+            "surface_normal": {
+                "x": 0.014670009724795819,
+                "y": 0.9997643828392029,
+                "z": 0.015997596085071565
+            },
+            "surface_tilt_degrees": 1.2436399459838868,
+            "maximum_plane_residual_meters": 0.0000152587890625,
+            "anchor_local_y_meters": 0.4000000059604645,
+            "surface_clearance_meters": 0.019999999552965165,
+            "scaled_anchor_y_meters": 0.336229532957077,
+            "model_origin": {
+                "x": 513.5803833007813,
+                "y": -34.40700912475586,
+                "z": 3528.636962890625
+            },
+            "model_rotation": {
+                "x": 0.008838249370455742,
+                "y": 0.12259267270565033,
+                "z": -0.0062993913888931278,
+                "w": 0.9923977255821228
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_010_KS01",
+            "placement_mode": "TOURING_KAYAK_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -30.73942756652832,
+            "surface_normal": {
+                "x": 0.00011141542927362025,
+                "y": 0.9990912675857544,
+                "z": 0.042621683329343799
+            },
+            "surface_tilt_degrees": 2.4428036212921144,
+            "maximum_plane_residual_meters": 0.0000972747802734375,
+            "anchor_local_y_meters": 0.00033999999868683517,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.00031558232149109244,
+            "model_origin": {
+                "x": 252.7469940185547,
+                "y": -30.714765548706056,
+                "z": 3516.550048828125
+            },
+            "model_rotation": {
+                "x": 0.02104700356721878,
+                "y": 0.16084015369415284,
+                "z": 0.00337420217692852,
+                "w": 0.9867503046989441
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_011_KS02",
+            "placement_mode": "TOURING_KAYAK_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -30.77833366394043,
+            "surface_normal": {
+                "x": 0.000036168326914776117,
+                "y": 0.9990915656089783,
+                "z": 0.04261569306254387
+            },
+            "surface_tilt_degrees": 2.4424028396606447,
+            "maximum_plane_residual_meters": 0.0000133514404296875,
+            "anchor_local_y_meters": 0.00033999999868683517,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.00030943541787564754,
+            "model_origin": {
+                "x": 255.49200439453126,
+                "y": -30.753665924072267,
+                "z": 3517.4619140625
+            },
+            "model_rotation": {
+                "x": 0.021037988364696504,
+                "y": 0.1608407348394394,
+                "z": 0.0034108739346265795,
+                "w": 0.9867502450942993
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_012_KS03",
+            "placement_mode": "TOURING_KAYAK_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -30.817249298095704,
+            "surface_normal": {
+                "x": 0.00001553748188598547,
+                "y": 0.9990911483764648,
+                "z": 0.04262487217783928
+            },
+            "surface_tilt_degrees": 2.4429638385772707,
+            "maximum_plane_residual_meters": 0.0000095367431640625,
+            "anchor_local_y_meters": 0.00033999999868683517,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.0003198417543899268,
+            "model_origin": {
+                "x": 258.4670104980469,
+                "y": -30.792593002319337,
+                "z": 3518.3740234375
+            },
+            "model_rotation": {
+                "x": 0.021040858700871469,
+                "y": 0.1608409434556961,
+                "z": 0.0034218011423945429,
+                "w": 0.9867501258850098
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_013_KS04",
+            "placement_mode": "TOURING_KAYAK_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -30.846426010131837,
+            "surface_normal": {
+                "x": 0.00005675022111972794,
+                "y": 0.9990925788879395,
+                "z": 0.04259084165096283
+            },
+            "surface_tilt_degrees": 2.440959930419922,
+            "maximum_plane_residual_meters": 0.000057220458984375,
+            "anchor_local_y_meters": 0.00033999999868683517,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.0003136948507744819,
+            "model_origin": {
+                "x": 261.4410095214844,
+                "y": -30.821762084960939,
+                "z": 3519.057861328125
+            },
+            "model_rotation": {
+                "x": 0.021027375012636186,
+                "y": 0.16084043681621552,
+                "z": 0.0033987073693424465,
+                "w": 0.9867505431175232
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_014_KS05",
+            "placement_mode": "TOURING_KAYAK_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -30.88530158996582,
+            "surface_normal": {
+                "x": -0.000049029265937861055,
+                "y": 0.9990913271903992,
+                "z": 0.04262084513902664
+            },
+            "surface_tilt_degrees": 2.442723512649536,
+            "maximum_plane_residual_meters": 0.0000629425048828125,
+            "anchor_local_y_meters": 0.00033999999868683517,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.0003241012163925916,
+            "model_origin": {
+                "x": 264.4159851074219,
+                "y": -30.86064910888672,
+                "z": 3519.968994140625
+            },
+            "model_rotation": {
+                "x": 0.021033674478530885,
+                "y": 0.1608414649963379,
+                "z": 0.0034533580765128137,
+                "w": 0.986750066280365
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_015_KS06",
+            "placement_mode": "TOURING_KAYAK_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -30.92420768737793,
+            "surface_normal": {
+                "x": 0.000046942124754423276,
+                "y": 0.9990917444229126,
+                "z": 0.042611073702573779
+            },
+            "surface_tilt_degrees": 2.442162275314331,
+            "maximum_plane_residual_meters": 0.000019073486328125,
+            "anchor_local_y_meters": 0.00033999999868683517,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.00030943541787564754,
+            "model_origin": {
+                "x": 267.3900146484375,
+                "y": -30.899539947509767,
+                "z": 3520.880859375
+            },
+            "model_rotation": {
+                "x": 0.021036574617028238,
+                "y": 0.16084061563014985,
+                "z": 0.0034051816910505296,
+                "w": 0.9867503046989441
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_016_SS01",
+            "placement_mode": "SUP_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -28.585208892822267,
+            "surface_normal": {
+                "x": 0.007966919802129269,
+                "y": 0.998687207698822,
+                "z": 0.05060145631432533
+            },
+            "surface_tilt_degrees": 2.936183214187622,
+            "maximum_plane_residual_meters": 0.0000209808349609375,
+            "anchor_local_y_meters": 0.0,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.0,
+            "model_origin": {
+                "x": 241.30819702148438,
+                "y": -28.56024169921875,
+                "z": 3472.792236328125
+            },
+            "model_rotation": {
+                "x": 0.025605183094739915,
+                "y": 0.18985934555530549,
+                "z": 0.0008944920264184475,
+                "w": 0.9814769625663757
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_017_SS02",
+            "placement_mode": "SUP_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -28.655200958251954,
+            "surface_normal": {
+                "x": 0.008026400581002236,
+                "y": 0.9986876845359802,
+                "z": 0.0505821593105793
+            },
+            "surface_tilt_degrees": 2.935649871826172,
+            "maximum_plane_residual_meters": 0.00002288818359375,
+            "anchor_local_y_meters": 0.0,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.0,
+            "model_origin": {
+                "x": 244.28219604492188,
+                "y": -28.630233764648439,
+                "z": 3473.7041015625
+            },
+            "model_rotation": {
+                "x": 0.025601357221603395,
+                "y": 0.18985861539840699,
+                "z": 0.0008634318364784122,
+                "w": 0.9814772605895996
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_018_SS03",
+            "placement_mode": "SUP_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -28.72516632080078,
+            "surface_normal": {
+                "x": 0.008044437505304814,
+                "y": 0.9986867904663086,
+                "z": 0.0505964569747448
+            },
+            "surface_tilt_degrees": 2.936649799346924,
+            "maximum_plane_residual_meters": 0.0000476837158203125,
+            "anchor_local_y_meters": 0.0,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.0,
+            "model_origin": {
+                "x": 247.2572021484375,
+                "y": -28.700199127197267,
+                "z": 3474.615234375
+            },
+            "model_rotation": {
+                "x": 0.025610098615288736,
+                "y": 0.18985846638679505,
+                "z": 0.0008559289271943271,
+                "w": 0.9814770221710205
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_019_SS04",
+            "placement_mode": "SUP_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -28.79515838623047,
+            "surface_normal": {
+                "x": 0.008028723299503327,
+                "y": 0.9986880421638489,
+                "z": 0.05057389289140701
+            },
+            "surface_tilt_degrees": 2.9352498054504396,
+            "maximum_plane_residual_meters": 0.000034332275390625,
+            "anchor_local_y_meters": 0.0,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.0,
+            "model_origin": {
+                "x": 250.231201171875,
+                "y": -28.770191192626954,
+                "z": 3475.527099609375
+            },
+            "model_rotation": {
+                "x": 0.025597520172595979,
+                "y": 0.1898585557937622,
+                "z": 0.0008615030674263835,
+                "w": 0.9814773797988892
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_020_DS01",
+            "placement_mode": "DINGHY_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -25.922218322753908,
+            "surface_normal": {
+                "x": 0.0000039318147173617039,
+                "y": 0.9999819993972778,
+                "z": -0.006000214256346226
+            },
+            "surface_tilt_degrees": 0.3437809646129608,
+            "maximum_plane_residual_meters": 0.000003814697265625,
+            "anchor_local_y_meters": 0.009999999776482582,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.009871031157672406,
+            "model_origin": {
+                "x": 81.14299774169922,
+                "y": -25.907089233398439,
+                "z": 3346.296875
+            },
+            "model_rotation": {
+                "x": -0.0029941594693809749,
+                "y": 0.062355879694223407,
+                "z": -0.00018903812451753765,
+                "w": 0.9980494976043701
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_021_DS02",
+            "placement_mode": "DINGHY_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -25.981691360473634,
+            "surface_normal": {
+                "x": 0.00933648832142353,
+                "y": 0.9999508857727051,
+                "z": 0.0033332034945487978
+            },
+            "surface_tilt_degrees": 0.567862331867218,
+            "maximum_plane_residual_meters": 0.000003814697265625,
+            "anchor_local_y_meters": 0.009999999776482582,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.010059523396193982,
+            "model_origin": {
+                "x": 110.88914489746094,
+                "y": -25.966751098632814,
+                "z": 3344.01806640625
+            },
+            "model_rotation": {
+                "x": 0.0019544262904673816,
+                "y": 0.06234440952539444,
+                "z": -0.004555313847959042,
+                "w": 0.9980424046516419
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_022_DS03",
+            "placement_mode": "DINGHY_STORED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -26.3315372467041,
+            "surface_normal": {
+                "x": 0.0000019174178760295037,
+                "y": 0.9999944567680359,
+                "z": 0.003333272645249963
+            },
+            "surface_tilt_degrees": 0.1907740831375122,
+            "maximum_plane_residual_meters": 0.0000019073486328125,
+            "anchor_local_y_meters": 0.009999999776482582,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.009776785038411618,
+            "model_origin": {
+                "x": 154.36300659179688,
+                "y": -26.316314697265626,
+                "z": 3339.4609375
+            },
+            "model_rotation": {
+                "x": 0.0016634551575407386,
+                "y": 0.062355298548936847,
+                "z": 0.00010296705295331776,
+                "w": 0.9980526566505432
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_023_PT01",
+            "placement_mode": "POWERBOAT_TRAILERED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -26.308753967285158,
+            "surface_normal": {
+                "x": -1.851950912623579e-7,
+                "y": 0.9999944567680359,
+                "z": 0.0033334484323859216
+            },
+            "surface_tilt_degrees": 0.1907740831375122,
+            "maximum_plane_residual_meters": 0.0000019073486328125,
+            "anchor_local_y_meters": 0.0,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.0,
+            "model_origin": {
+                "x": 255.04100036621095,
+                "y": -26.283754348754884,
+                "z": 3332.6259765625
+            },
+            "model_rotation": {
+                "x": 0.0016609943704679609,
+                "y": 0.08280853927135468,
+                "z": 0.00013811165990773588,
+                "w": 0.9965640902519226
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_024_PT02",
+            "placement_mode": "POWERBOAT_TRAILERED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -26.543956756591798,
+            "surface_normal": {
+                "x": -3.6173091189084519e-7,
+                "y": 0.9999358057975769,
+                "z": 0.011332916095852852
+            },
+            "surface_tilt_degrees": 0.649213969707489,
+            "maximum_plane_residual_meters": 0.0000019073486328125,
+            "anchor_local_y_meters": 0.0,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.0,
+            "model_origin": {
+                "x": 309.95599365234377,
+                "y": -26.518959045410158,
+                "z": 3330.349365234375
+            },
+            "model_rotation": {
+                "x": 0.0056470707058906559,
+                "y": 0.08281207829713822,
+                "z": 0.0004694464150816202,
+                "w": 0.9965490698814392
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        },
+        {
+            "stable_id": "RWV1_025_PT03",
+            "placement_mode": "POWERBOAT_TRAILERED",
+            "anchor_mode": "MODEL_SUPPORT_PLANE",
+            "surface_center_y_meters": -26.569820404052736,
+            "surface_normal": {
+                "x": 2.1170498598621635e-7,
+                "y": 0.9999358057975769,
+                "z": 0.011332524940371514
+            },
+            "surface_tilt_degrees": 0.649213969707489,
+            "maximum_plane_residual_meters": 0.0000019073486328125,
+            "anchor_local_y_meters": 0.0,
+            "surface_clearance_meters": 0.02500000037252903,
+            "scaled_anchor_y_meters": 0.0,
+            "model_origin": {
+                "x": 374.02301025390627,
+                "y": -26.544822692871095,
+                "z": 3332.63134765625
+            },
+            "model_rotation": {
+                "x": 0.005646898876875639,
+                "y": 0.08281208574771881,
+                "z": 0.0004691445210482925,
+                "w": 0.996549129486084
+            },
+            "lod0_anchor_error_meters": 0.0,
+            "lod1_anchor_error_meters": 0.0
+        }
+    ]
+}

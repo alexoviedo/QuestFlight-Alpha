@@ -40,6 +40,7 @@ namespace QuestFlightLab.Environment
         public Transform authoritativeRunwaySystem;
         public Transform essentialWater;
         public Transform trafficRoot;
+        public Transform reservoirWatercraftRoot;
         public Transform airportPerimeterFence;
         public Transform airportNearFieldDetail;
         public Transform boulderCloudField;

@@ -29,7 +29,7 @@ namespace QuestFlightLab.Editor
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
-        private const int RequiredShotCount = 125;
+        private const int RequiredShotCount = 130;
         // The accepted pre-V3 product reached 77 estimated draws and 659,877
         // visible triangles in the complete camera set.  This milestone must
         // hold draws/materials and may add at most five percent triangles for
@@ -152,6 +152,71 @@ namespace QuestFlightLab.Editor
             }
             WriteReportFiles(report, outputDir);
             Debug.Log($"[QuestFlightLab][ProductionVisualQA] selector-only " +
+                      $"classification={report.classification} output={outputDir}");
+        }
+
+        public static void RunReservoirWatercraftVisualQa()
+        {
+            string outputDir = System.Environment.GetEnvironmentVariable("QFL_PRODUCTION_VISUAL_QA_DIR");
+            if (string.IsNullOrWhiteSpace(outputDir))
+                throw new InvalidOperationException("QFL_PRODUCTION_VISUAL_QA_DIR is required for watercraft QA.");
+            int width = ReadInt("QFL_PRODUCTION_VISUAL_QA_WIDTH", 1920);
+            int height = ReadInt("QFL_PRODUCTION_VISUAL_QA_HEIGHT", 1080);
+            Directory.CreateDirectory(outputDir);
+            Directory.CreateDirectory(Path.Combine(outputDir, "screenshots"));
+            ProductionVisualQaReport report = new ProductionVisualQaReport
+            {
+                generatedUtc = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+                unityVersion = Application.unityVersion,
+                scenePath = ProductionScenePath,
+                outputDirectory = outputDir,
+                renderWidth = width,
+                renderHeight = height,
+                humanHeadsetAcceptance = "NOT_RUN_NO_USER_AVAILABLE",
+                flightPhaseImageSemantics = "Watercraft-only deterministic presentation poses; not physics evidence."
+            };
+            try
+            {
+                VisualContext context = LoadContext(width, height, report);
+                Vector3 overheadTarget = new Vector3(345f, -28f, 3505f);
+                Vector3 overheadCamera = overheadTarget + Vector3.up * 560f;
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "reservoir_watercraft_overhead_alignment", "Reservoir watercraft source-footprint alignment overview",
+                    "reservoir_watercraft", overheadCamera, LookAt(overheadCamera, overheadTarget), 60f, ViewProfile.Environment));
+                Vector3 routeTarget = new Vector3(285f, -27f, 3545f);
+                Vector3 routeCamera = new Vector3(70f, 175f, 3195f);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "reservoir_watercraft_guided_route_oblique", "Reservoir watercraft from the guided-route approach",
+                    "reservoir_watercraft", routeCamera, LookAt(routeCamera, routeTarget), 46f, ViewProfile.Environment));
+                Vector3 mooringTarget = new Vector3(190f, -27.5f, 3598f);
+                Vector3 mooringCamera = new Vector3(285f, 78f, 3440f);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "reservoir_watercraft_mooring_field", "Source-backed Boulder Reservoir mooring field",
+                    "reservoir_watercraft", mooringCamera, LookAt(mooringCamera, mooringTarget), 40f, ViewProfile.Environment));
+                Vector3 shoreTarget = new Vector3(254f, -27f, 3497f);
+                Vector3 shoreCamera = new Vector3(330f, 20f, 3415f);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "reservoir_watercraft_shore_storage", "Organized kayak and SUP shoreline storage",
+                    "reservoir_watercraft", shoreCamera, LookAt(shoreCamera, shoreTarget), 34f, ViewProfile.Environment));
+                Vector3 dryStorageTarget = new Vector3(310f, -25.5f, 3332f);
+                Vector3 dryStorageCamera = new Vector3(430f, -17f, 3328f);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "reservoir_watercraft_dry_storage", "Trailed powerboat ground-contact detail",
+                    "reservoir_watercraft", dryStorageCamera, LookAt(dryStorageCamera, dryStorageTarget), 32f, ViewProfile.Environment));
+                report.contactSheetPath = BuildContactSheet(report, outputDir);
+                report.passed = report.shots.Count == 5 && report.shots.All(shot => shot.passed);
+                report.classification = report.passed
+                    ? "PASS_RESERVOIR_WATERCRAFT_MACHINE_QA_HUMAN_HEADSET_REQUIRED"
+                    : "FAIL_RESERVOIR_WATERCRAFT_MACHINE_QA";
+            }
+            catch (Exception exception)
+            {
+                report.errors.Add(exception.ToString());
+                report.passed = false;
+                report.classification = "FAIL_RESERVOIR_WATERCRAFT_MACHINE_QA";
+            }
+            WriteReportFiles(report, outputDir);
+            Debug.Log($"[QuestFlightLab][ReservoirWatercraftVisualQA] shots={report.shots.Count}/5 " +
                       $"classification={report.classification} output={outputDir}");
         }
 
@@ -756,6 +821,61 @@ namespace QuestFlightLab.Editor
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "22_reservoir_aerial", "Boulder Reservoir aerial water read", "water",
                 reservoirAerial, LookAt(reservoirAerial, waterTarget), 48f, ViewProfile.Environment));
+
+            Vector3 watercraftOverheadTarget = new Vector3(345f, -28f, 3505f);
+            Vector3 watercraftOverheadCamera = watercraftOverheadTarget + Vector3.up * 560f;
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "reservoir_watercraft_overhead_alignment",
+                "Reservoir watercraft source-footprint alignment overview",
+                "reservoir_watercraft",
+                watercraftOverheadCamera,
+                LookAt(watercraftOverheadCamera, watercraftOverheadTarget),
+                60f,
+                ViewProfile.Environment));
+
+            Vector3 watercraftRouteTarget = new Vector3(285f, -27f, 3545f);
+            Vector3 watercraftRouteCamera = new Vector3(70f, 175f, 3195f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "reservoir_watercraft_guided_route_oblique",
+                "Reservoir watercraft from the guided-route approach",
+                "reservoir_watercraft",
+                watercraftRouteCamera,
+                LookAt(watercraftRouteCamera, watercraftRouteTarget),
+                46f,
+                ViewProfile.Environment));
+
+            Vector3 mooringTarget = new Vector3(190f, -27.5f, 3598f);
+            Vector3 mooringCamera = new Vector3(285f, 78f, 3440f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "reservoir_watercraft_mooring_field",
+                "Source-backed Boulder Reservoir mooring field",
+                "reservoir_watercraft",
+                mooringCamera,
+                LookAt(mooringCamera, mooringTarget),
+                40f,
+                ViewProfile.Environment));
+
+            Vector3 shoreStorageTarget = new Vector3(254f, -27f, 3497f);
+            Vector3 shoreStorageCamera = new Vector3(330f, 20f, 3415f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "reservoir_watercraft_shore_storage",
+                "Organized kayak and SUP shoreline storage",
+                "reservoir_watercraft",
+                shoreStorageCamera,
+                LookAt(shoreStorageCamera, shoreStorageTarget),
+                34f,
+                ViewProfile.Environment));
+
+            Vector3 dryStorageTarget = new Vector3(310f, -25.5f, 3332f);
+            Vector3 dryStorageCamera = new Vector3(430f, -17f, 3328f);
+            Capture(context, report, outputDir, width, height, new ShotDefinition(
+                "reservoir_watercraft_dry_storage",
+                "Trailed powerboat ground-contact detail",
+                "reservoir_watercraft",
+                dryStorageCamera,
+                LookAt(dryStorageCamera, dryStorageTarget),
+                32f,
+                ViewProfile.Environment));
 
             Vector3 rampCamera = hangarTarget
                                  - context.runwayForward * (airportExtent * 0.45f + 45f)

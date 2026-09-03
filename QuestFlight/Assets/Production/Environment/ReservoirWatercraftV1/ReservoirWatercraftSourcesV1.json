@@ -1,0 +1,79 @@
+{
+  "schema": "questflight.reservoir-watercraft-sources-v1",
+  "distribution_status": "PRIVATE_PROJECT_SOURCE_NOT_REVIEWED_FOR_PUBLIC_RELEASE",
+  "external_artifact_root": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\reservoir_watercraft_v1_20260902_232635",
+  "sources": [
+    {
+      "canonical_id": "laser_47",
+      "original_download": "C:\\Users\\ovied\\Downloads\\laser-47-simple-model.zip",
+      "canonical_external_copy": "sources\\raw\\laser_47_source.zip",
+      "title": "Laser 4.7 Simple Model",
+      "creator": "sindorman",
+      "sketchfab_uid": "d1902e9cc8ef4842bdd3c60ccebf71d4",
+      "source_url": "https://sketchfab.com/3d-models/laser-47-simple-model-d1902e9cc8ef4842bdd3c60ccebf71d4",
+      "archive_sha256": "6457F933DB7F0D6AABC427AC478AAE51A154EA50BB69897E98B5A53B2420C04C",
+      "source_license_label": "CC Attribution",
+      "status": "ACCEPTED"
+    },
+    {
+      "canonical_id": "j80_sailboat",
+      "original_download": "C:\\Users\\ovied\\Downloads\\j-80-sailboat.zip",
+      "canonical_external_copy": "sources\\raw\\j80_sailboat_source.zip",
+      "title": "J-80 Sailboat",
+      "creator": "BoatUS",
+      "sketchfab_uid": "681513987f464be48add6cb69580f9c5",
+      "source_url": "https://sketchfab.com/3d-models/j-80-sailboat-681513987f464be48add6cb69580f9c5",
+      "archive_sha256": "067E2FD25A1FC9ACCDCEF0BD4A435E071AA14BD6083BBD8F85E71FF48C368FD5",
+      "source_license_label": "CC Attribution-NonCommercial-NoDerivs",
+      "status": "PRIVATE_SOURCE_REFERENCE_ACCEPTED_FOR_SOURCE_MEASURED_DERIVATIVE"
+    },
+    {
+      "canonical_id": "yamaha_212x_trailer",
+      "original_download": "C:\\Users\\ovied\\Downloads\\2008-212x-yamaha-wakeboard-boat-with-trailer.zip",
+      "canonical_external_copy": "sources\\raw\\yamaha_212x_trailer_source.zip",
+      "title": "2008 212X Yamaha Wakeboard Boat with Trailer",
+      "creator": "BoatUS",
+      "sketchfab_uid": "208da9049fb744c285a692b6ebb9c3e0",
+      "source_url": "https://sketchfab.com/3d-models/2008-212x-yamaha-wakeboard-boat-with-trailer-208da9049fb744c285a692b6ebb9c3e0",
+      "archive_sha256": "AB5D72682106C3123DC7032C83D31E8A52880F0DF2E4802D7AA8848986717F96",
+      "source_license_label": "CC Attribution",
+      "status": "ACCEPTED_SOURCE_MEASURED_DERIVATIVE"
+    },
+    {
+      "canonical_id": "paddle_board",
+      "original_download": "C:\\Users\\ovied\\Downloads\\paddle-board.zip",
+      "canonical_external_copy": "sources\\raw\\paddle_board_source.zip",
+      "title": "Paddle Board",
+      "creator": "cassandra.swilley",
+      "sketchfab_uid": "a8010bc8731f46258a2769476ed8bf8c",
+      "source_url": "https://sketchfab.com/3d-models/paddle-board-a8010bc8731f46258a2769476ed8bf8c",
+      "archive_sha256": "AE65A191A6A6FF4C7067E47F6917E040244FCE571D025503A38F04F75961D9F6",
+      "source_license_label": "CC Attribution",
+      "status": "ACCEPTED_SOURCE_MEASURED_DERIVATIVE"
+    },
+    {
+      "canonical_id": "wooden_kayak_paddle",
+      "original_download": "C:\\Users\\ovied\\Downloads\\wooden-kayak-paddle.zip",
+      "canonical_external_copy": "sources\\raw\\wooden_kayak_paddle_source.zip",
+      "title": "Wooden Kayak & Paddle",
+      "creator": "Dominik Bialy",
+      "sketchfab_uid": "01cc514c5ace410ea4e5710cbfe89bb8",
+      "source_url": "https://sketchfab.com/3d-models/wooden-kayak-paddle-01cc514c5ace410ea4e5710cbfe89bb8",
+      "archive_sha256": "E12A9749ACE9810847CF7B0B0B434D1B09F45DD794E0DC4B3F50AA85C92E64A9",
+      "source_license_label": "CC Attribution",
+      "status": "ACCEPTED_GEOMETRY_ONLY_MODERN_PLASTIC_CONVERSION"
+    },
+    {
+      "canonical_id": "sit_on_top_rescue_kayak",
+      "sketchfab_uid": "8eaec235306944368de256ad81d9dc77",
+      "status": "NOT_FOUND_IN_DOWNLOADS_OPTIONAL_CATEGORY_OMITTED"
+    }
+  ],
+  "shipping_contract": {
+    "source_archives_in_project": 0,
+    "temporary_fbx_in_project": 0,
+    "source_materials_in_project": 0,
+    "source_textures_in_project": 0,
+    "shipping_material": "Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraft.mat"
+  }
+}

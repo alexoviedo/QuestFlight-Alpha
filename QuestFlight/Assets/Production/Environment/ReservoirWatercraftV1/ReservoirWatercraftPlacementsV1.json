@@ -1,0 +1,1133 @@
+{
+  "schema": "questflight.reservoir-watercraft-placements-v1",
+  "source_mosaic_sha256": "f80134caffdaf8281abfff839093650dbbffd169b0c4eecd356695f5de67cf0f",
+  "source_mosaic_report_sha256": "7898d394c515cc6b5264d81c7a90ff8fa380b13fc1b07bbee652a45a67f2ec67",
+  "vertical_surface_authority": "ACTIVE_RENDERED_TERRAIN_MESH",
+  "records": [
+    {
+      "stable_id": "RWV1_001_MW01",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198348,
+        "column": 108899,
+        "pixel_center": [
+          15,
+          19
+        ],
+        "mosaic_pixel_center": [
+          2610,
+          1346
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            2603,
+            1358
+          ],
+          [
+            2618,
+            1334
+          ]
+        ]
+      },
+      "product_x_meters": 97.157,
+      "product_z_meters": 3593.35,
+      "yaw_degrees": 32.11,
+      "footprint_length_meters": 6.0,
+      "footprint_width_meters": 2.05,
+      "derivative": "MOORED_DAY_SAILER",
+      "placement_mode": "MOORED_DAY_SAILER",
+      "spatial_group": "open_water",
+      "palette": "sailer_offwhite_navy",
+      "source_color_confidence": "HIGH",
+      "classification_confidence": "HIGH",
+      "evidence_note": "white moored hull and mast shadow",
+      "vertical_authority": "TERRAIN_OWNED_WATER_VISUAL_SURFACE",
+      "anchor_mode": "MODEL_WATERLINE",
+      "anchor_local_y_meters": 0.42,
+      "surface_clearance_meters": 0.02
+    },
+    {
+      "stable_id": "RWV1_002_MW02",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198348,
+        "column": 108899,
+        "pixel_center": [
+          178,
+          28
+        ],
+        "mosaic_pixel_center": [
+          2773,
+          1355
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            2765,
+            1371
+          ],
+          [
+            2781,
+            1339
+          ]
+        ]
+      },
+      "product_x_meters": 134.452,
+      "product_z_meters": 3591.3,
+      "yaw_degrees": 26.65,
+      "footprint_length_meters": 6.5,
+      "footprint_width_meters": 2.1,
+      "derivative": "MOORED_DAY_SAILER",
+      "placement_mode": "MOORED_DAY_SAILER",
+      "spatial_group": "open_water",
+      "palette": "sailer_offwhite_gray",
+      "source_color_confidence": "HIGH",
+      "classification_confidence": "HIGH",
+      "evidence_note": "white moored hull and mast shadow",
+      "vertical_authority": "TERRAIN_OWNED_WATER_VISUAL_SURFACE",
+      "anchor_mode": "MODEL_WATERLINE",
+      "anchor_local_y_meters": 0.42,
+      "surface_clearance_meters": 0.02
+    },
+    {
+      "stable_id": "RWV1_003_MW03",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198348,
+        "column": 108900,
+        "pixel_center": [
+          199,
+          114
+        ],
+        "mosaic_pixel_center": [
+          3050,
+          1441
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3043,
+            1455
+          ],
+          [
+            3057,
+            1426
+          ]
+        ]
+      },
+      "product_x_meters": 197.832,
+      "product_z_meters": 3571.701,
+      "yaw_degrees": 25.86,
+      "footprint_length_meters": 6.1,
+      "footprint_width_meters": 2.0,
+      "derivative": "MOORED_DAY_SAILER",
+      "placement_mode": "MOORED_DAY_SAILER",
+      "spatial_group": "open_water",
+      "palette": "sailer_offwhite_navy",
+      "source_color_confidence": "HIGH",
+      "classification_confidence": "HIGH",
+      "evidence_note": "white moored hull, no raised sail",
+      "vertical_authority": "TERRAIN_OWNED_WATER_VISUAL_SURFACE",
+      "anchor_mode": "MODEL_WATERLINE",
+      "anchor_local_y_meters": 0.42,
+      "surface_clearance_meters": 0.02
+    },
+    {
+      "stable_id": "RWV1_004_MW04",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198347,
+        "column": 108900,
+        "pixel_center": [
+          227,
+          221
+        ],
+        "mosaic_pixel_center": [
+          3078,
+          1292
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3072,
+            1304
+          ],
+          [
+            3084,
+            1280
+          ]
+        ]
+      },
+      "product_x_meters": 204.237,
+      "product_z_meters": 3605.659,
+      "yaw_degrees": 26.65,
+      "footprint_length_meters": 5.8,
+      "footprint_width_meters": 1.95,
+      "derivative": "MOORED_DAY_SAILER",
+      "placement_mode": "MOORED_DAY_SAILER",
+      "spatial_group": "open_water",
+      "palette": "sailer_lightgray_charcoal",
+      "source_color_confidence": "HIGH",
+      "classification_confidence": "HIGH",
+      "evidence_note": "white moored hull and westward mast shadow",
+      "vertical_authority": "TERRAIN_OWNED_WATER_VISUAL_SURFACE",
+      "anchor_mode": "MODEL_WATERLINE",
+      "anchor_local_y_meters": 0.42,
+      "surface_clearance_meters": 0.02
+    },
+    {
+      "stable_id": "RWV1_005_MW05",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198347,
+        "column": 108901,
+        "pixel_center": [
+          42,
+          165
+        ],
+        "mosaic_pixel_center": [
+          3149,
+          1236
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3143,
+            1250
+          ],
+          [
+            3155,
+            1222
+          ]
+        ]
+      },
+      "product_x_meters": 220.482,
+      "product_z_meters": 3618.422,
+      "yaw_degrees": 23.28,
+      "footprint_length_meters": 6.4,
+      "footprint_width_meters": 2.1,
+      "derivative": "MOORED_DAY_SAILER",
+      "placement_mode": "MOORED_DAY_SAILER",
+      "spatial_group": "open_water",
+      "palette": "sailer_offwhite_navy",
+      "source_color_confidence": "HIGH",
+      "classification_confidence": "HIGH",
+      "evidence_note": "white moored hull and westward mast shadow",
+      "vertical_authority": "TERRAIN_OWNED_WATER_VISUAL_SURFACE",
+      "anchor_mode": "MODEL_WATERLINE",
+      "anchor_local_y_meters": 0.42,
+      "surface_clearance_meters": 0.02
+    },
+    {
+      "stable_id": "RWV1_006_MW06",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198348,
+        "column": 108901,
+        "pixel_center": [
+          136,
+          36
+        ],
+        "mosaic_pixel_center": [
+          3243,
+          1363
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3236,
+            1379
+          ],
+          [
+            3250,
+            1348
+          ]
+        ]
+      },
+      "product_x_meters": 241.99,
+      "product_z_meters": 3589.479,
+      "yaw_degrees": 24.39,
+      "footprint_length_meters": 6.7,
+      "footprint_width_meters": 2.15,
+      "derivative": "MOORED_DAY_SAILER",
+      "placement_mode": "MOORED_DAY_SAILER",
+      "spatial_group": "open_water",
+      "palette": "sailer_offwhite_blue",
+      "source_color_confidence": "HIGH",
+      "classification_confidence": "HIGH",
+      "evidence_note": "blue-covered moored hull and mast shadow",
+      "vertical_authority": "TERRAIN_OWNED_WATER_VISUAL_SURFACE",
+      "anchor_mode": "MODEL_WATERLINE",
+      "anchor_local_y_meters": 0.42,
+      "surface_clearance_meters": 0.02
+    },
+    {
+      "stable_id": "RWV1_007_PA01",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198347,
+        "column": 108903,
+        "pixel_center": [
+          163,
+          194
+        ],
+        "mosaic_pixel_center": [
+          3782,
+          1265
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3782,
+            1278
+          ],
+          [
+            3781,
+            1252
+          ]
+        ]
+      },
+      "product_x_meters": 365.315,
+      "product_z_meters": 3611.819,
+      "yaw_degrees": -2.21,
+      "footprint_length_meters": 5.9,
+      "footprint_width_meters": 2.25,
+      "derivative": "POWERBOAT_AFLOAT",
+      "placement_mode": "POWERBOAT_AFLOAT",
+      "spatial_group": "open_water",
+      "palette": "power_offwhite_muted_red",
+      "source_color_confidence": "HIGH",
+      "classification_confidence": "MEDIUM",
+      "evidence_note": "compact white/red motor craft afloat",
+      "vertical_authority": "TERRAIN_OWNED_WATER_VISUAL_SURFACE",
+      "anchor_mode": "MODEL_WATERLINE",
+      "anchor_local_y_meters": 0.4,
+      "surface_clearance_meters": 0.02
+    },
+    {
+      "stable_id": "RWV1_008_PA02",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198346,
+        "column": 108908,
+        "pixel_center": [
+          21,
+          170
+        ],
+        "mosaic_pixel_center": [
+          4920,
+          985
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            4911,
+            994
+          ],
+          [
+            4929,
+            976
+          ]
+        ]
+      },
+      "product_x_meters": 625.688,
+      "product_z_meters": 3675.649,
+      "yaw_degrees": 45.11,
+      "footprint_length_meters": 6.6,
+      "footprint_width_meters": 2.35,
+      "derivative": "POWERBOAT_AFLOAT",
+      "placement_mode": "POWERBOAT_AFLOAT",
+      "spatial_group": "open_water",
+      "palette": "power_offwhite_navy",
+      "source_color_confidence": "HIGH",
+      "classification_confidence": "MEDIUM",
+      "evidence_note": "modern power craft visibly underway; wake remains in imagery",
+      "vertical_authority": "TERRAIN_OWNED_WATER_VISUAL_SURFACE",
+      "anchor_mode": "MODEL_WATERLINE",
+      "anchor_local_y_meters": 0.4,
+      "surface_clearance_meters": 0.02
+    },
+    {
+      "stable_id": "RWV1_009_PA03",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198349,
+        "column": 108906,
+        "pixel_center": [
+          43,
+          47
+        ],
+        "mosaic_pixel_center": [
+          4430,
+          1630
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            4427,
+            1642
+          ],
+          [
+            4433,
+            1618
+          ]
+        ]
+      },
+      "product_x_meters": 513.585,
+      "product_z_meters": 3528.642,
+      "yaw_degrees": 14.09,
+      "footprint_length_meters": 5.6,
+      "footprint_width_meters": 2.15,
+      "derivative": "POWERBOAT_AFLOAT",
+      "placement_mode": "POWERBOAT_AFLOAT",
+      "spatial_group": "open_water",
+      "palette": "power_offwhite_charcoal",
+      "source_color_confidence": "HIGH",
+      "classification_confidence": "MEDIUM",
+      "evidence_note": "dark-cockpit craft clear of east launch dock",
+      "vertical_authority": "TERRAIN_OWNED_WATER_VISUAL_SURFACE",
+      "anchor_mode": "MODEL_WATERLINE",
+      "anchor_local_y_meters": 0.4,
+      "surface_clearance_meters": 0.02
+    },
+    {
+      "stable_id": "RWV1_010_KS01",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198349,
+        "column": 108901,
+        "pixel_center": [
+          183,
+          100
+        ],
+        "mosaic_pixel_center": [
+          3290,
+          1683
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3286,
+            1695
+          ],
+          [
+            3294,
+            1671
+          ]
+        ]
+      },
+      "product_x_meters": 252.747,
+      "product_z_meters": 3516.549,
+      "yaw_degrees": 18.5,
+      "footprint_length_meters": 4.15,
+      "footprint_width_meters": 0.67,
+      "derivative": "TOURING_KAYAK_STORED",
+      "placement_mode": "TOURING_KAYAK_STORED",
+      "spatial_group": "shore_storage",
+      "palette": "kayak_muted_teal",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "HIGH",
+      "evidence_note": "first organized colored beach row",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.00034,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_011_KS02",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198349,
+        "column": 108901,
+        "pixel_center": [
+          195,
+          96
+        ],
+        "mosaic_pixel_center": [
+          3302,
+          1679
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3298,
+            1691
+          ],
+          [
+            3306,
+            1667
+          ]
+        ]
+      },
+      "product_x_meters": 255.492,
+      "product_z_meters": 3517.461,
+      "yaw_degrees": 18.5,
+      "footprint_length_meters": 4.05,
+      "footprint_width_meters": 0.66,
+      "derivative": "TOURING_KAYAK_STORED",
+      "placement_mode": "TOURING_KAYAK_STORED",
+      "spatial_group": "shore_storage",
+      "palette": "kayak_deep_blue",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "HIGH",
+      "evidence_note": "first organized colored beach row",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.00034,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_012_KS03",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198349,
+        "column": 108901,
+        "pixel_center": [
+          208,
+          92
+        ],
+        "mosaic_pixel_center": [
+          3315,
+          1675
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3311,
+            1687
+          ],
+          [
+            3319,
+            1663
+          ]
+        ]
+      },
+      "product_x_meters": 258.467,
+      "product_z_meters": 3518.373,
+      "yaw_degrees": 18.5,
+      "footprint_length_meters": 4.2,
+      "footprint_width_meters": 0.68,
+      "derivative": "TOURING_KAYAK_STORED",
+      "placement_mode": "TOURING_KAYAK_STORED",
+      "spatial_group": "shore_storage",
+      "palette": "kayak_muted_orange",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "HIGH",
+      "evidence_note": "first organized colored beach row",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.00034,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_013_KS04",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198349,
+        "column": 108901,
+        "pixel_center": [
+          221,
+          89
+        ],
+        "mosaic_pixel_center": [
+          3328,
+          1672
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3324,
+            1684
+          ],
+          [
+            3332,
+            1660
+          ]
+        ]
+      },
+      "product_x_meters": 261.441,
+      "product_z_meters": 3519.057,
+      "yaw_degrees": 18.5,
+      "footprint_length_meters": 4.1,
+      "footprint_width_meters": 0.67,
+      "derivative": "TOURING_KAYAK_STORED",
+      "placement_mode": "TOURING_KAYAK_STORED",
+      "spatial_group": "shore_storage",
+      "palette": "kayak_muted_teal",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "HIGH",
+      "evidence_note": "first organized colored beach row",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.00034,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_014_KS05",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198349,
+        "column": 108901,
+        "pixel_center": [
+          234,
+          85
+        ],
+        "mosaic_pixel_center": [
+          3341,
+          1668
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3337,
+            1680
+          ],
+          [
+            3345,
+            1656
+          ]
+        ]
+      },
+      "product_x_meters": 264.416,
+      "product_z_meters": 3519.968,
+      "yaw_degrees": 18.5,
+      "footprint_length_meters": 4.25,
+      "footprint_width_meters": 0.69,
+      "derivative": "TOURING_KAYAK_STORED",
+      "placement_mode": "TOURING_KAYAK_STORED",
+      "spatial_group": "shore_storage",
+      "palette": "kayak_deep_blue",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "HIGH",
+      "evidence_note": "first organized colored beach row",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.00034,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_015_KS06",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198349,
+        "column": 108901,
+        "pixel_center": [
+          247,
+          81
+        ],
+        "mosaic_pixel_center": [
+          3354,
+          1664
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3350,
+            1676
+          ],
+          [
+            3358,
+            1652
+          ]
+        ]
+      },
+      "product_x_meters": 267.39,
+      "product_z_meters": 3520.88,
+      "yaw_degrees": 18.5,
+      "footprint_length_meters": 4.05,
+      "footprint_width_meters": 0.66,
+      "derivative": "TOURING_KAYAK_STORED",
+      "placement_mode": "TOURING_KAYAK_STORED",
+      "spatial_group": "shore_storage",
+      "palette": "kayak_muted_orange",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "HIGH",
+      "evidence_note": "first organized colored beach row",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.00034,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_016_SS01",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198350,
+        "column": 108901,
+        "pixel_center": [
+          133,
+          36
+        ],
+        "mosaic_pixel_center": [
+          3240,
+          1875
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3236,
+            1885
+          ],
+          [
+            3244,
+            1865
+          ]
+        ]
+      },
+      "product_x_meters": 241.308,
+      "product_z_meters": 3472.791,
+      "yaw_degrees": 21.88,
+      "footprint_length_meters": 3.15,
+      "footprint_width_meters": 0.82,
+      "derivative": "SUP_STORED",
+      "placement_mode": "SUP_STORED",
+      "spatial_group": "shore_storage",
+      "palette": "sup_offwhite_muted_blue",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "HIGH",
+      "evidence_note": "parallel colored board row on developed grass staging",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.0,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_017_SS02",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198350,
+        "column": 108901,
+        "pixel_center": [
+          146,
+          32
+        ],
+        "mosaic_pixel_center": [
+          3253,
+          1871
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3249,
+            1881
+          ],
+          [
+            3257,
+            1861
+          ]
+        ]
+      },
+      "product_x_meters": 244.282,
+      "product_z_meters": 3473.703,
+      "yaw_degrees": 21.88,
+      "footprint_length_meters": 3.2,
+      "footprint_width_meters": 0.84,
+      "derivative": "SUP_STORED",
+      "placement_mode": "SUP_STORED",
+      "spatial_group": "shore_storage",
+      "palette": "sup_muted_teal",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "HIGH",
+      "evidence_note": "parallel colored board row on developed grass staging",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.0,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_018_SS03",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198350,
+        "column": 108901,
+        "pixel_center": [
+          159,
+          28
+        ],
+        "mosaic_pixel_center": [
+          3266,
+          1867
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3262,
+            1877
+          ],
+          [
+            3270,
+            1857
+          ]
+        ]
+      },
+      "product_x_meters": 247.257,
+      "product_z_meters": 3474.614,
+      "yaw_degrees": 21.88,
+      "footprint_length_meters": 3.1,
+      "footprint_width_meters": 0.82,
+      "derivative": "SUP_STORED",
+      "placement_mode": "SUP_STORED",
+      "spatial_group": "shore_storage",
+      "palette": "sup_lightgray_charcoal",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "HIGH",
+      "evidence_note": "parallel colored board row on developed grass staging",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.0,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_019_SS04",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198350,
+        "column": 108901,
+        "pixel_center": [
+          172,
+          24
+        ],
+        "mosaic_pixel_center": [
+          3279,
+          1863
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3275,
+            1873
+          ],
+          [
+            3283,
+            1853
+          ]
+        ]
+      },
+      "product_x_meters": 250.231,
+      "product_z_meters": 3475.526,
+      "yaw_degrees": 21.88,
+      "footprint_length_meters": 3.18,
+      "footprint_width_meters": 0.83,
+      "derivative": "SUP_STORED",
+      "placement_mode": "SUP_STORED",
+      "spatial_group": "shore_storage",
+      "palette": "sup_offwhite_muted_blue",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "HIGH",
+      "evidence_note": "parallel colored board row on developed grass staging",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.0,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_020_DS01",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198352,
+        "column": 108898,
+        "pixel_center": [
+          201,
+          79
+        ],
+        "mosaic_pixel_center": [
+          2540,
+          2430
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            2538,
+            2446
+          ],
+          [
+            2542,
+            2414
+          ]
+        ]
+      },
+      "product_x_meters": 81.143,
+      "product_z_meters": 3346.297,
+      "yaw_degrees": 7.15,
+      "footprint_length_meters": 4.15,
+      "footprint_width_meters": 1.42,
+      "derivative": "DINGHY_STORED",
+      "placement_mode": "DINGHY_STORED",
+      "spatial_group": "dry_storage",
+      "palette": "dinghy_offwhite_navy",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "MEDIUM",
+      "evidence_note": "small white hull in organized gravel storage",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.01,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_021_DS02",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198352,
+        "column": 108899,
+        "pixel_center": [
+          75,
+          89
+        ],
+        "mosaic_pixel_center": [
+          2670,
+          2440
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            2668,
+            2456
+          ],
+          [
+            2672,
+            2424
+          ]
+        ]
+      },
+      "product_x_meters": 110.889,
+      "product_z_meters": 3344.018,
+      "yaw_degrees": 7.15,
+      "footprint_length_meters": 4.25,
+      "footprint_width_meters": 1.44,
+      "derivative": "DINGHY_STORED",
+      "placement_mode": "DINGHY_STORED",
+      "spatial_group": "dry_storage",
+      "palette": "dinghy_offwhite_gray",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "MEDIUM",
+      "evidence_note": "small white hull in organized gravel storage",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.01,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_022_DS03",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198352,
+        "column": 108900,
+        "pixel_center": [
+          9,
+          109
+        ],
+        "mosaic_pixel_center": [
+          2860,
+          2460
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            2858,
+            2476
+          ],
+          [
+            2862,
+            2444
+          ]
+        ]
+      },
+      "product_x_meters": 154.363,
+      "product_z_meters": 3339.461,
+      "yaw_degrees": 7.15,
+      "footprint_length_meters": 4.1,
+      "footprint_width_meters": 1.41,
+      "derivative": "DINGHY_STORED",
+      "placement_mode": "DINGHY_STORED",
+      "spatial_group": "dry_storage",
+      "palette": "dinghy_offwhite_navy",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "MEDIUM",
+      "evidence_note": "small white hull in organized gravel storage",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.01,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_023_PT01",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198352,
+        "column": 108901,
+        "pixel_center": [
+          193,
+          139
+        ],
+        "mosaic_pixel_center": [
+          3300,
+          2490
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3297,
+            2508
+          ],
+          [
+            3303,
+            2472
+          ]
+        ]
+      },
+      "product_x_meters": 255.041,
+      "product_z_meters": 3332.626,
+      "yaw_degrees": 9.5,
+      "footprint_length_meters": 7.75,
+      "footprint_width_meters": 2.5,
+      "derivative": "POWERBOAT_TRAILERED",
+      "placement_mode": "POWERBOAT_TRAILERED",
+      "spatial_group": "dry_storage",
+      "palette": "power_offwhite_charcoal",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "MEDIUM",
+      "evidence_note": "white trailerable hull in south storage line",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.0,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_024_PT02",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198352,
+        "column": 108902,
+        "pixel_center": [
+          177,
+          149
+        ],
+        "mosaic_pixel_center": [
+          3540,
+          2500
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3537,
+            2518
+          ],
+          [
+            3543,
+            2482
+          ]
+        ]
+      },
+      "product_x_meters": 309.956,
+      "product_z_meters": 3330.349,
+      "yaw_degrees": 9.5,
+      "footprint_length_meters": 7.95,
+      "footprint_width_meters": 2.55,
+      "derivative": "POWERBOAT_TRAILERED",
+      "placement_mode": "POWERBOAT_TRAILERED",
+      "spatial_group": "dry_storage",
+      "palette": "power_offwhite_navy",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "MEDIUM",
+      "evidence_note": "white trailerable hull in south storage line",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.0,
+      "surface_clearance_meters": 0.025
+    },
+    {
+      "stable_id": "RWV1_025_PT03",
+      "source": {
+        "provider": "City of Boulder",
+        "imagery_id": "city_of_boulder_2020_9inch",
+        "acquisition_period": "Spring and Summer 2020",
+        "level": 19,
+        "row": 198352,
+        "column": 108903,
+        "pixel_center": [
+          201,
+          139
+        ],
+        "mosaic_pixel_center": [
+          3820,
+          2490
+        ],
+        "long_axis_mosaic_pixels": [
+          [
+            3817,
+            2508
+          ],
+          [
+            3823,
+            2472
+          ]
+        ]
+      },
+      "product_x_meters": 374.023,
+      "product_z_meters": 3332.631,
+      "yaw_degrees": 9.5,
+      "footprint_length_meters": 7.7,
+      "footprint_width_meters": 2.48,
+      "derivative": "POWERBOAT_TRAILERED",
+      "placement_mode": "POWERBOAT_TRAILERED",
+      "spatial_group": "dry_storage",
+      "palette": "power_offwhite_charcoal",
+      "source_color_confidence": "MEDIUM",
+      "classification_confidence": "MEDIUM",
+      "evidence_note": "white trailerable hull in south storage line",
+      "vertical_authority": "ACTIVE_RENDERED_TERRAIN_SURFACE",
+      "anchor_mode": "MODEL_SUPPORT_PLANE",
+      "anchor_local_y_meters": 0.0,
+      "surface_clearance_meters": 0.025
+    }
+  ]
+}
