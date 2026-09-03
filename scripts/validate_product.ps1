@@ -96,7 +96,8 @@ try {
   & .\scripts\run_unity_tests.ps1 -ProjectPath $ProjectPath -TestPlatform EditMode -ArtifactDir (Join-Path $ArtifactDir 'editmode') -TimeoutSeconds 900
   & .\scripts\run_unity_tests.ps1 -ProjectPath $ProjectPath -TestPlatform PlayMode -ArtifactDir (Join-Path $ArtifactDir 'playmode') -TimeoutSeconds 900
   $visualQaDir = Join-Path $ArtifactDir 'visual_qa'
-  & .\scripts\run_production_visual_qa.ps1 -ProjectPath $ProjectPath -ArtifactDir $visualQaDir -TimeoutSeconds 900
+  & .\scripts\run_production_visual_qa.ps1 -ProjectPath $ProjectPath -ArtifactDir $visualQaDir `
+    -Width 1920 -Height 1080 -TimeoutSeconds 900
   & .\scripts\run_quest_performance_budget.ps1 -ProjectPath $ProjectPath -ArtifactDir (Join-Path $ArtifactDir 'performance_budget') `
     -SkipVisualQa -VisualQaReport (Join-Path $visualQaDir 'visual_qa_report.json') -TimeoutSeconds 900
   & .\scripts\build_production_quest.ps1 -ProjectPath $ProjectPath -ArtifactDir (Join-Path $ArtifactDir 'build') -TimeoutSeconds 1800

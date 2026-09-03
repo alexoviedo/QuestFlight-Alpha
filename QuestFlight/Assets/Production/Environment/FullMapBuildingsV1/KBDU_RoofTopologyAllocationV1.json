@@ -1,8 +1,8 @@
 {
-    "compiler_version": "proper-roof-topology-selective-compiler-v14-20260903",
+    "compiler_version": "semantic-tower-exclusion-compiler-v15-20260903",
     "rollout": "selective",
     "triangle_ceiling": 235000,
-    "represented_buildings": 57441,
+    "represented_buildings": 57440,
     "page_count": 576,
     "nonempty_page_count": 483,
     "active_page_slots": 24,
@@ -19,7 +19,7 @@
     "selected_roofs": 5962,
     "budget_rejected_safe_roofs": 7065,
     "ambiguous_or_unsupported_roofs": 15707,
-    "baseline_total_triangles": 613389,
+    "baseline_total_triangles": 613373,
     "all_safe_added_triangles": 50790,
     "selected_added_triangles": 23252,
     "baseline_maximum_selected_triangles": 233298,
@@ -2395,12 +2395,12 @@
         {
             "column": 14,
             "row": 9,
-            "baseline_triangles": 1314,
+            "baseline_triangles": 1298,
             "safe_candidate_roofs": 19,
             "all_safe_added_triangles": 74,
             "selected_roofs": 19,
             "selected_added_triangles": 74,
-            "final_triangles": 1388
+            "final_triangles": 1372
         },
         {
             "column": 15,

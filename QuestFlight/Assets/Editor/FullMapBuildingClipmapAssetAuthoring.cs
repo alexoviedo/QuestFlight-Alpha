@@ -148,11 +148,11 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
-        private const string MeshCompilerVersion = "proper-roof-topology-selective-compiler-v14-20260903";
+        private const string MeshCompilerVersion = "semantic-tower-exclusion-compiler-v15-20260903";
         private const string FacadeContractVersion = "boulder-semantic-facades-v2";
         private const int MaximumSelectedTriangleCeiling = 235000;
         private const int AuthoredMaximumSelectedTriangles = 235000;
-        private const int ExpectedRepresentedBuildings = 57441;
+        private const int ExpectedSourceBuildings = 57441;
         private const int OrdinaryFootprintVertexLimit = 4;
         private const int LargeFootprintVertexLimit = 6;
         private const float LargeFootprintAreaSquareMeters = 1000f;
@@ -438,6 +438,38 @@ namespace QuestFlight.Editor
             }
         }
 
+        /// <summary>
+        /// Reconstructs one exact source-database shell for matched editor-only
+        /// before/after QA. The returned object and mesh are transient and are
+        /// never serialized into the product hierarchy.
+        /// </summary>
+        public static GameObject CreateSemanticTowerBaselineShellPreview(int buildingId, Transform parent)
+        {
+            Database database = LoadDatabase();
+            Page sourcePage = database.pages.Single(page =>
+                (page.buildings ?? Array.Empty<Building>()).Any(building => building.id == buildingId));
+            Building building = sourcePage.buildings.Single(candidate => candidate.id == buildingId);
+            ProductionTerrainSurfaceAsset terrain = LoadRequired<ProductionTerrainSurfaceAsset>(TerrainSurfacePath);
+            RoofAllocation baselineAllocation = BuildRoofAllocation(database, new HashSet<int>());
+            Page previewPage = new Page
+            {
+                column = sourcePage.column,
+                row = sourcePage.row,
+                buildings = new[] { building }
+            };
+            Mesh mesh = BuildPageMesh(database, previewPage, terrain, baselineAllocation, new HashSet<int>());
+            mesh.name = $"SemanticTowerBaselineShell_{buildingId}";
+            mesh.hideFlags = HideFlags.DontSave;
+            GameObject preview = new GameObject(mesh.name) { hideFlags = HideFlags.DontSave };
+            preview.transform.SetParent(parent, false);
+            preview.AddComponent<MeshFilter>().sharedMesh = mesh;
+            MeshRenderer renderer = preview.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = LoadRequired<Material>(MaterialPath);
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            return preview;
+        }
+
         public static void ReauthorSerializedProductBatch()
         {
             try
@@ -718,14 +750,15 @@ namespace QuestFlight.Editor
         private static void RebuildMeshAssets(Database database)
         {
             ProductionTerrainSurfaceAsset terrain = LoadRequired<ProductionTerrainSurfaceAsset>(TerrainSurfacePath);
-            RoofAllocation roofAllocation = BuildRoofAllocation(database);
+            HashSet<int> exclusions = LoadValidatedSemanticTowerExclusions(database);
+            RoofAllocation roofAllocation = BuildRoofAllocation(database, exclusions);
             string absolute = Absolute(GeneratedRoot);
             if (Directory.Exists(absolute)) Directory.Delete(absolute, true);
             Directory.CreateDirectory(absolute);
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             foreach (Page page in database.pages.OrderBy(item => item.row).ThenBy(item => item.column))
             {
-                Mesh mesh = BuildPageMesh(database, page, terrain, roofAllocation);
+                Mesh mesh = BuildPageMesh(database, page, terrain, roofAllocation, exclusions);
                 AssetDatabase.CreateAsset(mesh, MeshPath(page.column, page.row));
                 if ((page.row * database.columns + page.column) % 24 == 23)
                 {
@@ -736,11 +769,11 @@ namespace QuestFlight.Editor
             }
             EditorUtility.ClearProgressBar();
             AssetDatabase.SaveAssets();
-            WriteCompilationReport(database, roofAllocation);
+            WriteCompilationReport(database, roofAllocation, exclusions);
             WriteRoofTopologyReport(roofAllocation.report);
         }
 
-        private static RoofAllocation BuildRoofAllocation(Database database)
+        private static RoofAllocation BuildRoofAllocation(Database database, ISet<int> exclusions)
         {
             int pageCount = database.columns * database.rows;
             int[] baselinePageTriangles = new int[pageCount];
@@ -765,6 +798,7 @@ namespace QuestFlight.Editor
                 foreach (Building building in (page.buildings ?? Array.Empty<Building>())
                              .OrderBy(item => item.id))
                 {
+                    if (exclusions.Contains(building.id)) continue;
                     represented++;
                     bool pitched = building.roof_id == FullMapBuildingRoofTopology.GableRoofId ||
                                    building.roof_id == FullMapBuildingRoofTopology.HipRoofId;
@@ -828,7 +862,7 @@ namespace QuestFlight.Editor
                 }
             }
 
-            if (represented != ExpectedRepresentedBuildings)
+            if (represented != ExpectedSourceBuildings - exclusions.Count)
                 throw new InvalidOperationException("Roof allocation lost source buildings.");
             FullMapBuildingRoofBudgetResult allocation = FullMapBuildingRoofBudgetAllocator.Select(
                 budgetCandidates, baselinePageTriangles,
@@ -900,7 +934,8 @@ namespace QuestFlight.Editor
                 triangle_ceiling = MaximumSelectedTriangleCeiling,
                 represented_buildings = represented,
                 page_count = pageCount,
-                nonempty_page_count = database.pages.Count(page => (page.buildings?.Length ?? 0) > 0),
+                nonempty_page_count = database.pages.Count(page =>
+                    (page.buildings ?? Array.Empty<Building>()).Any(building => !exclusions.Contains(building.id))),
                 active_page_slots = AircraftCenteredBuildingClipmapController.SlotCount,
                 nominal_gable_roofs = nominalGables,
                 nominal_hip_roofs = nominalHips,
@@ -963,13 +998,14 @@ namespace QuestFlight.Editor
         }
 
         private static Mesh BuildPageMesh(Database database, Page page, ProductionTerrainSurfaceAsset terrain,
-            RoofAllocation roofAllocation)
+            RoofAllocation roofAllocation, ISet<int> exclusions)
         {
             MeshBuilder builder = new MeshBuilder();
             float pageMinX = -database.map_half_extent_meters + page.column * database.page_size_meters;
             float pageMinZ = -database.map_half_extent_meters + page.row * database.page_size_meters;
             foreach (Building building in page.buildings ?? Array.Empty<Building>())
             {
+                if (exclusions.Contains(building.id)) continue;
                 int[] ring = building.lod2_q;
                 if (ring == null || ring.Length < 6 || ring.Length % 2 != 0) continue;
                 Vector2[] polygon = new Vector2[ring.Length / 2];
@@ -1554,7 +1590,8 @@ namespace QuestFlight.Editor
             return new Color(variation + warmth, variation, variation - warmth, 1f);
         }
 
-        private static void WriteCompilationReport(Database database, RoofAllocation roofAllocation)
+        private static void WriteCompilationReport(Database database, RoofAllocation roofAllocation,
+            ISet<int> exclusions)
         {
             int[,] pageTriangles = new int[database.columns, database.rows];
             ProductionTerrainSurfaceAsset terrain = LoadRequired<ProductionTerrainSurfaceAsset>(TerrainSurfacePath);
@@ -1566,6 +1603,7 @@ namespace QuestFlight.Editor
             foreach (Page page in database.pages)
             foreach (Building building in page.buildings ?? Array.Empty<Building>())
             {
+                if (exclusions.Contains(building.id)) continue;
                 int[] ring = building.lod2_q;
                 if (ring == null || ring.Length < 6 || ring.Length % 2 != 0) continue;
                 float pageMinX = -database.map_half_extent_meters + page.column * database.page_size_meters;
@@ -1616,7 +1654,7 @@ namespace QuestFlight.Editor
             report.roof_sealed_wall_vertices = watertight.roofSealedWallVertices;
             report.maximum_roof_wall_seam_meters = watertight.maximumRoofWallSeamMeters;
             report.maximum_vertical_corner_seam_meters = watertight.maximumVerticalCornerSeamMeters;
-            if (report.represented_buildings != ExpectedRepresentedBuildings)
+            if (report.represented_buildings != ExpectedSourceBuildings - exclusions.Count)
                 throw new InvalidOperationException("Stable shell compilation lost source buildings.");
             if (report.maximum_active_window_triangles > MaximumSelectedTriangleCeiling)
                 throw new InvalidOperationException($"Stable shell window exceeds {MaximumSelectedTriangleCeiling:N0} triangles: {report.maximum_active_window_triangles:N0}.");
@@ -1747,6 +1785,7 @@ namespace QuestFlight.Editor
 
         private static void AuthorEnvironment(Database database, Material material)
         {
+            HashSet<int> exclusions = LoadValidatedSemanticTowerExclusions(database);
             GameObject environment = PrefabUtility.LoadPrefabContents(EnvironmentPath);
             try
             {
@@ -1777,7 +1816,8 @@ namespace QuestFlight.Editor
                     int index = page.row * database.columns + page.column;
                     Mesh pageMesh = LoadRequired<Mesh>(MeshPath(page.column, page.row));
                     controller.pageTriangleCounts[index] = (int)pageMesh.GetIndexCount(0) / 3;
-                    Building[] buildings = page.buildings ?? Array.Empty<Building>();
+                    Building[] buildings = (page.buildings ?? Array.Empty<Building>())
+                        .Where(building => !exclusions.Contains(building.id)).ToArray();
                     controller.pageBuildingCounts[index] = buildings.Length;
                     controller.pageRoofAreasSquareMeters[index] = buildings.Sum(building =>
                         Mathf.Max(0f, building.area_m2));
@@ -1803,7 +1843,8 @@ namespace QuestFlight.Editor
                 surface.productionBuildingSurfaceLayer = rootObject.transform;
                 surface.buildingSurfaceRenderers = controller.pageRenderers.Cast<Renderer>().ToArray();
                 surface.buildingSurfaceManifest = LoadRequired<TextAsset>(DatabasePath);
-                surface.representedBuildingCount = database.pages.Sum(page => page.buildings?.Length ?? 0);
+                surface.representedBuildingCount = database.pages.Sum(page =>
+                    (page.buildings ?? Array.Empty<Building>()).Count(building => !exclusions.Contains(building.id)));
                 surface.nearBuildingCoveragePercent = 100f;
                 surface.midBuildingCoveragePercent = 100f;
                 surface.maximumBuildingFootprintInflationPercent = 5f;
@@ -1827,6 +1868,7 @@ namespace QuestFlight.Editor
 
         private static void RefreshSerializedPageMetadata(Database database)
         {
+            HashSet<int> exclusions = LoadValidatedSemanticTowerExclusions(database);
             GameObject environment = PrefabUtility.LoadPrefabContents(EnvironmentPath);
             try
             {
@@ -1844,14 +1886,16 @@ namespace QuestFlight.Editor
                     int index = page.row * database.columns + page.column;
                     Mesh pageMesh = LoadRequired<Mesh>(MeshPath(page.column, page.row));
                     controller.pageTriangleCounts[index] = (int)pageMesh.GetIndexCount(0) / 3;
-                    Building[] buildings = page.buildings ?? Array.Empty<Building>();
+                    Building[] buildings = (page.buildings ?? Array.Empty<Building>())
+                        .Where(building => !exclusions.Contains(building.id)).ToArray();
                     controller.pageBuildingCounts[index] = buildings.Length;
                     controller.pageRoofAreasSquareMeters[index] = buildings.Sum(building =>
                         Mathf.Max(0f, building.area_m2));
                 }
                 controller.authoredMaximumSelectedTriangles = AuthoredMaximumSelectedTriangles;
                 controller.authoredContractVersion = AircraftCenteredBuildingClipmapController.ContractVersion;
-                surface.representedBuildingCount = database.pages.Sum(page => page.buildings?.Length ?? 0);
+                surface.representedBuildingCount = database.pages.Sum(page =>
+                    (page.buildings ?? Array.Empty<Building>()).Count(building => !exclusions.Contains(building.id)));
                 surface.bakedBuildingTriangleCount = AuthoredMaximumSelectedTriangles;
                 ProductionEnvironmentRoot contract =
                     environment.GetComponent<ProductionEnvironmentRoot>() ??
@@ -1936,10 +1980,30 @@ namespace QuestFlight.Editor
         {
             using SHA256 sha = SHA256.Create();
             byte[] database = File.ReadAllBytes(Absolute(DatabasePath));
+            byte[] semanticTowerAuthority = File.ReadAllBytes(
+                Absolute(SemanticTowerAuthorityManifest.AssetPath));
             byte[] compiler = System.Text.Encoding.UTF8.GetBytes(MeshCompilerVersion);
             sha.TransformBlock(database, 0, database.Length, null, 0);
+            sha.TransformBlock(semanticTowerAuthority, 0, semanticTowerAuthority.Length, null, 0);
             sha.TransformFinalBlock(compiler, 0, compiler.Length);
             return BitConverter.ToString(sha.Hash).Replace("-", "").ToLowerInvariant();
+        }
+
+        private static HashSet<int> LoadValidatedSemanticTowerExclusions(Database database)
+        {
+            SemanticTowerAuthorityManifest.Document authority = SemanticTowerAuthorityManifest.Load();
+            Dictionary<int, Building> buildings = database.pages
+                .SelectMany(page => page.buildings ?? Array.Empty<Building>())
+                .ToDictionary(building => building.id);
+            foreach (SemanticTowerAuthorityManifest.ExclusionRecord exclusion in authority.exclusions)
+            {
+                if (!buildings.TryGetValue(exclusion.building_id, out Building building) ||
+                    !string.Equals(building.source_id, exclusion.building_source_id, StringComparison.Ordinal) ||
+                    building.component != exclusion.component)
+                    throw new InvalidOperationException(
+                        $"Semantic tower exclusion no longer identifies one exact source shell: {exclusion.building_id}.");
+            }
+            return new HashSet<int>(authority.exclusions.Select(record => record.building_id));
         }
     }
 }

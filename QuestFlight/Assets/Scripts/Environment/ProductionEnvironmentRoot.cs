@@ -41,6 +41,7 @@ namespace QuestFlightLab.Environment
         public Transform essentialWater;
         public Transform trafficRoot;
         public Transform reservoirWatercraftRoot;
+        public SemanticTowerRoot semanticTowerRoot;
         public Transform airportPerimeterFence;
         public Transform airportNearFieldDetail;
         public Transform boulderCloudField;
@@ -168,6 +169,14 @@ namespace QuestFlightLab.Environment
             Require(trafficRoot == null ||
                     trafficRoot.GetComponentsInChildren<KbduTrafficV2Runtime>(true).Length == 1,
                 "TrafficRoot must contain exactly one authored Traffic V2 moving runtime", failures);
+            Require(semanticTowerRoot != null,
+                "SemanticTowerRoot is not bound", failures);
+            Require(semanticTowerRoot == null ||
+                    GetComponentsInChildren<SemanticTowerRoot>(true).Length == 1,
+                "exactly one authored SemanticTowerRoot is required", failures);
+            if (semanticTowerRoot != null &&
+                !semanticTowerRoot.TryValidateContract(out string semanticTowerReport))
+                failures.Add("semantic tower contract failed: " + semanticTowerReport);
             KbduTrafficRuntime parkedTraffic = trafficRoot == null
                 ? null
                 : trafficRoot.GetComponentInChildren<KbduTrafficRuntime>(true);

@@ -36,7 +36,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(controller.pageTriangleCounts, Has.Length.EqualTo(576));
             Assert.That(controller.pageBuildingCounts, Has.Length.EqualTo(576));
             Assert.That(controller.pageRoofAreasSquareMeters, Has.Length.EqualTo(576));
-            Assert.That(controller.pageBuildingCounts.Sum(), Is.EqualTo(57441));
+            Assert.That(controller.pageBuildingCounts.Sum(), Is.EqualTo(57440));
 
             var scene = EditorSceneManager.OpenScene(
                 FullMapBuildingClipmapAssetAuthoring.ScenePath, OpenSceneMode.Single);
@@ -408,9 +408,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(source, Is.Not.Null);
             RoofAllocationTestReport report = JsonUtility.FromJson<RoofAllocationTestReport>(source.text);
             Assert.That(report.compiler_version,
-                Is.EqualTo("proper-roof-topology-selective-compiler-v14-20260903"));
+                Is.EqualTo("semantic-tower-exclusion-compiler-v15-20260903"));
             Assert.That(report.rollout, Is.EqualTo("selective"));
-            Assert.That(report.represented_buildings, Is.EqualTo(57441));
+            Assert.That(report.represented_buildings, Is.EqualTo(57440));
             Assert.That(report.page_count, Is.EqualTo(576));
             Assert.That(report.nonempty_page_count, Is.EqualTo(483));
             Assert.That(report.active_page_slots, Is.EqualTo(24));
@@ -428,8 +428,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(report.final_maximum_selected_triangles, Is.EqualTo(235000));
             Assert.That(report.remaining_triangle_margin, Is.Zero);
             Assert.That(report.pages, Has.Length.EqualTo(576));
-            Assert.That(report.pages.Sum(page => page.baseline_triangles), Is.EqualTo(613389));
-            Assert.That(report.pages.Sum(page => page.final_triangles), Is.EqualTo(636641));
+            Assert.That(report.pages.Sum(page => page.baseline_triangles), Is.EqualTo(613373));
+            Assert.That(report.pages.Sum(page => page.final_triangles), Is.EqualTo(636625));
             Assert.That(report.pages.Select(page => page.final_triangles)
                 .OrderByDescending(value => value).Take(24).Sum(), Is.EqualTo(235000));
             Assert.That(report.selected_building_ids, Has.Length.EqualTo(report.selected_roofs));
@@ -576,7 +576,7 @@ namespace QuestFlight.Editor.Tests
                 FullMapBuildingClipmapAssetAuthoring.CompilationReportPath);
             Assert.That(report, Is.Not.Null);
             Assert.That(report.text, Does.Contain(
-                "proper-roof-topology-selective-compiler-v14-20260903"));
+                "semantic-tower-exclusion-compiler-v15-20260903"));
             Assert.That(report.text, Does.Contain("\"foundation_embed_meters\": 1.6"));
             Assert.That(report.text, Does.Contain("\"maximum_roof_wall_seam_meters\": 0.0"));
             Assert.That(report.text, Does.Contain("\"maximum_vertical_corner_seam_meters\": 0.0"));
@@ -755,8 +755,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(nonConstantWallQuads, Is.Zero,
                 "Packed endpoints must be constant across each duplicated wall quad.");
             Assert.That(encodedWallQuads, Is.GreaterThan(200000));
-            Assert.That(vertices, Is.EqualTo(1424409));
-            Assert.That(triangles, Is.EqualTo(636641));
+            Assert.That(vertices, Is.EqualTo(1424373));
+            Assert.That(triangles, Is.EqualTo(636625));
         }
 
         private static int Occurrences(string source, string value)

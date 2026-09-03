@@ -732,3 +732,16 @@ the committed canopy RGBA PNG is 35,760,529 bytes with SHA-256
 Exact input hashes, generation tools, exclusions, and the no-splats decision are
 recorded in
 `Assets/Production/Environment/FullMapVegetationV3/SOURCE_MANIFEST.json`.
+
+### Semantic Tower Replacement V1
+
+The communications-tower derivative combines `Radio tower` by Gunnar Correa
+from [Sketchfab](https://sketchfab.com/3d-models/radio-tower-4b3c733d8bfd4ee2b91dcbcd02670686),
+licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
+with sector-panel geometry from `Low Poly Cell Phone Tower` by papapig from
+[BlendSwap](https://blendswap.com/blend/27860), published under CC0 1.0. The
+industrial-stack derivative is project-authored. Raw BLEND/ZIP source files,
+working extracts, imagery, government data, captures, builds, and APKs remain
+external. Exact source and derivative SHA-256 hashes, attribution, and use are
+recorded in
+`Assets/Production/Environment/SemanticTowersV1/SOURCE_MANIFEST.json`.

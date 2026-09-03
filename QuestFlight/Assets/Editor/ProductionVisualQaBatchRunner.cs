@@ -220,6 +220,233 @@ namespace QuestFlightLab.Editor
                       $"classification={report.classification} output={outputDir}");
         }
 
+        public static void RunSemanticTowerVisualQa()
+        {
+            string outputDir = System.Environment.GetEnvironmentVariable("QFL_PRODUCTION_VISUAL_QA_DIR");
+            if (string.IsNullOrWhiteSpace(outputDir))
+                throw new InvalidOperationException("QFL_PRODUCTION_VISUAL_QA_DIR is required for semantic tower QA.");
+            int width = ReadInt("QFL_PRODUCTION_VISUAL_QA_WIDTH", 1920);
+            int height = ReadInt("QFL_PRODUCTION_VISUAL_QA_HEIGHT", 1080);
+            Directory.CreateDirectory(outputDir);
+            Directory.CreateDirectory(Path.Combine(outputDir, "screenshots"));
+            ProductionVisualQaReport report = new ProductionVisualQaReport
+            {
+                generatedUtc = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+                unityVersion = Application.unityVersion,
+                scenePath = ProductionScenePath,
+                outputDirectory = outputDir,
+                renderWidth = width,
+                renderHeight = height,
+                requiredShotCount = 9,
+                humanHeadsetAcceptance = "NOT_RUN_NO_PHYSICAL_QUEST_AVAILABLE",
+                flightPhaseImageSemantics = "Static semantic tower presentation; not flight or hardware performance evidence."
+            };
+            try
+            {
+                VisualContext context = LoadContext(width, height, report);
+                SemanticTowerRoot semanticRoot = context.environment.semanticTowerRoot;
+                if (semanticRoot == null)
+                    throw new InvalidOperationException("SemanticTowerRoot is missing from the product scene.");
+                if (!semanticRoot.TryValidateContract(out string semanticReport))
+                    throw new InvalidOperationException("Semantic tower contract failed: " + semanticReport);
+                AircraftCenteredBuildingClipmapController clipmap = context.environment
+                    .GetComponentInChildren<AircraftCenteredBuildingClipmapController>(true);
+
+                Transform tower = semanticRoot.transform.Find("fcc-1024061-guyed-lattice");
+                Vector3 towerTarget = tower.position + Vector3.up * 24f;
+                QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring.LoadEditorPreviewWindow(clipmap, tower.position);
+                Vector3 towerClose = tower.position + new Vector3(-135f, 72f, -165f);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "semantic_tower_communications_site", "FCC/OSM guyed lattice tower and preserved equipment shelter",
+                    "semantic_tower", towerClose, LookAt(towerClose, towerTarget), 42f, ViewProfile.Environment));
+                Vector3 towerDistant = tower.position + new Vector3(-780f, 310f, -910f);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "semantic_tower_pattern_altitude", "Guyed lattice tower distant silhouette",
+                    "semantic_tower", towerDistant, LookAt(towerDistant, towerTarget), 34f, ViewProfile.Environment));
+                CaptureStereoEnvironment(context, report, outputDir, width, height,
+                    "semantic_tower_03_lattice_stereo", "Guyed lattice tower stereo presentation",
+                    towerClose, towerTarget, 42f);
+
+                Transform stack = semanticRoot.transform.Find("faa-08-000121-industrial-stack");
+                Vector3 stackTarget = stack.position + Vector3.up * 52f;
+                QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring.LoadEditorPreviewWindow(clipmap, stack.position);
+                Vector3 stackClose = stack.position + new Vector3(-175f, 88f, -215f);
+                MeshRenderer[] stackRenderers = stack.GetComponentsInChildren<MeshRenderer>(true);
+                GameObject baselineShell = null;
+                try
+                {
+                    baselineShell = QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring
+                        .CreateSemanticTowerBaselineShellPreview(52188, context.environment.transform);
+                    foreach (MeshRenderer renderer in stackRenderers) renderer.enabled = false;
+                    Capture(context, report, outputDir, width, height, new ShotDefinition(
+                        "semantic_tower_false_building_before", "Exact starting-HEAD generic shell before semantic ownership transfer",
+                        "semantic_tower_before_after", stackClose, LookAt(stackClose, stackTarget), 43f,
+                        ViewProfile.Environment));
+                    foreach (MeshRenderer renderer in stackRenderers) renderer.enabled = true;
+                    baselineShell.SetActive(false);
+                    Capture(context, report, outputDir, width, height, new ShotDefinition(
+                        "semantic_tower_false_building_after", "FAA/OSM industrial stack after exact shell exclusion",
+                        "semantic_tower_before_after", stackClose, LookAt(stackClose, stackTarget), 43f,
+                        ViewProfile.Environment));
+                }
+                finally
+                {
+                    foreach (MeshRenderer renderer in stackRenderers) renderer.enabled = true;
+                    if (baselineShell != null)
+                    {
+                        Mesh transient = baselineShell.GetComponent<MeshFilter>()?.sharedMesh;
+                        Object.DestroyImmediate(baselineShell);
+                        if (transient != null) Object.DestroyImmediate(transient);
+                    }
+                }
+                Vector3 industrialWide = stack.position + new Vector3(-620f, 330f, -760f);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "semantic_tower_industrial_wide", "Industrial cluster silhouette and surrounding building continuity",
+                    "semantic_tower", industrialWide, LookAt(industrialWide, stackTarget), 47f, ViewProfile.Environment));
+
+                Vector3 airportCamera = new Vector3(-320f, 210f, 260f);
+                Vector3 airportTarget = new Vector3(1700f, 35f, -1900f);
+                QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring.LoadEditorPreviewWindow(clipmap, Vector3.zero);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "semantic_tower_airport_skyline", "Airport-area skyline regression toward the industrial structures",
+                    "semantic_tower_regression", airportCamera, LookAt(airportCamera, airportTarget), 42f,
+                    ViewProfile.Environment));
+
+                Vector3 universityTarget = new Vector3(-2200f, 22f, -4500f);
+                Vector3 universityCamera = universityTarget + new Vector3(-540f, 285f, -620f);
+                QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring.LoadEditorPreviewWindow(clipmap, universityTarget);
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "semantic_tower_protected_high_rises", "Protected named university high-rise components",
+                    "semantic_tower_regression", universityCamera, LookAt(universityCamera, universityTarget), 45f,
+                    ViewProfile.Environment));
+
+                Material diagnosticMaterial = semanticRoot.authoredRenderers.Select(renderer => renderer.sharedMaterial)
+                    .Distinct().Single();
+                float originalNight = diagnosticMaterial.GetFloat("_SemanticTowerDiagnosticNight");
+                float originalTime = diagnosticMaterial.GetFloat("_SemanticTowerDiagnosticTime");
+                try
+                {
+                    diagnosticMaterial.SetFloat("_SemanticTowerDiagnosticNight", 1f);
+                    diagnosticMaterial.SetFloat("_SemanticTowerDiagnosticTime", 0.8f);
+                    QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring.LoadEditorPreviewWindow(clipmap, tower.position);
+                    Vector3 lightCamera = tower.position + new Vector3(-68f, 42f, -82f);
+                    Vector3 lightTarget = tower.position + Vector3.up * 39f;
+                    Capture(context, report, outputDir, width, height, new ShotDefinition(
+                        "semantic_tower_light_night_diagnostic", "Editor-only FCC red obstruction-light diagnostic",
+                        "semantic_tower_light_diagnostic", lightCamera, LookAt(lightCamera, lightTarget), 38f,
+                        ViewProfile.Environment));
+                }
+                finally
+                {
+                    diagnosticMaterial.SetFloat("_SemanticTowerDiagnosticNight", originalNight);
+                    diagnosticMaterial.SetFloat("_SemanticTowerDiagnosticTime", originalTime);
+                }
+
+                report.contactSheetPath = BuildContactSheet(report, outputDir);
+                report.passed = report.shots.Count == report.requiredShotCount && report.shots.All(shot => shot.passed);
+                report.classification = report.passed
+                    ? "PASS_SEMANTIC_TOWER_MACHINE_QA_PHYSICAL_QUEST_REQUIRED"
+                    : "FAIL_SEMANTIC_TOWER_MACHINE_QA";
+            }
+            catch (Exception exception)
+            {
+                report.errors.Add(exception.ToString());
+                report.passed = false;
+                report.classification = "FAIL_SEMANTIC_TOWER_MACHINE_QA";
+            }
+            WriteReportFiles(report, outputDir);
+            Debug.Log($"[QuestFlightLab][SemanticTowerVisualQA] shots={report.shots.Count}/9 " +
+                      $"classification={report.classification} output={outputDir}");
+        }
+
+        private static void CaptureStereoEnvironment(
+            VisualContext context,
+            ProductionVisualQaReport report,
+            string outputDir,
+            int width,
+            int height,
+            string id,
+            string title,
+            Vector3 centerEye,
+            Vector3 target,
+            float fov)
+        {
+            string path = Path.Combine(outputDir, "screenshots", id + ".png");
+            Texture2D left = null;
+            Texture2D right = null;
+            Texture2D stereo = null;
+            Renderer[] hidden = Array.Empty<Renderer>();
+            bool[] hiddenStates = Array.Empty<bool>();
+            try
+            {
+                context.visibility?.SetExternalView();
+                IEnumerable<Renderer> aircraft = context.rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true);
+                if (context.groundShadow?.BlobRenderer != null)
+                    aircraft = aircraft.Concat(new[] { context.groundShadow.BlobRenderer });
+                hidden = aircraft.Distinct().ToArray();
+                hiddenStates = hidden.Select(renderer => renderer.enabled).ToArray();
+                foreach (Renderer renderer in hidden) renderer.enabled = false;
+
+                Vector3 forward = (target - centerEye).normalized;
+                Vector3 rightAxis = Vector3.Cross(Vector3.up, forward).normalized;
+                const float halfIpdMeters = 0.032f;
+                context.camera.fieldOfView = fov;
+                Vector3 leftEye = centerEye - rightAxis * halfIpdMeters;
+                context.camera.transform.SetPositionAndRotation(leftEye, LookAt(leftEye, target));
+                left = Render(context.camera, width, height, out EditorFrameRenderStats leftStats);
+                Vector3 rightEye = centerEye + rightAxis * halfIpdMeters;
+                context.camera.transform.SetPositionAndRotation(rightEye, LookAt(rightEye, target));
+                right = Render(context.camera, width, height, out EditorFrameRenderStats rightStats);
+
+                stereo = new Texture2D(width * 2, height, TextureFormat.RGBA32, false);
+                stereo.SetPixels32(0, 0, width, height, left.GetPixels32());
+                stereo.SetPixels32(width, 0, width, height, right.GetPixels32());
+                stereo.Apply();
+                File.WriteAllBytes(path, stereo.EncodeToPNG());
+                ImageStats image = Analyze(stereo);
+                RenderBudgetSnapshot budget = QuestRenderBudgetAudit.Capture(context.camera);
+                ProductionVisualQaShot shot = new ProductionVisualQaShot
+                {
+                    id = id,
+                    title = title,
+                    category = "semantic_tower_stereo",
+                    screenshotPath = path,
+                    cameraPosition = centerEye,
+                    cameraEuler = LookAt(centerEye, target).eulerAngles,
+                    fov = fov,
+                    width = image.width,
+                    height = image.height,
+                    colorVariance = image.colorVariance,
+                    nonBackgroundRatio = image.nonBackgroundRatio,
+                    outsideViewRatio = image.outsideViewRatio,
+                    editorRenderStats = rightStats.available ? rightStats : leftStats,
+                    estimatedDrawCalls = budget.estimatedInstancedDrawCalls,
+                    estimatedVisibleTriangles = budget.estimatedFrustumTriangles,
+                    sceneMaterialCount = budget.uniqueMaterialCount,
+                    imageNotBlank = image.colorVariance > 18f && image.nonBackgroundRatio > 0.035f
+                };
+                shot.passed = shot.imageNotBlank && budget.estimatedInstancedDrawCalls <= DrawCallTarget &&
+                              budget.estimatedFrustumTriangles <= VisibleTriangleTarget;
+                if (!shot.imageNotBlank) shot.warnings.Add("Stereo tower capture looks blank or solid.");
+                report.shots.Add(shot);
+            }
+            catch (Exception exception)
+            {
+                report.shots.Add(new ProductionVisualQaShot
+                {
+                    id = id, title = title, category = "semantic_tower_stereo",
+                    screenshotPath = path, passed = false, error = exception.Message
+                });
+            }
+            finally
+            {
+                for (int index = 0; index < hidden.Length; index++) hidden[index].enabled = hiddenStates[index];
+                if (left != null) Object.DestroyImmediate(left);
+                if (right != null) Object.DestroyImmediate(right);
+                if (stereo != null) Object.DestroyImmediate(stereo);
+            }
+        }
+
         [MenuItem("Quest Flight Lab/Production Vertical Slice V2/Trace Visual Artifacts")]
         public static void TraceProductionVisualArtifacts()
         {

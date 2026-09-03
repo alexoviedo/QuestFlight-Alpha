@@ -1,0 +1,62 @@
+{
+  "schema": "questflight.semantic-tower-source-manifest-v1",
+  "raw_sources_committed": false,
+  "sources": [
+    {
+      "role": "cellular_sector_panel_kitbash_source",
+      "title": "Low Poly Cell Phone Tower",
+      "creator": "papapig",
+      "source_url": "https://blendswap.com/blend/27860",
+      "license_spdx": "CC0-1.0",
+      "downloaded_filename": "Low Poly Cell Phone Tower.blend",
+      "sha256": "4b740989bde14c363d7dcc641fb0b6d09a20c5a541d802a035a76d9913fea0bc",
+      "committed_usage": "Three panel-array meshes were scaled and recombined into the LOD0 lattice-tower derivative."
+    },
+    {
+      "role": "modular_lattice_section_kitbash_source",
+      "title": "Radio tower",
+      "creator": "Gunnar Correa",
+      "source_url": "https://sketchfab.com/3d-models/radio-tower-4b3c733d8bfd4ee2b91dcbcd02670686",
+      "license_spdx": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "downloaded_filename": "radio-tower.zip",
+      "sha256": "2b63a15017e6a014a7a1adecc41d66efab0dd8de4a85a62268480d0b2b9f2ef2",
+      "committed_usage": "One modular lattice section was repeated, tapered, and combined with project-authored low-poly guy wires for both LODs.",
+      "attribution": "Radio tower by Gunnar Correa, licensed under CC BY 4.0."
+    }
+  ],
+  "derivatives": [
+    {
+      "asset": "Assets/Production/Environment/SemanticTowersV1/Derivatives/SemanticLatticeTowerV1.fbx",
+      "sha256": "07909ff1cae1d3e652715c7d42ea3d1f27372e606fd485fa31c5822796ab41df",
+      "license_spdx": "CC-BY-4.0",
+      "source_roles": [
+        "cellular_sector_panel_kitbash_source",
+        "modular_lattice_section_kitbash_source"
+      ]
+    },
+    {
+      "asset": "Assets/Production/Environment/SemanticTowersV1/Derivatives/SemanticIndustrialStackV1.fbx",
+      "sha256": "3e8ccc535454171a3f3d8ac5b661a72aef88516dc17782fe491720732fc5a266",
+      "license_spdx": "LicenseRef-QuestFlight-Project-Authored",
+      "source_roles": []
+    }
+  ],
+  "unused_downloads": [
+    {
+      "filename": "Meteo Tower.zip",
+      "sha256": "8e84358fc4966384d9a47e26c36f43b2d7975cb1695fd75d16dd840957bc6010",
+      "reason": "No high-confidence meteorological-tower candidate intersected a false product building shell."
+    },
+    {
+      "filename": "WaterTower.blend",
+      "sha256": "656dcd01e4b7a04f352830bc124ca2060684ecdb64b89514e009219899778570",
+      "reason": "No authoritative elevated water-tower candidate passed chronology and exact-shell checks."
+    },
+    {
+      "filename": "3d-model-watertower.fbx",
+      "sha256": "2302629b06ae9c2cae84c94f29b5d46badb1549101d0469786520b82fcce18cc",
+      "reason": "No authoritative elevated water-tower candidate passed chronology and exact-shell checks."
+    }
+  ]
+}
