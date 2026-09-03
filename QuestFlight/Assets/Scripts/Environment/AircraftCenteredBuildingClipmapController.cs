@@ -45,7 +45,7 @@ namespace QuestFlightLab.Environment
         public float[] pageRoofAreasSquareMeters = Array.Empty<float>();
         [Min(0f)] public float predictionSeconds = 2.5f;
         [Min(0.02f)] public float movementPollSeconds = 0.3f;
-        public int authoredMaximumSelectedTriangles = 233316;
+        public int authoredMaximumSelectedTriangles = 233298;
         public string authoredContractVersion = ContractVersion;
 
         [Header("Flight-simulator interest contract")]

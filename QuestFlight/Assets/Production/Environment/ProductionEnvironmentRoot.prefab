@@ -5804,7 +5804,7 @@ MonoBehaviour:
   - {fileID: 8853359896272806083}
   - {fileID: 4934532480890289504}
   bakedRendererCount: 61
-  bakedSelectedTriangleCount: 618866
+  bakedSelectedTriangleCount: 618848
   bakedMaterialCount: 12
   bakedVegetationRendererCount: 7
   bakedVegetationTriangleCount: 60768
@@ -5889,7 +5889,7 @@ MonoBehaviour:
   terrainMaximumErrorOutsideDeclaredOutliersMeters: 1.4611648
   operationalSurfaceFiveCentimeterToleranceEstablished: 0
   bakedBuildingDrawCount: 24
-  bakedBuildingTriangleCount: 233316
+  bakedBuildingTriangleCount: 233298
   bakedCanopyDrawCount: 0
   bakedCanopyTriangleCount: 0
   bakedTextureResidentBytes: 210808066
@@ -6387,7 +6387,7 @@ MonoBehaviour:
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
   bakedRendererCount: 61
-  bakedTriangleCount: 618866
+  bakedTriangleCount: 618848
   bakedMaterialCount: 12
   bakedTextureCount: 28
   bakeUtc: 2026-08-12T08:42:04.7392327Z
@@ -8696,7 +8696,7 @@ MonoBehaviour:
   - 276.2
   predictionSeconds: 2.5
   movementPollSeconds: 0.3
-  authoredMaximumSelectedTriangles: 233316
+  authoredMaximumSelectedTriangles: 233298
   authoredContractVersion: full-map-building-clipmap-v1.5
   expandedViewHalfAngleDegrees: 68
   directionResponseSeconds: 0.65

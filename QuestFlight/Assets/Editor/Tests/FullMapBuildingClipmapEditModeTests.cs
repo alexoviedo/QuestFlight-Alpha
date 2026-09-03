@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -30,7 +31,7 @@ namespace QuestFlight.Editor.Tests
                 renderer.shadowCastingMode == ShadowCastingMode.Off), Is.True);
             Assert.That(controller.GetComponentsInChildren<LODGroup>(true), Is.Empty);
             Assert.That(controller.authoredContractVersion, Is.EqualTo(AircraftCenteredBuildingClipmapController.ContractVersion));
-            Assert.That(controller.authoredMaximumSelectedTriangles, Is.EqualTo(233316));
+            Assert.That(controller.authoredMaximumSelectedTriangles, Is.EqualTo(233298));
             Assert.That(controller.pageTriangleCounts, Has.Length.EqualTo(576));
             Assert.That(controller.pageBuildingCounts, Has.Length.EqualTo(576));
             Assert.That(controller.pageRoofAreasSquareMeters, Has.Length.EqualTo(576));
@@ -118,6 +119,22 @@ namespace QuestFlight.Editor.Tests
             Assert.That(material.GetTexture("_MidAlbedo"), Is.Not.Null);
             Assert.That(material.GetTexture("_FarAlbedo"), Is.Not.Null);
             Assert.That(material.HasProperty("_BuildingShellMorphEnabled"), Is.False);
+            Assert.That(material.HasProperty("_CornerSofteningWidthMeters"), Is.True);
+            Assert.That(material.GetFloat("_CornerSofteningWidthMeters"), Is.EqualTo(0.35f).Within(0.0001f));
+            Assert.That(material.HasProperty("_CornerSofteningStrength"), Is.True);
+            Assert.That(material.GetFloat("_CornerSofteningStrength"), Is.EqualTo(0.65f).Within(0.0001f));
+            Assert.That(material.shaderKeywords, Is.Empty,
+                "The analytic corner path must not create a keyword variant.");
+            string[] buildingOwnedTextures = material.GetTexturePropertyNames()
+                .Select(material.GetTexture)
+                .Where(texture => texture != null)
+                .Select(AssetDatabase.GetAssetPath)
+                .Where(path => path.StartsWith(FullMapBuildingClipmapAssetAuthoring.Root + "/",
+                    StringComparison.Ordinal))
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            Assert.That(buildingOwnedTextures, Has.Length.EqualTo(4),
+                "Corner softening must not add a building texture or sampler.");
             foreach (string path in new[]
                      {
                          FullMapBuildingClipmapAssetAuthoring.AlbedoPath,
@@ -159,15 +176,180 @@ namespace QuestFlight.Editor.Tests
             Assert.That(shader, Does.Contain("SampleProjectedRoofOrthophoto(i.worldPos.xz)"));
             Assert.That(shader, Does.Contain("AerialClipmapSampling.cginc"));
             Assert.That(shader, Does.Contain("UNITY_BRANCH if (roof > 0.5h)"));
+            Assert.That(shader, Does.Contain("DecodeCornerMagnitude"));
+            Assert.That(shader, Does.Contain("CornerEdgeMask"));
+            Assert.That(shader, Does.Contain("fwidth(i.detailUv.x)"));
+            Assert.That(shader, Does.Contain("UNITY_BRANCH if (_CornerSofteningStrength > 0.0005h"));
+            Assert.That(shader, Does.Contain("wallLength * 0.20h"));
+            Assert.That(shader, Does.Contain("tangentNormal.xy += horizontalTangentInBasis"));
+            Assert.That(Occurrences(shader, ": TEXCOORD"), Is.EqualTo(10),
+                "The Phase 1 path must reuse existing interpolators.");
+            Assert.That(Occurrences(shader, "UNITY_SAMPLE_TEX2DARRAY(_FacadeAlbedo"), Is.EqualTo(1));
+            Assert.That(Occurrences(shader, "UNITY_SAMPLE_TEX2DARRAY(_FacadeNormal"), Is.EqualTo(1));
+            Assert.That(Occurrences(shader, "UNITY_SAMPLE_TEX2DARRAY(_FacadeMRAO"), Is.EqualTo(1));
+            Assert.That(Occurrences(shader, "tex2D(_FacadeDetail"), Is.EqualTo(2));
+            Assert.That(shader, Does.Not.Contain("#pragma shader_feature"));
             Assert.That(shader, Does.Not.Contain("tex2D(_MainTex"),
                 "Wall rendering must not fall back to the retired semantic-incoherent atlas.");
             Assert.That(shader, Does.Not.Contain("Blend "));
+            Assert.That(shader, Does.Not.Contain("clip("));
+            Assert.That(shader, Does.Not.Contain("discard"));
+            Assert.That(shader.ToLowerInvariant(), Does.Not.Contain("dither"));
 
             string authoring = Read("Assets/Editor/FullMapBuildingClipmapAssetAuthoring.cs");
             Assert.That(authoring, Does.Contain("RoofCell(building)"));
             Assert.That(authoring, Does.Contain("seed01, RoofDetailScale(building)"));
             Assert.That(authoring, Does.Contain("Vector3.Cross(c - a, b - a)"));
             Assert.That(authoring, Does.Contain("builder.indices.Add(start + 2); builder.indices.Add(start + 1)"));
+        }
+
+        [Test]
+        public void ConvexCornerCodecHandlesRightNonRightAndReversedWinding()
+        {
+            Vector2[] square =
+            {
+                new Vector2(0f, 0f), new Vector2(4f, 0f),
+                new Vector2(4f, 4f), new Vector2(0f, 4f)
+            };
+            Assert.That(FullMapBuildingCornerEncoding.TryCalculateConvexTurnMagnitude(
+                square, 1, out float rightTurn), Is.True);
+            Assert.That(rightTurn, Is.EqualTo(1f).Within(0.00001f));
+
+            Vector2[] reversed = square.Reverse().ToArray();
+            int reversedCorner = Array.FindIndex(reversed, point => point == square[1]);
+            Assert.That(FullMapBuildingCornerEncoding.TryCalculateConvexTurnMagnitude(
+                reversed, reversedCorner, out float reversedTurn), Is.True);
+            Assert.That(reversedTurn, Is.EqualTo(rightTurn).Within(0.00001f),
+                "Convexity must be independent of source winding.");
+
+            Vector2[] sixtyDegreeTurn =
+            {
+                new Vector2(0f, 0f), new Vector2(4f, 0f),
+                new Vector2(6f, 3.4641016f)
+            };
+            Assert.That(FullMapBuildingCornerEncoding.TryCalculateConvexTurnMagnitude(
+                sixtyDegreeTurn, 1, out float nonRightTurn), Is.True);
+            Assert.That(nonRightTurn, Is.EqualTo(Mathf.Tan(30f * Mathf.Deg2Rad)).Within(0.0001f));
+
+            byte packed = FullMapBuildingCornerEncoding.Pack(rightTurn, nonRightTurn);
+            Assert.That(FullMapBuildingCornerEncoding.DecodeStart(packed), Is.EqualTo(1f));
+            Assert.That(Mathf.Abs(FullMapBuildingCornerEncoding.DecodeEnd(packed) - nonRightTurn),
+                Is.LessThanOrEqualTo(FullMapBuildingCornerEncoding.MaximumQuantizationError + 0.00001f));
+            Assert.That(FullMapBuildingCornerEncoding.DecodeStart(
+                FullMapBuildingCornerEncoding.LegacyDisabledPacked), Is.Zero,
+                "Legacy all-white alpha must fail visually neutral.");
+            Assert.That(FullMapBuildingCornerEncoding.DecodeEnd(
+                FullMapBuildingCornerEncoding.LegacyDisabledPacked), Is.Zero);
+        }
+
+        [Test]
+        public void CornerCodecSuppressesConcaveCollinearDuplicateShortAndAcuteTurns()
+        {
+            Vector2[] concave =
+            {
+                new Vector2(0f, 0f), new Vector2(4f, 0f), new Vector2(2f, 2f),
+                new Vector2(4f, 4f), new Vector2(0f, 4f)
+            };
+            Assert.That(FullMapBuildingCornerEncoding.TryCalculateConvexTurnMagnitude(
+                concave, 2, out _), Is.False);
+
+            Vector2[] collinear =
+            {
+                new Vector2(0f, 0f), new Vector2(2f, 0f), new Vector2(4f, 0f),
+                new Vector2(4f, 4f), new Vector2(0f, 4f)
+            };
+            Assert.That(FullMapBuildingCornerEncoding.TryCalculateConvexTurnMagnitude(
+                collinear, 1, out _), Is.False);
+
+            Vector2[] duplicate =
+            {
+                new Vector2(0f, 0f), new Vector2(4f, 0f), new Vector2(4f, 0f),
+                new Vector2(4f, 4f), new Vector2(0f, 4f)
+            };
+            Assert.That(FullMapBuildingCornerEncoding.TryCalculateConvexTurnMagnitude(
+                duplicate, 2, out _), Is.False);
+
+            Vector2[] shortEdge =
+            {
+                new Vector2(0f, 0f), new Vector2(0.5f, 0f),
+                new Vector2(0.5f, 4f), new Vector2(0f, 4f)
+            };
+            Assert.That(FullMapBuildingCornerEncoding.TryCalculateConvexTurnMagnitude(
+                shortEdge, 1, out _), Is.False);
+
+            Vector2[] pathologicalAcuteInterior =
+            {
+                new Vector2(0f, 0f), new Vector2(4f, 0f),
+                new Vector2(0.5358984f, 2f)
+            };
+            Assert.That(FullMapBuildingCornerEncoding.TryCalculateConvexTurnMagnitude(
+                pathologicalAcuteInterior, 1, out _), Is.False);
+        }
+
+        [Test]
+        public void WallEndpointSignsConvergeAdjacentNormalsTowardOneBisector()
+        {
+            Vector2[] square =
+            {
+                new Vector2(0f, 0f), new Vector2(4f, 0f),
+                new Vector2(4f, 4f), new Vector2(0f, 4f)
+            };
+            FullMapBuildingCornerEncoding.TryCalculateConvexTurnMagnitude(square, 1, out float magnitude);
+            byte packed = FullMapBuildingCornerEncoding.Pack(magnitude, magnitude);
+            Assert.That(FullMapBuildingCornerEncoding.SignedEndContribution(packed), Is.EqualTo(1f));
+            Assert.That(FullMapBuildingCornerEncoding.SignedStartContribution(packed), Is.EqualTo(-1f));
+
+            Vector2 incomingTangent = (square[1] - square[0]).normalized;
+            Vector2 outgoingTangent = (square[2] - square[1]).normalized;
+            Vector2 incomingOutward = new Vector2(incomingTangent.y, -incomingTangent.x);
+            Vector2 outgoingOutward = new Vector2(outgoingTangent.y, -outgoingTangent.x);
+            Vector2 fromIncomingWall = VirtualEdgeNormal(incomingOutward, incomingTangent,
+                FullMapBuildingCornerEncoding.SignedEndContribution(packed));
+            Vector2 fromOutgoingWall = VirtualEdgeNormal(outgoingOutward, outgoingTangent,
+                FullMapBuildingCornerEncoding.SignedStartContribution(packed));
+            Vector2 expectedBisector = (incomingOutward + outgoingOutward).normalized;
+            Assert.That(Vector2.Angle(fromIncomingWall, expectedBisector), Is.LessThan(0.01f));
+            Assert.That(Vector2.Angle(fromOutgoingWall, expectedBisector), Is.LessThan(0.01f));
+            Assert.That(Vector2.Angle(fromIncomingWall, fromOutgoingWall), Is.LessThan(0.01f));
+
+            Vector2[] nonRight =
+            {
+                new Vector2(0f, 0f), new Vector2(4f, 0f),
+                new Vector2(6f, 3.4641016f)
+            };
+            FullMapBuildingCornerEncoding.TryCalculateConvexTurnMagnitude(nonRight, 1, out float nonRightMagnitude);
+            byte nonRightPacked = FullMapBuildingCornerEncoding.Pack(nonRightMagnitude, nonRightMagnitude);
+            Vector2 firstTangent = (nonRight[1] - nonRight[0]).normalized;
+            Vector2 secondTangent = (nonRight[2] - nonRight[1]).normalized;
+            Vector2 firstNormal = VirtualEdgeNormal(new Vector2(firstTangent.y, -firstTangent.x),
+                firstTangent, FullMapBuildingCornerEncoding.SignedEndContribution(nonRightPacked));
+            Vector2 secondNormal = VirtualEdgeNormal(new Vector2(secondTangent.y, -secondTangent.x),
+                secondTangent, FullMapBuildingCornerEncoding.SignedStartContribution(nonRightPacked));
+            Assert.That(Vector2.Angle(firstNormal, secondNormal), Is.LessThan(7.1f),
+                "Four-bit quantization bounds adjacent-face disagreement below 7.1 degrees.");
+        }
+
+        [Test]
+        public void PackedWallAlphaIsDeterministicConstantInterpolableAndPreservesTintRgb()
+        {
+            Color32 tint = new Color32(17, 93, 211, 255);
+            byte expected = FullMapBuildingCornerEncoding.Pack(1f, Mathf.Tan(30f * Mathf.Deg2Rad));
+            for (int iteration = 0; iteration < 32; iteration++)
+            {
+                Color32 encoded = FullMapBuildingCornerEncoding.ApplyToTint(
+                    tint, 1f, Mathf.Tan(30f * Mathf.Deg2Rad));
+                Assert.That(encoded.r, Is.EqualTo(tint.r));
+                Assert.That(encoded.g, Is.EqualTo(tint.g));
+                Assert.That(encoded.b, Is.EqualTo(tint.b));
+                Assert.That(encoded.a, Is.EqualTo(expected));
+            }
+
+            float normalizedAlpha = expected / 255f;
+            float interpolated = normalizedAlpha * 0.07f + normalizedAlpha * 0.19f +
+                                 normalizedAlpha * 0.31f + normalizedAlpha * 0.43f;
+            byte reconstructed = (byte)Mathf.RoundToInt(interpolated * 255f);
+            Assert.That(reconstructed, Is.EqualTo(expected),
+                "All four duplicated wall vertices carry one byte, so interpolation adds zero endpoint error.");
         }
 
         [Test]
@@ -193,7 +375,8 @@ namespace QuestFlight.Editor.Tests
             TextAsset report = AssetDatabase.LoadAssetAtPath<TextAsset>(
                 FullMapBuildingClipmapAssetAuthoring.CompilationReportPath);
             Assert.That(report, Is.Not.Null);
-            Assert.That(report.text, Does.Contain("full-height-forward-residency-compiler-v11-20260817"));
+            Assert.That(report.text, Does.Contain(
+                "full-height-forward-residency-corner-softening-compiler-v12-20260902"));
             Assert.That(report.text, Does.Contain("\"foundation_embed_meters\": 1.6"));
             Assert.That(report.text, Does.Contain("\"maximum_roof_wall_seam_meters\": 0.0"));
             Assert.That(report.text, Does.Contain("\"maximum_vertical_corner_seam_meters\": 0.0"));
@@ -273,7 +456,93 @@ namespace QuestFlight.Editor.Tests
             int maximum = stable.Cast<int>().OrderByDescending(value => value)
                 .Take(AircraftCenteredBuildingClipmapController.SlotCount).Sum();
             Assert.That(maximum, Is.EqualTo(233298));
-            Assert.That(maximum, Is.LessThanOrEqualTo(233316));
+            GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(
+                FullMapBuildingClipmapAssetAuthoring.EnvironmentPath);
+            AircraftCenteredBuildingClipmapController controller = environment
+                .GetComponentInChildren<AircraftCenteredBuildingClipmapController>(true);
+            Assert.That(controller.authoredMaximumSelectedTriangles, Is.EqualTo(maximum),
+                "The authored allowance must equal deterministic mesh truth, not a stale overestimate.");
+            Assert.That(maximum, Is.LessThanOrEqualTo(235000));
+        }
+
+        [Test]
+        public void GeneratedCornerMetadataChangesOnlyAlphaAndKeepsStableShellCounts()
+        {
+            long vertices = 0;
+            long triangles = 0;
+            long encodedWallQuads = 0;
+            int incompleteStreams = 0;
+            int legacyWallVertices = 0;
+            int nonSentinelRoofVertices = 0;
+            int nonConstantWallQuads = 0;
+
+            for (int row = 0; row < 24; row++)
+            for (int column = 0; column < 24; column++)
+            {
+                Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(
+                    $"{FullMapBuildingClipmapAssetAuthoring.GeneratedRoot}/KBDU_buildings_stable_{column:D3}_{row:D3}.asset");
+                Assert.That(mesh, Is.Not.Null, $"stable {column},{row}");
+                Color32[] colors = mesh.colors32;
+                List<Vector4> parameters = new List<Vector4>(mesh.vertexCount);
+                mesh.GetUVs(2, parameters);
+                if (colors.Length != mesh.vertexCount || parameters.Count != mesh.vertexCount)
+                {
+                    incompleteStreams++;
+                    continue;
+                }
+
+                vertices += mesh.vertexCount;
+                triangles += (long)mesh.GetIndexCount(0) / 3;
+                int cursor = 0;
+                while (cursor < mesh.vertexCount)
+                {
+                    bool roof = parameters[cursor].x >= 0.5f;
+                    int runStart = cursor;
+                    while (cursor < mesh.vertexCount && (parameters[cursor].x >= 0.5f) == roof)
+                        cursor++;
+                    if (roof)
+                    {
+                        for (int index = runStart; index < cursor; index++)
+                            if (colors[index].a != FullMapBuildingCornerEncoding.LegacyDisabledPacked)
+                                nonSentinelRoofVertices++;
+                        continue;
+                    }
+
+                    if ((cursor - runStart) % 4 != 0)
+                    {
+                        nonConstantWallQuads++;
+                        continue;
+                    }
+                    for (int start = runStart; start < cursor; start += 4)
+                    {
+                        Color32 first = colors[start];
+                        bool constant = true;
+                        for (int offset = 0; offset < 4; offset++)
+                        {
+                            Color32 value = colors[start + offset];
+                            constant &= value.r == first.r && value.g == first.g &&
+                                        value.b == first.b && value.a == first.a;
+                            if (value.a == FullMapBuildingCornerEncoding.LegacyDisabledPacked)
+                                legacyWallVertices++;
+                        }
+                        if (!constant) nonConstantWallQuads++;
+                        if (FullMapBuildingCornerEncoding.DecodeStart(first.a) > 0f ||
+                            FullMapBuildingCornerEncoding.DecodeEnd(first.a) > 0f)
+                            encodedWallQuads++;
+                    }
+                }
+            }
+
+            Assert.That(incompleteStreams, Is.Zero);
+            Assert.That(legacyWallVertices, Is.Zero,
+                "Rebuilt walls must not retain the legacy all-white sentinel.");
+            Assert.That(nonSentinelRoofVertices, Is.Zero,
+                "Phase 1 must leave roof color metadata untouched.");
+            Assert.That(nonConstantWallQuads, Is.Zero,
+                "Packed endpoints must be constant across each duplicated wall quad.");
+            Assert.That(encodedWallQuads, Is.GreaterThan(200000));
+            Assert.That(vertices, Is.EqualTo(1354653));
+            Assert.That(triangles, Is.EqualTo(613389));
         }
 
         private static int Occurrences(string source, string value)
@@ -286,6 +555,9 @@ namespace QuestFlight.Editor.Tests
             }
             return count;
         }
+
+        private static Vector2 VirtualEdgeNormal(Vector2 outward, Vector2 tangent, float signedMagnitude) =>
+            (outward + tangent * signedMagnitude).normalized;
 
         private static string Read(string assetPath) => File.ReadAllText(Path.GetFullPath(
             Path.Combine(Application.dataPath, "..", assetPath.Replace('/', Path.DirectorySeparatorChar))));

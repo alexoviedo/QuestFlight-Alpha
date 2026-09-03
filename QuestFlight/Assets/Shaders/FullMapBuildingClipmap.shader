@@ -9,6 +9,8 @@ Shader "QuestFlight/Full Map Building Clipmap"
         _NormalScale ("Normal Scale", Range(0, 1)) = 0.34
         _WindowReflection ("Window Reflection", Range(0, 1)) = 0.38
         _AmbientLift ("Ambient Lift", Range(0, 1)) = 0.04
+        _CornerSofteningWidthMeters ("Corner Softening Width (m)", Range(0, 0.5)) = 0.35
+        _CornerSofteningStrength ("Corner Softening Strength", Range(0, 1)) = 0.65
         [HideInInspector] _NearAlbedo ("Near orthophoto fallback", 2D) = "gray" {}
         [HideInInspector] _MidAlbedo ("Mid orthophoto fallback", 2D) = "gray" {}
         [HideInInspector] _FarAlbedo ("Far orthophoto fallback", 2D) = "gray" {}
@@ -55,6 +57,8 @@ Shader "QuestFlight/Full Map Building Clipmap"
             half _NormalScale;
             half _WindowReflection;
             half _AmbientLift;
+            half _CornerSofteningWidthMeters;
+            half _CornerSofteningStrength;
             half _ClipmapEnabled;
 
             struct appdata
@@ -266,6 +270,29 @@ Shader "QuestFlight/Full Map Building Clipmap"
                 return classId < 0.5h ? 0.72h : 0.76h;
             }
 
+            half2 DecodeCornerMagnitudes(half packedByte)
+            {
+                // Alpha 0xff is the legacy/roof sentinel. Valid endpoint codes
+                // are 1..14 in eighth-unit tan(turn/2) increments; zero and 15
+                // deliberately disable the endpoint.
+                half legacyDisabled = step(254.5h, packedByte);
+                half endCode = floor(packedByte * 0.0625h);
+                half startCode = packedByte - endCode * 16.0h;
+                half2 codes = half2(startCode, endCode);
+                half2 valid = step(0.5h, codes) * (1.0h - step(14.5h, codes)) *
+                    (1.0h - legacyDisabled);
+                return codes * 0.125h * valid;
+            }
+
+            half CornerEdgeMask(half distanceMeters, half widthMeters, half pixelMeters)
+            {
+                half feather = min(widthMeters * 0.45h, pixelMeters * 1.25h);
+                return 1.0h - smoothstep(
+                    widthMeters - feather,
+                    widthMeters + feather,
+                    max(0.0h, distanceMeters));
+            }
+
             fixed4 frag(v2f i) : SV_Target
             {
                 half roof = step(0.5h, i.parameters.x);
@@ -299,10 +326,59 @@ Shader "QuestFlight/Full Map Building Clipmap"
                     half3 tangentNormal = UnpackNormal(
                         UNITY_SAMPLE_TEX2DARRAY(_FacadeNormal, float3(facadeUv, materialId)));
                     tangentNormal.xy *= _NormalScale;
+                    half wallLength = max(0.01h, i.atlasCell.x);
+                    // Both controls are constant for the complete draw, so this
+                    // branch is derivative-safe and provides an exact no-op path
+                    // for controlled material-level profiling.
+                    UNITY_BRANCH if (_CornerSofteningStrength > 0.0005h &&
+                        _CornerSofteningWidthMeters > 0.0005h)
+                    {
+                        half packedCornerByte = floor(saturate(i.color.a) * 255.0h + 0.5h);
+                        half2 cornerMagnitudes = DecodeCornerMagnitudes(packedCornerByte);
+                        half startMagnitude = cornerMagnitudes.x;
+                        half endMagnitude = cornerMagnitudes.y;
+                        half cornerWidth = min(_CornerSofteningWidthMeters, wallLength * 0.20h);
+                        half pixelMeters = max(0.0005h, fwidth(i.detailUv.x));
+                        // The initial 0.18 m / 0.75..1.50 response was not visible
+                        // in a worn Quest 3 check. Keep the transition derivative-
+                        // stable, but retain it until the projected bevel is truly
+                        // subpixel at the headset's render resolution.
+                        half projectedResponse = smoothstep(
+                            0.65h, 1.25h, cornerWidth / pixelMeters);
+                        half startMask = CornerEdgeMask(
+                            i.detailUv.x, cornerWidth, pixelMeters) *
+                            step(0.0005h, startMagnitude);
+                        half endMask = CornerEdgeMask(
+                            wallLength - i.detailUv.x, cornerWidth, pixelMeters) *
+                            step(0.0005h, endMagnitude);
+                        // Strength controls the shoulder while the mathematical
+                        // edge still reaches the shared bisector.
+                        startMask *= lerp(_CornerSofteningStrength, 1.0h, startMask) *
+                            projectedResponse;
+                        endMask *= lerp(_CornerSofteningStrength, 1.0h, endMask) *
+                            projectedResponse;
+                        half cornerEnvelope = saturate(startMask + endMask);
+                        UNITY_BRANCH if (cornerEnvelope > 0.0001h)
+                        {
+                            tangentNormal.xy *= 1.0h - cornerEnvelope;
+                            half signedTurn = endMask * endMagnitude - startMask * startMagnitude;
+                            // Foundation sealing can tilt the serialized wall tangent.
+                            // Express its horizontal direction back in the existing T/B
+                            // basis so the virtual corner normal cannot tilt into the roof
+                            // or terrain, then perturb tangent space before the existing
+                            // tangent-to-world transform.
+                            half3 horizontalTangent = half3(i.worldTangent.x, 0.0h, i.worldTangent.z);
+                            horizontalTangent *= rsqrt(max(0.0001h,
+                                dot(horizontalTangent, horizontalTangent)));
+                            half2 horizontalTangentInBasis = half2(
+                                dot(horizontalTangent, i.worldTangent),
+                                dot(horizontalTangent, i.worldBitangent));
+                            tangentNormal.xy += horizontalTangentInBasis * signedTurn * tangentNormal.z;
+                        }
+                    }
                     n = normalize(i.worldTangent * tangentNormal.x +
                         i.worldBitangent * tangentNormal.y + i.worldNormal * tangentNormal.z);
                     roughness = packed.g;
-                    half wallLength = max(0.01h, i.atlasCell.x);
                     float2 windowUv;
                     window = WindowMask(i.detailUv, wallLength, i.parameters.z, facadeStyle,
                         i.atlasCell.y, windowUv);

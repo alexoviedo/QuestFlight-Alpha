@@ -59,6 +59,8 @@ Material:
     m_Floats:
     - _AmbientLift: 0.04
     - _ClipmapEnabled: 0
+    - _CornerSofteningStrength: 0.65
+    - _CornerSofteningWidthMeters: 0.35
     - _NormalScale: 0.34
     - _WindowReflection: 0.38
     m_Colors:

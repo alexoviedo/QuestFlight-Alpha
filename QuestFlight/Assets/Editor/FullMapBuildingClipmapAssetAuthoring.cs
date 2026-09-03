@@ -13,6 +13,114 @@ using UnityEngine.SceneManagement;
 
 namespace QuestFlight.Editor
 {
+    /// <summary>
+    /// Pure, deterministic codec for the two convex-corner turns carried by one
+    /// wall quad.  The low alpha nibble belongs to the wall start and the high
+    /// nibble to the wall end.  Code 15 is reserved so legacy 0xff vertex colors
+    /// fail visually neutral instead of being interpreted as maximum curvature.
+    /// </summary>
+    public static class FullMapBuildingCornerEncoding
+    {
+        public const byte DisabledCode = 0;
+        public const byte ReservedCode = 15;
+        public const byte LegacyDisabledPacked = 255;
+        public const float QuantizationStepsPerUnit = 8f;
+        public const float MaximumQuantizationError = 0.0625f;
+        public const float MinimumIncidentEdgeMeters = 0.8f;
+        public const float MinimumTurnTangent = 0.08748866f; // tan(10 degrees / 2)
+        public const float MaximumTurnTangent = 1.75f;
+
+        public static bool TryCalculateConvexTurnMagnitude(
+            IReadOnlyList<Vector2> polygon,
+            int cornerIndex,
+            out float tangentHalfTurn)
+        {
+            tangentHalfTurn = 0f;
+            if (polygon == null || polygon.Count < 3 ||
+                cornerIndex < 0 || cornerIndex >= polygon.Count)
+                return false;
+
+            Vector2 origin = polygon[0];
+            double twiceArea = 0d;
+            for (int index = 0; index < polygon.Count; index++)
+            {
+                Vector2 a = polygon[index] - origin;
+                Vector2 b = polygon[(index + 1) % polygon.Count] - origin;
+                twiceArea += (double)a.x * b.y - (double)a.y * b.x;
+            }
+            if (Math.Abs(twiceArea) <= 0.0002d || double.IsNaN(twiceArea) || double.IsInfinity(twiceArea))
+                return false;
+
+            Vector2 previous = polygon[(cornerIndex - 1 + polygon.Count) % polygon.Count];
+            Vector2 current = polygon[cornerIndex];
+            Vector2 next = polygon[(cornerIndex + 1) % polygon.Count];
+            double incomingX = current.x - previous.x;
+            double incomingY = current.y - previous.y;
+            double outgoingX = next.x - current.x;
+            double outgoingY = next.y - current.y;
+            double incomingLength = Math.Sqrt(incomingX * incomingX + incomingY * incomingY);
+            double outgoingLength = Math.Sqrt(outgoingX * outgoingX + outgoingY * outgoingY);
+            if (incomingLength < MinimumIncidentEdgeMeters || outgoingLength < MinimumIncidentEdgeMeters ||
+                double.IsNaN(incomingLength) || double.IsNaN(outgoingLength) ||
+                double.IsInfinity(incomingLength) || double.IsInfinity(outgoingLength))
+                return false;
+
+            incomingX /= incomingLength;
+            incomingY /= incomingLength;
+            outgoingX /= outgoingLength;
+            outgoingY /= outgoingLength;
+            double cross = incomingX * outgoingY - incomingY * outgoingX;
+            double dot = incomingX * outgoingX + incomingY * outgoingY;
+            double orientedCross = twiceArea > 0d ? cross : -cross;
+            double denominator = 1d + dot;
+            if (orientedCross <= 0d || denominator <= 0.0001d)
+                return false;
+
+            double magnitude = orientedCross / denominator;
+            if (double.IsNaN(magnitude) || double.IsInfinity(magnitude) ||
+                magnitude < MinimumTurnTangent || magnitude > MaximumTurnTangent)
+                return false;
+
+            tangentHalfTurn = (float)magnitude;
+            return true;
+        }
+
+        public static byte QuantizeMagnitude(float tangentHalfTurn)
+        {
+            if (float.IsNaN(tangentHalfTurn) || float.IsInfinity(tangentHalfTurn) ||
+                tangentHalfTurn < MinimumTurnTangent || tangentHalfTurn > MaximumTurnTangent)
+                return DisabledCode;
+            return (byte)Mathf.Clamp(
+                Mathf.RoundToInt(tangentHalfTurn * QuantizationStepsPerUnit),
+                1,
+                ReservedCode - 1);
+        }
+
+        public static byte Pack(float startMagnitude, float endMagnitude)
+        {
+            byte start = QuantizeMagnitude(startMagnitude);
+            byte end = QuantizeMagnitude(endMagnitude);
+            return (byte)((end << 4) | start);
+        }
+
+        public static float DecodeStart(byte packed) => DecodeCode(packed, true);
+        public static float DecodeEnd(byte packed) => DecodeCode(packed, false);
+        public static float SignedStartContribution(byte packed) => -DecodeStart(packed);
+        public static float SignedEndContribution(byte packed) => DecodeEnd(packed);
+
+        public static Color32 ApplyToTint(Color32 tint, float startMagnitude, float endMagnitude) =>
+            new Color32(tint.r, tint.g, tint.b, Pack(startMagnitude, endMagnitude));
+
+        private static float DecodeCode(byte packed, bool start)
+        {
+            if (packed == LegacyDisabledPacked) return 0f;
+            int code = start ? packed & 0x0f : packed >> 4;
+            return code <= DisabledCode || code >= ReservedCode
+                ? 0f
+                : code / QuantizationStepsPerUnit;
+        }
+    }
+
     /// <summary>Offline compiler for full-map semantic building pages and their fixed product owner.</summary>
     public static class FullMapBuildingClipmapAssetAuthoring
     {
@@ -38,10 +146,10 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
-        private const string MeshCompilerVersion = "full-height-forward-residency-compiler-v11-20260817";
+        private const string MeshCompilerVersion = "full-height-forward-residency-corner-softening-compiler-v12-20260902";
         private const string FacadeContractVersion = "boulder-semantic-facades-v2";
         private const int MaximumSelectedTriangleCeiling = 235000;
-        private const int AuthoredMaximumSelectedTriangles = 233316;
+        private const int AuthoredMaximumSelectedTriangles = 233298;
         private const int ExpectedRepresentedBuildings = 57441;
         private const int OrdinaryFootprintVertexLimit = 4;
         private const int LargeFootprintVertexLimit = 6;
@@ -441,6 +549,8 @@ namespace QuestFlight.Editor
             material.SetFloat("_NormalScale", 0.34f);
             material.SetFloat("_WindowReflection", 0.38f);
             material.SetFloat("_AmbientLift", 0.04f);
+            material.SetFloat("_CornerSofteningWidthMeters", 0.35f);
+            material.SetFloat("_CornerSofteningStrength", 0.65f);
             Material terrain = LoadRequired<Material>(TerrainMaterialPath);
             foreach (string propertyName in new[] { "_NearAlbedo", "_MidAlbedo", "_FarAlbedo" })
                 material.SetTexture(propertyName, terrain.GetTexture(propertyName));
@@ -721,6 +831,11 @@ namespace QuestFlight.Editor
                 wallTop + RoofHeight(point, axes, building.roof_id, roofRise), point.y)).ToArray();
             float[] foundation = polygon.Select(point => TerrainSealedFoundationHeight(
                 terrain, point, baseY, building.id)).ToArray();
+            float[] cornerMagnitudes = new float[polygon.Length];
+            for (int index = 0; index < polygon.Length; index++)
+                if (FullMapBuildingCornerEncoding.TryCalculateConvexTurnMagnitude(
+                        polygon, index, out float magnitude))
+                    cornerMagnitudes[index] = magnitude;
 
             int frontWall = FrontWallIndex(polygon, building.seed);
             Vector2 frontNormal = ExteriorNormal(polygon, frontWall);
@@ -742,10 +857,12 @@ namespace QuestFlight.Editor
                     (Mathf.Clamp(building.secondary_material_id, -1, 15) + 1) / 32f;
                 Vector4 facadeParameters = new Vector4(
                     0f, building.material_id, building.height_dm * 0.1f, packedStyleAndSecondary);
+                Color32 wallTint = FullMapBuildingCornerEncoding.ApplyToTint(
+                    tint, cornerMagnitudes[i], cornerMagnitudes[(i + 1) % polygon.Length]);
                 AddQuad(builder, a, b, c, d,
                     new Vector2(0f, a.y - baseY), new Vector2(length, b.y - baseY),
                     new Vector2(length, c.y - baseY), new Vector2(0f, d.y - baseY),
-                    facadeSemantics, facadeParameters, tint);
+                    facadeSemantics, facadeParameters, wallTint);
             }
 
             if (!includeRoof) return;
@@ -1027,10 +1144,12 @@ namespace QuestFlight.Editor
             {
                 int[] ring = building.lod2_q;
                 if (ring == null || ring.Length < 6 || ring.Length % 2 != 0) continue;
+                float pageMinX = -database.map_half_extent_meters + page.column * database.page_size_meters;
+                float pageMinZ = -database.map_half_extent_meters + page.row * database.page_size_meters;
                 Vector2[] source = new Vector2[ring.Length / 2];
                 for (int i = 0; i < source.Length; i++)
-                    source[i] = new Vector2(ring[i * 2] * database.quantization_meters,
-                        ring[i * 2 + 1] * database.quantization_meters);
+                    source[i] = new Vector2(pageMinX + ring[i * 2] * database.quantization_meters,
+                        pageMinZ + ring[i * 2 + 1] * database.quantization_meters);
                 Vector2[] compiled = CompileStableFootprint(source, building);
                 if (compiled == null || compiled.Length < 3 || !IsSimplePolygon(compiled))
                     throw new InvalidOperationException("Stable shell compilation produced an invalid footprint: " + building.id);
