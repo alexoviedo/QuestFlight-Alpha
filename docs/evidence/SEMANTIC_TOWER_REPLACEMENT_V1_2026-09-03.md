@@ -2,7 +2,7 @@
 
 ## Decision
 
-`VISUALLY_ACCEPTED_HARDWARE_GATE_PENDING`
+`ACCEPTED_SEMANTIC_TOWER_REPLACEMENT`
 
 Two directly verified vertical structures are now authored under one serialized
 `SemanticTowerRoot`: an FCC/OSM-confirmed guyed communications mast and an
@@ -10,8 +10,8 @@ FAA/OSM-confirmed industrial stack. Exact county building component `52188:0`
 was removed because it incorrectly owned the stack footprint; its semantic
 replacement is present at the same authority point. The communications site's
 real equipment shelter (`45081`) is preserved. Machine visual QA passes, the
-exact APK is installed and running on Quest 3, and the operator's short worn
-observation is pending. This milestone does not claim physical timing, thermal,
+exact APK is installed and running on Quest 3, and the operator reported that
+the short headset test worked fine. This milestone does not claim physical timing, thermal,
 or broad visual-fidelity acceptance.
 
 ## Starting state and artifact boundary
@@ -170,12 +170,12 @@ not a claim that every visually extreme narrow building was false.
 | Full EditMode, run once | FAIL, 387/389 | one initial feature integration failure was corrected and its focused rerun passed; remaining failure is inherited reservoir evidence hash drift (`a164597...` recorded versus unchanged placements SHA `eb8e333...`) |
 | Full PlayMode, run once | PASS, 22/22 | `final_manual\playmode\unity_PlayMode_test_results.xml` |
 | Targeted tower Visual QA | PASS, 9/9 | `validation\semantic_tower_visual_qa_final_candidate\visual_qa_report.json` |
-| Production Visual QA, 1920x1080, run once | PASS, 130/130 machine views | `final_manual\visual_qa\visual_qa_report.json`; human exact-APK review pending |
+| Production Visual QA, 1920x1080, run once | PASS, 130/130 machine views | `final_manual\visual_qa\visual_qa_report.json`; followed by the exact-APK worn check below |
 | Static performance budget using exact final Visual-QA report | PASS | 53/77 draws, 384,747/692,871 visible triangles, 20/38 visible materials, 18/18 transparent slots |
 | One-command product validation, run once | BLOCKED | feature dependency classification was corrected and its targeted exporter rerun passes; wrapper remains blocked by six inherited `StartupShowroom*.mat` unknown dependencies and therefore did not duplicate downstream gates |
 | Android release-style build, run once | PASS | non-development Android ARM64/Vulkan/OpenXR build; native JSBSim required and UnityPrototype forbidden |
 | Exact APK install and unattended launch | PASS | Quest 3 `2G0YC5ZG8907TD`; package PID `23393`; no app-scoped fatal error observed |
-| Short worn visual check | NOT RUN / operator observation pending | exact installed APK is active; no result is inferred from Editor captures |
+| Short worn visual check | PASS | on 2026-09-03 the operator reported that the exact installed APK worked fine during headset testing; no issue was reported with the scoped correction |
 | Formal three-session Quest timing/thermal gate | NOT RUN | explicitly out of scope for this small content milestone |
 
 Exact APK:
