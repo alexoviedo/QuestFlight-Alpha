@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using QuestFlightLab.Environment;
 using QuestFlightLab.Runtime;
+using QuestFlightLab.Training.FlightLessonV1;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -133,6 +134,7 @@ namespace QuestFlight.Editor
         public const string DetailPath = Root + "/Materials/FullMapBuildingFacadeDetailAtlas.png";
         public const string FacadeManifestPath = Root + "/KBDU_FullMapBuildingFacadeManifestV2.json";
         public const string CompilationReportPath = Root + "/KBDU_StableShellCompilationV1.json";
+        public const string RoofTopologyReportPath = Root + "/KBDU_RoofTopologyAllocationV1.json";
         public const string GeneratedRoot = "Assets/Generated/FullMapBuildingClipmap";
         public const string StreamingRoot = "Assets/StreamingAssets/QuestFlightBuildingClipmap";
         public const string EnvironmentPath = "Assets/Production/Environment/ProductionEnvironmentRoot.prefab";
@@ -146,14 +148,30 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
-        private const string MeshCompilerVersion = "full-height-forward-residency-corner-softening-compiler-v12-20260902";
+        private const string MeshCompilerVersion = "proper-roof-topology-selective-compiler-v14-20260903";
         private const string FacadeContractVersion = "boulder-semantic-facades-v2";
         private const int MaximumSelectedTriangleCeiling = 235000;
-        private const int AuthoredMaximumSelectedTriangles = 233298;
+        private const int AuthoredMaximumSelectedTriangles = 235000;
         private const int ExpectedRepresentedBuildings = 57441;
         private const int OrdinaryFootprintVertexLimit = 4;
         private const int LargeFootprintVertexLimit = 6;
         private const float LargeFootprintAreaSquareMeters = 1000f;
+        private const float AcceptanceViewRadiusMeters = 1000f;
+        private const float AcceptancePriorityRadiusMeters = 1250f;
+        private const float GuidedRouteRadiusMeters = 1200f;
+        private const float AirportRegionRadiusMeters = 3000f;
+        private static readonly string[] AcceptanceViewNames =
+        {
+            "airport", "cu_downtown", "residential", "north_boulder", "reservoir"
+        };
+        private static readonly Vector2[] AcceptanceViewCenters =
+        {
+            Vector2.zero,
+            new Vector2(-3500f, -3500f),
+            new Vector2(-3500f, -1500f),
+            new Vector2(-4500f, 1500f),
+            new Vector2(251.5f, 4308.25f)
+        };
 
         [Serializable] private sealed class Database
         {
@@ -241,6 +259,119 @@ namespace QuestFlight.Editor
             public float foundation_embed_meters;
             public float maximum_roof_wall_seam_meters;
             public float maximum_vertical_corner_seam_meters;
+        }
+
+        [Serializable] private sealed class RoofTopologyPageReport
+        {
+            public int column;
+            public int row;
+            public int baseline_triangles;
+            public int safe_candidate_roofs;
+            public int all_safe_added_triangles;
+            public int selected_roofs;
+            public int selected_added_triangles;
+            public int final_triangles;
+        }
+
+        [Serializable] private sealed class RoofTopologyCountReport
+        {
+            public string name;
+            public int count;
+        }
+
+        [Serializable] private sealed class RoofTopologyViewReport
+        {
+            public string name;
+            public int safe_candidate_roofs;
+            public int selected_roofs;
+        }
+
+        [Serializable] private sealed class RoofTopologyAllocationReport
+        {
+            public string compiler_version;
+            public string rollout;
+            public int triangle_ceiling;
+            public int represented_buildings;
+            public int page_count;
+            public int nonempty_page_count;
+            public int active_page_slots;
+            public int nominal_gable_roofs;
+            public int nominal_hip_roofs;
+            public int positive_rise_pitched_roofs;
+            public int safe_gable_roofs;
+            public int safe_compact_hip_roofs;
+            public int safe_short_ridge_hip_roofs;
+            public int safe_roofs;
+            public int selected_gable_roofs;
+            public int selected_compact_hip_roofs;
+            public int selected_short_ridge_hip_roofs;
+            public int selected_roofs;
+            public int budget_rejected_safe_roofs;
+            public int ambiguous_or_unsupported_roofs;
+            public int baseline_total_triangles;
+            public int all_safe_added_triangles;
+            public int selected_added_triangles;
+            public int baseline_maximum_selected_triangles;
+            public int all_safe_maximum_selected_triangles;
+            public int final_maximum_selected_triangles;
+            public int remaining_triangle_margin;
+            public int safe_roofs_near_airport;
+            public int selected_roofs_near_airport;
+            public int safe_roofs_near_guided_route;
+            public int selected_roofs_near_guided_route;
+            public RoofTopologyCountReport[] rejection_reasons;
+            public RoofTopologyViewReport[] acceptance_views;
+            public RoofTopologyPageReport[] pages;
+            public int[] selected_building_ids;
+        }
+
+        private sealed class RoofAllocation
+        {
+            public readonly HashSet<int> selectedBuildingIds;
+            public readonly Dictionary<int, FullMapBuildingRoofTopologyResult> candidateRoofs;
+            public readonly int[] baselinePageTriangles;
+            public readonly int[] allSafePageTriangles;
+            public readonly int[] finalPageTriangles;
+            public readonly RoofTopologyAllocationReport report;
+
+            public RoofAllocation(
+                HashSet<int> selectedBuildingIds,
+                Dictionary<int, FullMapBuildingRoofTopologyResult> candidateRoofs,
+                int[] baselinePageTriangles,
+                int[] allSafePageTriangles,
+                int[] finalPageTriangles,
+                RoofTopologyAllocationReport report)
+            {
+                this.selectedBuildingIds = selectedBuildingIds;
+                this.candidateRoofs = candidateRoofs;
+                this.baselinePageTriangles = baselinePageTriangles;
+                this.allSafePageTriangles = allSafePageTriangles;
+                this.finalPageTriangles = finalPageTriangles;
+                this.report = report;
+            }
+
+            public bool IsSelected(int buildingId) => selectedBuildingIds.Contains(buildingId);
+        }
+
+        private readonly struct RoofCandidateAudit
+        {
+            public readonly int buildingId;
+            public readonly int pageIndex;
+            public readonly Vector2 center;
+            public readonly float routeDistanceMeters;
+            public readonly FullMapBuildingRoofTopologyKind kind;
+            public readonly int addedTriangles;
+
+            public RoofCandidateAudit(int buildingId, int pageIndex, Vector2 center,
+                float routeDistanceMeters, FullMapBuildingRoofTopologyKind kind, int addedTriangles)
+            {
+                this.buildingId = buildingId;
+                this.pageIndex = pageIndex;
+                this.center = center;
+                this.routeDistanceMeters = routeDistanceMeters;
+                this.kind = kind;
+                this.addedTriangles = addedTriangles;
+            }
         }
 
         private readonly struct PositionKey : IEquatable<PositionKey>
@@ -587,13 +718,14 @@ namespace QuestFlight.Editor
         private static void RebuildMeshAssets(Database database)
         {
             ProductionTerrainSurfaceAsset terrain = LoadRequired<ProductionTerrainSurfaceAsset>(TerrainSurfacePath);
+            RoofAllocation roofAllocation = BuildRoofAllocation(database);
             string absolute = Absolute(GeneratedRoot);
             if (Directory.Exists(absolute)) Directory.Delete(absolute, true);
             Directory.CreateDirectory(absolute);
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             foreach (Page page in database.pages.OrderBy(item => item.row).ThenBy(item => item.column))
             {
-                Mesh mesh = BuildPageMesh(database, page, terrain);
+                Mesh mesh = BuildPageMesh(database, page, terrain, roofAllocation);
                 AssetDatabase.CreateAsset(mesh, MeshPath(page.column, page.row));
                 if ((page.row * database.columns + page.column) % 24 == 23)
                 {
@@ -604,10 +736,234 @@ namespace QuestFlight.Editor
             }
             EditorUtility.ClearProgressBar();
             AssetDatabase.SaveAssets();
-            WriteCompilationReport(database);
+            WriteCompilationReport(database, roofAllocation);
+            WriteRoofTopologyReport(roofAllocation.report);
         }
 
-        private static Mesh BuildPageMesh(Database database, Page page, ProductionTerrainSurfaceAsset terrain)
+        private static RoofAllocation BuildRoofAllocation(Database database)
+        {
+            int pageCount = database.columns * database.rows;
+            int[] baselinePageTriangles = new int[pageCount];
+            int[] allSafePageTriangles = new int[pageCount];
+            Dictionary<int, FullMapBuildingRoofTopologyResult> candidateRoofs =
+                new Dictionary<int, FullMapBuildingRoofTopologyResult>();
+            List<FullMapBuildingRoofBudgetCandidate> budgetCandidates =
+                new List<FullMapBuildingRoofBudgetCandidate>();
+            List<RoofCandidateAudit> candidateAudits = new List<RoofCandidateAudit>();
+            Dictionary<string, int> rejectionReasons = new Dictionary<string, int>(StringComparer.Ordinal);
+            FlightLessonRouteDefinition route = KbduExtendedReservoirLesson.CreateDefinition();
+            int represented = 0;
+            int nominalGables = 0;
+            int nominalHips = 0;
+            int positiveRisePitched = 0;
+
+            foreach (Page page in database.pages.OrderBy(item => item.row).ThenBy(item => item.column))
+            {
+                int pageIndex = page.row * database.columns + page.column;
+                float pageMinX = -database.map_half_extent_meters + page.column * database.page_size_meters;
+                float pageMinZ = -database.map_half_extent_meters + page.row * database.page_size_meters;
+                foreach (Building building in (page.buildings ?? Array.Empty<Building>())
+                             .OrderBy(item => item.id))
+                {
+                    represented++;
+                    bool pitched = building.roof_id == FullMapBuildingRoofTopology.GableRoofId ||
+                                   building.roof_id == FullMapBuildingRoofTopology.HipRoofId;
+                    if (building.roof_id == FullMapBuildingRoofTopology.GableRoofId) nominalGables++;
+                    if (building.roof_id == FullMapBuildingRoofTopology.HipRoofId) nominalHips++;
+                    if (pitched && building.roof_rise_dm > 0) positiveRisePitched++;
+
+                    int[] ring = building.lod2_q;
+                    if (ring == null || ring.Length < 6 || ring.Length % 2 != 0)
+                        throw new InvalidOperationException("Building source ring is invalid: " + building.id);
+                    Vector2[] source = new Vector2[ring.Length / 2];
+                    for (int index = 0; index < source.Length; index++)
+                        source[index] = new Vector2(
+                            pageMinX + ring[index * 2] * database.quantization_meters,
+                            pageMinZ + ring[index * 2 + 1] * database.quantization_meters);
+                    Vector2[] compiled = CompileStableFootprint(source, building);
+                    if (compiled == null || compiled.Length < 3 || !IsSimplePolygon(compiled))
+                        throw new InvalidOperationException(
+                            "Stable shell compilation produced an invalid footprint: " + building.id);
+
+                    int baselineTriangles = 3 * compiled.Length - 2;
+                    baselinePageTriangles[pageIndex] += baselineTriangles;
+                    allSafePageTriangles[pageIndex] += baselineTriangles;
+                    if (!pitched) continue;
+
+                    if (!FullMapBuildingRoofTopology.TryCreate(
+                            compiled, building.roof_id, 0f, building.roof_rise_dm * 0.1f,
+                            building.landmark, out FullMapBuildingRoofTopologyResult properRoof,
+                            out string rejectionReason))
+                    {
+                        rejectionReasons.TryGetValue(rejectionReason, out int count);
+                        rejectionReasons[rejectionReason] = count + 1;
+                        continue;
+                    }
+
+                    if (!candidateRoofs.TryAdd(building.id, properRoof))
+                        throw new InvalidOperationException("Duplicate building id: " + building.id);
+                    allSafePageTriangles[pageIndex] += properRoof.AddedTriangleCount;
+                    Vector2 center = compiled.Aggregate(Vector2.zero, (sum, point) => sum + point) /
+                                     compiled.Length;
+                    float acceptanceDistance = AcceptanceViewCenters.Min(view => Vector2.Distance(center, view));
+                    float routeDistance = DistanceToGuidedRoute(center, route);
+                    budgetCandidates.Add(new FullMapBuildingRoofBudgetCandidate(
+                        building.id,
+                        pageIndex,
+                        properRoof.AddedTriangleCount,
+                        Mathf.RoundToInt(Mathf.Max(0f,
+                            acceptanceDistance - AcceptancePriorityRadiusMeters) * 100f),
+                        Mathf.RoundToInt(routeDistance * 100f),
+                        building.class_id == 0,
+                        Mathf.RoundToInt(Mathf.Max(0f, building.area_m2) * 100f),
+                        building.height_dm,
+                        building.roof_rise_dm,
+                        building.semantic_confidence,
+                        building.material_confidence,
+                        building.source_id,
+                        building.component));
+                    candidateAudits.Add(new RoofCandidateAudit(
+                        building.id, pageIndex, center, routeDistance, properRoof.kind,
+                        properRoof.AddedTriangleCount));
+                }
+            }
+
+            if (represented != ExpectedRepresentedBuildings)
+                throw new InvalidOperationException("Roof allocation lost source buildings.");
+            FullMapBuildingRoofBudgetResult allocation = FullMapBuildingRoofBudgetAllocator.Select(
+                budgetCandidates, baselinePageTriangles,
+                AircraftCenteredBuildingClipmapController.SlotCount,
+                MaximumSelectedTriangleCeiling);
+            HashSet<int> selected = new HashSet<int>(allocation.selectedBuildingIds);
+            int baselineMaximum = FullMapBuildingRoofBudgetAllocator.ConservativeMaximum(
+                baselinePageTriangles, AircraftCenteredBuildingClipmapController.SlotCount);
+            int allSafeMaximum = FullMapBuildingRoofBudgetAllocator.ConservativeMaximum(
+                allSafePageTriangles, AircraftCenteredBuildingClipmapController.SlotCount);
+
+            int safeGables = candidateAudits.Count(value =>
+                value.kind == FullMapBuildingRoofTopologyKind.Gable);
+            int safeCompactHips = candidateAudits.Count(value =>
+                value.kind == FullMapBuildingRoofTopologyKind.CompactHip);
+            int safeShortHips = candidateAudits.Count(value =>
+                value.kind == FullMapBuildingRoofTopologyKind.ShortRidgeHip);
+            int selectedGables = candidateAudits.Count(value => selected.Contains(value.buildingId) &&
+                value.kind == FullMapBuildingRoofTopologyKind.Gable);
+            int selectedCompactHips = candidateAudits.Count(value => selected.Contains(value.buildingId) &&
+                value.kind == FullMapBuildingRoofTopologyKind.CompactHip);
+            int selectedShortHips = candidateAudits.Count(value => selected.Contains(value.buildingId) &&
+                value.kind == FullMapBuildingRoofTopologyKind.ShortRidgeHip);
+            int selectedAdded = candidateAudits.Where(value => selected.Contains(value.buildingId))
+                .Sum(value => value.addedTriangles);
+            int allSafeAdded = candidateAudits.Sum(value => value.addedTriangles);
+
+            RoofTopologyViewReport[] viewReports = AcceptanceViewNames.Select((name, index) =>
+            {
+                Vector2 view = AcceptanceViewCenters[index];
+                RoofCandidateAudit[] visible = candidateAudits.Where(value =>
+                    Vector2.Distance(value.center, view) <= AcceptanceViewRadiusMeters).ToArray();
+                return new RoofTopologyViewReport
+                {
+                    name = name,
+                    safe_candidate_roofs = visible.Length,
+                    selected_roofs = visible.Count(value => selected.Contains(value.buildingId))
+                };
+            }).ToArray();
+
+            RoofTopologyPageReport[] pageReports = database.pages
+                .OrderBy(page => page.row).ThenBy(page => page.column)
+                .Select(page =>
+                {
+                    int pageIndex = page.row * database.columns + page.column;
+                    RoofCandidateAudit[] onPage = candidateAudits.Where(value =>
+                        value.pageIndex == pageIndex).ToArray();
+                    int selectedCount = onPage.Count(value => selected.Contains(value.buildingId));
+                    int selectedPageAdded = allocation.pageTriangleTotals[pageIndex] -
+                                            baselinePageTriangles[pageIndex];
+                    return new RoofTopologyPageReport
+                    {
+                        column = page.column,
+                        row = page.row,
+                        baseline_triangles = baselinePageTriangles[pageIndex],
+                        safe_candidate_roofs = onPage.Length,
+                        all_safe_added_triangles = allSafePageTriangles[pageIndex] -
+                                                   baselinePageTriangles[pageIndex],
+                        selected_roofs = selectedCount,
+                        selected_added_triangles = selectedPageAdded,
+                        final_triangles = allocation.pageTriangleTotals[pageIndex]
+                    };
+                }).ToArray();
+
+            RoofTopologyAllocationReport report = new RoofTopologyAllocationReport
+            {
+                compiler_version = MeshCompilerVersion,
+                rollout = allSafeMaximum <= MaximumSelectedTriangleCeiling ? "global" : "selective",
+                triangle_ceiling = MaximumSelectedTriangleCeiling,
+                represented_buildings = represented,
+                page_count = pageCount,
+                nonempty_page_count = database.pages.Count(page => (page.buildings?.Length ?? 0) > 0),
+                active_page_slots = AircraftCenteredBuildingClipmapController.SlotCount,
+                nominal_gable_roofs = nominalGables,
+                nominal_hip_roofs = nominalHips,
+                positive_rise_pitched_roofs = positiveRisePitched,
+                safe_gable_roofs = safeGables,
+                safe_compact_hip_roofs = safeCompactHips,
+                safe_short_ridge_hip_roofs = safeShortHips,
+                safe_roofs = candidateAudits.Count,
+                selected_gable_roofs = selectedGables,
+                selected_compact_hip_roofs = selectedCompactHips,
+                selected_short_ridge_hip_roofs = selectedShortHips,
+                selected_roofs = selected.Count,
+                budget_rejected_safe_roofs = candidateAudits.Count - selected.Count,
+                ambiguous_or_unsupported_roofs = nominalGables + nominalHips - candidateAudits.Count,
+                baseline_total_triangles = baselinePageTriangles.Sum(),
+                all_safe_added_triangles = allSafeAdded,
+                selected_added_triangles = selectedAdded,
+                baseline_maximum_selected_triangles = baselineMaximum,
+                all_safe_maximum_selected_triangles = allSafeMaximum,
+                final_maximum_selected_triangles = allocation.maximumSelectedTriangles,
+                remaining_triangle_margin = MaximumSelectedTriangleCeiling - allocation.maximumSelectedTriangles,
+                safe_roofs_near_airport = candidateAudits.Count(value =>
+                    value.center.magnitude <= AirportRegionRadiusMeters),
+                selected_roofs_near_airport = candidateAudits.Count(value =>
+                    selected.Contains(value.buildingId) && value.center.magnitude <= AirportRegionRadiusMeters),
+                safe_roofs_near_guided_route = candidateAudits.Count(value =>
+                    value.routeDistanceMeters <= GuidedRouteRadiusMeters),
+                selected_roofs_near_guided_route = candidateAudits.Count(value =>
+                    selected.Contains(value.buildingId) &&
+                    value.routeDistanceMeters <= GuidedRouteRadiusMeters),
+                rejection_reasons = rejectionReasons.OrderBy(pair => pair.Key, StringComparer.Ordinal)
+                    .Select(pair => new RoofTopologyCountReport { name = pair.Key, count = pair.Value })
+                    .ToArray(),
+                acceptance_views = viewReports,
+                pages = pageReports,
+                selected_building_ids = allocation.selectedBuildingIds
+            };
+            return new RoofAllocation(
+                selected, candidateRoofs, baselinePageTriangles, allSafePageTriangles,
+                allocation.pageTriangleTotals, report);
+        }
+
+        private static float DistanceToGuidedRoute(Vector2 point, FlightLessonRouteDefinition route)
+        {
+            float minimum = float.PositiveInfinity;
+            foreach (FlightLessonSegment segment in route.segments ?? Array.Empty<FlightLessonSegment>())
+            {
+                Vector3 start3 = route.waypoints[segment.startWaypointIndex].positionUnityMeters;
+                Vector3 end3 = route.waypoints[segment.endWaypointIndex].positionUnityMeters;
+                Vector2 start = new Vector2(start3.x, start3.z);
+                Vector2 end = new Vector2(end3.x, end3.z);
+                Vector2 delta = end - start;
+                float denominator = delta.sqrMagnitude;
+                float t = denominator > 0.0001f
+                    ? Mathf.Clamp01(Vector2.Dot(point - start, delta) / denominator)
+                    : 0f;
+                minimum = Mathf.Min(minimum, Vector2.Distance(point, start + delta * t));
+            }
+            return float.IsPositiveInfinity(minimum) ? point.magnitude : minimum;
+        }
+
+        private static Mesh BuildPageMesh(Database database, Page page, ProductionTerrainSurfaceAsset terrain,
+            RoofAllocation roofAllocation)
         {
             MeshBuilder builder = new MeshBuilder();
             float pageMinX = -database.map_half_extent_meters + page.column * database.page_size_meters;
@@ -621,7 +977,8 @@ namespace QuestFlight.Editor
                     polygon[i] = new Vector2(pageMinX + ring[i * 2] * database.quantization_meters,
                         pageMinZ + ring[i * 2 + 1] * database.quantization_meters);
                 polygon = CompileStableFootprint(polygon, building);
-                AddBuilding(builder, polygon, building, terrain, true, true);
+                AddBuilding(builder, polygon, building, terrain, true, true,
+                    roofAllocation.IsSelected(building.id));
             }
 
             Mesh mesh = new Mesh
@@ -816,7 +1173,8 @@ namespace QuestFlight.Editor
         }
 
         private static void AddBuilding(MeshBuilder builder, Vector2[] polygon, Building building,
-            ProductionTerrainSurfaceAsset terrain, bool includeWalls, bool includeRoof)
+            ProductionTerrainSurfaceAsset terrain, bool includeWalls, bool includeRoof,
+            bool useProperRoof)
         {
             if (SignedArea(polygon) < 0f) Array.Reverse(polygon);
             float baseY = building.base_y_dm * 0.1f;
@@ -826,9 +1184,19 @@ namespace QuestFlight.Editor
             Vector2 roofCell = RoofCell(building);
             float seed01 = (building.seed & 0xffff) / 65535f;
             Vector4 roofParameters = new Vector4(1f, building.class_id, seed01, RoofDetailScale(building));
+            FullMapBuildingRoofTopologyResult properRoof = null;
+            bool hasProperRoof = useProperRoof &&
+                FullMapBuildingRoofTopology.TryCreate(
+                    polygon, building.roof_id, wallTop, roofRise, building.landmark,
+                    out properRoof, out _);
+            if (useProperRoof && !hasProperRoof)
+                throw new InvalidOperationException(
+                    $"Selected proper roof became ineligible during mesh emission: {building.id}.");
             RoofAxes axes = RoofAxes.From(polygon);
-            Vector3[] roof = polygon.Select(point => new Vector3(point.x,
-                wallTop + RoofHeight(point, axes, building.roof_id, roofRise), point.y)).ToArray();
+            Vector3[] roof = hasProperRoof
+                ? properRoof.vertices.Take(polygon.Length).ToArray()
+                : polygon.Select(point => new Vector3(point.x,
+                    wallTop + RoofHeight(point, axes, building.roof_id, roofRise), point.y)).ToArray();
             float[] foundation = polygon.Select(point => TerrainSealedFoundationHeight(
                 terrain, point, baseY, building.id)).ToArray();
             float[] cornerMagnitudes = new float[polygon.Length];
@@ -866,6 +1234,20 @@ namespace QuestFlight.Editor
             }
 
             if (!includeRoof) return;
+            if (hasProperRoof)
+            {
+                for (int index = 0; index < properRoof.roofTriangles.Length; index += 3)
+                    AddTriangle(builder,
+                        properRoof.vertices[properRoof.roofTriangles[index]],
+                        properRoof.vertices[properRoof.roofTriangles[index + 1]],
+                        properRoof.vertices[properRoof.roofTriangles[index + 2]],
+                        roofCell, roofParameters, tint, true);
+                foreach (FullMapBuildingGableInfill infill in properRoof.gableInfills)
+                    AddGableInfillTriangle(builder, properRoof.vertices, infill,
+                        baseY, building, tint);
+                return;
+            }
+
             List<int> triangles = Triangulate(polygon, building.id);
             for (int i = 0; i + 2 < triangles.Count; i += 3)
             {
@@ -944,6 +1326,48 @@ namespace QuestFlight.Editor
                 builder.atlasCells.Add(atlasCell); builder.parameters.Add(parameters); builder.colors.Add(tint);
             }
             builder.indices.Add(start); builder.indices.Add(start + 1); builder.indices.Add(start + 2);
+        }
+
+        private static void AddGableInfillTriangle(
+            MeshBuilder builder,
+            IReadOnlyList<Vector3> roofVertices,
+            FullMapBuildingGableInfill infill,
+            float baseY,
+            Building building,
+            Color32 tint)
+        {
+            Vector3 a = roofVertices[infill.edgeStartIndex];
+            Vector3 b = roofVertices[infill.ridgeVertexIndex];
+            Vector3 c = roofVertices[infill.edgeEndIndex];
+            float length = Vector3.Distance(a, c);
+            Vector3 normal = Vector3.Cross(b - a, c - a).normalized;
+            Vector3 tangent3 = (c - a).normalized;
+            Vector4 tangent = new Vector4(tangent3.x, tangent3.y, tangent3.z, -1f);
+            float eaveHeight = a.y - baseY;
+            float packedStyleAndSecondary = building.facade_style_id +
+                (Mathf.Clamp(building.secondary_material_id, -1, 15) + 1) / 32f;
+            Vector4 facadeParameters = new Vector4(
+                0f, building.material_id, building.height_dm * 0.1f, packedStyleAndSecondary);
+            Color32 disabledCornerTint = FullMapBuildingCornerEncoding.ApplyToTint(tint, 0f, 0f);
+            int start = builder.vertices.Count;
+            foreach ((Vector3 point, Vector2 uv) in new[]
+                     {
+                         (a, new Vector2(0f, eaveHeight)),
+                         (b, new Vector2(length * 0.5f, b.y - baseY)),
+                         (c, new Vector2(length, eaveHeight))
+                     })
+            {
+                builder.vertices.Add(point);
+                builder.normals.Add(normal);
+                builder.tangents.Add(tangent);
+                builder.detailUvs.Add(uv);
+                builder.atlasCells.Add(new Vector2(length, 3f));
+                builder.parameters.Add(facadeParameters);
+                builder.colors.Add(disabledCornerTint);
+            }
+            builder.indices.Add(start);
+            builder.indices.Add(start + 1);
+            builder.indices.Add(start + 2);
         }
 
         private static List<int> Triangulate(Vector2[] polygon, int buildingId)
@@ -1130,7 +1554,7 @@ namespace QuestFlight.Editor
             return new Color(variation + warmth, variation, variation - warmth, 1f);
         }
 
-        private static void WriteCompilationReport(Database database)
+        private static void WriteCompilationReport(Database database, RoofAllocation roofAllocation)
         {
             int[,] pageTriangles = new int[database.columns, database.rows];
             ProductionTerrainSurfaceAsset terrain = LoadRequired<ProductionTerrainSurfaceAsset>(TerrainSurfacePath);
@@ -1165,7 +1589,10 @@ namespace QuestFlight.Editor
                 report.maximum_inflation_percent = Mathf.Max(report.maximum_inflation_percent, inflation);
                 report.maximum_centroid_shift_meters = Mathf.Max(report.maximum_centroid_shift_meters, error.centroidMeters);
                 report.maximum_boundary_error_meters = Mathf.Max(report.maximum_boundary_error_meters, error.boundaryMeters);
-                pageTriangles[page.column, page.row] += 3 * compiled.Length - 2;
+                int triangles = 3 * compiled.Length - 2;
+                if (roofAllocation.IsSelected(building.id))
+                    triangles += roofAllocation.candidateRoofs[building.id].AddedTriangleCount;
+                pageTriangles[page.column, page.row] += triangles;
             }
 
             for (int minimumRow = 0; minimumRow <= database.rows - AircraftCenteredBuildingClipmapController.GridSize; minimumRow++)
@@ -1193,11 +1620,20 @@ namespace QuestFlight.Editor
                 throw new InvalidOperationException("Stable shell compilation lost source buildings.");
             if (report.maximum_active_window_triangles > MaximumSelectedTriangleCeiling)
                 throw new InvalidOperationException($"Stable shell window exceeds {MaximumSelectedTriangleCeiling:N0} triangles: {report.maximum_active_window_triangles:N0}.");
+            if (report.maximum_active_window_triangles != roofAllocation.report.final_maximum_selected_triangles)
+                throw new InvalidOperationException(
+                    "Stable shell report and roof allocator disagree on the selected triangle maximum.");
             if (report.maximum_inflation_percent > 5.01f)
                 throw new InvalidOperationException($"Stable shell footprint inflation exceeds 5%: {report.maximum_inflation_percent:0.###}%.");
 
             File.WriteAllText(Absolute(CompilationReportPath), JsonUtility.ToJson(report, true));
             AssetDatabase.ImportAsset(CompilationReportPath, ImportAssetOptions.ForceSynchronousImport);
+        }
+
+        private static void WriteRoofTopologyReport(RoofTopologyAllocationReport report)
+        {
+            File.WriteAllText(Absolute(RoofTopologyReportPath), JsonUtility.ToJson(report, true));
+            AssetDatabase.ImportAsset(RoofTopologyReportPath, ImportAssetOptions.ForceSynchronousImport);
         }
 
         private static WatertightMetrics MeasureWatertightMeshes(Database database,
@@ -1212,10 +1648,13 @@ namespace QuestFlight.Editor
                     throw new InvalidOperationException($"Compiled shell page is missing: {page.column},{page.row}.");
                 Vector3[] vertices = mesh.vertices;
                 List<Vector2> detailUvs = new List<Vector2>(vertices.Length);
+                List<Vector2> atlasCells = new List<Vector2>(vertices.Length);
                 List<Vector4> parameters = new List<Vector4>(vertices.Length);
                 mesh.GetUVs(0, detailUvs);
+                mesh.GetUVs(1, atlasCells);
                 mesh.GetUVs(2, parameters);
-                if (detailUvs.Count != vertices.Length || parameters.Count != vertices.Length)
+                if (detailUvs.Count != vertices.Length || atlasCells.Count != vertices.Length ||
+                    parameters.Count != vertices.Length)
                     throw new InvalidOperationException($"Compiled shell semantics are incomplete: {page.column},{page.row}.");
 
                 HashSet<PositionKey> roofPositions = new HashSet<PositionKey>();
@@ -1229,8 +1668,12 @@ namespace QuestFlight.Editor
                     if (parameters[index].x >= 0.5f) continue;
                     Vector3 vertex = vertices[index];
                     PositionKey key = new PositionKey(vertex);
-                    wallPositionUse.TryGetValue(key, out int uses);
-                    wallPositionUse[key] = uses + 1;
+                    bool gableInfill = atlasCells[index].y > 2.5f;
+                    if (!gableInfill)
+                    {
+                        wallPositionUse.TryGetValue(key, out int uses);
+                        wallPositionUse[key] = uses + 1;
+                    }
                     if (detailUvs[index].y > 0.001f)
                     {
                         if (!roofPositions.Contains(key))

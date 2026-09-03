@@ -179,6 +179,9 @@ Shader "QuestFlight/Full Map Building Clipmap"
                     (1.0h - smoothstep(sill + openingHeight - verticalEdge, sill + openingHeight, floorLocal));
                 half validFloor = step(0.0h, uvMeters.y) * step(floorIndex + 1.0h, completeFloors);
                 half allowed = style > 3.5h && style < 4.5h ? 0.0h : 1.0h;
+                // Facade role 3 is triangular gable infill. It reuses the wall
+                // material but intentionally carries no procedural apertures.
+                allowed *= 1.0h - step(2.5h, facadeRole);
                 // Rear industrial/agricultural faces stay service-like rather than
                 // receiving a false office grid.
                 if (facadeRole > 1.5h &&
@@ -189,7 +192,8 @@ Shader "QuestFlight/Full Map Building Clipmap"
             half DoorMask(float2 uvMeters, half wallLength, half style, half facadeRole,
                 out float2 apertureUv)
             {
-                half isFront = 1.0h - step(0.5h, facadeRole);
+                half isFront = (1.0h - step(0.5h, facadeRole)) *
+                    (1.0h - step(2.5h, facadeRole));
                 half doorWidth = style > 1.5h && style < 2.5h ? 3.4h :
                     (style > 0.5h && style < 1.5h ? 1.8h : 1.05h);
                 half doorHeight = style > 1.5h && style < 2.5h ? 3.6h : 2.20h;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using QuestFlightLab.Environment;
 using UnityEditor;
@@ -31,7 +32,7 @@ namespace QuestFlight.Editor.Tests
                 renderer.shadowCastingMode == ShadowCastingMode.Off), Is.True);
             Assert.That(controller.GetComponentsInChildren<LODGroup>(true), Is.Empty);
             Assert.That(controller.authoredContractVersion, Is.EqualTo(AircraftCenteredBuildingClipmapController.ContractVersion));
-            Assert.That(controller.authoredMaximumSelectedTriangles, Is.EqualTo(233298));
+            Assert.That(controller.authoredMaximumSelectedTriangles, Is.EqualTo(235000));
             Assert.That(controller.pageTriangleCounts, Has.Length.EqualTo(576));
             Assert.That(controller.pageBuildingCounts, Has.Length.EqualTo(576));
             Assert.That(controller.pageRoofAreasSquareMeters, Has.Length.EqualTo(576));
@@ -243,6 +244,205 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
+        public void LegacyBoundaryOnlyRoofTopologyCannotReachInteriorPeakButProperTopologyDoes()
+        {
+            Vector2[] rectangle =
+            {
+                new Vector2(0f, 0f), new Vector2(12f, 0f),
+                new Vector2(12f, 8f), new Vector2(0f, 8f)
+            };
+            Type authoring = typeof(FullMapBuildingClipmapAssetAuthoring);
+            Type axesType = authoring.GetNestedType("RoofAxes", BindingFlags.NonPublic);
+            Assert.That(axesType, Is.Not.Null);
+            MethodInfo from = axesType.GetMethod("From", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo height = authoring.GetMethod("RoofHeight", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.That(from, Is.Not.Null);
+            Assert.That(height, Is.Not.Null);
+            object axes = from.Invoke(null, new object[] { rectangle });
+
+            foreach (int roofId in new[] { 1, 2 })
+            {
+                float maximum = rectangle.Max(point =>
+                    (float)height.Invoke(null, new[] { (object)point, axes, roofId, 2f }));
+                Assert.That(maximum, Is.Zero.Within(0.0001f),
+                    $"Legacy roof {roofId} evaluates only boundary vertices and misses its peak.");
+                Assert.That(FullMapBuildingRoofTopology.TryCreate(
+                    rectangle, roofId, 10f, 2f, false,
+                    out FullMapBuildingRoofTopologyResult proper, out string rejection),
+                    Is.True, rejection);
+                Assert.That(proper.vertices.Max(point => point.y), Is.EqualTo(12f).Within(0.0001f));
+            }
+        }
+
+        [Test]
+        public void RectangularGableCreatesRidgeFieldsAndOutwardApertureFreeInfills()
+        {
+            Vector2[] rectangle = Rectangle(12f, 8f);
+            Assert.That(FullMapBuildingRoofTopology.TryCreate(
+                rectangle, FullMapBuildingRoofTopology.GableRoofId, 10f, 2f, false,
+                out FullMapBuildingRoofTopologyResult roof, out string rejection), Is.True, rejection);
+            Assert.That(roof.kind, Is.EqualTo(FullMapBuildingRoofTopologyKind.Gable));
+            Assert.That(roof.vertices, Has.Length.EqualTo(6));
+            Assert.That(roof.RoofTriangleCount, Is.EqualTo(4));
+            Assert.That(roof.GableInfillTriangleCount, Is.EqualTo(2));
+            Assert.That(roof.TotalTriangleCount, Is.EqualTo(6));
+            Assert.That(roof.AddedTriangleCount, Is.EqualTo(4));
+            Assert.That(roof.gableInfills.Select(value => value.ridgeVertexIndex).Distinct().Count(), Is.EqualTo(2));
+            Assert.That(roof.gableInfills.All(value =>
+                Mathf.Abs(roof.vertices[value.ridgeVertexIndex].y - 12f) < 0.0001f), Is.True);
+            AssertRoofTrianglesFaceUp(roof);
+            AssertPerimeterIsCovered(roof);
+
+            foreach (FullMapBuildingGableInfill infill in roof.gableInfills)
+            {
+                Vector3 a = roof.vertices[infill.edgeStartIndex];
+                Vector3 ridge = roof.vertices[infill.ridgeVertexIndex];
+                Vector3 c = roof.vertices[infill.edgeEndIndex];
+                Vector3 normal = Vector3.Cross(ridge - a, c - a).normalized;
+                Vector2 edge = rectangle[infill.edgeEndIndex] - rectangle[infill.edgeStartIndex];
+                Vector3 outward = new Vector3(edge.y, 0f, -edge.x).normalized;
+                Assert.That(Vector3.Dot(normal, outward), Is.GreaterThan(0.999f));
+            }
+
+            string shader = Read("Assets/Shaders/FullMapBuildingClipmap.shader");
+            Assert.That(shader, Does.Contain("allowed *= 1.0h - step(2.5h, facadeRole)"));
+            Assert.That(shader, Does.Contain("(1.0h - step(2.5h, facadeRole))"));
+            string authoring = Read("Assets/Editor/FullMapBuildingClipmapAssetAuthoring.cs");
+            Assert.That(authoring, Does.Contain("builder.atlasCells.Add(new Vector2(length, 3f))"));
+            Assert.That(authoring, Does.Contain("ApplyToTint(tint, 0f, 0f)"));
+        }
+
+        [Test]
+        public void CompactHipCreatesOneApexAtIntendedRise()
+        {
+            Assert.That(FullMapBuildingRoofTopology.TryCreate(
+                Rectangle(8f, 8f), FullMapBuildingRoofTopology.HipRoofId, 20f, 2.5f, false,
+                out FullMapBuildingRoofTopologyResult roof, out string rejection), Is.True, rejection);
+            Assert.That(roof.kind, Is.EqualTo(FullMapBuildingRoofTopologyKind.CompactHip));
+            Assert.That(roof.vertices, Has.Length.EqualTo(5));
+            Assert.That(roof.RoofTriangleCount, Is.EqualTo(4));
+            Assert.That(roof.GableInfillTriangleCount, Is.Zero);
+            Assert.That(roof.AddedTriangleCount, Is.EqualTo(2));
+            Assert.That(roof.vertices[4].y, Is.EqualTo(22.5f).Within(0.0001f));
+            AssertRoofTrianglesFaceUp(roof);
+            AssertPerimeterIsCovered(roof);
+        }
+
+        [Test]
+        public void ElongatedHipCreatesEqualPitchShortRidgeAtIntendedRise()
+        {
+            Assert.That(FullMapBuildingRoofTopology.TryCreate(
+                Rectangle(14f, 8f), FullMapBuildingRoofTopology.HipRoofId, 5f, 1.5f, false,
+                out FullMapBuildingRoofTopologyResult roof, out string rejection), Is.True, rejection);
+            Assert.That(roof.kind, Is.EqualTo(FullMapBuildingRoofTopologyKind.ShortRidgeHip));
+            Assert.That(roof.vertices, Has.Length.EqualTo(6));
+            Assert.That(roof.RoofTriangleCount, Is.EqualTo(6));
+            Assert.That(roof.GableInfillTriangleCount, Is.Zero);
+            Assert.That(roof.AddedTriangleCount, Is.EqualTo(4));
+            Assert.That(roof.vertices.Skip(4).All(point => Mathf.Abs(point.y - 6.5f) < 0.0001f), Is.True);
+            Assert.That(Vector3.Distance(roof.vertices[4], roof.vertices[5]), Is.EqualTo(6f).Within(0.0001f));
+            AssertRoofTrianglesFaceUp(roof);
+            AssertPerimeterIsCovered(roof);
+        }
+
+        [Test]
+        public void ProperRoofEligibilityRejectsAmbiguousIrregularAndExactLandmarkShells()
+        {
+            Assert.That(FullMapBuildingRoofTopology.TryCreate(
+                Rectangle(8f, 8f), FullMapBuildingRoofTopology.GableRoofId, 5f, 1f, false,
+                out _, out string squareReason), Is.False);
+            Assert.That(squareReason, Is.EqualTo("ambiguous-gable-axis"));
+
+            Vector2[] irregular =
+            {
+                new Vector2(0f, 0f), new Vector2(12f, 0f),
+                new Vector2(9f, 7f), new Vector2(0f, 8f)
+            };
+            Assert.That(FullMapBuildingRoofTopology.TryCreate(
+                irregular, FullMapBuildingRoofTopology.HipRoofId, 5f, 1f, false,
+                out _, out _), Is.False);
+
+            Vector2[] bowTie =
+            {
+                new Vector2(0f, 0f), new Vector2(8f, 8f),
+                new Vector2(0f, 8f), new Vector2(8f, 0f)
+            };
+            Assert.That(FullMapBuildingRoofTopology.TryCreate(
+                bowTie, FullMapBuildingRoofTopology.HipRoofId, 5f, 1f, false,
+                out _, out _), Is.False);
+            Assert.That(FullMapBuildingRoofTopology.TryCreate(
+                Rectangle(12f, 8f), FullMapBuildingRoofTopology.GableRoofId, 5f, 1f, true,
+                out _, out string landmarkReason), Is.False);
+            Assert.That(landmarkReason, Is.EqualTo("exact-landmark"));
+        }
+
+        [Test]
+        public void RoofBudgetAllocatorIsOrderIndependentAndEnforcesEveryHeaviestPageSet()
+        {
+            int[] baseline = { 100, 90, 80, 70 };
+            FullMapBuildingRoofBudgetCandidate[] candidates =
+            {
+                BudgetCandidate(1, 2, 10, 0),
+                BudgetCandidate(2, 0, 4, 1),
+                BudgetCandidate(3, 1, 4, 2),
+                BudgetCandidate(4, 3, 20, 3)
+            };
+            FullMapBuildingRoofBudgetResult ordered = FullMapBuildingRoofBudgetAllocator.Select(
+                candidates, baseline, 2, 195);
+            FullMapBuildingRoofBudgetResult reversed = FullMapBuildingRoofBudgetAllocator.Select(
+                candidates.Reverse(), baseline, 2, 195);
+
+            Assert.That(ordered.selectedBuildingIds, Is.EqualTo(new[] { 1, 2, 4 }));
+            Assert.That(reversed.selectedBuildingIds, Is.EqualTo(ordered.selectedBuildingIds));
+            Assert.That(reversed.pageTriangleTotals, Is.EqualTo(ordered.pageTriangleTotals));
+            Assert.That(ordered.maximumSelectedTriangles, Is.EqualTo(194));
+            Assert.That(FullMapBuildingRoofBudgetAllocator.ConservativeMaximum(
+                ordered.pageTriangleTotals, 2), Is.LessThanOrEqualTo(195));
+        }
+
+        [Test]
+        public void GeneratedRoofAllocationIsSelectiveDeterministicAndExactlyBudgeted()
+        {
+            TextAsset source = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                FullMapBuildingClipmapAssetAuthoring.RoofTopologyReportPath);
+            Assert.That(source, Is.Not.Null);
+            RoofAllocationTestReport report = JsonUtility.FromJson<RoofAllocationTestReport>(source.text);
+            Assert.That(report.compiler_version,
+                Is.EqualTo("proper-roof-topology-selective-compiler-v14-20260903"));
+            Assert.That(report.rollout, Is.EqualTo("selective"));
+            Assert.That(report.represented_buildings, Is.EqualTo(57441));
+            Assert.That(report.page_count, Is.EqualTo(576));
+            Assert.That(report.nonempty_page_count, Is.EqualTo(483));
+            Assert.That(report.active_page_slots, Is.EqualTo(24));
+            Assert.That(report.nominal_gable_roofs + report.nominal_hip_roofs, Is.EqualTo(28734));
+            Assert.That(report.safe_roofs, Is.EqualTo(13027));
+            Assert.That(report.selected_gable_roofs, Is.EqualTo(4985));
+            Assert.That(report.selected_compact_hip_roofs, Is.EqualTo(298));
+            Assert.That(report.selected_short_ridge_hip_roofs, Is.EqualTo(679));
+            Assert.That(report.selected_roofs, Is.EqualTo(5962));
+            Assert.That(report.budget_rejected_safe_roofs, Is.EqualTo(7065));
+            Assert.That(report.all_safe_added_triangles, Is.EqualTo(50790));
+            Assert.That(report.selected_added_triangles, Is.EqualTo(23252));
+            Assert.That(report.baseline_maximum_selected_triangles, Is.EqualTo(233298));
+            Assert.That(report.all_safe_maximum_selected_triangles, Is.EqualTo(261348));
+            Assert.That(report.final_maximum_selected_triangles, Is.EqualTo(235000));
+            Assert.That(report.remaining_triangle_margin, Is.Zero);
+            Assert.That(report.pages, Has.Length.EqualTo(576));
+            Assert.That(report.pages.Sum(page => page.baseline_triangles), Is.EqualTo(613389));
+            Assert.That(report.pages.Sum(page => page.final_triangles), Is.EqualTo(636641));
+            Assert.That(report.pages.Select(page => page.final_triangles)
+                .OrderByDescending(value => value).Take(24).Sum(), Is.EqualTo(235000));
+            Assert.That(report.selected_building_ids, Has.Length.EqualTo(report.selected_roofs));
+            Assert.That(report.selected_building_ids, Is.Ordered.Ascending);
+            Assert.That(report.selected_building_ids.Distinct().Count(),
+                Is.EqualTo(report.selected_building_ids.Length));
+
+            string authoring = Read("Assets/Editor/FullMapBuildingClipmapAssetAuthoring.cs");
+            Assert.That(authoring, Does.Not.Contain("PrototypeAllEligibleRoofs"),
+                "The over-budget broad visual prototype must never enter shipping authoring.");
+        }
+
+        [Test]
         public void CornerCodecSuppressesConcaveCollinearDuplicateShortAndAcuteTurns()
         {
             Vector2[] concave =
@@ -376,7 +576,7 @@ namespace QuestFlight.Editor.Tests
                 FullMapBuildingClipmapAssetAuthoring.CompilationReportPath);
             Assert.That(report, Is.Not.Null);
             Assert.That(report.text, Does.Contain(
-                "full-height-forward-residency-corner-softening-compiler-v12-20260902"));
+                "proper-roof-topology-selective-compiler-v14-20260903"));
             Assert.That(report.text, Does.Contain("\"foundation_embed_meters\": 1.6"));
             Assert.That(report.text, Does.Contain("\"maximum_roof_wall_seam_meters\": 0.0"));
             Assert.That(report.text, Does.Contain("\"maximum_vertical_corner_seam_meters\": 0.0"));
@@ -455,7 +655,7 @@ namespace QuestFlight.Editor.Tests
 
             int maximum = stable.Cast<int>().OrderByDescending(value => value)
                 .Take(AircraftCenteredBuildingClipmapController.SlotCount).Sum();
-            Assert.That(maximum, Is.EqualTo(233298));
+            Assert.That(maximum, Is.EqualTo(235000));
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(
                 FullMapBuildingClipmapAssetAuthoring.EnvironmentPath);
             AircraftCenteredBuildingClipmapController controller = environment
@@ -483,9 +683,12 @@ namespace QuestFlight.Editor.Tests
                     $"{FullMapBuildingClipmapAssetAuthoring.GeneratedRoot}/KBDU_buildings_stable_{column:D3}_{row:D3}.asset");
                 Assert.That(mesh, Is.Not.Null, $"stable {column},{row}");
                 Color32[] colors = mesh.colors32;
+                List<Vector2> atlasCells = new List<Vector2>(mesh.vertexCount);
                 List<Vector4> parameters = new List<Vector4>(mesh.vertexCount);
+                mesh.GetUVs(1, atlasCells);
                 mesh.GetUVs(2, parameters);
-                if (colors.Length != mesh.vertexCount || parameters.Count != mesh.vertexCount)
+                if (colors.Length != mesh.vertexCount || atlasCells.Count != mesh.vertexCount ||
+                    parameters.Count != mesh.vertexCount)
                 {
                     incompleteStreams++;
                     continue;
@@ -497,14 +700,25 @@ namespace QuestFlight.Editor.Tests
                 while (cursor < mesh.vertexCount)
                 {
                     bool roof = parameters[cursor].x >= 0.5f;
+                    bool gableInfill = !roof && atlasCells[cursor].y > 2.5f;
                     int runStart = cursor;
-                    while (cursor < mesh.vertexCount && (parameters[cursor].x >= 0.5f) == roof)
+                    while (cursor < mesh.vertexCount &&
+                           (parameters[cursor].x >= 0.5f) == roof &&
+                           (!roof && atlasCells[cursor].y > 2.5f) == gableInfill)
                         cursor++;
                     if (roof)
                     {
                         for (int index = runStart; index < cursor; index++)
                             if (colors[index].a != FullMapBuildingCornerEncoding.LegacyDisabledPacked)
                                 nonSentinelRoofVertices++;
+                        continue;
+                    }
+
+                    if (gableInfill)
+                    {
+                        if ((cursor - runStart) % 3 != 0) nonConstantWallQuads++;
+                        for (int index = runStart; index < cursor; index++)
+                            if (colors[index].a != 0) nonConstantWallQuads++;
                         continue;
                     }
 
@@ -541,8 +755,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(nonConstantWallQuads, Is.Zero,
                 "Packed endpoints must be constant across each duplicated wall quad.");
             Assert.That(encodedWallQuads, Is.GreaterThan(200000));
-            Assert.That(vertices, Is.EqualTo(1354653));
-            Assert.That(triangles, Is.EqualTo(613389));
+            Assert.That(vertices, Is.EqualTo(1424409));
+            Assert.That(triangles, Is.EqualTo(636641));
         }
 
         private static int Occurrences(string source, string value)
@@ -558,6 +772,71 @@ namespace QuestFlight.Editor.Tests
 
         private static Vector2 VirtualEdgeNormal(Vector2 outward, Vector2 tangent, float signedMagnitude) =>
             (outward + tangent * signedMagnitude).normalized;
+
+        private static Vector2[] Rectangle(float length, float width) => new[]
+        {
+            new Vector2(0f, 0f), new Vector2(length, 0f),
+            new Vector2(length, width), new Vector2(0f, width)
+        };
+
+        private static FullMapBuildingRoofBudgetCandidate BudgetCandidate(
+            int id, int page, int delta, int priority) =>
+            new FullMapBuildingRoofBudgetCandidate(
+                id, page, delta, priority, priority, true,
+                100, 50, 10, 3, 3, id.ToString("D4"), 0);
+
+        [Serializable]
+        private sealed class RoofAllocationTestPage
+        {
+            public int baseline_triangles;
+            public int final_triangles;
+        }
+
+        [Serializable]
+        private sealed class RoofAllocationTestReport
+        {
+            public string compiler_version;
+            public string rollout;
+            public int represented_buildings;
+            public int page_count;
+            public int nonempty_page_count;
+            public int active_page_slots;
+            public int nominal_gable_roofs;
+            public int nominal_hip_roofs;
+            public int safe_roofs;
+            public int selected_gable_roofs;
+            public int selected_compact_hip_roofs;
+            public int selected_short_ridge_hip_roofs;
+            public int selected_roofs;
+            public int budget_rejected_safe_roofs;
+            public int all_safe_added_triangles;
+            public int selected_added_triangles;
+            public int baseline_maximum_selected_triangles;
+            public int all_safe_maximum_selected_triangles;
+            public int final_maximum_selected_triangles;
+            public int remaining_triangle_margin;
+            public RoofAllocationTestPage[] pages;
+            public int[] selected_building_ids;
+        }
+
+        private static void AssertRoofTrianglesFaceUp(FullMapBuildingRoofTopologyResult roof)
+        {
+            for (int index = 0; index < roof.roofTriangles.Length; index += 3)
+            {
+                Vector3 a = roof.vertices[roof.roofTriangles[index]];
+                Vector3 b = roof.vertices[roof.roofTriangles[index + 1]];
+                Vector3 c = roof.vertices[roof.roofTriangles[index + 2]];
+                Assert.That(Vector3.Cross(b - a, c - a).y, Is.GreaterThan(0.0001f),
+                    $"Roof triangle {index / 3} must face upward and remain nondegenerate.");
+            }
+        }
+
+        private static void AssertPerimeterIsCovered(FullMapBuildingRoofTopologyResult roof)
+        {
+            for (int perimeter = 0; perimeter < 4; perimeter++)
+                Assert.That(roof.roofTriangles, Does.Contain(perimeter),
+                    $"Roof topology omitted footprint corner {perimeter}.");
+        }
 
         private static string Read(string assetPath) => File.ReadAllText(Path.GetFullPath(
             Path.Combine(Application.dataPath, "..", assetPath.Replace('/', Path.DirectorySeparatorChar))));
