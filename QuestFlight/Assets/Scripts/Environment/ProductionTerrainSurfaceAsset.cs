@@ -106,11 +106,94 @@ namespace QuestFlightLab.Environment
             }
         }
 
+        /// <summary>
+        /// A small, offline-authored triangle patch used only where two regular terrain grids
+        /// cannot share a row of vertices. The serialized triangles are the same triangles used
+        /// by the visible transition mesh, so height and normal queries cannot reintroduce the
+        /// grid seam. Patches are bounded square annuli and are never runtime-generated.
+        /// </summary>
+        [Serializable]
+        public sealed class TrianglePatch
+        {
+            public string stableId;
+            public ProductionTerrainZone zone;
+            public int priority;
+            [Min(0f)] public float innerHalfExtentMeters;
+            [Min(0.01f)] public float outerHalfExtentMeters;
+            public Vector3[] vertices = Array.Empty<Vector3>();
+            public Vector3[] normals = Array.Empty<Vector3>();
+            public int[] triangles = Array.Empty<int>();
+
+            public bool IsValid =>
+                !string.IsNullOrWhiteSpace(stableId) &&
+                outerHalfExtentMeters > innerHalfExtentMeters &&
+                vertices != null && vertices.Length >= 3 &&
+                normals != null && normals.Length == vertices.Length &&
+                triangles != null && triangles.Length >= 3 && triangles.Length % 3 == 0;
+
+            public bool Contains(float eastMeters, float northMeters)
+            {
+                float squareRadius = Mathf.Max(Mathf.Abs(eastMeters), Mathf.Abs(northMeters));
+                return squareRadius >= innerHalfExtentMeters - 0.0001f &&
+                       squareRadius <= outerHalfExtentMeters + 0.0001f;
+            }
+
+            public bool TrySample(
+                float eastMeters,
+                float northMeters,
+                out float sampledHeight,
+                out Vector3 sampledNormal)
+            {
+                sampledHeight = float.NegativeInfinity;
+                sampledNormal = Vector3.up;
+                if (!IsValid || !Contains(eastMeters, northMeters)) return false;
+
+                bool found = false;
+                for (int offset = 0; offset < triangles.Length; offset += 3)
+                {
+                    int ia = triangles[offset];
+                    int ib = triangles[offset + 1];
+                    int ic = triangles[offset + 2];
+                    if ((uint)ia >= vertices.Length || (uint)ib >= vertices.Length ||
+                        (uint)ic >= vertices.Length) continue;
+                    Vector3 a = vertices[ia];
+                    Vector3 b = vertices[ib];
+                    Vector3 c = vertices[ic];
+                    float minimumX = Mathf.Min(a.x, Mathf.Min(b.x, c.x)) - 0.0001f;
+                    float maximumX = Mathf.Max(a.x, Mathf.Max(b.x, c.x)) + 0.0001f;
+                    float minimumZ = Mathf.Min(a.z, Mathf.Min(b.z, c.z)) - 0.0001f;
+                    float maximumZ = Mathf.Max(a.z, Mathf.Max(b.z, c.z)) + 0.0001f;
+                    if (eastMeters < minimumX || eastMeters > maximumX ||
+                        northMeters < minimumZ || northMeters > maximumZ) continue;
+
+                    float denominator = (b.z - c.z) * (a.x - c.x) +
+                                        (c.x - b.x) * (a.z - c.z);
+                    if (Mathf.Abs(denominator) <= 0.000001f) continue;
+                    float wa = ((b.z - c.z) * (eastMeters - c.x) +
+                                (c.x - b.x) * (northMeters - c.z)) / denominator;
+                    float wb = ((c.z - a.z) * (eastMeters - c.x) +
+                                (a.x - c.x) * (northMeters - c.z)) / denominator;
+                    float wc = 1f - wa - wb;
+                    const float epsilon = 0.00005f;
+                    if (wa < -epsilon || wb < -epsilon || wc < -epsilon) continue;
+
+                    float height = wa * a.y + wb * b.y + wc * c.y;
+                    if (found && height <= sampledHeight) continue;
+                    sampledHeight = height;
+                    sampledNormal = (wa * normals[ia] + wb * normals[ib] + wc * normals[ic]).normalized;
+                    if (sampledNormal.sqrMagnitude < 0.5f) sampledNormal = Vector3.up;
+                    found = true;
+                }
+                return found;
+            }
+        }
+
         public string schemaVersion = "2";
         public string sourceManifestSha256;
         public Vector2 macroMinimumEnuMeters = new Vector2(-12000f, -12000f);
         public Vector2 macroSizeMeters = new Vector2(24000f, 24000f);
         public GridLayer[] layers = Array.Empty<GridLayer>();
+        public TrianglePatch[] transitionPatches = Array.Empty<TrianglePatch>();
         public SurfaceRegion[] regions = Array.Empty<SurfaceRegion>();
 
         public bool TrySample(float eastMeters, float northMeters, out ProductionTerrainSample sample)
@@ -126,13 +209,46 @@ namespace QuestFlightLab.Environment
                 }
             }
 
-            if (selected == null)
+            TrianglePatch selectedPatch = null;
+            float patchHeight = 0f;
+            Vector3 patchNormal = Vector3.up;
+            if (transitionPatches != null)
+            {
+                for (int index = 0; index < transitionPatches.Length; index++)
+                {
+                    TrianglePatch candidate = transitionPatches[index];
+                    if (candidate == null || !candidate.IsValid ||
+                        (selectedPatch != null && candidate.priority >= selectedPatch.priority) ||
+                        !candidate.TrySample(eastMeters, northMeters, out float height, out Vector3 normal))
+                        continue;
+                    selectedPatch = candidate;
+                    patchHeight = height;
+                    patchNormal = normal;
+                }
+            }
+
+            if (selected == null && selectedPatch == null)
             {
                 sample = default;
                 return false;
             }
 
-            selected.Sample(eastMeters, northMeters, out float sampledHeight, out Vector3 sampledNormal);
+            bool usePatch = selectedPatch != null &&
+                            (selected == null || selectedPatch.priority < selected.priority);
+            float sampledHeight;
+            Vector3 sampledNormal;
+            ProductionTerrainZone sampledZone;
+            if (usePatch)
+            {
+                sampledHeight = patchHeight;
+                sampledNormal = patchNormal;
+                sampledZone = selectedPatch.zone;
+            }
+            else
+            {
+                selected.Sample(eastMeters, northMeters, out sampledHeight, out sampledNormal);
+                sampledZone = selected.zone;
+            }
             ProductionSurfaceCategory category = ProductionSurfaceCategory.DryPrairie;
             int categoryPriority = int.MaxValue;
             Vector2 point = new Vector2(eastMeters, northMeters);
@@ -153,7 +269,7 @@ namespace QuestFlightLab.Environment
             Vector2 macroUv = new Vector2(
                 (eastMeters - macroMinimumEnuMeters.x) / safeSize.x,
                 (northMeters - macroMinimumEnuMeters.y) / safeSize.y);
-            sample = new ProductionTerrainSample(sampledHeight, sampledNormal, selected.zone, macroUv, category);
+            sample = new ProductionTerrainSample(sampledHeight, sampledNormal, sampledZone, macroUv, category);
             return true;
         }
 

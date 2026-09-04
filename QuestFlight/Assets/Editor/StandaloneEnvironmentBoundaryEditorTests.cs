@@ -62,20 +62,28 @@ namespace QuestFlight.EditorTests
                         Assert.That(patch.Covers(sign * 799f, z) && near.Covers(sign * 801f, z), Is.True,
                             "Airport patch-to-near X interface must be continuously covered");
 
-                    for (float along = -1900f; along <= 1900f; along += 100f)
+                    for (float along = -2000f; along <= 2000f; along += 100f)
                     {
-                        AssertInterfaceCoverage(near, mid, sign * 1999f, sign * 2001f, along, false, "near-mid X");
-                        AssertInterfaceCoverage(near, mid, sign * 1999f, sign * 2001f, along, true, "near-mid Z");
+                        AssertInterfaceCoverage(near, mid, sign * 2047f, sign * 2049f, along, false, "near-mid X");
+                        AssertInterfaceCoverage(near, mid, sign * 2047f, sign * 2049f, along, true, "near-mid Z");
+                        Assert.That(mid.HeightAt(sign * 2048f, along),
+                            Is.EqualTo(near.HeightAt(sign * 2048f, along)).Within(0.001f));
+                        Assert.That(mid.HeightAt(along, sign * 2048f),
+                            Is.EqualTo(near.HeightAt(along, sign * 2048f)).Within(0.001f));
                     }
                     for (float along = -5800f; along <= 5800f; along += 200f)
                     {
                         AssertInterfaceCoverage(mid, far, sign * 5999f, sign * 6001f, along, false, "mid-far X");
                         AssertInterfaceCoverage(mid, far, sign * 5999f, sign * 6001f, along, true, "mid-far Z");
+                        Assert.That(far.HeightAt(sign * 6000f, along),
+                            Is.EqualTo(mid.HeightAt(sign * 6000f, along)).Within(0.001f));
+                        Assert.That(far.HeightAt(along, sign * 6000f),
+                            Is.EqualTo(mid.HeightAt(along, sign * 6000f)).Within(0.001f));
                     }
                 }
 
-                // The four coarse-mid 6-edge components are collinear T-junctions caused by
-                // the 150 m center-mask grid, not projected holes. Audit the full corner boxes.
+                // The V1 repair removes the four coarse-mid corner T-junction components and
+                // covers the complete bounded transition ring.
                 foreach (float xSign in new[] { -1f, 1f })
                 foreach (float zSign in new[] { -1f, 1f })
                 for (float xMagnitude = 1955f; xMagnitude <= 2095f; xMagnitude += 10f)
@@ -110,8 +118,8 @@ namespace QuestFlight.EditorTests
                     Is.InRange(1, AirportPatchLidarConformanceAuthoring.MaximumOutputTriangles));
                 Assert.That(Required(root, "Terrain_Near4km_USGS").sharedMesh.triangles.Length / 3,
                     Is.EqualTo(92000));
-                Assert.That(Required(root, "Terrain_Mid12km_USGS").sharedMesh.triangles.Length / 3, Is.EqualTo(11752));
-                Assert.That(Required(root, "Terrain_Far24km_Immutable_USGS").sharedMesh.triangles.Length / 3, Is.EqualTo(89280));
+                Assert.That(Required(root, "Terrain_Mid12km_USGS").sharedMesh.triangles.Length / 3, Is.EqualTo(12194));
+                Assert.That(Required(root, "Terrain_Far24km_Immutable_USGS").sharedMesh.triangles.Length / 3, Is.EqualTo(87184));
                 TextAsset conformance = AssetDatabase.LoadAssetAtPath<TextAsset>(
                     AirportPatchLidarConformanceAuthoring.OutputReportPath);
                 Assert.That(conformance, Is.Not.Null);

@@ -314,7 +314,7 @@ namespace QuestFlight.Editor
             EditorUtility.SetDirty(material);
         }
 
-        private static Mesh AuthorFarTerrainMesh()
+        internal static Mesh AuthorFarTerrainMesh()
         {
             string repositoryRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
             string path = Path.Combine(repositoryRoot, FarDemRepositoryRelativePath.Replace('/', Path.DirectorySeparatorChar));
@@ -369,9 +369,19 @@ namespace QuestFlight.Editor
             ApplyTwoPassFarSmoothing(generated);
             generated.RecalculateNormals();
             generated.RecalculateBounds();
+            Mesh transitioned = TerrainDefectRepairV1Authoring.BuildTransitionMesh(
+                LoadRequired<Mesh>(TerrainDefectRepairV1Authoring.MiddleMeshPath),
+                TerrainDefectRepairV1Authoring.MiddleHalfExtent,
+                generated,
+                TerrainDefectRepairV1Authoring.FarTransitionOuterHalfExtent,
+                "Terrain_Far24km_Immutable_USGS_Mesh");
+            UnityEngine.Object.DestroyImmediate(generated);
+            generated = transitioned;
             Mesh stored = WriteMeshAsset(FarMeshPath, generated);
-            if (stored.triangles.Length / 3 != 89280)
-                throw new InvalidOperationException("Far terrain triangle contract changed: " + stored.triangles.Length / 3);
+            if (stored.triangles.Length / 3 != 87184)
+                throw new InvalidOperationException(
+                    "Far terrain bounded transition triangle contract changed: " +
+                    stored.triangles.Length / 3);
             return stored;
         }
 

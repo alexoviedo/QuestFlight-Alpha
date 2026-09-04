@@ -7212,10 +7212,10 @@ MonoBehaviour:
   macroWorldMinimumMeters: {x: -6000, y: -6000}
   macroWorldSizeMeters: {x: 12000, y: 12000}
   macroRepeatedTileSimilarity: 0.9604127
-  farTerrainSourceVertexCount: 63841
-  farTerrainSourceIndexCount: 267840
-  farTerrainSourceTopologyHash: 27BFB29C
-  farTerrainBakedTopologyHash: 27BFB29C
+  farTerrainSourceVertexCount: 47112
+  farTerrainSourceIndexCount: 261552
+  farTerrainSourceTopologyHash: 54EA7395
+  farTerrainBakedTopologyHash: 54EA7395
   farTerrainSmoothingPassCount: 2
   omittedDuplicatedLandcoverBatchCount: 33
   rejectedMalformedGroundBatchCount: 5
@@ -7256,11 +7256,11 @@ MonoBehaviour:
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
   bakedRendererCount: 71
-  bakedTriangleCount: 631141
+  bakedTriangleCount: 629487
   bakedMaterialCount: 13
   bakedTextureCount: 28
-  bakeUtc: 2026-08-12T08:42:04.7392327Z
-  bakeToolVersion: photoreal_aerial_surface_v1
+  bakeUtc: 2026-09-03T00:00:00.0000000Z
+  bakeToolVersion: terrain_defect_repair_v1
   validateOnAwake: 1
 --- !u!114 &3275182717276356067
 MonoBehaviour:

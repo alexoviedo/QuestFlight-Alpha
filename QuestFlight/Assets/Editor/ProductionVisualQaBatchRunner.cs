@@ -105,6 +105,92 @@ namespace QuestFlightLab.Editor
                 Debug.LogWarning("[QuestFlightLab][ProductionVisualQA] Machine QA did not pass; see visual_qa_summary.md.");
         }
 
+        /// <summary>
+        /// Focused, standard-pipeline capture set for Terrain Defect Repair V1. This deliberately
+        /// avoids the complete product matrix while retaining the normal image and render-budget
+        /// checks, a stereo pair at each repaired join, and the existing mountain identity sweep.
+        /// </summary>
+        public static void RunTerrainDefectRepairV1VisualQa()
+        {
+            string outputDir = System.Environment.GetEnvironmentVariable("QFL_PRODUCTION_VISUAL_QA_DIR");
+            if (string.IsNullOrWhiteSpace(outputDir))
+                throw new InvalidOperationException("QFL_PRODUCTION_VISUAL_QA_DIR is required for terrain QA.");
+            int width = ReadInt("QFL_PRODUCTION_VISUAL_QA_WIDTH", 1920);
+            int height = ReadInt("QFL_PRODUCTION_VISUAL_QA_HEIGHT", 1080);
+            Directory.CreateDirectory(outputDir);
+            Directory.CreateDirectory(Path.Combine(outputDir, "screenshots"));
+            ProductionVisualQaReport report = new ProductionVisualQaReport
+            {
+                generatedUtc = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+                unityVersion = Application.unityVersion,
+                scenePath = ProductionScenePath,
+                outputDirectory = outputDir,
+                renderWidth = width,
+                renderHeight = height,
+                requiredShotCount = 8,
+                humanHeadsetAcceptance = "NOT_RUN_NO_PHYSICAL_QUEST_REQUIRED_FOR_STATIC_TERRAIN_REPAIR",
+                flightPhaseImageSemantics =
+                    "Fixed terrain-defect cameras plus deterministic editor stereo; not Quest performance evidence."
+            };
+            try
+            {
+                VisualContext context = LoadContext(width, height, report);
+                foreach (ShotDefinition shot in new[]
+                         {
+                             TerrainShot("terrain_v1_mountain_inside", "Former west mountain hole from inside tier",
+                                 new Vector3(-5790f, 246f, -4470f), new Vector3(-6000f, 240f, -4640f), 52f),
+                             TerrainShot("terrain_v1_mountain_outside", "Former west mountain hole from outside tier",
+                                 new Vector3(-6250f, 360f, -4460f), new Vector3(-6000f, 240f, -4640f), 52f),
+                             TerrainShot("terrain_v1_mountain_oblique", "Former west mountain hole oblique control",
+                                 new Vector3(-5480f, 355f, -4140f), new Vector3(-6000f, 235f, -4640f), 48f),
+                             TerrainShot("terrain_v1_near_inside", "Near/middle east seam from inside tier",
+                                 new Vector3(1840f, 32f, -650f), new Vector3(2000f, -5f, -810f), 50f),
+                             TerrainShot("terrain_v1_near_outside", "Near/middle east seam from outside tier",
+                                 new Vector3(2170f, 28f, -650f), new Vector3(2000f, -5f, -810f), 50f),
+                             TerrainShot("terrain_v1_unaffected_control", "Unaffected near-terrain control",
+                                 new Vector3(200f, 330f, 1250f), new Vector3(450f, 0f, 900f), 55f)
+                         })
+                    Capture(context, report, outputDir, width, height, shot);
+
+                CaptureStereoEnvironment(context, report, outputDir, width, height,
+                    "terrain_v1_mountain_stereo", "Former west mountain hole stereo control",
+                    new Vector3(-5480f, 355f, -4140f), new Vector3(-6000f, 235f, -4640f), 48f);
+                CaptureStereoEnvironment(context, report, outputDir, width, height,
+                    "terrain_v1_near_stereo", "Near/middle east seam stereo control",
+                    new Vector3(1840f, 32f, -650f), new Vector3(2000f, -5f, -810f), 50f);
+                report.mountainSweep = RunMountainSweep(context);
+                report.contactSheetPath = BuildContactSheet(report, outputDir);
+                report.maxEstimatedDrawCalls = report.shots.Max(shot => shot.estimatedDrawCalls);
+                report.maxEstimatedVisibleTriangles = report.shots.Max(shot => shot.estimatedVisibleTriangles);
+                report.sceneMaterialCount = report.shots.Max(shot => shot.sceneMaterialCount);
+                report.passed = report.shots.Count == report.requiredShotCount &&
+                                report.shots.All(shot => shot.passed) && report.mountainSweep.passed &&
+                                report.productionEnvironmentContractPassed && report.authoredHierarchyPassed &&
+                                report.singleEnabledXrOrigin && report.legacyBootstrapAndUiSuppressed;
+                report.classification = report.passed
+                    ? "PASS_TERRAIN_DEFECT_REPAIR_V1_MACHINE_QA_PHYSICAL_QUEST_NOT_RUN"
+                    : "FAIL_TERRAIN_DEFECT_REPAIR_V1_MACHINE_QA";
+            }
+            catch (Exception exception)
+            {
+                report.errors.Add(exception.ToString());
+                report.passed = false;
+                report.classification = "FAIL_TERRAIN_DEFECT_REPAIR_V1_MACHINE_QA";
+            }
+            WriteReportFiles(report, outputDir);
+            Debug.Log($"[QuestFlightLab][TerrainDefectRepairV1VisualQA] shots={report.shots.Count}/8 " +
+                      $"classification={report.classification} output={outputDir}");
+        }
+
+        private static ShotDefinition TerrainShot(
+            string id,
+            string title,
+            Vector3 camera,
+            Vector3 target,
+            float fov) => new ShotDefinition(
+            id, title, "terrain_defect_repair_v1", camera, LookAt(camera, target), fov,
+            ViewProfile.Environment);
+
         public static void RunStartupSelectorVisualQa()
         {
             string outputDir = System.Environment.GetEnvironmentVariable(
