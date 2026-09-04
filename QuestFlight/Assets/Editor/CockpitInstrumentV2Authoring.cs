@@ -325,13 +325,17 @@ namespace QuestFlight.Editor
                 frozen, components[flap.Seed], false,
                 vertices, normals, tangents, uv, selector, indices);
             for (int vertex = flapFaceFirst; vertex < vertices.Count; vertex++)
-                selector[vertex] = new Vector2(0f, 1f);
+                // This copied face is already seated on its authoritative
+                // source plane. Layer 3 explicitly classifies that plane while
+                // producing zero shader bias; the synthetic pointer retains
+                // the existing foreground layer.
+                selector[vertex] = new Vector2(0f, 3f);
             int brakeFaceFirst = vertices.Count;
             AddSourceComponent(
                 frozen, components[brake.Seed], false,
                 vertices, normals, tangents, uv, selector, indices);
             for (int vertex = brakeFaceFirst; vertex < vertices.Count; vertex++)
-                selector[vertex] = new Vector2(0f, 1f);
+                selector[vertex] = new Vector2(0f, 3f);
             AddLubber(dg, vertices, normals, tangents, uv, selector, indices);
             int staticOverlayVertexCount = vertices.Count;
 

@@ -1,4 +1,6 @@
 using System;
+using QuestFlight.Product;
+using QuestFlightLab.Aircraft;
 using QuestFlightLab.Aircraft.CockpitDynamics;
 using QuestFlightLab.Aircraft.CockpitDynamics.Analog;
 using QuestFlightLab.Aircraft.CockpitDynamics.V2;
@@ -245,6 +247,14 @@ namespace QuestFlight.Editor
             hardwareRenderer.enabled = true;
             EditorUtility.SetDirty(hardwareFilter);
             EditorUtility.SetDirty(hardwareRenderer);
+            ReplaceRendererReference(
+                root.GetComponentInChildren<AircraftVisibilityProfileController>(true),
+                "interiorRenderers", sourceRenderer, hardwareRenderer,
+                "aircraft interior visibility");
+            ReplaceRendererReference(
+                root.GetComponentInChildren<ProductFlightModeMenuView>(true),
+                "aircraftPresentationRenderers", sourceRenderer, hardwareRenderer,
+                "startup menu suppression");
             sourceRenderer.enabled = false;
             EditorUtility.SetDirty(sourceRenderer);
 
@@ -322,6 +332,38 @@ namespace QuestFlight.Editor
             renderer.additionalVertexStreams = null;
             EditorUtility.SetDirty(filter);
             EditorUtility.SetDirty(renderer);
+        }
+
+        private static void ReplaceRendererReference(
+            UnityEngine.Object owner,
+            string propertyName,
+            Renderer source,
+            Renderer replacement,
+            string label)
+        {
+            Require(owner != null, $"The {label} authority is missing.");
+            var serialized = new SerializedObject(owner);
+            SerializedProperty renderers = serialized.FindProperty(propertyName);
+            Require(renderers != null && renderers.isArray,
+                $"The {label} renderer array is unavailable.");
+            int replacements = 0;
+            int replacementReferences = 0;
+            for (int index = 0; index < renderers.arraySize; index++)
+            {
+                SerializedProperty element = renderers.GetArrayElementAtIndex(index);
+                if (element.objectReferenceValue == source)
+                {
+                    element.objectReferenceValue = replacement;
+                    replacements++;
+                }
+                if (element.objectReferenceValue == replacement)
+                    replacementReferences++;
+            }
+            Require(replacements <= 1 && replacementReferences == 1,
+                $"Expected one idempotent {label} replacement binding; found " +
+                $"source={replacements}, replacement={replacementReferences}.");
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(owner);
         }
 
         private static void RequireRendererContract(

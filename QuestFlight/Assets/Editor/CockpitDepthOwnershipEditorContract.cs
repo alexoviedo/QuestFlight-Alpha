@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuestFlight.Product;
+using QuestFlightLab.Aircraft;
 using QuestFlightLab.Aircraft.CockpitDynamics.V2;
 using UnityEditor;
 using UnityEngine;
@@ -137,6 +139,15 @@ namespace QuestFlight.Editor
                             hardwareFilter.sharedMesh) == 0,
                     "The neutralized hardware mesh still contains an obsolete " +
                     "display-aperture triangle.");
+                ValidateRendererAuthority(
+                    root.GetComponentInChildren<
+                        AircraftVisibilityProfileController>(true),
+                    "interiorRenderers", sourceRenderer, hardwareRenderer,
+                    "aircraft interior visibility");
+                ValidateRendererAuthority(
+                    root.GetComponentInChildren<ProductFlightModeMenuView>(true),
+                    "aircraftPresentationRenderers", sourceRenderer,
+                    hardwareRenderer, "startup menu suppression");
 
                 Transform generated = FindUniqueTransform(
                     root, CockpitCompletionV3Authoring.AvionicsObjectName);
@@ -403,14 +414,16 @@ namespace QuestFlight.Editor
                 Require(Mathf.Abs(a.y - b.y) <= LayerTolerance &&
                         Mathf.Abs(a.y - c.y) <= LayerTolerance,
                     $"Analog generated triangle {triangle / 3} mixes depth layers.");
-                Require(IsLayer(a.y, 1f) || IsLayer(a.y, 2f),
+                Require(IsLayer(a.y, 1f) || IsLayer(a.y, 2f) ||
+                        IsLayer(a.y, 3f),
                     $"Analog generated triangle {triangle / 3} remains on the " +
                     "unclassified default layer.");
                 if (triangles[triangle] < layout.StaticOverlayVertexCount &&
                     a.x < 0.5f)
                 {
-                    Require(IsLayer(a.y, 1f),
-                        "Copied static face artwork is not on the explicit face layer.");
+                    Require(IsLayer(a.y, 1f) || IsLayer(a.y, 3f),
+                        "Copied static face artwork is not on an explicit " +
+                        "synthetic-face or source-plane layer.");
                 }
             }
 
@@ -638,6 +651,33 @@ namespace QuestFlight.Editor
                     count++;
             }
             return count;
+        }
+
+        private static void ValidateRendererAuthority(
+            UnityEngine.Object owner,
+            string propertyName,
+            Renderer source,
+            Renderer replacement,
+            string label)
+        {
+            Require(owner != null, $"The {label} authority is missing.");
+            var serialized = new SerializedObject(owner);
+            SerializedProperty renderers = serialized.FindProperty(propertyName);
+            Require(renderers != null && renderers.isArray,
+                $"The {label} renderer array is unavailable.");
+            int sourceReferences = 0;
+            int replacementReferences = 0;
+            for (int index = 0; index < renderers.arraySize; index++)
+            {
+                UnityEngine.Object value = renderers.GetArrayElementAtIndex(index)
+                    .objectReferenceValue;
+                if (value == source) sourceReferences++;
+                if (value == replacement) replacementReferences++;
+            }
+            Require(sourceReferences == 0 && replacementReferences == 1,
+                $"The {label} authority must reference only the neutralized " +
+                $"hardware renderer; source={sourceReferences}, " +
+                $"replacement={replacementReferences}.");
         }
 
         private static bool BoundsApproximately(Bounds a, Bounds b)
