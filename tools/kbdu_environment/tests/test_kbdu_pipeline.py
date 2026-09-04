@@ -20,7 +20,7 @@ from kbdu_common import (  # noqa: E402
     load_config,
     simplify_polyline,
 )
-from process_kbdu_environment import macro_material_for, runway_blended_height  # noqa: E402
+from process_kbdu_environment import ALLOWED_TAGS, macro_material_for, runway_blended_height  # noqa: E402
 
 
 class KbduCommonTests(unittest.TestCase):
@@ -87,6 +87,22 @@ class KbduCommonTests(unittest.TestCase):
 
 
 class KbduProcessingTests(unittest.TestCase):
+    def test_grade_separation_tags_survive_context_compilation(self) -> None:
+        self.assertTrue(
+            {
+                "bridge",
+                "layer",
+                "tunnel",
+                "covered",
+                "embankment",
+                "cutting",
+                "bridge:name",
+                "bridge:structure",
+                "lanes",
+                "width",
+            }.issubset(ALLOWED_TAGS)
+        )
+
     def test_runway_blend_uses_endpoint_plane_and_leaves_far_terrain_unchanged(self) -> None:
         runways = [
             {

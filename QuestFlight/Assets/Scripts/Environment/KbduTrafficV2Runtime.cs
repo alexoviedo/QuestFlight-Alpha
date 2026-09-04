@@ -30,12 +30,14 @@ namespace QuestFlightLab.Environment
             "6f643c3d44d115c64b9b2c9b2bbf84cb331979fdc7598ed11b0d2e34377db097";
         public const string ExpectedAcceptedSourceSha =
             "fda11a25eb526824d82a47330f2be80b1410bb64";
+        public const string ExpectedGradeSeparatedRoadAuthoritySha256 =
+            "1a7e3769c6767c02c63f54f8bd59f47aa203bb89ead5252dea948910b4c6fb36";
         public const int DrawMeshInstancedLimit = 1023;
         public const int MaximumInstancesPerGroup = 2048;
         public const int MaximumDrawCalls = 18;
         public const float NearDistanceMeters = 1000f;
         public const float FarDistanceMeters = 4500f;
-        public const float RoadSurfaceOffsetMeters = 0.04f;
+        public const float LegacyUniversalRoadSurfaceOffsetMeters = 0.04f;
         private const int ExpectedTileAxisCount = 24;
         private const float ExpectedTileSizeMeters = 1000f;
         private const float BoundsMinimumMeters = -12000f;
@@ -114,6 +116,7 @@ namespace QuestFlightLab.Environment
         [SerializeField] private TextAsset sourceAndLicenseRecord;
         [SerializeField] private KbduTrafficRuntime acceptedVehicleAssets;
         [SerializeField] private ProductionTerrainSurfaceAsset terrainSurface;
+        [SerializeField] private TextAsset gradeSeparatedRoadAuthority;
         [SerializeField] private bool deterministicGlobalClock = true;
         [SerializeField] private bool perVehicleGameObjects;
         [SerializeField] private bool realtimeVehicleShadows;
@@ -170,11 +173,16 @@ namespace QuestFlightLab.Environment
         private Camera lastPreparedCamera;
         private bool submissionLogged;
         private int droppedInstanceCount;
+        private KbduGradeSeparatedRoadAuthorityV1 roadAuthority;
+#if UNITY_EDITOR
+        private bool gradeSeparatedRoadDiagnosticBypass;
+#endif
 
         public TextAsset TrajectoryManifest => trajectoryManifest;
         public TextAsset SourceAndLicenseRecord => sourceAndLicenseRecord;
         public KbduTrafficRuntime AcceptedVehicleAssets => acceptedVehicleAssets;
         public ProductionTerrainSurfaceAsset TerrainSurface => terrainSurface;
+        public TextAsset GradeSeparatedRoadAuthority => gradeSeparatedRoadAuthority;
         public bool DeterministicGlobalClock => deterministicGlobalClock;
         public bool PerVehicleGameObjects => perVehicleGameObjects;
         public bool RealtimeVehicleShadows => realtimeVehicleShadows;
@@ -185,6 +193,22 @@ namespace QuestFlightLab.Environment
         public int DroppedInstanceCount => droppedInstanceCount;
         public int PreparedNearInstanceCount => SumCounts(nearCounts);
         public int PreparedFarInstanceCount => SumCounts(farCounts);
+
+#if UNITY_EDITOR
+        public void SetGradeSeparatedRoadDiagnosticBypass(bool bypass)
+        {
+            gradeSeparatedRoadDiagnosticBypass = bypass;
+            lastPreparedFrame = -1;
+            lastPreparedCamera = null;
+        }
+
+        public void SetDiagnosticScheduleClock(float seconds)
+        {
+            scheduleClockSeconds = seconds;
+            lastPreparedFrame = -1;
+            lastPreparedCamera = null;
+        }
+#endif
 
         public void Configure(
             TextAsset manifest,
@@ -206,12 +230,20 @@ namespace QuestFlightLab.Environment
             contractValid = TryValidateContract(out _);
         }
 
+        public void ConfigureGradeSeparatedRoadAuthority(TextAsset authority)
+        {
+            gradeSeparatedRoadAuthority = authority;
+            roadAuthority = null;
+            contractValid = TryValidateContract(out _);
+        }
+
         public bool TryValidateContract(out string report)
         {
             contractValid = false;
             report = null;
             if (trajectoryManifest == null || sourceAndLicenseRecord == null ||
-                acceptedVehicleAssets == null || terrainSurface == null)
+                acceptedVehicleAssets == null || terrainSurface == null ||
+                gradeSeparatedRoadAuthority == null)
             {
                 report = "missing authored Traffic V2 binding";
                 return false;
@@ -240,7 +272,23 @@ namespace QuestFlightLab.Environment
                 report = "Traffic V2 source-and-license record hash mismatch";
                 return false;
             }
+            if (!string.Equals(ComputeSha256(gradeSeparatedRoadAuthority.bytes),
+                    ExpectedGradeSeparatedRoadAuthoritySha256, StringComparison.Ordinal))
+            {
+                report = "grade-separated road authority hash mismatch";
+                return false;
+            }
             ParseManifest();
+            try
+            {
+                roadAuthority = roadAuthority ??
+                    new KbduGradeSeparatedRoadAuthorityV1(gradeSeparatedRoadAuthority);
+            }
+            catch (Exception exception)
+            {
+                report = "grade-separated road authority invalid: " + exception.Message;
+                return false;
+            }
             if (parsedManifest == null ||
                 !string.Equals(parsedManifest.schema, ExpectedSchema, StringComparison.Ordinal) ||
                 !string.Equals(parsedManifest.status, ExpectedStatus, StringComparison.Ordinal) ||
@@ -310,8 +358,11 @@ namespace QuestFlightLab.Environment
                 rotation = Quaternion.identity;
                 return false;
             }
+            long departure = (long)Math.Floor(
+                (scheduleSeconds - corridor.phase_seconds) / corridor.headway_seconds);
+            int archetype = SelectArchetype(corridor, departure, direction);
             return TryEvaluateDistance(corridor, direction,
-                (float)(age * corridor.speed_mps), 0, out position, out rotation);
+                (float)(age * corridor.speed_mps), 0, archetype, out position, out rotation);
         }
 
         // Retained for the existing diagnostic runner. The product manifest now
@@ -598,8 +649,12 @@ namespace QuestFlightLab.Environment
                             StringComparison.Ordinal) ? 2 : 1));
                     int laneIndex = PositiveModulo(
                         StableHash(corridor.corridor_id) + streamIndex, laneSlots);
+                    long departure = (long)Math.Floor(
+                        (scheduleSeconds - corridor.phase_seconds) / corridor.headway_seconds) -
+                        streamIndex;
+                    int archetype = SelectArchetype(corridor, departure, direction);
                     if (!TryEvaluateDistance(corridor, direction,
-                        (float)(vehicleAge * corridor.speed_mps), laneIndex,
+                        (float)(vehicleAge * corridor.speed_mps), laneIndex, archetype,
                         out Vector3 position, out Quaternion rotation))
                     {
                         continue;
@@ -609,10 +664,6 @@ namespace QuestFlightLab.Environment
                     {
                         continue;
                     }
-                    long departure = (long)Math.Floor(
-                        (scheduleSeconds - corridor.phase_seconds) / corridor.headway_seconds) -
-                        streamIndex;
-                    int archetype = SelectArchetype(corridor, departure, direction);
                     int paint = PositiveModulo(
                         StableHash(corridor.corridor_id) + (int)(departure & 0x7fffffff) * 31 +
                         direction * 131, PaintPalette.Length);
@@ -627,9 +678,21 @@ namespace QuestFlightLab.Environment
             int direction,
             float travelDistance,
             int laneIndex,
+            int archetype,
             out Vector3 position,
             out Quaternion rotation)
         {
+            if (roadAuthority == null)
+            {
+                if (gradeSeparatedRoadAuthority == null)
+                {
+                    position = default;
+                    rotation = Quaternion.identity;
+                    return false;
+                }
+                roadAuthority = new KbduGradeSeparatedRoadAuthorityV1(
+                    gradeSeparatedRoadAuthority);
+            }
             float distance = direction == 0
                 ? travelDistance
                 : corridor.length_meters - travelDistance;
@@ -664,23 +727,99 @@ namespace QuestFlightLab.Environment
             float lateral = 1.75f + laneIndex * 3.5f;
             float x = Mathf.LerpUnclamped(startX, endX, ratio) + right.x * lateral;
             float z = Mathf.LerpUnclamped(startZ, endZ, ratio) + right.z * lateral;
-            if (!terrainSurface.TrySample(x, z, out ProductionTerrainSample sample))
+            float contactOffset = roadAuthority.ContactOffsetMeters(archetype);
+#if UNITY_EDITOR
+            bool useGradeSeparatedRoad = !gradeSeparatedRoadDiagnosticBypass;
+            if (gradeSeparatedRoadDiagnosticBypass)
+            {
+                contactOffset = LegacyUniversalRoadSurfaceOffsetMeters;
+                if (!terrainSurface.TrySample(x, z, out ProductionTerrainSample baselineSample))
+                {
+                    position = default;
+                    rotation = Quaternion.identity;
+                    return false;
+                }
+                Vector3 baselineNormal = baselineSample.normal.sqrMagnitude > 0.5f
+                    ? baselineSample.normal.normalized
+                    : Vector3.up;
+                Vector3 baselineForward = Vector3.ProjectOnPlane(flatForward, baselineNormal).normalized;
+                if (baselineForward.sqrMagnitude < 0.5f) baselineForward = flatForward;
+                position = new Vector3(x, baselineSample.heightMeters, z) + baselineNormal * contactOffset;
+                rotation = Quaternion.LookRotation(baselineForward, baselineNormal);
+                return true;
+            }
+#else
+            const bool useGradeSeparatedRoad = true;
+#endif
+            if (!TrySampleRoadSurface(
+                    corridor.corridor_id, x, z, flatForward, useGradeSeparatedRoad,
+                    out float centerHeight, out Vector3 centerNormal))
             {
                 position = default;
                 rotation = Quaternion.identity;
                 return false;
             }
-            Vector3 normal = sample.normal.sqrMagnitude > 0.5f
-                ? sample.normal.normalized
-                : Vector3.up;
-            Vector3 surfaceForward = Vector3.ProjectOnPlane(flatForward, normal).normalized;
-            if (surfaceForward.sqrMagnitude < 0.5f)
+            float halfLength = roadAuthority.ContactHalfLengthMeters(archetype);
+            float frontX = x + flatForward.x * halfLength;
+            float frontZ = z + flatForward.z * halfLength;
+            float rearX = x - flatForward.x * halfLength;
+            float rearZ = z - flatForward.z * halfLength;
+            if (!TrySampleRoadSurface(
+                    corridor.corridor_id, frontX, frontZ, flatForward, useGradeSeparatedRoad,
+                    out float frontHeight, out _) ||
+                !TrySampleRoadSurface(
+                    corridor.corridor_id, rearX, rearZ, flatForward, useGradeSeparatedRoad,
+                    out float rearHeight, out _))
             {
-                surfaceForward = flatForward;
+                frontHeight = centerHeight;
+                rearHeight = centerHeight;
             }
-            position = new Vector3(x, sample.heightMeters + RoadSurfaceOffsetMeters, z);
-            rotation = Quaternion.LookRotation(surfaceForward, normal);
+            float chordHeight = (frontHeight + rearHeight) * 0.5f;
+            float rootHeight = chordHeight + Mathf.Max(0f, centerHeight - chordHeight) + contactOffset;
+            Vector3 supportedForward = new Vector3(
+                flatForward.x * halfLength * 2f,
+                frontHeight - rearHeight,
+                flatForward.z * halfLength * 2f).normalized;
+            Vector3 supportedUp = Vector3.ProjectOnPlane(centerNormal, supportedForward).normalized;
+            if (supportedUp.sqrMagnitude < 0.5f)
+            {
+                supportedUp = Vector3.ProjectOnPlane(Vector3.up, supportedForward).normalized;
+            }
+            position = new Vector3(x, rootHeight, z);
+            rotation = Quaternion.LookRotation(supportedForward, supportedUp);
             return true;
+        }
+
+        private bool TrySampleRoadSurface(
+            string routeId,
+            float x,
+            float z,
+            Vector3 horizontalForward,
+            bool useGradeSeparatedRoad,
+            out float height,
+            out Vector3 normal)
+        {
+            if (useGradeSeparatedRoad && roadAuthority.TryEvaluate(
+                    routeId, x, z, horizontalForward,
+                    out KbduGradeSeparatedRoadAuthorityV1.SurfaceSample roadSample))
+            {
+                height = roadSample.position.y;
+                normal = roadSample.normal.sqrMagnitude > 0.5f
+                    ? roadSample.normal.normalized
+                    : Vector3.up;
+                return true;
+            }
+            if (terrainSurface.TrySample(x, z, out ProductionTerrainSample terrainSample))
+            {
+                height = terrainSample.heightMeters;
+                normal = terrainSample.normal.sqrMagnitude > 0.5f
+                    ? terrainSample.normal.normalized
+                    : Vector3.up;
+                return true;
+            }
+            height = 0f;
+            normal = Vector3.up;
+            return false;
         }
 
         private void AppendInstance(
