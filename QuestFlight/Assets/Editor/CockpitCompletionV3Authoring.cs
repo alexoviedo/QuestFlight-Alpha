@@ -18,6 +18,8 @@ namespace QuestFlight.Editor
             CockpitAnalogInstrumentAuthoring.DynamicRendererObjectName;
         public const string AvionicsObjectName =
             "ProductionInstrumentDisplayReadouts";
+        public const string AvionicsHardwareObjectName =
+            "ProductionStaticDisplayHardware";
         public const string InstrumentLensObjectPath =
             "AircraftVisualRoot/ProductionPrincipalInstrumentLensArray";
 
@@ -117,6 +119,10 @@ namespace QuestFlight.Editor
                 RequireRendererContract(
                     FindUniqueTransform(root, AvionicsObjectName),
                     "AvionicsV2");
+                Require(
+                    CockpitDepthOwnershipEditorContract.ValidatePrefabContents(
+                        root, out string depthOwnershipError),
+                    depthOwnershipError);
 
                 Transform lens = root.transform.Find(InstrumentLensObjectPath);
                 Require(lens != null,
@@ -209,6 +215,38 @@ namespace QuestFlight.Editor
                     CockpitAvionicsV2PresentationAuthoring.LayoutPath);
             Require(layout != null, "AvionicsV2 layout is missing.");
             Require(layout.Validate(out string layoutError), layoutError);
+
+            MeshRenderer sourceRenderer =
+                CockpitDepthOwnershipEditorContract
+                    .ResolveSourceDisplayRenderer(root);
+            MeshFilter sourceFilter = sourceRenderer.GetComponent<MeshFilter>();
+            Mesh neutralizedSource = CockpitAvionicsV2PresentationAuthoring
+                .BuildNeutralizedSourceMeshAsset(sourceFilter.sharedMesh);
+
+            Transform hardware = sourceRenderer.transform.parent.Find(
+                AvionicsHardwareObjectName);
+            if (hardware == null)
+            {
+                var hardwareObject = new GameObject(AvionicsHardwareObjectName);
+                hardware = hardwareObject.transform;
+                hardware.SetParent(sourceRenderer.transform.parent, false);
+                hardware.localPosition = sourceRenderer.transform.localPosition;
+                hardware.localRotation = sourceRenderer.transform.localRotation;
+                hardware.localScale = sourceRenderer.transform.localScale;
+                hardwareObject.AddComponent<MeshFilter>();
+                hardwareObject.AddComponent<MeshRenderer>();
+            }
+            MeshFilter hardwareFilter = hardware.GetComponent<MeshFilter>();
+            MeshRenderer hardwareRenderer = hardware.GetComponent<MeshRenderer>();
+            Require(hardwareFilter != null && hardwareRenderer != null,
+                "The neutralized static-display hardware renderer is incomplete.");
+            hardwareFilter.sharedMesh = neutralizedSource;
+            EditorUtility.CopySerialized(sourceRenderer, hardwareRenderer);
+            hardwareRenderer.enabled = true;
+            EditorUtility.SetDirty(hardwareFilter);
+            EditorUtility.SetDirty(hardwareRenderer);
+            sourceRenderer.enabled = false;
+            EditorUtility.SetDirty(sourceRenderer);
 
             Transform display = FindUniqueTransform(root, AvionicsObjectName);
             MeshFilter filter = display.GetComponent<MeshFilter>();

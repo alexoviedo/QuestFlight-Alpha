@@ -320,12 +320,18 @@ namespace QuestFlight.Editor
                 vertices, normals, tangents, uv, selector, indices);
             AddDiscScaled(turnCoordinator, TurnCoordinatorTile, 0f, 1.02f,
                 vertices, normals, tangents, uv, selector, indices);
+            int flapFaceFirst = vertices.Count;
             AddSourceComponent(
                 frozen, components[flap.Seed], false,
                 vertices, normals, tangents, uv, selector, indices);
+            for (int vertex = flapFaceFirst; vertex < vertices.Count; vertex++)
+                selector[vertex] = new Vector2(0f, 1f);
+            int brakeFaceFirst = vertices.Count;
             AddSourceComponent(
                 frozen, components[brake.Seed], false,
                 vertices, normals, tangents, uv, selector, indices);
+            for (int vertex = brakeFaceFirst; vertex < vertices.Count; vertex++)
+                selector[vertex] = new Vector2(0f, 1f);
             AddLubber(dg, vertices, normals, tangents, uv, selector, indices);
             int staticOverlayVertexCount = vertices.Count;
 
@@ -758,6 +764,11 @@ namespace QuestFlight.Editor
             AddSourceComponent(
                 source, component, false,
                 vertices, normals, tangents, uv, selector, indices);
+            // The rotating compass card is face artwork, not an unclassified
+            // source layer. Keep it on the existing explicit face-depth layer
+            // so every generated triangle has deterministic mobile depth.
+            for (int vertex = first; vertex < vertices.Count; vertex++)
+                selector[vertex] = new Vector2(0f, 1f);
             bindings.Add(Binding(
                 "magnetic_compass_card",
                 component.Seed,

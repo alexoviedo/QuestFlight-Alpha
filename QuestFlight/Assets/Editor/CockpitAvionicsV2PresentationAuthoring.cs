@@ -29,6 +29,9 @@ namespace QuestFlight.Editor
         public const string CombinedMeshPath =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/" +
             "Reflection/Cockpit/Meshes/C172_V2AvionicsGlyphs.asset";
+        public const string NeutralizedSourceMeshPath =
+            "Assets/Production/Environment/PhotorealAerialSurfaceV1/" +
+            "Reflection/Cockpit/Meshes/C172_StaticDisplayV2Neutralized.asset";
         public const string LayoutPath =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/" +
             "Reflection/Cockpit/C172_AvionicsV2Layout.asset";
@@ -47,6 +50,7 @@ namespace QuestFlight.Editor
             AtlasColumns * CellPixels * AtlasRows * CellPixels * 4 * 4 / 3;
 
         private const float SurfaceOffsetMeters = 0.00018f;
+        private const float BoundaryTolerance = 0.000001f;
 
         private readonly struct Aperture
         {
@@ -161,6 +165,82 @@ namespace QuestFlight.Editor
                 $"{meshAsset.vertexCount} vertices, {EstimatedTextureBytes} bytes.");
         }
 
+        public static Mesh BuildNeutralizedSourceMeshAsset(Mesh source)
+        {
+            Require(source != null, "The imported static-display mesh is missing.");
+            Vector3[] vertices = source.vertices;
+            Vector2[] uv = source.uv;
+            int[] triangles = source.triangles;
+            Require(source.subMeshCount == 1 && uv.Length == vertices.Length,
+                "The imported static-display topology is unsupported.");
+            var retained = new List<int>(triangles.Length - 36);
+            int removed = 0;
+            for (int triangle = 0; triangle < triangles.Length / 3; triangle++)
+            {
+                int a = triangles[triangle * 3];
+                int b = triangles[triangle * 3 + 1];
+                int c = triangles[triangle * 3 + 2];
+                if (IsImportedApertureTriangle(vertices, uv, a, b, c))
+                {
+                    removed++;
+                    continue;
+                }
+                retained.Add(a);
+                retained.Add(b);
+                retained.Add(c);
+            }
+            Require(removed == CockpitAvionicsV2Authoring.ExpectedReadoutTriangles,
+                $"Expected to neutralize 12 source aperture triangles; found {removed}.");
+
+            Mesh generated = UnityEngine.Object.Instantiate(source);
+            generated.name = "C172_StaticDisplayV2Neutralized";
+            generated.SetTriangles(retained, 0, false);
+            generated.bounds = source.bounds;
+            Mesh asset = AssetDatabase.LoadAssetAtPath<Mesh>(
+                NeutralizedSourceMeshPath);
+            if (asset == null)
+            {
+                AssetDatabase.CreateAsset(generated, NeutralizedSourceMeshPath);
+                asset = generated;
+            }
+            else
+            {
+                EditorUtility.CopySerialized(generated, asset);
+                UnityEngine.Object.DestroyImmediate(generated);
+            }
+            EditorUtility.SetDirty(asset);
+            return asset;
+        }
+
+        public static bool IsImportedApertureTriangle(
+            Vector3[] vertices,
+            Vector2[] uv,
+            int a,
+            int b,
+            int c)
+        {
+            Vector2 uvMin = Vector2.Min(uv[a], Vector2.Min(uv[b], uv[c]));
+            Vector2 uvMax = Vector2.Max(uv[a], Vector2.Max(uv[b], uv[c]));
+            float area = Vector3.Cross(
+                vertices[b] - vertices[a],
+                vertices[c] - vertices[a]).magnitude * 0.5f;
+            bool mainGps = area > 0.0017f &&
+                           uvMin.x >= 0.63f && uvMin.x <= 0.65f &&
+                           uvMin.y <= 0.02f && uvMax.x >= 0.98f &&
+                           uvMax.y >= 0.23f && uvMax.y <= 0.25f;
+            bool radio = area > 0.00070f &&
+                         uvMin.x >= 0.61f && uvMin.x <= 0.63f &&
+                         uvMin.y >= 0.31f && uvMin.y <= 0.33f &&
+                         uvMax.x >= 0.98f && uvMax.y >= 0.41f &&
+                         uvMax.y <= 0.43f;
+            bool transponder = area > 0.00065f &&
+                               uvMin.x >= 0.61f && uvMin.x <= 0.63f &&
+                               uvMin.y >= 0.43f && uvMin.y <= 0.45f &&
+                               uvMax.x >= 0.97f && uvMax.y >= 0.45f &&
+                               uvMax.y <= 0.47f;
+            return mainGps || radio || transponder;
+        }
+
         private static Mesh BuildCombinedGlyphMesh(
             Mesh source,
             out CockpitAvionicsV2GlyphSlot[] slots)
@@ -170,16 +250,21 @@ namespace QuestFlight.Editor
             var normals = new List<Vector3>(ExpectedGlyphSlots * 4);
             var tangents = new List<Vector4>(ExpectedGlyphSlots * 4);
             var uv = new List<Vector2>(ExpectedGlyphSlots * 4);
+            var apertureUv = new List<Vector2>(ExpectedGlyphSlots * 4);
+            var ownership = new List<Vector2>(ExpectedGlyphSlots * 4);
             var indices = new List<int>(ExpectedGlyphSlots * 6);
             var glyphSlots =
                 new List<CockpitAvionicsV2GlyphSlot>(ExpectedGlyphSlots);
+            var glyphRects = new List<Rect>[ExpectedSourceApertures];
+            for (int aperture = 0; aperture < glyphRects.Length; aperture++)
+                glyphRects[aperture] = new List<Rect>();
 
             // Large GPS aperture: three deterministic 12-character rows.
             // Twenty 5x7 glyphs were technically valid but illegible at the
             // represented panel's physical size. These mappings preserve the
             // most useful source fields while remaining readable in XR.
             AddGrid(
-                apertures[0], 12, 3, 0.045f, 0.10f,
+                apertures[0], 0, 12, 3, 0.045f, 0.10f,
                 (row, column) =>
                 {
                     int first = row * CockpitAvionicsV2Formatter.Columns;
@@ -191,41 +276,54 @@ namespace QuestFlight.Editor
                             : first + 14 + column - 9; // 090 track
                     return first + column;         // ALT  5430
                 },
-                vertices, normals, tangents, uv, indices, glyphSlots);
+                vertices, normals, tangents, uv, apertureUv, ownership,
+                indices, glyphSlots, glyphRects[0]);
 
             // Four represented radio apertures: active/standby values only.
             AddGrid(
-                apertures[1], 7, 1, 0.08f, 0.18f,
+                apertures[1], 1, 7, 1, 0.08f, 0.18f,
                 (_, column) => 3 * CockpitAvionicsV2Formatter.Columns +
                                3 + column,
-                vertices, normals, tangents, uv, indices, glyphSlots);
+                vertices, normals, tangents, uv, apertureUv, ownership,
+                indices, glyphSlots, glyphRects[1]);
             AddGrid(
-                apertures[3], 7, 1, 0.08f, 0.18f,
+                apertures[3], 3, 7, 1, 0.08f, 0.18f,
                 (_, column) => 3 * CockpitAvionicsV2Formatter.Columns +
                                12 + column,
-                vertices, normals, tangents, uv, indices, glyphSlots);
+                vertices, normals, tangents, uv, apertureUv, ownership,
+                indices, glyphSlots, glyphRects[3]);
             AddGrid(
-                apertures[4], 7, 1, 0.08f, 0.18f,
+                apertures[4], 4, 7, 1, 0.08f, 0.18f,
                 (_, column) => 4 * CockpitAvionicsV2Formatter.Columns +
                                3 + column,
-                vertices, normals, tangents, uv, indices, glyphSlots);
+                vertices, normals, tangents, uv, apertureUv, ownership,
+                indices, glyphSlots, glyphRects[4]);
             AddGrid(
-                apertures[5], 7, 1, 0.08f, 0.18f,
+                apertures[5], 5, 7, 1, 0.08f, 0.18f,
                 (_, column) => 4 * CockpitAvionicsV2Formatter.Columns +
                                12 + column,
-                vertices, normals, tangents, uv, indices, glyphSlots);
+                vertices, normals, tangents, uv, apertureUv, ownership,
+                indices, glyphSlots, glyphRects[5]);
 
             // Wide transponder aperture: "1200 ALT" without invented data.
             AddGrid(
-                apertures[2], 10, 1, 0.08f, 0.16f,
+                apertures[2], 2, 10, 1, 0.08f, 0.16f,
                 (_, column) => 6 * CockpitAvionicsV2Formatter.Columns +
                                5 + column,
-                vertices, normals, tangents, uv, indices, glyphSlots);
+                vertices, normals, tangents, uv, apertureUv, ownership,
+                indices, glyphSlots, glyphRects[2]);
 
             Require(
                 glyphSlots.Count == ExpectedGlyphSlots,
                 $"Expected {ExpectedGlyphSlots} glyph slots; built " +
                 $"{glyphSlots.Count}.");
+            for (int aperture = 0; aperture < apertures.Length; aperture++)
+            {
+                AddBackgroundCells(
+                    apertures[aperture], aperture, glyphRects[aperture],
+                    vertices, normals, tangents, uv, apertureUv, ownership,
+                    indices);
+            }
             var mesh = new Mesh
             {
                 name = "C172_V2AvionicsGlyphs",
@@ -235,6 +333,11 @@ namespace QuestFlight.Editor
             mesh.SetNormals(normals);
             mesh.SetTangents(tangents);
             mesh.SetUVs(0, uv);
+            // UV1 records normalized aperture coordinates and UV2 records
+            // aperture index / glyph ownership for the editor-only depth and
+            // coverage contract. The runtime shader consumes neither channel.
+            mesh.SetUVs(1, apertureUv);
+            mesh.SetUVs(2, ownership);
             mesh.SetTriangles(indices, 0, false);
             mesh.bounds = source.bounds;
             slots = glyphSlots.ToArray();
@@ -372,6 +475,7 @@ namespace QuestFlight.Editor
 
         private static void AddGrid(
             Aperture aperture,
+            int apertureIndex,
             int columns,
             int rows,
             float marginU,
@@ -381,13 +485,12 @@ namespace QuestFlight.Editor
             List<Vector3> normals,
             List<Vector4> tangents,
             List<Vector2> uv,
+            List<Vector2> apertureUv,
+            List<Vector2> ownership,
             List<int> indices,
-            List<CockpitAvionicsV2GlyphSlot> slots)
+            List<CockpitAvionicsV2GlyphSlot> slots,
+            List<Rect> glyphRects)
         {
-            Vector3 right = (aperture.BottomRight -
-                             aperture.BottomLeft).normalized;
-            Vector4 tangent = new Vector4(
-                right.x, right.y, right.z, 1f);
             float usableU = 1f - marginU * 2f;
             float usableV = 1f - marginV * 2f;
             for (int row = 0; row < rows; row++)
@@ -397,35 +500,143 @@ namespace QuestFlight.Editor
                 float u1 = marginU + usableU * (column + 1) / columns;
                 float v1 = 1f - marginV - usableV * row / rows;
                 float v0 = 1f - marginV - usableV * (row + 1) / rows;
-                int first = vertices.Count;
-                vertices.Add(aperture.Point(u0, v0));
-                vertices.Add(aperture.Point(u1, v0));
-                vertices.Add(aperture.Point(u1, v1));
-                vertices.Add(aperture.Point(u0, v1));
-                for (int vertex = 0; vertex < 4; vertex++)
-                {
-                    normals.Add(aperture.Normal);
-                    tangents.Add(tangent);
-                    uv.Add(Vector2.zero);
-                }
-                bool forward =
-                    Vector3.Dot(
-                        Vector3.Cross(
-                            vertices[first + 1] - vertices[first],
-                            vertices[first + 2] - vertices[first]),
-                        aperture.Normal) >= 0f;
-                indices.Add(first);
-                indices.Add(forward ? first + 1 : first + 2);
-                indices.Add(forward ? first + 2 : first + 1);
-                indices.Add(first);
-                indices.Add(forward ? first + 2 : first + 3);
-                indices.Add(forward ? first + 3 : first + 2);
+                int first = AddQuad(
+                    aperture, apertureIndex, u0, v0, u1, v1,
+                    Vector2.zero, 1f,
+                    vertices, normals, tangents, uv, apertureUv, ownership,
+                    indices);
+                glyphRects.Add(Rect.MinMaxRect(u0, v0, u1, v1));
                 slots.Add(new CockpitAvionicsV2GlyphSlot
                 {
                     characterIndex = characterIndex(row, column),
                     firstVertex = first
                 });
             }
+        }
+
+        private static void AddBackgroundCells(
+            Aperture aperture,
+            int apertureIndex,
+            List<Rect> glyphRects,
+            List<Vector3> vertices,
+            List<Vector3> normals,
+            List<Vector4> tangents,
+            List<Vector2> uv,
+            List<Vector2> apertureUv,
+            List<Vector2> ownership,
+            List<int> indices)
+        {
+            var uBoundaries = new List<float> { 0f, 1f };
+            var vBoundaries = new List<float> { 0f, 1f };
+            for (int index = 0; index < glyphRects.Count; index++)
+            {
+                Rect rect = glyphRects[index];
+                uBoundaries.Add(rect.xMin);
+                uBoundaries.Add(rect.xMax);
+                vBoundaries.Add(rect.yMin);
+                vBoundaries.Add(rect.yMax);
+            }
+            SortAndDeduplicate(uBoundaries);
+            SortAndDeduplicate(vBoundaries);
+
+            // The ASCII space is glyph zero and is authored completely black.
+            // Sampling its center stays far from neighboring glyphs even if
+            // filtering changes from the currently authored point filter.
+            Vector2 blackUv = new Vector2(
+                0.5f / AtlasColumns,
+                1f - 0.5f / AtlasRows);
+            for (int v = 0; v < vBoundaries.Count - 1; v++)
+            for (int u = 0; u < uBoundaries.Count - 1; u++)
+            {
+                float u0 = uBoundaries[u];
+                float u1 = uBoundaries[u + 1];
+                float v0 = vBoundaries[v];
+                float v1 = vBoundaries[v + 1];
+                Vector2 center = new Vector2(
+                    (u0 + u1) * 0.5f,
+                    (v0 + v1) * 0.5f);
+                bool glyphOwned = false;
+                for (int glyph = 0; glyph < glyphRects.Count; glyph++)
+                {
+                    if (!glyphRects[glyph].Contains(center)) continue;
+                    glyphOwned = true;
+                    break;
+                }
+                if (glyphOwned) continue;
+
+                AddQuad(
+                    aperture, apertureIndex, u0, v0, u1, v1,
+                    blackUv, 0f,
+                    vertices, normals, tangents, uv, apertureUv, ownership,
+                    indices);
+            }
+        }
+
+        private static int AddQuad(
+            Aperture aperture,
+            int apertureIndex,
+            float u0,
+            float v0,
+            float u1,
+            float v1,
+            Vector2 atlasUv,
+            float glyphOwnership,
+            List<Vector3> vertices,
+            List<Vector3> normals,
+            List<Vector4> tangents,
+            List<Vector2> uv,
+            List<Vector2> apertureUv,
+            List<Vector2> ownership,
+            List<int> indices)
+        {
+            Vector3 right = (aperture.BottomRight -
+                             aperture.BottomLeft).normalized;
+            Vector4 tangent = new Vector4(
+                right.x, right.y, right.z, 1f);
+            int first = vertices.Count;
+            vertices.Add(aperture.Point(u0, v0));
+            vertices.Add(aperture.Point(u1, v0));
+            vertices.Add(aperture.Point(u1, v1));
+            vertices.Add(aperture.Point(u0, v1));
+            apertureUv.Add(new Vector2(u0, v0));
+            apertureUv.Add(new Vector2(u1, v0));
+            apertureUv.Add(new Vector2(u1, v1));
+            apertureUv.Add(new Vector2(u0, v1));
+            for (int vertex = 0; vertex < 4; vertex++)
+            {
+                normals.Add(aperture.Normal);
+                tangents.Add(tangent);
+                uv.Add(atlasUv);
+                ownership.Add(new Vector2(apertureIndex, glyphOwnership));
+            }
+            bool forward =
+                Vector3.Dot(
+                    Vector3.Cross(
+                        vertices[first + 1] - vertices[first],
+                        vertices[first + 2] - vertices[first]),
+                    aperture.Normal) >= 0f;
+            indices.Add(first);
+            indices.Add(forward ? first + 1 : first + 2);
+            indices.Add(forward ? first + 2 : first + 1);
+            indices.Add(first);
+            indices.Add(forward ? first + 2 : first + 3);
+            indices.Add(forward ? first + 3 : first + 2);
+            return first;
+        }
+
+        private static void SortAndDeduplicate(List<float> values)
+        {
+            values.Sort();
+            int write = 1;
+            for (int read = 1; read < values.Count; read++)
+            {
+                if (Mathf.Abs(values[read] - values[write - 1]) <=
+                    BoundaryTolerance)
+                    continue;
+                values[write++] = values[read];
+            }
+            if (write < values.Count)
+                values.RemoveRange(write, values.Count - write);
         }
 
         private static Texture2D UpsertAtlas()
