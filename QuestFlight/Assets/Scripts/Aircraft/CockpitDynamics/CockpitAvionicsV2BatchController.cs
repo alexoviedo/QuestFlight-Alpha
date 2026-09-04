@@ -102,6 +102,13 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
                 (ICockpitAvionicsV2AuthorityProvider)authorityProvider;
             _runtimeMesh = Instantiate(layout.CombinedGlyphMesh);
             _runtimeMesh.name = layout.CombinedGlyphMesh.name + "_RuntimeV2";
+            // UV1/UV2 exist only so the editor ownership contract can audit
+            // aperture coverage. Strip them from the mutable Quest copy before
+            // UV0 starts changing; keeping the diagnostic streams changes the
+            // vertex layout and prevents the no-notify UV0 upload from reaching
+            // the renderer reliably on the Vulkan player.
+            _runtimeMesh.SetUVs(1, new List<Vector2>());
+            _runtimeMesh.SetUVs(2, new List<Vector2>());
             _runtimeMesh.MarkDynamic();
             combinedGlyphFilter.sharedMesh = _runtimeMesh;
             _workingUv = new List<Vector2>(
