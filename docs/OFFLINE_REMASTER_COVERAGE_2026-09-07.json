@@ -1,0 +1,118 @@
+{
+  "schema": "questflight.remaster.coverage-decision.v1",
+  "early_apk_sha256": "449e21c3d4cb44fc001f24b0278b3f792c8d49c94da2b23026ab793adae8df9a",
+  "current_product_outcome": "All remaster runtime changes restored; no useful integrated visual enhancement demonstrated",
+  "complete_runtime_closure_verified": false,
+  "limitations": [
+    "BuildReport identifies packaged inputs, not every indirect authoring source or runtime draw.",
+    "Existing aerial/building string bindings checked through manifests and 616 payload hashes; no new streaming output.",
+    "No mandatory simulator acceptance or new physical Quest result.",
+    "Watercraft high-detail source/rights preparation remains blocked; not a completed map-wide remaster."
+  ],
+  "asset_counts": {
+    "deliberately-excluded": 657,
+    "retained-original": 702,
+    "blocked": 6
+  },
+  "family_counts": {
+    "AerialSceneryRecoveryV2": {
+      "retained-original": 5
+    },
+    "AerialSceneryV1": {
+      "retained-original": 28,
+      "deliberately-excluded": 6
+    },
+    "AerialSurfaceV1": {
+      "retained-original": 7
+    },
+    "AirportCoreV4": {
+      "retained-original": 81,
+      "deliberately-excluded": 7
+    },
+    "AirportFenceV1": {
+      "retained-original": 5
+    },
+    "AirportHeroCorridorV1": {
+      "retained-original": 246
+    },
+    "AirportKit": {
+      "retained-original": 4
+    },
+    "AirportNearFieldV1": {
+      "retained-original": 3
+    },
+    "AirportParkedAircraftV1": {
+      "retained-original": 2
+    },
+    "CloudsV1": {
+      "deliberately-excluded": 6
+    },
+    "FullMapBuildingsV1": {
+      "retained-original": 8
+    },
+    "FullMapVegetationV2": {
+      "deliberately-excluded": 1
+    },
+    "FullMapVegetationV3": {
+      "deliberately-excluded": 2,
+      "retained-original": 1
+    },
+    "Generated": {
+      "retained-original": 103
+    },
+    "Generated/FullMapBuildingClipmap": {
+      "deliberately-excluded": 576
+    },
+    "Generated/RemasterCompressionSmoke": {
+      "deliberately-excluded": 1
+    },
+    "GradeSeparatedRoadsV1": {
+      "retained-original": 2
+    },
+    "Materials": {
+      "retained-original": 15
+    },
+    "PhotorealAerialSurfaceV1": {
+      "retained-original": 59,
+      "deliberately-excluded": 56
+    },
+    "PhotorealTerrainV1": {
+      "retained-original": 81,
+      "deliberately-excluded": 1
+    },
+    "Presentation": {
+      "retained-original": 2
+    },
+    "ReconstructionV2": {
+      "retained-original": 23
+    },
+    "ReservoirWatercraftV1": {
+      "blocked": 6
+    },
+    "SemanticTowersV1": {
+      "retained-original": 3
+    },
+    "Sky": {
+      "deliberately-excluded": 1
+    },
+    "Textures": {
+      "retained-original": 8
+    },
+    "TrafficV1": {
+      "retained-original": 10
+    },
+    "Wildlife": {
+      "retained-original": 6
+    }
+  },
+  "evidence": [
+    "unity_consumer_inventory.json",
+    "glb_contracts.json",
+    "airport_source_verification.json",
+    "early_build_packed_source_paths.txt",
+    "candidate_restore.json",
+    "restored_standard_qa/visual_qa_report.json"
+  ],
+  "external_evidence_root": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\offline_scenery_remaster_v1\\approved_execution",
+  "full_records": "coverage_decisions.json"
+}

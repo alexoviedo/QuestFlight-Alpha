@@ -1,0 +1,162 @@
+{
+  "schema": "questflight.offline-remaster-traffic.v1",
+  "status": "rejected-and-restored; historical staged derivative provenance only",
+  "source_manifest": "QuestFlight/Assets/Production/Environment/TrafficV1/Data/KBDU_TrafficManifestV1.json",
+  "source_manifest_sha256": "3b8ac16873bdc4c2a436f6f9751c8466e97d4b07eb171ddaa664593347f19705",
+  "license": "CC0-1.0",
+  "sources": {
+    "additional_source": {
+      "author": "Teh_Bucket",
+      "license": "CC0 1.0 Universal",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "raw_storage": "external artifact cache only",
+      "source_sha256": "6dbc08a6c2c6c4c8d8c18957132e6aae0329e188205e26649977ea8849ce0d75",
+      "title": "Semi-Trailer Truck (lowpoly)",
+      "url": "https://opengameart.org/content/semi-trailer-truck-lowpoly"
+    },
+    "author": "RGSDev",
+    "license": "CC0 1.0 Universal",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "market_basis": "Colorado registrations are passenger-vehicle dominant; the selected mix emphasizes crossovers/SUVs and pickups while retaining sedans, hatchbacks, and cargo vans.",
+    "market_sources": [
+      "https://cdor.colorado.gov/sites/revenue/files/documents/DR_4000_2025_Annual_Report.pdf",
+      "https://colorado.auto/wp-content/uploads/2026/01/2025-Colorado-Auto-Outlook-Q4.pdf"
+    ],
+    "optimized_archetypes": [
+      "sedan",
+      "hatchback",
+      "crossover_suv",
+      "pickup",
+      "cargo_van",
+      "semi_trailer"
+    ],
+    "paint_palette": [
+      "white",
+      "black",
+      "gray",
+      "silver",
+      "blue",
+      "red",
+      "green",
+      "brown"
+    ],
+    "paint_weight_source": "Edmunds 2025 U.S. new retail registration color distribution",
+    "paint_weight_source_url": "https://www.edmunds.com/most-popular-car-colors/",
+    "paint_weights": [
+      0.26,
+      0.22,
+      0.19,
+      0.14,
+      0.09,
+      0.07,
+      0.02,
+      0.01
+    ],
+    "parked_source_archetype_field": "legacy source-silhouette hint; runtime style is deterministically market weighted",
+    "passenger_fleet_style_weights": [
+      0.24,
+      0.14,
+      0.34,
+      0.2,
+      0.08,
+      0.0
+    ],
+    "runtime_material": "QuestFlight/Assets/Production/Environment/TrafficV1/Materials/KBDU_TrafficVehicle.mat",
+    "source": "RGSDev Free Low Poly Vehicles Pack",
+    "source_archive_sha256": "9091e478bd211a7cf8b562f04e8f061a2188d323e2fa0878f3f1641e5e67c800",
+    "source_files": [
+      {
+        "archetype": "sedan",
+        "sha256": "9ed24c5ac7d248d05ef06a0f36d2a60cd212a88285097d602e48b5682df099d7"
+      },
+      {
+        "archetype": "hatchback",
+        "sha256": "350aa3176c37af412524304e920a9b336cea4a30c63c1dd2cc547cc4c76673be"
+      },
+      {
+        "archetype": "crossover_suv",
+        "sha256": "7a1dd80445f81564d8ce352a1e31a47ca0c81f04150090052aec3c385a070eb1"
+      },
+      {
+        "archetype": "pickup",
+        "sha256": "a199845625780059588ccf154ef055a288944e2b62719161cb90ff91d20e974b"
+      },
+      {
+        "archetype": "cargo_van",
+        "sha256": "2e05fe145a8d525e9105816ee953f39c9cd66a914eecbbe2a4a8182673a31479"
+      },
+      {
+        "archetype": "semi_trailer",
+        "sha256": "6dbc08a6c2c6c4c8d8c18957132e6aae0329e188205e26649977ea8849ce0d75"
+      }
+    ],
+    "source_url": "https://opengameart.org/content/free-low-poly-vehicles-pack",
+    "surface_detail_license": "Project-owned",
+    "surface_detail_texture": "QuestFlight/Assets/Production/Environment/TrafficV1/Textures/KBDU_TrafficSurfaceDetail.png",
+    "trunk_fleet_style_weights": [
+      0.2,
+      0.1,
+      0.28,
+      0.18,
+      0.08,
+      0.16
+    ]
+  },
+  "method": {
+    "implementation": "tools/remaster_self_ao.py",
+    "execution": "CPU NumPy; no neural/high-poly reconstruction",
+    "rays": 48,
+    "radius_m": 0.4,
+    "visibility_range": [
+      0.85,
+      1.0
+    ],
+    "storage": "existing vertex-color alpha; body/trim only; RGB preserved"
+  },
+  "consumer_contract": "Shared V1 near archetypes and far proxies, reused by V2 acceptedVehicleAssets",
+  "files": [
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\TrafficV1\\Models\\KBDU_TrafficCargoVan.asset",
+      "integrated_sha256": "d8ad7dde2e12c05e2ef1d60826a6fb110bf63c694dd4d417b266e17b69522ea2",
+      "original_sha256": "e07a628bda72d5669f7cb01f90788ef4b399eeb8b03ee19bdad0ff178f9ff742"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\TrafficV1\\Models\\KBDU_TrafficCrossover.asset",
+      "integrated_sha256": "8855496419fd14ca7dc7435983e0c8a2b8ca434ac6e966246e0b872370ccc95f",
+      "original_sha256": "1966f6e07a3e0799013464285864feec0d00ec098931a83e0b02e644bf7913cc"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\TrafficV1\\Models\\KBDU_TrafficHatchback.asset",
+      "integrated_sha256": "13ac631046bf6f90a3a3470465d2327467c3225fb051e5bd18c0bb71cb609f44",
+      "original_sha256": "fdebd6b5bef33b0e91a5725c6299277f6b08572f68e3df0b4e70c904b16e3fa7"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\TrafficV1\\Models\\KBDU_TrafficPassengerProxy.asset",
+      "integrated_sha256": "7fd18279c00d94f7f9426581bd7fc48257a002997b2e91676e9bfaf293ee1708",
+      "original_sha256": "21e6ca1910e428c550f8762567ee2720b68a029373d139d34bf3b93515f4e70c"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\TrafficV1\\Models\\KBDU_TrafficPickup.asset",
+      "integrated_sha256": "d979f03ddc44213fd81e3ec370c82e044f14e7cf1827eb87c4ac13c5b6922c96",
+      "original_sha256": "02d74ee2d2174cf3e344ada7fbd41d555a63948feed036b7222015984ba4dd68"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\TrafficV1\\Models\\KBDU_TrafficSedan.asset",
+      "integrated_sha256": "eb557e3c21807c8f8e66c04597981e9571d63d8a1b161b6a47bb6adb310e7d56",
+      "original_sha256": "763bc8c51f36e9aa10e6af89f94b0ec776407499e8b9d79a40adba32cc731e22"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\TrafficV1\\Models\\KBDU_TrafficSemi.asset",
+      "integrated_sha256": "bbe84f664edc27dae1deae9c443be6fb2d7865d6e1875133bfbe8fe8fd838fa1",
+      "original_sha256": "e29edc318be8b3ea3c38e77088d12f1242caa5d297847c555a570f4b39385f14"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\TrafficV1\\Models\\KBDU_TrafficSemiProxy.asset",
+      "integrated_sha256": "42fc5f486293ac907f443b49cb650749dddc3d2ab541d5b1ffc08e3853d8a192",
+      "original_sha256": "5a99f872d3765c797213e2c08cef594a8f770043cd644e9b4963503da78b8b23"
+    }
+  ],
+  "authoring_records_sha256": "69f614ed8542e2a0ef521909d4b245ee1db2346638d8c81d8a2473d2f9a9c59d",
+  "quest_performance_verified": false,
+  "current_runtime": "original meshes/shader/authoring restored; no baked AO active"
+}

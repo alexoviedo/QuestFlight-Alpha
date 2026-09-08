@@ -745,3 +745,17 @@ working extracts, imagery, government data, captures, builds, and APKs remain
 external. Exact source and derivative SHA-256 hashes, attribution, and use are
 recorded in
 `Assets/Production/Environment/SemanticTowersV1/SOURCE_MANIFEST.json`.
+
+### Offline scenery remaster traffic experiment - September 7, 2026
+
+Eight CC0 traffic archetype/proxy meshes were staged with bounded self-occlusion
+in previously unused color alpha. The experiment was rejected after inconclusive
+flight-distance benefit; original runtime meshes, shader and authoring were
+restored. Only Editor bake records and offline tooling remain from this trial.
+Source attribution remains RGSDev's Free Low Poly Vehicles Pack and Teh_Bucket's
+Semi-Trailer Truck (lowpoly), recorded as CC0 1.0 in the existing traffic manifest.
+No new downloaded binary or restricted source enters the product.
+
+[Historical derivative provenance](OFFLINE_REMASTER_TRAFFIC_PROVENANCE_2026-09-07.json)
+records source attribution, original/staged hashes and the transformation.
+The record does not claim current runtime integration or visual acceptance.
