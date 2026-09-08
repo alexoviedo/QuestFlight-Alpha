@@ -23,7 +23,7 @@ Branch `feature/offline-scenery-remaster-v1` starts at `a42c87b5358a30ec97f5dee1
 
 Evidence root: `C:/Users/ovied/Dev/T2/T2-QuestFlight-product-artifacts/offline_scenery_remaster_v1`. Implementation-start free space was 18.96 GiB after the user received manual cleanup commands; this agent did not execute the previously rejected cleanup. Latest measurement: 13,414,404,096 bytes (12.49 GiB).
 
-The accepted installed APK `f6c019e08b85f95a827c52e40335e95fbe7f31b7da42c02515d26b2d5e66ad26` remains unchanged. The early experimental APK described above has now been built locally; no APK was installed. Checkpoint status is recorded below.
+The accepted installed APK `f6c019e08b85f95a827c52e40335e95fbe7f31b7da42c02515d26b2d5e66ad26` remains unchanged. The early experimental APK described above has now been built locally; no APK was installed. Local tooling/evidence checkpoint: `e60aa5c`; no merge or push. The checkpoint preserves staged rejected experiments, not an accepted visual upgrade.
 
 ## Earlier experiments (subsequently restored)
 
