@@ -167,13 +167,16 @@ namespace QuestFlightLab.Runtime
             bool startDemo = ReadBool("QFL_META_XR_SIMULATOR_START_DEMO", definition != null && definition.startAuthoredDemoPilot);
             if (startDemo)
             {
-                if (_demoPilot != null) _demoPilot.StartDemo();
+                var modes=Object.FindFirstObjectByType<ProductFlightModeCoordinator>();
+                if(modes!=null) modes.SelectDemo();
+                else if (_demoPilot != null) _demoPilot.StartDemo();
                 else _errors.Add("The authored ProductDemoPilot was unavailable for the requested flight phase.");
             }
             else if (_demoPilot != null && _demoPilot.IsRunning)
             {
                 _demoPilot.StopDemo();
             }
+            if(!startDemo) Object.FindFirstObjectByType<ProductFlightModeCoordinator>()?.SelectFreeFlight();
 
             float delay = ReadFloat(
                 "QFL_META_XR_SIMULATOR_CAPTURE_DELAY_SECONDS",
@@ -402,10 +405,14 @@ namespace QuestFlightLab.Runtime
             report.hmdInputDevice = XrInputDeviceMetadata.FromDevice(InputDevices.GetDeviceAtXRNode(XRNode.Head));
             report.leftControllerInputDevice = XrInputDeviceMetadata.FromDevice(InputDevices.GetDeviceAtXRNode(XRNode.LeftHand));
             report.rightControllerInputDevice = XrInputDeviceMetadata.FromDevice(InputDevices.GetDeviceAtXRNode(XRNode.RightHand));
-            report.checks.metaSimulatorRuntimeConnected =
-                report.xrDeviceActive && report.stereoEnabled &&
-                report.openXrRuntimeName.IndexOf("Meta", StringComparison.OrdinalIgnoreCase) >= 0 &&
-                report.openXrRuntimeName.IndexOf("Simulator", StringComparison.OrdinalIgnoreCase) >= 0;
+            // Simulator v201 identifies itself as Oculus, version 201.0.0.
+            // Check the audited launch manifest and loaded version, not a guessed name.
+            string manifest=System.Environment.GetEnvironmentVariable("XR_RUNTIME_JSON");
+            bool expectedVersion=Version.TryParse(System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_EXPECTED_RUNTIME_VERSION"),out var expected) &&
+                Version.TryParse(report.openXrRuntimeVersion,out var loaded) && expected.Major==loaded.Major && expected.Minor==loaded.Minor;
+            report.checks.metaSimulatorRuntimeConnected = report.xrDeviceActive && report.stereoEnabled && expectedVersion &&
+                !string.IsNullOrEmpty(manifest) && File.Exists(manifest) &&
+                string.Equals(Path.GetFileName(manifest),"meta_openxr_simulator.json",StringComparison.OrdinalIgnoreCase);
             report.checks.quest3RefreshRate72Hz = report.displayRefreshRateAvailable &&
                                                       Mathf.Abs(report.measuredSimulatorDisplayRefreshRateHz - 72f) <= 0.5f;
             report.checks.stereoEyePosesPlausible = report.eyeSeparationMeters >= 0.03f &&
@@ -436,22 +443,29 @@ namespace QuestFlightLab.Runtime
             Matrix4x4 world = view.inverse;
             camera.transform.SetPositionAndRotation(
                 world.GetColumn(3),
-                Quaternion.LookRotation(world.GetColumn(2), world.GetColumn(1)));
+                Quaternion.LookRotation(-world.GetColumn(2), world.GetColumn(1)));
             camera.worldToCameraMatrix = view;
             camera.projectionMatrix = projection;
 
             RenderTexture target = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32,
                 RenderTextureReadWrite.sRGB)
             {
-                antiAliasing = 1,
+                antiAliasing = Mathf.Max(1, QualitySettings.antiAliasing),
                 useMipMap = false,
                 autoGenerateMips = false,
                 name = "Meta XR Simulator QA Eye"
             };
             target.Create();
             RenderTexture previous = RenderTexture.active;
+            var groves = Object.FindObjectsByType<MapBranchGroveRenderer>(FindObjectsSortMode.None);
+            Camera.CameraCallback drawGroves = renderingCamera =>
+            {
+                if (renderingCamera != camera) return;
+                foreach (var grove in groves) grove.DrawSimulatorEyeCapture(tracked, camera);
+            };
             try
             {
+                Camera.onPreCull += drawGroves;
                 camera.targetTexture = target;
                 camera.Render();
                 RenderTexture.active = target;
@@ -462,6 +476,7 @@ namespace QuestFlightLab.Runtime
             }
             finally
             {
+                Camera.onPreCull -= drawGroves;
                 camera.targetTexture = null;
                 RenderTexture.active = previous;
                 target.Release();
@@ -829,7 +844,7 @@ namespace QuestFlightLab.Runtime
         public static EyeMetadata FromMatrices(Matrix4x4 view, Matrix4x4 projection)
         {
             Matrix4x4 world = view.inverse;
-            Quaternion rotation = Quaternion.LookRotation(world.GetColumn(2), world.GetColumn(1));
+            Quaternion rotation = Quaternion.LookRotation(-world.GetColumn(2), world.GetColumn(1));
             return new EyeMetadata
             {
                 worldPosition = world.GetColumn(3),

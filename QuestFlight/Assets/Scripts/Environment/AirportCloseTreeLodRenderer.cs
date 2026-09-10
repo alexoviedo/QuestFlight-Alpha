@@ -108,6 +108,34 @@ namespace QuestFlightLab.Environment
         [SerializeField] private Mesh lod2Mesh;
         [SerializeField] private Mesh shrubMesh;
         [SerializeField] private Mesh groveMesh;
+        [Header("Authored neighborhood foliage replacement")]
+        [SerializeField] private Renderer authoredFoliageReplacement;
+        [SerializeField] private Vector2[] authoredFoliageReplacementCenters = Array.Empty<Vector2>();
+        private readonly HashSet<Vector2Int> replacementTreeCenters = new HashSet<Vector2Int>();
+
+        public void ConfigureAuthoredFoliageReplacement(Renderer replacement, Vector2[] centers)
+        {
+            if (centers == null || centers.Length > 256 || (centers.Length > 0 && replacement == null))
+                throw new ArgumentException("A bounded authored replacement renderer and centers are required.");
+            foreach (Vector2 center in centers)
+                if (float.IsNaN(center.x) || float.IsInfinity(center.x) || float.IsNaN(center.y) || float.IsInfinity(center.y))
+                    throw new ArgumentException("Replacement center must be finite.");
+            authoredFoliageReplacement = replacement;
+            authoredFoliageReplacementCenters = (Vector2[])centers.Clone();
+            RefreshReplacementCenters();
+        }
+
+        private void RefreshReplacementCenters()
+        {
+            replacementTreeCenters.Clear();
+            foreach (Vector2 center in authoredFoliageReplacementCenters ?? Array.Empty<Vector2>())
+                replacementTreeCenters.Add(new Vector2Int(Mathf.RoundToInt(center.x * 100f), Mathf.RoundToInt(center.y * 100f)));
+        }
+
+        public bool HasActiveAuthoredReplacementAt(Vector3 position) =>
+            authoredFoliageReplacement != null && authoredFoliageReplacement.enabled &&
+            authoredFoliageReplacement.gameObject.activeInHierarchy &&
+            replacementTreeCenters.Contains(new Vector2Int(Mathf.RoundToInt(position.x * 100f), Mathf.RoundToInt(position.z * 100f)));
         [SerializeField] private TextAsset placementManifest;
         [SerializeField] private TextAsset sourceLicenseManifest;
         [SerializeField] private TextAsset fullMapPlacementDatabase;
@@ -118,6 +146,8 @@ namespace QuestFlightLab.Environment
         [SerializeField] private float lod1EnterScreenPixels = 12f;
         [SerializeField] private float lod1ExitScreenPixels = 7f;
         [SerializeField] private float maximumDistanceMeters = 1600f;
+        [SerializeField] private bool enableAuthoredFarCoveragePatch;
+        [SerializeField] private Vector4 authoredFarCoveragePatchXZ;
         [SerializeField] private float transitionDurationSeconds = 0.60f;
         [SerializeField] private float minimumResidencySeconds = 1.00f;
         [SerializeField] private float impostorAngularHysteresisDegrees = 6f;
@@ -400,6 +430,7 @@ namespace QuestFlightLab.Environment
 
         private void OnEnable()
         {
+            RefreshReplacementCenters();
             Camera.onPreCull -= DrawForCamera;
             Camera.onPreCull += DrawForCamera;
             Prepare();
@@ -411,8 +442,48 @@ namespace QuestFlightLab.Environment
         }
 
 #if UNITY_EDITOR
+        // Unsaved, geographically bounded benchmark only; never changes Android selection.
+        public static bool AllowBenchmarkCrownProxiesForVisualQa;
+        // External, unsaved prototype review only. Neither hook exists in a player.
+        public static Func<Vector3, Mesh, bool> OmitHybridPrototypeInstanceForVisualQa;
+        public static Action<Mesh, int> ObserveHybridPrototypeTierForVisualQa;
+        public static bool DisableDrawCullingForVisualQa;
+        private Camera settledPreviewCamera;
+        private float settledPreviewTime;
+
+        public void PrepareSettledPreview(Camera camera)
+        {
+            if (Application.isPlaying) throw new InvalidOperationException("Settled preview is Editor-only.");
+            Prepare();
+            settledPreviewCamera = camera;
+            // Reset identity/hysteresis so a capture does not inherit the preceding
+            // shot's tree choices. Exercise the real selection at a fixed settled pose.
+            Array.Fill(currentLods, Uninitialized);
+            Array.Fill(previousLods, Culled);
+            Array.Fill(transitionStarts, float.NegativeInfinity);
+            Array.Fill(lastStateChanges, float.NegativeInfinity);
+            Array.Clear(selectedLastFrame, 0, selectedLastFrame.Length);
+            selectionInitialized = false;
+            float start = Mathf.Max(settledPreviewTime, Time.realtimeSinceStartup);
+            float step = Mathf.Max(FullDensityPageOverlapSeconds,
+                Mathf.Max(minimumResidencySeconds, transitionDurationSeconds)) + 1f;
+            for (int iteration = 0; iteration < 4; iteration++)
+            {
+                settledPreviewTime = start + step * iteration;
+                BuildActiveIndices(camera.transform.position, camera.transform.forward, settledPreviewTime);
+                ShouldRefreshSelection(camera.transform.position, camera.transform.forward, settledPreviewTime);
+                EvaluateVisibility(camera, camera.transform.position, camera.transform.forward, true);
+                SelectDesiredLods();
+                AdvancePersistentStates(settledPreviewTime);
+                UpdateSelectionHistory();
+            }
+        }
+
+        public void ClearSettledPreview() => settledPreviewCamera = null;
+
         private void OnValidate()
         {
+            RefreshReplacementCenters();
             Prepare();
         }
 #endif
@@ -633,6 +704,14 @@ namespace QuestFlightLab.Environment
                 ? buildingClipmap.StableAircraftForward
                 : cameraForward;
             float now = Time.realtimeSinceStartup;
+#if UNITY_EDITOR
+            if (!Application.isPlaying && settledPreviewCamera == camera)
+            {
+                referencePosition = cameraPosition;
+                aircraftForward = cameraForward;
+                now = settledPreviewTime;
+            }
+#endif
             if (!BuildActiveIndices(referencePosition, aircraftForward, now))
                 return;
             bool refreshSelection = ShouldRefreshSelection(
@@ -644,6 +723,7 @@ namespace QuestFlightLab.Environment
                 SelectDesiredLods();
                 AdvancePersistentStates(now);
             }
+            PrepareDrawFrustum(camera);
             BuildAndDraw(camera, cameraPosition, layer, now);
             if (refreshSelection)
                 UpdateSelectionHistory();
@@ -717,7 +797,18 @@ namespace QuestFlightLab.Environment
                             "Full-map vegetation near-density capacity was exceeded.");
                     activeIndices[activeCount++] = index;
                     activeMembership[index] = true;
-                    farEligible[index] = false;
+                    Vector3 crownPosition = runtimeInstances[index].Position;
+                    farEligible[index] = enableAuthoredFarCoveragePatch &&
+                        crownPosition.x >= authoredFarCoveragePatchXZ.x && crownPosition.x <= authoredFarCoveragePatchXZ.y &&
+                        crownPosition.z >= authoredFarCoveragePatchXZ.z && crownPosition.z <= authoredFarCoveragePatchXZ.w;
+#if UNITY_EDITOR
+                    if (AllowBenchmarkCrownProxiesForVisualQa && !Application.isPlaying)
+                    {
+                        Vector3 position = runtimeInstances[index].Position;
+                        farEligible[index] = position.x >= -884f && position.x <= -135f &&
+                            position.z >= -914f && position.z <= -494f;
+                    }
+#endif
                 }
             }
             for (int position = 0; position < previousActiveCount; position++)
@@ -1000,8 +1091,8 @@ namespace QuestFlightLab.Environment
             bool refreshSelection)
         {
             // Selection is deliberately independent of head pose. DrawMeshInstanced
-            // submits the bounded resident set and the GPU performs ordinary camera
-            // clipping, so turning the pilot's head cannot create or destroy trees.
+            // keeps the bounded resident selection stable. Draw-stage frustum culling
+            // omits offscreen submissions without changing identities or LOD state.
             for (int active = 0; active < activeCount; active++)
                 visible[activeIndices[active]] = true;
             if (!refreshSelection)
@@ -1280,6 +1371,16 @@ namespace QuestFlightLab.Environment
             if (lod == Culled || fade <= 0.001f)
                 return;
             RuntimeInstance instance = runtimeInstances[index];
+            if (HasActiveAuthoredReplacementAt(instance.Position)) return;
+ #if UNITY_EDITOR
+            if (!Application.isPlaying && OmitHybridPrototypeInstanceForVisualQa != null)
+            {
+                Mesh reviewMesh = instance.Kind == 2 && lod != Lod2 ? shrubMesh :
+                    lod == Lod0 ? lod0Mesh : lod == Lod1 ? lod1Mesh : lod2Mesh;
+                if (OmitHybridPrototypeInstanceForVisualQa(instance.Position, reviewMesh))
+                    return;
+            }
+ #endif
             if (instance.Kind == 2 && lod != Lod2)
             {
                 if (shrubCount >= shrubMatrices.Length)
@@ -1374,13 +1475,70 @@ namespace QuestFlightLab.Environment
         {
             if (count <= 0)
                 return;
-            for (int offset = 0; offset < count; offset += MaximumInstancesPerDraw)
+            Bounds bounds = mesh.bounds;
+            int batchCount = 0;
+            for (int source = 0; source < count; source++)
             {
-                int batchCount = Mathf.Min(MaximumInstancesPerDraw, count - offset);
-                Array.Copy(matrices, offset, batchMatrices, 0, batchCount);
-                Array.Copy(tints, offset, batchTints, 0, batchCount);
-                Array.Copy(fades, offset, batchFades, 0, batchCount);
-                Array.Copy(frames, offset, batchFrames, 0, batchCount);
+                bool retain = IsMeshInsideDrawFrustum(matrices[source], bounds);
+#if UNITY_EDITOR
+                if (!Application.isPlaying && DisableDrawCullingForVisualQa) retain = true;
+#endif
+                if (!retain) continue;
+                batchMatrices[batchCount] = matrices[source];
+                batchTints[batchCount] = tints[source];
+                batchFades[batchCount] = fades[source];
+                batchFrames[batchCount] = frames[source];
+                batchCount++;
+                if (batchCount != MaximumInstancesPerDraw) continue;
+                SubmitTreeBatch(mesh, batchCount, properties, camera, layer);
+                batchCount = 0;
+            }
+            if (batchCount > 0) SubmitTreeBatch(mesh, batchCount, properties, camera, layer);
+        }
+
+        private readonly Plane[] drawPlanesLeft = new Plane[6];
+        private readonly Plane[] drawPlanesRight = new Plane[6];
+        private bool drawStereo;
+
+        private void PrepareDrawFrustum(Camera camera)
+        {
+            drawStereo = camera.stereoEnabled;
+            if (drawStereo)
+            {
+                GeometryUtility.CalculateFrustumPlanes(camera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left) *
+                    camera.GetStereoViewMatrix(Camera.StereoscopicEye.Left), drawPlanesLeft);
+                GeometryUtility.CalculateFrustumPlanes(camera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right) *
+                    camera.GetStereoViewMatrix(Camera.StereoscopicEye.Right), drawPlanesRight);
+            }
+            else GeometryUtility.CalculateFrustumPlanes(camera, drawPlanesLeft);
+        }
+
+        private bool IsMeshInsideDrawFrustum(Matrix4x4 matrix, Bounds bounds) =>
+            IsTreeBoundsInsidePlanes(matrix, bounds, drawPlanesLeft) ||
+            (drawStereo && IsTreeBoundsInsidePlanes(matrix, bounds, drawPlanesRight));
+
+        // All submitted tree transforms are TRS (orthogonal scaled axes). This
+        // sphere encloses the actual mesh bounds, including offset LOD centers.
+        // Keep a small margin at plane boundaries; never use selection radii,
+        // whose nominal crown dimensions need not enclose every LOD mesh.
+        public static bool IsTreeBoundsInsidePlanes(Matrix4x4 matrix, Bounds bounds, Plane[] planes)
+        {
+            Vector3 center = matrix.MultiplyPoint3x4(bounds.center);
+            Vector3 extents = bounds.extents;
+            Vector3 x = matrix.GetColumn(0), y = matrix.GetColumn(1), z = matrix.GetColumn(2);
+            float radius = Mathf.Sqrt(x.sqrMagnitude * extents.x * extents.x +
+                y.sqrMagnitude * extents.y * extents.y + z.sqrMagnitude * extents.z * extents.z) + 0.25f;
+            for (int plane = 0; plane < planes.Length; plane++)
+                if (planes[plane].GetDistanceToPoint(center) < -radius) return false;
+            return true;
+        }
+
+        private void SubmitTreeBatch(Mesh mesh, int batchCount, MaterialPropertyBlock properties, Camera camera, int layer)
+        {
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                    ObserveHybridPrototypeTierForVisualQa?.Invoke(mesh, batchCount);
+#endif
                 properties.SetVectorArray(InstanceTintId, batchTints);
                 properties.SetFloatArray(InstanceFadeId, batchFades);
                 properties.SetFloatArray(ImpostorFrameId, batchFrames);
@@ -1397,7 +1555,6 @@ namespace QuestFlightLab.Environment
                     camera,
                     LightProbeUsage.Off,
                 null);
-            }
         }
 
     }

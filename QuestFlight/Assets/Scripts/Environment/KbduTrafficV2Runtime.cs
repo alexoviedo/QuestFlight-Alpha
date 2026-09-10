@@ -31,12 +31,15 @@ namespace QuestFlightLab.Environment
         public const string ExpectedAcceptedSourceSha =
             "fda11a25eb526824d82a47330f2be80b1410bb64";
         public const string ExpectedGradeSeparatedRoadAuthoritySha256 =
-            "1a7e3769c6767c02c63f54f8bd59f47aa203bb89ead5252dea948910b4c6fb36";
+            "e06ee50d3de7f404489ceb4c2e48dc988e68a549ec8bc1a44726eee7d8da0d84";
         public const int DrawMeshInstancedLimit = 1023;
         public const int MaximumInstancesPerGroup = 2048;
         public const int MaximumDrawCalls = 18;
         public const float NearDistanceMeters = 1000f;
         public const float FarDistanceMeters = 4500f;
+        public const float EndpointFadeSeconds = 2f;
+        public const float FarFadeMeters = 250f;
+        public const float LodHysteresisMeters = 100f;
         public const float LegacyUniversalRoadSurfaceOffsetMeters = 0.04f;
         private const int ExpectedTileAxisCount = 24;
         private const float ExpectedTileSizeMeters = 1000f;
@@ -102,6 +105,15 @@ namespace QuestFlightLab.Environment
             public int[] tile_bounds;
 
             [NonSerialized] public float[] cumulativeMeters;
+            [NonSerialized] public int stableHash;
+            [NonSerialized] public Stream[] streams;
+            [NonSerialized] public Bounds conservativeBounds;
+        }
+
+        private sealed class Stream
+        {
+            public int hash, direction, root;
+            public double phase, ageOffset, lifetime;
         }
 
         [Serializable]
@@ -138,7 +150,16 @@ namespace QuestFlightLab.Environment
         private readonly Matrix4x4[] chunkMatrices = new Matrix4x4[DrawMeshInstancedLimit];
         private readonly Vector4[] chunkBodyTints = new Vector4[DrawMeshInstancedLimit];
         private readonly Vector4[] chunkTrailerTints = new Vector4[DrawMeshInstancedLimit];
+        private readonly Plane[] leftCullPlanes = new Plane[6];
+        private readonly Plane[] rightCullPlanes = new Plane[6];
+        private bool cullStereo, cullBoundsValid;
+#if UNITY_EDITOR
+        public bool DisableFrustumCullingForVisualQa { get; set; }
+#endif
         private readonly Dictionary<int, Tile> tileByKey = new Dictionary<int, Tile>();
+        private readonly Dictionary<long, int> lodBandStates = new Dictionary<long, int>();
+        private readonly List<long> expiredLodStates = new List<long>();
+        private Camera lodStateCamera;
 
         private static readonly Vector4[] PaintPalette =
         {
@@ -176,6 +197,15 @@ namespace QuestFlightLab.Environment
         private KbduGradeSeparatedRoadAuthorityV1 roadAuthority;
 #if UNITY_EDITOR
         private bool gradeSeparatedRoadDiagnosticBypass;
+        private bool trafficContinuityDiagnosticBypass;
+        public void ConfigureContinuityBaselineForVisualQa(bool enabled)
+        {
+            if (Application.isPlaying) throw new InvalidOperationException("Editor diagnostic only");
+            trafficContinuityDiagnosticBypass = enabled;
+            parsedManifest = null;
+            lodBandStates.Clear();
+            contractValid = TryValidateContract(out _);
+        }
 #endif
 
         public TextAsset TrajectoryManifest => trajectoryManifest;
@@ -193,6 +223,16 @@ namespace QuestFlightLab.Environment
         public int DroppedInstanceCount => droppedInstanceCount;
         public int PreparedNearInstanceCount => SumCounts(nearCounts);
         public int PreparedFarInstanceCount => SumCounts(farCounts);
+        public int PreparedDrawCallCount
+        {
+            get
+            {
+                int draws = 0;
+                foreach (int count in nearCounts) draws += (count + DrawMeshInstancedLimit - 1) / DrawMeshInstancedLimit;
+                foreach (int count in farCounts) draws += (count + DrawMeshInstancedLimit - 1) / DrawMeshInstancedLimit;
+                return draws;
+            }
+        }
 
 #if UNITY_EDITOR
         public void SetGradeSeparatedRoadDiagnosticBypass(bool bypass)
@@ -272,17 +312,20 @@ namespace QuestFlightLab.Environment
                 report = "Traffic V2 source-and-license record hash mismatch";
                 return false;
             }
-            if (!string.Equals(ComputeSha256(gradeSeparatedRoadAuthority.bytes),
+            // Git and the Windows authoring tool use different line endings. Pin the
+            // LF serialization, retaining all content checks without platform-dependent bytes.
+            if (!string.Equals(ComputeSha256(Encoding.UTF8.GetBytes(
+                    gradeSeparatedRoadAuthority.text.Replace("\r\n", "\n"))),
                     ExpectedGradeSeparatedRoadAuthoritySha256, StringComparison.Ordinal))
             {
                 report = "grade-separated road authority hash mismatch";
                 return false;
             }
-            ParseManifest();
             try
             {
                 roadAuthority = roadAuthority ??
                     new KbduGradeSeparatedRoadAuthorityV1(gradeSeparatedRoadAuthority);
+                ParseManifest();
             }
             catch (Exception exception)
             {
@@ -350,7 +393,7 @@ namespace QuestFlightLab.Environment
                 rotation = Quaternion.identity;
                 return false;
             }
-            double age = PositiveModulo(scheduleSeconds - corridor.phase_seconds,
+            double age = PositiveModulo(scheduleSeconds - corridor.streams[direction].phase,
                 corridor.headway_seconds);
             if (age * corridor.speed_mps >= corridor.length_meters)
             {
@@ -359,10 +402,11 @@ namespace QuestFlightLab.Environment
                 return false;
             }
             long departure = (long)Math.Floor(
-                (scheduleSeconds - corridor.phase_seconds) / corridor.headway_seconds);
+                (scheduleSeconds - corridor.streams[direction].phase) / corridor.headway_seconds);
             int archetype = SelectArchetype(corridor, departure, direction);
             return TryEvaluateDistance(corridor, direction,
-                (float)(age * corridor.speed_mps), 0, archetype, out position, out rotation);
+                (float)(age * corridor.speed_mps), SelectLane(corridor, departure, direction),
+                archetype, out position, out rotation);
         }
 
         // Retained for the existing diagnostic runner. The product manifest now
@@ -440,6 +484,7 @@ namespace QuestFlightLab.Environment
                     continue;
                 }
                 int pointCount = corridor?.points_xz_meters?.Length / 2 ?? 0;
+                corridor.stableHash = StableHash(corridor.corridor_id);
                 corridor.cumulativeMeters = new float[pointCount];
                 for (int point = 1; point < pointCount; point++)
                 {
@@ -452,6 +497,8 @@ namespace QuestFlightLab.Environment
                         Mathf.Sqrt(deltaX * deltaX + deltaZ * deltaZ);
                 }
             }
+            BuildContinuousStreams();
+            BuildConservativeCorridorBounds();
             foreach (Tile tile in parsedManifest.tiles)
             {
                 if (tile != null)
@@ -459,6 +506,146 @@ namespace QuestFlightLab.Environment
                     tileByKey[TileKey(tile.tile_x, tile.tile_z)] = tile;
                 }
             }
+        }
+
+        private void BuildConservativeCorridorBounds()
+        {
+            float minimumY = float.PositiveInfinity, maximumY = float.NegativeInfinity;
+            if (terrainSurface == null) return;
+            foreach (var layer in terrainSurface.layers)
+                if (layer != null && layer.IsValid)
+                    foreach (float y in layer.heightMeters)
+                    { minimumY = Mathf.Min(minimumY, y); maximumY = Mathf.Max(maximumY, y); }
+            foreach (var patch in terrainSurface.transitionPatches)
+                if (patch != null && patch.IsValid)
+                    foreach (Vector3 vertex in patch.vertices)
+                    { minimumY = Mathf.Min(minimumY, vertex.y); maximumY = Mathf.Max(maximumY, vertex.y); }
+            if (roadAuthority != null)
+                foreach (var profile in roadAuthority.Data.profiles)
+                    for (int i = 1; i < profile.samples_xyz_meters.Length; i += 3)
+                    { float y = profile.samples_xyz_meters[i]; minimumY = Mathf.Min(minimumY, y); maximumY = Mathf.Max(maximumY, y); }
+            cullBoundsValid = !float.IsInfinity(minimumY) && !float.IsInfinity(maximumY) &&
+                !float.IsNaN(minimumY) && !float.IsNaN(maximumY);
+            if (!cullBoundsValid) return;
+            foreach (var corridor in parsedManifest.corridors)
+            {
+                if (corridor == null || corridor.points_xz_meters.Length < 2) continue;
+                float[] p = corridor.points_xz_meters;
+                Bounds bounds = new Bounds(new Vector3(p[0], minimumY, p[1]), Vector3.zero);
+                for (int i = 0; i < p.Length; i += 2)
+                {
+                    bounds.Encapsulate(new Vector3(p[i], minimumY, p[i + 1]));
+                    bounds.Encapsulate(new Vector3(p[i], maximumY, p[i + 1]));
+                }
+                // Cover lane offsets, the entire longest vehicle and numerical/head-pose margin.
+                // Height spans all authored terrain and bridge data, never a guessed ground plane.
+                bounds.Expand(128f + corridor.lane_count * 3.5f);
+                corridor.conservativeBounds = bounds;
+            }
+        }
+
+        private bool CorridorCanReachEitherEye(Corridor corridor)
+        {
+#if UNITY_EDITOR
+            if (DisableFrustumCullingForVisualQa) return true;
+#endif
+            return !cullBoundsValid || GeometryUtility.TestPlanesAABB(leftCullPlanes, corridor.conservativeBounds) ||
+                cullStereo && GeometryUtility.TestPlanesAABB(rightCullPlanes, corridor.conservativeBounds);
+        }
+
+        // Continue a stream only at an exact, unambiguous two-road endpoint with
+        // matching authored flow/lane/speed contracts. Junctions and ambiguous
+        // source overlaps retain their independent schedules; no invented turn.
+        private void BuildContinuousStreams()
+        {
+            Corridor[] corridors = parsedManifest.corridors;
+            if (roadAuthority == null && gradeSeparatedRoadAuthority != null)
+                roadAuthority = new KbduGradeSeparatedRoadAuthorityV1(gradeSeparatedRoadAuthority);
+            var ports = new Dictionary<Vector2, List<int>>();
+            for (int i = 0; i < corridors.Length; i++)
+            {
+                Corridor c = corridors[i];
+                if (c == null || c.points_xz_meters == null || c.points_xz_meters.Length < 4 ||
+                    c.points_xz_meters.Length % 2 != 0) return;
+                c.streams = new Stream[2];
+                for (int end = 0; end < 2; end++)
+                {
+                    int p = end == 0 ? 0 : c.points_xz_meters.Length - 2;
+                    var point = new Vector2(c.points_xz_meters[p], c.points_xz_meters[p + 1]);
+                    if (!ports.TryGetValue(point, out List<int> list)) ports[point] = list = new List<int>(2);
+                    list.Add(i * 2 + end);
+                }
+            }
+            int[] next = new int[corridors.Length * 2], previous = new int[corridors.Length * 2];
+            Array.Fill(next, -1);
+            Array.Fill(previous, -1);
+            foreach (List<int> list in ports.Values)
+            {
+#if UNITY_EDITOR
+                if (trafficContinuityDiagnosticBypass) break;
+#endif
+                if (list.Count != 2 || list[0] / 2 == list[1] / 2) continue;
+                for (int side = 0; side < 2; side++)
+                {
+                    int fromPort = list[side], toPort = list[1 - side];
+                    int fromDirection = 1 - fromPort % 2, toDirection = toPort % 2;
+                    Corridor from = corridors[fromPort / 2], to = corridors[toPort / 2];
+                    // Existing deck authority is route-specific; a 2D endpoint
+                    // alone cannot prove the adjoining route uses the same deck.
+                    if (roadAuthority == null || roadAuthority.HasRouteProfile(from.corridor_id) ||
+                        roadAuthority.HasRouteProfile(to.corridor_id)) continue;
+                    if (!DirectionIsEnabled(from, fromDirection) || !DirectionIsEnabled(to, toDirection) ||
+                        from.headway_seconds != to.headway_seconds || from.speed_mps != to.speed_mps ||
+                        from.lane_count != to.lane_count || from.direction_mode != to.direction_mode ||
+                        from.road_class != to.road_class) continue;
+                    // Only a nearly straight continuation can preserve the lane
+                    // center at the shared endpoint without inventing a turn arc.
+                    if (Vector2.Dot(EndpointHeading(from, fromDirection, true),
+                            EndpointHeading(to, toDirection, false)) < 0.999f) continue;
+                    int fromId = fromPort / 2 * 2 + fromDirection, toId = toPort / 2 * 2 + toDirection;
+                    next[fromId] = toId;
+                    previous[toId] = fromId;
+                }
+            }
+            for (int id = 0; id < next.Length; id++)
+            {
+                if (previous[id] >= 0 || !DirectionIsEnabled(corridors[id / 2], id % 2)) continue;
+                var chain = new List<int>();
+                double lifetime = 0;
+                for (int node = id; node >= 0; node = next[node])
+                {
+                    chain.Add(node);
+                    lifetime += corridors[node / 2].length_meters / (double)corridors[node / 2].speed_mps;
+                }
+                double offset = 0;
+                Corridor root = corridors[id / 2];
+                foreach (int node in chain)
+                {
+                    Corridor c = corridors[node / 2];
+                    c.streams[node % 2] = new Stream { hash = root.stableHash, direction = id % 2, root = id / 2,
+                        phase = root.phase_seconds + offset, ageOffset = offset, lifetime = lifetime };
+                    offset += c.length_meters / (double)c.speed_mps;
+                }
+            }
+            // Closed cycles have no start: retain their authored schedules until
+            // an explicit loop-flow contract exists instead of inventing one.
+            for (int index = 0; index < corridors.Length; index++)
+            {
+                Corridor c = corridors[index];
+                for (int direction = 0; direction < 2; direction++)
+                    if (c.streams[direction] == null)
+                        c.streams[direction] = new Stream { hash = c.stableHash, direction = direction, root = index,
+                            phase = c.phase_seconds, lifetime = c.length_meters / (double)c.speed_mps };
+            }
+        }
+
+        private static Vector2 EndpointHeading(Corridor corridor, int direction, bool exit)
+        {
+            float[] p = corridor.points_xz_meters;
+            bool atEnd = (direction == 0) == exit;
+            int a = atEnd ? p.Length - 4 : 0;
+            Vector2 heading = new Vector2(p[a + 2] - p[a], p[a + 3] - p[a + 1]).normalized;
+            return direction == 0 ? heading : -heading;
         }
 
         private bool AllCorridorsAreValid(out string report)
@@ -591,12 +778,34 @@ namespace QuestFlightLab.Environment
             Array.Clear(nearCounts, 0, nearCounts.Length);
             Array.Clear(farCounts, 0, farCounts.Length);
             droppedInstanceCount = 0;
+            if (lodStateCamera != camera)
+            {
+                lodBandStates.Clear();
+                lodStateCamera = camera;
+            }
             visitGeneration++;
             if (visitGeneration == int.MaxValue)
             {
                 Array.Clear(corridorVisitGeneration, 0, corridorVisitGeneration.Length);
                 visitGeneration = 1;
+                lodBandStates.Clear();
             }
+            if ((visitGeneration & 127) == 0)
+            {
+                expiredLodStates.Clear();
+                foreach (var state in lodBandStates)
+                    if (visitGeneration - Math.Abs(state.Value) > 2) expiredLodStates.Add(state.Key);
+                foreach (long key in expiredLodStates) lodBandStates.Remove(key);
+            }
+            cullStereo = camera.stereoEnabled;
+            if (cullStereo)
+            {
+                GeometryUtility.CalculateFrustumPlanes(camera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left) *
+                    camera.GetStereoViewMatrix(Camera.StereoscopicEye.Left), leftCullPlanes);
+                GeometryUtility.CalculateFrustumPlanes(camera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right) *
+                    camera.GetStereoViewMatrix(Camera.StereoscopicEye.Right), rightCullPlanes);
+            }
+            else GeometryUtility.CalculateFrustumPlanes(camera.cullingMatrix, leftCullPlanes);
             Vector3 cameraPosition = camera.transform.position;
             int centerX = TileCoordinate(cameraPosition.x);
             int centerZ = TileCoordinate(cameraPosition.z);
@@ -618,8 +827,9 @@ namespace QuestFlightLab.Environment
                             continue;
                         }
                         corridorVisitGeneration[corridorIndex] = visitGeneration;
-                        PrepareCorridor(cameraPosition, parsedManifest.corridors[corridorIndex],
-                            corridorIndex, scheduleSeconds);
+                        Corridor corridor = parsedManifest.corridors[corridorIndex];
+                        if (CorridorCanReachEitherEye(corridor))
+                            PrepareCorridor(cameraPosition, corridor, corridorIndex, scheduleSeconds);
                     }
                 }
             }
@@ -637,25 +847,27 @@ namespace QuestFlightLab.Environment
                 {
                     continue;
                 }
-                double age = PositiveModulo(scheduleSeconds - corridor.phase_seconds,
+                Stream stream = corridor.streams[direction];
+                double age = PositiveModulo(scheduleSeconds - stream.phase,
                     corridor.headway_seconds);
                 int streamIndex = 0;
                 for (double vehicleAge = age;
                     vehicleAge * corridor.speed_mps < corridor.length_meters;
                     vehicleAge += corridor.headway_seconds, streamIndex++)
                 {
-                    int laneSlots = Mathf.Max(1, corridor.lane_count /
-                        (string.Equals(corridor.direction_mode, "BIDIRECTIONAL",
-                            StringComparison.Ordinal) ? 2 : 1));
-                    int laneIndex = PositiveModulo(
-                        StableHash(corridor.corridor_id) + streamIndex, laneSlots);
                     long departure = (long)Math.Floor(
-                        (scheduleSeconds - corridor.phase_seconds) / corridor.headway_seconds) -
+                        (scheduleSeconds - stream.phase) / corridor.headway_seconds) -
                         streamIndex;
+                    int laneIndex = SelectLane(corridor, departure, direction);
+#if UNITY_EDITOR
+                    if (trafficContinuityDiagnosticBypass)
+                        laneIndex = PositiveModulo(corridor.stableHash + streamIndex,
+                            Mathf.Max(1, corridor.lane_count / (corridor.direction_mode == "BIDIRECTIONAL" ? 2 : 1)));
+#endif
                     int archetype = SelectArchetype(corridor, departure, direction);
                     if (!TryEvaluateDistance(corridor, direction,
                         (float)(vehicleAge * corridor.speed_mps), laneIndex, archetype,
-                        out Vector3 position, out Quaternion rotation))
+                        out Vector3 position, out Quaternion rotation, cameraPosition))
                     {
                         continue;
                     }
@@ -665,10 +877,11 @@ namespace QuestFlightLab.Environment
                         continue;
                     }
                     int paint = PositiveModulo(
-                        StableHash(corridor.corridor_id) + (int)(departure & 0x7fffffff) * 31 +
-                        direction * 131, PaintPalette.Length);
+                        stream.hash + (int)(departure & 0x7fffffff) * 31 +
+                        stream.direction * 131, PaintPalette.Length);
                     AppendInstance(position, rotation, distance, archetype, paint,
-                        corridorIndex, direction);
+                        corridorIndex, direction, EvaluateVisibilityEnvelope(vehicleAge + stream.ageOffset,
+                            stream.lifetime, distance), RetainNearLod(stream.root, stream.direction, departure, distance));
                 }
             }
         }
@@ -680,7 +893,8 @@ namespace QuestFlightLab.Environment
             int laneIndex,
             int archetype,
             out Vector3 position,
-            out Quaternion rotation)
+            out Quaternion rotation,
+            Vector3? visibilityCenter = null)
         {
             if (roadAuthority == null)
             {
@@ -727,6 +941,19 @@ namespace QuestFlightLab.Environment
             float lateral = 1.75f + laneIndex * 3.5f;
             float x = Mathf.LerpUnclamped(startX, endX, ratio) + right.x * lateral;
             float z = Mathf.LerpUnclamped(startZ, endZ, ratio) + right.z * lateral;
+            // Reject only points provably outside the 3D draw radius before the
+            // expensive three terrain/road samples. This cannot reject a visible point.
+            if (visibilityCenter.HasValue)
+            {
+                Vector3 center = visibilityCenter.Value;
+                float dx = x - center.x, dz = z - center.z;
+                if (dx * dx + dz * dz > FarDistanceMeters * FarDistanceMeters)
+                {
+                    position = default;
+                    rotation = Quaternion.identity;
+                    return false;
+                }
+            }
             float contactOffset = roadAuthority.ContactOffsetMeters(archetype);
 #if UNITY_EDITOR
             bool useGradeSeparatedRoad = !gradeSeparatedRoadDiagnosticBypass;
@@ -799,22 +1026,22 @@ namespace QuestFlightLab.Environment
             out float height,
             out Vector3 normal)
         {
+            bool hasTerrain = terrainSurface.TrySample(x, z, out ProductionTerrainSample terrainSample);
             if (useGradeSeparatedRoad && roadAuthority.TryEvaluate(
                     routeId, x, z, horizontalForward,
-                    out KbduGradeSeparatedRoadAuthorityV1.SurfaceSample roadSample))
+                    out KbduGradeSeparatedRoadAuthorityV1.SurfaceSample roadSample) &&
+                (!hasTerrain || roadSample.position.y >= terrainSample.heightMeters))
             {
                 height = roadSample.position.y;
-                normal = roadSample.normal.sqrMagnitude > 0.5f
-                    ? roadSample.normal.normalized
-                    : Vector3.up;
+                normal = roadSample.normal.sqrMagnitude > 0.5f ? roadSample.normal.normalized : Vector3.up;
                 return true;
             }
-            if (terrainSurface.TrySample(x, z, out ProductionTerrainSample terrainSample))
+            // A straight authored approach can pass under a terrain crest. The
+            // visible terrain occludes it: never support a vehicle below that surface.
+            if (hasTerrain)
             {
                 height = terrainSample.heightMeters;
-                normal = terrainSample.normal.sqrMagnitude > 0.5f
-                    ? terrainSample.normal.normalized
-                    : Vector3.up;
+                normal = terrainSample.normal.sqrMagnitude > 0.5f ? terrainSample.normal.normalized : Vector3.up;
                 return true;
             }
             height = 0f;
@@ -829,10 +1056,21 @@ namespace QuestFlightLab.Environment
             int archetype,
             int paintIndex,
             int corridorIndex,
-            int direction)
+            int direction,
+            float visibility,
+            bool near)
         {
             Matrix4x4 matrix = Matrix4x4.TRS(position, rotation, Vector3.one);
-            if (distance <= NearDistanceMeters)
+            Vector4 bodyTint = PaintPalette[paintIndex];
+            bodyTint.w = visibility;
+#if UNITY_EDITOR
+            if (trafficContinuityDiagnosticBypass)
+            {
+                bodyTint.w = 1;
+                near = distance <= NearDistanceMeters;
+            }
+#endif
+            if (near)
             {
                 int count = nearCounts[archetype];
                 if (count >= MaximumInstancesPerGroup)
@@ -841,7 +1079,7 @@ namespace QuestFlightLab.Environment
                     return;
                 }
                 nearMatrices[archetype][count] = matrix;
-                nearBodyTints[archetype][count] = PaintPalette[paintIndex];
+                nearBodyTints[archetype][count] = bodyTint;
                 nearTrailerTints[archetype][count] = TrailerPalette[paintIndex];
                 nearCounts[archetype] = count + 1;
             }
@@ -857,7 +1095,7 @@ namespace QuestFlightLab.Environment
                     return;
                 }
                 farMatrices[proxy][count] = matrix;
-                farBodyTints[proxy][count] = PaintPalette[paintIndex];
+                farBodyTints[proxy][count] = bodyTint;
                 farTrailerTints[proxy][count] = TrailerPalette[paintIndex];
                 farCounts[proxy] = count + 1;
             }
@@ -909,11 +1147,67 @@ namespace QuestFlightLab.Environment
                 : string.Equals(corridor.direction_mode, "REVERSE", StringComparison.Ordinal);
         }
 
+        private static int SelectLane(Corridor corridor, long departure, int direction)
+        {
+            int slots = Mathf.Max(1, corridor.lane_count /
+                (corridor.direction_mode == "BIDIRECTIONAL" ? 2 : 1));
+            // Departure identifies the vehicle. Its changing rank in the stream
+            // must never change its lane when the next vehicle enters the road.
+            Stream stream = corridor.streams[direction];
+            return (int)PositiveModulo((double)stream.hash + departure + stream.direction, slots);
+        }
+
+        public static bool EvaluateNearLod(bool previouslyNear, float distance) =>
+            distance <= NearDistanceMeters + (previouslyNear ? LodHysteresisMeters : -LodHysteresisMeters);
+
+        private bool RetainNearLod(int corridor, int direction, long departure, float distance)
+        {
+            long key = ((long)corridor << 33) | ((long)direction << 32) | (uint)departure;
+            if (distance < NearDistanceMeters - LodHysteresisMeters ||
+                distance > NearDistanceMeters + LodHysteresisMeters)
+            {
+                lodBandStates.Remove(key);
+                return distance < NearDistanceMeters;
+            }
+            bool near = lodBandStates.TryGetValue(key, out int state)
+                ? EvaluateNearLod(state > 0, distance) : distance <= NearDistanceMeters;
+            lodBandStates[key] = near ? visitGeneration : -visitGeneration;
+            return near;
+        }
+
+        public static float EvaluateVisibilityEnvelope(double age, double lifetime, float distance)
+        {
+            if (age <= 0 || age >= lifetime || distance >= FarDistanceMeters) return 0f;
+            float fadeSeconds = (float)Math.Min(EndpointFadeSeconds, lifetime * 0.25);
+            float endWeight = Mathf.Clamp01((float)Math.Min(age, lifetime - age) / fadeSeconds);
+            float rangeWeight = Mathf.Clamp01((FarDistanceMeters - distance) / FarFadeMeters);
+            return Mathf.SmoothStep(0f, 1f, endWeight) * Mathf.SmoothStep(0f, 1f, rangeWeight);
+        }
+
+#if UNITY_EDITOR
+        public bool TryEvaluateVehicleForVisualQa(int corridorIndex, int direction, long departure,
+            double time, out Vector3 position, out Quaternion rotation, out int lane, out float visibility)
+        {
+            ParseManifest();
+            Corridor corridor = parsedManifest.corridors[corridorIndex];
+            Stream stream = corridor.streams[direction];
+            double age = time - stream.phase - departure * corridor.headway_seconds;
+            lane = SelectLane(corridor, departure, direction);
+            visibility = EvaluateVisibilityEnvelope(age + stream.ageOffset, stream.lifetime, 0);
+            position = default;
+            rotation = Quaternion.identity;
+            return DirectionIsEnabled(corridor, direction) && age >= 0 &&
+                age * corridor.speed_mps < corridor.length_meters &&
+                TryEvaluateDistance(corridor, direction, (float)(age * corridor.speed_mps), lane,
+                    SelectArchetype(corridor, departure, direction), out position, out rotation);
+        }
+#endif
+
         private static int SelectArchetype(Corridor corridor, long departure, int direction)
         {
             int value = PositiveModulo(
-                StableHash(corridor.corridor_id) + (int)(departure & 0x7fffffff) * 17 +
-                direction * 71, 100);
+                corridor.streams[direction].hash + (int)(departure & 0x7fffffff) * 17 +
+                corridor.streams[direction].direction * 71, 100);
             int heavyPercent = corridor.road_class == "motorway" || corridor.road_class == "trunk"
                 ? 12
                 : corridor.road_class == "primary" ? 6 : 2;

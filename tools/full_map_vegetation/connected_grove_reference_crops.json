@@ -1,0 +1,22 @@
+{
+  "schema": "questflight.connected-grove-reference-crops.v1",
+  "selection": "Frozen from unmasked 2020 orthophoto overviews before candidate inspection in these crops. Five crops per required environment. The first two in each category are development; the other three are held out. Source-edge/seasonal uncertainty is deliberate and must be reported, not filled as background.",
+  "cropSizeMeters": 64,
+  "pixels": 192,
+  "sites": {
+    "valmont": [-282, -828, "N3W297"],
+    "neighborhood": [-850, -600, "N3W297"],
+    "foothills": [-7500, -2500, "N2W213"],
+    "reservoir": [-800, 4500, "N3W267"],
+    "east": [3800, -4000, "N2W110"],
+    "west": [-4800, 1600, "N3W284"]
+  },
+  "categories": {
+    "dense": [["valmont",150,325],["valmont",245,330],["west",450,245],["west",455,475],["west",465,330]],
+    "rows": [["valmont",325,450],["valmont",500,155],["east",165,310],["east",75,475],["east",145,180]],
+    "roads_buildings": [["west",300,195],["west",200,145],["valmont",150,100],["east",145,495],["neighborhood",400,300]],
+    "lawns_fields": [["neighborhood",335,265],["valmont",330,150],["reservoir",180,300],["east",400,350],["west",45,155]],
+    "conifer_mixed": [["foothills",430,110],["foothills",165,195],["foothills",480,370],["foothills",330,280],["foothills",300,470]],
+    "seams_uncertain": [["valmont",300,385],["valmont",400,390],["reservoir",365,175],["reservoir",355,435],["reservoir",355,525]]
+  }
+}

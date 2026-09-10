@@ -10,6 +10,55 @@ namespace QuestFlight.Editor.Tests
 {
     public sealed class AirportCloseTreeLodEditModeTests
     {
+        [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)]
+        [TestCase(4)] [TestCase(5)] [TestCase(6)] [TestCase(7)]
+        public void FarImpostorRendersCrownAcrossAtlasFrame(int frame)
+        {
+            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(AirportCloseTreeLodAuthoring.Lod2AssetPath);
+            Material source = AssetDatabase.LoadAssetAtPath<Material>(AirportCloseTreeLodAuthoring.CanopyMaterialPath);
+            Assert.That(mesh, Is.Not.Null); Assert.That(source, Is.Not.Null);
+            var material = new Material(source);
+            material.SetFloat("_InstanceFade", 1); material.SetFloat("_ImpostorFrame", frame);
+            var tree = new GameObject("Isolated authored impostor regression") { layer = 31 };
+            tree.AddComponent<MeshFilter>().sharedMesh = mesh;
+            tree.AddComponent<MeshRenderer>().sharedMaterial = material;
+            var cameraObject = new GameObject("Impostor regression camera");
+            var camera = cameraObject.AddComponent<Camera>(); camera.enabled = false;
+            camera.cullingMask = 1 << 31; camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = Color.magenta; camera.orthographic = true; camera.orthographicSize = 0.6f;
+            camera.transform.position = new Vector3(0, 0.5f, -2);
+            var target = new RenderTexture(128, 128, 24, RenderTextureFormat.ARGB32);
+            var pixels = new Texture2D(128, 128, TextureFormat.RGB24, false);
+            var previousTarget = RenderTexture.active; bool previousFog = RenderSettings.fog;
+            try
+            {
+                RenderSettings.fog = false; camera.targetTexture = target; camera.Render();
+                RenderTexture.active = target; pixels.ReadPixels(new Rect(0, 0, 128, 128), 0, 0); pixels.Apply();
+                string captureRoot = System.Environment.GetEnvironmentVariable("QFL_CANOPY_UV_TEST_CAPTURE_ROOT");
+                if (!string.IsNullOrEmpty(captureRoot))
+                {
+                    Directory.CreateDirectory(captureRoot);
+                    File.WriteAllBytes(Path.Combine(captureRoot, $"frame_{frame}.png"), pixels.EncodeToPNG());
+                }
+                int covered = 0, left = 128, right = -1;
+                Color32[] data = pixels.GetPixels32();
+                for (int i = 0; i < data.Length; i++)
+                {
+                    Color32 value = data[i];
+                    if (value.r > 250 && value.b > 250 && value.g < 3) continue;
+                    covered++; left = Mathf.Min(left, i % 128); right = Mathf.Max(right, i % 128);
+                }
+                Assert.That(covered, Is.GreaterThan(800), $"Frame {frame} collapsed or clipped: {covered} covered pixels");
+                Assert.That(right - left, Is.GreaterThan(45), "Authored U endpoints must span the crown rather than the same atlas column.");
+            }
+            finally
+            {
+                RenderSettings.fog = previousFog; RenderTexture.active = previousTarget; camera.targetTexture = null;
+                Object.DestroyImmediate(cameraObject); Object.DestroyImmediate(tree);
+                Object.DestroyImmediate(material); Object.DestroyImmediate(target); Object.DestroyImmediate(pixels);
+            }
+        }
+
         private const string EnvironmentPath = ProductionEnvironmentRoot.PrefabAssetPath;
         private const string SourceManifestPath =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/" +

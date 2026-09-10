@@ -27,7 +27,7 @@ namespace QuestFlightLab.Tests.EditMode
                 AerialSceneryRoot aerial = root.GetComponentInChildren<AerialSceneryRoot>(true);
                 Assert.That(aerial, Is.Not.Null);
                 Assert.That(aerial.TryValidateContract(out string aerialReport), Is.True, aerialReport);
-                Assert.That(contract.bakeToolVersion, Is.EqualTo("photoreal_aerial_surface_v1"));
+                Assert.That(contract.bakeToolVersion, Is.EqualTo("terrain_defect_repair_v1"));
                 Assert.That(contract.authoritativeTerrainSurface, Is.Not.Null);
                 Assert.That(contract.productionPlacementManifest, Is.Not.Null);
                 Assert.That(contract.productionPlacementManifest.entries.Length, Is.EqualTo(28336));
@@ -319,6 +319,9 @@ namespace QuestFlightLab.Tests.EditMode
                 ProductionEnvironmentRoot contract = root.GetComponent<ProductionEnvironmentRoot>();
                 Renderer[] renderers = contract.GetComponentsInChildren<Renderer>(true);
                 bool[] before = renderers.Select(renderer => renderer.enabled).ToArray();
+                bool[] forcedBefore = renderers.Select(renderer => renderer.forceRenderingOff).ToArray();
+                var buildingSlots = contract.GetComponentsInChildren<AircraftCenteredBuildingClipmapController>(true)
+                    .SelectMany(controller => controller.pageRenderers).ToArray();
                 int mipLimitBefore = QualitySettings.globalTextureMipmapLimit;
                 MethodInfo apply = typeof(QuestTemporalVisualGateRecorder).GetMethod(
                     "ApplyDiagnosticIsolation",
@@ -335,21 +338,22 @@ namespace QuestFlightLab.Tests.EditMode
                     for (int index = 0; index < renderers.Length; index++)
                     {
                         Renderer renderer = renderers[index];
+                        Assert.That(renderer.enabled, Is.EqualTo(before[index]), "Isolation must preserve authored renderer activation");
                         bool wasEnabled = before[index];
                         if (profile == QuestTemporalVisualGateRecorder.SkyOnlyIsolationProfile)
                         {
-                            if (wasEnabled) Assert.That(renderer.enabled, Is.False, renderer.name);
+                            Assert.That(renderer.forceRenderingOff, Is.True, renderer.name);
                         }
                         else if (profile == QuestTemporalVisualGateRecorder.WaterOffIsolationProfile)
                         {
                             bool isWater = renderer.transform == contract.essentialWater ||
                                            renderer.transform.IsChildOf(contract.essentialWater);
-                            Assert.That(renderer.enabled, Is.EqualTo(wasEnabled && !isWater), renderer.name);
+                            Assert.That(renderer.forceRenderingOff, Is.EqualTo(forcedBefore[index] || isWater), renderer.name);
                         }
                         else if (profile == QuestTemporalVisualGateRecorder.BuildingsVegetationOffIsolationProfile)
                         {
-                            bool isBuildingOrVegetation = IsBuildingOrVegetationForDiagnostic(renderer.transform);
-                            Assert.That(renderer.enabled, Is.EqualTo(wasEnabled && !isBuildingOrVegetation), renderer.name);
+                            bool isBuildingOrVegetation = IsBuildingOrVegetationForDiagnostic(renderer.transform) || buildingSlots.Contains(renderer);
+                            Assert.That(renderer.forceRenderingOff, Is.EqualTo(forcedBefore[index] || isBuildingOrVegetation), renderer.name);
                             if (HasAncestorPrefix(renderer.transform, "parked_aircraft_"))
                                 Assert.That(renderer.enabled, Is.EqualTo(wasEnabled), "Parked aircraft are not part of the buildings/vegetation isolation.");
                         }
@@ -371,7 +375,10 @@ namespace QuestFlightLab.Tests.EditMode
 
                 Assert.That(QualitySettings.globalTextureMipmapLimit, Is.EqualTo(mipLimitBefore));
                 for (int index = 0; index < renderers.Length; index++)
+                {
                     Assert.That(renderers[index].enabled, Is.EqualTo(before[index]), renderers[index].name);
+                    Assert.That(renderers[index].forceRenderingOff, Is.EqualTo(forcedBefore[index]), renderers[index].name);
+                }
             });
         }
 
@@ -485,7 +492,6 @@ namespace QuestFlightLab.Tests.EditMode
             {
                 if (current.name.StartsWith("buildings_", StringComparison.Ordinal) ||
                     current.name.StartsWith("vegetation_", StringComparison.Ordinal) ||
-                    string.Equals(current.name, "AirportArtProduction", StringComparison.Ordinal) ||
                     string.Equals(current.name, AirportCoreBenchmarkRoot.GameObjectName, StringComparison.Ordinal) ||
                     string.Equals(current.name, "SparseVegetationProduction", StringComparison.Ordinal))
                     return true;

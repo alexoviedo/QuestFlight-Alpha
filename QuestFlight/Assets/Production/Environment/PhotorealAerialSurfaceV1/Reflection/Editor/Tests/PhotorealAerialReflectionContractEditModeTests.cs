@@ -276,13 +276,11 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(
                 displayReadoutMesh.vertexCount,
                 Is.EqualTo(
-                    CockpitAvionicsV2PresentationAuthoring
-                        .ExpectedGlyphSlots * 4));
+                    (CockpitAvionicsV2PresentationAuthoring.ExpectedGlyphSlots + 140) * 4));
             Assert.That(
                 displayReadoutMesh.triangles.Length,
                 Is.EqualTo(
-                    CockpitAvionicsV2PresentationAuthoring
-                        .ExpectedGlyphSlots * 6));
+                    (CockpitAvionicsV2PresentationAuthoring.ExpectedGlyphSlots + 140) * 6));
             Assert.That(aircraft.GetComponentsInChildren<Transform>(true).Any(transform =>
                 string.Equals(transform.name,
                     PhotorealAerialReflectionAuthoring.RejectedGeneratedInstrumentCoverName,
@@ -308,10 +306,15 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(lighting, Is.Not.Null);
                 Assert.That(lighting.ApplyAuthoredLightingNow(), Is.Not.Null);
                 Renderer[] runtimeRenderers = instance.GetComponentsInChildren<Renderer>(true);
+                // The accepted avionics depth repair replaces this overlapping
+                // static display with the one-draw glyph/background presentation.
+                Assert.That(runtimeRenderers.Single(renderer => renderer.name ==
+                    "Static_Display_New_Mat_01_0_New_Mat_01_0").enabled, Is.False);
+                Assert.That(runtimeRenderers.Single(renderer => renderer.name ==
+                    PhotorealAerialReflectionAuthoring.InstrumentDisplayReadoutName).enabled, Is.True);
                 foreach (string authoritativeName in new[]
                          {
                              PhotorealAerialReflectionAuthoring.InstrumentMeterRendererName,
-                             "Static_Display_New_Mat_01_0_New_Mat_01_0",
                              "Static_TXT_White_New_Static_0_White_New_Static_0"
                          })
                 {

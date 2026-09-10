@@ -49,6 +49,7 @@ Shader "QuestFlight/KBDU Traffic Vehicle"
                 half2 detailUv : TEXCOORD3;
                 half3 bodyTint : TEXCOORD4;
                 half3 trailerTint : TEXCOORD6;
+                half visibility : TEXCOORD7;
                 UNITY_FOG_COORDS(5)
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -67,6 +68,7 @@ Shader "QuestFlight/KBDU Traffic Vehicle"
                     TrafficVehicle,
                     _BodyTint);
                 output.bodyTint = tint.rgb;
+                output.visibility = tint.a;
                 output.trailerTint = UNITY_ACCESS_INSTANCED_PROP(
                     TrafficVehicle,
                     _TrailerTint).rgb;
@@ -80,6 +82,13 @@ Shader "QuestFlight/KBDU Traffic Vehicle"
             fixed4 frag(v2f input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
+                // Opaque ordered coverage: no transparent sorting, extra pass,
+                // texture or per-vehicle object. At full visibility nothing clips.
+                // Screen-space coverage stays fixed over time (no temporal noise).
+                float2 pixel = floor(input.position.xy);
+                float threshold = frac(52.9829189 * frac(dot(pixel, float2(0.06711056, 0.00583715))));
+                clip(input.visibility - max(threshold, 0.0001));
 
                 // Imported CC0 derivatives encode one exclusive surface class:
                 // R body, G glass, B tire, RG trim, RB headlamp, GB tail lamp.

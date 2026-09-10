@@ -15,6 +15,26 @@ namespace QuestFlight.Editor.Tests
     public sealed class FullMapBuildingClipmapEditModeTests
     {
         [Test]
+        public void ValmontPreservesLargeFlatSourceOutlineWithoutChangingOutsideOrPitchedBuildings()
+        {
+            Type authoring = typeof(FullMapBuildingClipmapAssetAuthoring);
+            Type buildingType = authoring.GetNestedType("Building", BindingFlags.NonPublic);
+            object building = Activator.CreateInstance(buildingType, true);
+            buildingType.GetField("area_m2").SetValue(building, 1500f);
+            MethodInfo compile = authoring.GetMethod("CompileStableFootprint", BindingFlags.Static | BindingFlags.NonPublic);
+            Vector2[] ring = Enumerable.Range(0, 12).Select(i => new Vector2(
+                -500f + 25f * Mathf.Cos(i * Mathf.PI / 6f), -700f + 25f * Mathf.Sin(i * Mathf.PI / 6f))).ToArray();
+            Vector2[] Run(Vector2[] points) => (Vector2[])compile.Invoke(null, new object[] { points, building });
+            Assert.That(Run(ring), Is.EqualTo(ring), "Preserve the recorded perimeter in the bounded patch.");
+            Assert.That(Run(ring.Select(p => p + new Vector2(2000, 0)).ToArray()).Length, Is.LessThan(ring.Length));
+            buildingType.GetField("roof_id").SetValue(building, 1);
+            Assert.That(Run(ring).Length, Is.LessThan(ring.Length), "Do not change pitched roof allocation inputs.");
+            buildingType.GetField("roof_id").SetValue(building, 0);
+            buildingType.GetField("area_m2").SetValue(building, 500f);
+            Assert.That(Run(ring).Length, Is.LessThan(ring.Length), "Small buildings retain the existing policy.");
+        }
+
+        [Test]
         public void ProductOwnsOneFixedAircraftCenteredBuildingClipmap()
         {
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(
@@ -408,7 +428,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(source, Is.Not.Null);
             RoofAllocationTestReport report = JsonUtility.FromJson<RoofAllocationTestReport>(source.text);
             Assert.That(report.compiler_version,
-                Is.EqualTo("semantic-tower-exclusion-compiler-v15-20260903"));
+                Is.EqualTo("valmont-source-outline-compiler-v16-20260907"));
             Assert.That(report.rollout, Is.EqualTo("selective"));
             Assert.That(report.represented_buildings, Is.EqualTo(57440));
             Assert.That(report.page_count, Is.EqualTo(576));
@@ -428,8 +448,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(report.final_maximum_selected_triangles, Is.EqualTo(235000));
             Assert.That(report.remaining_triangle_margin, Is.Zero);
             Assert.That(report.pages, Has.Length.EqualTo(576));
-            Assert.That(report.pages.Sum(page => page.baseline_triangles), Is.EqualTo(613373));
-            Assert.That(report.pages.Sum(page => page.final_triangles), Is.EqualTo(636625));
+            Assert.That(report.pages.Sum(page => page.baseline_triangles), Is.EqualTo(613373 + 177));
+            Assert.That(report.pages.Sum(page => page.final_triangles), Is.EqualTo(636625 + 177));
             Assert.That(report.pages.Select(page => page.final_triangles)
                 .OrderByDescending(value => value).Take(24).Sum(), Is.EqualTo(235000));
             Assert.That(report.selected_building_ids, Has.Length.EqualTo(report.selected_roofs));
@@ -576,7 +596,7 @@ namespace QuestFlight.Editor.Tests
                 FullMapBuildingClipmapAssetAuthoring.CompilationReportPath);
             Assert.That(report, Is.Not.Null);
             Assert.That(report.text, Does.Contain(
-                "semantic-tower-exclusion-compiler-v15-20260903"));
+                "valmont-source-outline-compiler-v16-20260907"));
             Assert.That(report.text, Does.Contain("\"foundation_embed_meters\": 1.6"));
             Assert.That(report.text, Does.Contain("\"maximum_roof_wall_seam_meters\": 0.0"));
             Assert.That(report.text, Does.Contain("\"maximum_vertical_corner_seam_meters\": 0.0"));
@@ -755,8 +775,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(nonConstantWallQuads, Is.Zero,
                 "Packed endpoints must be constant across each duplicated wall quad.");
             Assert.That(encodedWallQuads, Is.GreaterThan(200000));
-            Assert.That(vertices, Is.EqualTo(1424373));
-            Assert.That(triangles, Is.EqualTo(636625));
+            Assert.That(vertices, Is.EqualTo(1424373 + 413));
+            Assert.That(triangles, Is.EqualTo(636625 + 177));
         }
 
         private static int Occurrences(string source, string value)

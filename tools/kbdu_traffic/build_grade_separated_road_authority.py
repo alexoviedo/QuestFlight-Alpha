@@ -567,6 +567,85 @@ def profile_normals(
     return normals
 
 
+def reconcile_approach_overlaps(profiles: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Join coincident approach endpoints without moving terrain, bridge crowns or source XZ.
+
+    A 4% upward envelope joins an existing terrain-matched endpoint to the continuing
+    approach. Preserve every slope break in mesh authoring; the existing 6% gate remains.
+    """
+    import bisect
+    originals = []
+    for profile in profiles:
+        xyz = list(zip(*[iter(profile["samples_xyz_meters"])] * 3))
+        stations = [0.0]
+        for a, b in zip(xyz, xyz[1:]):
+            stations.append(stations[-1] + math.hypot(b[0] - a[0], b[2] - a[2]))
+        originals.append((profile, xyz, stations, LineString([(x, z) for x, _, z in xyz])))
+    report = []
+    for target, xyz, stations, line in originals:
+        def sample(distance):
+            index = min(len(xyz) - 2, max(0, bisect.bisect_right(stations, distance) - 1))
+            t = (distance - stations[index]) / (stations[index + 1] - stations[index])
+            return tuple(a + (b - a) * t for a, b in zip(xyz[index], xyz[index + 1]))
+        anchors = []
+        for source, source_xyz, _, _ in originals:
+            if source is target or not set(source["upper_route_ids"]).intersection(target["upper_route_ids"]):
+                continue
+            for endpoint in (source_xyz[0], source_xyz[-1]):
+                point = Point(endpoint[0], endpoint[2])
+                distance = line.project(point)
+                if line.distance(point) > 0.05 or not 1.0 < distance < line.length - 1.0:
+                    continue
+                old = sample(distance)[1]
+                if endpoint[1] <= old + 0.01:
+                    continue
+                if target["bridge_interval_meters"][0] <= distance <= target["bridge_interval_meters"][1]:
+                    raise RuntimeError("Overlap repair may not alter a bridge crown: " + target["span_id"])
+                anchors.append((distance, endpoint[1]))
+                report.append(dict(source=source["span_id"], target=target["span_id"],
+                                   station_meters=distance, raise_meters=endpoint[1] - old))
+        if not anchors:
+            continue
+        distances = sorted(set(stations + [d for d, _ in anchors]))
+        points, changed = [], set()
+        for index, distance in enumerate(distances):
+            x, old_y, z = sample(distance)
+            y = max(old_y, *(height - 0.04 * abs(distance - anchor) for anchor, height in anchors))
+            if y > old_y + 0.00001:
+                changed.update(range(max(0, index - 1), min(len(distances), index + 2)))
+            if index in (0, len(distances) - 1) and abs(y - old_y) > 0.00001:
+                raise RuntimeError("Overlap repair would move a terrain-matched endpoint")
+            if target["bridge_interval_meters"][0] <= distance <= target["bridge_interval_meters"][1] and y > old_y + 0.00001:
+                raise RuntimeError("Overlap repair would raise a bridge crown")
+            points.append(tuple(round(v, 4) for v in (x, y, z)))
+        normals = [tuple(target["sample_normals_xyz"][:3])]
+        for before, after in zip(points, points[2:]):
+            dx, dy, dz = (b - a for a, b in zip(before, after))
+            n = (-dy * dx, dx * dx + dz * dz, -dy * dz)
+            length = math.sqrt(sum(v * v for v in n))
+            normals.append(tuple(round(v / length, 6) for v in n))
+        normals.append(tuple(target["sample_normals_xyz"][-3:]))
+        maximum_grade = max(abs(b[1] - a[1]) / math.hypot(b[0] - a[0], b[2] - a[2])
+                            for a, b in zip(points, points[1:]))
+        if maximum_grade > MAXIMUM_ACCEPTED_GRADE:
+            raise RuntimeError("Overlap repair exceeds authored grade limit")
+        target["samples_xyz_meters"] = [v for point in points for v in point]
+        target["sample_normals_xyz"] = [v for normal in normals for v in normal]
+        target["maximum_grade"] = round(maximum_grade, 6)
+        critical = set()
+        for i in sorted(changed):
+            if i == 0 or i == len(points) - 1:
+                critical.add(i)
+                continue
+            before = (points[i][1] - points[i - 1][1]) / (distances[i] - distances[i - 1])
+            after = (points[i + 1][1] - points[i][1]) / (distances[i + 1] - distances[i])
+            if abs(after - before) > 0.0002:
+                critical.add(i)
+        critical.update(distances.index(d) for d, _ in anchors)
+        target["approach_join_distances_meters"] = [round(distances[i], 4) for i in sorted(critical)]
+    return report
+
+
 def main() -> int:
     args = parse_args()
     inventory = load_json(args.inventory)
@@ -793,6 +872,12 @@ def main() -> int:
                 }
             )
 
+    overlap_joins = reconcile_approach_overlaps(profiles)
+    by_span = {profile["span_id"]: profile for profile in profiles}
+    for entry in diagnostics:
+        profile = by_span[entry["span_id"]]
+        entry["maximum_grade"] = profile["maximum_grade"]
+        entry["sample_count"] = len(profile["samples_xyz_meters"]) // 3
     authority = {
         "schema": "questflight.grade-separated-road-authority.v1",
         "status": "FULL_MAP_GRADE_SEPARATED_ROAD_AUTHORITY_V1",
@@ -809,10 +894,11 @@ def main() -> int:
         "vehicle_contact_authority": (
             "CURRENT_NEAR_ARCHETYPE_MESH_LOCAL_MINIMUM_Y_EQUALS_ZERO_AND_LOCAL_Z_EXTENTS"
         ),
+        "approach_overlap_reconciliation": overlap_joins,
         "profiles": sorted(profiles, key=lambda value: value["span_id"]),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(authority, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    args.output.write_text(json.dumps(authority, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     diagnostic = {
         "schema": "questflight.grade-separated-road-authority-build-report.v1",
         "profile_count": len(profiles),

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace QuestFlightLab.Environment.Editor.Tests
@@ -16,6 +17,53 @@ namespace QuestFlightLab.Environment.Editor.Tests
             "Assets/Production/Environment/ProductionEnvironmentRoot.prefab";
         private const string RuntimeSource =
             "Assets/Scripts/Environment/KbduTrafficV2Runtime.cs";
+
+        [Test]
+        public void RoadAuthority_AcceptsGitAndWindowsLineEndingsButRejectsChangedContent()
+        {
+            var instance = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(TrafficPrefab));
+            var runtime = instance.GetComponent<KbduTrafficV2Runtime>();
+            var source = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                "Assets/Production/Environment/GradeSeparatedRoadsV1/Data/KBDU_GradeSeparatedRoadAuthorityV1.json");
+            TextAsset variant = null;
+            try
+            {
+                foreach (string text in new[] { source.text.Replace("\r\n", "\n"),
+                    source.text.Replace("\r\n", "\n").Replace("\n", "\r\n") })
+                {
+                    variant = new TextAsset(text);
+                    runtime.ConfigureGradeSeparatedRoadAuthority(variant);
+                    Assert.That(runtime.TryValidateContract(out string report), Is.True, report);
+                    Object.DestroyImmediate(variant);
+                }
+                variant = new TextAsset(source.text + " ");
+                runtime.ConfigureGradeSeparatedRoadAuthority(variant);
+                Assert.That(runtime.TryValidateContract(out string failure), Is.False);
+                Assert.That(failure, Does.Contain("hash mismatch"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(instance);
+                if (variant != null) Object.DestroyImmediate(variant);
+            }
+        }
+
+        [Test]
+        public void SerializedShippingScene_ValidatesTrafficAndAdvancesVehicles()
+        {
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/ProductionVerticalSlice.unity", OpenSceneMode.Single);
+            var runtime = scene.GetRootGameObjects().SelectMany(root =>
+                root.GetComponentsInChildren<KbduTrafficV2Runtime>(true)).Single();
+            Assert.That(runtime.TryValidateContract(out string report), Is.True, report);
+            bool moved = false;
+            for (int corridor = 0; corridor < 100 && !moved; corridor++)
+                for (int direction = 0; direction < 2 && !moved; direction++)
+                    for (int second = 0; second < 120 && !moved; second++)
+                        if (runtime.TryEvaluateCorridor(corridor, direction, second, out Vector3 a, out _) &&
+                            runtime.TryEvaluateCorridor(corridor, direction, second + 1, out Vector3 b, out _))
+                            moved = Vector3.Distance(a, b) > 1f;
+            Assert.That(moved, Is.True, "No authored vehicle moved over one second in the shipping scene.");
+        }
 
         [Test]
         public void AuthoredTrafficRoot_ReplacesOnlyV1Motion()

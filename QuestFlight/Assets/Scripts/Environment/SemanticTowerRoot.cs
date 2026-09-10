@@ -48,8 +48,13 @@ namespace QuestFlightLab.Environment
                     renderer.GetComponent<MeshFilter>()?.sharedMesh != null &&
                     renderer.shadowCastingMode == ShadowCastingMode.Off && !renderer.receiveShadows),
                 "a tower renderer is missing its mesh/material or uses unsupported shadows", failures);
-            Require(authoredRenderers == null || authoredRenderers.All(renderer => renderer.gameObject.isStatic),
+#if UNITY_EDITOR
+            // Unity consumes these authoring flags during player static batching.
+            // Keep the source/build invariant; a cleared player flag does not mean
+            // the baked tower moved or lost its serialized mesh/material contract.
+            Require(authoredRenderers == null || authoredRenderers.All(renderer => renderer != null && renderer.gameObject.isStatic),
                 "tower renderers are not marked static", failures);
+#endif
             Require(GetComponentsInChildren<MonoBehaviour>(true).Length == 1,
                 "per-structure runtime behaviours are forbidden", failures);
             Require(bakedLod0TriangleCount > 0 && bakedLod0TriangleCount <= 10000,

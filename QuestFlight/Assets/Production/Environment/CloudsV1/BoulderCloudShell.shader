@@ -11,6 +11,7 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
         _SilverLining ("Forward Scattering", Range(0.0,1.5)) = 0.40
         _MaximumDistance ("Maximum Ray Distance Metres", Float) = 18000
         _MinimumStepMetres ("Minimum March Step Metres", Range(60,400)) = 60
+        [Toggle] _CloudSamplingLod ("Experimental Distance Sampling LOD", Float) = 0
         [HideInInspector] _KBDUCloudExteriorOpacity ("Interior Transition", Range(0,1)) = 1
     }
 
@@ -48,6 +49,7 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
             half _SilverLining;
             float _MaximumDistance;
             half _MinimumStepMetres;
+            float _CloudSamplingLod;
             half _KBDUCloudExteriorOpacity;
 
             static const int MaximumMarchSteps = 48;
@@ -72,6 +74,7 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
                 float3 volumeRadii : TEXCOORD2;
                 float2 volumeParameters : TEXCOORD3;
                 UNITY_VERTEX_OUTPUT_STEREO
+                float samplingBudget : TEXCOORD4;
             };
 
             v2f vert(appdata input)
@@ -85,6 +88,28 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
                 output.volumeCenter = input.volumeCenter;
                 output.volumeRadii = input.volumeRadii;
                 output.volumeParameters = input.volumeParameters;
+                output.samplingBudget = MaximumMarchSteps;
+                if (_CloudSamplingLod > 0.5)
+                {
+                    // One conservative budget per formation, shared by both eyes.
+                    float3 lodCamera = _WorldSpaceCameraPos;
+                    float projectionScale = abs(UNITY_MATRIX_P[1][1]);
+                    #if defined(UNITY_SINGLE_PASS_STEREO)
+                        lodCamera = (unity_StereoWorldSpaceCameraPos[0] + unity_StereoWorldSpaceCameraPos[1]) * 0.5;
+                        projectionScale = max(abs(unity_StereoMatrixP[0][1][1]), abs(unity_StereoMatrixP[1][1][1]));
+                    #endif
+                    float3 localCamera = mul(unity_WorldToObject, float4(lodCamera, 1)).xyz;
+                    float3 delta = abs(localCamera - input.volumeCenter);
+                    float surfaceDistance = length(max(delta - input.volumeRadii, 0));
+                    // Bounding-sphere screen fraction protects large distant formations.
+                    float radius = length(input.volumeRadii);
+                    float projectedFraction = radius * projectionScale / max(length(delta) - radius, 1);
+                    float middleWeight = smoothstep(1500, 3500, surfaceDistance) *
+                        (1 - smoothstep(0.35, 0.65, projectedFraction));
+                    float farWeight = smoothstep(5000, 9000, surfaceDistance) *
+                        (1 - smoothstep(0.12, 0.25, projectedFraction));
+                    output.samplingBudget = lerp(lerp(48.0, 24.0, middleWeight), 12.0, farWeight);
+                }
                 return output;
             }
 
@@ -187,7 +212,9 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
                 if (span <= 0.01)
                     discard;
 
-                float stepLength = max((float)_MinimumStepMetres, span / MaximumMarchSteps);
+                // Cover the whole ray interval; optical depth below uses this spacing.
+                // Keep the exact original lattice when the experiment is disabled.
+                float stepLength = max((float)_MinimumStepMetres, span / input.samplingBudget);
                 float sampleDistance = rayStart + stepLength * 0.5;
                 half transmittance = 1.0h;
                 half3 accumulated = 0.0h;
@@ -200,9 +227,8 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
                 {
                     if (sampleDistance >= rayEnd || transmittance < 0.025h)
                         break;
-                    float3 sampleWorld = cameraWorld + rayDirectionWorld * sampleDistance;
-                    float3 sampleRoot = mul(unity_WorldToObject, float4(sampleWorld, 1.0)).xyz;
-                    float3 sampleLocal = (sampleRoot - input.volumeCenter) / diameter;
+                    // Reuse the affine local ray without changing the march lattice.
+                    float3 sampleLocal = rayOriginLocal + rayDirectionLocal * sampleDistance;
                     half lightTransmittance;
                     half density = EvaluateDensity(
                         sampleLocal, input.volumeParameters, lightTransmittance);

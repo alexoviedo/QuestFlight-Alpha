@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using NUnit.Framework;
 using UnityEditor;
@@ -10,6 +11,43 @@ namespace QuestFlightLab.Environment.Editor.Tests
 {
     public sealed class KbduTrafficV1EditModeTests
     {
+        [Test]
+        public void NearBudgetEvictionsRetainEveryVehicleAsEitherDetailOrProxy()
+        {
+            GameObject root = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(TrafficPrefab));
+            GameObject cameraObject = new GameObject("Parked traffic eviction diagnostic");
+            try
+            {
+                var runtime = root.GetComponent<KbduTrafficRuntime>();
+                Camera camera = cameraObject.AddComponent<Camera>();
+                camera.enabled = false;
+                var consider = (Action<Camera, Vector3, int, int, Matrix4x4, int>)Delegate.CreateDelegate(
+                    typeof(Action<Camera, Vector3, int, int, Matrix4x4, int>), runtime,
+                    typeof(KbduTrafficRuntime).GetMethod("ConsiderVisible", BindingFlags.Instance | BindingFlags.NonPublic));
+                // Every later car is closer, repeatedly evicting the worst detail
+                // candidate. All 96 are well inside the visible traffic range.
+                for (int i = 0; i < 96; i++)
+                {
+                    Vector3 position = new Vector3(0, 0, 100 - i * 0.5f);
+                    consider(camera, position, 0, 0, Matrix4x4.Translate(position), i);
+                }
+                T Field<T>(string name) => (T)typeof(KbduTrafficRuntime)
+                    .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(runtime);
+                int near = Field<int>("selectedCount"), far = Field<int>("selectedFarCount");
+                int[] ids = Field<int[]>("selectedVehicleIds").Take(near)
+                    .Concat(Field<int[]>("selectedFarVehicleIds").Take(far)).ToArray();
+                Assert.That(near, Is.EqualTo(KbduTrafficRuntime.MaximumNearInstances));
+                Assert.That(ids.Length, Is.EqualTo(96), "A detailed-slot eviction made a visible parked vehicle disappear.");
+                Assert.That(ids.Distinct().Count(), Is.EqualTo(96), "A vehicle was submitted in both tiers.");
+                Assert.That(ids.OrderBy(id => id), Is.EqualTo(Enumerable.Range(0, 96)));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(cameraObject);
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
         private const string TrafficPrefab =
             "Assets/Production/Environment/TrafficV1/KBDU_TrafficRoot.prefab";
         private const string ProductPrefab =

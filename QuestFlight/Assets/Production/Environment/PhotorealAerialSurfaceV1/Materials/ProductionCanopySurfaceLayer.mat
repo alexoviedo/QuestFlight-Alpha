@@ -59,6 +59,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: 20acc115e3da2c945b96ad78ee96fe51, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _NeighborhoodFoliageAtlas:
+        m_Texture: {fileID: 2800000, guid: 319a8d54770bb63438ddbad514988a62, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _NormalizedSurfaceHeight:
         m_Texture: {fileID: 2800000, guid: 9fa78b042fec97c1175e12054bd6dd48, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -86,6 +90,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _AmbientFloor: 0.22
+    - _BranchFoliageResponse: 1
     - _CanopyNormalStrength: 0.42
     - _Cull: 0
     - _DiagnosticMode: 0

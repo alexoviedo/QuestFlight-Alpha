@@ -1139,7 +1139,8 @@ namespace QuestFlightLab.Environment
                     archetype,
                     paintIndex,
                     matrix,
-                    vehicleId))
+                    vehicleId,
+                    camera.transform.position))
             {
                 return;
             }
@@ -1160,7 +1161,8 @@ namespace QuestFlightLab.Environment
             int archetype,
             int paintIndex,
             Matrix4x4 matrix,
-            int vehicleId)
+            int vehicleId,
+            Vector3 cameraPosition)
         {
             float score = CalculateSelectionScore(distanceSquared, retained);
             if (selectedCount < MaximumNearInstances)
@@ -1180,6 +1182,16 @@ namespace QuestFlightLab.Environment
             {
                 return false;
             }
+            // This vehicle was already visited in this frame. Replacing its
+            // detailed slot must submit its proxy now; there is no later pass
+            // that can recover the displaced vehicle from the near heap.
+            Matrix4x4 displaced = selectedMatrices[0];
+            Vector3 displacedPosition = new Vector3(displaced.m03, displaced.m13, displaced.m23);
+            int displacedId = selectedVehicleIds[0];
+            int proxy = selectedArchetypes[0] == ArchetypeCount - 1 ? 2 : Mathf.Abs(displacedId) % 2;
+            TryInsertFar((displacedPosition - cameraPosition).sqrMagnitude,
+                displacedId >= 0 && displacedId < previousLodTier.Length && previousLodTier[displacedId] == 2,
+                proxy, selectedPaintIndices[0], displaced, displacedId);
             SetNearSelection(
                 0,
                 score,

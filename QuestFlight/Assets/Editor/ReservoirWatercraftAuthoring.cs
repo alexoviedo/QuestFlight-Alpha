@@ -61,6 +61,38 @@ namespace QuestFlightLab.Editor
             Debug.Log($"[QuestFlight][ReservoirWatercraftV1] SUCCESS records={document.records.Length}");
         }
 
+        // A terrain edit outside the reservoir can invalidate the dependency hash
+        // without moving the surface beneath any craft. Revalidate all nine footprint
+        // samples before refreshing that record; never silently accept displaced boats.
+        public static void RevalidateExistingSurfaceAlignment()
+        {
+            var report = JsonUtility.FromJson<AlignmentReport>(File.ReadAllText(AlignmentReportPath));
+            var placements = ReadManifest();
+            var surface = VisibleSurfaceSampler.Create(EnvironmentPrefabPath);
+            foreach (var record in placements.records)
+            {
+                var old = report.records.Single(r => r.stable_id == record.stable_id);
+                var center = new Vector2(record.product_x_meters, record.product_z_meters);
+                Vector3 f = Quaternion.Euler(0, record.yaw_degrees, 0) * Vector3.forward * record.footprint_length_meters * 0.5f;
+                Vector3 r = Quaternion.Euler(0, record.yaw_degrees, 0) * Vector3.right * record.footprint_width_meters * 0.5f;
+                var forward = new Vector2(f.x, f.z);
+                var right = new Vector2(r.x, r.z);
+                var plane = FitVisibleSurfacePlane(record, surface, new[] { center,
+                    center + forward, center - forward, center + right, center - right,
+                    center + forward + right, center + forward - right,
+                    center - forward + right, center - forward - right });
+                float delta = plane.HeightAt(center.x, center.y) - old.surface_center_y_meters;
+                Debug.Log($"[ReservoirWatercraft] {record.stable_id} rendered height delta={delta:F6}m");
+                if (Mathf.Abs(delta) > 0.001f || Vector3.Distance(plane.normal, old.surface_normal) > 0.00001f ||
+                    plane.maximumResidualMeters > MaximumPlaneResidualMeters)
+                    throw new InvalidOperationException(record.stable_id + " needs surface realignment.");
+            }
+            report.surface_mesh_dependency_hash = surface.DependencyHash;
+            report.placement_manifest_sha256 = Sha256(File.ReadAllBytes(ManifestPath));
+            File.WriteAllText(AlignmentReportPath, JsonUtility.ToJson(report, true) + "\n", new UTF8Encoding(false));
+            AssetDatabase.ImportAsset(AlignmentReportPath, ImportAssetOptions.ForceSynchronousImport);
+        }
+
         public static void BuildBatch()
         {
             try

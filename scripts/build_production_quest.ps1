@@ -99,11 +99,22 @@ function Test-ProductStreamingAssets {
   # baseline. JSBSim-1.3.1 is allowed only as a correctly marked package-owned
   # recovery artifact; Unity removes that injection before validating and rebuilding.
   $requiredEntries = @(
+    'QuestFlightAerialClipmap',
+    'QuestFlightAerialClipmap.meta',
     'QuestFlightBuildingClipmap',
-    'QuestFlightBuildingClipmap.meta'
+    'QuestFlightBuildingClipmap.meta',
+    'QuestFlightBranchGroves',
+    'QuestFlightBranchGroves.meta'
   )
   $allowedEntries = @($requiredEntries)
   $localOnlyEntries = @()
+  $branchManifest = Get-Content -LiteralPath (Join-Path $UnityProjectPath 'Assets/Production/Environment/MapBranchGrovesV1/SOURCE_MANIFEST.json') -Raw | ConvertFrom-Json
+  if ($branchManifest.schema -ne 'questflight.map-branch-groves.v1' -or -not $branchManifest.complete -or @($branchManifest.pages).Count -ne 1296) { throw 'Map branch grove manifest incomplete' }
+  foreach ($page in $branchManifest.pages) {
+    if ($page.file -notmatch '^branches_[0-9]{2}_[0-9]{2}\.bytes$') { throw 'Invalid branch page filename' }
+    $pagePath=Join-Path (Join-Path $streamingRoot 'QuestFlightBranchGroves') $page.file
+    if ((Get-Item -LiteralPath $pagePath).Length -ne $page.bytes -or (Get-FileHash -LiteralPath $pagePath -Algorithm SHA256).Hash -ne $page.sha256) { throw "Branch page integrity failure: $pagePath" }
+  }
   $ownedJsbsimDirectory = Join-Path $streamingRoot 'JSBSim-1.3.1'
   if (Test-Path -LiteralPath $ownedJsbsimDirectory -PathType Container) {
     $ownershipMarker = Join-Path $ownedJsbsimDirectory '.questflight_jsbsim_package_injection'
@@ -121,20 +132,14 @@ function Test-ProductStreamingAssets {
     }
   }
 
-  # Full-resolution aerial AssetBundles are retained locally for authoring and
-  # visual work, but are not part of the accepted standalone product payload.
-  # The build transaction below preserves this exact pair outside Assets while
-  # Unity builds from the canonical project, then restores and verifies it.
+  # The September 6 accepted APK includes both clipmaps. Never silently strip
+  # its aerial bundles or admit unrelated local StreamingAssets.
   $aerialDirectory = Join-Path $streamingRoot 'QuestFlightAerialClipmap'
   $aerialMeta = $aerialDirectory + '.meta'
   $aerialDirectoryPresent = Test-Path -LiteralPath $aerialDirectory -PathType Container
   $aerialMetaPresent = Test-Path -LiteralPath $aerialMeta -PathType Leaf
   if ($aerialDirectoryPresent -ne $aerialMetaPresent) {
     throw "Production StreamingAssets preflight failed: QuestFlightAerialClipmap and its paired .meta must either both exist or both be absent. Root: $streamingRoot"
-  }
-  if ($aerialDirectoryPresent) {
-    $localOnlyEntries = @('QuestFlightAerialClipmap', 'QuestFlightAerialClipmap.meta')
-    $allowedEntries += $localOnlyEntries
   }
 
   $entryNames = @(Get-ChildItem -LiteralPath $streamingRoot -Force |
@@ -145,7 +150,7 @@ function Test-ProductStreamingAssets {
   if ($missing.Count -ne 0 -or $unexpected.Count -ne 0) {
     $missingText = if ($missing.Count -eq 0) { '<none>' } else { $missing -join ', ' }
     $unexpectedText = if ($unexpected.Count -eq 0) { '<none>' } else { $unexpected -join ', ' }
-    throw "Production StreamingAssets preflight failed. missing=[$missingText]; unexpected=[$unexpectedText]. Only the explicitly recognized local aerial pair may be transactionally excluded; all other entries fail closed. Root: $streamingRoot"
+    throw "Production StreamingAssets preflight failed. missing=[$missingText]; unexpected=[$unexpectedText]. Both accepted clipmaps are required; unrelated entries fail closed. Root: $streamingRoot"
   }
 
   [ordered]@{
@@ -251,7 +256,7 @@ function Restore-InterruptedStreamingAssetsTransaction {
 function Begin-ProductStreamingAssetsTransaction {
   param(
     [Parameter(Mandatory = $true)][string]$UnityProjectPath,
-    [Parameter(Mandatory = $true)][string[]]$EntryNames,
+    [Parameter(Mandatory = $true)][AllowEmptyCollection()][string[]]$EntryNames,
     [Parameter(Mandatory = $true)][string]$TransactionRoot
   )
 
@@ -329,6 +334,14 @@ if ([string]::IsNullOrWhiteSpace($ArtifactDir)) {
 }
 New-Item -ItemType Directory -Force -Path $ArtifactDir | Out-Null
 $ArtifactDir = (Resolve-Path -LiteralPath $ArtifactDir).Path
+$payloadTool = Join-Path $repositoryRoot 'tools\verify_scenery_payload.py'
+$payloadInventory = Join-Path $ArtifactDir 'scenery_payload_inventory.json'
+& python $payloadTool --streaming-root (Join-Path $ProjectPath 'Assets\StreamingAssets') --inventory $payloadInventory
+if ($LASTEXITCODE -ne 0) { throw 'Authored scenery payload validation failed before build.' }
+$sourceHead = (& git -C $repositoryRoot rev-parse HEAD | Out-String).Trim()
+if ($LASTEXITCODE -ne 0) { throw 'Cannot record build source identity.' }
+& python (Join-Path $repositoryRoot 'tools\record_source_identity.py') --root $repositoryRoot --output $ArtifactDir
+if ($LASTEXITCODE -ne 0) { throw 'Cannot record build source changes.' }
 
 $lock = Join-Path $ProjectPath 'Temp\UnityLockfile'
 if (Test-Path -LiteralPath $lock) {
@@ -380,6 +393,8 @@ if ($exitCode -ne 0) { throw "Product Quest build failed with exit code $exitCod
 
 $apk = Join-Path $ProjectPath 'Builds\Android\QuestFlight-production.apk'
 if (-not (Test-Path -LiteralPath $apk)) { throw "Unity exited without the product APK: $apk" }
+& python $payloadTool --apk $apk --inventory $payloadInventory
+if ($LASTEXITCODE -ne 0) { throw 'APK does not contain the authored scenery payload; do not install it.' }
 $hash = Get-Sha256Hex -LiteralPath $apk
 [ordered]@{
   generatedUtc = [DateTime]::UtcNow.ToString('O')
@@ -388,6 +403,12 @@ $hash = Get-Sha256Hex -LiteralPath $apk
   apk = $apk
   bytes = (Get-Item -LiteralPath $apk).Length
   sha256 = $hash
+  sourceHead = $sourceHead
+  sourceChanges = 'source_changes.patch'
+  sourceIdentity = 'source_identity.json'
+  sourceChangesArchive = 'source_changes.zip'
+  sceneryPayloadVerified = $true
+  sceneryPayloadInventory = $payloadInventory
   development = [bool]$Development
   nativeJsbsimRequired = $true
   unityPrototypeAllowed = $false

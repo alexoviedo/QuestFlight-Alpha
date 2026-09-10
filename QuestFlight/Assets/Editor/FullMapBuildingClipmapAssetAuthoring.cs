@@ -123,7 +123,7 @@ namespace QuestFlight.Editor
     }
 
     /// <summary>Offline compiler for full-map semantic building pages and their fixed product owner.</summary>
-    public static class FullMapBuildingClipmapAssetAuthoring
+    public static partial class FullMapBuildingClipmapAssetAuthoring
     {
         public const string Root = "Assets/Production/Environment/FullMapBuildingsV1";
         public const string DatabasePath = Root + "/KBDU_FullMapBuildingDatabaseV1.json";
@@ -148,7 +148,7 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
-        private const string MeshCompilerVersion = "semantic-tower-exclusion-compiler-v15-20260903";
+        private const string MeshCompilerVersion = "valmont-source-outline-compiler-v16-20260907";
         private const string FacadeContractVersion = "boulder-semantic-facades-v2";
         private const int MaximumSelectedTriangleCeiling = 235000;
         private const int AuthoredMaximumSelectedTriangles = 235000;
@@ -549,6 +549,7 @@ namespace QuestFlight.Editor
             Database database = LoadDatabase();
             RebuildMeshAssets(database);
             BuildBundles(database);
+            RefreshSerializedPageMetadata(database);
             File.WriteAllText(Absolute(StreamingRoot + "/build_stamp.txt"), SourceHash());
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             AssetDatabase.SaveAssets();
@@ -562,9 +563,25 @@ namespace QuestFlight.Editor
         /// </summary>
         public static void LoadEditorPreviewWindow(
             AircraftCenteredBuildingClipmapController controller,
-            Vector3 center)
+            Vector3 center,
+            Vector3? forward = null)
         {
             if (controller == null) throw new ArgumentNullException(nameof(controller));
+            if (forward.HasValue)
+            {
+                Vector2Int[] pages = controller.CalculateDesiredPagesForTest(center, forward.Value, forward.Value);
+                for (int slot = 0; slot < controller.pageFilters.Length; slot++)
+                {
+                    Mesh mesh = slot < pages.Length
+                        ? AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath(pages[slot].x, pages[slot].y)) ??
+                            throw new FileNotFoundException("Missing settled building preview page", MeshPath(pages[slot].x, pages[slot].y))
+                        : null;
+                    controller.pageFilters[slot].sharedMesh = mesh;
+                    controller.pageRenderers[slot].sharedMaterial = controller.sharedBuildingMaterial;
+                    controller.pageRenderers[slot].enabled = mesh != null && mesh.vertexCount > 0;
+                }
+                return;
+            }
             Database database = LoadDatabase();
             int centerColumn = Mathf.FloorToInt((center.x + database.map_half_extent_meters) /
                                                 database.page_size_meters);
@@ -753,13 +770,21 @@ namespace QuestFlight.Editor
             HashSet<int> exclusions = LoadValidatedSemanticTowerExclusions(database);
             RoofAllocation roofAllocation = BuildRoofAllocation(database, exclusions);
             string absolute = Absolute(GeneratedRoot);
-            if (Directory.Exists(absolute)) Directory.Delete(absolute, true);
             Directory.CreateDirectory(absolute);
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             foreach (Page page in database.pages.OrderBy(item => item.row).ThenBy(item => item.column))
             {
                 Mesh mesh = BuildPageMesh(database, page, terrain, roofAllocation, exclusions);
-                AssetDatabase.CreateAsset(mesh, MeshPath(page.column, page.row));
+                string meshPath = MeshPath(page.column, page.row);
+                Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+                if (existing == null) AssetDatabase.CreateAsset(mesh, meshPath);
+                else
+                {
+                    // Preserve serialized references and paired .meta GUIDs on regeneration.
+                    EditorUtility.CopySerialized(mesh, existing);
+                    EditorUtility.SetDirty(existing);
+                    UnityEngine.Object.DestroyImmediate(mesh);
+                }
                 if ((page.row * database.columns + page.column) % 24 == 23)
                 {
                     AssetDatabase.SaveAssets();
@@ -1043,6 +1068,16 @@ namespace QuestFlight.Editor
                 : ConvexHull(normalizedSource);
             if (building.landmark || validSource.Length <= 3) return validSource;
 
+            // Bounded City2020 Valmont reference crop. Preserve recorded outlines only;
+            // source heights, roof classification and the global triangle ceiling remain unchanged.
+            Vector2 sourceCenter = Vector2.zero;
+            foreach (Vector2 point in validSource) sourceCenter += point;
+            sourceCenter /= validSource.Length;
+            if (building.roof_id == 0 && building.area_m2 >= LargeFootprintAreaSquareMeters &&
+                sourceCenter.x >= -884f && sourceCenter.x <= -135f &&
+                sourceCenter.y >= -914f && sourceCenter.y <= -494f)
+                return validSource;
+
             int target = Mathf.Min(validSource.Length,
                 building.area_m2 >= LargeFootprintAreaSquareMeters
                     ? LargeFootprintVertexLimit
@@ -1210,8 +1245,13 @@ namespace QuestFlight.Editor
 
         private static void AddBuilding(MeshBuilder builder, Vector2[] polygon, Building building,
             ProductionTerrainSurfaceAsset terrain, bool includeWalls, bool includeRoof,
-            bool useProperRoof)
+            bool useProperRoof, NeighborhoodRoofReviewData roofOverride = null)
         {
+            if (roofOverride != null)
+            {
+                polygon = roofOverride.boundary.Select(p => new Vector2(p.x, p.z)).ToArray();
+                useProperRoof = false;
+            }
             if (SignedArea(polygon) < 0f) Array.Reverse(polygon);
             float baseY = building.base_y_dm * 0.1f;
             float wallTop = baseY + building.height_dm * 0.1f;
@@ -1229,7 +1269,7 @@ namespace QuestFlight.Editor
                 throw new InvalidOperationException(
                     $"Selected proper roof became ineligible during mesh emission: {building.id}.");
             RoofAxes axes = RoofAxes.From(polygon);
-            Vector3[] roof = hasProperRoof
+            Vector3[] roof = roofOverride != null ? roofOverride.boundary : hasProperRoof
                 ? properRoof.vertices.Take(polygon.Length).ToArray()
                 : polygon.Select(point => new Vector3(point.x,
                     wallTop + RoofHeight(point, axes, building.roof_id, roofRise), point.y)).ToArray();
@@ -1270,6 +1310,14 @@ namespace QuestFlight.Editor
             }
 
             if (!includeRoof) return;
+            if (roofOverride != null)
+            {
+                for (int index = 0; index < roofOverride.indices.Length; index += 3)
+                    AddTriangle(builder, roofOverride.vertices[roofOverride.indices[index]],
+                        roofOverride.vertices[roofOverride.indices[index + 1]],
+                        roofOverride.vertices[roofOverride.indices[index + 2]], roofCell, roofParameters, tint, true);
+                return;
+            }
             if (hasProperRoof)
             {
                 for (int index = 0; index < properRoof.roofTriangles.Length; index += 3)

@@ -410,7 +410,8 @@ function Invoke-SimulatorSession {
         "XR_RUNTIME_JSON", "QFL_META_XR_SIMULATOR_QA_DIR", "QFL_META_XR_SIMULATOR_SESSION",
         "QFL_META_XR_SIMULATOR_REPLAY_PATH", "QFL_META_XR_SIMULATOR_CAPTURE_DELAY_SECONDS",
         "QFL_META_XR_SIMULATOR_CAPTURE_WIDTH", "QFL_META_XR_SIMULATOR_CAPTURE_HEIGHT",
-        "QFL_META_XR_SIMULATOR_START_DEMO", "QFL_META_XR_SIMULATOR_EXIT_AFTER_CAPTURE"
+        "QFL_META_XR_SIMULATOR_START_DEMO", "QFL_META_XR_SIMULATOR_EXIT_AFTER_CAPTURE",
+        "QFL_META_XR_SIMULATOR_EXPECTED_RUNTIME_VERSION"
     )
     $environmentBefore = @{}
     foreach ($name in $envNames) { $environmentBefore[$name] = [Environment]::GetEnvironmentVariable($name, "Process") }
@@ -420,6 +421,7 @@ function Invoke-SimulatorSession {
     try {
         Set-SessionCaptureConfiguration -PersistentPath $PersistentPath -Mode $Mode -VrsPath $VrsPath
         $env:XR_RUNTIME_JSON = $Installation.Manifest
+        $env:QFL_META_XR_SIMULATOR_EXPECTED_RUNTIME_VERSION = $Installation.Version.ToString()
         $env:QFL_META_XR_SIMULATOR_QA_DIR = $sessionDirectory
         $env:QFL_META_XR_SIMULATOR_SESSION = $id
         $env:QFL_META_XR_SIMULATOR_REPLAY_PATH = if ($Mode -eq "replay") { $VrsPath } else { "" }

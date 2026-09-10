@@ -158,6 +158,14 @@ namespace QuestFlightLab.Editor.Tests
                     foreach (View view in views)
                         Capture(camera, runtime, view, sedan.schedule, output, mode, report);
                 }
+                SetMode(runtime, bridgeRenderers, false);
+                for (int frame = 0; frame < 36; frame++)
+                {
+                    var overlap = new View("14_overlap_join_" + frame.ToString("D2"),
+                        new Vector3(-1548f, 12f, -1895f), new Vector3(-1590f, -3.5f, -1890f), 55f);
+                    Capture(camera, runtime, overlap, manifest.corridors[28577].phase_seconds + 6.8f + frame / 30f,
+                        output, "candidate", report);
+                }
                 report.sequences.Add(CaptureSequence(
                     "05_sedan_approach_span_departure", sedan,
                     firstCenter + new Vector3(62f, 18f, -72f), firstCenter,

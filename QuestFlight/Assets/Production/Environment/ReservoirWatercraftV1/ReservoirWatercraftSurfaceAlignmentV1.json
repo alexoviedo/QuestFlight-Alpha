@@ -3,8 +3,8 @@
     "classification": "PASS_ACTIVE_RENDERED_SURFACE_ALIGNMENT",
     "vertical_surface_authority": "ACTIVE_RENDERED_TERRAIN_MESH",
     "surface_mesh_asset_path": "Assets/Production/Environment/Generated/Terrain_Mid12km_USGS_Mesh.asset",
-    "surface_mesh_dependency_hash": "28d6665e48c3571e6bc57dd46fff4066",
-    "placement_manifest_sha256": "a16459735049bfda3979365ca26beeaf1b3956702cba777d461bbf84c1d9b15b",
+    "surface_mesh_dependency_hash": "cd362dc05dd426ad200dfabf9715d2d6",
+    "placement_manifest_sha256": "eb8e333488b4e55b9851e9c56c711a6156e7f59052af6e5174bd78a5819cb662",
     "maximum_surface_tilt_degrees": 6.0,
     "maximum_plane_residual_meters": 0.03500000014901161,
     "records": [

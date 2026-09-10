@@ -144,7 +144,15 @@ namespace QuestFlightLab.Editor
                 .SelectMany(root => root.GetComponentsInChildren<KbduTrafficV2Runtime>(true))
                 .Single();
             runtime.ConfigureGradeSeparatedRoadAuthority(authorityAsset);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(runtime);
             EditorUtility.SetDirty(runtime);
+            ProductionEnvironmentRoot environmentContract = environment.GetComponent<ProductionEnvironmentRoot>();
+            ProductionEnvironmentBudget budget = environmentContract.CalculateBudget();
+            environmentContract.bakedRendererCount = budget.rendererCount;
+            environmentContract.bakedTriangleCount = budget.triangleCount;
+            environmentContract.bakedMaterialCount = budget.materialCount;
+            PrefabUtility.RecordPrefabInstancePropertyModifications(environmentContract);
+            EditorUtility.SetDirty(environmentContract);
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene, ScenePath))
                 throw new InvalidOperationException("Could not save the product scene.");
@@ -195,6 +203,9 @@ namespace QuestFlightLab.Editor
             distances.Add(profile.profile_length_meters);
             distances.Add(profile.bridge_interval_meters[0]);
             distances.Add(profile.bridge_interval_meters[1]);
+            if (profile.approach_join_distances_meters != null)
+                foreach (float join in profile.approach_join_distances_meters)
+                    if (!distances.Any(existing => Mathf.Abs(existing - join) < 0.02f)) distances.Add(join);
             float[] samples = distances.ToArray();
             for (int index = 0; index < samples.Length - 1; index++)
             {

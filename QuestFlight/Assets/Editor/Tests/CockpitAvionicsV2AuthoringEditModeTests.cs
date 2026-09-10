@@ -51,12 +51,12 @@ namespace QuestFlight.Editor.Tests
                 CockpitAvionicsV2EditorContract.ValidateLayout(
                     layout, out string error),
                 Is.True, error);
+            // The accepted depth repair adds 140 nonoverlapping black background quads.
             Assert.That(layout.CombinedGlyphMesh.subMeshCount, Is.EqualTo(1));
             Assert.That(
                 layout.CombinedGlyphMesh.vertexCount,
                 Is.EqualTo(
-                    CockpitAvionicsV2PresentationAuthoring
-                        .ExpectedGlyphSlots * 4));
+                    (CockpitAvionicsV2PresentationAuthoring.ExpectedGlyphSlots + 140) * 4));
             Assert.That(
                 layout.GlyphSlots.Length,
                 Is.EqualTo(

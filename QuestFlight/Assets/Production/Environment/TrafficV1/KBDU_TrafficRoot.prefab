@@ -80,6 +80,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.KbduTrafficV2Runtime
   trajectoryManifest: {fileID: 4900000, guid: 601139fd9d9d4eeea7e7d25a0948bd12, type: 3}
+  gradeSeparatedRoadAuthority: {fileID: 4900000, guid: e2c97f282a1798a409b2cee3675663a5, type: 3}
   sourceAndLicenseRecord: {fileID: 4900000, guid: 063566202d6e4c70b61ce1e32fb7fc79, type: 3}
   acceptedVehicleAssets: {fileID: 8832284638587171138}
   terrainSurface: {fileID: 11400000, guid: b2b2be77d482f4c4c8fb5ceb35614891, type: 2}

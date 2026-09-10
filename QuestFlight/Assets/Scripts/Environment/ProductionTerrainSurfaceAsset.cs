@@ -124,6 +124,43 @@ namespace QuestFlightLab.Environment
             public Vector3[] normals = Array.Empty<Vector3>();
             public int[] triangles = Array.Empty<int>();
 
+            // Query acceleration over the immutable authored triangles. This is
+            // data indexing only: no geometry, collider, height or normal changes.
+            private const float QueryCellMeters = 256f;
+            [NonSerialized] private Dictionary<long, int[]> queryCells;
+            [NonSerialized] private Vector3[] indexedVertices;
+            [NonSerialized] private int[] indexedTriangles;
+
+            private static long CellKey(int x, int z) => ((long)x << 32) | (uint)z;
+
+            private void EnsureQueryIndex()
+            {
+                if (queryCells != null && ReferenceEquals(indexedVertices, vertices) &&
+                    ReferenceEquals(indexedTriangles, triangles)) return;
+                var cells = new Dictionary<long, List<int>>();
+                for (int offset = 0; offset < triangles.Length; offset += 3)
+                {
+                    int ia = triangles[offset], ib = triangles[offset + 1], ic = triangles[offset + 2];
+                    if ((uint)ia >= vertices.Length || (uint)ib >= vertices.Length || (uint)ic >= vertices.Length) continue;
+                    Vector3 a = vertices[ia], b = vertices[ib], c = vertices[ic];
+                    int minX = Mathf.FloorToInt((Mathf.Min(a.x, Mathf.Min(b.x, c.x)) - 0.0001f) / QueryCellMeters);
+                    int maxX = Mathf.FloorToInt((Mathf.Max(a.x, Mathf.Max(b.x, c.x)) + 0.0001f) / QueryCellMeters);
+                    int minZ = Mathf.FloorToInt((Mathf.Min(a.z, Mathf.Min(b.z, c.z)) - 0.0001f) / QueryCellMeters);
+                    int maxZ = Mathf.FloorToInt((Mathf.Max(a.z, Mathf.Max(b.z, c.z)) + 0.0001f) / QueryCellMeters);
+                    for (int z = minZ; z <= maxZ; z++)
+                    for (int x = minX; x <= maxX; x++)
+                    {
+                        long key = CellKey(x, z);
+                        if (!cells.TryGetValue(key, out List<int> offsets)) cells[key] = offsets = new List<int>();
+                        offsets.Add(offset); // Retain original order, including overlapping surfaces.
+                    }
+                }
+                queryCells = new Dictionary<long, int[]>(cells.Count);
+                foreach (var cell in cells) queryCells.Add(cell.Key, cell.Value.ToArray());
+                indexedVertices = vertices;
+                indexedTriangles = triangles;
+            }
+
             public bool IsValid =>
                 !string.IsNullOrWhiteSpace(stableId) &&
                 outerHalfExtentMeters > innerHalfExtentMeters &&
@@ -147,10 +184,30 @@ namespace QuestFlightLab.Environment
                 sampledHeight = float.NegativeInfinity;
                 sampledNormal = Vector3.up;
                 if (!IsValid || !Contains(eastMeters, northMeters)) return false;
+                EnsureQueryIndex();
+                long key = CellKey(Mathf.FloorToInt(eastMeters / QueryCellMeters),
+                    Mathf.FloorToInt(northMeters / QueryCellMeters));
+                return queryCells.TryGetValue(key, out int[] candidates) &&
+                    TrySampleCandidates(eastMeters, northMeters, candidates, out sampledHeight, out sampledNormal);
+            }
+
+#if UNITY_EDITOR
+            public bool TrySampleReference(float eastMeters, float northMeters, out float height, out Vector3 normal) =>
+                TrySampleCandidates(eastMeters, northMeters, null, out height, out normal);
+#endif
+
+            private bool TrySampleCandidates(float eastMeters, float northMeters, int[] candidates,
+                out float sampledHeight, out Vector3 sampledNormal)
+            {
+                sampledHeight = float.NegativeInfinity;
+                sampledNormal = Vector3.up;
+                if (!IsValid || !Contains(eastMeters, northMeters)) return false;
 
                 bool found = false;
-                for (int offset = 0; offset < triangles.Length; offset += 3)
+                int count = candidates == null ? triangles.Length / 3 : candidates.Length;
+                for (int candidate = 0; candidate < count; candidate++)
                 {
+                    int offset = candidates == null ? candidate * 3 : candidates[candidate];
                     int ia = triangles[offset];
                     int ib = triangles[offset + 1];
                     int ic = triangles[offset + 2];

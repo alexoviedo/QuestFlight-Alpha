@@ -85,6 +85,7 @@ MonoBehaviour:
   flightDynamicsCoordinator: {fileID: 742791276885309778}
   environmentRoot: {fileID: 3570322925851413670}
   runwayRoot: {fileID: 983608951115090136}
+  fixedFoveationLevel: 3
 --- !u!1 &1766485041325464483
 GameObject:
   m_ObjectHideFlags: 0
@@ -700,7 +701,7 @@ PrefabInstance:
       objectReference: {fileID: 1171423066720843826}
     - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: worldPresentationRenderers.Array.size
-      value: 158
+      value: 159
       objectReference: {fileID: 0}
     - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: 'worldPresentationRenderers.Array.data[0]'
@@ -1332,6 +1333,10 @@ PrefabInstance:
       objectReference: {fileID: 3483775883399440522}
     - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: 'worldPresentationRenderers.Array.data[157]'
+      value: 
+      objectReference: {fileID: 8780821864180235742}
+    - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: 'worldPresentationRenderers.Array.data[158]'
       value: 
       objectReference: {fileID: 7363361558978708517}
     - target: {fileID: 2468626011682155691, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -2485,6 +2490,11 @@ MonoBehaviour:
 --- !u!23 &8765396467556345899 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 3203348237019017177, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
+  m_PrefabInstance: {fileID: 6183554003487197170}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &8780821864180235742 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3173871622557710892, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
   m_PrefabInstance: {fileID: 6183554003487197170}
   m_PrefabAsset: {fileID: 0}
 --- !u!23 &8834990702158133799 stripped

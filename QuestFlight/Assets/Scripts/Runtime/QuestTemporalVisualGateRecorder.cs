@@ -27,6 +27,8 @@ namespace QuestFlightLab.Runtime
         public long managedAllocationCount;
         public long runtimeDrawCalls;
         public long runtimeTriangles;
+        public long groveSelectionCount, groveUploadedBytes;
+        public double groveGatherTotalMs, groveFillTotalMs, groveBufferUploadTotalMs, groveOwnershipUploadTotalMs;
     }
 
     [Serializable]
@@ -44,6 +46,9 @@ namespace QuestFlightLab.Runtime
 
     public static class QuestRenderBudgetAudit
     {
+#if UNITY_EDITOR
+        public static string EditorDiagnosticPath;
+#endif
         public static RenderBudgetSnapshot Capture(Camera camera)
         {
             Renderer[] renderers = UnityEngine.Object.FindObjectsByType<Renderer>(
@@ -90,6 +95,23 @@ namespace QuestFlightLab.Runtime
                     IsVisibleForAudit(renderer, camera, frustum) &&
                     IsSelectedLodRenderer(renderer, rendererLodIndices, selectedLodIndices))
                 .ToArray();
+#if UNITY_EDITOR
+            if (!string.IsNullOrEmpty(EditorDiagnosticPath))
+            {
+                var lines = new List<string> { "renderer\tdraw_slots\tmaterials\tmaterial_assets" };
+                foreach (Renderer renderer in visible)
+                {
+                    string path = renderer.name;
+                    for (Transform parent = renderer.transform.parent; parent != null; parent = parent.parent)
+                        path = parent.name + "/" + path;
+                    Material[] slots = renderer.sharedMaterials;
+                    lines.Add(path + "\t" + slots.Count(m => m != null) + "\t" +
+                        string.Join(";", slots.Where(m => m != null).Select(m => m.name)) + "\t" +
+                        string.Join(";", slots.Where(m => m != null).Select(m => UnityEditor.AssetDatabase.GetAssetPath(m))));
+                }
+                File.WriteAllLines(EditorDiagnosticPath, lines);
+            }
+#endif
             HashSet<Material> materials = new HashSet<Material>();
             long triangles = 0;
             int drawCalls = 0;
@@ -165,6 +187,12 @@ namespace QuestFlightLab.Runtime
                 materials.Add(material);
                 if (IsTransparent(material)) transparentSlots += batchDraws;
             }
+            int branchDraws=0;
+            foreach(var grove in UnityEngine.Object.FindObjectsByType<MapBranchGroveRenderer>(FindObjectsSortMode.None))
+            {
+                if(!grove.isActiveAndEnabled||grove.LastDraws==0||camera!=null&&(camera.cullingMask&(1<<grove.gameObject.layer))==0)continue;
+                branchDraws+=grove.LastDraws;drawCalls+=grove.LastDraws;triangles+=grove.SelectedTriangles;materials.Add(grove.branchMaterial);
+            }
             if (camera != null && camera.clearFlags == CameraClearFlags.Skybox && RenderSettings.skybox != null)
             {
                 Material skybox = RenderSettings.skybox;
@@ -176,9 +204,9 @@ namespace QuestFlightLab.Runtime
             {
                 activeRendererCount = renderers.Length +
                     vegetationBatches.Sum(batch => batch.NonEmptyDrawCount) +
-                    closeTreeLods.Sum(batch => batch.AuthoredMaximumDrawCount),
+                    closeTreeLods.Sum(batch => batch.AuthoredMaximumDrawCount) + branchDraws,
                 estimatedVisibleRendererCount = visible.Length +
-                    visibleVegetationBatchDraws + visibleCloseTreeDraws,
+                    visibleVegetationBatchDraws + visibleCloseTreeDraws + branchDraws,
                 estimatedInstancedDrawCalls = drawCalls,
                 estimatedFrustumTriangles = triangles,
                 uniqueMaterialCount = materials.Count,
@@ -350,6 +378,12 @@ namespace QuestFlightLab.Runtime
         public const int ProductionTransparentMaterialSlotGate = 2;
         public const string ProductionIsolationProfile = "production";
         public const string SkyOnlyIsolationProfile = "sky_only";
+        public const string CloudsOffIsolationProfile = "clouds_off";
+        public const string CloudsFullSamplingIsolationProfile = "clouds_full_sampling";
+        public const string TrafficOffIsolationProfile = "traffic_off";
+        public const string VegetationOffIsolationProfile = "vegetation_off";
+        public const string ConnectedGroveOffIsolationProfile = "connected_grove_off";
+        public const string BuildingsOffIsolationProfile = "buildings_off";
         public const string WaterOffIsolationProfile = "water_off";
         public const string BuildingsVegetationOffIsolationProfile = "buildings_vegetation_off";
         public const string ReducedTextureIsolationProfile = "reduced_texture_tier";
@@ -367,6 +401,9 @@ namespace QuestFlightLab.Runtime
             public string profile = ProductionIsolationProfile;
             public int previousTextureMipmapLimit;
             public readonly List<Renderer> disabledRenderers = new List<Renderer>();
+            public readonly List<Behaviour> disabledBehaviours = new List<Behaviour>();
+            public float previousWaterDisabled;
+            public readonly Dictionary<Material,float> previousCloudSampling = new Dictionary<Material,float>();
         }
 
         [SerializeField] private float readinessTimeoutSeconds = DefaultReadinessTimeoutSeconds;
@@ -389,8 +426,71 @@ namespace QuestFlightLab.Runtime
 
         private IEnumerator Start()
         {
-            if (Application.isEditor || !AcceptanceCaptureRequested()) yield break;
+            if (Application.isEditor) yield break;
+            if (!AcceptanceCaptureRequested())
+            {
+                Debug.Log(LogPrefix + " Capture not requested by intent or a valid timed diagnostic request.");
+                yield break;
+            }
+            Debug.Log(LogPrefix + " Capture requested; checking authored scene readiness.");
             yield return Capture();
+        }
+
+        public const string RequestFileName = "qfl_acceptance_request.json";
+        [Serializable]
+        private sealed class CaptureRequest
+        {
+            public string schema;
+            public string expiresUtc;
+            public string isolationProfile;
+            public bool startDemo;
+            public bool groveObservation;
+            public bool groveVisibilityDiagnostic;
+            public int groveObservationStation;
+        }
+
+        public static bool TryValidateCaptureRequest(string json, DateTime utcNow, out string profile)
+        {
+            profile = ProductionIsolationProfile;
+            try
+            {
+                CaptureRequest request = JsonUtility.FromJson<CaptureRequest>(json);
+                if (request == null || request.schema != "questflight.acceptance-request.v1" ||
+                    !DateTime.TryParse(request.expiresUtc, CultureInfo.InvariantCulture,
+                        DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out DateTime expires) ||
+                    expires <= utcNow || expires > utcNow.AddMinutes(15) ||
+                    !IsSupportedIsolationProfile(request.isolationProfile) ||
+                    request.groveObservation && (request.startDemo || request.groveObservationStation < 0 || request.groveObservationStation > 8) || request.groveVisibilityDiagnostic && !request.groveObservation) return false;
+                profile = request.isolationProfile;
+                return true;
+            }
+            catch (ArgumentException) { return false; }
+        }
+
+        public static bool CaptureRequestStartsDemo(string json, DateTime utcNow) =>
+            TryValidateCaptureRequest(json, utcNow, out _) && JsonUtility.FromJson<CaptureRequest>(json).startDemo;
+
+        private static bool TryReadCaptureRequest(out string profile) => TryReadCaptureRequest(out profile, out _);
+
+        private static bool TryReadCaptureRequest(out string profile, out bool startDemo)
+        {
+            profile = ProductionIsolationProfile;
+            startDemo = false;
+            string path = Path.Combine(Application.persistentDataPath, RequestFileName);
+            try
+            {
+                if (!File.Exists(path)) return false;
+                string json = File.ReadAllText(path);
+                if (!TryValidateCaptureRequest(json, DateTime.UtcNow, out profile)) return false;
+                startDemo = JsonUtility.FromJson<CaptureRequest>(json).startDemo;
+                return true;
+            }
+            catch (IOException exception)
+            {
+                Debug.LogWarning(LogPrefix + " Cannot read diagnostic request: " + exception.Message);
+                return false;
+            }
+            catch (UnauthorizedAccessException) { return false; }
         }
 
         public static bool EvaluateSceneReadiness(out string status)
@@ -438,26 +538,142 @@ namespace QuestFlightLab.Runtime
                 status = "Excluded runtime component is present: " + found;
                 return false;
             }
-            status = "PASS: authored production hierarchy, environment, tracked XR, and sole Unity authority are ready.";
+            status = "PASS: authored production hierarchy, environment, tracked XR, and sole native JSBSim authority are ready.";
             return true;
         }
 
+        private float observationPreviousTimeScale;
+        private bool observationOwnsPause;
+        private DiagnosticIsolationState observationIsolation;
+        private Rigidbody observationBody;
+        private RigidbodyInterpolation observationPreviousInterpolation;
+        private void OnDisable()
+        {
+            if(observationOwnsPause){Time.timeScale=observationPreviousTimeScale;observationOwnsPause=false;}
+            if(observationIsolation!=null){RestoreDiagnosticIsolation(observationIsolation);observationIsolation=null;}
+            if(observationBody!=null){observationBody.interpolation=observationPreviousInterpolation;observationBody=null;}
+        }
+        [Serializable] private sealed class GroveObservationEvidence
+        {
+            public string status="STATIC_APPEARANCE_ONLY_NOT_FLIGHT_PERFORMANCE",profile,backend;
+            public int station;public double latitude,longitude,altitudeMslMeters;public bool nativeInitialized;
+            public Vector3 simulationPosition,presentationPosition;
+            public float presentationErrorMeters,nativePoseErrorMeters;
+            public bool mapGroveActive,mapGroveReady,mapGroveCameraMatches;
+            public int mapGroveResidentPages,mapGroveSelectedCells,mapGroveEligibleCells,mapGroveDraws,mapGroveLoadFailures;
+            public int mapGroveNearCells,mapGroveMiddleCells,mapGroveFarCells,mapGroveTriangles;
+            public float mapGroveFarthestMeters;public double mapGroveSelectionMs;
+            public Vector3 trackedCameraPosition,trackedCameraForward;
+        }
+        private IEnumerator CaptureConnectedGroveObservation(CaptureRequest request)
+        {
+            var mode=FindFirstObjectByType<QuestFlight.Product.ProductFlightModeCoordinator>();
+            var environment=productionRoot.EnvironmentRoot.GetComponentInChildren<ProductionEnvironmentRoot>(true);
+            var authoredMap=environment.GetComponentInChildren<MapBranchGroveRenderer>(true);
+            var pose=authoredMap!=null&&authoredMap.observationStarts!=null&&request.groveObservationStation<authoredMap.observationStarts.Length?authoredMap.observationStarts[request.groveObservationStation]:null;
+            if(mode==null||pose==null||!mode.AuthoredFlightCoordinator.IsInitialized)
+            {Debug.LogError("[ConnectedGroveObservation] Missing authored observation/native references");yield break;}
+            mode.SelectFreeFlight();
+            float started=Time.realtimeSinceStartup;
+            while(mode.AuthoredModeMenuView.TransitionPending && Time.realtimeSinceStartup-started<15)yield return null;
+            if(mode.State!=QuestFlight.Product.ProductFlightModeCoordinator.FlightModeState.FreeFlight||mode.AuthoredModeMenuView.TransitionPending)
+            {Debug.LogError("[ConnectedGroveObservation] Free-flight presentation failed");yield break;}
+            var initial=pose.Build(GeodeticReference.Kbdu);
+            // A paused native teleport must not retain PhysX's older interpolated
+            // transform. This diagnostic override is restored when the test ends.
+            observationBody=mode.AuthoredFlightCoordinator.authoritativeRigidbody;
+            observationPreviousInterpolation=observationBody.interpolation;
+            observationBody.interpolation=RigidbodyInterpolation.None;
+            if(!mode.AuthoredFlightCoordinator.TryResetToInitialConditions(initial))
+            {Debug.LogError("[ConnectedGroveObservation] Native reset failed: "+mode.AuthoredFlightCoordinator.LastError);yield break;}
+            Physics.SyncTransforms();
+            // Pausing prevents the rig's next FixedUpdate from sampling the native
+            // reset. Clear its interpolation history through the existing rig API.
+            productionRoot.AircraftRig.ResetPresentationHistory();
+            // Native JSBSim applies the aircraft pose. The tracked camera and seat
+            // are never written. Pause only this explicitly requested observation;
+            // unscaled streaming and OpenXR tracking continue normally.
+            observationPreviousTimeScale=Time.timeScale;observationOwnsPause=true;Time.timeScale=0;
+            observationIsolation=ApplyDiagnosticIsolation(request.isolationProfile,environment);
+            if(request.groveVisibilityDiagnostic&&authoredMap!=null)authoredMap.BeginVisibilityDiagnostic();
+            yield return new WaitForSecondsRealtime(12);
+            var rig=productionRoot.AircraftRig;
+            float presentationError=Vector3.Distance(rig.AircraftSimulationRoot.position,rig.AircraftVisualRoot.position);
+            float nativeError=Vector3.Distance(rig.AircraftSimulationRoot.position,mode.AuthoredFlightCoordinator.CurrentState.positionUnityMeters);
+            if(presentationError>0.1f||nativeError>0.1f)
+            {Debug.LogError("[ConnectedGroveObservation] Presentation alignment failed: visual="+presentationError+" m native="+nativeError+" m simulation="+rig.AircraftSimulationRoot.position+" presentation="+rig.AircraftVisualRoot.position);yield break;}
+            var evidence=new GroveObservationEvidence{profile=request.isolationProfile,station=request.groveObservationStation,
+                backend=mode.AuthoredFlightCoordinator.ActiveBackendKind.ToString(),nativeInitialized=mode.AuthoredFlightCoordinator.IsInitialized,
+                latitude=initial.latitudeDegrees,longitude=initial.longitudeDegrees,altitudeMslMeters=initial.altitudeMslMeters,
+                simulationPosition=rig.AircraftSimulationRoot.position,presentationPosition=rig.AircraftVisualRoot.position,
+                presentationErrorMeters=presentationError,nativePoseErrorMeters=nativeError};
+            var mapGrove=environment.GetComponentInChildren<MapBranchGroveRenderer>(true);
+            if(mapGrove!=null)
+            {
+                evidence.mapGroveActive=mapGrove.isActiveAndEnabled;evidence.mapGroveReady=mapGrove.Ready;
+                evidence.mapGroveResidentPages=mapGrove.ResidentPages;evidence.mapGroveSelectedCells=mapGrove.SelectedCells;
+                evidence.mapGroveEligibleCells=mapGrove.EligibleCells;evidence.mapGroveDraws=mapGrove.LastDraws;evidence.mapGroveLoadFailures=mapGrove.LoadFailures;
+                evidence.mapGroveCameraMatches=mapGrove.viewingCamera==rig.TrackedCamera;
+                evidence.mapGroveNearCells=mapGrove.NearCells;evidence.mapGroveMiddleCells=mapGrove.MiddleCells;evidence.mapGroveFarCells=mapGrove.FarCells;evidence.mapGroveTriangles=mapGrove.SelectedTriangles;
+                evidence.mapGroveFarthestMeters=mapGrove.FarthestSelectedMeters;evidence.mapGroveSelectionMs=mapGrove.SelectionMilliseconds;
+            }
+            evidence.trackedCameraPosition=rig.TrackedCamera.transform.position;evidence.trackedCameraForward=rig.TrackedCamera.transform.forward;
+            File.WriteAllText(Path.Combine(Application.persistentDataPath,"connected_grove_observation.json"),JsonUtility.ToJson(evidence,true));
+            Debug.Log("[ConnectedGroveObservation] READY "+JsonUtility.ToJson(evidence));
+            // No temporal/performance gate is run at a paused visual station.
+        }
         private IEnumerator Capture()
         {
             float readinessStarted = Time.realtimeSinceStartup;
             string readiness = string.Empty;
             while (!EvaluateSceneReadiness(out readiness) &&
                    Time.realtimeSinceStartup - readinessStarted < readinessTimeoutSeconds)
-                yield return null;
+                yield return new WaitForSecondsRealtime(0.5f);
             bool ready = EvaluateSceneReadiness(out readiness);
             Debug.Log($"{LogPrefix} Readiness {(ready ? "PASS" : "FAIL")}: {readiness}");
             if (!ready) yield break;
+
+            string requestPath=Path.Combine(Application.persistentDataPath,RequestFileName);
+            if(File.Exists(requestPath))
+            {
+                string requestJson=File.ReadAllText(requestPath);
+                if(TryValidateCaptureRequest(requestJson,DateTime.UtcNow,out _) && JsonUtility.FromJson<CaptureRequest>(requestJson).groveObservation)
+                {
+                    yield return CaptureConnectedGroveObservation(JsonUtility.FromJson<CaptureRequest>(requestJson));
+                    yield break;
+                }
+            }
+
+            if (TryReadCaptureRequest(out _, out bool startDemo) && startDemo)
+            {
+                var mode = FindFirstObjectByType<QuestFlight.Product.ProductFlightModeCoordinator>();
+                if (mode != null) mode.SelectDemo();
+                if (mode == null || mode.State != QuestFlight.Product.ProductFlightModeCoordinator.FlightModeState.Demo)
+                {
+                    Debug.LogError(LogPrefix + " Explicit diagnostic demo request failed; refusing menu-only measurement.");
+                    yield break;
+                }
+                Debug.Log(LogPrefix + " Explicit diagnostic request started the authored native-JSBSim demo route.");
+                // The menu deliberately restores world renderers during its fade.
+                // Establish the immutable-renderer baseline after that authored
+                // transition, otherwise normal startup becomes a false violation.
+                float presentationStarted = Time.realtimeSinceStartup;
+                var menu = mode.AuthoredModeMenuView;
+                while (menu != null && menu.TransitionPending &&
+                    Time.realtimeSinceStartup - presentationStarted < 15f)
+                    yield return null;
+                if (menu == null || menu.TransitionPending)
+                {
+                    Debug.LogError(LogPrefix + " Explicit diagnostic demo request failed: presentation did not settle.");
+                    yield break;
+                }
+            }
 
             ProductionEnvironmentRoot diagnosticEnvironment = productionRoot != null && productionRoot.EnvironmentRoot != null
                 ? productionRoot.EnvironmentRoot.GetComponentInChildren<ProductionEnvironmentRoot>(true)
                 : null;
             DiagnosticIsolationState isolation = ApplyDiagnosticIsolation(ReadIsolationProfile(), diagnosticEnvironment);
-            Debug.Log($"{LogPrefix} Isolation profile={isolation.profile}; disabledRenderers={isolation.disabledRenderers.Count}; " +
+            Debug.Log($"{LogPrefix} Isolation profile={isolation.profile}; disabledRenderers={isolation.disabledRenderers.Count}; disabledBehaviours={isolation.disabledBehaviours.Count}; " +
                       $"textureMipmapLimit={QualitySettings.globalTextureMipmapLimit}");
 
             // The temporal recorder owns mountain capture during this gate. Disable the probe's
@@ -503,6 +719,7 @@ namespace QuestFlightLab.Runtime
             }
 
             QuestTemporalVisualGateReport report = CreateReport(readiness, Time.realtimeSinceStartup - readinessStarted);
+            var measuredGrove = diagnosticEnvironment.GetComponentInChildren<MapBranchGroveRenderer>(true);
             report.diagnosticIsolationProfile = isolation.profile;
             report.diagnosticIsolationActive = !string.Equals(
                 isolation.profile,
@@ -510,6 +727,12 @@ namespace QuestFlightLab.Runtime
                 StringComparison.Ordinal);
             report.diagnosticDisabledRendererCount = isolation.disabledRenderers.Count;
             report.diagnosticTextureMipmapLimit = QualitySettings.globalTextureMipmapLimit;
+            if (isolation.profile == ReducedTextureIsolationProfile)
+                report.limitations.Add("Global mip limit diagnostic does not establish Texture2DArray residency or aerial clipmap cost.");
+            if (isolation.profile == BuildingsOffIsolationProfile || isolation.profile == BuildingsVegetationOffIsolationProfile)
+                report.limitations.Add("Building draw isolation retains streaming and page selection CPU work; it measures rendering removal, not the entire subsystem.");
+            if (isolation.profile == CloudsOffIsolationProfile)
+                report.limitations.Add("Cloud draw isolation preserves atmosphere response and skybox lighting.");
             // Allocate all observer-owned steady-state storage before the allocation recorder starts.
             // The gate must measure the product workload, not allocations introduced by its own probe.
             int expectedFrameSamples = Mathf.CeilToInt(Mathf.Max(1f, measurementSeconds) * 144f) + 16;
@@ -659,7 +882,13 @@ namespace QuestFlightLab.Runtime
                     cpuFrameMs = cpu,
                     gpuFrameMs = gpu,
                     gcAllocatedBytes = allocatedBytes,
-                    managedAllocationCount = managedAllocationCount
+                    managedAllocationCount = managedAllocationCount,
+                    groveSelectionCount = measuredGrove == null ? 0 : measuredGrove.SelectionCount,
+                    groveUploadedBytes = measuredGrove == null ? 0 : measuredGrove.UploadedBytes,
+                    groveGatherTotalMs = measuredGrove == null ? 0 : measuredGrove.GatherTotalMs,
+                    groveFillTotalMs = measuredGrove == null ? 0 : measuredGrove.FillTotalMs,
+                    groveBufferUploadTotalMs = measuredGrove == null ? 0 : measuredGrove.BufferUploadTotalMs,
+                    groveOwnershipUploadTotalMs = measuredGrove == null ? 0 : measuredGrove.OwnershipUploadTotalMs
                 });
             }
             if (!profilerAllocationAvailable && il2CppAllocationCounterAvailable && report.frameSamples.Count > 0)
@@ -899,6 +1128,7 @@ namespace QuestFlightLab.Runtime
 
         private static string ReadIsolationProfile()
         {
+            if (TryReadCaptureRequest(out string fileProfile)) return fileProfile;
 #if UNITY_ANDROID && !UNITY_EDITOR
             try
             {
@@ -919,6 +1149,12 @@ namespace QuestFlightLab.Runtime
         private static bool IsSupportedIsolationProfile(string profile) =>
             string.Equals(profile, ProductionIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, SkyOnlyIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, CloudsOffIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, CloudsFullSamplingIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, TrafficOffIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, VegetationOffIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, ConnectedGroveOffIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, BuildingsOffIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, WaterOffIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, BuildingsVegetationOffIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, ReducedTextureIsolationProfile, StringComparison.Ordinal);
@@ -937,45 +1173,87 @@ namespace QuestFlightLab.Runtime
                 QualitySettings.globalTextureMipmapLimit = Math.Max(1, state.previousTextureMipmapLimit);
                 return state;
             }
-            if (string.Equals(state.profile, ProductionIsolationProfile, StringComparison.Ordinal)) return state;
-
             if (environment == null) return state;
-            Renderer[] renderers = environment.GetComponentsInChildren<Renderer>(true);
-            foreach (Renderer renderer in renderers)
+            foreach (var clouds in environment.GetComponentsInChildren<BoulderCloudField>(true))
             {
-                if (renderer == null || !renderer.enabled) continue;
-                bool disable = string.Equals(state.profile, SkyOnlyIsolationProfile, StringComparison.Ordinal) ||
-                               string.Equals(state.profile, WaterOffIsolationProfile, StringComparison.Ordinal) &&
-                               environment.essentialWater != null &&
-                               (renderer.transform == environment.essentialWater ||
-                                renderer.transform.IsChildOf(environment.essentialWater)) ||
-                               string.Equals(state.profile, BuildingsVegetationOffIsolationProfile, StringComparison.Ordinal) &&
-                               IsBuildingOrVegetationRenderer(renderer.transform);
+                var material = clouds.SharedCloudMaterial;
+                if (material == null || !material.HasProperty("_CloudSamplingLod")) continue;
+                if (state.profile == CloudsFullSamplingIsolationProfile && !state.previousCloudSampling.ContainsKey(material))
+                {
+                    state.previousCloudSampling.Add(material,material.GetFloat("_CloudSamplingLod"));
+                    material.SetFloat("_CloudSamplingLod",0);
+                }
+                Debug.Log($"{LogPrefix} Cloud sampling profile={state.profile}; actualLod={material.GetFloat("_CloudSamplingLod")}");
+            }
+            if (state.profile == ProductionIsolationProfile || state.profile == CloudsFullSamplingIsolationProfile) return state;
+            bool sky = state.profile == SkyOnlyIsolationProfile;
+            bool trees = sky || state.profile == VegetationOffIsolationProfile ||
+                state.profile == BuildingsVegetationOffIsolationProfile;
+            bool buildings = sky || state.profile == BuildingsOffIsolationProfile ||
+                state.profile == BuildingsVegetationOffIsolationProfile;
+            bool traffic = sky || state.profile == TrafficOffIsolationProfile;
+            // Instanced draws have no Renderer to hide. Unsubscribe their camera callbacks.
+            foreach (Behaviour behaviour in environment.GetComponentsInChildren<Behaviour>(true))
+            {
+                bool disable = trees && (behaviour is AirportCloseTreeLodRenderer || behaviour is AerialVegetationBatchRenderer || behaviour is AirportNearFieldGrassRenderer) ||
+                    (trees || state.profile == ConnectedGroveOffIsolationProfile) && behaviour is MapBranchGroveRenderer ||
+                    traffic && (behaviour is KbduTrafficRuntime || behaviour is KbduTrafficV2Runtime);
+                if (!disable || !behaviour.enabled) continue;
+                behaviour.enabled = false;
+                state.disabledBehaviours.Add(behaviour);
+            }
+            var buildingPages = new HashSet<Renderer>();
+            if (buildings)
+                foreach (var controller in environment.GetComponentsInChildren<AircraftCenteredBuildingClipmapController>(true))
+                    foreach (var renderer in controller.pageRenderers)
+                        if (renderer != null) buildingPages.Add(renderer);
+            var cloudRenderers = new HashSet<Renderer>();
+            if (state.profile == CloudsOffIsolationProfile)
+                foreach (var clouds in environment.GetComponentsInChildren<BoulderCloudField>(true))
+                    foreach (var renderer in clouds.SectorRenderers)
+                        if (renderer != null) cloudRenderers.Add(renderer);
+            foreach (Renderer renderer in environment.GetComponentsInChildren<Renderer>(true))
+            {
+                if (renderer == null || renderer.forceRenderingOff) continue;
+                bool disable = sky || cloudRenderers.Contains(renderer) || buildingPages.Contains(renderer) ||
+                    state.profile == WaterOffIsolationProfile && environment.essentialWater != null &&
+                    (renderer.transform == environment.essentialWater || renderer.transform.IsChildOf(environment.essentialWater)) ||
+                    (buildings || trees) && IsBuildingOrVegetationRenderer(renderer.transform, buildings, trees);
                 if (!disable) continue;
-                renderer.enabled = false;
+                // Unlike enabled, streaming and LOD selection do not overwrite this flag.
+                // Include presently disabled slots: they can receive a streamed mesh later.
+                renderer.forceRenderingOff = true;
                 state.disabledRenderers.Add(renderer);
             }
+            state.previousWaterDisabled = Shader.GetGlobalFloat("_QflDiagnosticWaterDisabled");
+            if (state.profile == WaterOffIsolationProfile)
+                Shader.SetGlobalFloat("_QflDiagnosticWaterDisabled", 1f);
             return state;
         }
 
         private static void RestoreDiagnosticIsolation(DiagnosticIsolationState state)
         {
             if (state == null) return;
+            foreach (var setting in state.previousCloudSampling)
+                if (setting.Key != null) setting.Key.SetFloat("_CloudSamplingLod",setting.Value);
             foreach (Renderer renderer in state.disabledRenderers)
-                if (renderer != null) renderer.enabled = true;
+                if (renderer != null) renderer.forceRenderingOff = false;
+            foreach (Behaviour behaviour in state.disabledBehaviours)
+                if (behaviour != null) behaviour.enabled = true;
+            if (state.profile == WaterOffIsolationProfile)
+                Shader.SetGlobalFloat("_QflDiagnosticWaterDisabled", state.previousWaterDisabled);
             QualitySettings.globalTextureMipmapLimit = state.previousTextureMipmapLimit;
         }
 
-        private static bool IsBuildingOrVegetationRenderer(Transform transform)
+        private static bool IsBuildingOrVegetationRenderer(Transform transform, bool buildings, bool trees)
         {
             for (Transform current = transform; current != null; current = current.parent)
             {
                 string objectName = current.name;
-                if (objectName.StartsWith("buildings_", StringComparison.Ordinal) ||
-                    objectName.StartsWith("vegetation_", StringComparison.Ordinal) ||
-                    string.Equals(objectName, "AirportArtProduction", StringComparison.Ordinal) ||
-                    string.Equals(objectName, AirportCoreBenchmarkRoot.GameObjectName, StringComparison.Ordinal) ||
-                    string.Equals(objectName, "SparseVegetationProduction", StringComparison.Ordinal))
+                if (buildings && (objectName.StartsWith("buildings_", StringComparison.Ordinal) ||
+                        string.Equals(objectName, AirportCoreBenchmarkRoot.GameObjectName, StringComparison.Ordinal)) ||
+                    trees && (objectName.StartsWith("vegetation_", StringComparison.Ordinal) ||
+                        string.Equals(objectName, "SparseVegetationProduction", StringComparison.Ordinal)))
                     return true;
             }
             return false;
@@ -994,6 +1272,9 @@ namespace QuestFlightLab.Runtime
 
         private static bool AcceptanceCaptureRequested()
         {
+            // Quest shell launches may replace Activity intent extras. A bounded,
+            // explicitly requested host diagnostic also works through app-owned storage.
+            if (TryReadCaptureRequest(out _)) return true;
 #if UNITY_ANDROID && !UNITY_EDITOR
             try
             {

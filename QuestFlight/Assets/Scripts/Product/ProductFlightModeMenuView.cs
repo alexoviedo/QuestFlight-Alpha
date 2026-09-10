@@ -340,6 +340,20 @@ namespace QuestFlight.Product
             HideAircraftPresentation();
         }
 
+#if UNITY_EDITOR
+        // Batch captures do not tick the fade coroutine/Update lifecycle.
+        // Complete its presentation state explicitly without touching flight or XR.
+        public void CompleteTransitionForVisualQa()
+        {
+            RestoreAircraftPresentation();
+            RestoreWorldPresentation();
+            SetFadeOpacity(0f);
+            showroomContentRoot.SetActive(false);
+            _transitionPhase = TransitionPhase.Complete;
+            gameObject.SetActive(false);
+        }
+#endif
+
         public bool IsFocused(ProductFlightModeMenuButton button)
         {
             return button != null && FocusedButton == button;

@@ -84,6 +84,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             sampler2D _AirportCoreCleanPlateAlbedo;
             sampler2D _AirportCoreCleanPlateMask;
             sampler2D _FullMapWaterMask;
+            float _QflDiagnosticWaterDisabled; // Expiring capture request only; default zero.
             float4 _NearWorldMinInvSize;
             float4 _MidWorldMinInvSize;
             float4 _FarWorldMinInvSize;
@@ -158,7 +159,7 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 half3 waterTierCoverage = half3(0.0h, 0.0h, 0.0h);
                 half waterCoverage = 0.0h;
                 half waterReflectionAuthority = 0.0h;
-                UNITY_BRANCH if (waterInside > 0.5h)
+                UNITY_BRANCH if (waterInside > 0.5h && _QflDiagnosticWaterDisabled < 0.5)
                 {
                     waterTierCoverage = tex2Dgrad(
                         _FullMapWaterMask,
@@ -199,31 +200,6 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                 half nearWeight = 1.0 - smoothstep(_NearBlendStartEnd.x, _NearBlendStartEnd.y, radius);
                 half midWeight = 1.0 - smoothstep(_MidBlendStartEnd.x, _MidBlendStartEnd.y, radius);
                 fixed3 macro;
-                UNITY_BRANCH if (radius <= _NearBlendStartEnd.x)
-                {
-                    macro = tex2Dgrad(_NearAlbedo, nearUv, nearUvDx, nearUvDy).rgb;
-                }
-                else if (radius < _NearBlendStartEnd.y)
-                {
-                    fixed3 nearColor = tex2Dgrad(_NearAlbedo, nearUv, nearUvDx, nearUvDy).rgb;
-                    fixed3 midColor = tex2Dgrad(_MidAlbedo, midUv, midUvDx, midUvDy).rgb;
-                    macro = lerp(midColor, nearColor, nearWeight);
-                }
-                else if (radius <= _MidBlendStartEnd.x)
-                {
-                    macro = tex2Dgrad(_MidAlbedo, midUv, midUvDx, midUvDy).rgb;
-                }
-                else if (radius < _MidBlendStartEnd.y)
-                {
-                    fixed3 midColor = tex2Dgrad(_MidAlbedo, midUv, midUvDx, midUvDy).rgb;
-                    fixed3 farColor = tex2Dgrad(_FarAlbedo, farUv, farUvDx, farUvDy).rgb;
-                    macro = lerp(farColor, midColor, midWeight);
-                }
-                else
-                {
-                    macro = tex2Dgrad(_FarAlbedo, farUv, farUvDx, farUvDy).rgb;
-                }
-
                 UNITY_BRANCH if (_ClipmapEnabled > 0.5h)
                 {
                     macro = tex2Dgrad(_ClipGlobalAlbedo, farUv, farUvDx, farUvDy).rgb;
@@ -236,6 +212,33 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
                         world, _ClipHighGridMinSize, _ClipHighUvScaleOffsetBlend,
                         true, clipColor);
                     macro = lerp(macro, clipColor, clipWeight);
+                }
+                else
+                {
+                    UNITY_BRANCH if (radius <= _NearBlendStartEnd.x)
+                    {
+                        macro = tex2Dgrad(_NearAlbedo, nearUv, nearUvDx, nearUvDy).rgb;
+                    }
+                    else if (radius < _NearBlendStartEnd.y)
+                    {
+                        fixed3 nearColor = tex2Dgrad(_NearAlbedo, nearUv, nearUvDx, nearUvDy).rgb;
+                        fixed3 midColor = tex2Dgrad(_MidAlbedo, midUv, midUvDx, midUvDy).rgb;
+                        macro = lerp(midColor, nearColor, nearWeight);
+                    }
+                    else if (radius <= _MidBlendStartEnd.x)
+                    {
+                        macro = tex2Dgrad(_MidAlbedo, midUv, midUvDx, midUvDy).rgb;
+                    }
+                    else if (radius < _MidBlendStartEnd.y)
+                    {
+                        fixed3 midColor = tex2Dgrad(_MidAlbedo, midUv, midUvDx, midUvDy).rgb;
+                        fixed3 farColor = tex2Dgrad(_FarAlbedo, farUv, farUvDx, farUvDy).rgb;
+                        macro = lerp(farColor, midColor, midWeight);
+                    }
+                    else
+                    {
+                        macro = tex2Dgrad(_FarAlbedo, farUv, farUvDx, farUvDy).rgb;
+                    }
                 }
 
                 float2 cleanPlateUv =

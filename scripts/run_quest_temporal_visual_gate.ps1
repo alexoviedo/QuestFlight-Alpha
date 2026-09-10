@@ -14,8 +14,10 @@ param(
   [int]$ReadinessTimeoutSeconds = 120,
   [ValidateRange(60, 180)]
   [int]$MeasurementTimeoutSeconds = 90,
-  [ValidateSet('production', 'sky_only', 'water_off', 'buildings_vegetation_off', 'reduced_texture_tier')]
+  [ValidateSet('production', 'sky_only', 'clouds_off', 'clouds_full_sampling', 'traffic_off', 'vegetation_off', 'connected_grove_off', 'buildings_off', 'water_off', 'buildings_vegetation_off', 'reduced_texture_tier')]
   [string]$IsolationProfile = 'production',
+  [ValidateRange(-1, 4)]
+  [int]$DiagnosticFoveationLevel = -1,
   [switch]$SkipInstall,
   [switch]$SkipScreenRecording,
   [switch]$StaticEvidenceOnly,
@@ -571,8 +573,8 @@ function Get-FaultSummary {
   # `*Throttling {}` configuration messages are not thermal failures.
   $thermalWarningLines = @($lines | Where-Object {
     $_ -match '(?i)(thermal|temperature)' -and
-    ($_ -match '(?i)(critical|severe|emergency|shutdown|status\s*[:=]\s*[1-6])' -or
-      $_ -match '(?i)(throttl(?:e|ing)[^\r\n]*(?:active|enabled|started)|(?:active|enabled|started)[^\r\n]*throttl(?:e|ing))')
+    ($_ -match '(?i)\b(critical|severe|emergency|shutdown|status\s*[:=]\s*[1-6])\b' -or
+      $_ -match '(?i)(\bthrottl(?:e|ing)\b[^\r\n]*\b(?:active|enabled|started)\b|\b(?:active|enabled|started)\b[^\r\n]*\bthrottl(?:e|ing)\b)')
   })
   $guardianDialogLines = @($lines | Where-Object {
     $_ -match '(?i)(GuardianDialogActivity|GuardianDialogMgr[^\r\n]*requestDialog|GUARDIAN_TRACKING_LOST)'
@@ -682,9 +684,15 @@ function Wait-ForLogPattern {
       Write-Host "${Stage}: ${elapsed}s / ${TimeoutSeconds}s"
       $nextUpdate += 10
     }
+    if ($null -ne $logcatProcess -and $logcatProcess.HasExited) {
+      throw "ADB log stream ended during '$Stage'. Preserve/recover the device log before retrying; do not run an Editor launch during physical capture."
+    }
     if (Test-Path -LiteralPath $Path) {
       $text = Get-Content -LiteralPath $Path -Raw -ErrorAction SilentlyContinue
       if ($text -match $Pattern) { return $true }
+      if ($text -match '\[QuestFlight\]\[TemporalVisualGate\] (Readiness FAIL:|Explicit diagnostic demo request failed)') {
+        return $false
+      }
     }
     Start-Sleep -Milliseconds 1000
   }
@@ -1003,6 +1011,7 @@ function Write-GateSummary {
   [void]$md.AppendLine("- Supplemental delivered-cadence gate: **$(if ($deliveredCadencePass) { 'PASS' } else { 'FAIL/NOT RUN' })**")
   [void]$md.AppendLine("- Bottleneck diagnosis: $bottleneck")
   [void]$md.AppendLine()
+  if ($DiagnosticFoveationLevel -ge 0) { [void]$md.AppendLine("- Diagnostic-only system foveation override: $DiagnosticFoveationLevel; not shipping configuration acceptance.") }
   [void]$md.AppendLine('## Exact 90 s + 60 s timing gate')
   [void]$md.AppendLine()
   if ($runtimeAvailable) {
@@ -1115,6 +1124,8 @@ $originalStayAwakeSetting = ''
 $stayAwakeSettingChanged = $false
 $questPowerAutomationChanged = $false
 $launchBlocked = $false
+$originalFoveationOverride = ''
+$foveationOverrideChanged = $false
 
 try {
   $devices = Resolve-QuestDevice
@@ -1129,6 +1140,13 @@ try {
     Set-Content -LiteralPath (Join-Path $OutputDir 'adb_install.txt') -Value $install -Encoding UTF8
   }
 
+  if ($DiagnosticFoveationLevel -ge 0) {
+    $originalFoveationOverride = (Invoke-Adb -Arguments @('shell', 'getprop', 'debug.oculus.foveation.level')).Trim()
+    [ordered]@{ diagnosticOnly = $true; original = $originalFoveationOverride; requested = $DiagnosticFoveationLevel } |
+      ConvertTo-Json | Set-Content -LiteralPath (Join-Path $OutputDir 'foveation_override.json') -Encoding UTF8
+    $foveationOverrideChanged = $true
+    Invoke-Adb -Arguments @('shell', 'setprop', 'debug.oculus.foveation.level', "$DiagnosticFoveationLevel") | Out-Null
+  }
   $originalStayAwakeSetting = (Invoke-Adb -Arguments @('shell', 'settings', 'get', 'global', 'stay_on_while_plugged_in') -AllowFailure).Trim()
   Set-Content -LiteralPath (Join-Path $OutputDir 'stay_awake_setting_before.txt') -Value $originalStayAwakeSetting -Encoding UTF8
   Invoke-Adb -Arguments @('shell', 'svc', 'power', 'stayon', 'usb') -AllowFailure | Out-Null
@@ -1180,6 +1198,16 @@ try {
     -Value 'qfl_scenery_mode and qfl_environment_isolation are supplied through Activity intent extras; no shell-owned app evidence directory was created.' -Encoding UTF8
 
   if (-not $StaticEvidenceOnly -and -not $SuppressOperatorPrompt -and -not $NoHumanWitness) { Write-Host $OperatorRequest }
+  $captureRequestPath = Join-Path $OutputDir 'capture_request.json'
+  [ordered]@{
+    schema = 'questflight.acceptance-request.v1'
+    expiresUtc = [DateTime]::UtcNow.AddMinutes(10).ToString('O')
+    isolationProfile = $IsolationProfile
+    startDemo = -not $StaticEvidenceOnly
+  } | ConvertTo-Json | Set-Content -LiteralPath $captureRequestPath -Encoding utf8NoBOM
+  # The installed app owns its files directory. Only write the opt-in request;
+  # never create a shell-owned evidence directory. Expiry makes an interrupted run bounded.
+  Invoke-Adb -Arguments @('push', $captureRequestPath, "/sdcard/Android/data/$PackageId/files/qfl_acceptance_request.json") | Out-Null
   Invoke-Adb -Arguments @('logcat', '-c') | Out-Null
   $logcatProcess = Start-AdbBackgroundProcess -Arguments @('logcat', '-v', 'threadtime') -StdoutPath $logcatPath -StderrPath $logcatErrorPath
   $component = "$PackageId/$Activity"
@@ -1215,7 +1243,18 @@ try {
   } else {
     $ready = Wait-ForLogPattern -Path $logcatPath -Pattern '\[QuestFlight\]\[TemporalVisualGate\] Readiness PASS' -TimeoutSeconds $ReadinessTimeoutSeconds -Stage 'Waiting for environment/cockpit/seat/evidence readiness'
     if (-not $ready) { Write-Warning 'Readiness PASS marker was not observed; the runtime report will force the gate to fail.' }
-    $measurementStarted = Wait-ForLogPattern -Path $logcatPath -Pattern '\[QuestFlight\]\[TemporalVisualGate\] Measurement started' -TimeoutSeconds ($ReadinessTimeoutSeconds + 30) -Stage 'Waiting through the exact 90-second warmup'
+    # Inspect isolation while it is active, outside the measured window. The final
+    # screenshot occurs after the runtime restores production rendering.
+    if ($ready) {
+      $isolated = Wait-ForLogPattern -Path $logcatPath -Pattern '\[QuestFlight\]\[TemporalVisualGate\] Isolation profile=' -TimeoutSeconds 30 -Stage 'Waiting for diagnostic scope'
+      if ($isolated) {
+        Capture-AdbScreenshot -Path (Join-Path $OutputDir 'adb_screenshot_isolation_warmup.png') -ErrorPath (Join-Path $OutputDir 'adb_screenshot_isolation_error.txt') | Out-Null
+      }
+    }
+    $measurementStarted = $false
+    if ($ready) {
+      $measurementStarted = Wait-ForLogPattern -Path $logcatPath -Pattern '\[QuestFlight\]\[TemporalVisualGate\] Measurement started' -TimeoutSeconds ([Math]::Max(120, $ReadinessTimeoutSeconds + 30)) -Stage 'Waiting through the exact 90-second warmup'
+    }
     if (-not $measurementStarted) { Write-Warning 'Measurement-start marker was not observed.' }
 
     if ($measurementStarted -and -not $SkipScreenRecording) {
@@ -1230,7 +1269,10 @@ try {
       $screen.error = 'disabled by -SkipScreenRecording'
     }
 
-    $measurementComplete = Wait-ForLogPattern -Path $logcatPath -Pattern '\[QuestFlight\]\[TemporalVisualGate\] Evidence written:' -TimeoutSeconds $MeasurementTimeoutSeconds -Stage 'Recording exact 60-second measurement'
+    $measurementComplete = $false
+    if ($measurementStarted) {
+      $measurementComplete = Wait-ForLogPattern -Path $logcatPath -Pattern '\[QuestFlight\]\[TemporalVisualGate\] Evidence written:' -TimeoutSeconds $MeasurementTimeoutSeconds -Stage 'Recording exact 60-second measurement'
+    }
     if (-not $measurementComplete) { Write-Warning 'Temporal gate evidence marker was not observed.' }
   }
 
@@ -1243,7 +1285,7 @@ try {
     Set-Content -LiteralPath (Join-Path $OutputDir 'activity.txt') -Encoding UTF8
   Invoke-Adb -Arguments @('shell', 'dumpsys', 'power') -AllowFailure |
     Set-Content -LiteralPath (Join-Path $OutputDir 'power.txt') -Encoding UTF8
-} finally {
+  } finally {
   if ($null -ne $screenRecordProcess) {
     if (-not $screenRecordProcess.HasExited) {
       [void]$screenRecordProcess.WaitForExit(15000)
@@ -1252,6 +1294,15 @@ try {
   }
   if ($null -ne $logcatProcess -and -not $logcatProcess.HasExited) {
     Stop-Process -Id $logcatProcess.Id -Force -ErrorAction SilentlyContinue
+  }
+  if (-not [string]::IsNullOrWhiteSpace($script:ResolvedSerial)) {
+    Invoke-Adb -Arguments @('shell', 'rm', '-f', "/sdcard/Android/data/$PackageId/files/qfl_acceptance_request.json") -AllowFailure | Out-Null
+  }
+  if ($foveationOverrideChanged) {
+    $restoreFoveation = if ([string]::IsNullOrEmpty($originalFoveationOverride)) { '""' } else { $originalFoveationOverride }
+    Invoke-Adb -Arguments @('shell', 'setprop', 'debug.oculus.foveation.level', $restoreFoveation) | Out-Null
+    Invoke-Adb -Arguments @('shell', 'getprop', 'debug.oculus.foveation.level') |
+      Set-Content -LiteralPath (Join-Path $OutputDir 'foveation_override_restored.txt') -Encoding UTF8
   }
   if ($questPowerAutomationChanged) {
     Invoke-Adb -Arguments @('shell', 'am', 'broadcast', '-a', 'com.oculus.vrpowermanager.prox_far') -AllowFailure | Out-Null

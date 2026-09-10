@@ -74,7 +74,7 @@ namespace QuestFlightLab.Environment
         private bool refreshRunning;
         private bool indexReady;
 
-        private sealed class ScoredPage
+        private struct ScoredPage
         {
             public PageKey page;
             public float score;
@@ -322,6 +322,8 @@ namespace QuestFlightLab.Environment
             .Where(state => state.occupied)
             .Select(state => state.page));
 
+        private readonly List<ScoredPage> scoredPageScratch = new List<ScoredPage>((CandidateRadiusPages * 2 + 1) * (CandidateRadiusPages * 2 + 1));
+
         private List<PageKey> SelectDesiredPages(
             Vector3 referencePosition,
             Vector3 aircraftForward,
@@ -334,7 +336,8 @@ namespace QuestFlightLab.Environment
             HashSet<PageKey> selected = new HashSet<PageKey>(basePages);
             bool viewIsRear = Vector3.Dot(aircraftForward, viewForward) < -0.15f;
             float viewThreshold = Mathf.Cos(expandedViewHalfAngleDegrees * Mathf.Deg2Rad);
-            List<ScoredPage> candidates = new List<ScoredPage>();
+            List<ScoredPage> candidates = scoredPageScratch;
+            candidates.Clear();
 
             // The first extension tier is the complete page fringe that will enter the
             // protected 4x4 window at the next boundary in the dominant flight direction.
@@ -388,15 +391,21 @@ namespace QuestFlightLab.Environment
             // an isolated island, which is particularly visible from a flight-simulator view.
             while (selected.Count < SlotCount)
             {
-                ScoredPage next = candidates
-                    .Where(candidate => !selected.Contains(candidate.page) &&
-                                        IsEdgeAdjacent(candidate.page, selected))
-                    .OrderByDescending(candidate => candidate.score)
-                    .ThenBy(candidate => candidate.distance)
-                    .ThenBy(candidate => candidate.page.row)
-                    .ThenBy(candidate => candidate.page.column)
-                    .FirstOrDefault();
-                if (next == null) break;
+                bool found = false;
+                ScoredPage next = default;
+                foreach (ScoredPage candidate in candidates)
+                {
+                    if (selected.Contains(candidate.page) || !IsEdgeAdjacent(candidate.page, selected)) continue;
+                    if (!found || candidate.score > next.score ||
+                        candidate.score == next.score && (candidate.distance < next.distance ||
+                        candidate.distance == next.distance && (candidate.page.row < next.page.row ||
+                        candidate.page.row == next.page.row && candidate.page.column < next.page.column)))
+                    {
+                        found = true;
+                        next = candidate;
+                    }
+                }
+                if (!found) break;
                 selected.Add(next.page);
             }
 
@@ -418,10 +427,12 @@ namespace QuestFlightLab.Environment
             }
         }
 
-        private static bool IsEdgeAdjacent(PageKey page, IEnumerable<PageKey> selected)
+        private static bool IsEdgeAdjacent(PageKey page, HashSet<PageKey> selected)
         {
-            return selected.Any(other =>
-                Mathf.Abs(page.column - other.column) + Mathf.Abs(page.row - other.row) == 1);
+            return selected.Contains(new PageKey(page.column - 1, page.row)) ||
+                   selected.Contains(new PageKey(page.column + 1, page.row)) ||
+                   selected.Contains(new PageKey(page.column, page.row - 1)) ||
+                   selected.Contains(new PageKey(page.column, page.row + 1));
         }
 
         private Vector2Int DesiredMinimum(Vector3 position)

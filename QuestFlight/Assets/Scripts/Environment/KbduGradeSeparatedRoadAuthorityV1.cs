@@ -56,6 +56,7 @@ namespace QuestFlightLab.Environment
             public float surface_width_meters;
             public float profile_length_meters;
             public float[] bridge_interval_meters;
+            public float[] approach_join_distances_meters;
             public float maximum_grade;
             public float minimum_xz_distance_meters;
             public string[] upper_route_ids;
@@ -95,6 +96,7 @@ namespace QuestFlightLab.Environment
 
         public Document Data => document;
         public int ProfileCount => document?.profiles?.Length ?? 0;
+        public bool HasRouteProfile(string routeId) => profileIndicesByRoute.ContainsKey(routeId);
 
         public KbduGradeSeparatedRoadAuthorityV1(TextAsset serializedAuthority)
         {
@@ -131,10 +133,13 @@ namespace QuestFlightLab.Environment
             if (string.IsNullOrEmpty(routeId) ||
                 !profileIndicesByRoute.TryGetValue(routeId, out int[] profileIndices))
                 return false;
-            float bestSquaredDistance = float.PositiveInfinity;
+            float highestSupportedHeight = float.NegativeInfinity;
             bool found = false;
             for (int candidate = 0; candidate < profileIndices.Length; candidate++)
             {
+                float bestSquaredDistance = float.PositiveInfinity;
+                bool profileFound = false;
+                SurfaceSample profileSample = default;
                 int profileIndex = profileIndices[candidate];
                 Profile profile = document.profiles[profileIndex];
                 float limitSquared = profile.minimum_xz_distance_meters * profile.minimum_xz_distance_meters;
@@ -152,7 +157,8 @@ namespace QuestFlightLab.Environment
                     float dz = bz - az;
                     float lengthSquared = dx * dx + dz * dz;
                     if (lengthSquared <= 0.000001f) continue;
-                    float ratio = Mathf.Clamp01(((x - ax) * dx + (z - az) * dz) / lengthSquared);
+                    float projectedRatio = ((x - ax) * dx + (z - az) * dz) / lengthSquared;
+                    float ratio = Mathf.Clamp01(projectedRatio);
                     float closestX = ax + dx * ratio;
                     float closestZ = az + dz * ratio;
                     float differenceX = x - closestX;
@@ -165,13 +171,25 @@ namespace QuestFlightLab.Environment
                     Vector3 normal = InterpolateNormal(profile, index, ratio);
                     Vector3 surfaceForward = Vector3.ProjectOnPlane(tangent, normal).normalized;
                     if (surfaceForward.sqrMagnitude < 0.5f) surfaceForward = tangent;
-                    sample = new SurfaceSample(
+                    profileSample = new SurfaceSample(
                         new Vector3(x, y, z),
                         surfaceForward,
                         normal,
                         profileIndex,
                         Mathf.Sqrt(squaredDistance));
                     bestSquaredDistance = squaredDistance;
+                    // Clamping must not invent a flat round cap beyond an authored
+                    // approach's first/last cross-section. Keep its nearest distance
+                    // for selection, but reject support outside the actual interval.
+                    profileFound = !(index == 0 && projectedRatio < 0f ||
+                        index == pointCount - 2 && projectedRatio > 1f);
+                }
+                // Overlapping opaque approach meshes share upper routes. Keep the
+                // nearest sample on each profile, then choose the visible upper road.
+                if (profileFound && profileSample.position.y > highestSupportedHeight)
+                {
+                    highestSupportedHeight = profileSample.position.y;
+                    sample = profileSample;
                     found = true;
                 }
             }

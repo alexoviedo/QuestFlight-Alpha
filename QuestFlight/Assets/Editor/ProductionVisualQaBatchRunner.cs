@@ -25,7 +25,7 @@ namespace QuestFlightLab.Editor
     /// legacy runtime world/cockpit construction. Flight-phase images are
     /// deterministic presentation poses and are not physics evidence.
     /// </summary>
-    public static class ProductionVisualQaBatchRunner
+    public static partial class ProductionVisualQaBatchRunner
     {
         private const int DefaultWidth = 1280;
         private const int DefaultHeight = 720;
@@ -239,6 +239,43 @@ namespace QuestFlightLab.Editor
             WriteReportFiles(report, outputDir);
             Debug.Log($"[QuestFlightLab][ProductionVisualQA] selector-only " +
                       $"classification={report.classification} output={outputDir}");
+        }
+
+        public static void RunSettledSceneryBenchmark()
+        {
+            string output = System.Environment.GetEnvironmentVariable("QFL_PRODUCTION_VISUAL_QA_DIR");
+            if (string.IsNullOrEmpty(output)) throw new InvalidOperationException("QA output required");
+            Directory.CreateDirectory(Path.Combine(output, "screenshots"));
+            var report = new ProductionVisualQaReport { generatedUtc = DateTime.UtcNow.ToString("O"),
+                unityVersion = Application.unityVersion, scenePath = ProductionScenePath,
+                outputDirectory = output, renderWidth = 1280, renderHeight = 720,
+                humanHeadsetAcceptance = "NOT_RUN", flightPhaseImageSemantics =
+                    "Settled Editor building/tree selection at capture pose; fallback imagery, not simulator stereo or Android residency evidence." };
+            string previous = System.Environment.GetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW");
+            try
+            {
+                System.Environment.SetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW", "1");
+                VisualContext context = LoadContext(1280, 720, report);
+                Vector3 target = new Vector3(-800, 0, -700);
+                foreach (int height in new[] { 100, 300, 500 })
+                {
+                    Vector3 center = target + new Vector3(0, height, -height * 1.2f);
+                    Quaternion rotation = LookAt(center, target);
+                    foreach (int eye in new[] { -1, 1 })
+                    {
+                        Vector3 position = center + rotation * Vector3.right * (eye * 0.032f);
+                        Capture(context, report, output, 1280, 720, new ShotDefinition(
+                            "settled_" + height + (eye < 0 ? "_left" : "_right"), "Settled Valmont context",
+                            "settled_editor_pair", position, rotation, 55, ViewProfile.Environment));
+                    }
+                }
+                report.contactSheetPath = BuildContactSheet(report, output);
+                report.passed = report.shots.Count == 6 && report.shots.All(s => s.passed);
+                report.classification = report.passed ? "PASS_SETTLED_EDITOR_BENCHMARK" : "FAIL_SETTLED_EDITOR_BENCHMARK";
+            }
+            catch (Exception exception) { report.errors.Add(exception.ToString()); report.passed = false; }
+            finally { System.Environment.SetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW", previous); }
+            WriteReportFiles(report, output);
         }
 
         public static void RunReservoirWatercraftVisualQa()
@@ -738,6 +775,9 @@ namespace QuestFlightLab.Editor
             GameObject cameraObject = new GameObject("Production Visual QA Camera") { hideFlags = HideFlags.DontSave };
             SceneManager.MoveGameObjectToScene(cameraObject, scene);
             Camera camera = cameraObject.AddComponent<Camera>();
+            // Match the authored pilot's visible layers. In particular, shadow-only
+            // helper geometry must not leak into ordinary cockpit evidence.
+            camera.cullingMask = rig.TrackedCamera.cullingMask;
             camera.nearClipPlane = 0.03f;
             camera.farClipPlane = 24000f;
             camera.fieldOfView = 72f;
@@ -852,6 +892,7 @@ namespace QuestFlightLab.Editor
                 !modeCoordinator.AuthoredDemoPilot.IsRunning)
                 throw new InvalidOperationException(
                     "The public Demo selection did not establish the existing Demo lifecycle for Visual QA.");
+            modeCoordinator.AuthoredModeMenuView.CompleteTransitionForVisualQa();
             modeCoordinator.AuthoredModePanelRoot.SetActive(false);
 
             Capture(context, report, outputDir, width, height, new ShotDefinition(
@@ -2265,6 +2306,8 @@ namespace QuestFlightLab.Editor
             string path = Path.Combine(outputDir, "screenshots", shot.id + ".png");
             Texture2D texture = null;
             BoulderCloudField validationCloudField = null;
+            MapBranchGroveRenderer qaMapGrove=null;
+            Camera.CameraCallback qaMapDraw=null;
             try
             {
                 if (shot.profile == ViewProfile.Cockpit) context.visibility?.SetCockpitView();
@@ -2324,6 +2367,25 @@ namespace QuestFlightLab.Editor
 
                 context.camera.transform.SetPositionAndRotation(shot.cameraPosition, shot.cameraRotation);
                 context.camera.fieldOfView = shot.fov;
+                if(System.Environment.GetEnvironmentVariable("QFL_MAP_BRANCH_REVIEW_ACTIVE")!="1")
+                {
+                    qaMapGrove=context.environment.GetComponentInChildren<MapBranchGroveRenderer>();
+                    if(qaMapGrove!=null&&qaMapGrove.enabled)
+                    {
+                        qaMapGrove.PrepareForVisualQa(context.camera);
+                        qaMapDraw=c=>{if(c==context.camera)qaMapGrove.DrawForVisualQa(c);};Camera.onPreCull+=qaMapDraw;
+                    }
+                    else qaMapGrove=null;
+                }
+                if (System.Environment.GetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW") == "1")
+                {
+                    var buildings = context.environment.GetComponentInChildren<AircraftCenteredBuildingClipmapController>();
+                    if (buildings != null)
+                        QuestFlight.Editor.FullMapBuildingClipmapAssetAuthoring.LoadEditorPreviewWindow(
+                            buildings, shot.cameraPosition, context.camera.transform.forward);
+                    foreach (var trees in context.environment.GetComponentsInChildren<AirportCloseTreeLodRenderer>())
+                        trees.PrepareSettledPreview(context.camera);
+                }
                 if (shot.category == "cloud_inside")
                 {
                     validationCloudField = context.environment.boulderCloudField == null
@@ -2347,7 +2409,12 @@ namespace QuestFlightLab.Editor
                 texture = Render(context.camera, width, height, out EditorFrameRenderStats editorStats);
                 File.WriteAllBytes(path, texture.EncodeToPNG());
                 ImageStats image = Analyze(texture);
+                QuestRenderBudgetAudit.EditorDiagnosticPath =
+                    shot.id == "12_external_control_sweep" || shot.id == "16_approach" ||
+                    shot.id == "pasv1_18_cockpit_side_window"
+                        ? Path.Combine(outputDir, shot.id + "_draws.tsv") : null;
                 RenderBudgetSnapshot budget = QuestRenderBudgetAudit.Capture(context.camera);
+                QuestRenderBudgetAudit.EditorDiagnosticPath = null;
                 ProductionVisualQaShot result = new ProductionVisualQaShot
                 {
                     id = shot.id,
@@ -2398,6 +2465,8 @@ namespace QuestFlightLab.Editor
             }
             finally
             {
+                foreach (var trees in context.environment.GetComponentsInChildren<AirportCloseTreeLodRenderer>())
+                    trees.ClearSettledPreview();
                 for (int index = 0; index < qaDirectionalMaterials.Count; index++)
                 {
                     if (qaDirectionalMaterials[index] != null)
@@ -2411,6 +2480,8 @@ namespace QuestFlightLab.Editor
                 if (qaDisabledSunOcclusion != null)
                     qaDisabledSunOcclusion.enabled = qaDisabledSunOcclusionState;
                 validationCloudField?.RestoreAtmosphereForValidation();
+                if(qaMapDraw!=null)Camera.onPreCull-=qaMapDraw;
+                qaMapGrove?.ClearForVisualQa();
                 if (texture != null) Object.DestroyImmediate(texture);
             }
         }

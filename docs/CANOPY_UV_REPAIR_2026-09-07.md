@@ -1,0 +1,31 @@
+# Far-canopy UV repair
+
+The canopy investigation found a rendering defect, not merely sparse selection. The authored far-tree quad has U endpoints **6 and 7**. `ProductionSemanticSurface.shader` applied `frac()` in the vertex shader, mapping **both endpoints to zero before interpolation**. All eight atlas views therefore sampled a single transparent edge column instead of the crown image. This invalidates interpreting the previous selection-only experiment's small image difference as evidence that additional correctly rendered crowns have little value.
+
+The fix subtracts the far-card class offset (6), preserving U=0..1. It is restricted to the canopy material's far-card path; building and near-card decoding retain their original behavior. No placement, mesh, texture, material, tree selection, draw population, flight authority or runtime hierarchy is added or changed. The earlier patch-only selection experiment remains off in this candidate.
+
+## Evidence
+
+- Added an isolated render regression using the actual authored far mesh, production material and all eight atlas frames. Before the fix, **8/8 fail with zero covered crown pixels**. On the final fix, **24/24 focused tree and render-budget tests pass**, including all eight render cases.
+- Inspected rendered atlas-frame silhouettes and both eyes of the settled scenery captures. The six settled Editor captures pass their machine checks. These are not Meta XR Simulator replay captures or worn acceptance.
+- Fresh standard QA remains **128/130**, with the same external-control/approach draw estimates of 79/82 against 77, and the same 39-material warning against 38. No limit was raised.
+- Compared against the previous baseline at identical benchmark poses and unchanged tier populations. At local camera Y=100/300/500 m, the left-eye images differ by more than two RGB code values in 103/2,686/5,371 pixels. This counts changed pixels, not an aesthetic quality score. The broad canopy/building appearance upgrade remains unfinished.
+- Reinspected the actual City2020 Valmont photograph and existing authored impostor atlas. Existing photographic and canopy source/license records remain applicable; no binary asset was generated or modified.
+
+[Interactive scene comparison](../../T2-QuestFlight-current-evidence/canopy_uv_repair_20260907/canopy_review.html) · [failing-before tests](../../T2-QuestFlight-current-evidence/canopy_uv_repair_20260907/before_tests.xml) · [passing final tests](../../T2-QuestFlight-current-evidence/canopy_uv_repair_20260907/final_tests.xml) · [final scene QA](../../T2-QuestFlight-current-evidence/canopy_uv_repair_20260907/final_qa/standard_qa/visual_qa_report.json).
+
+## Performance and deployment
+
+The patch-only selection prototype was also rerun against the repaired shader, without changing the installed product selection. All six settled captures pass; the review tool verifies unchanged global tier populations. Its left-eye differences now cover 89/3,487/5,403 pixels at local Y=100/300/500 m, versus 0/410/608 with the defective shader. The inspected 500 m view shows additional local canopy detail. This is still an unsaved experiment: displaced far coverage, transitions and GPU cost are not accepted. [Reevaluated selection comparison](../../T2-QuestFlight-current-evidence/canopy_uv_repair_20260907/selection_review/canopy_review.html).
+
+The Android ARM64/Vulkan/OpenXR build passed, including verification of all 616 scenery payload files. APK **`e04a5ef0fa9f62ed54c976d27cc512c312686bb272d93a2fb26df956aefb68c5`**, **1,514,041,391 bytes**, is installed on Quest `2G0YC5ZG8907TD`; the installed `base.apk` hash matches. [Build identity](../../T2-QuestFlight-current-evidence/canopy_uv_repair_20260907/build/product_apk_manifest.json) · [installed checksum](../../T2-QuestFlight-current-evidence/canopy_uv_repair_20260907/build/installed_apk_sha256.txt).
+
+The first physical attempt did **not** reach readiness or measurement because Guardian's **“Finding position in room”** dialog held focus. After the user reported restored tracking, the retry completed 90 seconds warmup and 60 seconds measurement on the same installed APK.
+
+**Completed September 7 diagnostic:** mean delivered interval **17.381 ms** (about 57.5 fps), p95 **24.609 ms**; 78.51% of delivered intervals exceeded 13.889 ms. The exact window contains 61 product-PID VrApi samples: App mean/p95 **15.388/20.670 ms**, CPU&GPU mean/p95 **31.230/39.390 ms**, GPU/CPU utilization **93.0%/32.8%**, **1,085** reported stale frames and zero tears. It still **fails** the frame/GC gate (154,213 managed object creations). Native JSBSim and mountain invariants pass; no crash, ANR, OOM or Unity exception occurred. Maximum reported temperature was 36°C, thermalservice status and PLS were zero. Both-eye captures were inspected, but their sky-heavy framing does not establish canopy visual acceptance or a matched comparison against older APKs. No wearer/seat/three-run thermal acceptance is claimed.
+
+The initial host report falsely flagged thermal warning because its regex matched `oculus_mobile_thermal_throttling_events` and `os_update_shutdown_triggered` inside a `SettingsToPropertiesMapper` configuration value. The parser now requires whole event words. Regression fixtures verify that the configuration list is ignored while severe temperature, active thermal throttling and thermal shutdown remain detected. Reparsing the preserved log confirms **no thermal warning**; timing and frame failure are unchanged. The original report is retained as history. [Original capture](../../T2-QuestFlight-current-evidence/canopy_uv_repair_20260907/quest_retry/quest_temporal_visual_gate_summary.md) · [corrected parsing](../../T2-QuestFlight-current-evidence/canopy_uv_repair_20260907/quest_retry_reparsed/quest_temporal_visual_gate_summary.md).
+
+After the run, the request was removed, power automation and stay-awake setting `2` were restored, and the app was stopped. Foveation settings were not changed.
+
+Restoring discarded canopy pixels can increase fragment work despite identical geometry and draw populations. Do not treat this as a free GPU improvement or a 72 Hz acceptance result. The existing draw/material failures, full simulator replay gate and worn frame/thermal acceptance remain open.

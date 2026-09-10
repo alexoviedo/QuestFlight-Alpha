@@ -1,5 +1,5 @@
 {
-    "compiler_version": "semantic-tower-exclusion-compiler-v15-20260903",
+    "compiler_version": "valmont-source-outline-compiler-v16-20260907",
     "rollout": "selective",
     "triangle_ceiling": 235000,
     "represented_buildings": 57440,
@@ -19,7 +19,7 @@
     "selected_roofs": 5962,
     "budget_rejected_safe_roofs": 7065,
     "ambiguous_or_unsupported_roofs": 15707,
-    "baseline_total_triangles": 613373,
+    "baseline_total_triangles": 613550,
     "all_safe_added_triangles": 50790,
     "selected_added_triangles": 23252,
     "baseline_maximum_selected_triangles": 233298,
@@ -2845,12 +2845,12 @@
         {
             "column": 11,
             "row": 11,
-            "baseline_triangles": 4109,
+            "baseline_triangles": 4286,
             "safe_candidate_roofs": 131,
             "all_safe_added_triangles": 520,
             "selected_roofs": 131,
             "selected_added_triangles": 520,
-            "final_triangles": 4629
+            "final_triangles": 4806
         },
         {
             "column": 12,

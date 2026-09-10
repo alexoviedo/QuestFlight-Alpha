@@ -265,7 +265,23 @@ try {
     throw 'Three transparent material slots incorrectly satisfied the <=2 machine budget.'
   }
 
-  Write-Host 'Quest VrApi parser regression tests passed: product-PID-only coverage/timing/budgets plus Guardian/controller launch-dialog detection enforced.'
+  foreach ($thermalCase in @(
+    @{ name='telemetry_config'; warning=$false; text='E SettingsToPropertiesMapper: key=persist.device_config.oculus_shared_os_services.oculus_mobile_telemetry_statsd_event_verification_list value=oculus_mobile_thermal_throttling_events;os_update_process_started;os_update_shutdown_triggered; exceeds system property max length.' },
+    @{ name='severe'; warning=$true; text='W ThermalService: temperature severe' },
+    @{ name='active_throttling'; warning=$true; text='W ThermalService: thermal throttling active' },
+    @{ name='shutdown'; warning=$true; text='E ThermalService: thermal shutdown' }
+  )) {
+    $thermalLogcat = Join-Path $testRoot ($thermalCase.name + '.txt')
+    ((Get-Content -LiteralPath $passingLogcat -Raw) + "`n07-16 15:00:30.000 1505 7934 " + $thermalCase.text) |
+      Set-Content -LiteralPath $thermalLogcat -Encoding UTF8
+    $thermalResult = Invoke-ParserFixture -Logcat $thermalLogcat -Evidence $passingEvidence `
+      -Output (Join-Path $testRoot ('output_' + $thermalCase.name))
+    if ([bool]$thermalResult.faultChecks.thermalWarningInLog -ne $thermalCase.warning) {
+      throw "Thermal event classification failed: $($thermalCase.name)"
+    }
+  }
+
+  Write-Host 'Quest VrApi parser regression tests passed: product-PID timing/budgets, launch dialogs, and thermal events versus telemetry configuration names.'
 }
 finally {
   Remove-Item -LiteralPath $testRoot -Recurse -Force -ErrorAction SilentlyContinue

@@ -54,6 +54,7 @@ namespace QuestFlightLab.Editor
 
             ConfigureStandaloneOpenXrInDevelopmentCopy();
             ConfigureDevelopmentPlayer();
+            MetaXrSimulatorSceneryBuild.BuildAirportCoverage();
             AssetDatabase.SaveAssets();
 
             BuildPlayerOptions options = new BuildPlayerOptions

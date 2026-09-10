@@ -1,0 +1,37 @@
+{
+  "schema": "questflight.asset-provenance.v1",
+  "asset": "NeighborhoodFoliageAtlas.png",
+  "sha256": "af3e81398f558b673d1c5bf309a3c8c0fcbdbf8ccf2634b3eb7ae4b013cbd65c",
+  "source": "Built-in image_gen, 2026-09-08; no third-party image reference supplied",
+  "license": "Project-generated output; use subject to applicable OpenAI output terms. Not a surveyed species or site image.",
+  "original": "C:/Users/ovied/.codex/generated_images/01a07794-4e5f-70a2-a777-3a1129273701/exec-3423e31a-7d64-44d9-86b8-caa5865080f4.png",
+  "purpose": "Transparent branch atlas for the serialized bounded 230-tree Valmont foliage candidate",
+  "status": "ANDROID_BUILD_VALIDATED; SIMULATOR_AND_QUEST_ACCEPTANCE_PENDING",
+  "geometry_generator": "tools/full_map_vegetation/build_neighborhood_crowns.py",
+  "geometry_source_sha256": "3974881f8fc4f7abac5be47909ebbd12fe8e0e05c9b69100a6e7483cbb2395fe",
+  "prompt": "Use case: photorealistic-natural. Asset type: RGBA foliage branch-cluster atlas for a standalone Quest 3 flight simulator. Generate one square 2048 x 2048 PNG with a genuinely transparent alpha background. Exactly FOUR separate dense deciduous branch clusters arranged in an exact 2 by 2 grid, one cluster entirely within each quadrant. Orthographic face-on isolated scans of mature summer cottonwood/elm foliage suitable for Boulder Colorado. Each cluster is a roughly 1.5 meter spread of many overlapping fine branching twigs carrying hundreds of small 4–7 cm leaves, with irregular feathery edges and real small transparent gaps between leaves. Dense interior foliage around 70% coverage, not a sparse sprig or a solid round ball. Different asymmetrical branch shapes in the four quadrants, each fills about 90% of its quadrant with a clear transparent gutter. Realistic matte green, sage and muted olive leaves, subtle natural variation and fine leaf veins, no neon, no yellow autumn coloration. Neutral soft diffuse daylight suitable for an albedo texture, no cast shadows on background, no directional spotlight or baked dramatic lighting, no ambient studio backdrop. Branches mostly concealed inside leaves with some thin brown twigs at edges. No whole tree, trunk, ground, sky, labels, text, borders, white outline, checkerboard or decorative elements. Preserve true transparent alpha both outside and in the gaps, avoid translucent leaves. This must read as detailed photographic foliage, not a painted shrub, rock, broccoli, moss or smooth canopy surface.",
+  "actual_dimensions": [
+    1254,
+    1254
+  ],
+  "derived_assets": [
+    {
+      "path": "QuestFlight/Assets/Production/Environment/NeighborhoodFoliageV1/ValmontPerforatedFoliage.asset",
+      "sha256": "5d25726cc6fa3a73346c49127cd7dc9bab355287ca19ae833142c40bdf8f9964"
+    },
+    {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Materials/ProductionCanopySurfaceLayer.mat",
+      "sha256": "91956a6c449240aeb97f619c2e9229cbfad050eb9426debaa23387bcf0d63925"
+    },
+    {
+      "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Materials/ProductionSemanticSurface.shader",
+      "sha256": "9876a8eedae7c1c2cc556c47a39477221eff2b1cb5b5732d8eb1edc60da1df8a"
+    }
+  ],
+  "placement_source": "Assets/Production/Environment/FullMapVegetationV3/KBDU_FullMapVegetationHlodV3.bytes; retain existing V3 geographic data provenance and estimated-height limitations.",
+  "geometry_license": "Project-authored procedural geometry derived from accepted placement records; no external mesh used.",
+  "review_only_assets": [
+    "ValmontPerforatedFoliage.mat",
+    "NeighborhoodCanopyReview.shader"
+  ]
+}

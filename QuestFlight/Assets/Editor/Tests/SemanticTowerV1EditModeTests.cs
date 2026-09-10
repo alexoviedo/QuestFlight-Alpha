@@ -36,6 +36,23 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
+        public void EditorValidationStillRejectsUnmarkedTowerRenderers()
+        {
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath)
+                .GetComponentInChildren<SemanticTowerRoot>(true);
+            var copy = UnityEngine.Object.Instantiate(source.gameObject);
+            try
+            {
+                copy.name = SemanticTowerRoot.RootName;
+                var root = copy.GetComponent<SemanticTowerRoot>();
+                root.authoredRenderers[0].gameObject.isStatic = false;
+                Assert.That(root.TryValidateContract(out string report), Is.False);
+                Assert.That(report, Does.Contain("not marked static"));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(copy); }
+        }
+
+        [Test]
         public void GovernmentAndLocalSourceProvenanceIsFrozen()
         {
             SemanticTowerAuthorityManifest.Document authority = SemanticTowerAuthorityManifest.Load();

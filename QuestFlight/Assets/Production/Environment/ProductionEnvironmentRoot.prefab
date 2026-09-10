@@ -1613,6 +1613,64 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &2198144328627334530
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4687530420231581229}
+  - component: {fileID: 8551675248528271166}
+  m_Layer: 0
+  m_Name: Observation00
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4687530420231581229
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2198144328627334530}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -404, y: 96.50943, z: -1089}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3594233286126746084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8551675248528271166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2198144328627334530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a1d767b2eb24dc39f231ae8e7646c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightDynamicsInitialConditionProvider
+  latitudeDegrees: 40.03936527
+  longitudeDegrees: -105.22608958
+  altitudeMslMeters: 1613.0324
+  terrainElevationMslMeters: 1611.7824
+  derivePositionFromSpawnTransform: 1
+  deriveHeadingFromSpawnTransform: 1
+  spawnTransform: {fileID: 4687530420231581229}
+  spawnHeightAboveTerrainMeters: 115
+  calibratedAirspeedKnots: 85
+  headingDegrees: 89.972
+  pitchDegrees: 0
+  bankDegrees: 0
+  flightPathAngleDegrees: 0
+  engineRunning: 1
 --- !u!1 &2213419351226825192
 GameObject:
   m_ObjectHideFlags: 0
@@ -2461,6 +2519,64 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &2716664432887826269
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 135530172591531196}
+  - component: {fileID: 7502756900529654423}
+  m_Layer: 0
+  m_Name: Observation05
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &135530172591531196
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2716664432887826269}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 9820, y: 55.9775, z: -300}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3594233286126746084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7502756900529654423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2716664432887826269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a1d767b2eb24dc39f231ae8e7646c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightDynamicsInitialConditionProvider
+  latitudeDegrees: 40.03936527
+  longitudeDegrees: -105.22608958
+  altitudeMslMeters: 1613.0324
+  terrainElevationMslMeters: 1611.7824
+  derivePositionFromSpawnTransform: 1
+  deriveHeadingFromSpawnTransform: 1
+  spawnTransform: {fileID: 135530172591531196}
+  spawnHeightAboveTerrainMeters: 115
+  calibratedAirspeedKnots: 85
+  headingDegrees: 89.972
+  pitchDegrees: 0
+  bankDegrees: 0
+  flightPathAngleDegrees: 0
+  engineRunning: 1
 --- !u!1 &2759461098066362064
 GameObject:
   m_ObjectHideFlags: 0
@@ -3709,6 +3825,64 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &3864492676162798147
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 15338046640358838}
+  - component: {fileID: 8930452370687051897}
+  m_Layer: 0
+  m_Name: Observation04
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &15338046640358838
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3864492676162798147}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 4320, y: 136.80002, z: -4800}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3594233286126746084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8930452370687051897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3864492676162798147}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a1d767b2eb24dc39f231ae8e7646c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightDynamicsInitialConditionProvider
+  latitudeDegrees: 40.03936527
+  longitudeDegrees: -105.22608958
+  altitudeMslMeters: 1613.0324
+  terrainElevationMslMeters: 1611.7824
+  derivePositionFromSpawnTransform: 1
+  deriveHeadingFromSpawnTransform: 1
+  spawnTransform: {fileID: 15338046640358838}
+  spawnHeightAboveTerrainMeters: 115
+  calibratedAirspeedKnots: 85
+  headingDegrees: 89.972
+  pitchDegrees: 0
+  bankDegrees: 0
+  flightPathAngleDegrees: 0
+  engineRunning: 1
 --- !u!1 &3888639668365592725
 GameObject:
   m_ObjectHideFlags: 0
@@ -4360,6 +4534,64 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &4522492808561306034
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 70349283035174078}
+  - component: {fileID: 9196089124818548654}
+  m_Layer: 0
+  m_Name: Observation02
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &70349283035174078
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4522492808561306034}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -180, y: 93.14, z: 3000}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3594233286126746084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9196089124818548654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4522492808561306034}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a1d767b2eb24dc39f231ae8e7646c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightDynamicsInitialConditionProvider
+  latitudeDegrees: 40.03936527
+  longitudeDegrees: -105.22608958
+  altitudeMslMeters: 1613.0324
+  terrainElevationMslMeters: 1611.7824
+  derivePositionFromSpawnTransform: 1
+  deriveHeadingFromSpawnTransform: 1
+  spawnTransform: {fileID: 70349283035174078}
+  spawnHeightAboveTerrainMeters: 115
+  calibratedAirspeedKnots: 85
+  headingDegrees: 89.972
+  pitchDegrees: 0
+  bankDegrees: 0
+  flightPathAngleDegrees: 0
+  engineRunning: 1
 --- !u!1 &4526879367884402001
 GameObject:
   m_ObjectHideFlags: 0
@@ -4834,6 +5066,64 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &4972065380349657429
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5786783016959753118}
+  - component: {fileID: 4717820671527762292}
+  m_Layer: 0
+  m_Name: Observation01
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5786783016959753118
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4972065380349657429}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1030, y: 106.504, z: -900}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3594233286126746084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4717820671527762292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4972065380349657429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a1d767b2eb24dc39f231ae8e7646c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightDynamicsInitialConditionProvider
+  latitudeDegrees: 40.03936527
+  longitudeDegrees: -105.22608958
+  altitudeMslMeters: 1613.0324
+  terrainElevationMslMeters: 1611.7824
+  derivePositionFromSpawnTransform: 1
+  deriveHeadingFromSpawnTransform: 1
+  spawnTransform: {fileID: 5786783016959753118}
+  spawnHeightAboveTerrainMeters: 115
+  calibratedAirspeedKnots: 85
+  headingDegrees: 89.972
+  pitchDegrees: 0
+  bankDegrees: 0
+  flightPathAngleDegrees: 0
+  engineRunning: 1
 --- !u!1 &5008461283182416796
 GameObject:
   m_ObjectHideFlags: 0
@@ -5351,6 +5641,64 @@ LODGroup:
     renderers:
     - renderer: {fileID: 6756144928714553549}
   m_Enabled: 1
+--- !u!1 &5251323162926344478
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 579775823552632994}
+  - component: {fileID: 7460524008480757624}
+  m_Layer: 0
+  m_Name: Observation03
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &579775823552632994
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5251323162926344478}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -5180, y: 189.80667, z: 1200}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3594233286126746084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7460524008480757624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5251323162926344478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a1d767b2eb24dc39f231ae8e7646c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightDynamicsInitialConditionProvider
+  latitudeDegrees: 40.03936527
+  longitudeDegrees: -105.22608958
+  altitudeMslMeters: 1613.0324
+  terrainElevationMslMeters: 1611.7824
+  derivePositionFromSpawnTransform: 1
+  deriveHeadingFromSpawnTransform: 1
+  spawnTransform: {fileID: 579775823552632994}
+  spawnHeightAboveTerrainMeters: 115
+  calibratedAirspeedKnots: 85
+  headingDegrees: 89.972
+  pitchDegrees: 0
+  bankDegrees: 0
+  flightPathAngleDegrees: 0
+  engineRunning: 1
 --- !u!1 &5263336895221481220
 GameObject:
   m_ObjectHideFlags: 0
@@ -6396,6 +6744,76 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &6046124265878691040
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3594233286126746084}
+  - component: {fileID: 7002312034297103339}
+  m_Layer: 0
+  m_Name: MapBranchGrovesV1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3594233286126746084
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6046124265878691040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4687530420231581229}
+  - {fileID: 5786783016959753118}
+  - {fileID: 70349283035174078}
+  - {fileID: 579775823552632994}
+  - {fileID: 15338046640358838}
+  - {fileID: 135530172591531196}
+  - {fileID: 5554281423718339649}
+  - {fileID: 2909786808029174309}
+  - {fileID: 3546591980399589971}
+  m_Father: {fileID: 6492199952949179654}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7002312034297103339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6046124265878691040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e427355fb95897a43b180c7f78d51d91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.MapBranchGroveRenderer
+  buildingClipmap: {fileID: 1153024618204506478}
+  viewingCamera: {fileID: 0}
+  branchMesh: {fileID: 4300000, guid: 0921bd16ad16e3e47b3793753076b2a0, type: 2}
+  branchMaterial: {fileID: 2100000, guid: e695b2c4e1d649348b3c896511bd3a18, type: 2}
+  sourceManifest: {fileID: 4900000, guid: 1fb66349b7630504c84409524275eb5a, type: 3}
+  observationStarts:
+  - {fileID: 8551675248528271166}
+  - {fileID: 4717820671527762292}
+  - {fileID: 9196089124818548654}
+  - {fileID: 7460524008480757624}
+  - {fileID: 8930452370687051897}
+  - {fileID: 7502756900529654423}
+  - {fileID: 7111518602199054201}
+  - {fileID: 6714285535300419183}
+  - {fileID: 6444149790945017641}
+  pageDirectory: QuestFlightBranchGroves
+  DiagnosticTierForVisualQa: -1
 --- !u!1 &6276958509034584951
 GameObject:
   m_ObjectHideFlags: 0
@@ -6669,7 +7087,7 @@ MonoBehaviour:
   - {fileID: 8853359896272806083}
   - {fileID: 4934532480890289504}
   bakedRendererCount: 71
-  bakedSelectedTriangleCount: 631141
+  bakedSelectedTriangleCount: 629487
   bakedMaterialCount: 13
   bakedVegetationRendererCount: 7
   bakedVegetationTriangleCount: 60768
@@ -7170,6 +7588,8 @@ Transform:
   - {fileID: 763543984806738686}
   - {fileID: 6751656259700467392}
   - {fileID: 2096081673877473175}
+  - {fileID: 8510806116924085373}
+  - {fileID: 3594233286126746084}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3038420041324740316
@@ -7255,8 +7675,8 @@ MonoBehaviour:
     bounded derivatives
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
-  bakedRendererCount: 71
-  bakedTriangleCount: 629487
+  bakedRendererCount: 72
+  bakedTriangleCount: 640067
   bakedMaterialCount: 13
   bakedTextureCount: 28
   bakeUtc: 2026-09-03T00:00:00.0000000Z
@@ -7277,6 +7697,64 @@ MonoBehaviour:
   autoCaptureInPlayer: 0
   automaticWarmupSeconds: 90
   automaticCaptureSeconds: 60
+--- !u!1 &6789995971116263843
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5554281423718339649}
+  - component: {fileID: 7111518602199054201}
+  m_Layer: 0
+  m_Name: Observation06
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5554281423718339649
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6789995971116263843}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -10180, y: 422.92252, z: -300}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3594233286126746084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7111518602199054201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6789995971116263843}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a1d767b2eb24dc39f231ae8e7646c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightDynamicsInitialConditionProvider
+  latitudeDegrees: 40.03936527
+  longitudeDegrees: -105.22608958
+  altitudeMslMeters: 1613.0324
+  terrainElevationMslMeters: 1611.7824
+  derivePositionFromSpawnTransform: 1
+  deriveHeadingFromSpawnTransform: 1
+  spawnTransform: {fileID: 5554281423718339649}
+  spawnHeightAboveTerrainMeters: 115
+  calibratedAirspeedKnots: 85
+  headingDegrees: 89.972
+  pitchDegrees: 0
+  bankDegrees: 0
+  flightPathAngleDegrees: 0
+  engineRunning: 1
 --- !u!1 &6813113329372116694
 GameObject:
   m_ObjectHideFlags: 0
@@ -8264,6 +8742,64 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &7709012744614723965
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2909786808029174309}
+  - component: {fileID: 6714285535300419183}
+  m_Layer: 0
+  m_Name: Observation07
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2909786808029174309
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7709012744614723965}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -180, y: 255.40001, z: -10300}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3594233286126746084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6714285535300419183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7709012744614723965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a1d767b2eb24dc39f231ae8e7646c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightDynamicsInitialConditionProvider
+  latitudeDegrees: 40.03936527
+  longitudeDegrees: -105.22608958
+  altitudeMslMeters: 1613.0324
+  terrainElevationMslMeters: 1611.7824
+  derivePositionFromSpawnTransform: 1
+  deriveHeadingFromSpawnTransform: 1
+  spawnTransform: {fileID: 2909786808029174309}
+  spawnHeightAboveTerrainMeters: 115
+  calibratedAirspeedKnots: 85
+  headingDegrees: 89.972
+  pitchDegrees: 0
+  bankDegrees: 0
+  flightPathAngleDegrees: 0
+  engineRunning: 1
 --- !u!1 &7915122612073471966
 GameObject:
   m_ObjectHideFlags: 0
@@ -8296,6 +8832,96 @@ Transform:
   - {fileID: 6352362963235020364}
   m_Father: {fileID: 6492199952949179654}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7932098074727421506
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8510806116924085373}
+  - component: {fileID: 8857338739264495038}
+  - component: {fileID: 3173871622557710892}
+  m_Layer: 0
+  m_Name: NeighborhoodFoliageV1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8510806116924085373
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7932098074727421506}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6492199952949179654}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &8857338739264495038
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7932098074727421506}
+  m_Mesh: {fileID: 4300000, guid: 1444a6a473a5b0f41a2e22c65f32f601, type: 2}
+--- !u!23 &3173871622557710892
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7932098074727421506}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: d833d2cd5d39fe940abda08a10da3af8, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &7955412739098045184
 GameObject:
   m_ObjectHideFlags: 0
@@ -9036,6 +9662,64 @@ Transform:
   - {fileID: 1214491480071734224}
   m_Father: {fileID: 8267578717186844639}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8774774146784517367
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3546591980399589971}
+  - component: {fileID: 6444149790945017641}
+  m_Layer: 0
+  m_Name: Observation08
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3546591980399589971
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8774774146784517367}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -180, y: 143.59253, z: 9700}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3594233286126746084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6444149790945017641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8774774146784517367}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a1d767b2eb24dc39f231ae8e7646c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightDynamicsInitialConditionProvider
+  latitudeDegrees: 40.03936527
+  longitudeDegrees: -105.22608958
+  altitudeMslMeters: 1613.0324
+  terrainElevationMslMeters: 1611.7824
+  derivePositionFromSpawnTransform: 1
+  deriveHeadingFromSpawnTransform: 1
+  spawnTransform: {fileID: 3546591980399589971}
+  spawnHeightAboveTerrainMeters: 115
+  calibratedAirspeedKnots: 85
+  headingDegrees: 89.972
+  pitchDegrees: 0
+  bankDegrees: 0
+  flightPathAngleDegrees: 0
+  engineRunning: 1
 --- !u!1 &8828266783817454493
 GameObject:
   m_ObjectHideFlags: 0
@@ -9164,7 +9848,7 @@ MonoBehaviour:
   mapMinimumX: -12000
   mapMinimumZ: -12000
   bundleRegionCells: 2
-  pageTriangleCounts: 00000000820000000a0000000000000000000000b80000000000000020060000400200002c0000000000000000000000820000000a0000004c0000000000000000000000000000000000000000000000000000000000000000000000000000004a0000000000000000000000000000000a000000000000000e0000000a000000000000002c0300007e03000000000000000000004000000014000000000000000a00000000000000000000000000000000000000140000008a0000000000000030010000140000002e010000b60000000a0000000000000000000000000000000000000000000000cc010000360600004a0100003c000000c40000000e000000aa0000000000000000000000ce00000052000000a40000009c00000092010000260100001e000000a0010000740100003c00000000000000000000000000000010000000b2080000da010000ae0300005c02000072000000ec0000000001000098010000000000000000000014000000000000001e00000028010000a20100000000000000000000720100000a0000004a0000000000000000000000220000004c0e000032240000fc100000ba05000016000000d4010000a000000000030000e601000000000000000000000000000034000000ba0000004a010000140000000000000000000000a0000000240100004c000000000000000000000002040000861300009c280000a226000028060000a6000000c20000005e0300000a0400001608000088000000000000004a00000086000000ae000000000000008e0000001e000000000000001e000000740000000a0000000000000028000000460000004c0d000066230000a42700007e1a00008007000012010000ee010000ca050000180c000060010000560000000000000068000000140000000000000000000000dc0000006400000000000000000000001e0000000e000000fc05000032200000062100002c230000c31c000006180000160c0000be0300004c030000e8030000000a0000fa030000ba040000a4040000b202000078000000000000000000000042000000040300003a010000b600000000000000e4000000741b0000742d000013150000f015000011140000d02100008a0b00000c150000000d0000460100008e07000078000000fa0000008e090000860000006a0100009200000054000000680100003403000046000000a601000000000000a60100001625000076250000d7270000e10d000048070000df12000000090000440900005c050000aa01000018040000220300009e040000ea0500005e000000640200004e050000cc0000008c0000001e00000096000000100100003e02000022010000542a00001c2d0000a03700001c170000c20b00008a060000bc060000080200000a0000005e0000009e01000006020000e2010000a20000002a020000c0000000220100008a000000900000007e00000004020000b601000002010000ce010000d6230000f82800008a2b0000c1150000c31c000015120000800e00003e050000b2010000ec030000ca020000b4020000da000000280100009e0400008602000028010000100100003e0200006c010000ce000000ea0200003c05000010040000d8180000212800003e190000401e0000c80700001e000000b8000000e40200000a000000ec04000014020000d6000000660000001a020000ba0100000a00000026010000a40b00001a01000034010000e6000000600100006a0400004c030000100c0000e6260000002000005c120000d8090000fc010000b20c00005b0b0000d2090000e60d00007c05000020000000200000005a0000001e0100003400000084010000960500000e0200002e00000074000000aa000000580300004c0300007c0f0000c41c000008080000a4000000fe03000014020000db050000080d0000340f0000c8100000f2170000020a0000a400000084010000d00300006c020000c0010000c0000000f20000007e000000a601000068000000ae000000040200001c040000d00100002c0000000e0000008c0500007c020000b0000000c50400007a130000c41c00008201000000000000960000001601000032000000380100003e02000018030000400300007c04000054050000fe000000a00100008801000000000000d40000003a0000008e000000000000006400000000000000100100002c0500005e110000f404000014000000000000000a0000001000000058000000ae000000fa00000086000000300200004c05000042010000800000002403000000000000000000001402000012050000240000005600000028000000fc010000b6060000de010000de0200009a01000068030000880100009800000014000000c00100001a0000000000000082000000820000006202000064000000fe0100002201000042000000ea000000da0300000e04000086010000c4010000ce030000dc000000c6010000a20f0000fa0a0000940a00002e060000660100005e0100006c00000076000000360000007e000000000000000000000056000000f2010000340100003e000000280000000a01000076010000660100007e0100008a070000d804000026010000f6060000440d0000c2070000a001000064030000b00000005e010000880000000000000014000000000000000000000014000000960000007c010000e60200005002000052020000ca0200005601000040010000000100007a000000e2010000ec01000052030000b4000000d600000028040000a00100007e0300001c000000400000004a00000000000000000000000a000000ce0000003005000012010000500200003e01000014000000640200001002000054010000280000001801000068010000f20100007c0000001a020000fa01000076000000e4030000b400000028000000000000000000000000000000000000003001000016050000ea0200005a010000320000003600000082000000940300000e02000014000000740000002e0400002e00000048010000a4000000dc000000d2000000760100004a01000000000000000000000000000000000000280000000a000000ca01000048010000240100000202000000000000420000006a0000000c010000fc000000300000005000000000000000a20200000000000000000000000000000a000000a4000000
+  pageTriangleCounts: 00000000820000000a0000000000000000000000b80000000000000020060000400200002c0000000000000000000000820000000a0000004c0000000000000000000000000000000000000000000000000000000000000000000000000000004a0000000000000000000000000000000a000000000000000e0000000a000000000000002c0300007e03000000000000000000004000000014000000000000000a00000000000000000000000000000000000000140000008a0000000000000030010000140000002e010000b60000000a0000000000000000000000000000000000000000000000cc010000360600004a0100003c000000c40000000e000000aa0000000000000000000000ce00000052000000a40000009c00000092010000260100001e000000a0010000740100003c00000000000000000000000000000010000000b2080000da010000ae0300005c02000072000000ec0000000001000098010000000000000000000014000000000000001e00000028010000a20100000000000000000000720100000a0000004a0000000000000000000000220000004c0e000032240000fc100000ba05000016000000d4010000a000000000030000e601000000000000000000000000000034000000ba0000004a010000140000000000000000000000a0000000240100004c000000000000000000000002040000861300009c280000a226000028060000a6000000c20000005e0300000a0400001608000088000000000000004a00000086000000ae000000000000008e0000001e000000000000001e000000740000000a0000000000000028000000460000004c0d000066230000a42700007e1a00008007000012010000ee010000ca050000180c000060010000560000000000000068000000140000000000000000000000dc0000006400000000000000000000001e0000000e000000fc05000032200000062100002c230000c31c000006180000160c0000be0300004c030000e8030000000a0000fa030000ba040000a4040000b202000078000000000000000000000042000000040300003a010000b600000000000000e4000000741b0000742d000013150000f015000011140000d02100008a0b00000c150000000d0000460100008e07000078000000fa0000008e090000860000006a0100009200000054000000680100003403000046000000a601000000000000a60100001625000076250000d7270000e10d000048070000df12000000090000440900005c050000aa01000018040000220300009e040000ea0500005e000000640200004e050000cc0000008c0000001e00000096000000100100003e02000022010000542a00001c2d0000a03700001c170000c20b00008a060000bc060000080200000a0000005e0000009e01000006020000e2010000a20000002a020000c0000000220100008a000000900000007e00000004020000b601000002010000ce010000d6230000f82800008a2b0000c1150000c31c0000c6120000800e00003e050000b2010000ec030000ca020000b4020000da000000280100009e0400008602000028010000100100003e0200006c010000ce000000ea0200003c05000010040000d8180000212800003e190000401e0000c80700001e000000b8000000e40200000a000000ec04000014020000d6000000660000001a020000ba0100000a00000026010000a40b00001a01000034010000e6000000600100006a0400004c030000100c0000e6260000002000005c120000d8090000fc010000b20c00005b0b0000d2090000e60d00007c05000020000000200000005a0000001e0100003400000084010000960500000e0200002e00000074000000aa000000580300004c0300007c0f0000c41c000008080000a4000000fe03000014020000db050000080d0000340f0000c8100000f2170000020a0000a400000084010000d00300006c020000c0010000c0000000f20000007e000000a601000068000000ae000000040200001c040000d00100002c0000000e0000008c0500007c020000b0000000c50400007a130000c41c00008201000000000000960000001601000032000000380100003e02000018030000400300007c04000054050000fe000000a00100008801000000000000d40000003a0000008e000000000000006400000000000000100100002c0500005e110000f404000014000000000000000a0000001000000058000000ae000000fa00000086000000300200004c05000042010000800000002403000000000000000000001402000012050000240000005600000028000000fc010000b6060000de010000de0200009a01000068030000880100009800000014000000c00100001a0000000000000082000000820000006202000064000000fe0100002201000042000000ea000000da0300000e04000086010000c4010000ce030000dc000000c6010000a20f0000fa0a0000940a00002e060000660100005e0100006c00000076000000360000007e000000000000000000000056000000f2010000340100003e000000280000000a01000076010000660100007e0100008a070000d804000026010000f6060000440d0000c2070000a001000064030000b00000005e010000880000000000000014000000000000000000000014000000960000007c010000e60200005002000052020000ca0200005601000040010000000100007a000000e2010000ec01000052030000b4000000d600000028040000a00100007e0300001c000000400000004a00000000000000000000000a000000ce0000003005000012010000500200003e01000014000000640200001002000054010000280000001801000068010000f20100007c0000001a020000fa01000076000000e4030000b400000028000000000000000000000000000000000000003001000016050000ea0200005a010000320000003600000082000000940300000e02000014000000740000002e0400002e00000048010000a4000000dc000000d2000000760100004a01000000000000000000000000000000000000280000000a000000ca01000048010000240100000202000000000000420000006a0000000c010000fc000000300000005000000000000000a20200000000000000000000000000000a000000a4000000
   pageBuildingCounts: 000000000d000000010000000000000000000000120000000000000097000000370000000400000000000000000000000c0000000100000007000000000000000000000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000100000000000000010000000100000000000000480000005200000000000000000000000600000002000000000000000100000000000000000000000000000000000000020000000b000000000000001d000000020000001b000000110000000100000000000000000000000000000000000000000000002a000000940000002000000006000000130000000100000011000000000000000000000012000000070000001000000006000000260000001b0000000300000027000000240000000600000000000000000000000000000001000000c30000002700000059000000360000000a00000015000000170000002700000000000000000000000200000000000000030000001b00000028000000000000000000000024000000010000000700000000000000000000000300000045010000860300005d0100007e00000002000000290000000f000000430000002e00000000000000000000000000000004000000110000001e0000000200000000000000000000000f0000001c0000000700000000000000000000001b00000098010000f4030000c2030000830000000f000000110000004d00000061000000b30000000b00000000000000070000000b0000000e000000000000000d0000000300000000000000030000000b00000001000000000000000300000007000000220100007a030000e00300001d020000ab000000180000002a000000890000001d0100001f00000008000000000000000a000000020000000000000000000000150000000a0000000000000000000000030000000100000083000000160300001b03000010030000aa020000f501000017010000540000004a00000058000000eb0000005a0000006f00000070000000420000000c0000000000000000000000060000004a0000001b000000100000000000000015000000690200006a0400005a010000a40100009301000040030000fd000000e4010000220100001d000000ae0000000b00000015000000e20000000d0000001b0000000e00000008000000210000004e000000060000002900000000000000280000008c03000044030000b0030000fd000000840000006d010000bc000000c70000006b00000028000000610000004a0000006a00000090000000090000003800000080000000130000000e000000030000000f00000019000000360000001a000000230400005a0400002c050000ec010000ff0000007f000000840000002e0000000100000008000000270000002a0000002b0000000e00000032000000120000001a000000080000000e0000000c000000320000002900000018000000260000007e030000ed030000e5030000c201000068020000850100004001000074000000260000005b000000420000003e000000120000001b00000066000000330000001a00000019000000370000002200000013000000470000007c0000005f0000003a020000e203000029020000e0020000b800000003000000110000003f000000010000006e0000002f00000011000000090000003200000025000000010000001d0000001e0100001b0000001c0000001300000020000000680000004c00000019010000c103000008030000ae010000e50000002f0000002201000004010000e100000037010000750000000200000002000000060000001700000004000000240000008600000032000000040000000b00000011000000500000004a0000005f010000c6020000b30000000c000000580000002f0000007e000000010100005e010000730100001f020000ee0000000b00000020000000590000003a0000002500000012000000170000000b000000250000000a0000000f000000300000005a0000002900000004000000010000008100000038000000100000005a000000b40100009f02000021000000000000000f00000019000000040000001d0000003100000044000000500000006f000000860000001700000026000000240000000000000013000000050000000d000000000000000a0000000000000017000000730000007b01000070000000020000000000000001000000010000000100000011000000180000000d00000036000000810000001e0000000b0000004c0000000000000000000000340000007f0000000300000007000000040000002d0000008b000000230000003f000000230000004c000000200000000d000000020000002100000002000000000000000c0000000d0000003a0000000a000000300000001700000006000000170000005f00000065000000220000002700000057000000140000002b0000006f0100000c010000f800000091000000210000001c000000090000000a000000050000000b000000000000000000000008000000300000001c000000050000000300000019000000220000002200000021000000b10000007700000017000000a900000049010000b8000000240000004e000000100000001c0000000c00000000000000020000000000000000000000020000000e00000022000000450000003700000037000000430000001f0000001c000000170000000b0000002e0000002c0000004f0000001100000012000000620000002500000054000000020000000600000007000000000000000000000001000000140000007e0000001a000000350000001c0000000200000038000000320000001d0000000400000019000000210000002d0000000c0000002f0000002f000000090000005b0000000c00000004000000000000000000000000000000000000001d00000077000000440000002000000005000000050000000c0000005700000030000000020000000a0000005d000000040000001e0000000f0000001500000013000000240000001e000000000000000000000000000000000000000400000001000000270000001e0000001c0000003000000000000000060000000a00000017000000180000000400000008000000000000003c0000000000000000000000000000000100000007000000
   pageRoofAreasSquareMeters:
   - 0
@@ -10024,6 +10708,238 @@ MonoBehaviour:
   lod2Mesh: {fileID: 4300000, guid: 012a3dcd1bdbcd44b970a30d9e2e8564, type: 2}
   shrubMesh: {fileID: 4300000, guid: a92c5d708cd691948a27f69d95a8b09f, type: 2}
   groveMesh: {fileID: 4300000, guid: ab2aacc8a026aad4694233aec7eff940, type: 2}
+  authoredFoliageReplacement: {fileID: 3173871622557710892}
+  authoredFoliageReplacementCenters:
+  - {x: -1018.1, y: -574.39996}
+  - {x: -1024, y: -753}
+  - {x: -1012.1, y: -769.6}
+  - {x: -1009.8, y: -651.3}
+  - {x: -1040.5, y: -737.7}
+  - {x: -1040.5, y: -683.2}
+  - {x: -1039.4, y: -651.3}
+  - {x: -1027.5, y: -749.5}
+  - {x: -1026.2999, y: -794.5}
+  - {x: -1016.89996, y: -760.1}
+  - {x: -1003.89996, y: -787.4}
+  - {x: -1022.8, y: -799.2}
+  - {x: -740, y: -736.5}
+  - {x: -703.4, y: -633.5}
+  - {x: -787.4, y: -684.4}
+  - {x: -715.2, y: -796.8}
+  - {x: -944.7, y: -686.8}
+  - {x: -789.7, y: -463.19998}
+  - {x: -857.2, y: -606.3}
+  - {x: -806.3, y: -632.4}
+  - {x: -708.1, y: -651.3}
+  - {x: -980.2, y: -576.8}
+  - {x: -995.6, y: -749.5}
+  - {x: -761.3, y: -445.4}
+  - {x: -718.7, y: -772}
+  - {x: -945.9, y: -682.1}
+  - {x: -886.7, y: -520}
+  - {x: -753, y: -424.1}
+  - {x: -841.8, y: -572}
+  - {x: -877.3, y: -748.3}
+  - {x: -896.2, y: -772}
+  - {x: -688, y: -620.5}
+  - {x: -999.1, y: -559}
+  - {x: -977.8, y: -627.6}
+  - {x: -715.2, y: -710.5}
+  - {x: -945.9, y: -715.2}
+  - {x: -744.8, y: -560.2}
+  - {x: -986.1, y: -793.3}
+  - {x: -837, y: -717.5}
+  - {x: -768.4, y: -688}
+  - {x: -828.8, y: -641.8}
+  - {x: -750.7, y: -523.5}
+  - {x: -821.7, y: -486.8}
+  - {x: -702.2, y: -678.5}
+  - {x: -857.2, y: -639.5}
+  - {x: -734.1, y: -446.6}
+  - {x: -695.1, y: -776.7}
+  - {x: -937.6, y: -650.1}
+  - {x: -941.2, y: -567.3}
+  - {x: -869, y: -585}
+  - {x: -834.7, y: -554.3}
+  - {x: -879.6, y: -634.7}
+  - {x: -883.2, y: -574.39996}
+  - {x: -705.7, y: -638.3}
+  - {x: -695.1, y: -744.8}
+  - {x: -980.2, y: -751.9}
+  - {x: -747.1, y: -485.69998}
+  - {x: -787.4, y: -773.2}
+  - {x: -772, y: -637.1}
+  - {x: -692.7, y: -721.1}
+  - {x: -981.4, y: -704.5}
+  - {x: -893.8, y: -617}
+  - {x: -904.5, y: -647.7}
+  - {x: -792.1, y: -591}
+  - {x: -745.9, y: -425.3}
+  - {x: -775.5, y: -596.9}
+  - {x: -898.6, y: -634.7}
+  - {x: -864.3, y: -663.1}
+  - {x: -740, y: -755.4}
+  - {x: -945.9, y: -738.8}
+  - {x: -745.9, y: -475}
+  - {x: -779.1, y: -549.5}
+  - {x: -890.3, y: -577.89996}
+  - {x: -743.6, y: -517.6}
+  - {x: -890.3, y: -612.3}
+  - {x: -697.4, y: -690.3}
+  - {x: -928.1, y: -789.7}
+  - {x: -947.1, y: -725.8}
+  - {x: -799.2, y: -625.3}
+  - {x: -902.1, y: -665.5}
+  - {x: -688, y: -775.5}
+  - {x: -968.4, y: -684.4}
+  - {x: -730.6, y: -644.2}
+  - {x: -808.6, y: -512.89996}
+  - {x: -882, y: -686.8}
+  - {x: -753, y: -467.9}
+  - {x: -825.2, y: -535.39996}
+  - {x: -792.1, y: -627.6}
+  - {x: -736.5, y: -688}
+  - {x: -781.4, y: -508.1}
+  - {x: -899.7, y: -703.4}
+  - {x: -878.5, y: -731.7}
+  - {x: -818.1, y: -617}
+  - {x: -710.5, y: -671.4}
+  - {x: -906.8, y: -609.9}
+  - {x: -703.4, y: -417}
+  - {x: -841.8, y: -666.7}
+  - {x: -903.3, y: -766.1}
+  - {x: -945.9, y: -704.5}
+  - {x: -844.1, y: -541.3}
+  - {x: -906.8, y: -521.2}
+  - {x: -770.8, y: -762.5}
+  - {x: -970.7, y: -651.3}
+  - {x: -814.6, y: -730.6}
+  - {x: -943.5, y: -767.2}
+  - {x: -747.1, y: -497.5}
+  - {x: -808.6, y: -703.4}
+  - {x: -721.1, y: -730.6}
+  - {x: -821.7, y: -560.2}
+  - {x: -917.5, y: -547.2}
+  - {x: -793.3, y: -560.2}
+  - {x: -701, y: -717.5}
+  - {x: -883.2, y: -691.5}
+  - {x: -745.9, y: -604}
+  - {x: -980.2, y: -591}
+  - {x: -753, y: -566.1}
+  - {x: -904.5, y: -683.2}
+  - {x: -736.5, y: -441.9}
+  - {x: -974.3, y: -766.1}
+  - {x: -680.9, y: -722.3}
+  - {x: -984.9, y: -650.1}
+  - {x: -949.4, y: -798}
+  - {x: -834.7, y: -560.2}
+  - {x: -793.3, y: -633.5}
+  - {x: -818.1, y: -787.4}
+  - {x: -685.6, y: -600.4}
+  - {x: -728.2, y: -453.69998}
+  - {x: -970.7, y: -691.5}
+  - {x: -714, y: -722.3}
+  - {x: -889.1, y: -680.9}
+  - {x: -712.8, y: -676.1}
+  - {x: -741.2, y: -698.6}
+  - {x: -748.3, y: -529.39996}
+  - {x: -696.3, y: -613.4}
+  - {x: -684.4, y: -686.8}
+  - {x: -977.8, y: -719.9}
+  - {x: -812.2, y: -593.3}
+  - {x: -981.4, y: -689.2}
+  - {x: -780.3, y: -672.6}
+  - {x: -904.5, y: -641.8}
+  - {x: -796.8, y: -592.1}
+  - {x: -680.9, y: -414.69998}
+  - {x: -990.8, y: -575.6}
+  - {x: -843, y: -785}
+  - {x: -919.9, y: -776.7}
+  - {x: -944.7, y: -795.6}
+  - {x: -805.1, y: -540.1}
+  - {x: -780.3, y: -544.8}
+  - {x: -745.9, y: -706.9}
+  - {x: -751.9, y: -456.1}
+  - {x: -922.2, y: -505.8}
+  - {x: -799.2, y: -582.7}
+  - {x: -983.7, y: -510.5}
+  - {x: -776.7, y: -509.3}
+  - {x: -860.7, y: -704.5}
+  - {x: -918.7, y: -697.4}
+  - {x: -976.6, y: -541.3}
+  - {x: -753, y: -710.5}
+  - {x: -819.3, y: -581.5}
+  - {x: -735.3, y: -451.4}
+  - {x: -779.1, y: -452.5}
+  - {x: -943.5, y: -633.5}
+  - {x: -826.4, y: -570.8}
+  - {x: -993.2, y: -677.3}
+  - {x: -825.2, y: -522.3}
+  - {x: -809.8, y: -608.7}
+  - {x: -785, y: -511.69998}
+  - {x: -860.7, y: -543.6}
+  - {x: -841.8, y: -564.89996}
+  - {x: -732.9, y: -792.1}
+  - {x: -964.8, y: -613.4}
+  - {x: -822.8, y: -517.6}
+  - {x: -994.4, y: -671.4}
+  - {x: -764.9, y: -660.8}
+  - {x: -831.1, y: -767.2}
+  - {x: -738.8, y: -646.6}
+  - {x: -856, y: -753}
+  - {x: -712.8, y: -782.6}
+  - {x: -809.8, y: -537.7}
+  - {x: -893.8, y: -729.4}
+  - {x: -702.2, y: -762.5}
+  - {x: -753, y: -615.8}
+  - {x: -902.1, y: -530.6}
+  - {x: -740, y: -665.5}
+  - {x: -987.3, y: -724.6}
+  - {x: -915.1, y: -574.39996}
+  - {x: -919.9, y: -751.9}
+  - {x: -903.3, y: -759}
+  - {x: -750.7, y: -697.4}
+  - {x: -743.6, y: -787.4}
+  - {x: -759, y: -529.39996}
+  - {x: -741.2, y: -795.6}
+  - {x: -916.3, y: -667.9}
+  - {x: -890.3, y: -741.2}
+  - {x: -896.2, y: -546}
+  - {x: -938.8, y: -673.8}
+  - {x: -796.8, y: -790.9}
+  - {x: -745.9, y: -549.5}
+  - {x: -968.4, y: -793.3}
+  - {x: -780.3, y: -471.5}
+  - {x: -721.1, y: -710.5}
+  - {x: -977.8, y: -736.5}
+  - {x: -792.1, y: -576.8}
+  - {x: -944.7, y: -756.6}
+  - {x: -793.3, y: -601.6}
+  - {x: -941.2, y: -585}
+  - {x: -981.4, y: -563.7}
+  - {x: -820.5, y: -635.9}
+  - {x: -737.7, y: -770.8}
+  - {x: -935.2, y: -741.2}
+  - {x: -703.4, y: -780.3}
+  - {x: -740, y: -730.6}
+  - {x: -714, y: -762.5}
+  - {x: -852.4, y: -678.5}
+  - {x: -814.6, y: -536.5}
+  - {x: -702.2, y: -659.6}
+  - {x: -716.4, y: -411.1}
+  - {x: -853.6, y: -498.69998}
+  - {x: -838.2, y: -736.5}
+  - {x: -837, y: -502.19998}
+  - {x: -866.6, y: -708.1}
+  - {x: -698.6, y: -671.4}
+  - {x: -876.1, y: -762.5}
+  - {x: -984.9, y: -770.8}
+  - {x: -692.7, y: -617}
+  - {x: -917.5, y: -714}
+  - {x: -745.9, y: -577.89996}
+  - {x: -903.3, y: -787.4}
+  - {x: -783.8, y: -711.6}
+  - {x: -969.5, y: -740}
   placementManifest: {fileID: 4900000, guid: c3fcfbaf10a9a628c38362c280b2eabf, type: 3}
   sourceLicenseManifest: {fileID: 4900000, guid: 89cc45f73c0549e8b3d94e56753a6028, type: 3}
   fullMapPlacementDatabase: {fileID: 4900000, guid: a8bb31688f189cd41a3e69a15d3ee82c, type: 3}
@@ -34115,6 +35031,8 @@ MonoBehaviour:
   lod1EnterScreenPixels: 12
   lod1ExitScreenPixels: 7
   maximumDistanceMeters: 10000
+  enableAuthoredFarCoveragePatch: 1
+  authoredFarCoveragePatchXZ: {x: -884, y: -135, z: -914, w: -494}
   transitionDurationSeconds: 0.35
   minimumResidencySeconds: 2
   impostorAngularHysteresisDegrees: 6

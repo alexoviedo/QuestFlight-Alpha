@@ -1,0 +1,46 @@
+# Scenery development milestone — September 10, 2026
+
+The user approved consolidating the visibly improved map-wide canopy and accepted recovery work into `main`. This is a development checkpoint, not release, sustained-frame-rate, thermal, or detection-accuracy acceptance.
+
+## Included behavior
+
+- Connected branch foliage across all 1,296 map pages; accepted leaf artwork and geometry, full coverage to 1,600 m and fade to 1,800 m, with 12/6/4-triangle cell tiers and a 393,216-triangle ceiling.
+- Both-eye view selection, bounded 49-page residency, canopy ownership handoff, CPU preparation caching, and refresh on aircraft/head roll without a bank-angle blind spot.
+- Authored High fixed foveation and Android subsampled layout. The user reported no noticeable quality loss. Cloud sampling LOD remains enabled, with its isolated performance benefit unproven.
+- Traffic continuity and watercraft/road alignment repairs, terrain query indexing, retained building/terrain shader work, and earlier cockpit fixes already committed on the feature branch.
+
+## Consolidation cleanup
+
+The scene audit found disabled `AngularGrovesV1` and `ConnectedGrovePilotV1` prototype nodes. Neither had an enabled active renderer. Their serialized nodes, runtime hooks, and obsolete Editor utilities were removed; their research files and paired metadata are preserved outside the repository under `main_milestone_20260910/research_archive` in the sibling product-artifacts directory.
+
+The obsolete angular StreamingAssets pages occupied **231,835,068 bytes** of build inputs despite their disabled renderer. They are no longer required or permitted by the product build preflight. This is packaging cleanup, not a GPU-saving claim. The active `NeighborhoodFoliageV1` mesh and atlas remain: the authored dependency audit confirmed they still contribute to the accepted scene.
+
+## Source, license, and reproducibility
+
+- `Assets/Production/Environment/MapBranchGrovesV1/SOURCE_MANIFEST.json` records every committed branch page's SHA-256, dimensions, count, and source lineage. These 248,173,976 bytes are derived spatial foliage records, not raw photography, Unity caches, or generated builds. Pages use the repository's Git LFS rules.
+- Classified canopy extents: City of Boulder / NV5 / DRCOG, 2020 LiDAR derivatives, [publisher record](https://www.arcgis.com/home/item.html?id=8fb05137a9f049afa0b60d44086b19af), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Changes include projection, union across source boundaries, rasterization to 2.667 m cells, small-component filtering, and height/tint interpolation from accepted V3 records. Heights are estimates; outside classified coverage the retained orthophoto-derived classifier remains a fallback.
+- Orthophoto-derived fallback masks retain the existing City CC0 source record. No orthophoto RGB tiles are introduced into Git. Existing V3 vegetation and leaf-atlas source/license records remain authoritative for those inputs.
+- `NeighborhoodFoliageAtlas.source.json` records the generated atlas, full prompt, original file, SHA-256, applicable output terms, and procedural geometry provenance. Its `derived_assets` hashes describe the original generation checkpoint; subsequent material/shader changes are tracked in Git. The atlas and mesh themselves match those recorded hashes.
+- The accepted renderer's mesh is authored by `MapBranchGroveAuthoring.cs`; leaf artwork is reused at branch scale. No new external mesh or texture was acquired for the map rollout.
+
+Existing aerial and building StreamingAssets bundles remain local prerequisites, as before this milestone. Run `scripts/build_production_quest.ps1 -PreflightOnly` before building; the full build records source identity and verifies all 1,912 scenery payloads against the resulting APK. A checkout needs Git LFS content plus the previously provisioned aerial/building payloads. Missing inputs fail closed.
+
+To regenerate branch pages, use `tools/full_map_vegetation/build_map_branch_groves.py` with `--output`, `--sources`, `--source-masks`, and `--source-mask-manifest`. Preprocessing masks and their manifest now live in the external research archive, not inside shipping StreamingAssets. Source assembly and original compiler tools remain available; retained source hashes must match before regeneration. Normal builds consume the committed branch records and do not regenerate or download them.
+
+## Validation and remaining gates
+
+All **457 distinct EditMode tests** have passing results across the full run and targeted rechecks. The initial full run passed 450 and failed seven. Resolution removed one dangling angular-material scene override, refreshed the menu's renderer references, and corrected old assertions for the accepted background glyph quads/static-display suppression, terrain bake version, and `forceRenderingOff` diagnostic restoration. The original failed XML and both recheck XMLs remain external. Payload/parser and 15 road/source-processing host tests also pass.
+
+Standard Visual QA generated and was inspected at contact-sheet level for all 130 views, with full-resolution cloud and offset-eye cockpit samples inspected. Hierarchy/environment/single-XR checks pass. The same **26 cost failures** remain, with unchanged maxima of **86 estimated draws / 1,026,876 estimated triangles / 40 materials** relative to the preceding candidate. Existing pale/black Editor cockpit obstruction remains in some views. The cloud/foliage review additionally produced 20 cloud and 18 banked pilot images and compiled 12 requested Vulkan shader variants. These are Editor evidence, not tracked simulator or hardware acceptance.
+
+The first cleaned Android build succeeded and verified all **1,912** payloads. Size **1,763,387,318 bytes**, SHA-256 `6f60b4c837d8d1ac2b6b80b0f8519f51f11f16e0259b2a22c17243cb8b88c8b4`: **232,512,354 bytes smaller** than the preceding installed package. Final build and Git promotion identifiers follow below after validation finishes.
+
+The subsequent final build attempt overlapped the fresh simulator import and failed in Gradle with insufficient disk space. Retain its failure log; retry sequentially after the isolated simulator scratch directory is cleaned. Automatic approval review rejected an attempted recursive deletion of the obsolete initial simulator player with `blocked by policy`, without a more specific reason; that obsolete player was not removed.
+
+Simulator QA exposed pre-existing tooling defects: Android scenery bundles cannot load in a Windows player; Simulator v201 reports its runtime name as `Oculus`; the tool initially left the startup menu open; temporary eye transforms used the reversed view-space forward axis and one-sample MSAA; and pilot-only canopy submission omitted those temporary cameras. The development tooling now compiles Windows-native airport-area aerial bundles and building bundles inside the authorized isolated copy, selects the existing flight mode, checks the audited simulator manifest/version, uses the correct forward axis and configured MSAA, and resubmits the pilot's already selected canopy cells to the temporary eye cameras. It never changes the tracked Main Camera or adds a Windows product dependency.
+
+For simulator builds, set `QFL_META_XR_SIMULATOR_AERIAL_SOURCES` to the retained `terrain_recovery/pages` directory. Coverage is explicitly **airport area +/-4 km expanded to complete bundles (209 pages / 53 aerial bundles)**; it is not whole-map simulator validation. Every source image must match its retained manifest. The previously documented `high_016_016` reprojection mismatch uses the SHA-256-pinned accepted decoded texture instead; the Android bundle stays intact. Development textures use BC7, so this is scene/stereo evidence, not Android ASTC or Quest GPU evidence. Missing recorded replay sessions remain an independent open gate.
+
+Preserved prior evidence is in [the FFR recovery report](FFR_CLOUD_RECOVERY_2026-09-10.md) and [the map rollout report](MAP_BRANCH_GROVE_ROLLOUT_2026-09-10.md). Existing failed cost/frame gates are not waived or relabeled.
+
+After this checkpoint, make one representative pilot-view performance decision and then implement one visibly useful, bounded feature. Ambient airport aircraft remain the next recommendation, subject to eligible assets and cost checks; they are not part of this milestone.

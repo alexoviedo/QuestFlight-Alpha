@@ -28,6 +28,33 @@ namespace QuestFlightLab.EditorTests
         }
 
         [Test]
+        public void OverlappingApproachesSupportVehiclesOnTheVisibleUpperRoad()
+        {
+            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var roadRoot = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true))
+                .Single(t => t.name == "KBDU_GradeSeparatedRoadsV1");
+            var patches = roadRoot.GetComponentsInChildren<MeshFilter>(true).Select(f =>
+                new ProductionTerrainSurfaceAsset.TrianglePatch {
+                    stableId = f.name, outerHalfExtentMeters = 20000f,
+                    vertices = f.sharedMesh.vertices.Select(v => f.transform.TransformPoint(v)).ToArray(),
+                    triangles = f.sharedMesh.triangles, normals = f.sharedMesh.normals }).ToArray();
+            const string route = "canonical:osm_bounded_roads:way/362700162:0:0:0";
+            // The old nearest-profile rule alternated between coincident centerlines
+            // belonging to two overlapping approaches at these source-road positions.
+            foreach (Vector2 point in new[] { new Vector2(-1569.0511f, -2041.9478f),
+                new Vector2(-1573.8110f, -2022.2643f), new Vector2(-1589.2056f, -1902.5682f) })
+            {
+                float visible = float.NegativeInfinity;
+                foreach (var patch in patches)
+                    if (patch.TrySample(point.x, point.y, out float y, out _)) visible = Mathf.Max(visible, y);
+                Assert.That(float.IsNegativeInfinity(visible), Is.False);
+                Assert.That(authority.TryEvaluate(route, point.x, point.y, Vector3.forward, out var support), Is.True);
+                Assert.That(support.position.y, Is.EqualTo(visible).Within(0.08f),
+                    "Vehicle support differs from serialized opaque road triangles at " + point);
+            }
+        }
+
+        [Test]
         public void InventoryContainsEveryVerifiedStructureAndNoUpperLowerAlias()
         {
             Assert.That(authority.ProfileCount, Is.EqualTo(29));

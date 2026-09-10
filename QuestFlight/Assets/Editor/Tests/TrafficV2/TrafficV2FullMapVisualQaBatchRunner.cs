@@ -42,6 +42,9 @@ namespace QuestFlightLab.Environment.Editor.Tests
 
         public static void Run()
         {
+            bool temporal = System.Environment.GetEnvironmentVariable("QFL_TRAFFIC_TEMPORAL_QA") == "1";
+            View[] views = temporal ? Views.Take(2).ToArray() : Views;
+            float[] times = temporal ? Enumerable.Range(0, 31).Select(i => 58f + i / 6f).ToArray() : Times;
             string output = System.Environment.GetEnvironmentVariable(OutputVariable);
             if (string.IsNullOrWhiteSpace(output))
             {
@@ -67,6 +70,15 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 {
                     throw new InvalidOperationException("Traffic V2 contract failed: " + contract);
                 }
+                float endpointStart = 60f;
+                if (temporal)
+                {
+                    View endpoint = FindUnconnectedEndpointView(runtime, out endpointStart);
+                    views = views.Concat(new[] { endpoint }).ToArray();
+                }
+                bool baseline = System.Environment.GetEnvironmentVariable("QFL_TRAFFIC_CONTINUITY_BASELINE") == "1";
+                runtime.ConfigureContinuityBaselineForVisualQa(baseline);
+                report.scope = baseline ? "Editor emulation of accepted traffic scheduling/visibility; not an APK capture" : "Current candidate Editor traffic";
                 report.contract = contract;
                 foreach (Camera existing in scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Camera>(true)))
@@ -78,14 +90,15 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 {
                     listener.enabled = false;
                 }
-                foreach (View view in Views)
+                foreach (View view in views)
                 {
-                    foreach (float time in Times)
+                    foreach (float time in view.id == "endpoint_close"
+                        ? Enumerable.Range(0, 31).Select(i => endpointStart - 0.5f + i / 6f).ToArray() : times)
                     {
                         Capture(scene, runtime, output, view, time, report);
                     }
                 }
-                bool allPrepared = report.captures.Count == Views.Length * Times.Length &&
+                bool allPrepared = report.captures.Count == views.Length * times.Length &&
                     report.captures.All(value => value.nearCount + value.farCount > 0 &&
                         value.droppedCount == 0 && value.bytes > 0);
                 bool airportDensity = report.captures
@@ -107,6 +120,36 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 throw new InvalidOperationException(
                     "Traffic V2 full-map focused QA failed. See " + output);
             }
+        }
+
+        private static View FindUnconnectedEndpointView(KbduTrafficV2Runtime runtime, out float start)
+        {
+            object manifest = typeof(KbduTrafficV2Runtime).GetField("parsedManifest", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(runtime);
+            Array corridors = (Array)manifest.GetType().GetField("corridors").GetValue(manifest);
+            float bestDistance = float.MaxValue;
+            View best = null;
+            start = 0;
+            for (int i = 0; i < corridors.Length; i++)
+            {
+                object c = corridors.GetValue(i);
+                var type = c.GetType();
+                float speed = (float)type.GetField("speed_mps").GetValue(c);
+                float lifetime = (float)type.GetField("length_meters").GetValue(c) / speed;
+                if (lifetime < 8) continue;
+                object stream = ((Array)type.GetField("streams").GetValue(c)).GetValue(0);
+                double offset = (double)stream.GetType().GetField("ageOffset").GetValue(stream);
+                if (offset != 0 || Math.Abs((double)stream.GetType().GetField("lifetime").GetValue(stream) - lifetime) > 0.01) continue;
+                float phase = (float)type.GetField("phase_seconds").GetValue(c);
+                if (!runtime.TryEvaluateVehicleForVisualQa(i, 0, 0, phase + 0.01, out Vector3 point, out Quaternion rotation, out _, out _)) continue;
+                float distance = new Vector2(point.x, point.z).sqrMagnitude;
+                if (distance >= bestDistance) continue;
+                Vector3 forward = rotation * Vector3.forward;
+                Vector3 camera = point - forward * 60 + rotation * Vector3.right * 45 + Vector3.up * 35;
+                best = new View("endpoint_close", camera, Quaternion.LookRotation(point + forward * 15 - camera).eulerAngles, 50);
+                bestDistance = distance;
+                start = phase;
+            }
+            return best ?? throw new InvalidOperationException("No near-airport endpoint diagnostic found");
         }
 
         private static void Capture(
@@ -156,7 +199,7 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 texture.ReadPixels(new Rect(0, 0, Width, Height), 0, 0, false);
                 texture.Apply(false, false);
                 byte[] png = texture.EncodeToPNG();
-                string id = view.id + "_t" + time.ToString("000", CultureInfo.InvariantCulture);
+                string id = view.id + "_t" + time.ToString("000.000", CultureInfo.InvariantCulture);
                 string path = Path.Combine(output, id + ".png");
                 File.WriteAllBytes(path, png);
                 report.captures.Add(new CaptureResult
@@ -166,6 +209,9 @@ namespace QuestFlightLab.Environment.Editor.Tests
                     nearCount = runtime.PreparedNearInstanceCount,
                     farCount = runtime.PreparedFarInstanceCount,
                     droppedCount = runtime.DroppedInstanceCount,
+                    cameraPosition = view.position,
+                    cameraEuler = view.euler,
+                    fieldOfView = view.fieldOfView,
                     path = path,
                     bytes = png.LongLength,
                     sha256 = Sha256(png)
@@ -221,6 +267,7 @@ namespace QuestFlightLab.Environment.Editor.Tests
         private sealed class Report
         {
             public string schema;
+            public string scope;
             public string status;
             public string manifestSha256;
             public string scenePath;
@@ -238,6 +285,8 @@ namespace QuestFlightLab.Environment.Editor.Tests
             public int nearCount;
             public int farCount;
             public int droppedCount;
+            public Vector3 cameraPosition, cameraEuler;
+            public float fieldOfView;
             public string path;
             public long bytes;
             public string sha256;
