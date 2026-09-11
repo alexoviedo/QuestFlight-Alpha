@@ -75782,6 +75782,8 @@ MonoBehaviour:
   controls: {fileID: 0}
   terrainSurface: {fileID: 11400000, guid: b2b2be77d482f4c4c8fb5ceb35614891, type: 2}
   thermalField: {fileID: 11400000, guid: 761b448f5833d39478ae16e2d2544352, type: 2}
+  windField: {fileID: 11400000, guid: 7afbbf9b5ad8b7b4e91e3c075c3ad6a1, type: 2}
+  weatherPreset: 0
   initialConditionProvider: {fileID: 6090694490867546566}
   simulationRateHz: 120
   maxStepsPerFixedUpdate: 8

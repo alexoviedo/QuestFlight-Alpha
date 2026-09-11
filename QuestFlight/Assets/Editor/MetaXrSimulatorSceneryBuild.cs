@@ -33,9 +33,13 @@ namespace QuestFlightLab.Editor
             if(string.IsNullOrEmpty(source))throw new InvalidOperationException("QFL_META_XR_SIMULATOR_AERIAL_SOURCES must identify retained terrain_recovery/pages");
             const string aerial="Assets/StreamingAssets/QuestFlightAerialClipmap";
             var document=JsonUtility.FromJson<Pages>(File.ReadAllText(aerial+"/clipmap_manifest.json"));
+            float westExtent=4000;
+            string west=System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_WEST_EXTENT");
+            if(!string.IsNullOrEmpty(west) && (!float.TryParse(west,System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out westExtent) || westExtent<4000 || westExtent>8000))
+                throw new InvalidDataException("Simulator west extent must be between 4000 and 8000 metres.");
             // Bounded airport inspection, not whole-map simulator acceptance.
             var names=new HashSet<string>(document.pages.Where(p=>p.tier=="global" ||
-                p.local_bounds_meters[0]<4000 && p.local_bounds_meters[2]>-4000 &&
+                p.local_bounds_meters[0]<4000 && p.local_bounds_meters[2]>-westExtent &&
                 p.local_bounds_meters[1]<4000 && p.local_bounds_meters[3]>-4000).Select(p=>p.bundle_name));
             var pages=document.pages.Where(p=>names.Contains(p.bundle_name)).ToArray();
             const string generated="Assets/Generated/SimulatorAirportAerial";

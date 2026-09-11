@@ -16,6 +16,8 @@ namespace QuestFlightLab.Environment
         private const float AnimationBlendSeconds = 0.18f;
 
         public ThermalFieldProfile thermalField;
+        public BoulderWindFieldProfile windField;
+        public QuestFlightLab.Flight.Backends.FlightDynamicsCoordinator windAuthority;
         public Transform visualRoot;
         public Animator animator;
         [Tooltip("Explicitly authored aircraft root used only to stage the first encounter. No runtime discovery is permitted.")]
@@ -126,8 +128,13 @@ namespace QuestFlightLab.Environment
                 }
             }
 
-            Vector3 forward = velocity.sqrMagnitude > 0.001f
-                ? velocity.normalized
+            Vector3 wind = windField != null && windAuthority != null
+                ? windField.Sample(position, windAuthority.CurrentState.simulationTimeSeconds, windAuthority.WeatherPreset)
+                : new Vector3(0, thermalField.SampleUpdraftMetersPerSecond(position), 0);
+            // Preserve the accepted calm encounter; crab into horizontal wind along its fixed ground track.
+            Vector3 airVelocity = velocity - new Vector3(wind.x, 0, wind.z);
+            Vector3 forward = airVelocity.sqrMagnitude > 0.001f
+                ? airVelocity.normalized
                 : _lastForward;
             _smoothedBankDegrees = Mathf.MoveTowards(
                 _smoothedBankDegrees,
@@ -139,7 +146,7 @@ namespace QuestFlightLab.Environment
                 Quaternion.AngleAxis(_smoothedBankDegrees, Vector3.forward));
             _lastForward = forward;
 
-            LastSampledUpdraftMetersPerSecond = thermalField.SampleUpdraftMetersPerSecond(position);
+            LastSampledUpdraftMetersPerSecond = wind.y;
             UpdateAnimation(Time.time, pathBank);
         }
 

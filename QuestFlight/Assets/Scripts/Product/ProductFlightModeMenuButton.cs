@@ -15,7 +15,8 @@ namespace QuestFlight.Product
             Demo,
             FreeFlight,
             Lessons,
-            SeatCalibration
+            SeatCalibration,
+            Weather
         }
 
         [SerializeField] private MenuAction action;
@@ -212,6 +213,9 @@ namespace QuestFlight.Product
 
             switch (action)
             {
+                case MenuAction.Weather:
+                    coordinator.CycleWeather();
+                    break;
                 case MenuAction.Demo:
                     coordinator.SelectDemo();
                     break;

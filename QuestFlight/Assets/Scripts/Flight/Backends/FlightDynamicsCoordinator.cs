@@ -29,6 +29,19 @@ namespace QuestFlightLab.Flight.Backends
         public ProductionTerrainSurfaceAsset terrainSurface;
         [Tooltip("Shared authored thermal supplied to the native JSBSim air-mass input.")]
         public ThermalFieldProfile thermalField;
+        [Tooltip("Serialized shared atmosphere. Calm retains the accepted thermal exactly.")]
+        public BoulderWindFieldProfile windField;
+        [SerializeField] private BoulderWeatherPreset weatherPreset;
+        public BoulderWeatherPreset WeatherPreset => weatherPreset;
+        public Vector3 LastWindUnityMetersPerSecond { get; private set; }
+
+        public bool SelectWeatherBeforeFlight(BoulderWeatherPreset preset)
+        {
+            if (Time.timeScale > 0 || windField == null || !windField.IsValid(out _) ||
+                (preset != BoulderWeatherPreset.Calm && preset != BoulderWeatherPreset.FoothillSoaring)) return false;
+            weatherPreset = preset;
+            return true;
+        }
 
         [Header("Authored initial conditions")]
         public FlightDynamicsInitialConditionProvider initialConditionProvider;
@@ -85,6 +98,13 @@ namespace QuestFlightLab.Flight.Backends
             if (!thermalField.IsValid(out string thermalFailure))
             {
                 error = "The serialized thermal profile is invalid: " + thermalFailure;
+                return false;
+            }
+            error = null;
+            if ((windField == null && weatherPreset != BoulderWeatherPreset.Calm) ||
+                (windField != null && (!windField.IsValid(out error) || windField.legacyThermal != thermalField)))
+            {
+                error = "Invalid shared wind field or duplicate thermal source: " + error;
                 return false;
             }
             if (simulationRoot != transform || aircraftState.transform != simulationRoot ||
@@ -312,10 +332,13 @@ namespace QuestFlightLab.Flight.Backends
         {
             if (_backend == null || !_backend.IsInitialized) return false;
             _previousState = _currentState;
-            float updraft = thermalField != null
-                ? thermalField.SampleUpdraftMetersPerSecond(_currentState.positionUnityMeters)
-                : 0f;
-            _backend.SetAtmosphere(AtmosphereFromUpdraft(updraft));
+            LastWindUnityMetersPerSecond = windField != null
+                ? windField.Sample(_currentState.positionUnityMeters, _currentState.simulationTimeSeconds, weatherPreset)
+                : new Vector3(0, thermalField.SampleUpdraftMetersPerSecond(_currentState.positionUnityMeters), 0);
+            if (!BoulderWindFieldProfile.Finite(LastWindUnityMetersPerSecond) ||
+                LastWindUnityMetersPerSecond.sqrMagnitude > 900)
+                return Fail("Shared wind field returned invalid or out-of-envelope air velocity.");
+            _backend.SetAtmosphere(AtmosphereFromWind(LastWindUnityMetersPerSecond));
             if (!_backend.Advance(fixedDeltaTimeSeconds))
                 return Fail(_backend.LastError);
             _currentState = _backend.CurrentState;
@@ -334,6 +357,13 @@ namespace QuestFlightLab.Flight.Backends
                 windDownMetersPerSecond = -Math.Max(0d, updraftMetersPerSecond)
             };
         }
+
+        public static FlightDynamicsAtmosphere AtmosphereFromWind(Vector3 enuWind) => new FlightDynamicsAtmosphere
+        {
+            windNorthMetersPerSecond = enuWind.z,
+            windEastMetersPerSecond = enuWind.x,
+            windDownMetersPerSecond = -enuWind.y
+        };
 
         private void StepBackendUnchecked(double fixedDeltaTimeSeconds)
         {

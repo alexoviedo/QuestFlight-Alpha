@@ -534,6 +534,7 @@ try {
                 # A live neutral connection/capture proves the player can create a Meta
                 # OpenXR stereo session. It is explicitly not counted as replay coverage.
                 $smoke = $sessionCatalog | Where-Object { $_.id -eq "cockpit_neutral" } | Select-Object -First 1
+                if ($null -eq $smoke) { $smoke = $sessionCatalog | Select-Object -First 1 }
                 $sessionRuns += Invoke-SimulatorSession -Session $smoke -Mode "live" -VrsPath "" -Installation $installation -PersistentPath $persistentPath
             }
             $failedRuns = @($sessionRuns | Where-Object { -not $_.sessionPassed })

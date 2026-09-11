@@ -119,6 +119,8 @@ namespace QuestFlight.Editor
                 Renderer[] worldPresentationRenderers = environmentRoot
                     .GetComponentsInChildren<Renderer>(true)
                     .Concat(presentationEffectsRoot.GetComponentsInChildren<Renderer>(true))
+                    .Concat(root.GetComponentsInChildren<QuestFlightLab.Environment.AmbientAircraftActor>(true).SelectMany(actor => actor.renderers))
+                    .Concat(root.GetComponentsInChildren<QuestFlightLab.Environment.BoulderWindSock>(true).SelectMany(sock => sock.GetComponentsInChildren<Renderer>(true)))
                     .Where(renderer => renderer != null)
                     .Distinct()
                     .ToArray();

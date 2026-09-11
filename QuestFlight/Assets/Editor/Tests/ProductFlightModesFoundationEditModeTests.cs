@@ -14,12 +14,13 @@ namespace QuestFlight.Editor.Tests
 {
     public sealed class ProductFlightModesFoundationEditModeTests
     {
+        // September 11: only native wind and the shared-wind eagle cue are repinned for the approved feature.
         private static readonly IReadOnlyDictionary<string, string> FrozenSha256 =
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Assets/Production/Profiles/KBDU_ExtendedReservoirLessonV1.asset"] = "7569be8a2672a2a7a89ed3e522150c65e327c9f0e7cfe911d4d5930289e210aa",
-                ["Assets/Scripts/Environment/GoldenEagleThermalSoaring.cs"] = "50c89a1e177adb55ffc1256d99c7373ac3a3ba71ead506788efb1f2d6382de5d",
-                ["Assets/Scripts/Flight/Backends/FlightDynamicsCoordinator.cs"] = "4d8414c267ab11eca317991419ea1d133e8796f74fe35effc10ac08076c9a7b5",
+                ["Assets/Scripts/Environment/GoldenEagleThermalSoaring.cs"] = "b4ee6522720493fbea23ef915344cfd3fa317f6e94356aff196abdd3426e1b23",
+                ["Assets/Scripts/Flight/Backends/FlightDynamicsCoordinator.cs"] = "044517d3f4eec67e635242a22a7712fafc729efe37123bd09ed7e73deed41119",
                 ["Assets/Scripts/Input/ProductControlInput.cs"] = "e88e565a00325675313c886a80c0e13d86e9ce25413a787546def3da059652cb",
                 ["Assets/Scripts/Product/ProductDemoPilot.cs"] = "abe5d66c66350101d26e5e469b70b6fb699d3ce4aea8a2a0a25432d5f31fb3c5",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonAssistanceMixer.cs"] = "fb297d37923b9b629eed1ad8800b1bea7f424ecba1df397130d5591340f773c5",

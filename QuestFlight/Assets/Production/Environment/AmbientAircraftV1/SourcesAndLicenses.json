@@ -1,0 +1,365 @@
+{
+  "date": "2026-09-11",
+  "sources": {
+    "C172": {
+      "author": "KOG_THORNS",
+      "url": "https://sketchfab.com/3d-models/cessna172-d1b15841c29c43d0862667300bad55a4",
+      "license": "CC-BY-4.0",
+      "sha256": "a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872"
+    },
+    "SuperCub": {
+      "author": "Emmanuel Baranger (helijah)",
+      "url": "https://sketchfab.com/3d-models/piper-pa-18-413e3f81b0db4e0ebba0f27490732770",
+      "license": "Original author listing: CC-BY-4.0; source archive also contains a GPL notice",
+      "sha256": "43a652f3c0dd0bfe79d2dda077f020200f0e009d8ed9a1434ea79a5543af1a2a",
+      "excluded": "All source textures and Brett Harrison livery excluded; newly authored vertex paint."
+    },
+    "Discus": {
+      "author": "EGPJET, published with permission by app4soft",
+      "url": "https://opengameart.org/content/glider-flying",
+      "license": "CC0-1.0",
+      "sha256": "c367729605b0d67d1d989d18be1ca92b0279037006110858f1e7fc00909cd077",
+      "limitation": "Scenery representation informed by Discus CS dimensions; donor fuselage/tail revised and original three-panel wings with small optional winglets. Not an exact aerodynamic/manufacturing model.",
+      "reference": "https://www.aeroklub-edvardrusjan.si/wp-content/uploads/2017/09/FM_DCS_standard.pdf (three-view printed page 4; 15 m span, 6.59 m fuselage, 10.58 square m wing, optional winglets)"
+    }
+  },
+  "outputs": [
+    {
+      "type": "C172",
+      "lods": [
+        [
+          {
+            "part": "Body",
+            "triangles": 2800,
+            "min": [
+              -5.499075889587402,
+              -2.87223219871521,
+              -1.323370099067688
+            ],
+            "max": [
+              5.499095439910889,
+              5.378312587738037,
+              1.273499608039856
+            ]
+          },
+          {
+            "part": "Propeller",
+            "triangles": 100,
+            "min": [
+              -0.066583551466465,
+              -2.6300909519195557,
+              -0.9644433259963989
+            ],
+            "max": [
+              0.06660188734531403,
+              -2.4410481452941895,
+              1.0324910879135132
+            ]
+          },
+          {
+            "part": "Flaps",
+            "triangles": 100,
+            "min": [
+              -2.5531883239746094,
+              0.21677082777023315,
+              0.3847459852695465
+            ],
+            "max": [
+              2.553163528442383,
+              0.8017578125,
+              0.5446683764457703
+            ]
+          }
+        ],
+        [
+          {
+            "part": "Body",
+            "triangles": 850,
+            "min": [
+              -5.499075889587402,
+              -2.883842706680298,
+              -1.3136669397354126
+            ],
+            "max": [
+              5.499095439910889,
+              5.3630242347717285,
+              1.273533821105957
+            ]
+          },
+          {
+            "part": "Propeller",
+            "triangles": 50,
+            "min": [
+              -0.06808359175920486,
+              -2.628568410873413,
+              -0.9644433259963989
+            ],
+            "max": [
+              0.06810183078050613,
+              -2.4395055770874023,
+              1.0328809022903442
+            ]
+          },
+          {
+            "part": "Flaps",
+            "triangles": 50,
+            "min": [
+              -2.553208827972412,
+              0.2210947573184967,
+              0.38265496492385864
+            ],
+            "max": [
+              2.55414080619812,
+              0.8034600615501404,
+              0.5511095523834229
+            ]
+          }
+        ],
+        [
+          {
+            "part": "Body",
+            "triangles": 180,
+            "min": [
+              -5.518867492675781,
+              -2.883842706680298,
+              -1.2866034507751465
+            ],
+            "max": [
+              5.518884658813477,
+              5.360135555267334,
+              1.2191418409347534
+            ]
+          },
+          {
+            "part": "Propeller",
+            "triangles": 12,
+            "min": [
+              -0.1050424575805664,
+              -2.64365816116333,
+              -0.9576762914657593
+            ],
+            "max": [
+              0.10505896061658859,
+              -2.4377074241638184,
+              1.0271722078323364
+            ]
+          },
+          {
+            "part": "Flaps",
+            "triangles": 12,
+            "min": [
+              -2.5536324977874756,
+              0.2260424643754959,
+              0.31077995896339417
+            ],
+            "max": [
+              2.555501937866211,
+              0.8017578125,
+              0.5939590334892273
+            ]
+          }
+        ]
+      ],
+      "file": "C172_Ambient.glb",
+      "sha256": "4a6cdf9d00600a6d198069e7f44d300e584c6926367b70f4493757e8801fbc51"
+    },
+    {
+      "type": "SuperCub",
+      "lods": [
+        [
+          {
+            "part": "Body",
+            "triangles": 2800,
+            "min": [
+              -5.3589630126953125,
+              -3.4966824054718018,
+              -1.551499366760254
+            ],
+            "max": [
+              5.357745170593262,
+              3.4254610538482666,
+              1.1475392580032349
+            ]
+          },
+          {
+            "part": "Propeller",
+            "triangles": 100,
+            "min": [
+              -0.0713539868593216,
+              -3.411135196685791,
+              -1.2110445499420166
+            ],
+            "max": [
+              0.07124625146389008,
+              -3.3322176933288574,
+              0.669609546661377
+            ]
+          },
+          {
+            "part": "Flaps",
+            "triangles": 100,
+            "min": [
+              -2.0556018352508545,
+              -0.8266429901123047,
+              0.32889997959136963
+            ],
+            "max": [
+              2.0556015968322754,
+              -0.3457140028476715,
+              0.4480322003364563
+            ]
+          }
+        ],
+        [
+          {
+            "part": "Body",
+            "triangles": 838,
+            "min": [
+              -5.29348087310791,
+              -3.4990322589874268,
+              -1.563702940940857
+            ],
+            "max": [
+              5.402367115020752,
+              3.4665300846099854,
+              1.1070939302444458
+            ]
+          },
+          {
+            "part": "Propeller",
+            "triangles": 50,
+            "min": [
+              -0.07532157003879547,
+              -3.410687208175659,
+              -1.2116522789001465
+            ],
+            "max": [
+              0.07521374523639679,
+              -3.3322176933288574,
+              0.6702168583869934
+            ]
+          },
+          {
+            "part": "Flaps",
+            "triangles": 50,
+            "min": [
+              -2.055598258972168,
+              -0.8266618847846985,
+              0.32982775568962097
+            ],
+            "max": [
+              2.055598020553589,
+              -0.3456481993198395,
+              0.4485267102718353
+            ]
+          }
+        ],
+        [
+          {
+            "part": "Body",
+            "triangles": 678,
+            "min": [
+              -4.703256607055664,
+              -3.4990322589874268,
+              -1.563702940940857
+            ],
+            "max": [
+              4.703249931335449,
+              3.281813383102417,
+              1.1070939302444458
+            ]
+          },
+          {
+            "part": "Propeller",
+            "triangles": 12,
+            "min": [
+              -0.07532157003879547,
+              -3.410687208175659,
+              -1.2125698328018188
+            ],
+            "max": [
+              0.053537145256996155,
+              -3.3432130813598633,
+              0.6711339354515076
+            ]
+          },
+          {
+            "part": "Flaps",
+            "triangles": 12,
+            "min": [
+              -2.0555965900421143,
+              -0.8302509188652039,
+              0.3310472369194031
+            ],
+            "max": [
+              2.055593967437744,
+              -0.3455103635787964,
+              0.4323234260082245
+            ]
+          }
+        ]
+      ],
+      "file": "SuperCub_Ambient.glb",
+      "sha256": "d1d8ba3d8005825a8a2a9e83fafa7d3f8c1a7378bfe75dbbc283f37047f92559"
+    },
+    {
+      "type": "Discus",
+      "lods": [
+        [
+          {
+            "part": "Body",
+            "triangles": 2799,
+            "min": [
+              -7.510619640350342,
+              -1.9518849849700928,
+              -0.5047662258148193
+            ],
+            "max": [
+              7.510619640350342,
+              4.6314616203308105,
+              1.0701597929000854
+            ]
+          }
+        ],
+        [
+          {
+            "part": "Body",
+            "triangles": 850,
+            "min": [
+              -7.503296852111816,
+              -1.9535402059555054,
+              -0.5066298246383667
+            ],
+            "max": [
+              7.5145745277404785,
+              4.630422592163086,
+              1.0720365047454834
+            ]
+          }
+        ],
+        [
+          {
+            "part": "Body",
+            "triangles": 178,
+            "min": [
+              -7.503296852111816,
+              -1.9590827226638794,
+              -0.47023215889930725
+            ],
+            "max": [
+              7.513070583343506,
+              4.632467269897461,
+              1.0583453178405762
+            ]
+          }
+        ]
+      ],
+      "file": "Discus_Ambient.glb",
+      "sha256": "d10972532fbac14812d052bcf7619b8f3dbd40bf3db1529f3a4a151c2ac4f09d"
+    }
+  ],
+  "generator": "tools/kbdu_airport_aircraft/build_ambient_aircraft.py",
+  "modifications": "Exterior extraction; normalized coordinates; original vertex paint; three decimated LODs; protected C172 glazing; donor textures excluded. Glider wing replaced with original three-panel geometry and fuselage adjusted to manufacturer dimensions. Unity meshes extracted from these exports with persistent GUIDs.",
+  "acceptance": "Editor integration, six accelerated traffic scenarios and inspected asset views completed. Stereo simulator, Android and physical Quest acceptance tracked in docs/AMBIENT_AIRCRAFT_IMPLEMENTATION_2026-09-11.md.",
+  "generatedSources": "WindSock.asset is original authored geometry. NearFieldWithWindSockRemoved.asset derives from the project AirportNearFieldV1 generated mesh, with eight static fabric triangles removed and all other geometry preserved; see AirportNearFieldV1 source/provenance records. BoulderWind.asset and six route assets derive from the existing ReconstructionV2 licensed terrain data and original algorithms."
+}

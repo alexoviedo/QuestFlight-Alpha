@@ -26,7 +26,7 @@ namespace QuestFlight.Product
             "QUESTFLIGHT\n" +
             "A — DEMO FLIGHT\n" +
             "B — FREE FLIGHT\n" +
-            "X — FLIGHT LESSONS (COMING NEXT)\n" +
+            "X — CHANGE WEATHER\n" +
             "MENU — SEAT CALIBRATION";
         public const string PreparingText = "QUESTFLIGHT\nPREPARING AIRCRAFT…";
         public const string LessonsUnavailableText =
@@ -39,6 +39,7 @@ namespace QuestFlight.Product
         [SerializeField] private GameObject modePanelRoot;
         [SerializeField] private TextMesh modePanelText;
         [SerializeField] private ProductFlightModeMenuView modeMenuView;
+        [SerializeField] private TextMesh weatherMenuLabel;
         [SerializeField, Min(0.1f)] private float lessonsMessageSeconds = 2.5f;
 
         public FlightModeState State { get; private set; } = FlightModeState.Selection;
@@ -177,7 +178,7 @@ namespace QuestFlight.Product
             }
 
             if (Time.unscaledTime >= _lessonsMessageUntil)
-                SetPanelText(SelectionText);
+                SetPanelText(SelectionText + "\nWEATHER: " + WeatherLabel);
 
             ReadSelectionButtons(out bool demoDown, out bool freeFlightDown, out bool lessonsDown);
             if (demoDown)
@@ -185,7 +186,7 @@ namespace QuestFlight.Product
             else if (freeFlightDown)
                 SelectFreeFlight();
             else if (lessonsDown)
-                ShowLessonsUnavailable();
+                CycleWeather();
         }
 
         public void SelectDemo()
@@ -253,6 +254,21 @@ namespace QuestFlight.Product
             State = FlightModeState.FreeFlight;
             RestoreSavedTimeScaleOnce();
             BeginSuccessfulTransition("FREE FLIGHT");
+        }
+
+        public string WeatherLabel => flightCoordinator != null && flightCoordinator.WeatherPreset ==
+            QuestFlightLab.Environment.BoulderWeatherPreset.FoothillSoaring ? "FOOTHILL SOARING" : "CALM";
+
+        public void CycleWeather()
+        {
+            if (State != FlightModeState.Selection || flightCoordinator == null) return;
+            var next = flightCoordinator.WeatherPreset == QuestFlightLab.Environment.BoulderWeatherPreset.Calm
+                ? QuestFlightLab.Environment.BoulderWeatherPreset.FoothillSoaring : QuestFlightLab.Environment.BoulderWeatherPreset.Calm;
+            if (flightCoordinator.SelectWeatherBeforeFlight(next))
+            {
+                SetPanelText(SelectionText + "\nWEATHER: " + WeatherLabel);
+                if(weatherMenuLabel!=null)weatherMenuLabel.text=WeatherLabel;
+            }
         }
 
         public void ShowLessonsUnavailable()

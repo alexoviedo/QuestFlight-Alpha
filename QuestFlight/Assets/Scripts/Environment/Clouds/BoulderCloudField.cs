@@ -28,6 +28,11 @@ namespace QuestFlightLab.Environment
         [SerializeField] private bool temporalReprojection;
 
         private Camera cachedMainCamera;
+        public BoulderWindFieldProfile windField;
+        public QuestFlightLab.Flight.Backends.FlightDynamicsCoordinator windAuthority;
+        private Vector3 windRestPosition;
+        private double previousWindTime;
+        private bool windClockInitialized;
         private Color baselineFogColor;
         private float baselineFogDensity;
         private float baselineSunIntensity;
@@ -91,6 +96,8 @@ namespace QuestFlightLab.Environment
 
         private void OnEnable()
         {
+            windRestPosition = transform.position;
+            windClockInitialized = false;
             CaptureBaseline();
             Shader.SetGlobalFloat(ExteriorOpacityId, 1f);
         }
@@ -104,6 +111,7 @@ namespace QuestFlightLab.Environment
         {
             if (profile == null)
                 return;
+            AdvanceWind();
             Transform observer = atmosphereObserver;
             if (observer == null)
             {
@@ -121,6 +129,24 @@ namespace QuestFlightLab.Environment
                 Time.unscaledDeltaTime * 0.85f);
             Shader.SetGlobalFloat(ExteriorOpacityId, 1f - currentInteriorWeight);
             ApplyAtmosphere(currentInteriorWeight);
+        }
+
+        private void AdvanceWind()
+        {
+            if (windField == null || windAuthority == null || profile.Volumes == null || profile.Volumes.Length == 0) return;
+            double now = windAuthority.CurrentState.simulationTimeSeconds;
+            if (!windClockInitialized || now < previousWindTime || windAuthority.WeatherPreset == BoulderWeatherPreset.Calm)
+            {
+                transform.position = windRestPosition;
+                previousWindTime = now; windClockInitialized = true; return;
+            }
+            double elapsed = now - previousWindTime; previousWindTime = now;
+            if (elapsed <= 0 || elapsed > 1) return;
+            Vector3 samplePosition = transform.TransformPoint(profile.Volumes[0].centerLocalMeters);
+            Vector3 wind = windField.Sample(samplePosition, now, windAuthority.WeatherPreset);
+            // One shared advection transform keeps density, geometry, culling and interior sampling aligned.
+            // No wrapping, added volumes, shader samples or rendering passes.
+            transform.position += new Vector3(wind.x, 0, wind.z) * (float)elapsed;
         }
 
         public float EvaluateInteriorWeight(Vector3 worldPosition)
