@@ -15,6 +15,7 @@ namespace QuestFlightLab.Editor
     /// <summary>Offline-only authoring for the two combined raised-road batches.</summary>
     public static class GradeSeparatedRoadV1Authoring
     {
+        public static TrafficRoadSurfaceAuthoring.Ground VisibleGroundOverride;
         private const string ScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
         private const string AuthorityPath =
             "Assets/Production/Environment/GradeSeparatedRoadsV1/Data/KBDU_GradeSeparatedRoadAuthorityV1.json";
@@ -58,6 +59,8 @@ namespace QuestFlightLab.Editor
             public readonly List<Vector3> vertices = new List<Vector3>();
             public readonly List<Vector3> normals = new List<Vector3>();
             public readonly List<int> triangles = new List<int>();
+            public readonly List<int> concrete = new List<int>();
+            public bool structural;
 
             public void Quad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3? normalOverride = null)
             {
@@ -71,12 +74,13 @@ namespace QuestFlightLab.Editor
                 normals.Add(normal);
                 normals.Add(normal);
                 normals.Add(normal);
-                triangles.Add(start);
-                triangles.Add(start + 2);
-                triangles.Add(start + 1);
-                triangles.Add(start);
-                triangles.Add(start + 3);
-                triangles.Add(start + 2);
+                var indices=structural?concrete:triangles;
+                indices.Add(start);
+                indices.Add(start + 2);
+                indices.Add(start + 1);
+                indices.Add(start);
+                indices.Add(start + 3);
+                indices.Add(start + 2);
             }
         }
 
@@ -124,6 +128,9 @@ namespace QuestFlightLab.Editor
 
             EnsureFolder("Assets/Production/Environment/GradeSeparatedRoadsV1");
             EnsureFolder(MeshDirectory);
+            const string concretePath=MeshDirectory+"/KBDU_BridgeConcrete.mat";
+            Material concrete=AssetDatabase.LoadAssetAtPath<Material>(concretePath);
+            if(concrete==null){concrete=new Material(Shader.Find("QuestFlight/Bridge Concrete"));AssetDatabase.CreateAsset(concrete,concretePath);}
             Mesh nearMesh = SaveMesh(near, MeshDirectory + "/KBDU_GradeSeparatedRoads_Near_V1.asset");
             Mesh outerMesh = SaveMesh(outer, MeshDirectory + "/KBDU_GradeSeparatedRoads_Outer_V1.asset");
 
@@ -137,8 +144,8 @@ namespace QuestFlightLab.Editor
             if (existing != null) Object.DestroyImmediate(existing.gameObject);
             GameObject roadRoot = new GameObject(RootName);
             roadRoot.transform.SetParent(environment, false);
-            CreateBatch(roadRoot.transform, "RaisedRoadBatch_Near", nearMesh, material);
-            CreateBatch(roadRoot.transform, "RaisedRoadBatch_Outer", outerMesh, material);
+            CreateBatch(roadRoot.transform, "RaisedRoadBatch_Near", nearMesh, material, concrete);
+            CreateBatch(roadRoot.transform, "RaisedRoadBatch_Outer", outerMesh, material, concrete);
 
             KbduTrafficV2Runtime runtime = scene.GetRootGameObjects()
                 .SelectMany(root => root.GetComponentsInChildren<KbduTrafficV2Runtime>(true))
@@ -162,13 +169,13 @@ namespace QuestFlightLab.Editor
             {
                 profileCount = authority.ProfileCount,
                 rendererCount = 2,
-                drawDelta = 2,
-                triangleDelta = near.triangles.Count / 3 + outer.triangles.Count / 3,
-                materialDelta = 0,
+                drawDelta = 4,
+                triangleDelta = (near.triangles.Count+near.concrete.Count+outer.triangles.Count+outer.concrete.Count)/3,
+                materialDelta = 1,
                 textureDelta = 0,
                 runtimeComponentDelta = 0,
-                nearTriangleCount = near.triangles.Count / 3,
-                outerTriangleCount = outer.triangles.Count / 3,
+                nearTriangleCount = (near.triangles.Count+near.concrete.Count)/3,
+                outerTriangleCount = (outer.triangles.Count+outer.concrete.Count)/3,
                 nearBounds = nearMesh.bounds,
                 outerBounds = outerMesh.bounds,
                 authorityAssetPath = AuthorityPath,
@@ -187,6 +194,15 @@ namespace QuestFlightLab.Editor
                       $"triangles={report.triangleDelta}, draws={report.drawDelta}");
         }
 
+        public static Mesh BuildContactMesh(KbduGradeSeparatedRoadAuthorityV1.Profile profile)
+        {
+            var builder=new MeshBuilder();
+            AddApproaches(builder,profile,AssetDatabase.LoadAssetAtPath<ProductionTerrainSurfaceAsset>(TerrainPath));
+            AddMergedBridge(builder,new List<KbduGradeSeparatedRoadAuthorityV1.Profile>{profile});
+            var mesh=new Mesh();mesh.SetVertices(builder.vertices);mesh.SetTriangles(builder.triangles,0);mesh.SetNormals(builder.normals);mesh.RecalculateBounds();
+            return mesh;
+        }
+
         private static void AddApproaches(
             MeshBuilder builder,
             KbduGradeSeparatedRoadAuthorityV1.Profile profile,
@@ -196,6 +212,7 @@ namespace QuestFlightLab.Editor
             float spacing = Mathf.Max(Mathf.Abs(bridgeCenter.x), Mathf.Abs(bridgeCenter.z)) <= 6000f
                 ? NearApproachSpacingMeters
                 : OuterApproachSpacingMeters;
+            if (VisibleGroundOverride != null) spacing = 5f;
             SortedSet<float> distances = new SortedSet<float>();
             for (float distance = 0f; distance < profile.profile_length_meters;
                  distance += spacing)
@@ -220,12 +237,39 @@ namespace QuestFlightLab.Editor
                     out Vector3 startLeft, out Vector3 startRight, out Vector3 startNormal);
                 EvaluateEdges(profile, endDistance, halfWidth, halfWidth,
                     out Vector3 endLeft, out Vector3 endRight, out Vector3 endNormal);
-                builder.Quad(startLeft, startRight, endRight, endLeft);
+                float endDistanceToGround=Mathf.Min(startDistance,profile.profile_length_meters-endDistance);
+                int across=VisibleGroundOverride!=null&&endDistanceToGround<30?Mathf.CeilToInt(halfWidth*4):1;
+                for(int strip=0;strip<across;strip++)
+                {
+                    Vector3 a=ApproachAcross(startLeft,startRight,strip/(float)across,startDistance,profile);
+                    Vector3 b=ApproachAcross(startLeft,startRight,(strip+1)/(float)across,startDistance,profile);
+                    Vector3 c=ApproachAcross(endLeft,endRight,(strip+1)/(float)across,endDistance,profile);
+                    Vector3 d=ApproachAcross(endLeft,endRight,strip/(float)across,endDistance,profile);
+                    builder.Quad(a,b,c,d);
+                }
                 AddApproachShoulder(
                     builder, terrain, startLeft, endLeft, startRight, endRight, true);
                 AddApproachShoulder(
                     builder, terrain, startRight, endRight, startLeft, endLeft, false);
             }
+        }
+
+        private static float GroundBlendLength(KbduGradeSeparatedRoadAuthorityV1.Profile profile) =>
+            Mathf.Max(.001f,Mathf.Min(30f,Mathf.Min(profile.bridge_interval_meters[0],profile.profile_length_meters-profile.bridge_interval_meters[1])));
+
+        private static Vector3 ApproachAcross(Vector3 left,Vector3 right,float t,float distance,KbduGradeSeparatedRoadAuthorityV1.Profile profile)
+        {
+            Vector3 p=Vector3.Lerp(left,right,t);
+            if(VisibleGroundOverride!=null)
+            {
+                float blend=1-Mathf.SmoothStep(0,1,Mathf.Min(distance,profile.profile_length_meters-distance)/GroundBlendLength(profile));
+                if(blend>0)
+                {
+                    KbduGradeSeparatedRoadAuthorityV1.TryEvaluateProfile(profile,distance,out Vector3 center,out _);
+                    p.y=Mathf.Lerp(center.y,VisibleGroundOverride.Height(new Vector2(p.x,p.z),out _),blend);
+                }
+            }
+            return p;
         }
 
         private static void AddApproachShoulder(
@@ -263,6 +307,8 @@ namespace QuestFlightLab.Editor
                 float terrainHeight = roadEdge.y;
                 if (terrain.TrySample(outer.x, outer.z, out ProductionTerrainSample sample))
                     terrainHeight = sample.heightMeters + 0.01f;
+                if (VisibleGroundOverride != null)
+                    terrainHeight = VisibleGroundOverride.Height(new Vector2(outer.x, outer.z), out _) + .01f;
                 width = Mathf.Clamp(
                     Mathf.Abs(roadEdge.y - terrainHeight) / MaximumApproachEmbankmentGrade,
                     MinimumApproachEmbankmentWidthMeters,
@@ -272,6 +318,8 @@ namespace QuestFlightLab.Editor
             }
             if (terrain.TrySample(outer.x, outer.z, out ProductionTerrainSample finalSample))
                 outer.y = finalSample.heightMeters + 0.01f;
+            if (VisibleGroundOverride != null)
+                outer.y = VisibleGroundOverride.Height(new Vector2(outer.x, outer.z), out _) + .01f;
             return outer;
         }
 
@@ -313,9 +361,16 @@ namespace QuestFlightLab.Editor
                 Vector3 startRightBottom = startRight - startDrop;
                 Vector3 endLeftBottom = endLeft - endDrop;
                 Vector3 endRightBottom = endRight - endDrop;
+                builder.structural=true;
                 builder.Quad(startLeft, endLeft, endLeftBottom, startLeftBottom);
                 builder.Quad(endRight, startRight, startRightBottom, endRightBottom);
                 builder.Quad(startRightBottom, startLeftBottom, endLeftBottom, endRightBottom);
+                if(primary.source_cdot_structure_id=="D-16-DF"||primary.source_cdot_structure_id=="D-16-DL"||primary.source_cdot_structure_id=="D-16-DG")
+                {
+                    AddBarrier(builder,startLeft,endLeft,(startRight-startLeft).normalized);
+                    AddBarrier(builder,endRight,startRight,(startLeft-startRight).normalized);
+                }
+                builder.structural=false;
             }
             AddEndClosure(builder, primary, bridgeStart, leftExtent, rightExtent, true);
             AddEndClosure(builder, primary, bridgeEnd, leftExtent, rightExtent, false);
@@ -333,8 +388,23 @@ namespace QuestFlightLab.Editor
                 out Vector3 left, out Vector3 right, out Vector3 normal);
             Vector3 leftBottom = left - normal * profile.deck_thickness_meters;
             Vector3 rightBottom = right - normal * profile.deck_thickness_meters;
+            builder.structural=true;
+            if (VisibleGroundOverride!=null && (profile.source_cdot_structure_id=="D-16-DF"||profile.source_cdot_structure_id=="D-16-DL"||profile.source_cdot_structure_id=="D-16-DG"))
+            {
+                leftBottom.y=Mathf.Min(leftBottom.y,VisibleGroundOverride.Height(new Vector2(left.x,left.z),out _));
+                rightBottom.y=Mathf.Min(rightBottom.y,VisibleGroundOverride.Height(new Vector2(right.x,right.z),out _));
+            }
             if (reverse) builder.Quad(right, left, leftBottom, rightBottom);
             else builder.Quad(left, right, rightBottom, leftBottom);
+            builder.structural=false;
+        }
+
+        private static void AddBarrier(MeshBuilder b,Vector3 a,Vector3 c,Vector3 inward)
+        {
+            Vector3 d=inward*.32f,up=Vector3.up*.8f;
+            b.Quad(a,c,c+up,a+up);
+            b.Quad(c+d,a+d,a+d+up,c+d+up);
+            b.Quad(a+up,c+up,c+d+up,a+d+up);
         }
 
         private static void EvaluateEdges(
@@ -359,6 +429,16 @@ namespace QuestFlightLab.Editor
             Vector3 lateral = new Vector3(forward.z, 0f, -forward.x).normalized;
             left = center - lateral * leftExtent;
             right = center + lateral * rightExtent;
+            if(VisibleGroundOverride!=null)
+            {
+                // Match the full end cross-section, not just its center point.
+                float endBlend=1-Mathf.SmoothStep(0,1,Mathf.Min(distance,profile.profile_length_meters-distance)/GroundBlendLength(profile));
+                if(endBlend>0)
+                {
+                    left.y=Mathf.Lerp(left.y,VisibleGroundOverride.Height(new Vector2(left.x,left.z),out _),endBlend);
+                    right.y=Mathf.Lerp(right.y,VisibleGroundOverride.Height(new Vector2(right.x,right.z),out _),endBlend);
+                }
+            }
         }
 
         private static List<List<KbduGradeSeparatedRoadAuthorityV1.Profile>> ClusterProfiles(
@@ -435,30 +515,34 @@ namespace QuestFlightLab.Editor
         private static float EffectiveRoadWidth(KbduGradeSeparatedRoadAuthorityV1.Profile profile)
         {
             return int.TryParse(profile.source_lanes, out int lanes)
-                ? Mathf.Min(profile.surface_width_meters, Mathf.Max(3.5f, lanes * 3.5f))
+                ? Mathf.Min(profile.surface_width_meters, Mathf.Max(3.5f, lanes * 3.5f + 2f))
                 : profile.surface_width_meters;
         }
 
         private static Mesh SaveMesh(MeshBuilder builder, string path)
         {
-            AssetDatabase.DeleteAsset(path);
-            Mesh mesh = new Mesh { name = Path.GetFileNameWithoutExtension(path) };
+            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            bool create=mesh==null;
+            if(create)mesh=new Mesh { name = Path.GetFileNameWithoutExtension(path) };
+            else mesh.Clear();
             if (builder.vertices.Count > ushort.MaxValue) mesh.indexFormat = IndexFormat.UInt32;
             mesh.SetVertices(builder.vertices);
-            mesh.SetTriangles(builder.triangles, 0, true);
+            mesh.subMeshCount=2;
+            mesh.SetTriangles(builder.triangles,0,true);
+            mesh.SetTriangles(builder.concrete,1,true);
             mesh.SetNormals(builder.normals);
             mesh.RecalculateBounds();
-            AssetDatabase.CreateAsset(mesh, path);
+            if(create)AssetDatabase.CreateAsset(mesh,path);else EditorUtility.SetDirty(mesh);
             return mesh;
         }
 
-        private static void CreateBatch(Transform parent, string name, Mesh mesh, Material material)
+        private static void CreateBatch(Transform parent, string name, Mesh mesh, Material material, Material concrete)
         {
             GameObject batch = new GameObject(name);
             batch.transform.SetParent(parent, false);
             batch.AddComponent<MeshFilter>().sharedMesh = mesh;
             MeshRenderer renderer = batch.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
+            renderer.sharedMaterials = new[] { material,concrete };
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
             renderer.lightProbeUsage = LightProbeUsage.Off;

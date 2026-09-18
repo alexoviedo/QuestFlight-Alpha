@@ -561,8 +561,10 @@ namespace QuestFlight.Editor
                         // The selector is mounted on the horizontal cabin floor.
                         // Its imported face is the local XZ plane, so local +Y
                         // is the spindle normal and produces radial detent travel.
+                        // Authored pointer rests at LEFT: enum OFF/LEFT/BOTH/RIGHT
+                        // maps to +90/0/-90/-180 degrees (90-degree detents).
                         Vector3.up,
-                        -90f, 90f,
+                        90f, -180f,
                         Vector3.zero, 0f, 0f))
             };
             result.AddRange(

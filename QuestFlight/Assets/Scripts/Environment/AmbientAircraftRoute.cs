@@ -13,6 +13,7 @@ namespace QuestFlightLab.Environment
             public AmbientFlightPhase phase;
             public bool onGround, protectsRunway;
             public float startSpeed, endSpeed, dwellSeconds;
+            public float sharedTaxiStart = -1, sharedTaxiEnd = -1;
             public Vector3[] points = Array.Empty<Vector3>();
             public float[] distance = Array.Empty<float>();
             public float Length => distance.Length == 0 ? 0 : distance[distance.Length - 1];
@@ -39,6 +40,9 @@ namespace QuestFlightLab.Environment
                     s.startSpeed < 0 || s.endSpeed < 0 || !BoulderWindFieldProfile.Finite(s.startSpeed + s.endSpeed + s.dwellSeconds))
                 { error = "Invalid route segment."; return false; }
                 if (Vector3.Distance(prior, s.points[0]) > 0.05f) { error = "Route position discontinuity."; return false; }
+                if(!BoulderWindFieldProfile.Finite(s.sharedTaxiStart+s.sharedTaxiEnd) ||
+                    (s.sharedTaxiStart>=0 && (!s.onGround || s.sharedTaxiEnd<s.sharedTaxiStart || s.sharedTaxiEnd>s.Length)))
+                {error="Invalid shared taxi interval.";return false;}
                 for (int i = 0; i < s.points.Length; i++)
                     if (!BoulderWindFieldProfile.Finite(s.points[i]) || !BoulderWindFieldProfile.Finite(s.distance[i]) ||
                         (i > 0 && s.distance[i] < s.distance[i - 1])) { error = "Invalid path sample."; return false; }

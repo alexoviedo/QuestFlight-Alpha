@@ -51,6 +51,8 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
             half _MinimumStepMetres;
             float _CloudSamplingLod;
             half _KBDUCloudExteriorOpacity;
+            float4 _CloudDrift;
+            float3 _CloudWrapCenter;
 
             static const int MaximumMarchSteps = 48;
             static const float SliceCount = 64.0;
@@ -75,6 +77,7 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
                 float2 volumeParameters : TEXCOORD3;
                 UNITY_VERTEX_OUTPUT_STEREO
                 float samplingBudget : TEXCOORD4;
+                float windVisibility : TEXCOORD5;
             };
 
             v2f vert(appdata input)
@@ -83,6 +86,17 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
                 v2f output;
                 UNITY_INITIALIZE_OUTPUT(v2f, output);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.windVisibility=1;
+                if(_CloudDrift.w>0.5)
+                {
+                    float3 center=input.volumeCenter+_CloudDrift.xyz;
+                    center.xz=_CloudWrapCenter.xz+frac((center.xz-_CloudWrapCenter.xz+16000)/32000)*32000-16000;
+                    input.vertex.xyz+=center-input.volumeCenter;
+                    input.volumeCenter=center;
+                    // Formation fades completely before wrapping; both eyes share this world-space admission.
+                    float edge=max(abs(center.x-_CloudWrapCenter.x),abs(center.z-_CloudWrapCenter.z));
+                    output.windVisibility=1-smoothstep(12000,15000,edge);
+                }
                 output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
                 output.position = UnityWorldToClipPos(output.worldPosition);
                 output.volumeCenter = input.volumeCenter;
@@ -191,6 +205,7 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
                 float3 rootOrigin = mul(unity_WorldToObject, float4(cameraWorld, 1.0)).xyz;
                 float3 rootDirection = mul((float3x3)unity_WorldToObject, rayDirectionWorld);
                 float3 diameter = max(input.volumeRadii * 2.0, 0.001);
+                clip(input.windVisibility-0.001);
                 float3 rayOriginLocal = (rootOrigin - input.volumeCenter) / diameter;
                 float3 rayDirectionLocal = rootDirection / diameter;
 
@@ -246,10 +261,10 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
                     sampleDistance += stepLength;
                 }
 
-                half opacity = saturate((1.0h - transmittance) * _KBDUCloudExteriorOpacity);
+                half opacity = saturate((1.0h - transmittance) * _KBDUCloudExteriorOpacity * input.windVisibility);
                 if (opacity < 0.002h)
                     discard;
-                return fixed4(accumulated * _KBDUCloudExteriorOpacity, opacity);
+                return fixed4(accumulated * _KBDUCloudExteriorOpacity * input.windVisibility, opacity);
             }
             ENDCG
         }

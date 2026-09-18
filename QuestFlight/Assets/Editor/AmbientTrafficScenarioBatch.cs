@@ -19,6 +19,9 @@ namespace QuestFlightLab.Editor
             public float closestPlayerHorizontal=100000, maxGroundAcceleration, maxAirAcceleration;
             public string maxGroundEvent, maxAirEvent;
             public int totalSteps;
+            public float[] firstTaxiSeconds={-1,-1,-1};
+            public bool[] completedCycle={false,false,false};
+            public float concurrentTaxiFlightSeconds;
         }
         public static void RunBatch()
         {
@@ -29,7 +32,7 @@ namespace QuestFlightLab.Editor
                     Path.GetFullPath("../ambient_traffic_evidence");
                 Directory.CreateDirectory(output);
                 var results=new List<Result>();
-                foreach(string id in new[]{"clear_calm_30min","clear_soaring_20min","runway_occupied_then_clear","taxi_blocked_then_clear","reverse_runway","airborne_conflict"})
+                foreach(string id in new[]{"clear_calm_30min","clear_soaring_20min","runway_occupied_then_clear","taxi_blocked_then_clear","reverse_runway","airborne_conflict","schedule_offset_45","schedule_offset_90"})
                     results.Add(Run(id,output));
                 File.WriteAllText(Path.Combine(output,"traffic_scenarios.json"),JsonUtility.ToJson(new Report {scenarios=results.ToArray()},true));
                 EditorApplication.Exit(results.All(r=>r.passed)?0:1);
@@ -46,6 +49,7 @@ namespace QuestFlightLab.Editor
             var camera=cameraObject.AddComponent<Camera>();cameraObject.transform.position=new Vector3(4000,700,3000);camera.enabled=false;d.pilotCamera=camera;
             var wind=UnityEngine.Object.Instantiate(d.windField);d.windField=wind;
             if(id=="reverse_runway") {wind.surfaceWindEastNorth=-wind.surfaceWindEastNorth;wind.ridgeWindEastNorth=-wind.ridgeWindEastNorth;}
+            if(id.StartsWith("schedule_offset"))foreach(var a in d.actors)if(!a.sailplane)a.initialDelay+=id.EndsWith("45")?45:90;
             var visited=new HashSet<string>[5];for(int i=0;i<5;i++)visited[i]=new HashSet<string>();
             var result=new Result {id=id};
             float duration=id=="clear_calm_30min"?1800:1200;
@@ -57,7 +61,7 @@ namespace QuestFlightLab.Editor
             {
                 using(var trace=new StreamWriter(Path.Combine(output,id+".csv")))
                 {
-                    trace.WriteLine("time,id,phase,east,up,north,speed,suppressed,runwayOwner");
+                    trace.WriteLine("time,id,phase,east,up,north,speed,suppressed,runwayOwner,groundOwner,lod,blocked");
                     for(int step=0;step<duration*10;step++)
                     {
                         float t=step*.1f;
@@ -66,13 +70,18 @@ namespace QuestFlightLab.Editor
                         if(id=="taxi_blocked_then_clear"&&t<120) {player.positionUnityMeters=new Vector3(-540,2,-138);player.weightOnWheels=true;}
                         if(id=="airborne_conflict")
                         {
-                            if(step==2200) {var a=d.actors[0];intercept=a.Position+a.Velocity.normalized*900;interceptVelocity=-a.Velocity.normalized*40;}
-                            if(step>=2200&&step<2600){player.positionUnityMeters=intercept+interceptVelocity*(t-220);player.velocityUnityMetersPerSecond=interceptVelocity;}
+                            // Inject while the authored first actor is airborne on downwind,
+                            // not at a fixed old-route time which can now be a ground rollout.
+                            if(step==600) {var a=d.actors[0];if(a.OnGround)throw new InvalidOperationException("Air conflict fixture is not airborne");intercept=a.Position+a.Velocity.normalized*900;interceptVelocity=-a.Velocity.normalized*40;}
+                            if(step>=600&&step<1000){player.positionUnityMeters=intercept+interceptVelocity*(t-60);player.velocityUnityMetersPerSecond=interceptVelocity;}
                         }
                         d.StepTraffic(player,.1f,weather);
+                        if(d.actors.Any(a=>!a.sailplane&&!a.Suppressed&&a.Phase==AmbientFlightPhase.TaxiOut&&a.Velocity.magnitude>.2f)&&d.actors.Any(a=>!a.Suppressed&&!a.OnGround))result.concurrentTaxiFlightSeconds+=.1f;
                         for(int i=0;i<5;i++)
                         {
-                            var a=d.actors[i];visited[i].Add(a.sailplane?a.SoaringPhase.ToString():a.Phase.ToString());
+                            var a=d.actors[i];
+                            if(i<3){if(a.Phase==AmbientFlightPhase.TaxiOut&&a.Velocity.magnitude>.2f&&result.firstTaxiSeconds[i]<0)result.firstTaxiSeconds[i]=t;result.completedCycle[i]|=a.Phase==AmbientFlightPhase.Shutdown;}
+                            visited[i].Add(a.sailplane?a.SoaringPhase.ToString():a.Phase.ToString());
                             if(!a.Suppressed)
                             {
                                 float acceleration=(a.Velocity-previous[i]).magnitude/.1f;
@@ -87,7 +96,7 @@ namespace QuestFlightLab.Editor
                                 if(Mathf.Abs(relative.y)<10)result.closestPlayerHorizontal=Mathf.Min(result.closestPlayerHorizontal,new Vector2(relative.x,relative.z).magnitude);
                             }
                             previous[i]=a.Velocity;
-                            if(step%10==0)trace.WriteLine(FormattableString.Invariant($"{t:F1},{i},{(a.sailplane?a.SoaringPhase.ToString():a.Phase.ToString())},{a.Position.x:F2},{a.Position.y:F2},{a.Position.z:F2},{a.Velocity.magnitude:F2},{a.Suppressed},{d.RunwayOwner}"));
+                            if(step%10==0)trace.WriteLine(FormattableString.Invariant($"{t:F1},{i},{(a.sailplane?a.SoaringPhase.ToString():a.Phase.ToString())},{a.Position.x:F2},{a.Position.y:F2},{a.Position.z:F2},{a.Velocity.magnitude:F2},{a.Suppressed},{d.RunwayOwner},{d.GroundMovementOwner},{a.SelectedLod},{a.BlockingReason}"));
                         }
                     }
                 }
@@ -96,6 +105,7 @@ namespace QuestFlightLab.Editor
                 result.finalStates=d.actors.Select(a=>$"{a.aircraftId}: {a.Phase}, suppressed={a.Suppressed}, position={a.Position}, speed={a.Velocity.magnitude:F1}").ToArray();
                 result.passed=result.suppressions==0 && result.maxGroundAcceleration<8 && result.maxAirAcceleration<18 &&
                     visited.Take(3).Any(v=>v.Contains("Takeoff")) && visited.Take(3).Any(v=>v.Contains("Shutdown"));
+                if(id.StartsWith("clear_"))result.passed &= result.firstTaxiSeconds[1]<=30 && result.completedCycle.All(x=>x) && result.concurrentTaxiFlightSeconds>10;
                 Debug.Log("[AmbientScenarios] "+JsonUtility.ToJson(result));
                 return result;
             }

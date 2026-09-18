@@ -557,6 +557,28 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 global, airportLocal, cockpitInterior, globalStatistics, localStatistics);
         }
 
+        public static void RefreshTrainerCabinReflection()
+        {
+            Texture2D output = CreateReflectionTexture("C172_CockpitInteriorReflection_256", BuildCockpitInteriorReflectionPixels());
+            try { WriteIfChanged(CockpitInteriorReflectionPath, output.EncodeToEXR(Texture2D.EXRFlags.CompressZIP)); }
+            finally { UnityEngine.Object.DestroyImmediate(output); }
+            ConfigureReflectionImport(CockpitInteriorReflectionPath);
+            Material lens = LoadRequired<Material>(InstrumentGlassMaterialPath);
+            lens.SetFloat("_ReflectionStrength", .23f);
+            lens.SetFloat("_DirectGlintStrength", .065f);
+            lens.SetFloat("_PerceptualRoughness", .28f);
+            EditorUtility.SetDirty(lens);
+            Material window = LoadRequired<Material>(WindowMaterialPath);
+            window.SetFloat("_InteriorReflectionStrength", .48f);
+            window.SetFloat("_ReflectionStrength", .30f);
+            window.SetFloat("_WindshieldOpacity", .045f);
+            window.SetFloat("_SideWindowOpacity", .06f);
+            window.SetColor("_WindshieldTint", new Color(.90f, .93f, .95f, 1));
+            window.SetColor("_SideWindowTint", new Color(.87f, .92f, .94f, 1));
+            EditorUtility.SetDirty(window);
+            AssetDatabase.SaveAssets();
+        }
+
         private static Color[] BuildCockpitInteriorReflectionPixels()
         {
             GameObject aircraftAsset = LoadRequired<GameObject>(AircraftPrefabPath);
@@ -585,12 +607,13 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 // window apertures that exist in the product without any runtime capture.
                 foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>(true))
                 {
-                    bool cockpitOwned = renderer.transform == cockpit || renderer.transform.IsChildOf(cockpit);
+                    bool cockpitOwned = renderer.transform == cockpit || renderer.transform.IsChildOf(cockpit) ||
+                        renderer.name == "ProductionDynamicAnalogInstruments" || renderer.name == "ProductionMagneticCompassV2";
                     bool transparentGlass = renderer.name.IndexOf("Glass", StringComparison.OrdinalIgnoreCase) >= 0 ||
                         renderer.sharedMaterials.Any(material => material != null && material.shader != null &&
                             (material.shader.name.IndexOf("Window Reflection", StringComparison.OrdinalIgnoreCase) >= 0 ||
                              material.shader.name.IndexOf("Instrument Glass", StringComparison.OrdinalIgnoreCase) >= 0));
-                    renderer.enabled = cockpitOwned && !transparentGlass;
+                    renderer.enabled = renderer.enabled && cockpitOwned && !transparentGlass;
                     renderer.shadowCastingMode = ShadowCastingMode.Off;
                     renderer.receiveShadows = false;
                 }
@@ -2286,10 +2309,10 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             Mesh instrumentLensMesh = instrumentLensRenderers.FirstOrDefault()
                 ?.GetComponent<MeshFilter>()?.sharedMesh;
             if (instrumentLensRenderers.Length != 1 || instrumentLensMesh == null ||
-                instrumentLensMesh.vertexCount != 325 || instrumentLensMesh.triangles.Length != 936 ||
+                instrumentLensMesh.vertexCount != 325 || instrumentLensMesh.triangles.Length != 576 ||
                 FindDescendant(rig.AircraftVisualRoot, RejectedGeneratedInstrumentCoverName) != null)
                 throw new InvalidOperationException(
-                    "The single 13-aperture gauge-only instrument lens contract is incomplete.");
+                    "The single eight-aperture trainer lens contract is incomplete (obsolete decorative lenses must be removed).");
             Renderer instrumentDisplayReadout = aircraftRenderers.Single(renderer =>
                 string.Equals(renderer.name, InstrumentDisplayReadoutName, StringComparison.Ordinal));
             Mesh instrumentDisplayReadoutMesh = instrumentDisplayReadout.GetComponent<MeshFilter>()?.sharedMesh;

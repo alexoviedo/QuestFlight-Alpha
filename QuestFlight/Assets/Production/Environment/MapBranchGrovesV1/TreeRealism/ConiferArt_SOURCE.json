@@ -1,0 +1,34 @@
+{
+  "asset": "Pine Tree 01",
+  "author": "Poly Haven",
+  "source": "https://polyhaven.com/a/pine_tree_01",
+  "license": "CC0 1.0",
+  "licenseUrl": "https://polyhaven.com/license",
+  "files": [
+    {
+      "file": "twig_diff.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/1k/pine_tree_01/pine_tree_01_twig_diff_1k.png",
+      "sha256": "d02c031de64b8ad671f3dd0da19870fa4783d912ae6674aeab0702871deeaeaa",
+      "bytes": 3208228
+    },
+    {
+      "file": "twig_alpha.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/1k/pine_tree_01/pine_tree_01_twig_alpha_1k.png",
+      "sha256": "6f91aa99f2c27108d6f817f874954aa7df8bfbb4dea2673e9322555a6ae79d99",
+      "bytes": 351928
+    },
+    {
+      "file": "twig_nor_gl.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/1k/pine_tree_01/pine_tree_01_twig_nor_gl_1k.png",
+      "sha256": "4b79eda7fe8843d71f9289bd0d3897a1b0a7310b1872b390a589a04b510b0597",
+      "bytes": 3021524
+    }
+  ],
+  "generator": "tools/full_map_vegetation/bake_conifer_art.py",
+  "treeSourceSha256": "be844e836745699eff08f3aed4cca64273fbcc811cacc62fa51e40dd9b14e5fe",
+  "representation": "Small CC0 needle sprays; open-pine and tapered-fir visual approximations from existing card topology. Not species scans.",
+  "outputs": {
+    "ConiferTreeAtlas.png": "1361cc4ac67fb2c530215cd23a7198a8aa7d235d86e51842db7f83498188b9bb",
+    "NeedleBranchAtlas.png": "8d1da9717365a3ddea2a5526717742754b388c0235d3434d6fe8264127cc9313"
+  }
+}

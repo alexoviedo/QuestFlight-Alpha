@@ -38,7 +38,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void FrozenIasAndVsi_UseTheirAuditedCalibrations()
+        public void TrainerIasAndVsi_MatchAuthoredDialAngles()
         {
             CockpitInstrumentV2Snapshot snapshot =
                 Valid(CockpitInstrumentV2Availability.AirData);
@@ -49,12 +49,12 @@ namespace QuestFlight.Editor.Tests
                     CockpitInstrumentV2Function
                         .IndicatedAirspeedNeedleDegrees,
                     snapshot),
-                Is.EqualTo(45f).Within(0.001f));
+                Is.EqualTo(47.22222f).Within(0.001f));
             Assert.That(Evaluate(
                     CockpitInstrumentV2Function
                         .IndicatedVerticalSpeedNeedleDegrees,
                     snapshot),
-                Is.EqualTo(90f).Within(0.001f));
+                Is.EqualTo(100f).Within(0.001f));
         }
 
         [Test]

@@ -57,9 +57,9 @@ namespace QuestFlightLab.EditorTests
         [Test]
         public void InventoryContainsEveryVerifiedStructureAndNoUpperLowerAlias()
         {
-            Assert.That(authority.ProfileCount, Is.EqualTo(29));
+            Assert.That(authority.ProfileCount, Is.EqualTo(31));
             Assert.That(authority.Data.profiles.Select(profile => profile.source_cdot_structure_id).Distinct().Count(),
-                Is.EqualTo(18));
+                Is.EqualTo(19));
             foreach (KbduGradeSeparatedRoadAuthorityV1.Profile profile in authority.Data.profiles)
             {
                 Assert.That(profile.source_bridge, Is.Not.EqualTo("no"), profile.span_id);
@@ -79,7 +79,9 @@ namespace QuestFlightLab.EditorTests
             foreach (KbduGradeSeparatedRoadAuthorityV1.Profile profile in authority.Data.profiles)
             {
                 Assert.That(profile.maximum_grade, Is.LessThanOrEqualTo(0.06f), profile.span_id);
-                Assert.That(profile.minimum_clearance_meters, Is.GreaterThanOrEqualTo(4.75f), profile.span_id);
+                if(profile.lower_feature_kind=="railway")
+                    Assert.That(profile.minimum_clearance_meters,Is.Zero,"Rail clearance is explicitly unverified");
+                else Assert.That(profile.minimum_clearance_meters, Is.GreaterThanOrEqualTo(4.75f), profile.span_id);
                 Evaluate(profile, 0f, out Vector3 start, out Vector3 startNormal);
                 Evaluate(profile, profile.profile_length_meters, out Vector3 end, out Vector3 endNormal);
                 Assert.That(terrain.TrySample(start.x, start.z, out ProductionTerrainSample startTerrain), Is.True);

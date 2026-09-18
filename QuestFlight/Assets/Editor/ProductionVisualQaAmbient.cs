@@ -35,10 +35,10 @@ namespace QuestFlightLab.Editor
                 {
                     player.simulationTimeSeconds=step*.1;
                     traffic.StepTraffic(player,.1f,BoulderWeatherPreset.Calm);
-                    if(step==250||step==400||step==600)
+                    if(step==220||step==270||step==320)
                     {
-                        string id="ambient_pilot_apron_"+(step/10);
-                        Capture(context,report,output,1440,960,new ShotDefinition(id,"Pilot seat, right apron at "+step/10+" seconds","ambient_pilot",eye,forward*Quaternion.Euler(0,45,0),72,ViewProfile.Cockpit));
+                        string id="ambient_pilot_circuit_"+(step/10);
+                        Capture(context,report,output,1440,960,new ShotDefinition(id,"Pilot seat, right window taxi at "+step/10+" seconds","ambient_pilot",eye,forward*Quaternion.Euler(0,75,0),72,ViewProfile.Cockpit));
                     }
                 }
                 // Verify each exterior under the actual product shader and sun, in addition to pilot shots.
@@ -53,22 +53,22 @@ namespace QuestFlightLab.Editor
                 }
                 // Reach actual ambient flight before authoring a normal, separated following-pilot presentation pose.
                 player.positionUnityMeters=new Vector3(4000,700,3000);player.weightOnWheels=false;
-                for(int step=601;step<=3100;step++){player.simulationTimeSeconds=step*.1;traffic.StepTraffic(player,.1f,BoulderWeatherPreset.Calm);}
+
                 var lead=traffic.actors[0];
                 if(lead.OnGround||lead.Suppressed)throw new InvalidOperationException("No airborne lead for pilot flight capture.");
                 var heading=lead.Velocity;heading.y=0;heading.Normalize();
                 var aircraftPosition=lead.Position-heading*350-Vector3.up*30;
                 context.rig.transform.SetPositionAndRotation(aircraftPosition,Quaternion.LookRotation(heading));
-                player.positionUnityMeters=aircraftPosition;player.velocityUnityMetersPerSecond=heading*40;player.simulationTimeSeconds=310.1;
+                player.positionUnityMeters=aircraftPosition;player.velocityUnityMetersPerSecond=heading*40;player.simulationTimeSeconds=60.1;
                 traffic.StepTraffic(player,.1f,BoulderWeatherPreset.Calm);
                 eye=context.rig.PilotSeatAnchor.position;forward=context.rig.transform.rotation;
                 Capture(context,report,output,1440,960,new ShotDefinition("ambient_pilot_airborne","Pilot following at 350m separation","ambient_pilot",eye,forward,72,ViewProfile.Cockpit));
-                var glider=traffic.actors[3];heading=glider.Velocity;heading.y=0;heading.Normalize();
+                var glider=traffic.actors[4];heading=glider.Velocity;heading.y=0;heading.Normalize();
                 aircraftPosition=glider.Position-heading*350-Vector3.up*30;
                 context.rig.transform.SetPositionAndRotation(aircraftPosition,Quaternion.LookRotation(heading));
-                player.positionUnityMeters=aircraftPosition;player.simulationTimeSeconds=310.2;traffic.StepTraffic(player,.1f,BoulderWeatherPreset.Calm);
+                player.positionUnityMeters=aircraftPosition;player.simulationTimeSeconds=60.2;traffic.StepTraffic(player,.1f,BoulderWeatherPreset.Calm);
                 eye=context.rig.PilotSeatAnchor.position;forward=context.rig.transform.rotation;
-                Capture(context,report,output,1440,960,new ShotDefinition("ambient_pilot_sailplane","Pilot view of thermalling sailplane","ambient_pilot",eye,forward,72,ViewProfile.Cockpit));
+                Capture(context,report,output,1440,960,new ShotDefinition("ambient_pilot_sailplane","Pilot view of foothill sailplane","ambient_pilot",eye,forward,72,ViewProfile.Cockpit));
                 report.requiredShotCount=8;report.passed=report.shots.Count==8&&report.shots.All(s=>s.imageNotBlank&&string.IsNullOrEmpty(s.error));
                 report.classification=report.passed?"IMAGES_READY_FOR_INSPECTION":"FAIL_IMAGES";
             }

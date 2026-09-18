@@ -632,6 +632,8 @@ namespace QuestFlightLab.Environment
             if (bounds.size.x <= 0.01f || bounds.size.y <= 0.01f || bounds.size.z <= 0.01f)
                 throw new InvalidDataException("Full-map vegetation LOD0 bounds are invalid.");
             runtimeInstances = new RuntimeInstance[instanceCount];
+            bool hasTreeFamilies=sharedCanopyMaterial!=null&&sharedCanopyMaterial.HasProperty("_TreeRealismEnabled")&&
+                sharedCanopyMaterial.GetFloat("_TreeRealismEnabled")>.5f;
             for (int page = 0; page < pageCount; page++)
             {
                 int column = page % databaseColumns;
@@ -650,7 +652,7 @@ namespace QuestFlightLab.Environment
                     float red = reader.ReadByte() / 255f;
                     float green = reader.ReadByte() / 255f;
                     float blue = reader.ReadByte() / 255f;
-                    reader.ReadByte(); // Stable seed is retained in the derivative manifest.
+                    byte seedAndFamily=reader.ReadByte(); // Low six bits retain the stable seed.
                     byte kind = reader.ReadByte();
                     if (height < 0.75f || height > 30f || crown < 1.5f ||
                         crown > 85f || kind > 3)
@@ -663,12 +665,18 @@ namespace QuestFlightLab.Environment
                     Vector3 center = position + Vector3.up * height * 0.5f;
                     float radius = Mathf.Sqrt(
                         height * height * 0.25f + crown * crown * 0.5f);
+                    int family=hasTreeFamilies ? seedAndFamily>>6 : 0;
+                    if(family>2)throw new InvalidDataException("Unknown tree visual family");
+                    if(family>0)
+                    {
+                        red=Mathf.Lerp(red,.25f,.55f);green=Mathf.Lerp(green,.34f,.55f);blue=Mathf.Lerp(blue,.21f,.55f);
+                    }
                     runtimeInstances[destination] = new RuntimeInstance
                     {
                         Position = position,
                         Scale = scale,
                         Center = center,
-                        Tint = new Vector4(red, green, blue, 1f),
+                        Tint = new Vector4(red, green, blue, 1f+family),
                         Radius = radius,
                         RotationDegrees = rotationDegrees,
                         Kind = kind,
@@ -1423,10 +1431,15 @@ namespace QuestFlightLab.Environment
             if (facing.sqrMagnitude < 0.001f)
                 facing = Vector3.forward;
             Quaternion rotation = Quaternion.LookRotation(facing.normalized, Vector3.up);
+            // The impostor is unit-height; reusing the non-unit near-mesh scale
+            // shortened every far tree (including its crown and pictured stem).
+            Vector3 farScale=instance.Scale;
+            farScale.x*=lod0Mesh.bounds.size.x/lod2Mesh.bounds.size.x;
+            farScale.y*=lod0Mesh.bounds.size.y/lod2Mesh.bounds.size.y;
             lod2Matrices[lod2Count] = Matrix4x4.TRS(
                 instance.Position,
                 rotation,
-                instance.Scale);
+                farScale);
             lod2Tints[lod2Count] = instance.Tint;
             lod2Fades[lod2Count] = fade;
             lod2Frames[lod2Count] = SelectImpostorFrame(index, facing);
@@ -1479,7 +1492,11 @@ namespace QuestFlightLab.Environment
             int batchCount = 0;
             for (int source = 0; source < count; source++)
             {
-                bool retain = IsMeshInsideDrawFrustum(matrices[source], bounds);
+                Bounds visibleBounds=bounds;
+                if(tints[source].w>1.5f)
+                    visibleBounds.Encapsulate(new Bounds(new Vector3(0,bounds.max.y*.5f,0),
+                        new Vector3(Mathf.Max(bounds.size.x,bounds.size.z),bounds.max.y*1.1f,Mathf.Max(bounds.size.x,bounds.size.z))));
+                bool retain = IsMeshInsideDrawFrustum(matrices[source], visibleBounds);
 #if UNITY_EDITOR
                 if (!Application.isPlaying && DisableDrawCullingForVisualQa) retain = true;
 #endif
@@ -1540,6 +1557,7 @@ namespace QuestFlightLab.Environment
                     ObserveHybridPrototypeTierForVisualQa?.Invoke(mesh, batchCount);
 #endif
                 properties.SetVectorArray(InstanceTintId, batchTints);
+                properties.SetFloat("_TreePrototypeHeight",mesh.bounds.max.y);
                 properties.SetFloatArray(InstanceFadeId, batchFades);
                 properties.SetFloatArray(ImpostorFrameId, batchFrames);
                 Graphics.DrawMeshInstanced(

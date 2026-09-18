@@ -14,8 +14,8 @@
             "functions": [
                 "IndicatedAirspeedNeedleDegrees"
             ],
-            "authority": "calibrated airspeed",
-            "calibration": "Existing audited piecewise KNOTS scale"
+            "authority": "indicated airspeed",
+            "calibration": "Project-authored 0-180 KIAS dial; C172P colored operating arcs; matched live needle mapping"
         },
         {
             "id": "vertical_speed_indicator",
@@ -26,7 +26,7 @@
                 "IndicatedVerticalSpeedNeedleDegrees"
             ],
             "authority": "filtered vertical speed",
-            "calibration": "Existing audited split FPM scale"
+            "calibration": "Project-authored +/-2000 FPM dial with matched live needle mapping"
         },
         {
             "id": "principal_altimeter",

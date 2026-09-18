@@ -76,5 +76,20 @@
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/AirportCloseTree_HeroLeaf_RGBA.png",
       "sha256": "67a613d7b34086d4f6c1303e4b53b052b968f57f2a2d40259a697a04e768fd1f"
     }
+  },
+  "treeRealismNativeDerivative": {
+    "authoring": "QuestFlight/Assets/Editor/TreeRealismAuthoring.cs",
+    "change": "UV1 stores existing leaf-card centers and rank; original positions, indices, wood and GUIDs retained. Runtime shader repositions rigid small cards for approximate conifers.",
+    "sourceLicense": "CC0 1.0 Universal, inherited from Tree Small 02 source above",
+    "assets": {
+      "AirportCloseTree_LOD0.asset": {
+        "sha256": "6ece4668795828fe94bfa8f4442ab661630d1839e52876eb583e54b21ac899ac",
+        "bytes": 75871
+      },
+      "AirportCloseTree_LOD1.asset": {
+        "sha256": "cabb281783910080716ebfeb31b5851f54e298844a764cca4ebfedf43db1419f",
+        "bytes": 27666
+      }
+    }
   }
 }

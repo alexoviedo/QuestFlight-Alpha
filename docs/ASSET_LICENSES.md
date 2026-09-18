@@ -759,3 +759,19 @@ No new downloaded binary or restricted source enters the product.
 [Historical derivative provenance](OFFLINE_REMASTER_TRAFFIC_PROVENANCE_2026-09-07.json)
 records source attribution, original/staged hashes and the transformation.
 The record does not claim current runtime integration or visual acceptance.
+
+## Existing airport lighting refresh, 2026-09-18
+
+The refreshed `Assets/Scenes/ProductionVerticalSlice/Lightmap-0_comp_light.exr` and `LightingData.asset` are Unity-generated derivatives of the existing rights-cleared airport bake inputs documented above; no new external source or license is introduced. Existing asset GUIDs and Android compression are preserved. Bake scope is the terminal and T-hangar row plus 18 probes, not new map-wide shadow coverage.
+
+- Lightmap SHA-256: `041bbaaad6f18c11a6cce429ac2fed96ffb6b361e14771108d99bd969581358e`.
+- LightingData SHA-256: `cf785942d352df5e3dfaa26c01d58bc7ef652b333d15a6328b6061eb57058650`.
+- Evidence: `docs/LIGHTING_REFRESH_2026-09-18.md`; raw bake/cache/build outputs remain external or ignored.
+
+## September 18 consolidated derivatives
+
+The habitat/tree atlases derive from Poly Haven `Pine Tree 01` (CC0 1.0); source URLs, inputs and output hashes are in `MapBranchGrovesV1/TreeRealism/ConiferArt_SOURCE.json`. Updated grove/tree placement data retain the previously documented canopy, orthophoto and terrain sources; transformations are recorded in `TreeRealism_SOURCE.json` and `docs/TREE_REALISM_IMPLEMENTATION_2026-09-15.md`.
+
+Trainer cockpit textures and adjusted source geometry retain KOG_THORNS / CC BY 4.0 attribution in `C172_TrainerFinishManifest.json`; original gauge/yoke artwork is project-authored. The retained Trainer ButtonPlate mesh also derives from the same source, including the superseded authored variant kept for reproducibility.
+
+The visible-road contact bank and bridge/terrain derivatives retain the existing GIS/USGS/OSM rights, with source hashes and limitations in `KBDU_VisibleRoadLaneSurfaces_Source.json` and `docs/ROAD_REPAIR_IMPLEMENTATION_2026-09-18.md`. No raw download, abandoned pending bank, or unclear-license source file is added.

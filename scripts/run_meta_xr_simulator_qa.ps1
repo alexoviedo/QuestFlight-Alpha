@@ -49,6 +49,9 @@ $developmentCopyRemoved = $false
 $developmentCleanupError = $null
 
 $sessionCatalog = @(
+    [ordered]@{ id = "ambient_airport"; description = "Ordinary runway start: early taxi and airborne traffic"; delaySeconds = 22; startDemo = $false },
+    [ordered]@{ id = "ambient_departure"; description = "Ordinary authored departure with ambient traffic"; delaySeconds = 42; startDemo = $true },
+    [ordered]@{ id = "ambient_foothill"; description = "Supplemental native foothill start, not normal-route coverage"; delaySeconds = 4; startDemo = $false },
     [ordered]@{ id = "cockpit_neutral"; description = "Cockpit neutral forward view"; delaySeconds = 4; startDemo = $false },
     [ordered]@{ id = "head_pan"; description = "Slow head pan left/right/up/down"; delaySeconds = 8; startDemo = $false },
     [ordered]@{ id = "rear_view"; description = "180-degree rearward view"; delaySeconds = 6; startDemo = $false },
@@ -320,6 +323,10 @@ function Remove-DevelopmentProjectCopy {
 }
 
 function Build-SimulatorDevelopmentPlayer {
+    if ([string]::IsNullOrWhiteSpace($env:QFL_META_XR_SIMULATOR_AERIAL_SOURCES) -or
+        -not (Test-Path -LiteralPath $env:QFL_META_XR_SIMULATOR_AERIAL_SOURCES -PathType Container)) {
+        throw 'Set QFL_META_XR_SIMULATOR_AERIAL_SOURCES to the retained terrain_recovery/pages directory before building. No development copy was created.'
+    }
     Assert-UnitySlotAvailable
     $unityExe = Get-UnityExecutable
     $devProject = New-DevelopmentProjectCopy

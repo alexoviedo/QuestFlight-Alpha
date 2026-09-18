@@ -14,6 +14,40 @@ namespace QuestFlight.Editor.Tests
 {
     public sealed class FullMapBuildingClipmapEditModeTests
     {
+        [TestCase(950f)]
+        [TestCase(-100f)]
+        public void GroundingRejectsGrossAbsoluteElevationErrors(float sourceBase)
+        {
+            var terrain = ScriptableObject.CreateInstance<ProductionTerrainSurfaceAsset>();
+            try
+            {
+                terrain.layers = new[] { new ProductionTerrainSurfaceAsset.GridLayer {
+                    stableId = "grounding_test", width = 2, height = 2, spacingMeters = 100,
+                    minimumEnuMeters = Vector2.zero, heightMeters = new[] { 350f, 350f, 350f, 350f } } };
+                var ring = new[] { new Vector2(10,10), new Vector2(30,10), new Vector2(30,30), new Vector2(10,30) };
+                float corrected = FullMapBuildingClipmapAssetAuthoring.ResolveTerrainGroundedBase(terrain, ring, sourceBase, 6);
+                Assert.That(corrected, Is.InRange(348.5f,351.5f));
+                Assert.That(FullMapBuildingClipmapAssetAuthoring.ResolveTerrainGroundedBase(terrain, ring, 350.4f, 6), Is.EqualTo(350.4f));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(terrain); }
+        }
+
+        [Test]
+        public void SteepFootprintKeepsLevelEaveAboveTerrain()
+        {
+            var terrain = ScriptableObject.CreateInstance<ProductionTerrainSurfaceAsset>();
+            try
+            {
+                terrain.layers = new[] { new ProductionTerrainSurfaceAsset.GridLayer {
+                    stableId = "grounding_test", width = 2, height = 2, spacingMeters = 100,
+                    minimumEnuMeters = Vector2.zero, heightMeters = new[] { 300f, 400f, 300f, 400f } } };
+                var ring = new[] { new Vector2(10,10), new Vector2(30,10), new Vector2(30,30), new Vector2(10,30) };
+                float datum = FullMapBuildingClipmapAssetAuthoring.ResolveTerrainGroundedBase(terrain, ring, 950, 6);
+                Assert.That(datum + 6, Is.EqualTo(330.5f).Within(0.01f));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(terrain); }
+        }
+
         [Test]
         public void ValmontPreservesLargeFlatSourceOutlineWithoutChangingOutsideOrPitchedBuildings()
         {
@@ -428,7 +462,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(source, Is.Not.Null);
             RoofAllocationTestReport report = JsonUtility.FromJson<RoofAllocationTestReport>(source.text);
             Assert.That(report.compiler_version,
-                Is.EqualTo("valmont-source-outline-compiler-v16-20260907"));
+                Is.EqualTo("terrain-grounded-shell-compiler-v17-20260917"));
             Assert.That(report.rollout, Is.EqualTo("selective"));
             Assert.That(report.represented_buildings, Is.EqualTo(57440));
             Assert.That(report.page_count, Is.EqualTo(576));
@@ -596,7 +630,7 @@ namespace QuestFlight.Editor.Tests
                 FullMapBuildingClipmapAssetAuthoring.CompilationReportPath);
             Assert.That(report, Is.Not.Null);
             Assert.That(report.text, Does.Contain(
-                "valmont-source-outline-compiler-v16-20260907"));
+                "terrain-grounded-shell-compiler-v17-20260917"));
             Assert.That(report.text, Does.Contain("\"foundation_embed_meters\": 1.6"));
             Assert.That(report.text, Does.Contain("\"maximum_roof_wall_seam_meters\": 0.0"));
             Assert.That(report.text, Does.Contain("\"maximum_vertical_corner_seam_meters\": 0.0"));

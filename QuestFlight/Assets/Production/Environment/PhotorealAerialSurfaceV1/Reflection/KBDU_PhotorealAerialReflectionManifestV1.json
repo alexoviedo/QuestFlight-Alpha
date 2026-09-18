@@ -22,44 +22,72 @@
   "runtime_assets": {
     "global_ground_sky_reflection": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Textures/KBDU_GlobalGroundSkyReflection_256.exr",
-      "equirectangular_pixels": [256, 128],
+      "equirectangular_pixels": [
+        256,
+        128
+      ],
       "cubemap_face_pixels": 128,
       "convolution": "Specular",
       "android_format": "ASTC_HDR_6x6",
       "mipmaps": true,
       "ground_sources": "mid+far",
       "sampling": "bilinear_direction_to_ground_proxy",
-      "proxy_center_xz_meters": [0, 0],
+      "proxy_center_xz_meters": [
+        0,
+        0
+      ],
       "proxy_height_meters": 720,
       "maximum_radius_meters": 11200,
-      "lower_hemisphere_rgb_mean_linear": [0.211453, 0.193347, 0.16022],
-      "lower_hemisphere_rgb_standard_deviation_linear": [0.090224, 0.093604, 0.102978],
+      "lower_hemisphere_rgb_mean_linear": [
+        0.211453,
+        0.193347,
+        0.16022
+      ],
+      "lower_hemisphere_rgb_standard_deviation_linear": [
+        0.090224,
+        0.093604,
+        0.102978
+      ],
       "lower_hemisphere_luminance_standard_deviation_linear": 0.09331,
       "sha256": "ffbc8a0eb093c528ad22266e75b5327c0c4c93e071758c0f46e96ce73536b39a",
       "bytes": 107192
     },
     "airport_local_reflection": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Textures/KBDU_AirportLocalReflection_256.exr",
-      "equirectangular_pixels": [256, 128],
+      "equirectangular_pixels": [
+        256,
+        128
+      ],
       "cubemap_face_pixels": 128,
       "convolution": "Specular",
       "android_format": "ASTC_HDR_6x6",
       "mipmaps": true,
       "ground_sources": "near",
       "sampling": "bilinear_direction_to_ground_proxy",
-      "proxy_center_xz_meters": [-385, -260],
+      "proxy_center_xz_meters": [
+        -385,
+        -260
+      ],
       "proxy_height_meters": 72,
       "maximum_radius_meters": 1700,
-      "lower_hemisphere_rgb_mean_linear": [0.26997, 0.246193, 0.214007],
-      "lower_hemisphere_rgb_standard_deviation_linear": [0.082745, 0.08769, 0.096598],
+      "lower_hemisphere_rgb_mean_linear": [
+        0.26997,
+        0.246193,
+        0.214007
+      ],
+      "lower_hemisphere_rgb_standard_deviation_linear": [
+        0.082745,
+        0.08769,
+        0.096598
+      ],
       "lower_hemisphere_luminance_standard_deviation_linear": 0.087057,
       "sha256": "7752397d6afa1ed1bc9694013759cb388ec67a1a15872b08662bbeae446ddbed",
       "bytes": 95645
     },
     "cockpit_interior_reflection": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Textures/C172_CockpitInteriorReflection_256.exr",
-      "sha256": "cef4433bab4a224d2fa02707aba62e964204c2b9693b5110bdf7c66b1fb78907",
-      "bytes": 63134
+      "sha256": "8af7fd997489075da428dff4a14909faa165887e95c0ae155399077adc184df3",
+      "bytes": 55006
     },
     "profile": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Profiles/KBDU_PhotorealAerialReflectionProfile.asset",
@@ -68,7 +96,7 @@
     },
     "window_material": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionCockpitWindowReflection.mat",
-      "sha256": "1baa070ad5ed5a4c94c3ba93e9421ff43558d719054f14477378d23d2c382c67",
+      "sha256": "f029e879c521865dbd2b23665fe40c4ef9377c302347eb8b0a4d8a86bc14a0d8",
       "bytes": 2045
     },
     "window_shader": {
@@ -83,8 +111,8 @@
     },
     "instrument_glass_material": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Materials/ProductionInstrumentGlassReflection.mat",
-      "sha256": "ba9f9b71affb669ea3d4aceafb4521834f33dba39dda5030cdea540905222d95",
-      "bytes": 1320
+      "sha256": "0231c7d59f45a82d29107a087f33f097a01c15e9d5f474d8c111a18e8c62e335",
+      "bytes": 1321
     },
     "instrument_glass_shader": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/ProductionInstrumentGlassReflection.shader",
@@ -93,8 +121,8 @@
     },
     "instrument_lens_mesh": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_PrincipalInstrumentLensArray.asset",
-      "sha256": "b2eda64f4e1ff88533bfed45e84c8cd680fa584a6b92abb48880ebf61707f102",
-      "bytes": 28076
+      "sha256": "3d8dc73b67fa9bbc62fbcb4349c79ceee495bc96c87c661f7ad4b0ccf7398b0a",
+      "bytes": 26643
     },
     "instrument_display_readout_mesh": {
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_InstrumentDisplayReadouts.asset",
@@ -148,7 +176,7 @@
     "refraction_camera": false,
     "aircraft_probe_anchor": "AircraftSimulationRoot/CenterOfGravityReference",
     "aircraft_probe_usage": "BlendProbesAndSkybox",
-    "instrument_surface_mode": "Imported Meter_01 PBR plus one 13-aperture additive lens mesh; one opaque 12-triangle avionics readout mesh; source display/text retain imported PBR"
+    "instrument_surface_mode": "Trainer six-pack; eight planar gauge lenses in the existing additive batch, retained spherical attitude geometry, opaque avionics with single surface ownership."
   },
   "android_budget": {
     "new_reflection_probes": 1,

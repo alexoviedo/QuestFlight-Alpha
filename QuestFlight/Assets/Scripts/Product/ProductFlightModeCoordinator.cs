@@ -24,11 +24,11 @@ namespace QuestFlight.Product
 
         public const string SelectionText =
             "QUESTFLIGHT\n" +
-            "A — DEMO FLIGHT\n" +
-            "B — FREE FLIGHT\n" +
-            "X — CHANGE WEATHER\n" +
-            "MENU — SEAT CALIBRATION";
-        public const string PreparingText = "QUESTFLIGHT\nPREPARING AIRCRAFT…";
+            "A â€” DEMO FLIGHT\n" +
+            "B â€” FREE FLIGHT\n" +
+            "X â€” CHANGE WEATHER\n" +
+            "MENU â€” SEAT CALIBRATION";
+        public const string PreparingText = "QUESTFLIGHT\nPREPARING AIRCRAFTâ€¦";
         public const string LessonsUnavailableText =
             "FLIGHT LESSONS ARE THE NEXT MILESTONE";
 
@@ -39,7 +39,6 @@ namespace QuestFlight.Product
         [SerializeField] private GameObject modePanelRoot;
         [SerializeField] private TextMesh modePanelText;
         [SerializeField] private ProductFlightModeMenuView modeMenuView;
-        [SerializeField] private TextMesh weatherMenuLabel;
         [SerializeField, Min(0.1f)] private float lessonsMessageSeconds = 2.5f;
 
         public FlightModeState State { get; private set; } = FlightModeState.Selection;
@@ -178,7 +177,7 @@ namespace QuestFlight.Product
             }
 
             if (Time.unscaledTime >= _lessonsMessageUntil)
-                SetPanelText(SelectionText + "\nWEATHER: " + WeatherLabel);
+                SetPanelText(SelectionText);
 
             ReadSelectionButtons(out bool demoDown, out bool freeFlightDown, out bool lessonsDown);
             if (demoDown)
@@ -186,7 +185,7 @@ namespace QuestFlight.Product
             else if (freeFlightDown)
                 SelectFreeFlight();
             else if (lessonsDown)
-                CycleWeather();
+                ShowLessonsUnavailable();
         }
 
         public void SelectDemo()
@@ -256,20 +255,20 @@ namespace QuestFlight.Product
             BeginSuccessfulTransition("FREE FLIGHT");
         }
 
-        public string WeatherLabel => flightCoordinator != null && flightCoordinator.WeatherPreset ==
-            QuestFlightLab.Environment.BoulderWeatherPreset.FoothillSoaring ? "FOOTHILL SOARING" : "CALM";
-
-        public void CycleWeather()
+        public string WeatherLabel
         {
-            if (State != FlightModeState.Selection || flightCoordinator == null) return;
-            var next = flightCoordinator.WeatherPreset == QuestFlightLab.Environment.BoulderWeatherPreset.Calm
-                ? QuestFlightLab.Environment.BoulderWeatherPreset.FoothillSoaring : QuestFlightLab.Environment.BoulderWeatherPreset.Calm;
-            if (flightCoordinator.SelectWeatherBeforeFlight(next))
+            get
             {
-                SetPanelText(SelectionText + "\nWEATHER: " + WeatherLabel);
-                if(weatherMenuLabel!=null)weatherMenuLabel.text=WeatherLabel;
+                if (flightCoordinator == null || flightCoordinator.windField == null) return "WIND UNAVAILABLE";
+                Vector3 w = flightCoordinator.windField.Sample(new Vector3(-555, 10, -30), 0);
+                float knots = new Vector2(w.x, w.z).magnitude * 1.943844f;
+                float from = Mathf.Repeat(Mathf.Atan2(-w.x, -w.z) * Mathf.Rad2Deg, 360);
+                return $"WIND {from:000}° / {knots:0} KT";
             }
         }
+
+        // Existing serialized Weather buttons are informational; weather is no longer a physics toggle.
+        public void CycleWeather() => SetPanelText(SelectionText);
 
         public void ShowLessonsUnavailable()
         {
@@ -390,7 +389,10 @@ namespace QuestFlight.Product
         {
             if (modePanelText != null && modePanelText.text != value)
                 modePanelText.text = value;
-            modeMenuView?.SetMessage(value);
+            if(modeMenuView!=null)
+            {
+                modeMenuView.SetMessage(value);
+            }
         }
 
         private void BeginSuccessfulTransition(string selectedMode)

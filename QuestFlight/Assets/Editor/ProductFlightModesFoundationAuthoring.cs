@@ -166,6 +166,7 @@ namespace QuestFlight.Editor
                 ProductStartupShowroomAuthoring.BindWorldAuthority(
                     coordinator,
                     view);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(view);
                 demo.ConfigureAuthoredAutoStart(false);
                 EditorUtility.SetDirty(coordinator);
                 EditorUtility.SetDirty(boundaryRecovery);

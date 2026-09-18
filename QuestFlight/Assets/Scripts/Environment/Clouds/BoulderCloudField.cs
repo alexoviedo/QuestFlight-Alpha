@@ -30,9 +30,14 @@ namespace QuestFlightLab.Environment
         private Camera cachedMainCamera;
         public BoulderWindFieldProfile windField;
         public QuestFlightLab.Flight.Backends.FlightDynamicsCoordinator windAuthority;
-        private Vector3 windRestPosition;
         private double previousWindTime;
         private bool windClockInitialized;
+        private Vector3 cloudDrift, cloudWrapCenter;
+        private MaterialPropertyBlock windProperties;
+        private bool cloudWrapActive;
+        public const float CloudWrapPeriod = 32000;
+        private static readonly int DriftId=Shader.PropertyToID("_CloudDrift");
+        private static readonly int WrapId=Shader.PropertyToID("_CloudWrapCenter");
         private Color baselineFogColor;
         private float baselineFogDensity;
         private float baselineSunIntensity;
@@ -96,14 +101,17 @@ namespace QuestFlightLab.Environment
 
         private void OnEnable()
         {
-            windRestPosition = transform.position;
             windClockInitialized = false;
+            cloudDrift=Vector3.zero;cloudWrapActive=false;
+            if(windProperties==null)windProperties=new MaterialPropertyBlock();
             CaptureBaseline();
             Shader.SetGlobalFloat(ExteriorOpacityId, 1f);
         }
 
         private void OnDisable()
         {
+            cloudWrapActive=false;
+            foreach(var renderer in sectorRenderers)if(renderer!=null){renderer.SetPropertyBlock(null);renderer.ResetLocalBounds();}
             RestoreBaseline();
         }
 
@@ -135,18 +143,37 @@ namespace QuestFlightLab.Environment
         {
             if (windField == null || windAuthority == null || profile.Volumes == null || profile.Volumes.Length == 0) return;
             double now = windAuthority.CurrentState.simulationTimeSeconds;
-            if (!windClockInitialized || now < previousWindTime || windAuthority.WeatherPreset == BoulderWeatherPreset.Calm)
+            if (!windClockInitialized || now < previousWindTime)
             {
-                transform.position = windRestPosition;
-                previousWindTime = now; windClockInitialized = true; return;
+                cloudDrift=Vector3.zero;
+                previousWindTime=now;windClockInitialized=true;
             }
-            double elapsed = now - previousWindTime; previousWindTime = now;
-            if (elapsed <= 0 || elapsed > 1) return;
-            Vector3 samplePosition = transform.TransformPoint(profile.Volumes[0].centerLocalMeters);
-            Vector3 wind = windField.Sample(samplePosition, now, windAuthority.WeatherPreset);
-            // One shared advection transform keeps density, geometry, culling and interior sampling aligned.
-            // No wrapping, added volumes, shader samples or rendering passes.
-            transform.position += new Vector3(wind.x, 0, wind.z) * (float)elapsed;
+            double elapsed=now-previousWindTime;previousWindTime=now;
+            if(elapsed<0 || elapsed>1)return;
+            cloudWrapCenter=transform.InverseTransformPoint(windAuthority.CurrentState.positionUnityMeters);
+            cloudWrapCenter.y=0;cloudWrapActive=true;
+            Vector3 samplePosition=transform.TransformPoint(WrappedCenter(profile.Volumes[0].centerLocalMeters,cloudDrift,cloudWrapCenter));
+            Vector3 wind=windField.Sample(samplePosition,now);
+            Vector3 localWind=transform.InverseTransformVector(new Vector3(wind.x,0,wind.z));
+            cloudDrift+=localWind*(float)elapsed;
+            cloudDrift.x=Mathf.Repeat(cloudDrift.x+CloudWrapPeriod*.5f,CloudWrapPeriod)-CloudWrapPeriod*.5f;
+            cloudDrift.z=Mathf.Repeat(cloudDrift.z+CloudWrapPeriod*.5f,CloudWrapPeriod)-CloudWrapPeriod*.5f;
+            windProperties.SetVector(DriftId,new Vector4(cloudDrift.x,0,cloudDrift.z,1));
+            windProperties.SetVector(WrapId,cloudWrapCenter);
+            foreach(var renderer in sectorRenderers)
+            {
+                renderer.SetPropertyBlock(windProperties);
+                // Vertex offsets, fragment density and CPU interior lookup use the same wrapped centers.
+                renderer.localBounds=new Bounds(new Vector3(cloudWrapCenter.x,profile.Volumes[0].centerLocalMeters.y,cloudWrapCenter.z),new Vector3(48000,20000,48000));
+            }
+        }
+
+        public static Vector3 WrappedCenter(Vector3 original,Vector3 drift,Vector3 observer)
+        {
+            Vector3 c=original+drift;
+            c.x=observer.x+Mathf.Repeat(c.x-observer.x+CloudWrapPeriod*.5f,CloudWrapPeriod)-CloudWrapPeriod*.5f;
+            c.z=observer.z+Mathf.Repeat(c.z-observer.z+CloudWrapPeriod*.5f,CloudWrapPeriod)-CloudWrapPeriod*.5f;
+            return c;
         }
 
         public float EvaluateInteriorWeight(Vector3 worldPosition)
@@ -160,7 +187,7 @@ namespace QuestFlightLab.Environment
             {
                 BoulderCloudProfile.Volume volume = volumes[index];
                 Vector3 radii = volume.radiiMeters;
-                Vector3 delta = local - volume.centerLocalMeters;
+                Vector3 delta = local - (cloudWrapActive ? WrappedCenter(volume.centerLocalMeters,cloudDrift,cloudWrapCenter) : volume.centerLocalMeters);
                 float normalized = Mathf.Sqrt(
                     delta.x * delta.x / (radii.x * radii.x) +
                     delta.y * delta.y / (radii.y * radii.y) +

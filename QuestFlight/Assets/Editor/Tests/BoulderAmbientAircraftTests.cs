@@ -21,13 +21,17 @@ public sealed class BoulderAmbientAircraftTests
                 int landing=System.Array.FindIndex(a.runway08.segments,s=>s.phase==AmbientFlightPhase.Landing);
                 typeof(AmbientAircraftActor).GetProperty("SegmentIndex").SetValue(a,landing);
                 typeof(AmbientAircraftActor).GetMethod("Present",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)
-                    .Invoke(a,new object[]{2f,Vector3.zero,a.Position});
+                    .Invoke(a,new object[]{2f,Vector3.zero,a.Position,null});
+                int activeFlaps=0;
                 foreach(var flap in a.flaps)
                 {
+                    if(!flap.gameObject.activeInHierarchy)continue;
+                    activeFlaps++;
                     var mesh=flap.GetComponent<MeshFilter>().sharedMesh;
                     Vector3 edge=mesh.vertices[0];foreach(var vertex in mesh.vertices)if(vertex.z<edge.z)edge=vertex;
                     Assert.Less((flap.localRotation*edge).y,edge.y-.02f,a.aircraftId+" trailing edge must lower");
                 }
+                Assert.Greater(activeFlaps,0,a.aircraftId+" must expose a flap in the selected near LOD");
             }
             finally{Object.DestroyImmediate(go);}
         }
@@ -40,14 +44,15 @@ public sealed class BoulderAmbientAircraftTests
         try
         {
             p.minimumEnu=new Vector2(-10000,-10000);p.width=p.height=11;p.spacingMeters=100;
-            p.groundHeights=new float[121];p.ridgeResponse=new float[121];p.foothillThermals=System.Array.Empty<BoulderWindFieldProfile.Thermal>();p.gustAmplitude=0;
-            for(int i=0;i<121;i++)p.ridgeResponse[i]=.3f;
+            p.groundHeights=new float[121];p.ridgeResponse=new float[121];p.gradientEast=new float[121];p.gradientNorth=new float[121];p.ridgeRelief=new float[121];p.exposureSectors=new float[121*8];
+            for(int i=0;i<121*8;i++)p.exposureSectors[i]=1;for(int i=0;i<121;i++)p.ridgeRelief[i]=500;p.foothillThermals=System.Array.Empty<BoulderWindFieldProfile.Thermal>();p.gustAmplitude=0;
+            for(int i=0;i<121;i++)p.gradientEast[i]=-.3f;
             var center=new Vector3(-9500,100,-9500);
             Assert.Greater(p.Sample(center,0,BoulderWeatherPreset.FoothillSoaring).y,.1);
             Assert.AreEqual(0,p.Sample(center+Vector3.up*600,0,BoulderWeatherPreset.FoothillSoaring).y);
             var edge=new Vector3(-10000,100,-9500);
             Assert.Less(Vector3.Distance(p.Sample(edge-Vector3.right*.1f,0,BoulderWeatherPreset.FoothillSoaring),p.Sample(edge+Vector3.right*.1f,0,BoulderWeatherPreset.FoothillSoaring)),.001);
-            for(int i=0;i<121;i++)p.ridgeResponse[i]=-.3f;
+            for(int i=0;i<121;i++)p.gradientEast[i]=.3f;
             Assert.Less(p.Sample(center,0,BoulderWeatherPreset.FoothillSoaring).y,-.1);
             p.surfaceWindEastNorth=p.ridgeWindEastNorth=Vector2.zero;
             Assert.AreEqual(Vector3.zero,p.Sample(center,0,BoulderWeatherPreset.FoothillSoaring));
@@ -101,14 +106,14 @@ public sealed class BoulderAmbientAircraftTests
         Assert.IsFalse(AmbientTrafficDirector.ProtectsRunway(new Vector3(0,600,-30),new Vector3(35,0,0),false));
     }
     [Test]
-    public void SharedWindRetainsCalmAndMapsSignedEnuToNativeNed()
+    public void SharedWindIsIndependentOfLegacyPresetAndMapsSignedEnuToNativeNed()
     {
         var p=AssetDatabase.LoadAssetAtPath<BoulderWindFieldProfile>(BoulderAmbientAircraftAuthoring.WindPath);
         Assert.IsNotNull(p,"Run ambient aircraft authoring first."); Assert.IsTrue(p.IsValid(out string error),error);
         for(int i=0;i<100;i++)
         {
             var at=new Vector3(1500+i*4,200+i*5,2600);
-            Assert.AreEqual(new Vector3(0,p.legacyThermal.SampleUpdraftMetersPerSecond(at),0),p.Sample(at,i,BoulderWeatherPreset.Calm));
+            Assert.AreEqual(p.Sample(at,i,BoulderWeatherPreset.FoothillSoaring),p.Sample(at,i,BoulderWeatherPreset.Calm));
             var wind=p.Sample(at,i,BoulderWeatherPreset.FoothillSoaring);
             Assert.IsTrue(BoulderWindFieldProfile.Finite(wind));Assert.Less(wind.x,0);
             var native=FlightDynamicsCoordinator.AtmosphereFromWind(wind);

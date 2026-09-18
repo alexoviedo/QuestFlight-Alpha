@@ -288,9 +288,9 @@ namespace QuestFlight.Product
                 statusText.text = "INITIALIZING NATIVE FLIGHT SYSTEMS";
                 statusText.color = new Color(0.44f, 0.82f, 1f, 1f);
             }
-            else if (message == ProductFlightModeCoordinator.SelectionText)
+            else if (message != null && message.StartsWith(ProductFlightModeCoordinator.SelectionText))
             {
-                statusText.text = "AIRCRAFT READY  ·  SELECT A FLIGHT";
+                statusText.text = "AIRCRAFT READY  Â·  SELECT A FLIGHT";
                 statusText.color = new Color(0.68f, 0.92f, 0.82f, 1f);
             }
             else if (message == ProductFlightModeCoordinator.LessonsUnavailableText)

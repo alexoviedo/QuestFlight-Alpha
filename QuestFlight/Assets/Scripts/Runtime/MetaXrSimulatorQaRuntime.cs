@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using QuestFlight.Product;
 using QuestFlightLab.Environment;
+using QuestFlightLab.Flight.Backends;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR;
@@ -163,6 +164,12 @@ namespace QuestFlightLab.Runtime
             if (_mountainProbe != null) _mountainProbe.BeginCapture(rig.TrackedCamera);
             else _errors.Add("Authored MountainTemporalStabilityProbe was not available.");
 
+            var atmosphereAuthority=rig.AircraftSimulationRoot.GetComponent<FlightDynamicsCoordinator>();
+            float nativeStarted=Time.realtimeSinceStartup;
+            while(atmosphereAuthority!=null && !atmosphereAuthority.IsInitialized && Time.realtimeSinceStartup-nativeStarted<StartupTimeoutSeconds)
+                yield return null;
+            if(atmosphereAuthority==null || !atmosphereAuthority.IsInitialized)
+            { _errors.Add("Native flight authority not ready for simulator scenario.");WriteStartupFailure(productRoot,rig);yield break; }
             _demoPilot = Object.FindFirstObjectByType<ProductDemoPilot>(FindObjectsInactive.Exclude);
             bool startDemo = ReadBool("QFL_META_XR_SIMULATOR_START_DEMO", definition != null && definition.startAuthoredDemoPilot);
             if (startDemo)
@@ -178,6 +185,47 @@ namespace QuestFlightLab.Runtime
             }
             if(!startDemo) Object.FindFirstObjectByType<ProductFlightModeCoordinator>()?.SelectFreeFlight();
 
+            // Development-only scenario placement goes through native reset; tracked eye poses stay OpenXR-owned.
+            if(System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_AMBIENT_VIEW")=="foothill")
+            {
+                yield return null;yield return null;
+                var traffic=Object.FindFirstObjectByType<AmbientTrafficDirector>();
+                var glider=traffic!=null?traffic.actors[4]:null;
+                if(glider==null){_errors.Add("Missing authored foothill traffic.");WriteStartupFailure(productRoot,rig);yield break;}
+                Vector3 at=glider.Position+new Vector3(500,15,-300);
+                var geo=FlightFrameConversions.UnityToGeodetic(at,GeodeticReference.Kbdu);
+                Vector3 direction=glider.Position-at;
+                var initial=atmosphereAuthority.LastResetInitialConditions;
+                initial.latitudeDegrees=geo.latitudeDegrees;initial.longitudeDegrees=geo.longitudeDegrees;initial.altitudeMslMeters=geo.altitudeMslMeters;
+                initial.calibratedAirspeedKnots=80;initial.headingDegrees=Mathf.Repeat(Mathf.Atan2(direction.x,direction.z)*Mathf.Rad2Deg,360);
+                initial.pitchDegrees=0;initial.bankDegrees=0;initial.flightPathAngleDegrees=0;
+                if(!atmosphereAuthority.TryRecoverToInitialConditions(initial))
+                {_errors.Add(atmosphereAuthority.LastError);WriteStartupFailure(productRoot,rig);yield break;}
+            }
+
+            // Bounded road-repair inspection in the Windows QA player only.
+            // Place the aircraft through native JSBSim; never move a tracked eye.
+            if (System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_ROAD_VIEW") == "airport")
+            {
+                yield return null;
+                var geo = FlightFrameConversions.UnityToGeodetic(new Vector3(-1100, 120, -650), GeodeticReference.Kbdu);
+                var initial = atmosphereAuthority.LastResetInitialConditions;
+                initial.latitudeDegrees = geo.latitudeDegrees;
+                initial.longitudeDegrees = geo.longitudeDegrees;
+                initial.altitudeMslMeters = geo.altitudeMslMeters;
+                initial.calibratedAirspeedKnots = 80;
+                initial.headingDegrees = 300;
+                initial.pitchDegrees = 0;
+                initial.bankDegrees = 0;
+                initial.flightPathAngleDegrees = 0;
+                if (!atmosphereAuthority.TryRecoverToInitialConditions(initial))
+                {
+                    _errors.Add(atmosphereAuthority.LastError);
+                    WriteStartupFailure(productRoot, rig);
+                    yield break;
+                }
+            }
+
             float delay = ReadFloat(
                 "QFL_META_XR_SIMULATOR_CAPTURE_DELAY_SECONDS",
                 definition != null ? definition.captureDelaySeconds : 5f);
@@ -185,8 +233,65 @@ namespace QuestFlightLab.Runtime
             while (Time.realtimeSinceStartup - delayStarted < Mathf.Max(0.5f, delay))
                 yield return null;
 
+            int temporalFrames=Mathf.Clamp(ReadInt("QFL_META_XR_SIMULATOR_TEMPORAL_FRAMES",0),0,30);
+            bool ambientWindows=ReadBool("QFL_META_XR_SIMULATOR_AMBIENT_WINDOWS",false);
+            for(int frame=0;frame<temporalFrames;frame++)
+            {
+                yield return new WaitForEndOfFrame();
+                Camera tracked=rig.TrackedCamera;
+                for(int eye=0;eye<2;eye++)
+                {
+                    var side=(Camera.StereoscopicEye)eye;
+                    var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side),tracked.GetStereoProjectionMatrix(side),1440,1440);
+                    File.WriteAllBytes(Path.Combine(_outputDirectory,$"temporal_{frame:00}_{side}.png"),texture.EncodeToPNG());
+                    Object.Destroy(texture);
+                }
+                if(ambientWindows)
+                {
+                    // Separate QA eye cameras simulate seated window views. Never
+                    // rotate or write the OpenXR-owned tracked camera or XR rig.
+                    foreach(float yaw in new[]{-45f,75f})
+                    {
+                        var center=tracked.transform.position;
+                        var turn=Matrix4x4.Translate(center)*Matrix4x4.Rotate(Quaternion.AngleAxis(yaw,Vector3.up))*Matrix4x4.Translate(-center);
+                        for(int eye=0;eye<2;eye++)
+                        {
+                            var side=(Camera.StereoscopicEye)eye;
+                            var view=tracked.GetStereoViewMatrix(side)*turn.inverse;
+                            var texture=RenderEye(tracked,view,tracked.GetStereoProjectionMatrix(side),1440,1440);
+                            File.WriteAllBytes(Path.Combine(_outputDirectory,$"window_{yaw}_{frame:00}_{side}.png"),texture.EncodeToPNG());
+                            Object.Destroy(texture);
+                        }
+                    }
+                }
+                WriteAmbientWitness(rig,$"ambient_{frame:00}.json");
+                yield return new WaitForSeconds(1);
+            }
             yield return new WaitForEndOfFrame();
             Capture(productRoot, rig, definition);
+        }
+
+        [Serializable] private class AmbientWitness {public AmbientWitnessRow[] actors;}
+        [Serializable] private class AmbientWitnessRow {public string id,phase;public Vector3 position,leftViewport,rightViewport;public float distance;public bool suppressed;public int activeRenderers,lod,runwayOwner,groundOwner;public Vector3 velocity;public string blocked;}
+
+        private void WriteAmbientWitness(AircraftReferenceFrameRig rig,string filename)
+        {
+            var trafficWitness=Object.FindFirstObjectByType<AmbientTrafficDirector>();
+            if(trafficWitness!=null)
+            {
+                var rows=new AmbientWitnessRow[trafficWitness.actors.Length];
+                for(int i=0;i<rows.Length;i++)
+                {
+                    var a=trafficWitness.actors[i];
+                    rows[i]=new AmbientWitnessRow{id=a.aircraftId,phase=a.sailplane?a.SoaringPhase.ToString():a.Phase.ToString(),position=a.Position,
+                        distance=Vector3.Distance(a.Position,rig.TrackedCamera.transform.position),suppressed=a.Suppressed,
+                        lod=a.SelectedLod,velocity=a.Velocity,blocked=a.BlockingReason,runwayOwner=trafficWitness.RunwayOwner,groundOwner=trafficWitness.GroundMovementOwner,
+                        leftViewport=rig.TrackedCamera.WorldToViewportPoint(a.Position,Camera.MonoOrStereoscopicEye.Left),
+                        rightViewport=rig.TrackedCamera.WorldToViewportPoint(a.Position,Camera.MonoOrStereoscopicEye.Right),
+                        activeRenderers=a.renderers.Count(r=>r.enabled&&r.gameObject.activeInHierarchy)};
+                }
+                File.WriteAllText(Path.Combine(_outputDirectory,filename),JsonUtility.ToJson(new AmbientWitness{actors=rows},true));
+            }
         }
 
         private void Capture(
@@ -243,6 +348,7 @@ namespace QuestFlightLab.Runtime
                 if (right != null) Object.Destroy(right);
             }
 
+            WriteAmbientWitness(rig,"ambient_witness.json");
             PopulateArchitectureAndEnvironmentChecks(report, productRoot, rig);
             PopulateMountainCheck(report);
             PopulateUiAndDebugChecks(report, productRoot, rig);

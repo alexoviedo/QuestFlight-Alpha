@@ -1,4 +1,5 @@
 using QuestFlightLab.Runtime;
+using QuestFlight.Product;
 using QuestFlightLab.Training.FlightLessonV1;
 using UnityEngine;
 
@@ -98,6 +99,8 @@ namespace QuestFlightLab.Input
         private float _manualThrottleOwnedUntil;
         private bool _trimManuallyOwned;
         private bool _flapsManuallyOwned;
+        private ProductFlightModeCoordinator _touchFlightMode;
+        private bool _touchRudderArmed;
 
         public bool CanAcceptTouchOverrides =>
             enabled &&
@@ -432,11 +435,14 @@ namespace QuestFlightLab.Input
                 return;
             }
             _throttle = Mathf.Clamp01(defaultThrottle);
+            _touchFlightMode = FindFirstObjectByType<ProductFlightModeCoordinator>();
             CaptureBaseControls(Current);
         }
 
         private void OnDisable()
         {
+            _touchRudderArmed = false;
+            Current.rudder = 0f;
             ReleaseTouchOverridesOwnedBy(_touchYoke.ownerToken);
             ReleaseTouchOverridesOwnedBy(_touchThrottle.ownerToken);
             ReleaseTouchOverridesOwnedBy(_touchMixture.ownerToken);
@@ -456,6 +462,7 @@ namespace QuestFlightLab.Input
 
             if (_flightLessonInputSuppressed)
             {
+                _touchRudderArmed = false;
                 PublishSuppressedControls();
                 _previousButtonWest = snapshot.buttonWest;
                 _previousButtonNorth = snapshot.buttonNorth;
@@ -510,6 +517,19 @@ namespace QuestFlightLab.Input
             if (pause) Paused = !Paused;
 
             MapSnapshotInto(snapshot, invertElevator, _throttle, _trim, _flaps, _mixture, _carbHeat, Current);
+            bool touchRudderAvailable = !useDeterministic && !_flightLessonGuidanceActive && !Paused &&
+                Application.isFocused && OVRManager.hasInputFocus &&
+                _touchFlightMode != null &&
+                _touchFlightMode.State == ProductFlightModeCoordinator.FlightModeState.FreeFlight &&
+                _touchFlightMode.AuthoredSeatCalibration != null &&
+                !_touchFlightMode.AuthoredSeatCalibration.IsOpen &&
+                OVRInput.IsControllerConnected(OVRInput.Controller.RTouch) &&
+                OVRInput.GetControllerOrientationTracked(OVRInput.Controller.RTouch);
+            float touchRudderX = touchRudderAvailable
+                ? OVRInput.Get(OVRInput.RawAxis2D.RThumbstick, OVRInput.Controller.RTouch).x
+                : 0f;
+            Current.rudder = ResolveTouchThumbstickRudder(
+                Current.rudder, touchRudderX, touchRudderAvailable, ref _touchRudderArmed);
             if (_flightLessonGuidanceActive)
                 ApplyFlightLessonGuidance(snapshot, Time.unscaledTime, Time.unscaledDeltaTime, Current);
             CaptureBaseControls(Current);
@@ -521,6 +541,38 @@ namespace QuestFlightLab.Input
             _previousButtonNorth = snapshot.buttonNorth;
             _previousButtonEast = snapshot.buttonEast;
             _previousStartButton = snapshot.startButton;
+        }
+
+        /// <summary>
+        /// Right Touch stick temporarily owns rudder while deflected. Centering
+        /// restores the existing source. Require neutral after UI/focus/tracking
+        /// loss so an input held during menu navigation cannot steer the aircraft.
+        /// </summary>
+        public static float ResolveTouchThumbstickRudder(
+            float baseRudder, float stickX, bool available, ref bool armed)
+        {
+            const float deadzone = 0.12f;
+            if (!available || !IsFinite(stickX))
+            {
+                armed = false;
+                return baseRudder;
+            }
+            float magnitude = Mathf.Abs(stickX);
+            if (magnitude <= deadzone)
+            {
+                armed = true;
+                return baseRudder;
+            }
+            return armed ? Mathf.Sign(stickX) * Mathf.Clamp01((magnitude - deadzone) / (1f - deadzone)) : baseRudder;
+        }
+
+        private void OnApplicationFocus(bool focused)
+        {
+            if (!focused)
+            {
+                _touchRudderArmed = false;
+                Current.rudder = 0f;
+            }
         }
 
         public bool ConsumeResetRequest()

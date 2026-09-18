@@ -148,7 +148,7 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
-        private const string MeshCompilerVersion = "valmont-source-outline-compiler-v16-20260907";
+        private const string MeshCompilerVersion = "terrain-grounded-shell-compiler-v17-20260917";
         private const string FacadeContractVersion = "boulder-semantic-facades-v2";
         private const int MaximumSelectedTriangleCeiling = 235000;
         private const int AuthoredMaximumSelectedTriangles = 235000;
@@ -764,11 +764,19 @@ namespace QuestFlight.Editor
             }
         }
 
+        [Serializable] private sealed class GroundingAuditRow
+        {
+            public int id; public string source; public float sourceBase, compiledBase, height, minimumTerrain, maximumTerrain;
+        }
+        [Serializable] private sealed class GroundingAudit { public List<GroundingAuditRow> buildings = new List<GroundingAuditRow>(); }
+        private static GroundingAudit groundingAudit;
+
         private static void RebuildMeshAssets(Database database)
         {
             ProductionTerrainSurfaceAsset terrain = LoadRequired<ProductionTerrainSurfaceAsset>(TerrainSurfacePath);
             HashSet<int> exclusions = LoadValidatedSemanticTowerExclusions(database);
             RoofAllocation roofAllocation = BuildRoofAllocation(database, exclusions);
+            groundingAudit = new GroundingAudit();
             string absolute = Absolute(GeneratedRoot);
             Directory.CreateDirectory(absolute);
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
@@ -794,6 +802,9 @@ namespace QuestFlight.Editor
             }
             EditorUtility.ClearProgressBar();
             AssetDatabase.SaveAssets();
+            string auditPath = System.Environment.GetEnvironmentVariable("QFL_BUILDING_GROUNDING_AUDIT");
+            if (!string.IsNullOrEmpty(auditPath)) File.WriteAllText(auditPath, JsonUtility.ToJson(groundingAudit, true));
+            groundingAudit = null;
             WriteCompilationReport(database, roofAllocation, exclusions);
             WriteRoofTopologyReport(roofAllocation.report);
         }
@@ -1253,7 +1264,14 @@ namespace QuestFlight.Editor
                 useProperRoof = false;
             }
             if (SignedArea(polygon) < 0f) Array.Reverse(polygon);
-            float baseY = building.base_y_dm * 0.1f;
+            float baseY = ResolveTerrainGroundedBase(terrain, polygon, building.base_y_dm * 0.1f, building.height_dm * 0.1f);
+            if (groundingAudit != null)
+            {
+                float[] ground = polygon.Select(p => { TrySampleTerrainAtMapEdge(terrain, p, out var t); return t.heightMeters; }).ToArray();
+                groundingAudit.buildings.Add(new GroundingAuditRow { id = building.id, source = building.source_id,
+                    sourceBase = building.base_y_dm * 0.1f, compiledBase = baseY, height = building.height_dm * 0.1f,
+                    minimumTerrain = ground.Min(), maximumTerrain = ground.Max() });
+            }
             float wallTop = baseY + building.height_dm * 0.1f;
             float roofRise = building.roof_rise_dm * 0.1f;
             Color32 tint = BuildingTint(building);
@@ -1341,6 +1359,43 @@ namespace QuestFlight.Editor
                 // Polygon triangulation is CCW in X/Z; reverse for an upward Unity normal.
                 AddTriangle(builder, roof[a], roof[c], roof[b], roofCell, roofParameters, tint, true);
             }
+        }
+
+        // Compile against the exact rendered surface, including transition patches.
+        // GIS absolute elevations are evidence, not permission to extrude a pedestal
+        // hundreds of metres down to a simplified mountain surface. Roofs stay level,
+        // source above-ground heights and footprint topology remain unchanged.
+        public static float ResolveTerrainGroundedBase(ProductionTerrainSurfaceAsset terrain,
+            Vector2[] polygon, float sourceBase, float buildingHeight)
+        {
+            var heights = new List<float>();
+            Vector2 center = Vector2.zero;
+            foreach (Vector2 point in polygon) center += point;
+            center /= polygon.Length;
+            void Sample(Vector2 point)
+            {
+                if (!TrySampleTerrainAtMapEdge(terrain, point, out ProductionTerrainSample sample))
+                    throw new InvalidOperationException($"Missing building grounding terrain at {point}.");
+                heights.Add(sample.heightMeters);
+            }
+            Sample(center);
+            for (int i = 0; i < polygon.Length; i++)
+            {
+                Vector2 a = polygon[i], b = polygon[(i + 1) % polygon.Length];
+                int steps = Mathf.Clamp(Mathf.CeilToInt(Vector2.Distance(a, b) / 5f), 1, 256);
+                for (int step = 0; step < steps; step++) Sample(Vector2.Lerp(a, b, step / (float)steps));
+            }
+            heights.Sort();
+            float median = (heights[(heights.Count - 1) / 2] + heights[heights.Count / 2]) * 0.5f;
+            // Allow ordinary foundations, but no tall downhill pedestal. Where possible,
+            // keep even the highest sampled terrain below the eave by at least 0.5 m.
+            float lower = Mathf.Max(median - 1.5f, heights[heights.Count - 1] - buildingHeight + 0.5f);
+            float upper = Mathf.Min(median + 1.5f, heights[0] + Mathf.Max(2f, buildingHeight * 0.5f));
+            // On a footprint steeper than the whole building, a bounded pedestal
+            // and a clear level roof cannot both be achieved without changing terrain.
+            // Use the lowest level datum that keeps the eave clear, never bury the roof.
+            if (lower > upper) return Mathf.Max(median, heights[heights.Count - 1] - buildingHeight + 0.5f);
+            return Mathf.Clamp(sourceBase, lower, upper);
         }
 
         private static float TerrainSealedFoundationHeight(ProductionTerrainSurfaceAsset terrain,
@@ -1788,10 +1843,21 @@ namespace QuestFlight.Editor
             return new WatertightMetrics(terrainSealed, roofSealed, 0f, 0f);
         }
 
-        private static void BuildBundles(Database database)
+        public static void ExportWindowsBuildingPreviewBatch()
         {
-            string streaming = Absolute(StreamingRoot);
-            if (Directory.Exists(streaming)) Directory.Delete(streaming, true);
+            string destination = System.Environment.GetEnvironmentVariable("QFL_BUILDING_WINDOWS_PREVIEW");
+            if (string.IsNullOrWhiteSpace(destination) || !Path.IsPathRooted(destination) ||
+                Path.GetFullPath(destination).StartsWith(Path.GetFullPath(Application.dataPath), StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Windows development bundles require an external absolute output directory.");
+            BuildBundles(LoadDatabase(), destination, BuildTarget.StandaloneWindows64);
+        }
+
+        private static void BuildBundles(Database database, string externalOutput = null, BuildTarget target = BuildTarget.Android)
+        {
+            string streaming = externalOutput ?? Absolute(StreamingRoot);
+            // Only the known generated Android cache may be cleared. External preview
+            // outputs are overwritten by BuildPipeline without recursive deletion.
+            if (externalOutput == null && Directory.Exists(streaming)) Directory.Delete(streaming, true);
             Directory.CreateDirectory(streaming);
             List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
             for (int regionRow = 0; regionRow < Mathf.CeilToInt(database.rows / (float)BundleRegionCells); regionRow++)
@@ -1809,7 +1875,7 @@ namespace QuestFlight.Editor
                 });
             }
             AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(streaming, builds.ToArray(),
-                BuildAssetBundleOptions.ChunkBasedCompression | BuildAssetBundleOptions.StrictMode, BuildTarget.Android);
+                BuildAssetBundleOptions.ChunkBasedCompression | BuildAssetBundleOptions.StrictMode, target);
             if (manifest == null) throw new InvalidOperationException("Building AssetBundle compilation failed.");
             BundleRecord[] records = builds.Select(build =>
             {
@@ -2031,8 +2097,10 @@ namespace QuestFlight.Editor
             byte[] semanticTowerAuthority = File.ReadAllBytes(
                 Absolute(SemanticTowerAuthorityManifest.AssetPath));
             byte[] compiler = System.Text.Encoding.UTF8.GetBytes(MeshCompilerVersion);
+            byte[] terrain = File.ReadAllBytes(Absolute(TerrainSurfacePath));
             sha.TransformBlock(database, 0, database.Length, null, 0);
             sha.TransformBlock(semanticTowerAuthority, 0, semanticTowerAuthority.Length, null, 0);
+            sha.TransformBlock(terrain, 0, terrain.Length, null, 0);
             sha.TransformFinalBlock(compiler, 0, compiler.Length);
             return BitConverter.ToString(sha.Hash).Replace("-", "").ToLowerInvariant();
         }

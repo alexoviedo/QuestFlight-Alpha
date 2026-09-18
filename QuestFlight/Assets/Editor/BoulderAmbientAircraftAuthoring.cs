@@ -53,14 +53,16 @@ namespace QuestFlightLab.Editor
                 {
                     var go = new GameObject(kinds[i] + "_" + i); go.transform.SetParent(root.transform, false);
                     var a = go.AddComponent<AmbientAircraftActor>(); director.actors[i] = a;
+                    a.paintAccent=i==2?new Color(.38f,.08f,.055f,1):new Color(.11f,.23f,.32f,1);
                     a.aircraftId = go.name; a.sailplane = i >= 3; a.taildragger = i == 1;
                     a.mountainSoaring = i == 4;
                     a.spanMeters = a.sailplane ? 15 : 11; a.bodyRadius = a.spanMeters * .55f;
                     a.wheelHeight = i == 1 ? 1.24f : 1.325f;
-                    a.initialDelay = i == 0 ? 12 : i == 1 ? 75 : 150;
-                    // The first useful encounter is nearby apron motion, rather than a tiny distant aircraft.
-                    a.initialSegment = 0;
-                    a.soaringCenter = i == 3 ? new Vector3(1700, 550, 2600) : new Vector3(-5500, Ground(-5500, 1800) + 240, 1800);
+                    a.initialDelay = i == 0 ? 12 : i == 1 ? 12 : 82;
+                    // One existing C172 begins airborne on the north circuit. No additional population.
+                    a.initialSegment = i == 0 ? 7 : 0;
+                    a.initialAlongFraction = 0;
+                    a.soaringCenter = i == 3 ? new Vector3(1700, 550, 2600) : new Vector3(-6150, Ground(-6150, 1600) + 150, 1600);
                     a.soaringRadius = i == 3 ? 90 : 160;
                     a.initialOrbitAngle = i; a.airspeed = 25;
                     BuildModel(a, kinds[i], mat);
@@ -155,19 +157,14 @@ namespace QuestFlightLab.Editor
         {
             var coordinator=root.GetComponentsInChildren<ProductFlightModeCoordinator>(true).SingleOrDefault();
             foreach (var b in root.GetComponentsInChildren<ProductFlightModeMenuButton>(true))
-                if (b.Action == ProductFlightModeMenuButton.MenuAction.Lessons || b.Action == ProductFlightModeMenuButton.MenuAction.Weather)
+                if (b.Action == ProductFlightModeMenuButton.MenuAction.Weather)
                 {
-                    var so = new SerializedObject(b); so.FindProperty("action").intValue = (int)ProductFlightModeMenuButton.MenuAction.Weather;
-                    so.ApplyModifiedPropertiesWithoutUndo(); PrefabUtility.RecordPrefabInstancePropertyModifications(b);
-                    foreach (var t in b.GetComponentsInChildren<TextMesh>(true))
+                    var so=new SerializedObject(b);so.FindProperty("action").intValue=(int)ProductFlightModeMenuButton.MenuAction.Lessons;
+                    so.ApplyModifiedPropertiesWithoutUndo();PrefabUtility.RecordPrefabInstancePropertyModifications(b);
+                    foreach(var t in b.GetComponentsInChildren<TextMesh>(true))
                     {
-                        t.text = t.text.Replace("FLIGHT LESSONS", "WEATHER").Replace("COMING NEXT", "CALM / FOOTHILL SOARING");
-                        if(t.text.Contains("CALM") && coordinator!=null)
-                        {
-                            t.text="CALM";
-                            var weather=new SerializedObject(coordinator);weather.FindProperty("weatherMenuLabel").objectReferenceValue=t;
-                            weather.ApplyModifiedPropertiesWithoutUndo();PrefabUtility.RecordPrefabInstancePropertyModifications(coordinator);
-                        }
+                        if(t.text.Contains("WIND") || t.text.Contains("CALM"))t.text="COMING NEXT";
+                        else t.text=t.text.Replace("WEATHER","FLIGHT LESSONS");
                         PrefabUtility.RecordPrefabInstancePropertyModifications(t);
                     }
                 }
@@ -184,16 +181,32 @@ namespace QuestFlightLab.Editor
         {
             var p = Asset<BoulderWindFieldProfile>(WindPath, ScriptableObject.CreateInstance<BoulderWindFieldProfile>);
             p.legacyThermal = AssetDatabase.LoadAssetAtPath<ThermalFieldProfile>(GoldenEagleThermalAuthoring.ProfilePath);
-            p.groundHeights = new float[p.width * p.height]; p.ridgeResponse = new float[p.groundHeights.Length];
+            p.windTransitionHeight=200;
+            int cells = p.width * p.height;
+            p.groundHeights = new float[cells]; p.ridgeResponse = new float[cells];
+            p.gradientEast = new float[cells]; p.gradientNorth = new float[cells];
+            p.exposureSectors = new float[cells * 8]; p.ridgeRelief = new float[cells];
             for (int z = 0; z < p.height; z++) for (int x = 0; x < p.width; x++)
             {
                 float e = p.minimumEnu.x + x * p.spacingMeters, n = p.minimumEnu.y + z * p.spacingMeters;
-                int i = z * p.width + x; p.groundHeights[i] = Ground(e, n);
-                // An easterly air mass climbs west-facing travel slopes: -dh/de is positive on windward foothills.
-                float slope = (Ground(e - 150, n) - Ground(e + 150, n)) / 300;
-                float upstream = Mathf.Max(Ground(e + 300, n), Ground(e + 600, n));
-                float shelter = Mathf.Lerp(1, .25f, Mathf.Clamp01((upstream - p.groundHeights[i]) / 150));
-                p.ridgeResponse[i] = Mathf.Clamp(slope * shelter, -.55f, .55f);
+                int i = z * p.width + x; float ground = Ground(e,n); p.groundHeights[i] = ground;
+                p.gradientEast[i] = Mathf.Clamp((Ground(e+150,n)-Ground(e-150,n))/300, -3,3);
+                p.gradientNorth[i] = Mathf.Clamp((Ground(e,n+150)-Ground(e,n-150))/300, -3,3);
+                float min = ground, max = ground;
+                for (int sector=0;sector<8;sector++)
+                {
+                    Vector2 travel = new Vector2(Mathf.Cos(sector*Mathf.PI/4),Mathf.Sin(sector*Mathf.PI/4));
+                    float upstream = ground;
+                    for (int k=1;k<=4;k++)
+                    {
+                        float h=Ground(e-travel.x*k*300,n-travel.y*k*300);
+                        min=Mathf.Min(min,h);max=Mathf.Max(max,h);
+                        if(k<=2)upstream=Mathf.Max(upstream,h);
+                    }
+                    p.exposureSectors[sector*cells+i]=Mathf.Lerp(1,.25f,Mathf.Clamp01((upstream-ground)/150));
+                }
+                p.ridgeRelief[i]=max-min;
+                p.ridgeResponse[i]=-p.gradientEast[i]*p.exposureSectors[4*cells+i];
             }
             p.foothillThermals = new[] { new BoulderWindFieldProfile.Thermal {
                 centerEnu = new Vector2(-5200, 1800), groundHeight = Ground(-5200,1800), radius = 240, topAgl = 1400, updraft = 3 } };
@@ -301,7 +314,14 @@ namespace QuestFlightLab.Editor
             Add(AmbientFlightPhase.Takeoff,true,true,3,32,0,G(-120*sign,-30));
             float rotationY=G(-120*sign,-30).y;
             Add(AmbientFlightPhase.Climb,false,true,32,40,0,R(-110,rotationY+.01f,-30),R(-90,rotationY+.4f,-30),R(-40,rotationY+3,-30),R(50,12,-30),R(150,25,-30),R(720,110,-30));
-            Add(AmbientFlightPhase.Circuit,false,false,40,43,0,R(780,118.5f,-30),R(1050,156,-25),R(1850,270,25),R(1700,308,900),R(-2400,260,900),R(-2900,180,700),R(-2900,140,-30),R(-2250,95,-30));
+            float pattern=(float)(6300*.3048-GeodeticReference.Kbdu.altitudeMslMeters);
+            // Keep the established north-side pattern below Jay Road. Maintain
+            // published MSL height until abeam the landing end, rather than a
+            // descending downwind. The 26 western crosswind is authored separately.
+            if(direction==8)
+                Add(AmbientFlightPhase.Circuit,false,false,40,43,0,R(780,118.5f,-30),R(1050,156,-30),R(2200,pattern,25),R(2050,pattern,900),R(-650,pattern,900),R(-1600,245,900),R(-1900,180,650),R(-1900,105,-30),R(-1200,48,-30));
+            else
+                Add(AmbientFlightPhase.Circuit,false,false,40,43,0,new Vector3(-780,118.5f,-30),new Vector3(-1050,160,-30),new Vector3(-1450,pattern,25),new Vector3(-1650,pattern,900),new Vector3(650,pattern,900),new Vector3(1600,245,900),new Vector3(2050,180,650),new Vector3(2050,105,-30),new Vector3(1650,85,-30));
             Add(AmbientFlightPhase.Approach,false,true,35,30,0,R(-900,24,-30));
             float touchdownY=G(-470*sign,-30).y;
             Add(AmbientFlightPhase.Landing,false,true,30,25,0,R(-670,10.5f,-30),R(-540,3,-30),R(-500,touchdownY+.5f,-30),R(-480,touchdownY+.05f,-30),G(-470*sign,-30));
@@ -309,6 +329,24 @@ namespace QuestFlightLab.Editor
             Add(AmbientFlightPhase.Rollout,true,true,25,3,0,G(exitX,-30),G(exitX,-91),G(exitX-30,-91));
             Add(AmbientFlightPhase.TaxiIn,true,false,3,.25f,0,G(-420,-91),G(-420,-121),G(standX,-121),G(standX,-159));
             Add(AmbientFlightPhase.Shutdown,true,false,0,0,8);
+            foreach(var segment in segments)
+            {
+                if(segment.phase==AmbientFlightPhase.TaxiOut)
+                {
+                    segment.sharedTaxiStart=0;
+                    int clear=Array.FindIndex(segment.points,p=>p.z>-105 && (direction==8 ? p.x<-445 : p.x>-390));
+                    if(clear<0)throw new InvalidOperationException("Taxi-out connector clearance missing");
+                    segment.sharedTaxiEnd=direction==26?segment.Length:segment.distance[clear];
+                }
+                if(segment.phase==AmbientFlightPhase.TaxiIn)
+                {
+                    // Inbound and outbound travel west together on taxiway A for 08.
+                    // Only the opposing apron lane/connector needs serialization.
+                    int entry=direction==8?Array.FindIndex(segment.points,p=>p.x<-350):0;
+                    segment.sharedTaxiStart=segment.distance[Mathf.Max(0,entry)];
+                    segment.sharedTaxiEnd=segment.Length;
+                }
+            }
             route.segments=segments.ToArray(); if(!route.IsValid(out string error))throw new InvalidOperationException(error);
             EditorUtility.SetDirty(route); return route;
         }

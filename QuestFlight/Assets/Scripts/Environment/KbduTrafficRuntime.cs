@@ -68,6 +68,8 @@ namespace QuestFlightLab.Environment
             public float y;
             public float z;
             public float yaw_degrees;
+            public float pitch_degrees;
+            public float roll_degrees;
         }
 
         [Serializable]
@@ -1003,7 +1005,7 @@ namespace QuestFlightLab.Environment
                         new Vector3(vehicle.x, vehicle.y, vehicle.z);
                     Matrix4x4 matrix = Matrix4x4.TRS(
                         position,
-                        Quaternion.Euler(0f, vehicle.yaw_degrees, 0f),
+                        Quaternion.Euler(vehicle.pitch_degrees, vehicle.yaw_degrees, vehicle.roll_degrees),
                         Vector3.one);
                     ConsiderVisible(
                         camera,

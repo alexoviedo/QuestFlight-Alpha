@@ -6272,6 +6272,8 @@ MonoBehaviour:
   sparseVolumetricField: 1
   singleContinuousField: 1
   temporalReprojection: 0
+  windField: {fileID: 0}
+  windAuthority: {fileID: 0}
 --- !u!1 &5816459443892209966
 GameObject:
   m_ObjectHideFlags: 0
@@ -7086,8 +7088,8 @@ MonoBehaviour:
   - {fileID: 5647493251231481069}
   - {fileID: 8853359896272806083}
   - {fileID: 4934532480890289504}
-  bakedRendererCount: 71
-  bakedSelectedTriangleCount: 629487
+  bakedRendererCount: 72
+  bakedSelectedTriangleCount: 652145
   bakedMaterialCount: 13
   bakedVegetationRendererCount: 7
   bakedVegetationTriangleCount: 60768
@@ -7676,7 +7678,7 @@ MonoBehaviour:
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
   bakedRendererCount: 72
-  bakedTriangleCount: 640067
+  bakedTriangleCount: 652145
   bakedMaterialCount: 13
   bakedTextureCount: 28
   bakeUtc: 2026-09-03T00:00:00.0000000Z

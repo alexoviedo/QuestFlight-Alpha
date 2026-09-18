@@ -1,0 +1,34 @@
+{
+    "corridors": 32770,
+    "laneCount": 68068,
+    "samples": 1080344,
+    "nearTriangles": 104078,
+    "parkedCount": 24347,
+    "bankBytes": 23014234,
+    "maximumBakeProbeError": 0.011999130249023438,
+    "maximumRejectedProbeError": 4.327823638916016,
+    "worstProbePosition": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "unresolvedCorridors": [
+        "canonical:cdot_ramps:1844:0:0:0",
+        "canonical:city_street_centerlines:5218:0:0:0",
+        "canonical:city_street_centerlines:6474:0:0:0",
+        "canonical:city_street_centerlines:703:0:0:0",
+        "canonical:county_street_centerlines:93735741:0:0:0",
+        "canonical:osm_bounded_roads:way/106343361:0:0:0",
+        "canonical:osm_bounded_roads:way/17015262:0:0:0",
+        "canonical:osm_bounded_roads:way/41994767:0:0:0"
+    ],
+    "authoritySha256": "4c429ae9502fd268081d592de3fdb696806ae54d02927ccf31832676df0d1436",
+    "nearRoadSha256": "9481277f2ce2b6b87b6feac72425d06908914e5ba67ff89d5e6887ae76f1d9c8",
+    "outerRoadSha256": "fcb0c72d08bab8323673b0dea6be8554e42ab26c8da65c1678dc696ac8241d7d",
+    "bankSha256": "661fb2c8c4f14899d1c227eda98867a6a0d4494a2c89240a995a2fac061104fb",
+    "groundQuerySha256": "2ecea7ef92d8fd2df0107230733fe54af4abe003c404b46245c5fd61930ccb52",
+    "sourceManifestSha256": "e45e9fb4284780a643fc54f20a7da1ff25754174376bb6cb24cef9e3c4205209",
+    "nearMeshSha256": "1977c3c42179b20087078cd07eb684e55f9990ec5495150b966135fd5255175e",
+    "license": "Project-authored derivative of existing USGS public-domain terrain and OSM ODbL road data; source records retained in existing manifests.",
+    "limitation": "Contact/lane correction; full intersection scheduling and footprint coverage require separate validation."
+}

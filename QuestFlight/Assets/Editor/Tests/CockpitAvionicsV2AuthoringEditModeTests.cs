@@ -7,6 +7,11 @@ namespace QuestFlight.Editor.Tests
     public sealed class CockpitAvionicsV2AuthoringEditModeTests
     {
         [Test]
+        public void CurrentProduct_RemovesLegacyDigitsAndLowestPinkScreen()
+        {
+            CockpitDepthOwnershipEditorContract.ValidateProductPrefab();
+        }
+        [Test]
         public void CurrentProduct_AuditsPhysicalAperturesWithoutClaimingDmeOrAudio()
         {
             CockpitAvionicsV2Authoring.AuditReport report =
@@ -51,12 +56,12 @@ namespace QuestFlight.Editor.Tests
                 CockpitAvionicsV2EditorContract.ValidateLayout(
                     layout, out string error),
                 Is.True, error);
-            // The accepted depth repair adds 140 nonoverlapping black background quads.
+            // 140 live-screen backgrounds plus one blank unsupported lower display.
             Assert.That(layout.CombinedGlyphMesh.subMeshCount, Is.EqualTo(1));
             Assert.That(
                 layout.CombinedGlyphMesh.vertexCount,
                 Is.EqualTo(
-                    (CockpitAvionicsV2PresentationAuthoring.ExpectedGlyphSlots + 140) * 4));
+                    (CockpitAvionicsV2PresentationAuthoring.ExpectedGlyphSlots + 141) * 4));
             Assert.That(
                 layout.GlyphSlots.Length,
                 Is.EqualTo(

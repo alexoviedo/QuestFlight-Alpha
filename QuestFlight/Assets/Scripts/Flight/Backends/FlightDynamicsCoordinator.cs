@@ -29,19 +29,10 @@ namespace QuestFlightLab.Flight.Backends
         public ProductionTerrainSurfaceAsset terrainSurface;
         [Tooltip("Shared authored thermal supplied to the native JSBSim air-mass input.")]
         public ThermalFieldProfile thermalField;
-        [Tooltip("Serialized shared atmosphere. Calm retains the accepted thermal exactly.")]
+        [Tooltip("Required shared atmosphere, independent of flight mode.")]
         public BoulderWindFieldProfile windField;
-        [SerializeField] private BoulderWeatherPreset weatherPreset;
-        public BoulderWeatherPreset WeatherPreset => weatherPreset;
+        public BoulderWeatherPreset WeatherPreset => BoulderWeatherPreset.FoothillSoaring;
         public Vector3 LastWindUnityMetersPerSecond { get; private set; }
-
-        public bool SelectWeatherBeforeFlight(BoulderWeatherPreset preset)
-        {
-            if (Time.timeScale > 0 || windField == null || !windField.IsValid(out _) ||
-                (preset != BoulderWeatherPreset.Calm && preset != BoulderWeatherPreset.FoothillSoaring)) return false;
-            weatherPreset = preset;
-            return true;
-        }
 
         [Header("Authored initial conditions")]
         public FlightDynamicsInitialConditionProvider initialConditionProvider;
@@ -101,7 +92,7 @@ namespace QuestFlightLab.Flight.Backends
                 return false;
             }
             error = null;
-            if ((windField == null && weatherPreset != BoulderWeatherPreset.Calm) ||
+            if ((windField == null) ||
                 (windField != null && (!windField.IsValid(out error) || windField.legacyThermal != thermalField)))
             {
                 error = "Invalid shared wind field or duplicate thermal source: " + error;
@@ -242,8 +233,13 @@ namespace QuestFlightLab.Flight.Backends
 
         private bool ResetToInitialConditions(in FlightDynamicsInitialConditions initialConditions)
         {
+            if (!SetInitialAtmosphere(_backend, initialConditions, out string windError)) return Fail(windError);
             if (!_backend.Reset(initialConditions))
                 return Fail(_backend.LastError);
+            LastWindUnityMetersPerSecond = windField.Sample(_backend.CurrentState.positionUnityMeters, _backend.CurrentState.simulationTimeSeconds);
+            if (!BoulderWindFieldProfile.Finite(LastWindUnityMetersPerSecond) || LastWindUnityMetersPerSecond.sqrMagnitude > 900)
+                return Fail("Invalid reset atmosphere.");
+            _backend.SetAtmosphere(AtmosphereFromWind(LastWindUnityMetersPerSecond));
             LastResetInitialConditions = initialConditions;
             ApplyControls(NeutralIdleControls);
             _currentState = _backend.CurrentState;
@@ -273,6 +269,19 @@ namespace QuestFlightLab.Flight.Backends
         private static bool IsFinite(double value) =>
             !double.IsNaN(value) && !double.IsInfinity(value);
 
+        private bool SetInitialAtmosphere(IFlightDynamicsBackend backend, in FlightDynamicsInitialConditions initial, out string error)
+        {
+            error = null;
+            if (windField == null) { error = "Missing shared atmosphere."; return false; }
+            Vector3 at = FlightFrameConversions.GeodeticToUnity(initial.latitudeDegrees, initial.longitudeDegrees,
+                initial.altitudeMslMeters, GeodeticReference.Kbdu);
+            Vector3 wind = windField.Sample(at, 0);
+            if (!BoulderWindFieldProfile.Finite(wind) || wind.sqrMagnitude > 900)
+            { error = "Invalid initial shared atmosphere."; return false; }
+            backend.SetAtmosphere(AtmosphereFromWind(wind));
+            return true;
+        }
+
         private bool TryInitializeBackend(
             IFlightDynamicsBackend candidate,
             FlightDynamicsBackendContext context,
@@ -284,12 +293,17 @@ namespace QuestFlightLab.Flight.Backends
                 error = candidate.LastError;
                 return false;
             }
-            candidate.SetAtmosphere(FlightDynamicsAtmosphere.Calm);
+            if (!SetInitialAtmosphere(candidate, initialConditions, out error)) return false;
             if (!candidate.Reset(initialConditions))
             {
                 error = candidate.LastError;
                 return false;
             }
+            Vector3 initialWind = windField.Sample(candidate.CurrentState.positionUnityMeters, candidate.CurrentState.simulationTimeSeconds);
+            if (!BoulderWindFieldProfile.Finite(initialWind) || initialWind.sqrMagnitude > 900)
+            { error = "Invalid initial shared atmosphere."; return false; }
+            candidate.SetAtmosphere(AtmosphereFromWind(initialWind));
+            LastWindUnityMetersPerSecond = initialWind;
             candidate.SetControls(NeutralIdleControls);
             _backend = candidate;
             LastResetInitialConditions = initialConditions;
@@ -332,9 +346,7 @@ namespace QuestFlightLab.Flight.Backends
         {
             if (_backend == null || !_backend.IsInitialized) return false;
             _previousState = _currentState;
-            LastWindUnityMetersPerSecond = windField != null
-                ? windField.Sample(_currentState.positionUnityMeters, _currentState.simulationTimeSeconds, weatherPreset)
-                : new Vector3(0, thermalField.SampleUpdraftMetersPerSecond(_currentState.positionUnityMeters), 0);
+            LastWindUnityMetersPerSecond = windField.Sample(_currentState.positionUnityMeters, _currentState.simulationTimeSeconds);
             if (!BoulderWindFieldProfile.Finite(LastWindUnityMetersPerSecond) ||
                 LastWindUnityMetersPerSecond.sqrMagnitude > 900)
                 return Fail("Shared wind field returned invalid or out-of-envelope air velocity.");

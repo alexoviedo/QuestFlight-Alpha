@@ -19,10 +19,14 @@ namespace QuestFlightLab.Environment
         public float spanMeters = 11, bodyRadius = 7, wheelHeight = 1.3f, initialDelay;
         public float taildraggerRestOffset;
         public int initialSegment;
+        [Range(0,1)] public float initialAlongFraction;
         public Vector3 soaringCenter;
         public float soaringRadius = 175, airspeed = 27, initialOrbitAngle;
         public Color tint = Color.white;
+        public Color paintAccent = new Color(.11f,.23f,.32f,1);
 
+        public string BlockingReason { get; internal set; } = "";
+        public int SelectedLod => Lod;
         public Vector3 Position { get; internal set; }
         public int Generation { get; private set; }
         public Vector3 Velocity { get; internal set; }
@@ -33,35 +37,42 @@ namespace QuestFlightLab.Environment
         public int SegmentIndex { get; internal set; }
         internal float Along, Dwell, Speed, OrbitAngle, EscapeTime;
         internal float EscapeVerticalSpeed;
+        internal bool EscapeSpeedInitialized;
         internal bool Escaping, Started, Retired;
         internal Vector3 EscapeDirection;
         internal Vector3 AirHeading, PriorAirHeading;
         internal float RidgeDirection = 1;
+        internal float SoaringDecisionTime, RidgeTurnTime, LiftLossTime;
+        internal Vector3 SoaringDesired;
+        public int RidgeTurns { get; internal set; }
+        public float LastSink { get; internal set; }
         internal int Lod = -1;
         internal Quaternion attitude = Quaternion.identity;
+        private static readonly int AccentId = Shader.PropertyToID("_PaintAccent");
         private static readonly int TintId = Shader.PropertyToID("_Tint");
 
         public void Initialize(int direction, bool returning = false)
         {
-            Generation++;
+            Generation++; BlockingReason="";
             Velocity=Vector3.zero;
             Route = direction == 26 ? runway26 : runway08;
             SegmentIndex = Route == null || returning ? 0 : Mathf.Clamp(initialSegment, 0, Route.segments.Length - 1);
-            Along = 0; Dwell = initialDelay; Speed = 0; OrbitAngle = initialOrbitAngle;
-            Escaping = false; Suppressed = false; Started = false; Retired = false; EscapeTime = 0;
+            Along = Route == null || returning ? 0 : Route.segments[SegmentIndex].Length * initialAlongFraction; Dwell = initialDelay; Speed = 0; OrbitAngle = initialOrbitAngle;
+            Escaping = false; Suppressed = false; Started = false; Retired = false; EscapeTime = 0; EscapeSpeedInitialized=false;
             AirHeading = new Vector3(-Mathf.Sin(OrbitAngle),0,Mathf.Cos(OrbitAngle)); PriorAirHeading=AirHeading;
-            SoaringPhase=AmbientSoaringPhase.Thermal; RidgeDirection=1;
+            SoaringPhase=AmbientSoaringPhase.Glide; RidgeDirection=1;
+            SoaringDecisionTime=RidgeTurnTime=LiftLossTime=0; RidgeTurns=0; SoaringDesired=AirHeading;
             attitude=Quaternion.Euler(taildragger ? -10 : 0,0,0);
             if (sailplane) Position = soaringCenter + new Vector3(Mathf.Cos(OrbitAngle), 0, Mathf.Sin(OrbitAngle)) * soaringRadius;
-            else if (Route != null) Position = Route.segments[SegmentIndex].points[0];
+            else if (Route != null) Position = Route.segments[SegmentIndex].Position(Along, out _);
             if(!sailplane && Route!=null && !Route.segments[SegmentIndex].onGround)
             {
                 Speed=Route.segments[SegmentIndex].startSpeed;Dwell=0;
-                Route.segments[SegmentIndex].Position(0,out var forward);Velocity=forward*Speed;
+                Route.segments[SegmentIndex].Position(Along,out var forward);Velocity=forward*Speed;
                 attitude=Quaternion.LookRotation(forward);PriorAirHeading=new Vector3(forward.x,0,forward.z).normalized;
             }
             transform.position = Position;
-            var properties = new MaterialPropertyBlock(); properties.SetColor(TintId, tint);
+            var properties = new MaterialPropertyBlock(); properties.SetColor(TintId, tint); properties.SetColor(AccentId,paintAccent);
             foreach (Renderer r in renderers) if (r != null) r.SetPropertyBlock(properties);
         }
 
@@ -70,7 +81,7 @@ namespace QuestFlightLab.Environment
             foreach (Renderer r in renderers) if (r != null) r.enabled = visible;
         }
 
-        internal void Present(float dt, Vector3 wind, Vector3 observer)
+        internal void Present(float dt, Vector3 wind, Vector3 observer, Camera camera = null)
         {
             if (!Suppressed && Velocity.sqrMagnitude > 0.01f)
             {
@@ -88,8 +99,21 @@ namespace QuestFlightLab.Environment
             transform.SetPositionAndRotation(Position, attitude);
             if(visual!=null && visual!=transform)visual.localPosition=Vector3.up*(OnGround && taildragger ? Mathf.Lerp(taildraggerRestOffset,0,Speed/20) : 0);
             float distance = Mathf.Max(1, Vector3.Distance(observer, Position));
+            float projectionScale=1;
+            if(camera!=null)
+            {
+                distance=Mathf.Max(1,Vector3.Distance(camera.transform.position,Position));
+                if(camera.stereoEnabled)
+                {
+                    var left=camera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
+                    var right=camera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right);
+                    projectionScale=Mathf.Max(Mathf.Abs(left.m00),Mathf.Abs(right.m00));
+                    distance=Mathf.Max(1,distance-.04f);
+                }
+                else projectionScale=Mathf.Abs(camera.projectionMatrix.m00);
+            }
             // Span-based angular size keeps thin sailplanes from disappearing on height-only LOD.
-            float angular = spanMeters / distance;
+            float angular = spanMeters / distance * Mathf.Max(1,projectionScale);
             int next = angular > (Lod == 0 ? 0.024f : 0.029f) ? 0 : angular > (Lod <= 1 ? 0.005f : 0.006f) ? 1 : 2;
             if (next != Lod)
             {
@@ -97,9 +121,9 @@ namespace QuestFlightLab.Environment
                 for (int i = 0; i < lodRoots.Length; i++) if (lodRoots[i] != null) lodRoots[i].SetActive(i == Lod);
             }
             float rpm = sailplane || Phase == AmbientFlightPhase.Parked ? 0 : Phase == AmbientFlightPhase.Starting ? 600 : Phase == AmbientFlightPhase.Shutdown ? 200 : OnGround ? 850 : 2200;
-            foreach (Transform p in propellers) if (p != null) p.Rotate(Vector3.forward, rpm * 6 * dt, Space.Self);
+            foreach (Transform p in propellers) if (p != null && p.gameObject.activeInHierarchy) p.Rotate(Vector3.forward, rpm * 6 * dt, Space.Self);
             float flap = Phase == AmbientFlightPhase.Approach || Phase == AmbientFlightPhase.Landing || Phase == AmbientFlightPhase.Rollout ? 25 : Phase == AmbientFlightPhase.Takeoff ? 10 : 0;
-            foreach (Transform f in flaps) if (f != null) f.localRotation = Quaternion.RotateTowards(f.localRotation, Quaternion.Euler(-flap, 0, 0), 15 * dt);
+            foreach (Transform f in flaps) if (f != null && f.gameObject.activeInHierarchy) f.localRotation = Quaternion.RotateTowards(f.localRotation, Quaternion.Euler(-flap, 0, 0), 15 * dt);
             SetVisible(!Suppressed);
         }
     }

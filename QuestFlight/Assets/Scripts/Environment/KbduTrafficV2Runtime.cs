@@ -31,7 +31,7 @@ namespace QuestFlightLab.Environment
         public const string ExpectedAcceptedSourceSha =
             "fda11a25eb526824d82a47330f2be80b1410bb64";
         public const string ExpectedGradeSeparatedRoadAuthoritySha256 =
-            "e06ee50d3de7f404489ceb4c2e48dc988e68a549ec8bc1a44726eee7d8da0d84";
+            "bbd37c19025418e506bd92f0d1b2d14f3f54446aff219d00d4bf82c216c3aba3";
         public const int DrawMeshInstancedLimit = 1023;
         public const int MaximumInstancesPerGroup = 2048;
         public const int MaximumDrawCalls = 18;
@@ -108,6 +108,7 @@ namespace QuestFlightLab.Environment
             [NonSerialized] public int stableHash;
             [NonSerialized] public Stream[] streams;
             [NonSerialized] public Bounds conservativeBounds;
+            [NonSerialized] public int authoredIndex;
         }
 
         private sealed class Stream
@@ -129,6 +130,9 @@ namespace QuestFlightLab.Environment
         [SerializeField] private KbduTrafficRuntime acceptedVehicleAssets;
         [SerializeField] private ProductionTerrainSurfaceAsset terrainSurface;
         [SerializeField] private TextAsset gradeSeparatedRoadAuthority;
+        [SerializeField] private TextAsset laneSurfaceBank;
+        [SerializeField] private Vector4[] vehicleContactGeometry = Array.Empty<Vector4>();
+        private TrafficLaneSurfaceBank authoredLaneSurfaces;
         [SerializeField] private bool deterministicGlobalClock = true;
         [SerializeField] private bool perVehicleGameObjects;
         [SerializeField] private bool realtimeVehicleShadows;
@@ -484,6 +488,7 @@ namespace QuestFlightLab.Environment
                     continue;
                 }
                 int pointCount = corridor?.points_xz_meters?.Length / 2 ?? 0;
+                corridor.authoredIndex = index;
                 corridor.stableHash = StableHash(corridor.corridor_id);
                 corridor.cumulativeMeters = new float[pointCount];
                 for (int point = 1; point < pointCount; point++)
@@ -497,6 +502,8 @@ namespace QuestFlightLab.Environment
                         Mathf.Sqrt(deltaX * deltaX + deltaZ * deltaZ);
                 }
             }
+            if (laneSurfaceBank != null)
+                authoredLaneSurfaces = new TrafficLaneSurfaceBank(laneSurfaceBank, parsedManifest.corridors.Length, ExpectedManifestSha256);
             BuildContinuousStreams();
             BuildConservativeCorridorBounds();
             foreach (Tile tile in parsedManifest.tiles)
@@ -592,8 +599,9 @@ namespace QuestFlightLab.Environment
                     Corridor from = corridors[fromPort / 2], to = corridors[toPort / 2];
                     // Existing deck authority is route-specific; a 2D endpoint
                     // alone cannot prove the adjoining route uses the same deck.
-                    if (roadAuthority == null || roadAuthority.HasRouteProfile(from.corridor_id) ||
-                        roadAuthority.HasRouteProfile(to.corridor_id)) continue;
+                    if (roadAuthority == null || (authoredLaneSurfaces == null &&
+                        (roadAuthority.HasRouteProfile(from.corridor_id) ||
+                         roadAuthority.HasRouteProfile(to.corridor_id)))) continue;
                     if (!DirectionIsEnabled(from, fromDirection) || !DirectionIsEnabled(to, toDirection) ||
                         from.headway_seconds != to.headway_seconds || from.speed_mps != to.speed_mps ||
                         from.lane_count != to.lane_count || from.direction_mode != to.direction_mode ||
@@ -602,6 +610,21 @@ namespace QuestFlightLab.Environment
                     // center at the shared endpoint without inventing a turn arc.
                     if (Vector2.Dot(EndpointHeading(from, fromDirection, true),
                             EndpointHeading(to, toDirection, false)) < 0.999f) continue;
+                    if(authoredLaneSurfaces!=null)
+                    {
+                        if(!authoredLaneSurfaces.HasCorridor(from.authoredIndex)||!authoredLaneSurfaces.HasCorridor(to.authoredIndex))continue;
+                        int fromLanes=authoredLaneSurfaces.LaneCount(from.authoredIndex,from.direction_mode=="BIDIRECTIONAL");
+                        int toLanes=authoredLaneSurfaces.LaneCount(to.authoredIndex,to.direction_mode=="BIDIRECTIONAL");
+                        if(fromLanes!=toLanes)continue;
+                        bool continuous=true;
+                        for(int lane=0;lane<fromLanes;lane++)
+                        {
+                            authoredLaneSurfaces.TrySample(from.authoredIndex,from.direction_mode=="BIDIRECTIONAL",fromDirection,lane,fromDirection==0?1:0,0,out var a,out _);
+                            authoredLaneSurfaces.TrySample(to.authoredIndex,to.direction_mode=="BIDIRECTIONAL",toDirection,lane,toDirection==0?0:1,0,out var b,out _);
+                            if(Vector3.Distance(a,b)>.02f){continuous=false;break;}
+                        }
+                        if(!continuous)continue;
+                    }
                     int fromId = fromPort / 2 * 2 + fromDirection, toId = toPort / 2 * 2 + toDirection;
                     next[fromId] = toId;
                     previous[toId] = fromId;
@@ -911,6 +934,32 @@ namespace QuestFlightLab.Environment
                 ? travelDistance
                 : corridor.length_meters - travelDistance;
             distance = Mathf.Clamp(distance, 0f, corridor.length_meters);
+            if (authoredLaneSurfaces != null && authoredLaneSurfaces.HasCorridor(corridor.authoredIndex))
+            {
+                bool twoWay = corridor.direction_mode == "BIDIRECTIONAL";
+                float fraction = distance / Mathf.Max(.001f, corridor.length_meters);
+                float half = roadAuthority.ContactHalfLengthMeters(archetype);
+                Vector4 geometry=vehicleContactGeometry.Length==KbduTrafficRuntime.ArchetypeCount
+                    ?vehicleContactGeometry[archetype]:new Vector4(half,-half,1,0);
+                float sign = direction == 0 ? 1f : -1f;
+                if (!authoredLaneSurfaces.TrySample(corridor.authoredIndex, twoWay, direction, laneIndex,
+                        fraction, 0, out Vector3 center, out Vector3 up) ||
+                    !authoredLaneSurfaces.TrySample(corridor.authoredIndex, twoWay, direction, laneIndex,
+                        fraction, geometry.x * sign, out Vector3 front, out _) ||
+                    !authoredLaneSurfaces.TrySample(corridor.authoredIndex, twoWay, direction, laneIndex,
+                        fraction, geometry.y * sign, out Vector3 rear, out _))
+                {
+                    position = default; rotation = Quaternion.identity; return false;
+                }
+                position = center;
+                float axleHeight=Mathf.LerpUnclamped(rear.y,front.y,-geometry.y/Mathf.Max(.001f,geometry.x-geometry.y));
+                position.y = Mathf.Max(center.y-geometry.w, axleHeight) + roadAuthority.ContactOffsetMeters(archetype);
+                Vector3 forward = (front - rear).normalized;
+                if (forward.sqrMagnitude < .5f) { rotation = Quaternion.identity; return false; }
+                up = Vector3.ProjectOnPlane(up, forward).normalized;
+                rotation = Quaternion.LookRotation(forward, up.sqrMagnitude > .5f ? up : Vector3.up);
+                return !visibilityCenter.HasValue || (position - visibilityCenter.Value).sqrMagnitude <= FarDistanceMeters * FarDistanceMeters;
+            }
             float[] cumulative = corridor.cumulativeMeters;
             int low = 0;
             int high = cumulative.Length - 1;
@@ -1147,10 +1196,12 @@ namespace QuestFlightLab.Environment
                 : string.Equals(corridor.direction_mode, "REVERSE", StringComparison.Ordinal);
         }
 
-        private static int SelectLane(Corridor corridor, long departure, int direction)
+        private int SelectLane(Corridor corridor, long departure, int direction)
         {
             int slots = Mathf.Max(1, corridor.lane_count /
                 (corridor.direction_mode == "BIDIRECTIONAL" ? 2 : 1));
+            if (authoredLaneSurfaces != null && authoredLaneSurfaces.HasCorridor(corridor.authoredIndex))
+                slots = authoredLaneSurfaces.LaneCount(corridor.authoredIndex, corridor.direction_mode == "BIDIRECTIONAL");
             // Departure identifies the vehicle. Its changing rank in the stream
             // must never change its lane when the next vehicle enters the road.
             Stream stream = corridor.streams[direction];

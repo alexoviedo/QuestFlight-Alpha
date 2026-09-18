@@ -31,6 +31,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: 8712b0de0c676fe0840fb2bc72cfa359, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ConiferTreeAtlas:
+        m_Texture: {fileID: 2800000, guid: f2f41c3b87793e340b2837cb7a4a0c1e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _FacadeAtlas:
         m_Texture: {fileID: 2800000, guid: 466ed3d39b9fd5847a79c6fbbc4d1818, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -57,6 +61,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _NearFoliageAtlas:
         m_Texture: {fileID: 2800000, guid: 20acc115e3da2c945b96ad78ee96fe51, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NeedleBranchAtlas:
+        m_Texture: {fileID: 2800000, guid: a6376390b72ee094cbd92bbe8fe9da9c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NeighborhoodFoliageAtlas:
@@ -95,11 +103,14 @@ Material:
     - _Cull: 0
     - _DiagnosticMode: 0
     - _FoliageCutoff: 0.3
+    - _GroveLeafResponse: 0
     - _ImpostorFrame: 0
     - _InstanceFade: 1
     - _SemanticMode: 1
     - _SideRoughness: 0.92
     - _TopRoughness: 0.88
+    - _TreePrototypeHeight: 1.2347747
+    - _TreeRealismEnabled: 1
     m_Colors:
     - _CanopyProductToSourceRow0: {r: 0.99960136, g: 0.0025375222, b: -3.0146167e-11, a: 0}
     - _CanopyProductToSourceRow1: {r: -0.0025375225, g: 0.99960136, b: 4.110161e-10, a: 0}

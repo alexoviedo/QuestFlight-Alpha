@@ -45,6 +45,7 @@ namespace QuestFlight.Editor
         public const int FirstAsciiCode = 32;
         public const int GlyphCount = 95;
         public const int ExpectedSourceApertures = 6;
+        public const int ExpectedPresentationApertures = 7; // Six live, one unpowered lower unit.
         public const int ExpectedGlyphSlots = 74;
         public const int EstimatedTextureBytes =
             AtlasColumns * CellPixels * AtlasRows * CellPixels * 4 * 4 / 3;
@@ -155,6 +156,15 @@ namespace QuestFlight.Editor
                 CockpitInstrumentV2EditorContract.ExpectedSourceSha256);
             EditorUtility.SetDirty(layout);
 
+            GameObject prefab = PrefabUtility.LoadPrefabContents(
+                CockpitDynamicsIntegrationAuthoring.AircraftPrefabPath);
+            try
+            {
+                var imported = CockpitDepthOwnershipEditorContract.ResolveSourceDisplayRenderer(prefab);
+                BuildNeutralizedSourceMeshAsset(imported.GetComponent<MeshFilter>().sharedMesh);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(prefab); }
+
             WriteManifest();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -175,12 +185,14 @@ namespace QuestFlight.Editor
                 "The imported static-display topology is unsupported.");
             var retained = new List<int>(triangles.Length - 36);
             int removed = 0;
+            var regions = ReadImportedScreenRegions(source);
             for (int triangle = 0; triangle < triangles.Length / 3; triangle++)
             {
                 int a = triangles[triangle * 3];
                 int b = triangles[triangle * 3 + 1];
                 int c = triangles[triangle * 3 + 2];
-                if (IsImportedApertureTriangle(vertices, uv, a, b, c))
+                if (regions.Exists(region => region.Contains(vertices[a]) &&
+                    region.Contains(vertices[b]) && region.Contains(vertices[c])))
                 {
                     removed++;
                     continue;
@@ -189,8 +201,8 @@ namespace QuestFlight.Editor
                 retained.Add(b);
                 retained.Add(c);
             }
-            Require(removed == CockpitAvionicsV2Authoring.ExpectedReadoutTriangles,
-                $"Expected to neutralize 12 source aperture triangles; found {removed}.");
+            Require(removed == 3918,
+                $"Frozen imported screen geometry changed: expected 3918 face/digit triangles, found {removed}.");
 
             Mesh generated = UnityEngine.Object.Instantiate(source);
             generated.name = "C172_StaticDisplayV2Neutralized";
@@ -210,6 +222,79 @@ namespace QuestFlight.Editor
             }
             EditorUtility.SetDirty(asset);
             return asset;
+        }
+
+        // The frozen model contains extruded legacy digits as well as screen quads.
+        // Removing just the twelve large faces leaves those digits competing with
+        // the live readouts. Test the complete thin aperture volume, not its UVs.
+        internal readonly struct ImportedScreenRegion
+        {
+            public readonly Bounds Bounds;
+            public readonly Plane Plane;
+            public ImportedScreenRegion(Vector3 a, Vector3 b, Vector3 c)
+            {
+                Bounds = new Bounds(a, Vector3.zero);
+                Bounds.Encapsulate(b); Bounds.Encapsulate(c);
+                Plane = new Plane(a, b, c);
+            }
+            public bool Contains(Vector3 p) =>
+                p.x >= Bounds.min.x - 0.000002f && p.x <= Bounds.max.x + 0.000002f &&
+                p.y >= Bounds.min.y - 0.000002f && p.y <= Bounds.max.y + 0.000002f &&
+                Mathf.Abs(Plane.GetDistanceToPoint(p)) < 0.002f;
+        }
+
+        internal static List<ImportedScreenRegion> ReadImportedScreenRegions(Mesh source)
+        {
+            var result = new List<ImportedScreenRegion>();
+            var v = source.vertices; var uv = source.uv; var t = source.triangles;
+            for (int i = 0; i < t.Length; i += 3)
+            {
+                int a = t[i], b = t[i + 1], c = t[i + 2];
+                bool lower = IsLowerInactiveScreen(v, uv, a, b, c);
+                if (lower || IsImportedApertureTriangle(v, uv, a, b, c))
+                    result.Add(new ImportedScreenRegion(v[a], v[b], v[c]));
+            }
+            Require(result.Count == 14, "Expected seven paired imported screen faces.");
+            return result;
+        }
+
+        private static bool IsLowerInactiveScreen(Vector3[] v, Vector2[] uv, int a, int b, int c)
+        {
+            Vector2 min = Vector2.Min(uv[a], Vector2.Min(uv[b], uv[c]));
+            Vector2 max = Vector2.Max(uv[a], Vector2.Max(uv[b], uv[c]));
+            float area = Vector3.Cross(v[b] - v[a], v[c] - v[a]).magnitude * 0.5f;
+            return area > 0.00044f && area < 0.00047f &&
+                min.x > 0.616f && min.x < 0.618f && max.x > 0.996f &&
+                min.y > 0.256f && min.y < 0.258f && max.y > 0.307f && max.y < 0.309f;
+        }
+
+        private static Aperture ReadLowerInactiveAperture()
+        {
+            GameObject prefab = PrefabUtility.LoadPrefabContents(
+                CockpitDynamicsIntegrationAuthoring.AircraftPrefabPath);
+            try
+            {
+                var renderer = CockpitDepthOwnershipEditorContract.ResolveSourceDisplayRenderer(prefab);
+                var mesh = renderer.GetComponent<MeshFilter>().sharedMesh;
+                var v = mesh.vertices; var uv = mesh.uv; var t = mesh.triangles;
+                var points = new List<Vector3>(); var coords = new List<Vector2>();
+                Matrix4x4 matrix = prefab.transform.Find("AircraftVisualRoot").worldToLocalMatrix *
+                    renderer.localToWorldMatrix;
+                for (int i = 0; i < t.Length; i += 3)
+                    if (IsLowerInactiveScreen(v, uv, t[i], t[i + 1], t[i + 2]))
+                        for (int j = 0; j < 3; j++)
+                        { points.Add(matrix.MultiplyPoint3x4(v[t[i + j]])); coords.Add(uv[t[i + j]]); }
+                Require(points.Count == 6, "Lower inactive display geometry changed.");
+                Vector2 min = coords[0], max = coords[0];
+                foreach (Vector2 coord in coords) { min = Vector2.Min(min, coord); max = Vector2.Max(max, coord); }
+                Vector3 bl = Corner(points.ToArray(), coords.ToArray(), 0, min.x, min.y);
+                Vector3 br = Corner(points.ToArray(), coords.ToArray(), 0, max.x, min.y);
+                Vector3 tl = Corner(points.ToArray(), coords.ToArray(), 0, min.x, max.y);
+                Vector3 tr = Corner(points.ToArray(), coords.ToArray(), 0, max.x, max.y);
+                Vector3 normal = ReadApertures(AssetDatabase.LoadAssetAtPath<Mesh>(SourceMeshPath))[2].Normal;
+                return new Aperture(bl, br, tl, tr, normal);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(prefab); }
         }
 
         public static bool IsImportedApertureTriangle(
@@ -324,6 +409,8 @@ namespace QuestFlight.Editor
                     vertices, normals, tangents, uv, apertureUv, ownership,
                     indices);
             }
+            AddBackgroundCells(ReadLowerInactiveAperture(), 6, new List<Rect>(),
+                vertices, normals, tangents, uv, apertureUv, ownership, indices);
             var mesh = new Mesh
             {
                 name = "C172_V2AvionicsGlyphs",
@@ -339,7 +426,7 @@ namespace QuestFlight.Editor
             mesh.SetUVs(1, apertureUv);
             mesh.SetUVs(2, ownership);
             mesh.SetTriangles(indices, 0, false);
-            mesh.bounds = source.bounds;
+            mesh.RecalculateBounds();
             slots = glyphSlots.ToArray();
             return mesh;
         }
@@ -493,6 +580,18 @@ namespace QuestFlight.Editor
         {
             float usableU = 1f - marginU * 2f;
             float usableV = 1f - marginV * 2f;
+            // The atlas has square cells with a 5:7 ink aspect. Preserve that
+            // physical aspect instead of stretching characters to each screen.
+            float width = Vector3.Distance(aperture.BottomLeft, aperture.BottomRight);
+            float height = Vector3.Distance(aperture.BottomLeft, aperture.TopLeft);
+            // Navigator dot-matrix text uses a moderately condensed face;
+            // radios retain the square-cell character proportions.
+            float aspect = apertureIndex == 0 ? .72f : 1f;
+            float cellSize = Mathf.Min(width * usableU / columns, height * usableV / rows * aspect);
+            usableU = cellSize * columns / width;
+            usableV = cellSize * rows / (height * aspect);
+            marginU = (1f - usableU) * 0.5f;
+            marginV = (1f - usableV) * 0.5f;
             for (int row = 0; row < rows; row++)
             for (int column = 0; column < columns; column++)
             {
@@ -652,7 +751,7 @@ namespace QuestFlight.Editor
                 anisoLevel = 1
             };
             Color32 black = new Color32(2, 5, 2, 255);
-            Color32 green = new Color32(118, 255, 82, 255);
+            Color32 green = new Color32(164, 218, 132, 255);
             Color32[] pixels = new Color32[width * height];
             for (int index = 0; index < pixels.Length; index++)
                 pixels[index] = black;

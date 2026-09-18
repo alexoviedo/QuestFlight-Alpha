@@ -32,7 +32,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SourceTex:
-        m_Texture: {fileID: -3112187905955043861, guid: d312be0fd0ba928458dd86cbe967956b, type: 3}
+        m_Texture: {fileID: 2800000, guid: cf8d9cd6b7fe88a47b6ceac5e7c23dca, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -44,9 +44,9 @@ Material:
     - _MagneticCompassHeadingDegrees: 330
     - _MagneticCompassWindowCenterDegrees: 135
     m_Colors:
-    - _AltitudeApertureUv: {r: 0.056334384, g: 0.29207444, b: 0.19499207, a: 0.3541956}
+    - _AltitudeApertureUv: {r: 0.056334384, g: 0.14603722, b: 0.19499207, a: 0.1770978}
     - _AltitudeDigits: {r: 5, g: 2, b: 8, a: 0}
-    - _AttitudePivot: {r: 0, g: 0, b: 0, a: 0}
+    - _AttitudePivot: {r: -0.02250458, g: -0.031147908, b: -0.074817024, a: 0}
     - _AttitudeRotation: {r: 0, g: 0, b: 0, a: 1}
     - _InstrumentToAircraftRow0: {r: 1, g: 0, b: 0, a: 0}
     - _InstrumentToAircraftRow1: {r: -0, g: -0.9961947, b: -0.08715622, a: 0}

@@ -17,15 +17,15 @@ MonoBehaviour:
   existingSourceMaterial: {fileID: 2100000, guid: 44a9bf5c91b1adc4d9ca8be8b315592b, type: 2}
   bindings:
   - label: IAS / KNOTS
-    sourceIdentity: Meter_01 face seed 2819
+    sourceIdentity: Meter_01 positively identified face seed 2819
     sourceTriangleSeed: 2819
-    firstVertex: 1005
-    vertexCount: 48
-    pivotLocal: {x: -0.004498316, y: -0.03165085, z: -0.071638905}
-    rotationAxisLocal: {x: 0, y: 0.08715622, z: -0.99619466}
+    firstVertex: 1581
+    vertexCount: 9
+    pivotLocal: {x: -0.031350326, y: -0.031690642, z: -0.07159761}
+    rotationAxisLocal: {x: -0, y: -0.08715622, z: 0.99619466}
     rotationFunction: 1
-    authoredRotationValue: 99.98916
-    rotationDegreesPerUnit: 1
+    authoredRotationValue: 90
+    rotationDegreesPerUnit: -1
     translationAxisLocal: {x: 0, y: 0, z: 0}
     translationFunction: 0
     authoredTranslationValue: 0
@@ -33,15 +33,15 @@ MonoBehaviour:
     absoluteRegistrationProven: 1
     magneticVariationContractProven: 0
   - label: Principal VERTICAL SPEED
-    sourceIdentity: Meter_01 face seed 2541
+    sourceIdentity: Meter_01 positively identified face seed 2541
     sourceTriangleSeed: 2541
-    firstVertex: 1053
-    vertexCount: 72
-    pivotLocal: {x: -0.004614267, y: -0.013257569, z: -0.068812504}
-    rotationAxisLocal: {x: 0, y: 0.08715622, z: -0.99619466}
+    firstVertex: 1590
+    vertexCount: 9
+    pivotLocal: {x: -0.013582392, y: -0.022604408, z: -0.070216045}
+    rotationAxisLocal: {x: -0, y: -0.08715622, z: 0.99619466}
     rotationFunction: 2
-    authoredRotationValue: 179.90086
-    rotationDegreesPerUnit: 1
+    authoredRotationValue: 90
+    rotationDegreesPerUnit: -1
     translationAxisLocal: {x: 0, y: 0, z: 0}
     translationFunction: 0
     authoredTranslationValue: 0
@@ -51,9 +51,9 @@ MonoBehaviour:
   - label: directional_gyro_card
     sourceIdentity: Meter_01 positively identified face seed 2891
     sourceTriangleSeed: 2891
-    firstVertex: 1125
+    firstVertex: 1599
     vertexCount: 45
-    pivotLocal: {x: -0.013582392, y: -0.022604408, z: -0.070216045}
+    pivotLocal: {x: -0.022562984, y: -0.02251694, z: -0.070251875}
     rotationAxisLocal: {x: -0, y: -0.08715622, z: 0.99619466}
     rotationFunction: 12
     authoredRotationValue: 0
@@ -67,7 +67,7 @@ MonoBehaviour:
   - label: altimeter_hundreds
     sourceIdentity: Meter_01 positively identified face seed 2713
     sourceTriangleSeed: 2713
-    firstVertex: 1170
+    firstVertex: 1644
     vertexCount: 9
     pivotLocal: {x: -0.013448985, y: -0.03188298, z: -0.07158219}
     rotationAxisLocal: {x: -0, y: -0.08715622, z: 0.99619466}
@@ -83,7 +83,7 @@ MonoBehaviour:
   - label: altimeter_thousands
     sourceIdentity: Meter_01 positively identified face seed 2713
     sourceTriangleSeed: 2713
-    firstVertex: 1179
+    firstVertex: 1653
     vertexCount: 9
     pivotLocal: {x: -0.013448985, y: -0.03188298, z: -0.07158219}
     rotationAxisLocal: {x: -0, y: -0.08715622, z: 0.99619466}
@@ -99,7 +99,7 @@ MonoBehaviour:
   - label: altimeter_ten_thousands
     sourceIdentity: Meter_01 positively identified face seed 2713
     sourceTriangleSeed: 2713
-    firstVertex: 1188
+    firstVertex: 1662
     vertexCount: 9
     pivotLocal: {x: -0.013448985, y: -0.03188298, z: -0.07158219}
     rotationAxisLocal: {x: -0, y: -0.08715622, z: 0.99619466}
@@ -115,7 +115,7 @@ MonoBehaviour:
   - label: altimeter_baro_setting
     sourceIdentity: Meter_01 positively identified face seed 2713
     sourceTriangleSeed: 2713
-    firstVertex: 1197
+    firstVertex: 1671
     vertexCount: 9
     pivotLocal: {x: -0.013448985, y: -0.03188298, z: -0.07158219}
     rotationAxisLocal: {x: -0, y: -0.08715622, z: 0.99619466}
@@ -131,7 +131,7 @@ MonoBehaviour:
   - label: actual_flap_position
     sourceIdentity: Meter_01 positively identified face seed 2759
     sourceTriangleSeed: 2759
-    firstVertex: 1206
+    firstVertex: 1680
     vertexCount: 9
     pivotLocal: {x: 0.02506545, y: -0.03193479, z: -0.0715369}
     rotationAxisLocal: {x: -0, y: -0.08715622, z: 0.99619466}
@@ -147,7 +147,7 @@ MonoBehaviour:
   - label: brake_pressure
     sourceIdentity: Meter_01 positively identified face seed 2906
     sourceTriangleSeed: 2906
-    firstVertex: 1215
+    firstVertex: 1689
     vertexCount: 9
     pivotLocal: {x: -0.03898813, y: -0.03073519, z: -0.07149625}
     rotationAxisLocal: {x: -0, y: -0.08715622, z: 0.99619466}
@@ -163,7 +163,7 @@ MonoBehaviour:
   - label: engine_rpm
     sourceIdentity: Meter_01 positively identified face seed 2621
     sourceTriangleSeed: 2621
-    firstVertex: 1224
+    firstVertex: 1698
     vertexCount: 9
     pivotLocal: {x: 0.034332804, y: -0.03187571, z: -0.07147956}
     rotationAxisLocal: {x: -0, y: -0.08715622, z: 0.99619466}
@@ -179,9 +179,9 @@ MonoBehaviour:
   - label: turn_coordinator_aircraft
     sourceIdentity: Meter_01 positively identified face seed 2667
     sourceTriangleSeed: 2667
-    firstVertex: 1233
+    firstVertex: 1707
     vertexCount: 12
-    pivotLocal: {x: -0.022562984, y: -0.02251694, z: -0.070251875}
+    pivotLocal: {x: -0.031361546, y: -0.022482667, z: -0.070285514}
     rotationAxisLocal: {x: -0, y: -0.08715622, z: 0.99619466}
     rotationFunction: 23
     authoredRotationValue: 0
@@ -195,9 +195,9 @@ MonoBehaviour:
   - label: slip_skid_ball
     sourceIdentity: Meter_01 positively identified face seed 2667
     sourceTriangleSeed: 2667
-    firstVertex: 1245
+    firstVertex: 1719
     vertexCount: 54
-    pivotLocal: {x: -0.022562984, y: -0.02251694, z: -0.070251875}
+    pivotLocal: {x: -0.031361546, y: -0.022482667, z: -0.070285514}
     rotationAxisLocal: {x: 0, y: 0, z: 0}
     rotationFunction: 0
     authoredRotationValue: 0
@@ -205,7 +205,7 @@ MonoBehaviour:
     translationAxisLocal: {x: 1, y: 0, z: 0}
     translationFunction: 24
     authoredTranslationValue: 0
-    translationMetersPerUnit: 0.0010530003
+    translationMetersPerUnit: 0.0010518266
     absoluteRegistrationProven: 1
     magneticVariationContractProven: 0
   altitudeDigitSlots: []
@@ -215,15 +215,15 @@ MonoBehaviour:
     sourceComponentSeeds: 460000000d020000b9020000810400004b050000
     sourceVertexCount: 998
     sourceTriangleCount: 1740
-    pivotLocal: {x: -0.03131947, y: -0.012531534, z: -0.072034195}
+    pivotLocal: {x: -0.02250458, y: -0.031147908, z: -0.074817024}
     pitchAxisLocal: {x: 1, y: 0, z: 0}
-    bankAxisLocal: {x: 0, y: 0.08715622, z: -0.99619466}
+    bankAxisLocal: {x: 0, y: 0.15209877, z: -0.9883653}
     sphereRadiusLocal: 0.0048047984
     sphereFitRmsLocal: 0.000019100498
   sourceTriangleCount: 6241
-  neutralizedTriangleCount: 3991
-  dynamicTriangleCount: 433
-  staticOverlayVertexCount: 1005
+  neutralizedTriangleCount: 2134
+  dynamicTriangleCount: 591
+  staticOverlayVertexCount: 1581
   opaqueOverlayCoversSourceApertures: 1
   sourceAssetGuid: d312be0fd0ba928458dd86cbe967956b
   sourceSha256: a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872

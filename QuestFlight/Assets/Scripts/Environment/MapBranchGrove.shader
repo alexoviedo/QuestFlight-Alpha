@@ -1,6 +1,6 @@
 Shader "QuestFlight/Map Branch Groves"
 {
-    Properties { _LeafAtlas("Existing branch artwork",2D)="white" {} _Cutoff("Leaf cutoff",Range(0,1))=.3 _Diagnostic("Visibility diagnostic",Float)=0 }
+    Properties { _LeafAtlas("Existing branch artwork",2D)="white" {} _NeedleBranchAtlas("CC0 needle branch sprays",2D)="white" {} _Cutoff("Leaf cutoff",Range(0,1))=.3 _Diagnostic("Visibility diagnostic",Float)=0 }
     SubShader
     {
         Tags { "Queue"="AlphaTest" "RenderType"="TransparentCutout" }
@@ -22,12 +22,12 @@ Shader "QuestFlight/Map Branch Groves"
             StructuredBuffer<Cell> _BranchCells;
             #endif
             void Setup() {}
-            sampler2D _LeafAtlas; half _Cutoff,_Diagnostic;
+            sampler2D _LeafAtlas,_NeedleBranchAtlas; half _Cutoff,_Diagnostic;
             int _BranchOffset;
             float4 _GroveViewPosition;
             float4 _GroveLodRanges;
             struct appdata {float4 vertex:POSITION;float2 uv:TEXCOORD0;float4 color:COLOR;UNITY_VERTEX_INPUT_INSTANCE_ID};
-            struct v2f {float4 pos:SV_POSITION;float2 uv:TEXCOORD0;half4 tint:TEXCOORD1;half3 light:TEXCOORD2;UNITY_FOG_COORDS(3) UNITY_VERTEX_OUTPUT_STEREO};
+            struct v2f {float4 pos:SV_POSITION;float2 uv:TEXCOORD0;half4 tint:TEXCOORD1;half3 light:TEXCOORD2;UNITY_FOG_COORDS(3) half family:TEXCOORD4; UNITY_VERTEX_OUTPUT_STEREO};
             v2f vert(appdata v)
             {
                 UNITY_SETUP_INSTANCE_ID(v);
@@ -40,8 +40,11 @@ Shader "QuestFlight/Map Branch Groves"
                 #endif
                 float3 p=v.vertex.xyz*c.tintRadius.w;
                 p.xz=float2(p.x*c.rotationFade.y+p.z*c.rotationFade.x,p.z*c.rotationFade.y-p.x*c.rotationFade.x);
+                o.family=floor(c.rotationFade.w/16);
                 float upper=max(c.positionHeight.w*.6,c.positionHeight.w-1.6);
-                p.y+=lerp(upper,c.positionHeight.w*.71,v.color.r);
+                // Heights now follow rounded/tapered crown profiles around real
+                // anchors. Lower branch masses fill depth without another layer.
+                p.y+=lerp(upper,c.positionHeight.w*(o.family>.5?.58:.62),v.color.r);
                 p+=c.positionHeight.xyz;
                 o.pos=mul(UNITY_MATRIX_VP,float4(p,1));
                 // Reuse branch patches at fixed scale, cropping only at edges.
@@ -64,7 +67,10 @@ Shader "QuestFlight/Map Branch Groves"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
                 clip(i.tint.a-.001);
-                half4 leaf=tex2D(_LeafAtlas,i.uv);clip(leaf.a-_Cutoff);
+                half4 leaf;
+                UNITY_BRANCH if(i.family>.5)leaf=tex2D(_NeedleBranchAtlas,i.uv);
+                else leaf=tex2D(_LeafAtlas,i.uv);
+                clip(leaf.a-_Cutoff);
                 half luminance=max(.035,dot(leaf.rgb,half3(.2126,.7152,.0722)));
                 half3 color=i.tint.rgb*(leaf.rgb/luminance)*clamp(luminance/.1271,.48,1.6)*.80*i.light;
                 half coverage=saturate((leaf.a-_Cutoff)/max(fwidth(leaf.a),.02)+.5)*i.tint.a;

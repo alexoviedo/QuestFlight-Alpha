@@ -80,10 +80,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.KbduTrafficV2Runtime
   trajectoryManifest: {fileID: 4900000, guid: 601139fd9d9d4eeea7e7d25a0948bd12, type: 3}
-  gradeSeparatedRoadAuthority: {fileID: 4900000, guid: e2c97f282a1798a409b2cee3675663a5, type: 3}
   sourceAndLicenseRecord: {fileID: 4900000, guid: 063566202d6e4c70b61ce1e32fb7fc79, type: 3}
   acceptedVehicleAssets: {fileID: 8832284638587171138}
   terrainSurface: {fileID: 11400000, guid: b2b2be77d482f4c4c8fb5ceb35614891, type: 2}
+  gradeSeparatedRoadAuthority: {fileID: 4900000, guid: e2c97f282a1798a409b2cee3675663a5, type: 3}
+  laneSurfaceBank: {fileID: 4900000, guid: 8c7086698dd898c4cbca9260d57658af, type: 3}
+  vehicleContactGeometry:
+  - {x: 1.5098021, y: -1.5525366, z: 0.73273695, w: 0.19398896}
+  - {x: 1.4090867, y: -1.5591402, z: 0.71663284, w: 0.20171274}
+  - {x: 1.5744113, y: -1.6756617, z: 0.7766525, w: 0.20341206}
+  - {x: 1.7819532, y: -1.9091542, z: 0.80901307, w: 0.2975178}
+  - {x: 1.7466607, y: -1.8972186, z: 0.77057827, w: 0.2891794}
+  - {x: 7.1599264, y: -6.4693246, z: 1.121131, w: 0.5178084}
   deterministicGlobalClock: 1
   perVehicleGameObjects: 0
   realtimeVehicleShadows: 0

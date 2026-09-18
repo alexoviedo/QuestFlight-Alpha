@@ -35,22 +35,22 @@ Material:
     m_Floats:
     - _DirectGlintStrength: 0.065
     - _FresnelOpacity: 0.11
-    - _InteriorReflectionStrength: 0.9
+    - _InteriorReflectionStrength: 0.48
     - _InteriorSkyLeak: 0.08
     - _PerceptualRoughness: 0.22
-    - _ReflectionStrength: 0.46
+    - _ReflectionStrength: 0.3
     - _SideAxisEnd: 0.82
     - _SideAxisStart: 0.52
-    - _SideWindowOpacity: 0.09
-    - _WindshieldOpacity: 0.075
+    - _SideWindowOpacity: 0.06
+    - _WindshieldOpacity: 0.045
     m_Colors:
     - _CockpitReflectionBoxMax: {r: 0.7002193, g: 1.4166205, b: 0.74844223, a: 0}
     - _CockpitReflectionBoxMin: {r: -0.70022, g: -0.42342335, b: -2.5413609, a: 0}
     - _CockpitReflectionCapturePosition: {r: -0.28, g: 0.94, b: -0.23, a: 0}
-    - _SideWindowTint: {r: 0.7, g: 0.82, b: 0.92, a: 1}
+    - _SideWindowTint: {r: 0.87, g: 0.92, b: 0.94, a: 1}
     - _WindowToAircraftRow0: {r: 0.011350489, g: 0, b: 0, a: 1.6130005e-13}
     - _WindowToAircraftRow1: {r: 0, g: -0.011307298, b: -0.000989266, a: 0.35486275}
     - _WindowToAircraftRow2: {r: 0, g: 0.000989266, b: -0.011307298, a: -0.44518113}
-    - _WindshieldTint: {r: 0.77, g: 0.86, b: 0.95, a: 1}
+    - _WindshieldTint: {r: 0.9, g: 0.93, b: 0.95, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

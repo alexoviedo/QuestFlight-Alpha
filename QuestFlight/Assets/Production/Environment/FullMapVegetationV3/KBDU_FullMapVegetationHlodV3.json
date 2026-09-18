@@ -28,7 +28,19 @@
     },
     "individual_order": "stable real-placement spatial hash with a bounded shrub reserve",
     "semantic_exclusion": "offline hard water-interior and verified athletic-playing-surface center rejection",
-    "grove_policy": "no aggregate grove geometry; grouped real placements form groves"
+    "grove_policy": "no aggregate grove geometry; grouped real placements form groves",
+    "tree_realism": {
+      "generator": "tools/full_map_vegetation/enrich_tree_realism.py",
+      "source_binary_sha256": "4efcf16d83133d3d41e4ee99f7b9706ce77b173bd62013fb00927f6a898fe9cf",
+      "grounding": "Current authored terrain surface samples including transition patches",
+      "seed_encoding": "low six bits stable seed; upper two bits visual family 0 broadleaf, 1 open pine, 2 tapered fir",
+      "family_record_counts": [
+        620623,
+        181830,
+        66055
+      ],
+      "accuracy": "Approximate habitat forms, not a species inventory"
+    }
   },
   "sources": {
     "v2_database": {
@@ -84,7 +96,7 @@
     "shrubs": 8694,
     "grove_hlods": 0,
     "binary_bytes": 16506300,
-    "binary_sha256": "4efcf16d83133d3d41e4ee99f7b9706ce77b173bd62013fb00927f6a898fe9cf",
+    "binary_sha256": "5ca2ce0d6f1c0191d24876e86aef06f0621decd0b67235e05ab1882e518dff31",
     "source_individuals": 901744,
     "retained_individuals": 868508,
     "semantic_rejections": {

@@ -39,6 +39,7 @@ namespace QuestFlightLab.Environment
             public int source_year_built;
             public string source_facility;
             public string source_feature_intersected;
+            public string lower_feature_kind;
             public string source_bridge;
             public string source_layer;
             public string source_tunnel;
@@ -264,13 +265,13 @@ namespace QuestFlightLab.Environment
                 int pointCount = profile?.samples_xyz_meters?.Length / 3 ?? 0;
                 if (profile == null || string.IsNullOrWhiteSpace(profile.span_id) ||
                     !ids.Add(profile.span_id) || profile.surface_width_meters <= 0f ||
-                    profile.minimum_clearance_meters <= 0f || profile.maximum_grade < 0f ||
+                    (profile.minimum_clearance_meters <= 0f && profile.lower_feature_kind != "railway") || profile.maximum_grade < 0f ||
                     profile.maximum_grade > 0.15f || pointCount < 2 ||
                     profile.samples_xyz_meters.Length != pointCount * 3 ||
                     profile.sample_normals_xyz == null ||
                     profile.sample_normals_xyz.Length != pointCount * 3 ||
                     profile.upper_route_ids == null || profile.upper_route_ids.Length == 0 ||
-                    profile.lower_route_ids == null || profile.lower_route_ids.Length == 0 ||
+                    profile.lower_route_ids == null || (profile.lower_route_ids.Length == 0 && profile.lower_feature_kind != "railway") ||
                     profile.bridge_interval_meters == null || profile.bridge_interval_meters.Length != 2)
                 {
                     report = "invalid profile " + profileIndex;

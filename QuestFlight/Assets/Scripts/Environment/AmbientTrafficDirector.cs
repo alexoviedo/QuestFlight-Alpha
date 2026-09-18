@@ -21,11 +21,15 @@ namespace QuestFlightLab.Environment
         public bool PlayerProtectsRunway { get; private set; }
         private int runwayOwner = -1;
         private int groundMovementOwner = -1;
-        private int airportMovementOwner = -1, lastAirportMovementOwner = 2;
+        private int lastGroundMovementOwner = 2;
+        public int GroundMovementOwner => groundMovementOwner;
         private bool initialized;
         private double lastTime;
         private float decisionCountdown;
         private double nextReturnTime;
+        private double nextDepartureSlot;
+        public bool logDiagnostics;
+        private double nextDiagnosticTime;
         private readonly Plane[] frustum = new Plane[6];
         private static readonly ProfilerMarker TickMarker = new ProfilerMarker("QuestFlight.AmbientTraffic");
 
@@ -39,6 +43,8 @@ namespace QuestFlightLab.Environment
             error = null;
             if (player == null || windField == null || terrain == null || pilotCamera == null || flightMode == null || actors.Length != 5)
                 error = "Missing serialized traffic references or invalid population.";
+            else if(windField!=player.windField || !windField.IsValid(out error))
+                error="Traffic must share the valid player atmosphere: "+error;
             else foreach (AmbientAircraftActor a in actors)
             {
                 if (a == null || a.visual == null || a.renderers.Length == 0 || a.lodRoots.Length != 3)
@@ -66,21 +72,26 @@ namespace QuestFlightLab.Environment
                 if (dt <= 0 || dt > .1f || !state.IsFinite) return;
                 if (!initialized || state.simulationTimeSeconds < lastTime)
                 {
-                    runwayOwner = -1; groundMovementOwner = -1; airportMovementOwner=-1;lastAirportMovementOwner=2;
+                    runwayOwner = -1; groundMovementOwner = -1; lastGroundMovementOwner=2;
+                    decisionCountdown=0; nextDepartureSlot=state.simulationTimeSeconds; EmergencySuppressions=0; nextDiagnosticTime=0;
                     Vector3 airportWind = windField.Sample(Vector3.zero, state.simulationTimeSeconds, weather);
                     int direction = airportWind.x > 1 ? 26 : 8;
                     foreach (var a in actors) a.Initialize(direction);
-                    for(int i=0;i<actors.Length;i++)if(!actors[i].sailplane && !actors[i].OnGround)airportMovementOwner=i;
                     initialized = true;
+                    Debug.Log($"[AmbientTraffic] Shared atmosphere active; actors={actors.Length}; runway={direction:00}; playerWind={windField.Sample(state.positionUnityMeters,state.simulationTimeSeconds)}");
                 }
                 lastTime = state.simulationTimeSeconds;
+                if(logDiagnostics && lastTime>=nextDiagnosticTime)
+                {
+                    nextDiagnosticTime=lastTime+10;
+                    foreach(var actor in actors)
+                        Debug.Log($"[AmbientTraffic] {actor.aircraftId} phase={(actor.sailplane?actor.SoaringPhase.ToString():actor.Phase.ToString())} distance={Vector3.Distance(actor.Position,state.positionUnityMeters):F0}m suppressed={actor.Suppressed} inView={IsPilotVisible(actor)} wind={windField.Sample(actor.Position,lastTime)}");
+                }
                 decisionCountdown -= dt;
                 bool decide = decisionCountdown <= 0;
                 if (decide) decisionCountdown = 0.1f;
                 PlayerProtectsRunway = ProtectsRunway(state.positionUnityMeters, state.velocityUnityMetersPerSecond, state.weightOnWheels);
-                if(airportMovementOwner<0)
-                    for(int offset=1;offset<=actors.Length;offset++)
-                    {int index=(lastAirportMovementOwner+offset)%actors.Length;if(!actors[index].sailplane && !actors[index].Suppressed && !actors[index].Escaping){airportMovementOwner=index;break;}}
+                if(decide) AllocateGroundMovement();
                 for (int i = 0; i < actors.Length; i++)
                 {
                     AmbientAircraftActor a = actors[i];
@@ -106,8 +117,6 @@ namespace QuestFlightLab.Environment
                             if (!actors[j].Suppressed && !actors[j].OnGround && PredictConflict(a.Position, a.Velocity,
                                 actors[j].Position, actors[j].Velocity, 30, 180, 60)) BeginEscape(a, actors[j].Position);
                     if (a.Escaping && runwayOwner == i && !ProtectsRunway(a.Position, a.Velocity, false)) runwayOwner = -1;
-                    if(a.Escaping && airportMovementOwner==i && !ProtectsRunway(a.Position,a.Velocity,false) && new Vector2(a.Position.x,a.Position.z).magnitude>1800)
-                    {airportMovementOwner=-1;lastAirportMovementOwner=i;}
                     if (a.Escaping) AdvanceEscape(a, wind, dt);
                     else if (a.sailplane) AdvanceSoaring(a, wind, dt, weather, state.simulationTimeSeconds);
                     else AdvancePowered(i, state, wind, dt);
@@ -124,38 +133,76 @@ namespace QuestFlightLab.Environment
                     if (a.Escaping && a.EscapeTime > 60 && Vector3.Distance(a.Position, state.positionUnityMeters) > 5000 && !IsPilotVisible(a) && !ProtectsRunway(a.Position,a.Velocity,false))
                     {
                         a.Retired = true; a.Suppressed = true; a.SetVisible(false); nextReturnTime=state.simulationTimeSeconds+30;
-                        if(airportMovementOwner==i){airportMovementOwner=-1;lastAirportMovementOwner=i;}
                         if(runwayOwner==i)runwayOwner=-1;
                     }
-                    a.Present(dt, wind, state.positionUnityMeters);
+                    a.Present(dt, wind, state.positionUnityMeters, pilotCamera);
                 }
             }
+        }
+
+        private static bool NeedsTaxiConnector(AmbientAircraftActor a)
+        {
+            if(a.sailplane || a.Suppressed || a.Escaping || !a.OnGround)return false;
+            var leg=a.Route.segments[a.SegmentIndex];
+            return leg.sharedTaxiStart>=0 && a.Along>=Mathf.Max(0,leg.sharedTaxiStart-30) && a.Along<leg.sharedTaxiEnd;
+        }
+
+        // Serialize the opposing apron/connector only. Same-direction aircraft
+        // may follow on taxiway A using the existing swept stopping envelopes.
+        private void AllocateGroundMovement()
+        {
+            if(groundMovementOwner>=0 && !NeedsTaxiConnector(actors[groundMovementOwner]))
+            {lastGroundMovementOwner=groundMovementOwner;groundMovementOwner=-1;}
+            if(groundMovementOwner>=0)return;
+            for(int i=0;i<actors.Length;i++)
+                if(NeedsTaxiConnector(actors[i]) && actors[i].Phase==AmbientFlightPhase.TaxiIn)
+                {groundMovementOwner=i;return;}
+            for(int offset=1;offset<=actors.Length;offset++)
+            {
+                int i=(lastGroundMovementOwner+offset)%actors.Length;
+                var a=actors[i];
+                if(!NeedsTaxiConnector(a) || a.Phase!=AmbientFlightPhase.TaxiOut || a.Dwell>0)continue;
+                // Runway 26 uses the same narrow taxiway in opposing directions.
+                // Do not send an outbound aircraft into an arriving aircraft's exit.
+                if(a.Route.runwayDirection==26 && (ArrivalDueWithin(420,i) ||
+                    (runwayOwner>=0 && actors[runwayOwner].Phase==AmbientFlightPhase.Rollout)))continue;
+                groundMovementOwner=i;return;
+            }
+        }
+
+        private bool ArrivalDueWithin(float seconds,int except)
+        {
+            for(int i=0;i<actors.Length;i++)
+            {
+                var other=actors[i];
+                if(i==except || other.sailplane || other.Suppressed || other.Escaping || other.OnGround)continue;
+                if(other.Phase==AmbientFlightPhase.Approach || other.Phase==AmbientFlightPhase.Landing)return true;
+                if(other.Phase==AmbientFlightPhase.Circuit)
+                {
+                    var segment=other.Route.segments[other.SegmentIndex];
+                    float eta=(segment.Length-other.Along)/Mathf.Max(15,other.Speed);
+                    if(eta<seconds)return true;
+                }
+            }
+            return false;
         }
 
         private void AdvancePowered(int index, FlightDynamicsState state, Vector3 wind, float dt)
         {
             AmbientAircraftActor a = actors[index];
             AmbientAircraftRoute.Segment s = a.Route.segments[a.SegmentIndex];
-            if(a.OnGround && airportMovementOwner!=index)
-            {
-                if(s.phase==AmbientFlightPhase.Shutdown){a.Dwell-=dt;if(a.Dwell<=0){a.SegmentIndex=0;a.Along=0;a.Dwell=a.Route.segments[0].dwellSeconds;a.Speed=0;}}
-                return;
-            }
-            if(s.phase==AmbientFlightPhase.Shutdown && airportMovementOwner==index)
-            {airportMovementOwner=-1;lastAirportMovementOwner=index;}
-            bool needsGroundRoute=s.phase==AmbientFlightPhase.TaxiOut || s.phase==AmbientFlightPhase.TaxiIn || s.phase==AmbientFlightPhase.Approach;
-            bool groundRouteBlocked=needsGroundRoute && groundMovementOwner!=-1 && groundMovementOwner!=index;
-            if(groundRouteBlocked && !s.onGround) { BeginEscape(a,state.positionUnityMeters); AdvanceEscape(a,wind,dt); return; }
-            if(needsGroundRoute && !groundRouteBlocked)groundMovementOwner=index;
-            if(groundMovementOwner==index && (s.phase==AmbientFlightPhase.HoldShort || s.phase==AmbientFlightPhase.Shutdown || s.phase==AmbientFlightPhase.Circuit))groundMovementOwner=-1;
+            bool groundRouteBlocked=NeedsTaxiConnector(a) && groundMovementOwner!=index;
+            a.BlockingReason=groundRouteBlocked ? "shared apron connector" : "";
             if (s.protectsRunway && runwayOwner != index)
             {
                 int airborne = 0;
                 foreach (var other in actors) if (!other.Suppressed && !other.OnGround) airborne++;
-                if (runwayOwner != -1 || PlayerProtectsRunway || (s.onGround && airborne >= 4))
+                bool opposingExitOccupied=!s.onGround && a.Route.runwayDirection==26 && groundMovementOwner>=0 &&
+                    actors[groundMovementOwner].Phase==AmbientFlightPhase.TaxiOut;
+                if (runwayOwner != -1 || PlayerProtectsRunway || opposingExitOccupied || (s.onGround && (airborne >= 4 || ArrivalDueWithin(85,index) || (s.phase==AmbientFlightPhase.LineUp && lastTime<nextDepartureSlot))))
                 {
                     if (!s.onGround) { BeginEscape(a, state.positionUnityMeters); AdvanceEscape(a,wind,dt); }
-                    else a.Speed = 0;
+                    else { a.Speed = 0; a.BlockingReason="runway protected"; }
                     return;
                 }
                 runwayOwner = index;
@@ -181,7 +228,7 @@ namespace QuestFlightLab.Environment
                     if (j != index && !actors[j].Suppressed && actors[j].OnGround)
                         blocked = SegmentNear(a.Position, ahead, actors[j].Position, a.bodyRadius + actors[j].bodyRadius + 3, 5);
             }
-            if (blocked) speed = 0;
+            if (blocked) { speed = 0; if(a.BlockingReason.Length==0)a.BlockingReason="player or ground traffic"; }
             a.Speed = Mathf.MoveTowards(a.Speed, speed, dt * (blocked ? 2.5f : s.onGround ? 1.8f : 2));
             float beforeAlong=a.Along;
             a.Along = Mathf.Min(s.Length, a.Along + a.Speed * dt);
@@ -190,6 +237,9 @@ namespace QuestFlightLab.Environment
             {
                 a.SegmentIndex = (a.SegmentIndex + 1) % a.Route.segments.Length;
                 a.Along = 0; a.Dwell = a.Route.segments[a.SegmentIndex].dwellSeconds;
+                if(a.Phase==AmbientFlightPhase.Takeoff) // Reserve roughly 160 seconds between departures including the
+                // authored 30-second line-up, enough for the full arrival/rollout.
+                nextDepartureSlot=lastTime+130;
                 float left=dt-(s.Length-beforeAlong)/Mathf.Max(.001f,a.Speed);
                 if(left>.00001f && a.Dwell<=0 && s.Length>.001f)AdvancePowered(index,state,wind,left);
             }
@@ -197,42 +247,58 @@ namespace QuestFlightLab.Environment
 
         private void AdvanceSoaring(AmbientAircraftActor a, Vector3 wind, float dt, BoulderWeatherPreset weather, double time)
         {
-            Vector3 center = a.soaringCenter;
-            if (a.mountainSoaring && weather==BoulderWeatherPreset.FoothillSoaring && windField.foothillThermals.Length>0)
+            var components=windField.SampleComponents(a.Position,time);
+            float nominalSink=.67f+Mathf.Pow((a.airspeed-27)/18,2);
+            a.SoaringDecisionTime-=dt;
+            a.RidgeTurnTime=Mathf.Max(0,a.RidgeTurnTime-dt);
+            if(a.SoaringDecisionTime<=0)
             {
-                var thermal=windField.foothillThermals[0];
-                float age=Mathf.Min(90,Mathf.Max(0,a.Position.y-thermal.groundHeight)/Mathf.Max(1,thermal.updraft));
-                center=new Vector3(thermal.centerEnu.x+wind.x*age,a.Position.y,thermal.centerEnu.y+wind.z*age);
+                a.SoaringDecisionTime=.2f;
+                var thermal=a.mountainSoaring && windField.foothillThermals.Length>0 ? windField.foothillThermals[0] : windField.AirportThermal;
+                Vector2 tc=BoulderWindFieldProfile.ThermalCenter(thermal,a.Position.y,new Vector2(components.background.x,components.background.z));
+                Vector3 center=new Vector3(tc.x,a.Position.y,tc.y);
+                Vector3 radial=a.Position-center;radial.y=0;
+                float threshold=a.SoaringPhase==AmbientSoaringPhase.Thermal ? nominalSink-.2f : nominalSink+.2f;
+                if(windField.thermalStrength>0 && components.thermal>threshold && radial.magnitude<thermal.radius)
+                {
+                    a.SoaringPhase=AmbientSoaringPhase.Thermal;
+                    Vector3 outward=radial.sqrMagnitude>1?radial.normalized:Vector3.right;
+                    a.SoaringDesired=Vector3.Cross(outward,Vector3.up)-outward*Mathf.Clamp((radial.magnitude-a.soaringRadius)/a.soaringRadius,-.8f,.8f);
+                }
+                else if(a.mountainSoaring && terrain.TrySample(a.Position.x,a.Position.z,out var ground) &&
+                    (components.terrain>nominalSink+.15f || (a.SoaringPhase==AmbientSoaringPhase.Ridge && a.LiftLossTime<20)))
+                {
+                    a.SoaringPhase=AmbientSoaringPhase.Ridge;
+                    Vector3 outward=new Vector3(ground.normal.x,0,ground.normal.z).normalized;
+                    if(outward.sqrMagnitude<.1f)outward=-new Vector3(components.background.x,0,components.background.z).normalized;
+                    Vector3 along=Vector3.Cross(outward,Vector3.up);
+                    if(along.z*a.RidgeDirection<0)along=-along;
+                    if(a.RidgeTurnTime<=0 && (a.Position.z-a.soaringCenter.z)*a.RidgeDirection>450)
+                    {a.RidgeDirection=-a.RidgeDirection;a.RidgeTurnTime=7;a.RidgeTurns++;}
+                    if(a.RidgeTurnTime>0) a.SoaringDesired=outward;
+                    else
+                    {
+                        // Select a nearby better lift strip, with terrain clearance checked at the candidate.
+                        float best=components.terrain;float offset=0;
+                        for(int k=-2;k<=2;k++)
+                        {
+                            Vector3 probe=a.Position+outward*(k*60);
+                            if(!terrain.TrySample(probe.x,probe.z,out var pg) || probe.y-pg.heightMeters<90)continue;
+                            float score=windField.SampleComponents(probe,time).terrain-Mathf.Abs(k)*.025f;
+                            if(score>best){best=score;offset=k*.25f;}
+                        }
+                        a.SoaringDesired=along+outward*offset;
+                    }
+                }
+                else
+                {
+                    a.SoaringPhase=AmbientSoaringPhase.Glide;
+                    // A nearby reachable thermal is a navigation target, not permission to invent lift.
+                    a.SoaringDesired=windField.thermalStrength>0 && radial.magnitude<1800 ? -radial : Vector3.right;
+                }
             }
-            Vector3 radial=a.Position-center;radial.y=0;
-            float distance=radial.magnitude;
-            Vector3 desired;
-            if (!a.mountainSoaring || (wind.y>.9f && distance<a.soaringRadius*2))
-            {
-                a.SoaringPhase=AmbientSoaringPhase.Thermal;
-                // Orbit the actual tilted thermal; correct radius without chasing a teleporting waypoint.
-                Vector3 outward=distance>1?radial/distance:Vector3.right;
-                desired=Vector3.Cross(outward,Vector3.up)-outward*Mathf.Clamp((distance-a.soaringRadius)/a.soaringRadius,-.8f,.8f);
-            }
-            else if (a.mountainSoaring && weather==BoulderWeatherPreset.FoothillSoaring &&
-                terrain.TrySample(a.Position.x,a.Position.z,out var ground) && a.Position.y-ground.heightMeters<400 && wind.y>.35f)
-            {
-                a.SoaringPhase=AmbientSoaringPhase.Ridge;
-                if(a.Position.z>a.soaringCenter.z+650)a.RidgeDirection=-1;
-                if(a.Position.z<a.soaringCenter.z-650)a.RidgeDirection=1;
-                desired=new Vector3(ground.normal.z,0,-ground.normal.x).normalized;
-                if(desired.z*a.RidgeDirection<0)desired=-desired;
-                // Follow the contour and favor the better sampled lift, never command an unpowered climb.
-                float east=windField.Sample(a.Position+Vector3.right*80,time,weather).y;
-                float west=windField.Sample(a.Position-Vector3.right*80,time,weather).y;
-                desired+=Vector3.right*Mathf.Clamp((east-west)*.3f,-.4f,.4f);
-            }
-            else
-            {
-                a.SoaringPhase=AmbientSoaringPhase.Glide;
-                desired=weather==BoulderWeatherPreset.FoothillSoaring?(center-a.Position):Vector3.right;
-                desired.y=0;
-            }
+            a.LiftLossTime=components.terrain<nominalSink-.15f?a.LiftLossTime+dt:0;
+            Vector3 desired=a.SoaringDesired;
             Vector3 horizontalWind=new Vector3(wind.x,0,wind.z);
             Vector3 target=(desired.normalized*a.airspeed-horizontalWind).normalized;
             float turnRate=9.81f*Mathf.Tan(30*Mathf.Deg2Rad)/a.airspeed;
@@ -240,10 +306,11 @@ namespace QuestFlightLab.Environment
             float bank=Mathf.Atan2(Vector3.Angle(a.AirHeading,heading)*Mathf.Deg2Rad*a.airspeed/Mathf.Max(dt,.001f),9.81f);
             a.AirHeading=heading;
             float sink=(.67f+Mathf.Pow((a.airspeed-27)/18,2))/Mathf.Pow(Mathf.Max(.7f,Mathf.Cos(bank)),1.5f);
+            a.LastSink=sink;
             a.Position += (heading*a.airspeed+horizontalWind+Vector3.up*(wind.y-sink))*dt;
             a.Speed = a.airspeed;
-            Vector3 ahead=a.Position+heading*1000;
-            bool low=terrain.TrySample(ahead.x,ahead.z,out var aheadGround) && a.Position.y-aheadGround.heightMeters<180;
+            Vector3 ahead=a.Position+heading*200;
+            bool low=terrain.TrySample(ahead.x,ahead.z,out var aheadGround) && a.Position.y-aheadGround.heightMeters<75;
             if (low || a.Position.y < a.soaringCenter.y - 180 || a.Position.y > a.soaringCenter.y + 400)
                 BeginEscape(a, a.soaringCenter + Vector3.left * 1000);
         }
@@ -251,20 +318,21 @@ namespace QuestFlightLab.Environment
         private void BeginEscape(AmbientAircraftActor a, Vector3 threat)
         {
             if (a.Escaping) return;
-            a.Escaping = true; a.EscapeTime = 0;
+            a.Escaping = true; a.EscapeTime = 0; a.EscapeSpeedInitialized=false;
             a.EscapeVerticalSpeed=a.Velocity.y;
             a.SoaringPhase=AmbientSoaringPhase.Exit;
             for(int i=0;i<actors.Length;i++)if(actors[i]==a && groundMovementOwner==i)groundMovementOwner=-1;
             Vector3 away = a.Position - threat; away.y = 0;
             // Prefer eastward open terrain for mountain gliders; never climb them with an engine.
             if (a.sailplane) away = (Vector3.right + away.normalized * 0.4f).normalized;
-            a.EscapeDirection = away.sqrMagnitude > 1 ? away.normalized : Vector3.right;
+            a.EscapeDirection = away.sqrMagnitude > .001f ? away.normalized : Vector3.right;
         }
 
         private void AdvanceEscape(AmbientAircraftActor a, Vector3 wind, float dt)
         {
             a.EscapeTime += dt;
             Vector3 forward = a.Velocity-wind; forward.y = 0;
+            if(!a.EscapeSpeedInitialized){a.Speed=forward.magnitude;a.EscapeSpeedInitialized=true;}
             if (forward.sqrMagnitude < 1) forward = a.transform.forward;
             Vector3 heading = Vector3.RotateTowards(forward.normalized, a.EscapeDirection, dt * (a.sailplane ? .24f : .14f), 0);
             a.Speed = Mathf.MoveTowards(a.Speed, a.sailplane ? 30 : 40, dt * 2);
@@ -277,7 +345,6 @@ namespace QuestFlightLab.Environment
             actors[index].Suppressed = true; actors[index].SetVisible(false);
             if (runwayOwner == index) runwayOwner = -1;
             if (groundMovementOwner == index) groundMovementOwner = -1;
-            if(airportMovementOwner==index){airportMovementOwner=-1;lastAirportMovementOwner=index;}
             EmergencySuppressions++;
             Debug.LogWarning("[AmbientTraffic] Emergency suppression " + actors[index].aircraftId + ": " + reason, this);
         }

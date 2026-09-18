@@ -12,6 +12,13 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
         public const float StandardBarometricSettingInHg = 29.92f;
         public const float ApproximateFeetPerInHg = 1000f;
 
+        // Shared with offline artwork; counterclockwise from instrument-right.
+        public static float EvaluateTrainerAirspeedAngle(float knots) =>
+            225f - Mathf.Clamp(knots, 0f, 180f) * (320f / 180f);
+
+        public static float EvaluateTrainerVerticalSpeedAngle(float feetPerMinute) =>
+            180f - Mathf.Clamp(feetPerMinute, -2000f, 2000f) * (160f / 2000f);
+
         /// <summary>
         /// Returns the world-stabilizing gyro-ball rotation in the instrument's
         /// local frame. Positive aircraft pitch and bank move the horizon in
@@ -55,7 +62,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
                     if (!snapshot.Has(CockpitInstrumentV2Availability.AirData) ||
                         !IsFinite(snapshot.indicatedAirspeedKnots))
                         return false;
-                    value = AnalogInstrumentKinematics.EvaluateAirspeedAngle(
+                    value = EvaluateTrainerAirspeedAngle(
                         Mathf.Max(0f, snapshot.indicatedAirspeedKnots));
                     return true;
                 case CockpitInstrumentV2Function
@@ -65,7 +72,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
                             snapshot.indicatedVerticalSpeedFeetPerMinute))
                         return false;
                     value =
-                        AnalogInstrumentKinematics.EvaluateVerticalSpeedAngle(
+                        EvaluateTrainerVerticalSpeedAngle(
                             snapshot.indicatedVerticalSpeedFeetPerMinute);
                     return true;
                 case CockpitInstrumentV2Function.AltimeterHundredsNeedleDegrees:

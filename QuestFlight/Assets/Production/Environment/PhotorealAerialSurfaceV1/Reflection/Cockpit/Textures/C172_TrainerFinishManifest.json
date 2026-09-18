@@ -1,0 +1,29 @@
+{
+  "schema": "questflight.cockpit.trainer_finish.v1",
+  "generator": [
+    "Assets/Editor/CockpitTrainerFinishAuthoring.cs",
+    "Assets/Editor/CockpitTrainerPanelAuthoring.cs",
+    "Assets/Editor/CockpitInstrumentV2Authoring.cs"
+  ],
+  "derived_assets": [
+    "C172_TrainerInterior.png",
+    "C172_TrainerInstrumentFaces.png"
+  ],
+  "source": "Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
+  "source_author": "KOG_THORNS",
+  "source_url": "https://sketchfab.com/3d-models/cessna172-d1b15841c29c43d0862667300bad55a4",
+  "source_license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "modifications": "Neutral panel and trim, darker source dial paint; complete six-pack instrument relocation with matched generated IAS/VSI artwork and pointers; unsupported apertures replaced by blank plates; subdued rubber controls and cabin materials; offline cabin reflection refresh.",
+  "original_assets": [
+    "C172_TrainerYoke.png",
+    "C172_InstrumentV2Atlas.png"
+  ],
+  "original_asset_rights": "Project-authored neutral grip finish and instrument artwork; no third-party image pixels. C172P airspeed limits observed in manufacturer POH, figure 2-2, used as factual scale data.",
+  "runtime_contract": "Existing opaque and glass batches, lights and cameras. Atlas expanded from 1024x512 to 1024x1024. No additional runtime texture samples or reflection captures.",
+  "derived_geometry": [
+    "../Meshes/Trainer_Cessna_Interior_Buttons_MAT_0_Buttons_MAT_0.asset",
+    "../Meshes/C172_PrincipalInstrumentLensArray.asset"
+  ],
+  "geometry_note": "InstrumentV2 combined and neutralized source meshes retain their existing source/license records and GUIDs. ButtonPlate uses the unchanged source mesh; no added case renderer."
+}

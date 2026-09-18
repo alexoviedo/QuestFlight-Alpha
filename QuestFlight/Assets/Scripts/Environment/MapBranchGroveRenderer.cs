@@ -52,7 +52,7 @@ namespace QuestFlightLab.Environment
         [Serializable] public sealed class Record {public int column,row,count,bytes;public string file,sha256;}
         [Serializable] public sealed class Manifest {public string schema;public bool complete;public Record[] pages;}
         private sealed class Block {public int[] indices;public Bounds bounds;}
-        private struct Cell {public int cell;public Vector3 center;public float radius,ground,height;public Vector3 tint;public uint seed;public float sine,cosine;}
+        private struct Cell {public int cell,family;public Vector3 center;public float radius,ground,height;public Vector3 tint;public uint seed;public float sine,cosine;}
         private sealed class Page {public Cell[] cells;public Block[] blocks;public float loaded,selectionFade;public int ownershipX,ownershipZ;}
         private struct GpuCell {public Vector4 positionHeight,tintRadius,rotationFade;}
         private struct Candidate {public Page page;public int index;public float distance;}
@@ -174,7 +174,11 @@ namespace QuestFlightLab.Environment
                 if(buckets[block]==null){buckets[block]=new List<int>(144);minY[block]=ground;maxY[block]=ground+height;}
                 int index=(offset-16)/20;
                 uint seed=unchecked((uint)(Key(r.column,r.row)*63504+cell)*1664525u+1013904223u);
-                p.cells[index]=new Cell{cell=cell,center=new Vector3(-12096+r.column*672+(cell%252+.5f)*CellMeters,ground+height*.75f,-12096+r.row*672+(cell/252+.5f)*CellMeters),ground=ground,height=height,radius=radius*.01f,tint=new Vector3(data[offset+12]/255f,data[offset+13]/255f,data[offset+14]/255f),seed=seed,sine=Mathf.Sin((seed&65535)*(Mathf.PI*2/65536)),cosine=Mathf.Cos((seed&65535)*(Mathf.PI*2/65536))};
+                int family=(data[offset+15]>>1)&3;
+                if(family>2)throw new InvalidDataException("Unknown tree visual family");
+                Vector3 tint=new Vector3(data[offset+12]/255f,data[offset+13]/255f,data[offset+14]/255f);
+                if(family>0)tint=Vector3.Lerp(tint,new Vector3(.25f,.34f,.21f),.55f);
+                p.cells[index]=new Cell{cell=cell,family=family,center=new Vector3(-12096+r.column*672+(cell%252+.5f)*CellMeters,ground+height*.75f,-12096+r.row*672+(cell/252+.5f)*CellMeters),ground=ground,height=height,radius=radius*.01f,tint=tint,seed=seed,sine=Mathf.Sin((seed&65535)*(Mathf.PI*2/65536)),cosine=Mathf.Cos((seed&65535)*(Mathf.PI*2/65536))};
                 buckets[block].Add(index);minY[block]=Mathf.Min(minY[block],ground);maxY[block]=Mathf.Max(maxY[block],ground+height);previous=cell;
             }
             var blocks=new List<Block>(441);
@@ -263,7 +267,7 @@ namespace QuestFlightLab.Environment
                     if(bin==cutoff)boundaryRemaining--;emitted++;var page=c.page;var cell=page.cells[c.index];
                     float fade=DistanceCoverage(c.distance)*page.selectionFade;
                     if(budgetEdges[tier]>0)fade*=1-Mathf.SmoothStep(0,1,Mathf.InverseLerp(budgetEdges[tier]-48,budgetEdges[tier],c.distance));
-                    gpu[SelectedCells++]=new GpuCell{positionHeight=new Vector4(cell.center.x,cell.ground,cell.center.z,cell.height),tintRadius=new Vector4(cell.tint.x,cell.tint.y,cell.tint.z,cell.radius),rotationFade=new Vector4(cell.sine,cell.cosine,fade,cell.seed%16)};
+                    gpu[SelectedCells++]=new GpuCell{positionHeight=new Vector4(cell.center.x,cell.ground,cell.center.z,cell.height),tintRadius=new Vector4(cell.tint.x,cell.tint.y,cell.tint.z,cell.radius),rotationFade=new Vector4(cell.sine,cell.cosine,fade,cell.seed%16+cell.family*16)};
                     int tx=page.ownershipX+cell.cell%252,tz=page.ownershipZ+cell.cell/252;
                     ownership[tz*OwnershipSize+tx]=(byte)Mathf.RoundToInt(fade*255);
                     minY=Mathf.Min(minY,cell.ground);maxY=Mathf.Max(maxY,cell.ground+cell.height+3);

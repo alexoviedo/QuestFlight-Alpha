@@ -139,6 +139,16 @@ namespace QuestFlight.Editor
                             hardwareFilter.sharedMesh) == 0,
                     "The neutralized hardware mesh still contains an obsolete " +
                     "display-aperture triangle.");
+                var screenRegions = CockpitAvionicsV2PresentationAuthoring.ReadImportedScreenRegions(
+                    sourceRenderer.GetComponent<MeshFilter>().sharedMesh);
+                var hardwareVertices = hardwareFilter.sharedMesh.vertices;
+                var hardwareTriangles = hardwareFilter.sharedMesh.triangles;
+                for (int i = 0; i < hardwareTriangles.Length; i += 3)
+                    Require(!screenRegions.Exists(region =>
+                        region.Contains(hardwareVertices[hardwareTriangles[i]]) &&
+                        region.Contains(hardwareVertices[hardwareTriangles[i + 1]]) &&
+                        region.Contains(hardwareVertices[hardwareTriangles[i + 2]])),
+                        "Legacy screen/digit geometry remains inside a display aperture.");
                 ValidateRendererAuthority(
                     root.GetComponentInChildren<
                         AircraftVisibilityProfileController>(true),
@@ -233,7 +243,7 @@ namespace QuestFlight.Editor
                 "The generated glyph slot ranges are not unique.");
             var rectangles = new List<Rect>[
                 CockpitAvionicsV2PresentationAuthoring
-                    .ExpectedSourceApertures];
+                    .ExpectedPresentationApertures];
             for (int aperture = 0; aperture < rectangles.Length; aperture++)
                 rectangles[aperture] = new List<Rect>();
 

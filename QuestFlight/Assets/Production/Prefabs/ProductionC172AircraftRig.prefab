@@ -362,7 +362,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -1494450411544164266, guid: d312be0fd0ba928458dd86cbe967956b, type: 3}
+  - {fileID: 2100000, guid: 26a304942efa84b43842d3a81cd7cf90, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -16759,7 +16759,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2179363186923576840}
-  m_Mesh: {fileID: -2559417597807108216, guid: d312be0fd0ba928458dd86cbe967956b, type: 3}
+  m_Mesh: {fileID: 4300000, guid: 433dca2358fc59742a6e2c8b5e4a0f14, type: 2}
 --- !u!23 &4638446874749790903
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -75783,7 +75783,6 @@ MonoBehaviour:
   terrainSurface: {fileID: 11400000, guid: b2b2be77d482f4c4c8fb5ceb35614891, type: 2}
   thermalField: {fileID: 11400000, guid: 761b448f5833d39478ae16e2d2544352, type: 2}
   windField: {fileID: 11400000, guid: 7afbbf9b5ad8b7b4e91e3c075c3ad6a1, type: 2}
-  weatherPreset: 0
   initialConditionProvider: {fileID: 6090694490867546566}
   simulationRateHz: 120
   maxStepsPerFixedUpdate: 8
@@ -91208,8 +91207,8 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
       localRotationAxis: {x: 0, y: 1, z: 0}
-      minimumAngleDegrees: -90
-      maximumAngleDegrees: 90
+      minimumAngleDegrees: 90
+      maximumAngleDegrees: -180
       localTranslationAxis: {x: 0, y: 0, z: 0}
       minimumTranslationMeters: 0
       maximumTranslationMeters: 0

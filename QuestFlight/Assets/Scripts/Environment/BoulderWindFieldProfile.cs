@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Unity.Profiling;
 
 namespace QuestFlightLab.Environment
 {
@@ -10,13 +11,25 @@ namespace QuestFlightLab.Environment
     [CreateAssetMenu(menuName = "QuestFlight/Environment/Boulder Wind Field")]
     public sealed class BoulderWindFieldProfile : ScriptableObject
     {
+        private static readonly ProfilerMarker SampleMarker=new ProfilerMarker("QuestFlight.SharedAtmosphere.Sample");
         public ThermalFieldProfile legacyThermal;
         public Vector2 minimumEnu = new Vector2(-8000, -8000);
         public float spacingMeters = 100;
         public int width = 161, height = 161;
         public float[] groundHeights = Array.Empty<float>();
-        // Smoothed slope deflection for the authored easterly wind, including upwind shelter.
+        // Retained serialized legacy data for migration; the shared sampler uses directional gradients.
         public float[] ridgeResponse = Array.Empty<float>();
+        public float[] gradientEast = Array.Empty<float>(), gradientNorth = Array.Empty<float>();
+        public float[] exposureSectors = Array.Empty<float>(), ridgeRelief = Array.Empty<float>();
+        public float windTransitionHeight = 450;
+        public float thermalStrength = 1;
+        public int gustSeed = 1729;
+        public struct Components
+        {
+            public Vector3 background, gust;
+            public float thermal, terrain;
+            public Vector3 Total => background + gust + Vector3.up * (thermal + terrain);
+        }
         public Vector2 surfaceWindEastNorth = new Vector2(-2.5f, 0);
         public Vector2 ridgeWindEastNorth = new Vector2(-5.5f, 0);
         public float ridgeInfluenceHeight = 450;
@@ -37,7 +50,12 @@ namespace QuestFlightLab.Environment
             else if (width < 2 || height < 2 || width > 512 || height > 512 ||
                 !Finite(spacingMeters) || spacingMeters <= 0 || !Finite(minimumEnu.x) || !Finite(minimumEnu.y) ||
                 groundHeights == null || ridgeResponse == null || groundHeights.Length != width * height ||
-                ridgeResponse.Length != width * height || !Finite(ridgeInfluenceHeight) || ridgeInfluenceHeight < 1 ||
+                ridgeResponse.Length != width * height ||
+                gradientEast == null || gradientNorth == null || exposureSectors == null || ridgeRelief == null ||
+                gradientEast.Length != width * height || gradientNorth.Length != width * height ||
+                ridgeRelief.Length != width * height || exposureSectors.Length != width * height * 8 ||
+                !Finite(thermalStrength) || thermalStrength < 0 || thermalStrength > 2 ||
+                !Finite(windTransitionHeight) || windTransitionHeight < 20 || !Finite(ridgeInfluenceHeight) || ridgeInfluenceHeight < 1 ||
                 !Finite(gustAmplitude) || gustAmplitude < 0 || gustAmplitude > 2 ||
                 !Finite(surfaceWindEastNorth.x) || !Finite(surfaceWindEastNorth.y) ||
                 !Finite(ridgeWindEastNorth.x) || !Finite(ridgeWindEastNorth.y) ||
@@ -46,8 +64,11 @@ namespace QuestFlightLab.Environment
             else
             {
                 for (int i = 0; i < groundHeights.Length; i++)
-                    if (!Finite(groundHeights[i]) || !Finite(ridgeResponse[i]) || Mathf.Abs(ridgeResponse[i]) > 3)
+                    if (!Finite(groundHeights[i]) || !Finite(ridgeResponse[i]) || Mathf.Abs(ridgeResponse[i]) > 3 || !Finite(gradientEast[i]) || !Finite(gradientNorth[i]) ||
+                        Mathf.Abs(gradientEast[i]) > 3 || Mathf.Abs(gradientNorth[i]) > 3 || !Finite(ridgeRelief[i]) || ridgeRelief[i] < 0)
                     { error = "Wind grid contains an invalid value."; break; }
+                foreach (float exposure in exposureSectors)
+                    if (!Finite(exposure) || exposure < 0 || exposure > 1) { error = "Invalid directional exposure."; break; }
                 if (foothillThermals == null) error = "Thermal array is missing.";
                 else foreach (Thermal t in foothillThermals)
                     if (!Finite(t.centerEnu.x) || !Finite(t.centerEnu.y) || !Finite(t.groundHeight) ||
@@ -58,34 +79,78 @@ namespace QuestFlightLab.Environment
             return string.IsNullOrEmpty(error);
         }
 
-        public Vector3 Sample(Vector3 position, double simulationTime, BoulderWeatherPreset preset)
+        // Compatibility argument describes old fixtures only; it never changes atmospheric physics.
+        public Vector3 Sample(Vector3 position, double simulationTime, BoulderWeatherPreset preset) =>
+            Sample(position, simulationTime);
+
+        public Vector3 Sample(Vector3 position, double simulationTime) => SampleComponents(position, simulationTime).Total;
+
+        public Components SampleComponents(Vector3 position, double simulationTime)
         {
+            using var sampleScope=SampleMarker.Auto();
             if (!Finite(position) || double.IsNaN(simulationTime) || double.IsInfinity(simulationTime))
-                return new Vector3(float.NaN, float.NaN, float.NaN);
-            float up = legacyThermal.SampleUpdraftMetersPerSecond(position);
-            if (preset == BoulderWeatherPreset.Calm) return new Vector3(0, up, 0);
-            if (preset != BoulderWeatherPreset.FoothillSoaring) return Vector3.one * float.NaN;
-            SampleGrid(position.x, position.z, out float ground, out float ridge);
+                return new Components { background = Vector3.one * float.NaN };
+            Grid(position.x, position.z, out int i, out float tx, out float tz, out float edge);
+            float ground = Bilinear(groundHeights, i, tx, tz);
             float agl = Mathf.Max(0, position.y - ground);
-            Vector2 wind = Vector2.Lerp(surfaceWindEastNorth, ridgeWindEastNorth, Smooth(agl / 900));
-            float gust = gustAmplitude * (0.65f * Mathf.Sin((float)(simulationTime * 0.17) + position.x * 0.0008f) +
-                0.35f * Mathf.Sin((float)(simulationTime * 0.071) + position.z * 0.001f));
-            wind *= 1 + gust / Mathf.Max(1, wind.magnitude);
-            wind *= Mathf.Lerp(0.65f, 1, Smooth(agl / 15));
-            float fade = 1 - Smooth(agl / ridgeInfluenceHeight);
-            up += Mathf.Clamp(ridge * wind.magnitude, -3, 3) * fade;
-            foreach (Thermal t in foothillThermals)
+            Vector2 wind = Vector2.Lerp(surfaceWindEastNorth, ridgeWindEastNorth, Smooth(agl / windTransitionHeight));
+            wind *= Mathf.Lerp(.65f, 1, Smooth(agl / 15));
+            float magnitude = wind.magnitude;
+            float sector = Mathf.Repeat(Mathf.Atan2(wind.y, wind.x) * 4 / Mathf.PI, 8);
+            int low = (int)sector, cells = width * height;
+            float exposure = Mathf.Lerp(Bilinear(exposureSectors, i + low * cells, tx, tz),
+                Bilinear(exposureSectors, i + ((low + 1) % 8) * cells, tx, tz), sector - low);
+            float relief = Bilinear(ridgeRelief, i, tx, tz);
+            float influence = Mathf.Min(ridgeInfluenceHeight, Mathf.Max(60, relief * 1.5f));
+            float ridge = (wind.x * Bilinear(gradientEast, i, tx, tz) + wind.y * Bilinear(gradientNorth, i, tx, tz)) * exposure;
+            ridge = Mathf.Clamp(ridge, -3, 3) * (1 - Smooth(agl / influence)) * edge;
+            float time = (float)simulationTime;
+            float seed = gustSeed * .017f;
+            // Smooth fixed-cost fluctuations advect with the mean air mass, including vertical motion.
+            float x = (position.x - wind.x * time) * .007f;
+            float z = (position.z - wind.y * time) * .006f;
+            float y = position.y * .009f;
+            float amplitude = gustAmplitude * Mathf.Clamp01(magnitude / 3) * Mathf.Lerp(.3f, 1, exposure) * Smooth(agl / 20);
+            Vector3 gust = amplitude * new Vector3(
+                .65f * Mathf.Sin(x + z + time * .31f + seed) + .35f * Mathf.Sin(y - z + time * .73f),
+                .45f * Mathf.Sin(x - z + time * .43f + seed) + .2f * Mathf.Sin(y + z + time * 1.13f),
+                .65f * Mathf.Sin(z - y + time * .37f - seed) + .35f * Mathf.Sin(x + y + time * .89f));
+            float thermal = 0;
+            if (thermalStrength > 0)
             {
-                float thermalAgl = position.y - t.groundHeight;
-                if (thermalAgl <= 0 || thermalAgl >= t.topAgl) continue;
-                // Tilt the rising column with its age since leaving its ground heat source.
-                Vector2 center = t.centerEnu + wind * Mathf.Min(90, thermalAgl / Mathf.Max(1, t.updraft));
-                float r = (new Vector2(position.x, position.z) - center).magnitude / t.radius;
-                if (r >= 2) continue;
-                float core = r <= 1 ? 1 - Smooth(r) : -0.12f * Mathf.Sin((r - 1) * Mathf.PI);
-                up += t.updraft * core * Smooth(thermalAgl / 120) * (1 - Smooth((thermalAgl - t.topAgl * 0.65f) / (t.topAgl * 0.35f)));
+                thermal = SampleThermal(AirportThermal, position, wind);
+                foreach (Thermal t in foothillThermals) thermal += SampleThermal(t, position, wind);
             }
-            return new Vector3(wind.x, Mathf.Clamp(up, -5, 5), wind.y);
+            return new Components { background = new Vector3(wind.x, 0, wind.y), gust = gust,
+                terrain = ridge, thermal = Mathf.Clamp(thermal * thermalStrength, -3, 5) };
+        }
+
+        public Thermal AirportThermal => new Thermal {
+            centerEnu = new Vector2(legacyThermal.centerUnityMeters.x, legacyThermal.centerUnityMeters.z),
+            groundHeight = legacyThermal.baseHeightUnityMeters,
+            radius = legacyThermal.outerRadiusMeters, topAgl = legacyThermal.capHeightUnityMeters - legacyThermal.baseHeightUnityMeters,
+            updraft = legacyThermal.peakUpdraftMetersPerSecond };
+
+        public static Vector2 ThermalCenter(Thermal t, float altitude, Vector2 wind) =>
+            t.centerEnu + wind * Mathf.Min(90, Mathf.Max(0, altitude - t.groundHeight) / Mathf.Max(1, t.updraft));
+
+        private static float SampleThermal(Thermal t, Vector3 position, Vector2 wind)
+        {
+            float agl = position.y - t.groundHeight;
+            if (agl <= 0 || agl >= t.topAgl) return 0;
+            float r = (new Vector2(position.x, position.z) - ThermalCenter(t, position.y, wind)).magnitude / t.radius;
+            if (r >= 2) return 0;
+            float core = r < 1 ? 1 - Smooth(r) : -.12f * Mathf.Sin((r - 1) * Mathf.PI);
+            return t.updraft * core * Smooth(agl / 120) * (1 - Smooth((agl - t.topAgl * .65f) / (t.topAgl * .35f)));
+        }
+
+        private void Grid(float east, float north, out int i, out float tx, out float tz, out float edge)
+        {
+            float x = Mathf.Clamp((east - minimumEnu.x) / spacingMeters, 0, width - 1);
+            float z = Mathf.Clamp((north - minimumEnu.y) / spacingMeters, 0, height - 1);
+            int ix = Mathf.Min((int)x, width - 2), iz = Mathf.Min((int)z, height - 2);
+            i = iz * width + ix; tx = x - ix; tz = z - iz;
+            edge = Smooth(Mathf.Min(Mathf.Min(x, z), Mathf.Min(width - 1 - x, height - 1 - z)) / 3);
         }
 
         public void SampleGrid(float east, float north, out float ground, out float ridge)

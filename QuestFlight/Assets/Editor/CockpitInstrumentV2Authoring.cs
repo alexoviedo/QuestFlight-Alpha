@@ -17,7 +17,7 @@ namespace QuestFlight.Editor
     /// and authoritative state are proven; unidentified fantasy apertures are
     /// deliberately left static.
     /// </summary>
-    public static class CockpitInstrumentV2Authoring
+    public static partial class CockpitInstrumentV2Authoring
     {
         public const string LayoutPath =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/" +
@@ -42,7 +42,7 @@ namespace QuestFlight.Editor
             "Reflection/Cockpit/C172_InstrumentV2PresentationManifest.json";
 
         private const int AtlasWidth = 1024;
-        private const int AtlasHeight = 512;
+        private const int AtlasHeight = 1024;
         private const int TileSize = 256;
         private const int TileColumns = 4;
         private const int SegmentCount = 48;
@@ -66,6 +66,9 @@ namespace QuestFlight.Editor
         private const int TurnCoordinatorTile = 5;
         private const int WhiteTile = 6;
         private const int BlackTile = 7;
+        private const int TrainerAirspeedTile = 8;
+        private const int TrainerVsiTile = 9;
+        private const int TrainerBlankTile = 10;
         private const int PrincipalAltimeterApertureSeed = 4593;
         private const int TurnCoordinatorFaceSeed = 2667;
         private const int TachometerFaceSeed = 2621;
@@ -268,6 +271,8 @@ namespace QuestFlight.Editor
                 frozen, components[2759], dialRight, dialUp, dialNormal);
             FaceFrame brake = Frame(
                 frozen, components[2906], dialRight, dialUp, dialNormal);
+            FaceFrame airspeed = Frame(frozen, components[2819], dialRight, dialUp, dialNormal);
+            FaceFrame vsi = Frame(frozen, components[2541], dialRight, dialUp, dialNormal);
 
             Component[] replacementOwnedComponents =
                 CollectReplacementOwnedComponents(
@@ -276,7 +281,7 @@ namespace QuestFlight.Editor
                     new[]
                     {
                         altimeter, turnCoordinator, tachometer,
-                        dg, flap, brake
+                        dg, flap, brake, airspeed, vsi
                     },
                     dialRight,
                     dialUp,
@@ -337,11 +342,20 @@ namespace QuestFlight.Editor
             for (int vertex = brakeFaceFirst; vertex < vertices.Count; vertex++)
                 selector[vertex] = new Vector2(0f, 3f);
             AddLubber(dg, vertices, normals, tangents, uv, selector, indices);
+            AddSealedGaugeBackplate(airspeed, vertices, normals, tangents, uv, selector, indices);
+            AddDiscScaled(airspeed, TrainerAirspeedTile, 0f, 1.02f, vertices, normals, tangents, uv, selector, indices);
+            AddSealedGaugeBackplate(vsi, vertices, normals, tangents, uv, selector, indices);
+            AddDiscScaled(vsi, TrainerVsiTile, 0f, 1.02f, vertices, normals, tangents, uv, selector, indices);
             int staticOverlayVertexCount = vertices.Count;
 
-            AddFrozenBindings(
-                source, vertices, normals, tangents, uv, selector, indices,
-                bindings);
+            AddNeedleBinding(airspeed, .84f, .022f, 0f,
+                CockpitInstrumentV2Function.IndicatedAirspeedNeedleDegrees,
+                90f, Vector3.Dot(airspeed.Normal, dialNormal), "IAS / KNOTS", bindings,
+                vertices, normals, tangents, uv, selector, indices);
+            AddNeedleBinding(vsi, .84f, .022f, 0f,
+                CockpitInstrumentV2Function.IndicatedVerticalSpeedNeedleDegrees,
+                90f, Vector3.Dot(vsi.Normal, dialNormal), "Principal VERTICAL SPEED", bindings,
+                vertices, normals, tangents, uv, selector, indices);
 
             AddSourceComponentBinding(
                 frozen,
@@ -1310,9 +1324,9 @@ namespace QuestFlight.Editor
             int y = tile / TileColumns;
             return new Rect(
                 (x + 0.01f) / TileColumns,
-                (y + 0.01f) / 2f,
+                (y + 0.01f) / (AtlasHeight / TileSize),
                 0.98f / TileColumns,
-                0.98f / 2f);
+                0.98f / (AtlasHeight / TileSize));
         }
 
         private static Mesh BuildMesh(
@@ -1738,6 +1752,7 @@ namespace QuestFlight.Editor
             DrawTurnCoordinatorFace(pixels, TurnCoordinatorTile);
             FillTile(pixels, WhiteTile, new Color32(232, 238, 226, 255));
             FillTile(pixels, BlackTile, black);
+            DrawTrainerFaces(pixels);
             texture.SetPixels32(pixels);
             byte[] png = texture.EncodeToPNG();
             UnityEngine.Object.DestroyImmediate(texture);
@@ -1970,10 +1985,10 @@ namespace QuestFlight.Editor
                 {
                     Active("airspeed_indicator", new[] { 2819 },
                         new[] { "IndicatedAirspeedNeedleDegrees" },
-                        "calibrated airspeed", "Existing audited piecewise KNOTS scale"),
+                        "indicated airspeed", "Project-authored 0-180 KIAS dial; C172P colored operating arcs; matched live needle mapping"),
                     Active("vertical_speed_indicator", new[] { 2541 },
                         new[] { "IndicatedVerticalSpeedNeedleDegrees" },
-                        "filtered vertical speed", "Existing audited split FPM scale"),
+                        "filtered vertical speed", "Project-authored +/-2000 FPM dial with matched live needle mapping"),
                     Active("principal_altimeter", new[] { principalAltimeterSeed },
                         new[]
                         {

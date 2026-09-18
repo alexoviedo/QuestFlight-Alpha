@@ -17,6 +17,10 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
         _NearFoliageAtlas ("Project-owned perforated near foliage atlas", 2D) = "white" {}
         _HeroLeafAtlas ("CC0-derived hero tree leaf atlas", 2D) = "white" {}
         _TreeImpostorAtlas ("CC0-derived eight-view tree impostor", 2D) = "white" {}
+        _NeedleBranchAtlas ("CC0 conifer branch atlas", 2D) = "white" {}
+        _ConiferTreeAtlas ("Open/tapered conifer eight-view atlas", 2D) = "white" {}
+        _TreeRealismEnabled ("Coordinated crowns and habitat families", Float) = 0
+        _TreePrototypeHeight ("Local prototype height", Float) = 1.2347747
         _NeighborhoodFoliageAtlas ("Authored perforated branch clusters", 2D) = "white" {}
         _NormalizedSurfaceHeight ("Normalized surface height", 2D) = "black" {}
         _NearWorldMinInvSize ("Near min XZ / inverse size", Vector) = (-2000,-2000,0.00025,0.00025)
@@ -79,11 +83,15 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
             samplerCUBE _FacadeReflectionCube;
             sampler2D _CanopyNormalOcclusion;
             sampler2D _CanopyFoliageAlbedo;
-            sampler2D _NearFoliageAtlas;
+            UNITY_DECLARE_TEX2D(_NearFoliageAtlas);
             half _GroveLeafResponse;
             half _BranchFoliageResponse;
             sampler2D _HeroLeafAtlas;
             sampler2D _TreeImpostorAtlas;
+            UNITY_DECLARE_TEX2D_NOSAMPLER(_NeedleBranchAtlas);
+            UNITY_DECLARE_TEX2D_NOSAMPLER(_ConiferTreeAtlas);
+            half _TreeRealismEnabled;
+            float _TreePrototypeHeight;
             sampler2D _NeighborhoodFoliageAtlas;
             sampler2D _NormalizedSurfaceHeight;
             float4 _NearWorldMinInvSize;
@@ -109,7 +117,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
             half _DiagnosticMode;
 
             UNITY_INSTANCING_BUFFER_START(Props)
-                UNITY_DEFINE_INSTANCED_PROP(fixed4, _InstanceTint)
+                UNITY_DEFINE_INSTANCED_PROP(half4, _InstanceTint)
                 UNITY_DEFINE_INSTANCED_PROP(half, _InstanceFade)
                 UNITY_DEFINE_INSTANCED_PROP(half, _ImpostorFrame)
             UNITY_INSTANCING_BUFFER_END(Props)
@@ -123,6 +131,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 half3 normal : NORMAL;
                 fixed4 color : COLOR;
                 float2 uv : TEXCOORD0;
+                float4 crownCenter : TEXCOORD1;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -135,12 +144,35 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 fixed4 semanticData : TEXCOORD3;
                 float2 wallUv : TEXCOORD4;
                 half4 treeData : TEXCOORD5;
+                half3 treeStructure : TEXCOORD6;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
             v2f vert(appdata input)
             {
                 UNITY_SETUP_INSTANCE_ID(input);
+                half4 instanceTint = UNITY_ACCESS_INSTANCED_PROP(Props, _InstanceTint);
+                half family=_TreeRealismEnabled*max(0,instanceTint.a-1);
+                // Fixed-size source cards are repositioned into conifer branch
+                // whorls. No crown-spanning card or additional draw is introduced.
+                UNITY_BRANCH if(family>.5h && _SemanticMode>.5h && input.uv.x<5.5)
+                {
+                    if(input.color.r<.5h && input.crownCenter.w>0)
+                    {
+                        float t=input.crownCenter.w;
+                        float radius=.30*pow(1-t,family<1.5?.60:.90);
+                        float angle=t*41;
+                        float crownBase=family<1.5?.39:.22;
+                        float3 center=float3(cos(angle)*radius,_TreePrototypeHeight*(crownBase+(1-crownBase)*t),sin(angle)*radius);
+                        input.vertex.xyz=center+(input.vertex.xyz-input.crownCenter.xyz)*(.70-.48*t);
+                    }
+                    else if(input.color.r>.5h)
+                    {
+                        float radial=length(input.vertex.xz);
+                        input.vertex.y*=lerp(1.33,.90,smoothstep(.025,.09,radial));input.vertex.xz*=.55;
+                        input.normal=normalize(input.normal/half3(.55,1.33,.55));
+                    }
+                }
                 v2f output;
                 UNITY_INITIALIZE_OUTPUT(v2f, output);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
@@ -156,7 +188,6 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 half impostorLeaf = step(5.5h, input.uv.x) * (1.0h - authoredLeaf);
                 half closeTreeLeaf = saturate(clumpLeaf + heroLeaf + impostorLeaf) *
                     (1.0h - step(0.5h, input.color.r));
-                fixed4 instanceTint = UNITY_ACCESS_INSTANCED_PROP(Props, _InstanceTint);
                 output.semanticData.gba = lerp(
                     output.semanticData.gba, instanceTint.rgb, closeTreeLeaf);
                 output.wallUv = float2(
@@ -171,6 +202,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     UNITY_ACCESS_INSTANCED_PROP(Props, _InstanceFade),
                     UNITY_ACCESS_INSTANCED_PROP(Props, _ImpostorFrame));
                 output.wallUv = lerp(output.wallUv, float2(input.uv.x - 8.0, input.uv.y), authoredLeaf);
+                output.treeStructure=half3(0,impostorLeaf>.5?input.uv.y:saturate(input.vertex.y/_TreePrototypeHeight),family);
                 UNITY_BRANCH if (_MapGroveOwnershipActive > .5h && _SemanticMode > .5h && closeTreeLeaf > .5h)
                 {
                     // Replace only leaf vertices of trees whose centers have a
@@ -178,7 +210,9 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     float2 center=float2(unity_ObjectToWorld._m03,unity_ObjectToWorld._m23);
                     float2 ownershipUv=(center-_MapGroveOwnershipBounds.xy)*_MapGroveOwnershipBounds.zw;
                     half inside=step(0,ownershipUv.x)*step(0,ownershipUv.y)*step(ownershipUv.x,1)*step(ownershipUv.y,1);
-                    output.treeData.z*=1-tex2Dlod(_MapGroveOwnership,float4(saturate(ownershipUv),0,0)).r*inside;
+                    half owned=tex2Dlod(_MapGroveOwnership,float4(saturate(ownershipUv),0,0)).r*inside;
+                    if(_TreeRealismEnabled>.5h)output.treeStructure.x=owned;
+                    else output.treeData.z*=1-owned;
                 }
                 UNITY_TRANSFER_FOG(output, output.position);
                 return output;
@@ -498,6 +532,11 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                 }
                 half3 geometricNormal = normalize(input.worldNormal);
                 half sourceTreeCard = saturate(input.treeData.x + input.treeData.y);
+                // A far impostor contains wood and the upper crown. Preserve
+                // those regions while replacing only its covered middle foliage.
+                half replacement=1-smoothstep(.72h,.94h,input.treeStructure.y);
+                if(input.treeData.y>.5h)replacement*=smoothstep(.32h,.50h,input.treeStructure.y);
+                input.treeData.z*=1-input.treeStructure.x*replacement;
                 half nearFoliageCard = saturate(
                     step(0.0h, input.wallUv.x) * step(0.5h, _SemanticMode) +
                     sourceTreeCard);
@@ -511,9 +550,16 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                         half2 atlasCell = half2(
                             frame - floor(frame * 0.25h) * 4.0h,
                             1.0h - floor(frame * 0.25h));
-                        nearFoliage = tex2D(
-                            _TreeImpostorAtlas,
-                            (atlasCell + input.wallUv) / half2(4.0h, 2.0h));
+                        UNITY_BRANCH if(input.treeStructure.z>.5h)
+                        {
+                            atlasCell.y=3-(floor(input.treeStructure.z+.5h)-1)*2-floor(frame*.25h);
+                            nearFoliage=UNITY_SAMPLE_TEX2D_SAMPLER(_ConiferTreeAtlas,_NearFoliageAtlas,(atlasCell+input.wallUv)/4);
+                        }
+                        else nearFoliage = tex2D(_TreeImpostorAtlas,(atlasCell + input.wallUv) / half2(4.0h, 2.0h));
+                    }
+                    else if(input.treeStructure.z>.5h)
+                    {
+                        nearFoliage=UNITY_SAMPLE_TEX2D_SAMPLER(_NeedleBranchAtlas,_NearFoliageAtlas,input.wallUv);
                     }
                     else if (input.treeData.x > 0.5h)
                     {
@@ -521,7 +567,7 @@ Shader "QuestFlight/Photoreal Aerial V1/Semantic Surface"
                     }
                     else
                     {
-                        nearFoliage = tex2D(_NearFoliageAtlas, input.wallUv);
+                        nearFoliage = UNITY_SAMPLE_TEX2D(_NearFoliageAtlas, input.wallUv);
                     }
                     clip(nearFoliage.a - _FoliageCutoff);
                     if (facing < 0.0h) geometricNormal = -geometricNormal;
