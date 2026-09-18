@@ -47,7 +47,8 @@
     "jsbsimLibrary": "GNU LGPL-2.1-or-later",
     "aircraftFileDeclaration": "GPL",
     "aircraftFileAdditionalStatement": "upstream file states model is not to be sold",
-    "resolution": "PRIVATE_PERSONAL_USE_ONLY_NOT_FOR_REDISTRIBUTION"
+    "resolution": "OWNER_AUTHORIZED_FREE_PUBLIC_ALPHA_DISTRIBUTION",
+    "projectDistributionPolicy": "Project-imposed private-use-only hold removed at owner instruction on 2026-09-18. Third-party licenses and notices remain unchanged; this records owner authorization, not a new upstream license grant."
   },
   "promotion": {
     "soleProductAuthority": true,

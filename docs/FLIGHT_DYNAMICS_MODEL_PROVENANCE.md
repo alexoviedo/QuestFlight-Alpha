@@ -29,6 +29,8 @@ not yet accepted.
 
 The JSBSim library is LGPL-2.1-or-later. The aircraft XML separately declares
 GPL and includes an upstream non-sale statement, so this derivative is recorded
-for private personal use and no public/commercial redistribution claim is made.
+with its upstream declarations preserved. On 2026-09-18 the owner removed
+the project-imposed private-use-only hold and authorized free public alpha
+distribution. This authorization does not replace third-party license terms.
 No certified fidelity, FAA approval, navigation suitability, or training credit
 is claimed.
