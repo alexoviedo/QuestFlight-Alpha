@@ -161,7 +161,11 @@ namespace QuestFlightLab.Runtime
             }
 
             _mountainProbe = Object.FindFirstObjectByType<MountainTemporalStabilityProbe>(FindObjectsInactive.Exclude);
-            if (_mountainProbe != null) _mountainProbe.BeginCapture(rig.TrackedCamera);
+            if (_mountainProbe != null)
+            {
+                if (string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_TRAINING_VIEW")))
+                    _mountainProbe.BeginCapture(rig.TrackedCamera);
+            }
             else _errors.Add("Authored MountainTemporalStabilityProbe was not available.");
 
             var atmosphereAuthority=rig.AircraftSimulationRoot.GetComponent<FlightDynamicsCoordinator>();
@@ -183,7 +187,28 @@ namespace QuestFlightLab.Runtime
             {
                 _demoPilot.StopDemo();
             }
-            if(!startDemo) Object.FindFirstObjectByType<ProductFlightModeCoordinator>()?.SelectFreeFlight();
+            string trainingView = System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_TRAINING_VIEW");
+            if (!startDemo && !string.IsNullOrEmpty(trainingView))
+            {
+                var mode = Object.FindFirstObjectByType<ProductFlightModeCoordinator>();
+                mode.SelectTraining();
+                float readyAt = Time.realtimeSinceStartup;
+                while (mode.AuthoredTraining.State != QuestFlight.Product.Training.TrainingSessionState.Menu && Time.realtimeSinceStartup - readyAt < 15)
+                    yield return null;
+                if (mode.AuthoredTraining.State != QuestFlight.Product.Training.TrainingSessionState.Menu)
+                { _errors.Add("Training menu did not finish its authored transition."); WriteStartupFailure(productRoot, rig); yield break; }
+                // The showroom deliberately hides terrain. Begin the stability witness
+                // after the normal transition restores it, not across that visibility switch.
+                if (_mountainProbe != null)
+                {
+                    _mountainProbe.Initialize(_mountainProbe.transform, _mountainProbe.transform.parent);
+                    _mountainProbe.BeginCapture(rig.TrackedCamera);
+                }
+                if (trainingView != "menu") mode.AuthoredTraining.SelectLesson(1);
+                if (trainingView == "practice") mode.AuthoredTraining.StartPractice();
+                Debug.Log($"[TrainingQA] requested={trainingView} state={mode.AuthoredTraining.State} focused={Application.isFocused}");
+            }
+            else if(!startDemo) Object.FindFirstObjectByType<ProductFlightModeCoordinator>()?.SelectFreeFlight();
 
             // Development-only scenario placement goes through native reset; tracked eye poses stay OpenXR-owned.
             if(System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_AMBIENT_VIEW")=="foothill")
@@ -232,6 +257,13 @@ namespace QuestFlightLab.Runtime
             float delayStarted = Time.realtimeSinceStartup;
             while (Time.realtimeSinceStartup - delayStarted < Mathf.Max(0.5f, delay))
                 yield return null;
+            if (!string.IsNullOrEmpty(trainingView))
+            {
+                var training = Object.FindFirstObjectByType<QuestFlight.Product.Training.ProductTrainingController>();
+                string expected = trainingView == "practice" ? "Practice" : trainingView == "menu" ? "Menu" : "Briefing";
+                if (training.State.ToString() != expected) _errors.Add($"Training capture expected {expected}, found {training.State}; focused={Application.isFocused}.");
+                Debug.Log($"[TrainingQA] capture state={training.State} focused={Application.isFocused}");
+            }
 
             int temporalFrames=Mathf.Clamp(ReadInt("QFL_META_XR_SIMULATOR_TEMPORAL_FRAMES",0),0,30);
             bool ambientWindows=ReadBool("QFL_META_XR_SIMULATOR_AMBIENT_WINDOWS",false);

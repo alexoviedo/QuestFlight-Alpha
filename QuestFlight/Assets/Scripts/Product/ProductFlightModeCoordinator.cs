@@ -19,14 +19,15 @@ namespace QuestFlight.Product
             Selection = 0,
             Demo = 1,
             FreeFlight = 2,
-            Blocked = 3
+            Blocked = 3,
+            Training = 4
         }
 
         public const string SelectionText =
             "QUESTFLIGHT\n" +
             "A â€” DEMO FLIGHT\n" +
             "B â€” FREE FLIGHT\n" +
-            "X â€” CHANGE WEATHER\n" +
+            "X â€” FLIGHT LESSONS\n" +
             "MENU â€” SEAT CALIBRATION";
         public const string PreparingText = "QUESTFLIGHT\nPREPARING AIRCRAFTâ€¦";
         public const string LessonsUnavailableText =
@@ -39,6 +40,9 @@ namespace QuestFlight.Product
         [SerializeField] private GameObject modePanelRoot;
         [SerializeField] private TextMesh modePanelText;
         [SerializeField] private ProductFlightModeMenuView modeMenuView;
+        [SerializeField] private Training.ProductTrainingController training;
+        public Training.ProductTrainingController AuthoredTraining => training;
+        public void ConfigureTrainingForAuthoring(Training.ProductTrainingController value) => training = value;
         [SerializeField, Min(0.1f)] private float lessonsMessageSeconds = 2.5f;
 
         public FlightModeState State { get; private set; } = FlightModeState.Selection;
@@ -272,12 +276,28 @@ namespace QuestFlight.Product
 
         public void ShowLessonsUnavailable()
         {
+            if (training != null) { SelectTraining(); return; }
             if (State != FlightModeState.Selection ||
                 (seatCalibration != null && seatCalibration.IsOpen))
                 return;
 
             SetPanelText(LessonsUnavailableText);
             _lessonsMessageUntil = Time.unscaledTime + lessonsMessageSeconds;
+        }
+
+        public void SelectTraining()
+        {
+            if (!CanSelectInitializedMode()) return;
+            if (training == null || !training.HasAuthoredReferences)
+            { EnterBlocked("The authored lesson catalog is incomplete."); return; }
+            demoPilot.StopDemo();
+            productInput.ReleaseAllTouchOverrides();
+            productInput.DisableFlightLessonGuidance();
+            productInput.SetDeterministicMode(false);
+            State = FlightModeState.Training;
+            RestoreSavedTimeScaleOnce();
+            BeginSuccessfulTransition("FLIGHT LESSONS");
+            training.OpenLessons();
         }
 
         private bool CanSelectInitializedMode()

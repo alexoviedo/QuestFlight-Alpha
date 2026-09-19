@@ -44,6 +44,7 @@ namespace QuestFlightLab.Input
 
         public AircraftControlState Current { get; private set; } = AircraftControlState.Neutral(0.10f);
         public bool Paused { get; private set; }
+        public event System.Action TrainingRestartRequested;
         public bool DeterministicMode => deterministicMode;
         public bool FlightLessonGuidanceActive => _flightLessonGuidanceActive;
         public bool FlightLessonInputSuppressed => _flightLessonInputSuppressed;
@@ -510,7 +511,9 @@ namespace QuestFlightLab.Input
             if (Mathf.Abs(snapshot.dpadY) > 0.01f) _trimManuallyOwned = true;
             if (reset)
             {
-                _resetQueued = true;
+                if (_touchFlightMode != null && _touchFlightMode.State == ProductFlightModeCoordinator.FlightModeState.Training)
+                    TrainingRestartRequested?.Invoke();
+                else _resetQueued = true;
                 _flightLessonResetVersion++;
                 ResetFlightLessonHandoverState();
             }
@@ -520,7 +523,8 @@ namespace QuestFlightLab.Input
             bool touchRudderAvailable = !useDeterministic && !_flightLessonGuidanceActive && !Paused &&
                 Application.isFocused && OVRManager.hasInputFocus &&
                 _touchFlightMode != null &&
-                _touchFlightMode.State == ProductFlightModeCoordinator.FlightModeState.FreeFlight &&
+                (_touchFlightMode.State == ProductFlightModeCoordinator.FlightModeState.FreeFlight ||
+                 _touchFlightMode.State == ProductFlightModeCoordinator.FlightModeState.Training) &&
                 _touchFlightMode.AuthoredSeatCalibration != null &&
                 !_touchFlightMode.AuthoredSeatCalibration.IsOpen &&
                 OVRInput.IsControllerConnected(OVRInput.Controller.RTouch) &&

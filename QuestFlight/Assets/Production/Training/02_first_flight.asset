@@ -1,0 +1,100 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5caaecf10ae238445afcc22c19aa33c6, type: 3}
+  m_Name: 02_first_flight
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
+  lessonId: 02_first_flight
+  displayName: Level flight and gentle turns
+  briefing: Begin airborne east of the airport at 7000 feet and 90 knots. Look outside
+    at the horizon, then cross-check the attitude indicator, airspeed and altimeter.
+    Use small yoke movements. You will hold level flight, turn left and roll out,
+    then return to the original heading. X requests assistance; assistance is recorded
+    separately.
+  briefingNarration: {fileID: 8300000, guid: cae490adc64efc046ac293119d10c0dd, type: 3}
+  start:
+    latitudeDegrees: 40.05467080422664
+    longitudeDegrees: -105.21085768949152
+    altitudeMslMeters: 2133.6
+    terrainElevationMslMeters: 1583.2224005340577
+    calibratedAirspeedKnots: 79.95769500732422
+    headingDegrees: 90
+    pitchDegrees: 0
+    bankDegrees: 0
+    flightPathAngleDegrees: 0
+    engineRunning: 1
+  initialThrottle: 0.72705275
+  initialTrim: -0.21362303
+  initialFlaps: 0
+  allowDemonstration: 1
+  airportExercise: 0
+  goAroundStage: -1
+  stages:
+  - title: Level flight
+    instruction: You have control. Hold 7000 feet, 90 knots and heading 090 true.
+      Level the wings against the outside horizon; make small corrections.
+    narration: {fileID: 8300000, guid: c2086b0f7d412ee4abe977dd0e37f68b, type: 3}
+    task: 6
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 90
+    dwellSeconds: 15
+    timeoutSeconds: 180
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200
+  - title: Gentle left turn
+    instruction: Turn left toward heading 060 true. Use about 15 degrees of bank
+      and enough rudder to keep the slip ball centered. Maintain 7000 feet.
+    narration: {fileID: 8300000, guid: 997e29733d964c1498a1da9a8da05163, type: 3}
+    task: 7
+    heading: 60
+    altitudeFeet: 7000
+    speedKnots: 90
+    dwellSeconds: 2
+    timeoutSeconds: 180
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200
+  - title: Roll out
+    instruction: Level the wings on heading 060 true. Hold 7000 feet and about 90
+      knots.
+    narration: {fileID: 8300000, guid: d8013fd23dc1c7e49bdbae54e294ad72, type: 3}
+    task: 6
+    heading: 60
+    altitudeFeet: 7000
+    speedKnots: 90
+    dwellSeconds: 10
+    timeoutSeconds: 180
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200
+  - title: Gentle right turn
+    instruction: Turn gently right to heading 090 true, maintaining altitude and
+      coordinated flight.
+    narration: {fileID: 8300000, guid: f733037202c2a714cbb566fc6e78f173, type: 3}
+    task: 7
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 90
+    dwellSeconds: 2
+    timeoutSeconds: 180
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200
+  - title: Settle level
+    instruction: Roll out on heading 090 true. Settle back into level flight at 7000
+      feet and 90 knots.
+    narration: {fileID: 8300000, guid: c53b01f2bc03ac94b87cef45d2f6a905, type: 3}
+    task: 6
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 90
+    dwellSeconds: 10
+    timeoutSeconds: 180
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200

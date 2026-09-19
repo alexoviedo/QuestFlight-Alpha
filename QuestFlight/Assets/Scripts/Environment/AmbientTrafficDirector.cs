@@ -57,6 +57,9 @@ namespace QuestFlightLab.Environment
 
         private void Update()
         {
+                // A lesson pause freezes traffic where it is; it must not hide every aircraft.
+                if (Time.timeScale <= 0 && flightMode != null &&
+                    flightMode.State == ProductFlightModeCoordinator.FlightModeState.Training) return;
                 if (!trafficEnabled || player == null || !player.IsInitialized || !player.CurrentState.IsFinite ||
                     Time.timeScale <= 0 || flightMode.State == ProductFlightModeCoordinator.FlightModeState.Selection ||
                     flightMode.State == ProductFlightModeCoordinator.FlightModeState.Blocked)
@@ -90,7 +93,9 @@ namespace QuestFlightLab.Environment
                 decisionCountdown -= dt;
                 bool decide = decisionCountdown <= 0;
                 if (decide) decisionCountdown = 0.1f;
-                PlayerProtectsRunway = ProtectsRunway(state.positionUnityMeters, state.velocityUnityMetersPerSecond, state.weightOnWheels);
+                PlayerProtectsRunway = ProtectsRunway(state.positionUnityMeters, state.velocityUnityMetersPerSecond, state.weightOnWheels) ||
+                    (flightMode != null && flightMode.State == ProductFlightModeCoordinator.FlightModeState.Training &&
+                     flightMode.AuthoredTraining != null && flightMode.AuthoredTraining.ReservesRunway);
                 if(decide) AllocateGroundMovement();
                 for (int i = 0; i < actors.Length; i++)
                 {

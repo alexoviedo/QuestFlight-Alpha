@@ -9,12 +9,13 @@
 - one embedded native JSBSim 1.3.1 C172P flight authority;
 - deterministic demo and standard gamepad input;
 - seat-relative viewpoint calibration;
+- six short C172 simulator-practice lessons, local progress, offline spoken coaching, and explicit optional assistance (approved September 18, 2026);
 - production build, Visual QA, and Quest temporal gates.
 - Meta XR Simulator solely as a development, stereo-composition, tracking, input, and visual-regression tool.
 
 ## Excluded from v1
 
-- training curriculum or training-credit claims;
+- advanced flight-training curriculum, certification, or training-credit claims;
 - USB2BLE, HOTAS, and hardware-integration experiments;
 - Gaussian splats;
 - a UnityPrototype flight-dynamics authority, second flight authority, native

@@ -1,0 +1,126 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5caaecf10ae238445afcc22c19aa33c6, type: 3}
+  m_Name: 05_pattern
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
+  lessonId: 05_pattern
+  displayName: Pattern and approach decisions
+  briefing: Begin on runway 08 left downwind at 6300 feet MSL, south of Jay Road.
+    Fly the pattern, configure for approach and judge stability. If the approach
+    is unstable, apply power and go around. This is a reset into a practice segment,
+    not a real-world arrival clearance.
+  briefingNarration: {fileID: 8300000, guid: c720d84397695144a82e70730dce7efd, type: 3}
+  start:
+    latitudeDegrees: 40.04701844816733
+    longitudeDegrees: -105.22140336838336
+    altitudeMslMeters: 1920.24
+    terrainElevationMslMeters: 1589.6624010681153
+    calibratedAirspeedKnots: 95.09220123291016
+    headingDegrees: 270
+    pitchDegrees: 0
+    bankDegrees: 0
+    flightPathAngleDegrees: 0
+    engineRunning: 1
+  initialThrottle: 0.6279252
+  initialTrim: -0.19077148
+  initialFlaps: 0
+  allowDemonstration: 0
+  airportExercise: 1
+  goAroundStage: 4
+  stages:
+  - title: Downwind
+    instruction: Hold the north-side downwind at 6300 feet and about 85 knots, heading
+      270 true. Keep the runway on your left and remain south of Jay Road.
+    narration: {fileID: 8300000, guid: 2815fedfe1d6d85458ec16d94bf78ad7, type: 3}
+    task: 15
+    heading: 270
+    altitudeFeet: 6300
+    speedKnots: 85
+    dwellSeconds: 3
+    timeoutSeconds: 180
+    targetEnu: {x: -500, y: 850}
+    captureMeters: 200
+  - title: Abeam landing end
+    instruction: Abeam the landing end, reduce power, slow below flap-extension speed
+      and select ten degrees of flaps. Begin a gentle descent; continue downwind
+      before turning base.
+    narration: {fileID: 8300000, guid: 5743734ddfd12344d9dbcc2966bb9134, type: 3}
+    task: 16
+    heading: 270
+    altitudeFeet: 6100
+    speedKnots: 75
+    dwellSeconds: 2
+    timeoutSeconds: 180
+    targetEnu: {x: -1200, y: 850}
+    captureMeters: 230
+  - title: Left base
+    instruction: Turn left onto base, heading 180 true. Descend at about 70 to 75
+      knots; use a gentle bank. If you overshoot final, go around instead of tightening
+      the turn.
+    narration: {fileID: 8300000, guid: e5006f6077eb9ce4fbde07bcac1b085f, type: 3}
+    task: 17
+    heading: 180
+    altitudeFeet: 5800
+    speedKnots: 70
+    dwellSeconds: 1
+    timeoutSeconds: 180
+    targetEnu: {x: -1750, y: 350}
+    captureMeters: 260
+  - title: Stable final
+    instruction: Turn left onto final for runway 08. Align with the extended centerline,
+      select landing flaps as needed and hold 60 to 70 knots. If unstable, apply
+      full power and go around.
+    narration: {fileID: 8300000, guid: 4b4adac9072ed1648b5e419acc528afd, type: 3}
+    task: 18
+    heading: 90
+    altitudeFeet: 5500
+    speedKnots: 65
+    dwellSeconds: 6
+    timeoutSeconds: 180
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200
+  - title: Go-around power
+    instruction: Go around. Apply full power and carb heat cold. Raise the nose for
+      climb and reduce full flaps to twenty degrees.
+    narration: {fileID: 8300000, guid: 81ea162c8d11ecd4ea6a813529f9456e, type: 3}
+    task: 21
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 65
+    dwellSeconds: 1
+    timeoutSeconds: 180
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200
+  - title: Positive climb
+    instruction: Confirm a positive climb. With safe airspeed, reduce flaps to ten
+      degrees. Hold the runway direction.
+    narration: {fileID: 8300000, guid: 3f118453ee031714eb1c6995be4462e7, type: 3}
+    task: 22
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 65
+    dwellSeconds: 3
+    timeoutSeconds: 180
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200
+  - title: Clean climb
+    instruction: Clear of obstacles, retract the remaining flaps and continue straight
+      ahead at 70 to 80 knots.
+    narration: {fileID: 8300000, guid: 1cf749655b2f3ee4785998523288824e, type: 3}
+    task: 23
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 75
+    dwellSeconds: 5
+    timeoutSeconds: 180
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200

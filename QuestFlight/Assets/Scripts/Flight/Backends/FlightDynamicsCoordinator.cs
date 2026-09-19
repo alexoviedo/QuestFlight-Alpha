@@ -51,6 +51,8 @@ namespace QuestFlightLab.Flight.Backends
             FlightDynamicsControlSnapshot.NeutralIdle;
         public FlightDynamicsInitialConditions LastResetInitialConditions { get; private set; }
         public double DroppedSimulationSeconds => _accumulator?.DroppedSeconds ?? 0.0;
+        // Read-only observation after each native step; training never becomes a flight authority.
+        public event Action<FlightDynamicsState, FlightDynamicsControlSnapshot, float> NativeStepCompleted;
 
         private IFlightDynamicsBackend _backend;
         private FlightDynamicsAuthorityLease _authorityLease;
@@ -356,6 +358,7 @@ namespace QuestFlightLab.Flight.Backends
             _currentState = _backend.CurrentState;
             ApplyBackendPose(_currentState);
             ApplyLegacyState(_currentState);
+            NativeStepCompleted?.Invoke(_currentState, LastAppliedControls, (float)fixedDeltaTimeSeconds);
             return true;
         }
 

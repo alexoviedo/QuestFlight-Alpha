@@ -122,7 +122,9 @@ namespace QuestFlight.Editor
         private static readonly string[] ApprovedFlightLessonAssetPrefixes =
         {
             "Assets/Scripts/Training/FlightLessonV1/",
-            "Assets/Editor/Tests/Training/FlightLessonV1/"
+            "Assets/Editor/Tests/Training/FlightLessonV1/",
+            "Assets/Scripts/Product/Training/",
+            "Assets/Production/Training/"
         };
 
         private static readonly HashSet<string> ApprovedFlightLessonDirectoryAssets =
@@ -135,7 +137,18 @@ namespace QuestFlight.Editor
                 "Assets/Editor/Tests/Training",
                 "Assets/Editor/Tests/Training/FlightLessonV1",
                 "Assets/Editor/Tests/Training.meta",
-                "Assets/Editor/Tests/Training/FlightLessonV1.meta"
+                "Assets/Editor/Tests/Training/FlightLessonV1.meta",
+                // Approved V1 product curriculum; legacy R&D training remains excluded.
+                "Assets/Scripts/Product/Training",
+                "Assets/Scripts/Product/Training.meta",
+                "Assets/Production/Training",
+                "Assets/Production/Training.meta",
+                "Assets/Editor/ProductTrainingAuthoring.cs",
+                "Assets/Editor/ProductTrainingAuthoring.cs.meta",
+                "Assets/Editor/TrainingNativeValidation.cs",
+                "Assets/Editor/TrainingNativeValidation.cs.meta",
+                "Assets/Editor/Tests/ProductTrainingEditModeTests.cs",
+                "Assets/Editor/Tests/ProductTrainingEditModeTests.cs.meta"
             };
 
         private static readonly HashSet<string> ApprovedJsbsimProductAssets =
@@ -559,6 +572,8 @@ namespace QuestFlight.Editor
                     ProductFlightModeCoordinator mode = modeCoordinators[0];
                     Require(mode.HasAuthoredReferences,
                         "ProductFlightModeCoordinator references are not fully serialized", report);
+                    Require(mode.AuthoredTraining != null && mode.AuthoredTraining.HasAuthoredReferences,
+                        "The approved six-lesson training catalog and presentation must be authored", report);
                     Require(mode.transform.name == "ProductionInputRoot",
                         "ProductFlightModeCoordinator must remain on ProductionInputRoot", report);
                     Require(demos.Length == 1 && mode.AuthoredDemoPilot == demos[0],
