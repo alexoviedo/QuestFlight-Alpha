@@ -150,6 +150,17 @@ namespace QuestFlight.Editor
                         "The startup showroom root identity changed unexpectedly.");
                     Require(existing.ValidateAuthoredReferences(out string error), error);
                     ValidatePresentation(existing.gameObject);
+                    foreach(var label in existing.GetComponentsInChildren<TextMesh>(true))
+                    {
+                        switch(label.name)
+                        {
+                            case "DemoFlightCardTitle": label.text="DEMO FLIGHT"; break;
+                            case "FreeFlightCardTitle": label.text="FREE FLIGHT"; break;
+                            case "LessonsCardTitle": label.text="FLIGHT LESSONS"; break;
+                            case "SeatCalibrationCardTitle": label.text="SEAT CALIBRATION"; break;
+                            case "StartupNavigationHint": label.text="POINT + TRIGGER / STICK + A    MENU: APP MENU    B / Y: BACK"; break;
+                        }
+                    }
                     existing.gameObject.SetActive(false);
                     return existing;
                 }
@@ -249,7 +260,7 @@ namespace QuestFlight.Editor
                 textTemplate,
                 view,
                 "DemoFlightCard",
-                "A   DEMO FLIGHT",
+                "DEMO FLIGHT",
                 "GUIDED KBDU DEPARTURE · SHARED-CONTROL HANDOFF",
                 new Vector3(-0.47f, 0.23f, 1.43f),
                 ProductFlightModeMenuButton.MenuAction.Demo,
@@ -265,7 +276,7 @@ namespace QuestFlight.Editor
                 textTemplate,
                 view,
                 "FreeFlightCard",
-                "B   FREE FLIGHT",
+                "FREE FLIGHT",
                 "ENGINE RUNNING · FULLY MANUAL C172",
                 new Vector3(-0.47f, -0.01f, 1.43f),
                 ProductFlightModeMenuButton.MenuAction.FreeFlight,
@@ -281,7 +292,7 @@ namespace QuestFlight.Editor
                 textTemplate,
                 view,
                 "LessonsCard",
-                "X   FLIGHT LESSONS",
+                "FLIGHT LESSONS",
                 "SIX GUIDED EXERCISES",
                 new Vector3(-0.47f, -0.25f, 1.43f),
                 ProductFlightModeMenuButton.MenuAction.Lessons,
@@ -297,7 +308,7 @@ namespace QuestFlight.Editor
                 textTemplate,
                 view,
                 "SeatCalibrationCard",
-                "MENU   SEAT CALIBRATION",
+                "SEAT CALIBRATION",
                 "",
                 new Vector3(-0.47f, -0.47f, 1.43f),
                 ProductFlightModeMenuButton.MenuAction.SeatCalibration,
@@ -323,7 +334,7 @@ namespace QuestFlight.Editor
                 "StartupNavigationHint",
                 selection.transform,
                 textTemplate,
-                "POINT + TRIGGER  ·  STICK ↑↓ + CLICK",
+                "POINT + TRIGGER / STICK + A    MENU: APP MENU    B / Y: BACK",
                 new Vector3(-1.09f, -0.70f, 1.44f),
                 0.0041f,
                 44,

@@ -1,5 +1,7 @@
 # Flight Training V1 — approved implementation
 
+September 19 follow-up: the user reports meaningful progress but insufficient instructional clarity. The [proposed clarity and coaching plan](FLIGHT_TRAINING_CLARITY_PLAN_2026-09-19.md) addresses that feedback within these six lessons and awaits explicit approval. The implementation evidence below does not establish instructional acceptance.
+
 Scope approved September 18, 2026: six short C172 simulator-practice lessons, using the existing authored Boulder scene, cockpit, shared wind, native JSBSim authority, and Quest controls. No advanced maneuvers, aircraft/physics overhaul, radio/ATC system, instructor avatar, cloud service, multiplayer, or new scenery is included.
 
 ## What the pilot uses
@@ -17,15 +19,14 @@ Choose **X — Flight Lessons** on the existing startup menu. Use the left stick
 
 The first-flight lesson has an optional 30-second level-flight/shallow-turn demonstration. Demonstration and assistance are explicitly labeled and spoken. Practice does not turn guidance back on when the pilot releases the yoke. Right Touch thumbstick rudder remains available in manual training with the existing focus, tracking and neutral-rearm checks.
 
-| Context | Controls |
+| Input | Updated September 19 behavior |
 |---|---|
-| Lesson selection | Left stick: select; A: briefing |
-| Briefing | A: practice; B: lesson list; Y: repeat; X: demonstration where offered |
-| Flying | A: pause; B: repeat instruction; X: request assistance / take control; Y: captions |
-| Paused | A: resume; X: restart exercise; B: lessons; Y: repeat instruction |
-| Debrief | A: retry; B: lessons; X: next lesson |
+| Left Menu | App pause/menu throughout Free Flight, Demo and training. |
+| B / Y | Back/cancel one level; while flying opens pause; at app-menu root resumes. |
+| A / point + trigger | Select visibly labeled actions. |
+| X | Repeat/show the current training cue. |
 
-The existing left Menu button still opens seat calibration. Training pauses on calibration, focus/presence loss and tracked-controller loss; resuming is deliberate. Ground/low-altitude help pauses the exercise instead of attempting a low-altitude hold. Restart uses the lesson checkpoint through the native reset API and a short comfort fade.
+Seat calibration is a named app-menu action. End-session/Main menu requires confirmation during a flight. Completed progress and saved seat calibration are retained. Held buttons, triggers and sticks must be released before manual flight input rearms.
 
 ## Implementation boundaries
 

@@ -102,11 +102,14 @@ namespace QuestFlightLab.Input
         private bool _flapsManuallyOwned;
         private ProductFlightModeCoordinator _touchFlightMode;
         private bool _touchRudderArmed;
+        private bool _touchControlsRequireRelease;
+        public void RequireTouchRelease() { _touchControlsRequireRelease=true; _touchRudderArmed=false; ReleaseAllTouchOverrides(); }
 
         public bool CanAcceptTouchOverrides =>
             enabled &&
             gameObject.activeInHierarchy &&
             !_flightLessonInputSuppressed &&
+            !_touchControlsRequireRelease &&
             HasAuthoredSources;
 
         public int ActiveTouchOverrideCount =>
@@ -451,6 +454,12 @@ namespace QuestFlightLab.Input
 
         private void Update()
         {
+            if (_touchControlsRequireRelease &&
+                OVRInput.Get(OVRInput.RawAxis1D.LIndexTrigger)<.1f && OVRInput.Get(OVRInput.RawAxis1D.RIndexTrigger)<.1f &&
+                OVRInput.Get(OVRInput.RawAxis1D.LHandTrigger)<.1f && OVRInput.Get(OVRInput.RawAxis1D.RHandTrigger)<.1f &&
+                OVRInput.Get(OVRInput.RawAxis2D.LThumbstick).sqrMagnitude<.04f && OVRInput.Get(OVRInput.RawAxis2D.RThumbstick).sqrMagnitude<.04f &&
+                !OVRInput.Get(OVRInput.RawButton.A|OVRInput.RawButton.B|OVRInput.RawButton.X|OVRInput.RawButton.Y|OVRInput.RawButton.Start))
+                _touchControlsRequireRelease=false;
             bool useDeterministic = deterministicMode &&
                                     !_flightLessonGuidanceActive &&
                                     deterministicInput != null &&
@@ -520,13 +529,14 @@ namespace QuestFlightLab.Input
             if (pause) Paused = !Paused;
 
             MapSnapshotInto(snapshot, invertElevator, _throttle, _trim, _flaps, _mixture, _carbHeat, Current);
-            bool touchRudderAvailable = !useDeterministic && !_flightLessonGuidanceActive && !Paused &&
+            bool touchFlightControlsAvailable = !useDeterministic && !_touchControlsRequireRelease && !_flightLessonGuidanceActive && !Paused &&
                 Application.isFocused && OVRManager.hasInputFocus &&
                 _touchFlightMode != null &&
                 (_touchFlightMode.State == ProductFlightModeCoordinator.FlightModeState.FreeFlight ||
                  _touchFlightMode.State == ProductFlightModeCoordinator.FlightModeState.Training) &&
                 _touchFlightMode.AuthoredSeatCalibration != null &&
-                !_touchFlightMode.AuthoredSeatCalibration.IsOpen &&
+                !_touchFlightMode.AuthoredSeatCalibration.IsOpen;
+            bool touchRudderAvailable = touchFlightControlsAvailable &&
                 OVRInput.IsControllerConnected(OVRInput.Controller.RTouch) &&
                 OVRInput.GetControllerOrientationTracked(OVRInput.Controller.RTouch);
             float touchRudderX = touchRudderAvailable
@@ -534,6 +544,25 @@ namespace QuestFlightLab.Input
                 : 0f;
             Current.rudder = ResolveTouchThumbstickRudder(
                 Current.rudder, touchRudderX, touchRudderAvailable, ref _touchRudderArmed);
+            // Each Touch index trigger applies its corresponding toe brake.
+            if(touchFlightControlsAvailable && OVRInput.IsControllerConnected(OVRInput.Controller.LTouch) &&
+                OVRInput.GetControllerOrientationTracked(OVRInput.Controller.LTouch))
+            {
+                float trimInput=OVRInput.Get(OVRInput.RawAxis2D.LThumbstick).y;
+                if(Mathf.Abs(trimInput)>.25f)
+                {
+                    _trim=Mathf.Clamp(_trim+trimInput*trimRatePerSecond*Mathf.Min(Time.unscaledDeltaTime,.05f),-1f,1f);
+                    Current.trim=_trim; _trimManuallyOwned=true;
+                }
+            }
+            if (touchFlightControlsAvailable &&
+                OVRInput.IsControllerConnected(OVRInput.Controller.LTouch) &&
+                OVRInput.GetControllerOrientationTracked(OVRInput.Controller.LTouch))
+                Current.leftToeBrake = Mathf.Max(Current.leftToeBrake, Mathf.Clamp01(
+                    OVRInput.Get(OVRInput.RawAxis1D.LIndexTrigger, OVRInput.Controller.LTouch)));
+            if (touchRudderAvailable)
+                Current.rightToeBrake = Mathf.Max(Current.rightToeBrake, Mathf.Clamp01(
+                    OVRInput.Get(OVRInput.RawAxis1D.RIndexTrigger, OVRInput.Controller.RTouch)));
             if (_flightLessonGuidanceActive)
                 ApplyFlightLessonGuidance(snapshot, Time.unscaledTime, Time.unscaledDeltaTime, Current);
             CaptureBaseControls(Current);

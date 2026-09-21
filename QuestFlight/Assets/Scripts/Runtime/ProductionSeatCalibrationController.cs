@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace QuestFlightLab.Runtime
@@ -19,6 +19,8 @@ namespace QuestFlightLab.Runtime
         [SerializeField, Min(0.001f)] private float largeStepMeters = 0.02f;
         [SerializeField, Min(1f)] private float repeatStepsPerSecond = 8f;
         [SerializeField, Range(0f, 0.95f)] private float stickDeadzone = 0.35f;
+        [SerializeField] private bool appNavigationOwnsButtons;
+        public void ConfigureAppNavigation(bool enabled) => appNavigationOwnsButtons = enabled;
 
         public bool IsOpen { get; private set; }
         public bool UsesSmallIncrement { get; private set; } = true;
@@ -92,7 +94,7 @@ namespace QuestFlightLab.Runtime
                 OVRInput.Button.Start,
                 OVRInput.Controller.LTouch,
                 ref _menuWasPressed);
-            if (menu)
+            if (menu && !appNavigationOwnsButtons)
             {
                 if (IsOpen) Cancel();
                 else Open();
@@ -119,12 +121,17 @@ namespace QuestFlightLab.Runtime
             bool incrementPressed = ReadEitherGripDown(
                 ref _incrementWasPressed);
 
-            if (incrementPressed) ToggleIncrementSize();
-            if (leftPrimary) Recenter();
-            if (leftSecondary) ResetToDefault();
-            if (rightPrimary) Save();
-            else if (rightSecondary) Cancel();
+            if (incrementPressed && !appNavigationOwnsButtons) ToggleIncrementSize();
+            if (!appNavigationOwnsButtons)
+            {
+                if (leftPrimary) Recenter();
+                if (leftSecondary || rightSecondary) Cancel();
+                if (rightPrimary) Save();
+            }
             if (!IsOpen) return;
+            if (appNavigationOwnsButtons) SetPanelVisible(false);
+
+            if (appNavigationOwnsButtons && !IsAdjustingSeat) return;
 
             Vector2 left = ApplyDeadzone(OVRInput.Get(
                 OVRInput.Axis2D.PrimaryThumbstick,
@@ -139,6 +146,8 @@ namespace QuestFlightLab.Runtime
                 ApplyOffset(CalibrationOffset + delta, CalibrationYawDegrees, "adjusting");
             }
         }
+
+        public bool IsAdjustingSeat => IsOpen && (OVRInput.Get(OVRInput.RawAxis1D.LHandTrigger)>.5f || OVRInput.Get(OVRInput.RawAxis1D.RHandTrigger)>.5f);
 
         public float CurrentStepMeters => UsesSmallIncrement ? smallStepMeters : largeStepMeters;
 
@@ -197,7 +206,7 @@ namespace QuestFlightLab.Runtime
                     importedC172PilotViewOffset = CalibrationOffset,
                     importedC172CockpitYawDeg = CalibrationYawDegrees,
                     pilotEyeLocal = seatProfile.nominalEyeLocalPosition + CalibrationOffset,
-                    instructions = "Touch UI: sticks move the view; grip toggles small/large; X recenter; Y reset; A save; B cancel."
+                    instructions = "Menu: app menu. Seat calibration: sticks adjust, grip toggles increments; use labeled Save, Recenter or Reset. B/Y cancel."
                 };
                 string path = CockpitViewpointPersistence.SaveCurrent(state);
                 Status = "saved " + path;
@@ -241,7 +250,7 @@ namespace QuestFlightLab.Runtime
 
         private void SetPanelVisible(bool visible)
         {
-            if (panelRoot != null) panelRoot.SetActive(visible);
+            if (panelRoot != null) panelRoot.SetActive(visible && !appNavigationOwnsButtons);
         }
 
         private void RefreshPanel()
@@ -253,8 +262,8 @@ namespace QuestFlightLab.Runtime
                 $"Increment  {(UsesSmallIncrement ? "SMALL" : "LARGE")}  {CurrentStepMeters * 100f:0.0} cm   Grip: toggle\n" +
                 "Left stick: left/right + up/down\n" +
                 "Right stick: forward/aft\n" +
-                "X: recenter   Y: reset default\n" +
-                "A: save       B/Menu: cancel\n" +
+                "Use the labeled Save, Recenter and Reset buttons.\n" +
+                "B/Y: cancel    Menu: app menu\n" +
                 Status;
         }
 

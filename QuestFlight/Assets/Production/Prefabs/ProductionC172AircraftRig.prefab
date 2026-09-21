@@ -11542,7 +11542,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1502035343935383864}
-  m_Text: X   FLIGHT LESSONS
+  m_Text: FLIGHT LESSONS
   m_OffsetZ: 0
   m_CharacterSize: 0.0068
   m_LineSpacing: 0.86
@@ -30231,7 +30231,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3400393854152525840}
-  m_Text: A   DEMO FLIGHT
+  m_Text: DEMO FLIGHT
   m_OffsetZ: 0
   m_CharacterSize: 0.0068
   m_LineSpacing: 0.86
@@ -61814,7 +61814,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6308292860393169123}
-  m_Text: MENU   SEAT CALIBRATION
+  m_Text: SEAT CALIBRATION
   m_OffsetZ: 0
   m_CharacterSize: 0.0068
   m_LineSpacing: 0.86
@@ -68848,7 +68848,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6890573909491980041}
-  m_Text: "POINT + TRIGGER  \xB7  STICK \u2191\u2193 + CLICK"
+  m_Text: 'POINT + TRIGGER / STICK + A    MENU: APP MENU    B / Y: BACK'
   m_OffsetZ: 0
   m_CharacterSize: 0.0041
   m_LineSpacing: 0.86
@@ -70899,7 +70899,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7142635423485235625}
-  m_Text: B   FREE FLIGHT
+  m_Text: FREE FLIGHT
   m_OffsetZ: 0
   m_CharacterSize: 0.0068
   m_LineSpacing: 0.86
@@ -78085,6 +78085,7 @@ MonoBehaviour:
   largeStepMeters: 0.02
   repeatStepsPerSecond: 8
   stickDeadzone: 0.35
+  appNavigationOwnsButtons: 0
 --- !u!1 &7658894249073416932
 GameObject:
   m_ObjectHideFlags: 0

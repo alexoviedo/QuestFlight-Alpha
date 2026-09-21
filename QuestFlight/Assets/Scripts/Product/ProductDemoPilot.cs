@@ -165,6 +165,7 @@ namespace QuestFlight.Product
 
         private void Update()
         {
+            if (Time.timeScale <= 0f) return;
             if (!IsRunning || deterministicInput == null || productInput == null)
                 return;
             if (_guidanceSuppressed)

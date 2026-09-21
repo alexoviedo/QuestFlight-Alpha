@@ -14,10 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 04_takeoff
   displayName: Takeoff and departure
-  briefing: Start lined up and stopped on runway 08. Check the available controls,
-    apply power, rotate near 55 knots and climb at 70 to 80 knots. Maintain the runway
-    direction. This exercise uses the existing traffic protection; it does not simulate
-    radio clearance or a complete preflight checklist.
+  briefing: Start stopped on runway zero eight. Check the aircraft, take off and
+    climb straight ahead. Review the references before starting; instructions become
+    brief during the roll.
   briefingNarration: {fileID: 8300000, guid: b353f4945bd486049bdac8e21410ff24, type: 3}
   start:
     latitudeDegrees: 40.03909497191087
@@ -38,10 +37,12 @@ MonoBehaviour:
   goAroundStage: -1
   stages:
   - title: Takeoff configuration
-    instruction: Check alignment with runway 08, flaps zero to ten degrees, carb
-      heat cold, and mixture set for this exercise. Hold stopped while checking.
+    instruction: While stopped, check runway alignment and the flap indication. This
+      checkpoint has mixture and carb heat preset.
     narration: {fileID: 8300000, guid: 9f257ed6b219f66498d2ba4c379a489e, type: 3}
     task: 11
+    reference: 9
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 90
@@ -50,10 +51,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Takeoff roll
-    instruction: Release brakes, apply full power smoothly, and keep the runway centerline
-      with rudder. At about 55 knots, prepare to raise the nose.
+    instruction: Release brakes and smoothly apply full power. Keep the centerline
+      with rudder.
     narration: {fileID: 8300000, guid: adb0aea07660e384f84fd88206a1a662, type: 3}
     task: 12
+    reference: 7
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 90
@@ -62,10 +65,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Rotate
-    instruction: Gently raise the nose near 55 knots. Let the airplane lift off,
-      then adjust pitch toward a 70 to 80 knot climb.
+    instruction: At about fifty-five knots, gently raise the nose. Establish the
+      climb as the aircraft lifts off.
     narration: {fileID: 8300000, guid: f3ce43a3a5d3f004d9e92dbba71602b7, type: 3}
     task: 13
+    reference: 1
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 90
@@ -74,10 +79,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Departure climb
-    instruction: Continue straight ahead at 70 to 80 knots. Climb through 6000 feet;
-      do not turn early over the airport.
+    instruction: Climb straight ahead through six thousand feet. Hold seventy to
+      eighty knots.
     narration: {fileID: 8300000, guid: 5be478bec96d4a744853721d4db46a5f, type: 3}
     task: 14
+    reference: 1
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 6000
     speedKnots: 75
@@ -85,3 +92,4 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
+  orientation: 000000000200000004000000030000000100000007000000060000000a00000009000000

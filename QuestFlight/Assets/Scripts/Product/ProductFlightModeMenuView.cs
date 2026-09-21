@@ -1,4 +1,4 @@
-using QuestFlightLab.Aircraft.CockpitDynamics;
+﻿using QuestFlightLab.Aircraft.CockpitDynamics;
 using UnityEngine;
 
 namespace QuestFlight.Product
@@ -285,29 +285,31 @@ namespace QuestFlight.Product
             if (statusText == null) return;
             if (message == ProductFlightModeCoordinator.PreparingText)
             {
-                statusText.text = "INITIALIZING NATIVE FLIGHT SYSTEMS";
+                statusText.text = "Preparing your aircraft";
                 statusText.color = new Color(0.44f, 0.82f, 1f, 1f);
             }
             else if (message != null && message.StartsWith(ProductFlightModeCoordinator.SelectionText))
             {
-                statusText.text = "AIRCRAFT READY  Â·  SELECT A FLIGHT";
+                statusText.text = "Ready to fly";
                 statusText.color = new Color(0.68f, 0.92f, 0.82f, 1f);
             }
             else if (message == ProductFlightModeCoordinator.LessonsUnavailableText)
             {
-                statusText.text = "FLIGHT LESSONS ARE THE NEXT MILESTONE";
+                statusText.text = "Lessons are unavailable";
                 statusText.color = new Color(1f, 0.72f, 0.26f, 1f);
             }
             else if (!string.IsNullOrWhiteSpace(message) &&
                      message.StartsWith("FLIGHT MODE STARTUP BLOCKED"))
             {
-                statusText.text = message;
+                Debug.LogError(message);
+                statusText.text = "Unable to prepare the aircraft. Please restart QuestFlight.";
                 statusText.color = new Color(1f, 0.34f, 0.28f, 1f);
             }
             else
             {
                 statusText.text = message ?? string.Empty;
             }
+            ProductUiLabel.Sync(statusText);
         }
 
         public void BeginModeTransition(string selectedMode)
@@ -318,14 +320,18 @@ namespace QuestFlight.Product
             selectionContentRoot.SetActive(false);
             transitionContentRoot.SetActive(true);
             transitionText.text = string.IsNullOrWhiteSpace(selectedMode)
-                ? "ENTERING COCKPIT"
-                : "ENTERING " + selectedMode.ToUpperInvariant();
+                ? "Entering the cockpit"
+                : "Starting " + selectedMode;
+            ProductUiLabel.Sync(transitionText);
             _readyFrames = 0;
             _transitionProgress = 0f;
             _transitionPhase = TransitionPhase.WaitingForCockpit;
         }
 
         public void ShowSelectionForVisualQa()
+        { ShowMainSelection(); }
+
+        public void ShowMainSelection()
         {
             gameObject.SetActive(true);
             showroomContentRoot.SetActive(true);
@@ -338,6 +344,7 @@ namespace QuestFlight.Product
             SetMessage(ProductFlightModeCoordinator.SelectionText);
             SetFocusIndex(0, true);
             HideAircraftPresentation();
+            HideWorldPresentation();
         }
 
 #if UNITY_EDITOR

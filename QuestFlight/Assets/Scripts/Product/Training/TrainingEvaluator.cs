@@ -61,17 +61,18 @@ namespace QuestFlight.Product.Training
         }
 
         public void Step(TrainingStage stage, in FlightDynamicsState s,
-            in FlightDynamicsControlSnapshot c, float dt, bool eligible)
+            in FlightDynamicsControlSnapshot c, float dt, bool eligible,
+            float indicatedAltitudeFeet=float.NaN, float indicatedSpeedKnots=float.NaN, float indicatedVerticalSpeed=float.NaN)
         {
             if (!eligible || Complete || !s.IsFinite || dt <= 0 || dt > .25f) return;
             ElapsedSeconds += dt;
             TotalSeconds += dt;
-            float alt = (float)(s.altitudeMslMeters * FlightFrameConversions.MetersToFeet);
+            float alt = float.IsNaN(indicatedAltitudeFeet) ? (float)(s.altitudeMslMeters * FlightFrameConversions.MetersToFeet) : indicatedAltitudeFeet;
             float altError = Mathf.Abs(alt - stage.altitudeFeet);
             float headingError = Mathf.Abs(Mathf.DeltaAngle((float)s.headingDegrees, stage.heading));
             float bank = (float)s.bankDegrees;
-            float speed = (float)s.calibratedAirspeedKnots;
-            float vs = (float)s.verticalSpeedFeetPerMinute;
+            float speed = float.IsNaN(indicatedSpeedKnots) ? (float)s.calibratedAirspeedKnots : indicatedSpeedKnots;
+            float vs = float.IsNaN(indicatedVerticalSpeed) ? (float)s.verticalSpeedFeetPerMinute : indicatedVerticalSpeed;
             float agl = (float)(s.altitudeAglMeters * FlightFrameConversions.MetersToFeet);
             bool stable = altError <= 150 && headingError <= 12 && Mathf.Abs(bank) <= 8 &&
                 Mathf.Abs(vs) <= 250 && Mathf.Abs(speed - stage.speedKnots) <= 15;
@@ -98,7 +99,11 @@ namespace QuestFlight.Product.Training
                     good = s.weightOnWheels && s.groundSpeedKnots < .7 && c.throttle < .2f && near && s.positionUnityMeters.z < -60;
                     correction = "Idle and brake at the hold-short point, before the runway."; break;
                 case TrainingTask.Level:
-                    good = stable;
+                    bool envelope = Mathf.Abs(bank)<=8 && speed>=65 && speed<=120 && agl>300 && Mathf.Abs(vs)<800;
+                    good = stage.attitudeOnly ? envelope && Mathf.Abs(bank)<=6 :
+                        stage.reference==TrainingReference.Altimeter ? envelope && altError<=150 :
+                        stage.reference==TrainingReference.Airspeed ? envelope && Mathf.Abs(speed-stage.speedKnots)<=12 :
+                        stage.reference==TrainingReference.Heading ? envelope && headingError<=12 : stable;
                     correction = altError > 150 ? "Ease back toward the target altitude." : headingError > 12 ? "Return to the target heading." : "Level the wings and settle the speed and climb rate.";
                     MaximumAltitudeError = Mathf.Max(MaximumAltitudeError, altError);
                     MaximumHeadingError = Mathf.Max(MaximumHeadingError, headingError); break;

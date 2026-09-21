@@ -25,7 +25,7 @@ namespace QuestFlightLab.Runtime
         [SerializeField] private FlightDynamicsCoordinator flightDynamicsCoordinator;
         [SerializeField] private Transform environmentRoot;
         [SerializeField] private Transform runwayRoot;
-        [SerializeField] private OVRManager.FoveatedRenderingLevel fixedFoveationLevel = OVRManager.FoveatedRenderingLevel.High;
+        [SerializeField] private OVRManager.FoveatedRenderingLevel fixedFoveationLevel = OVRManager.FoveatedRenderingLevel.Medium;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         private Coroutine foveationRoutine;

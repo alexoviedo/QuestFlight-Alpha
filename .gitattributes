@@ -55,3 +55,6 @@ QuestFlight/Packages/com.alexoviedo.questflight.jsbsim/RuntimeData/** -text -eol
 *.bytes filter=lfs diff=lfs merge=lfs -text
 *.dll filter=lfs diff=lfs merge=lfs -text
 *.so filter=lfs diff=lfs merge=lfs -text
+
+# Redistributable interface font sources (license recorded alongside assets).
+*.ttf filter=lfs diff=lfs merge=lfs -text

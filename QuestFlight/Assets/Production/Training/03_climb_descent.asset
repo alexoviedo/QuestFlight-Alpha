@@ -14,10 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 03_climb_descent
   displayName: Climbs, descents and trim
-  briefing: Start in level flight at 7000 feet. Add power and climb to 7300 feet,
-    level off, then descend to 7000 feet. Finally use the trim wheel to relieve sustained
-    yoke pressure. Keep the heading at 090 true. The same real wind field remains
-    active.
+  briefing: Practice a climb, descent and level-off. Learn the instruments first.
+    The left stick adjusts trim; the right stick controls rudder. Menu pauses.
   briefingNarration: {fileID: 8300000, guid: cbef6bf7c57cea946bfa7dec72fb4080, type: 3}
   start:
     latitudeDegrees: 40.055571596122014
@@ -38,10 +36,12 @@ MonoBehaviour:
   goAroundStage: -1
   stages:
   - title: Climb
-    instruction: Add power and raise the nose gently. Climb toward 7300 feet at 70
-      to 80 knots, heading 090 true.
+    instruction: Add climb power, then set a gentle climbing attitude. Aim for seventy
+      to eighty knots.
     narration: {fileID: 8300000, guid: e414d80d9ddcb564cb45d509d59ea5e9, type: 3}
     task: 8
+    reference: 1
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7300
     speedKnots: 75
@@ -50,10 +50,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Level at 7300
-    instruction: Lower the nose before passing the target, then adjust power for
-      level flight at 7300 feet and about 90 knots.
+    instruction: Approaching seventy-three hundred feet, lower the nose to level
+      flight and adjust power.
     narration: {fileID: 8300000, guid: 8a5605cc14f888c4795d8a9a03c25d3f, type: 3}
     task: 6
+    reference: 0
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7300
     speedKnots: 90
@@ -62,10 +64,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Descend
-    instruction: Reduce power and lower the nose slightly. Descend toward 7000 feet
-      at a comfortable 300 to 500 feet per minute.
+    instruction: Reduce power and establish a gentle descent toward seven thousand
+      feet.
     narration: {fileID: 8300000, guid: cbea92fdac83ad749bf48c19cce0802d, type: 3}
     task: 9
+    reference: 5
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 90
@@ -74,10 +78,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Level at 7000
-    instruction: Begin leveling before 7000 feet. Restore cruise power and settle
-      at about 90 knots.
+    instruction: Begin leveling before seven thousand feet. Restore cruise power
+      and settle near ninety knots.
     narration: {fileID: 8300000, guid: ab0c2cc1d7371d2408c74e2b469c6bb7, type: 3}
     task: 6
+    reference: 0
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 90
@@ -86,10 +92,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Trim off pressure
-    instruction: Use small movements of the trim wheel to relieve yoke pressure.
-      Keep 7000 feet, heading 090 true, and the wings level.
+    instruction: Move the left thumbstick up or down a little to trim. Reduce the
+      yoke input needed to stay level.
     narration: {fileID: 8300000, guid: 3c76954f770871041a1d9263dff2dcf7, type: 3}
     task: 10
+    reference: 10
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 90
@@ -97,3 +105,4 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
+  orientation: 000000000200000004000000030000000100000007000000060000000a00000009000000

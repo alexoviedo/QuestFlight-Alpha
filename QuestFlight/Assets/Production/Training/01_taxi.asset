@@ -14,10 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 01_taxi
   displayName: Cockpit and taxi
-  briefing: Start stopped on taxiway Alpha. Check the yoke, rudder and brakes, then
-    taxi toward runway 08 and stop before entering it. The right thumbstick controls
-    rudder; grasp the cockpit controls to operate them. A pauses, B repeats an instruction.
-    This lesson does not include engine starting or runway entry.
+  briefing: Start stopped. Learn the controls, then taxi slowly and stop before the
+    runway. Both index triggers apply brakes; the right stick steers. Menu pauses.
   briefingNarration: {fileID: 8300000, guid: 342c401618466274cb0d3ea83a1fca64, type: 3}
   start:
     latitudeDegrees: 40.03854574952252
@@ -38,9 +36,11 @@ MonoBehaviour:
   goAroundStage: -1
   stages:
   - title: Check roll
-    instruction: At idle, grasp the yoke. Move it left and right, then center it.
+    instruction: At idle, grip the yoke. Move it left and right, then center it.
     narration: {fileID: 8300000, guid: 19dc7aeecf062364c830f70f1d0daf4f, type: 3}
     task: 0
+    reference: 8
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 90
@@ -52,6 +52,8 @@ MonoBehaviour:
     instruction: Move the yoke gently forward and back, then center it.
     narration: {fileID: 8300000, guid: fa84df69b3afd3f428673e2a026c2686, type: 3}
     task: 1
+    reference: 8
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 90
@@ -60,10 +62,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Check rudder
-    instruction: Move the right thumbstick left and right, then center it. It controls
+    instruction: Move the right thumbstick left and right, then center it. This controls
       rudder and ground steering.
     narration: {fileID: 8300000, guid: 88d4278d6b7140347a552cdaac151313, type: 3}
     task: 2
+    reference: 6
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 90
@@ -72,10 +76,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Check brakes
-    instruction: Keep the throttle at idle. Press both toe brakes and hold the airplane
-      stopped.
+    instruction: With throttle at idle, squeeze both index triggers to apply both
+      brakes.
     narration: {fileID: 8300000, guid: bb7845a458be52c4c8653e6cda21c75b, type: 3}
     task: 3
+    reference: 11
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 90
@@ -84,10 +90,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Taxi west
-    instruction: Release the brakes. Add a little power and follow the taxiway west
-      at walking speed, about 3 to 6 knots. Slow near the runway-end connector.
+    instruction: Release the brakes. Add a little power; follow the taxiway west
+      at walking speed.
     narration: {fileID: 8300000, guid: 5fb3798724be13d4480d1c1d2c4027f2, type: 3}
     task: 4
+    reference: 11
+    attitudeOnly: 0
     heading: 270
     altitudeFeet: 7000
     speedKnots: 90
@@ -96,10 +104,12 @@ MonoBehaviour:
     targetEnu: {x: -600, y: -91}
     captureMeters: 20
   - title: Turn toward hold short
-    instruction: At the connector, turn right toward the runway. Keep the taxi speed
-      low and be ready to stop before the hold-short line.
+    instruction: Turn right at the connector toward the runway. Keep the taxi speed
+      low.
     narration: {fileID: 8300000, guid: fde3e86ab2dd13c43b19d58f609eba48, type: 3}
     task: 4
+    reference: 11
+    attitudeOnly: 0
     heading: 0
     altitudeFeet: 7000
     speedKnots: 90
@@ -108,10 +118,12 @@ MonoBehaviour:
     targetEnu: {x: -620, y: -80}
     captureMeters: 14
   - title: Stop before runway
-    instruction: Close the throttle and apply both brakes. Stop before the hold-short
-      line; do not enter the runway.
+    instruction: Close the throttle and brake before the hold-short line. Do not
+      enter the runway.
     narration: {fileID: 8300000, guid: 6cf1c573f2793964aaef7d10f539b169, type: 3}
     task: 5
+    reference: 11
+    attitudeOnly: 0
     heading: 0
     altitudeFeet: 7000
     speedKnots: 90
@@ -119,3 +131,4 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: -620, y: -72}
     captureMeters: 15
+  orientation: 08000000070000000b000000

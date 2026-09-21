@@ -1,5 +1,9 @@
 # Unified implementation plan — Map-Wide Offline Scenery Remaster V1
 
+## Proposed interface polish — September 21
+
+**Planning only; awaiting explicit approval.** The [interface polish plan](INTERFACE_POLISH_PLAN_2026-09-21.md) covers a unified visual system for startup, menus, lessons, live instructions, cockpit labels, calibration and feedback states. It is grounded in inspected existing captures, current source and primary design guidance. Preserve the user-accepted ground markers, stable cockpit label anchoring and Medium FFR. The proposed next deliverable is one coordinated interface candidate; no product changes are authorized by this planning update.
+
 ## Proposed correction — road geometry, bridge paths and parked-car grounding
 
 **Approved; core road-repair candidate built and installed September 18.** Packaged scenery and installed APK hashes are verified. Focused stereo captures are inspected and the candidate is ready for worn review; worn acceptance, resource/machine-gate findings and the broader path-behavior work remain open. The [revised road and traffic repair plan](ROAD_GEOMETRY_AND_TRAFFIC_CONTACT_PLAN_2026-09-17.md) consolidates the reported spiky pavement and vehicle clipping with newly verified off-deck bridge lanes and stale parked-car heights. It covers road-aware terrain triangulation, actual carriageway/lane geometry, connected driving paths, route-specific bridge support, final-surface contact baking and static parked-car grounding. Prioritize the airport road loop and nearby Foothills crossings, audit the full existing inventory, and produce one integrated candidate before another headset request. Preserve accepted scenery/FFR and instanced traffic; Implementation evidence and outstanding coverage are tracked in [the September 18 road repair report](ROAD_REPAIR_IMPLEMENTATION_2026-09-18.md).

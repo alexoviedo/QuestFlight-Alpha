@@ -206,6 +206,9 @@ namespace QuestFlightLab.Runtime
                 }
                 if (trainingView != "menu") mode.AuthoredTraining.SelectLesson(1);
                 if (trainingView == "practice") mode.AuthoredTraining.StartPractice();
+                if (trainingView == "orientation") { mode.AuthoredNavigation.ShowOrientation(); mode.AuthoredTraining.ShowReference(1); }
+                if (trainingView == "app") mode.AuthoredNavigation.OpenMenu();
+                if (trainingView == "calibration") mode.AuthoredNavigation.OpenCalibration();
                 Debug.Log($"[TrainingQA] requested={trainingView} state={mode.AuthoredTraining.State} focused={Application.isFocused}");
             }
             else if(!startDemo) Object.FindFirstObjectByType<ProductFlightModeCoordinator>()?.SelectFreeFlight();

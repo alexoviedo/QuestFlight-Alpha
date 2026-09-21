@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using QuestFlightLab.Flight.Backends;
@@ -25,6 +25,36 @@ namespace QuestFlight.Product.Training
         [SerializeField] private TextMesh cueText;
         [SerializeField] private AudioSource voice;
         [SerializeField] private AudioClip demonstrationVoice, assistanceVoice, handbackVoice, goAroundVoice;
+        [SerializeField] private AudioClip demonstrationTurnVoice;
+        public void ConfigureDemonstrationTurnForAuthoring(AudioClip value) => demonstrationTurnVoice=value;
+        public bool DemonstrationPaused => State==TrainingSessionState.Paused && resumedState==TrainingSessionState.Demonstration;
+        [SerializeField] private TrainingCoach coach;
+        public void ConfigureCoachForAuthoring(TrainingCoach value) => coach=value;
+        public TrainingStage CurrentStage => Stage;
+        public bool VoicePlaying => voice != null && voice.isPlaying;
+        public bool WithoutPrompts { get; private set; }
+        private string liveCue;
+        private AudioClip liveVoice;
+        private float liveCueUntil;
+        private bool demoTurnAnnounced;
+        private int orientationIndex;
+        public string CurrentExplanation => coach != null ? coach.Explain(coach.CurrentReference) : CurrentInstruction;
+        public void PresentCoachCue(string text,AudioClip clip,bool interrupt)
+        {
+            if(urgentGoAround) return; // The safety announcement has sole speech priority.
+            if(VoicePlaying&&!interrupt) return;
+            liveCue=text; liveVoice=clip; liveCueUntil=Time.unscaledTime+Mathf.Max(8,clip!=null?clip.length+3:8); Speak(clip); RefreshPresentation();
+        }
+        public void ShowReference(int direction=0)
+        {
+            if(coach==null||Lesson.orientation.Length==0) return;
+            orientationIndex=Mathf.Clamp(orientationIndex+direction,0,Lesson.orientation.Length-1);
+            var reference=Lesson.orientation[orientationIndex]; coach.Show(reference,60);
+            Speak(coach.ExplanationVoice(reference));
+        }
+        public void ExplainCurrent()
+        { if(coach!=null) { coach.Show(Stage.reference,60); Speak(coach.ExplanationVoice(Stage.reference)); } }
+        public void StartWithoutPrompts() { BeginExercise(false); WithoutPrompts=true; }
         [SerializeField] private TrainingLessonDefinition[] lessons = Array.Empty<TrainingLessonDefinition>();
         public TrainingSessionState State { get; private set; }
         public int SelectedLesson { get; private set; } = 1;
@@ -41,6 +71,9 @@ namespace QuestFlight.Product.Training
         private readonly TrainingEvaluator evaluator = new TrainingEvaluator();
         private readonly FlightLessonGuidanceController guidance = new FlightLessonGuidanceController();
         private readonly FlightLessonCrashClassifier crash = new FlightLessonCrashClassifier();
+        [SerializeField] private ProductUiInstruction polishedInstruction;
+        public void ConfigurePolishedInstruction(ProductUiInstruction view) => polishedInstruction=view;
+        public bool IsLessonComplete(int index) => index>=0&&index<lessons.Length&&progress?.Find(lessons[index].lessonId)?.independentCompletion==true;
         private TrainingProgress progress;
         private string progressPath, pendingFailure, notice = "";
         private float savedTimeScale = 1, sampleAccumulator, refreshAt, preparationTime, guidanceTime;
@@ -55,6 +88,34 @@ namespace QuestFlight.Product.Training
         private TrainingLessonDefinition Lesson => lessons[SelectedLesson];
         private TrainingStage Stage => Lesson.stages[StageIndex];
         private bool Flying => State == TrainingSessionState.Practice || State == TrainingSessionState.Demonstration || State == TrainingSessionState.Assisting;
+        public bool IsFlying => Flying;
+        public bool Captions => captions;
+        public bool AssistancePaused => State==TrainingSessionState.Paused && resumedState==TrainingSessionState.Assisting;
+        public bool CanUseAssistance => AssistancePaused || (resumedState==TrainingSessionState.Practice && !flight.CurrentState.weightOnWheels && flight.CurrentState.altitudeAglMeters>91.44);
+        public string CurrentInstruction => Stage.instruction;
+        public string CurrentBriefing => Lesson.briefing;
+        public string CurrentLessonName => Lesson.displayName;
+        public bool DemonstrationAvailable => Lesson.allowDemonstration;
+        public void ToggleCaptions() { captions=!captions; RefreshPresentation(); }
+        public void RepeatCurrent()
+        {
+            if(State==TrainingSessionState.Inactive||State==TrainingSessionState.Menu||State==TrainingSessionState.Debrief) return;
+            if(State==TrainingSessionState.Demonstration) { Speak(demoTurnAnnounced?demonstrationTurnVoice:demonstrationVoice); return; }
+            if(State==TrainingSessionState.Briefing) { Speak(Lesson.briefingNarration); return; }
+            if(urgentGoAround) { Speak(goAroundVoice); return; }
+            if(WithoutPrompts) WithoutPrompts=false;
+            Speak(liveVoice!=null?liveVoice:Stage.narration);
+            if(coach!=null) coach.Show(coach.CurrentReference);
+        }
+        public void LeaveTraining()
+        {
+            pendingOpen=resetRequested=false;
+            input.DisableFlightLessonGuidance(); voice.Stop();
+            if (ownsPause) { Time.timeScale=savedTimeScale; ownsPause=false; }
+            State=TrainingSessionState.Inactive; panelRoot.SetActive(false); cueRoot.SetActive(false);
+            coach?.ResetObservation();
+            input.SetFlightLessonInputSuppressed(true);
+        }
 
         public void ConfigureForAuthoring(ProductFlightModeCoordinator m, FlightDynamicsCoordinator f,
             ProductControlInput i, ProductionSeatCalibrationController c, GameObject panel, TextMesh text,
@@ -95,7 +156,9 @@ namespace QuestFlight.Product.Training
         {
             if (State != TrainingSessionState.Menu || index < 0 || index >= lessons.Length) return;
             SelectedLesson = index;
+            orientationIndex=0;
             StageIndex = 0;
+            WithoutPrompts=false; liveCue=null; liveVoice=null; coach?.ResetObservation();
             State = TrainingSessionState.Briefing;
             RefreshPresentation();
             Speak(Lesson.briefingNarration);
@@ -114,11 +177,13 @@ namespace QuestFlight.Product.Training
             input.DisableFlightLessonGuidance();
             voice.Stop();
             StageIndex = 0;
+            WithoutPrompts=false; liveCue=null; liveVoice=null; coach?.ResetObservation();
             pendingFailure = null;
             alternateFinish = false;
             urgentGoAround = false;
             approachFlaps = Lesson.initialFlaps;
             demoRequested = demonstration;
+            demoTurnAnnounced=false;
             preparationTime = 0;
             resetApplied = false;
             State = TrainingSessionState.Preparing;
@@ -127,6 +192,9 @@ namespace QuestFlight.Product.Training
 
         private void Update()
         {
+            if (State==TrainingSessionState.Inactive && !pendingOpen) return;
+            if (modes.AuthoredNavigation!=null && modes.AuthoredNavigation.IsOpen) { cueRoot.SetActive(false); return; }
+            if(liveCue!=null && Time.unscaledTime>liveCueUntil) { liveCue=null; liveVoice=null; }
             if (pendingOpen)
             {
                 if (modes.AuthoredModeMenuView.TransitionPending) return;
@@ -161,7 +229,7 @@ namespace QuestFlight.Product.Training
             {
                 if (evaluator.BadTouchdown || (evaluator.Landed && urgentGoAround)) Finish(false, "Landing needs practice. An unstable approach needs a go-around; reduce sink rate, level the wings and stay over the runway.");
                 else if (evaluator.TimedOut) Finish(false, "This exercise needs another attempt. " + evaluator.Feedback);
-                else if (evaluator.Complete) AdvanceStage();
+                else if (evaluator.Complete && (!VoicePlaying || IsTimeCritical(Stage.task))) AdvanceStage();
             }
             if (State == TrainingSessionState.Demonstration || State == TrainingSessionState.Assisting)
                 UpdateGuidance(Time.deltaTime);
@@ -233,7 +301,10 @@ namespace QuestFlight.Product.Training
                 // Presentation runs on Update, outside the native integrator callback.
                 announceStage = true;
             }
-            evaluator.Step(Stage, s, c, elapsed, true);
+            if(coach!=null && coach.TryIndications(out var indicated) &&
+                QuestFlightLab.Aircraft.CockpitDynamics.V2.CockpitInstrumentV2Kinematics.TryEvaluateIndicatedAltitudeFeet(indicated,out float indicatedFeet))
+                evaluator.Step(Stage,s,c,elapsed,true,indicatedFeet,indicated.indicatedAirspeedKnots,indicated.indicatedVerticalSpeedFeetPerMinute);
+            else if(coach==null) evaluator.Step(Stage,s,c,elapsed,true);
             if (approach) approachFlaps = c.flaps;
             if (approach && !alternateFinish && s.altitudeAglMeters < 91.44 && s.altitudeAglMeters > 12 && !evaluator.Landed &&
                 (s.calibratedAirspeedKnots < 55 || s.calibratedAirspeedKnots > 80 || s.verticalSpeedFeetPerMinute < -800 ||
@@ -250,8 +321,12 @@ namespace QuestFlight.Product.Training
             // The go-around sequence is an alternative, never an extra landing requirement.
             if (StageIndex == Lesson.goAroundStage) { Finish(true, "Exercise complete."); return; }
             evaluator.BeginStage(flight.LastAppliedControls.trim, flight.LastAppliedControls.flaps);
-            Speak(Stage.narration);
+            liveCue=null; liveVoice=null;
+            if(!WithoutPrompts || IsTimeCritical(Stage.task)) Speak(Stage.narration);
         }
+
+        private static bool IsTimeCritical(TrainingTask task) => task==TrainingTask.TakeoffRoll || task==TrainingTask.Rotation ||
+            task==TrainingTask.Landing || task==TrainingTask.GoAroundPower || task==TrainingTask.GoAroundClimb;
 
         public void PauseExercise(string reason = "")
         {
@@ -291,7 +366,7 @@ namespace QuestFlight.Product.Training
                 Speak(handbackVoice);
             }
             else if (State == TrainingSessionState.Practice && !flight.CurrentState.weightOnWheels && flight.CurrentState.altitudeAglMeters > 91.44)
-            { State = TrainingSessionState.Assisting; evaluator.MarkAssisted(); BeginGuidance(); notice = "ASSISTANCE HAS CONTROL - X returns control to you"; Speak(assistanceVoice); }
+            { State = TrainingSessionState.Assisting; evaluator.MarkAssisted(); BeginGuidance(); notice = "INSTRUCTOR CONTROLS - Menu: Take control"; Speak(assistanceVoice); }
             else if (State == TrainingSessionState.Practice) PauseExercise("Near the ground, assistance pauses the exercise. Repeat the instruction, retry, or resume to fly a go-around.");
             RefreshPresentation();
         }
@@ -312,6 +387,8 @@ namespace QuestFlight.Product.Training
             if (dt <= 0) return;
             guidanceTime += dt;
             bool demonstrateTurn = State == TrainingSessionState.Demonstration && guidanceTime > 12;
+            if(demonstrateTurn&&!demoTurnAnnounced)
+            { demoTurnAnnounced=true; Speak(demonstrationTurnVoice); coach?.Show(TrainingReference.Attitude,10); }
             float heading = demonstrateTurn ? assistHeading - 30 : assistHeading;
             var intent = new FlightLessonGuidanceIntent("training_explicit_assistance", FlightLessonSegmentKind.Cruise,
                 flight.CurrentState.positionUnityMeters, heading, 0, assistAltitude, assistSpeed, 15, 400, 0);
@@ -330,8 +407,8 @@ namespace QuestFlight.Product.Training
 
         private void Finish(bool complete, string reason)
         {
-            bool independent = complete && !evaluator.Assisted;
-            string result = complete ? independent ? "COMPLETED INDEPENDENTLY" : "COMPLETED WITH ASSISTANCE" : "NEEDS PRACTICE";
+            bool independent = complete && !evaluator.Assisted && WithoutPrompts;
+            string result = complete ? evaluator.Assisted ? "COMPLETED WITH FLIGHT ASSISTANCE" : independent ? "COMPLETED WITHOUT ROUTINE PROMPTS" : "COMPLETED GUIDED PRACTICE" : "NEEDS PRACTICE";
             LastDebrief = result + "\n" + reason + "\n" +
                 $"Manual time in target conditions: {evaluator.GoodSeconds:0} / {evaluator.TotalSeconds:0} seconds.\n" +
                 (evaluator.Landed ? $"Touchdown sink: {evaluator.TouchdownSinkFpm:0} ft/min.\n" : "") +
@@ -360,6 +437,7 @@ namespace QuestFlight.Product.Training
 
         private void ReadControls()
         {
+            if (modes.AuthoredNavigation != null) return;
             bool a = OVRInput.Get(OVRInput.RawButton.A), b = OVRInput.Get(OVRInput.RawButton.B);
             bool x = OVRInput.Get(OVRInput.RawButton.X), y = OVRInput.Get(OVRInput.RawButton.Y);
             float vertical = OVRInput.Get(OVRInput.RawAxis2D.LThumbstick).y;
@@ -386,7 +464,7 @@ namespace QuestFlight.Product.Training
         {
             if (State == TrainingSessionState.Inactive) return;
             bool showMenu = !Flying && State != TrainingSessionState.Preparing;
-            panelRoot.SetActive(showMenu);
+            panelRoot.SetActive(showMenu && modes.AuthoredNavigation == null);
             cueRoot.SetActive(Flying || State == TrainingSessionState.Preparing);
             if (announceStage) { announceStage = false; Speak(Stage.narration); }
             if (announceGoAround) { announceGoAround = false; Speak(goAroundVoice); }
@@ -407,11 +485,14 @@ namespace QuestFlight.Product.Training
                 menuText.text = Lesson.displayName.ToUpperInvariant() + "\n\n" + Wrap(LastDebrief, 58) + "\n\nA retry   B lessons   X next lesson";
             else if (State == TrainingSessionState.Blocked) menuText.text = "LESSON STOPPED\n\n" + Wrap(notice, 58);
             string owner = State == TrainingSessionState.Practice ? "YOUR CONTROLS" : State == TrainingSessionState.Preparing ? "PREPARING EXERCISE" : "ASSISTANCE HAS CONTROL";
-            string instruction = State == TrainingSessionState.Demonstration ? "Watch the horizon and attitude indicator during level flight and a gentle left turn. Pause, then restart for your own practice." :
-                State == TrainingSessionState.Assisting ? "Assistance is holding near your current heading and altitude. Press X when ready to take control. This attempt is marked assisted." : Stage.instruction;
+            string instruction = State == TrainingSessionState.Demonstration ? "Watch the outside horizon; compare the attitude indicator. Menu opens help." :
+                State == TrainingSessionState.Assisting ? "Instructor holds the aircraft. Menu offers Take control." : liveCue ?? Stage.instruction;
             cueText.text = owner + " | " + (StageIndex + 1) + "/" + Lesson.stages.Length + " " + Stage.title +
-                (captions ? "\n" + Wrap(instruction, 66) + "\n" + Wrap(urgentGoAround ? "UNSTABLE APPROACH - GO AROUND" : Flying && State != TrainingSessionState.Practice ? "Practice evaluation is suspended during assistance." : evaluator.Feedback, 66) : "") +
-                "\nA pause   B repeat   X help / my controls   Y captions";
+                (captions ? "\n" + Wrap(urgentGoAround ? "UNSTABLE APPROACH - GO AROUND" : instruction, 66) : "") +
+                "\nMenu: pause / help    X: repeat / show    B / Y: back";
+            if(polishedInstruction!=null)polishedInstruction.Present(
+                State==TrainingSessionState.Practice?"Your controls":State==TrainingSessionState.Preparing?"Preparing":"Instructor controls",
+                Stage.title,urgentGoAround?"Unstable approach — go around":instruction,StageIndex,Lesson.stages.Length,captions,urgentGoAround);
         }
 
         private void Speak(AudioClip clip) { if (clip != null) { voice.Stop(); voice.clip = clip; voice.Play(); } }

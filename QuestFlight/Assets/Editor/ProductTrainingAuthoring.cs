@@ -2,6 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Oculus.Interaction;
+using Oculus.Interaction.Surfaces;
+using QuestFlightLab.Aircraft.CockpitDynamics;
+using QuestFlightLab.Aircraft.CockpitDynamics.V2;
 using AlexOviedo.QuestFlight.JSBSim;
 using QuestFlight.Product;
 using QuestFlight.Product.Training;
@@ -26,7 +30,7 @@ namespace QuestFlight.Editor
 
         public static void RunBatch()
         {
-            try { Apply(); Debug.Log("[TrainingAuthoring] SUCCESS"); EditorApplication.Exit(0); }
+            try { ProductFlightModesFoundationAuthoring.Apply(); Apply(); Debug.Log("[TrainingAuthoring] SUCCESS"); EditorApplication.Exit(0); }
             catch (Exception e) { Debug.LogException(e); EditorApplication.Exit(1); }
         }
 
@@ -60,11 +64,14 @@ namespace QuestFlight.Editor
                 audio.playOnAwake = false; audio.spatialBlend = 0; audio.volume = .8f; audio.priority = 32;
                 training.ConfigureForAuthoring(mode, flight, input, seat, panel.gameObject, text, cue.gameObject, caption, audio, lessons);
                 training.ConfigureVoiceForAuthoring(
-                    Voice("demonstration", "The demonstration has control. Watch the outside horizon and attitude indicator as the airplane holds level, then turns gently left. Pause and restart the exercise when you are ready to practice yourself."),
-                    Voice("assistance", "Assistance has control. I am holding near your current heading and altitude. Press X to take control when ready. This attempt will be marked assisted."),
-                    Voice("handback", "You have control. Assistance is off. Continue the instruction shown, or press B to hear it again."),
+                    Voice("demonstration", "I have control. Watch the wings stay level against the outside horizon. Briefly cross-check the attitude indicator."),
+                    Voice("assistance", "The instructor has control and is holding the aircraft. Open Menu and select Take control when ready."),
+                    Voice("handback", "You have control. Assistance is off. X repeats the current instruction; Menu pauses."),
                     Voice("go_around", "The approach is unstable. Go around. Apply full power, carb heat cold, establish the climb and retract flaps in stages."));
+                training.ConfigureDemonstrationTurnForAuthoring(Voice("demonstration_turn","I am beginning a gentle left turn. Watch the bank develop, then settle. Cross-check the heading as it changes."));
                 mode.ConfigureTrainingForAuthoring(training);
+                AuthorNavigation(input.transform, calibration, mode, training, input, seat, template);
+                AuthorCoach(world,ui,calibration,training,flight,template);
                 // Restore the existing fourth menu capability without adding another card or camera.
                 var button = mode.AuthoredModePanelRoot.GetComponentsInChildren<ProductFlightModeMenuButton>(true).Single(b => b.name == "LessonsCard");
                 var serialized = new SerializedObject(button);
@@ -73,17 +80,56 @@ namespace QuestFlight.Editor
                 var labels = button.GetComponentsInChildren<TextMesh>(true);
                 foreach (var label in labels)
                 {
-                    if (label.name.EndsWith("Title")) label.text = "X   FLIGHT LESSONS";
+                    if (label.name.EndsWith("Title")) label.text = "FLIGHT LESSONS";
                     else if (label.name.EndsWith("Subtitle")) label.text = "SIX GUIDED EXERCISES";
                     EditorUtility.SetDirty(label); PrefabUtility.RecordPrefabInstancePropertyModifications(label);
                 }
                 PrefabUtility.RecordPrefabInstancePropertyModifications(button);
+                foreach (var label in mode.AuthoredModePanelRoot.GetComponentsInChildren<TextMesh>(true))
+                {
+                    if (label.name == "DemoFlightCardTitle") label.text="DEMO FLIGHT";
+                    else if (label.name == "FreeFlightCardTitle") label.text="FREE FLIGHT";
+                    else if (label.name == "SeatCalibrationCardTitle") label.text="SEAT CALIBRATION";
+                    else if (label.text.Contains("MENU") && label.text.Contains("CALIBRATION")) label.text="MENU: APP MENU    B / Y: BACK";
+                    else if (label.text.Contains("Menu") && label.text.Contains("calibration")) label.text="Menu: app menu    B / Y: back";
+                    EditorUtility.SetDirty(label); PrefabUtility.RecordPrefabInstancePropertyModifications(label);
+                }
                 EditorUtility.SetDirty(training); EditorUtility.SetDirty(mode);
                 PrefabUtility.SaveAsPrefabAsset(world, World);
             }
             finally { PrefabUtility.UnloadPrefabContents(world); }
             File.WriteAllText(Root + "/VoiceScripts.json", JsonUtility.ToJson(new VoiceManifest { clips = scripts.ToArray() }, true));
             AssetDatabase.SaveAssets(); AssetDatabase.Refresh();
+        }
+
+        private static void AuthorNavigation(Transform inputRoot, Transform seatRoot, ProductFlightModeCoordinator mode,
+            ProductTrainingController training, ProductControlInput input, ProductionSeatCalibrationController seat, TextMesh template)
+        {
+            var navigation=inputRoot.GetComponent<ProductAppNavigation>();
+            if(navigation==null) navigation=inputRoot.gameObject.AddComponent<ProductAppNavigation>();
+            var root=Child(seatRoot,"AppNavigationPanel");
+            root.localScale=Vector3.one*.48f;
+            var title=Text(root,"Heading",template,new Vector3(-.44f,.40f,1.05f),.008f,48);
+            var body=Text(root,"Detail",template,new Vector3(-.44f,.33f,1.05f),.0056f,44);
+            var hint=Text(root,"Controls",template,new Vector3(-.44f,-.47f,1.05f),.0045f,40);
+            Backplate(root,new Vector3(0,-.04f,1.08f),new Vector3(.98f,1.0f,.008f));
+            var choices=new ProductActionButton[8];
+            for(int n=0;n<choices.Length;n++)
+            {
+                var row=Child(root,"Action"+n); row.localPosition=new Vector3(0,.065f-n*.07f,1.05f);
+                var box=row.GetComponent<BoxCollider>(); if(box==null) box=row.gameObject.AddComponent<BoxCollider>();
+                box.size=new Vector3(.87f,.063f,.012f);
+                var surface=row.GetComponent<ColliderSurface>(); if(surface==null) surface=row.gameObject.AddComponent<ColliderSurface>();
+                surface.InjectAllColliderSurface(box);
+                var ray=row.GetComponent<RayInteractable>(); if(ray==null) ray=row.gameObject.AddComponent<RayInteractable>();
+                ray.InjectAllRayInteractable(surface);
+                var label=Text(row,"Label",template,new Vector3(-.42f,0,-.008f),.007f,44); label.anchor=TextAnchor.MiddleLeft;
+                choices[n]=row.GetComponent<ProductActionButton>(); if(choices[n]==null) choices[n]=row.gameObject.AddComponent<ProductActionButton>();
+                choices[n].Configure(navigation,new MonoBehaviour[]{ray},label,n);
+            }
+            navigation.Configure(mode,training,input,seat,root.gameObject,root.Find("Backplate"),title,body,hint,choices);
+            mode.ConfigureNavigationForAuthoring(navigation); seat.ConfigureAppNavigation(true);
+            root.gameObject.SetActive(false);
         }
 
         private static TrainingLessonDefinition[] BuildCatalog(FlightDynamicsCoordinator flight)
@@ -171,10 +217,323 @@ namespace QuestFlight.Editor
             landing.start.pitchDegrees = -1; landing.start.flightPathAngleDegrees = -3;
             foreach (var lesson in catalog)
             {
+                ApplyClarityContent(lesson);
                 if (lesson.start.calibratedAirspeedKnots > 0) AuthorAirborneTrim(lesson, flight);
                 EditorUtility.SetDirty(lesson);
             }
             return catalog.ToArray();
+        }
+
+        private static void ApplyClarityContent(TrainingLessonDefinition lesson)
+        {
+            if(lesson.lessonId=="02_first_flight")
+            {
+                TrainingStage Level(string title,string cue,TrainingReference reference,bool attitude=false) => new TrainingStage
+                {title=title,instruction=cue,reference=reference,task=TrainingTask.Level,altitudeFeet=7000,heading=90,speedKnots=90,dwellSeconds=12,attitudeOnly=attitude};
+                var left=lesson.stages[1]; var rollLeft=lesson.stages[2]; var right=lesson.stages[3]; var rollRight=lesson.stages[4];
+                lesson.stages=new[]{
+                    Level("Wings level","You have control. Keep the wings level against the outside horizon.",TrainingReference.Outside,true),
+                    Level("Altitude cross-check","Check the altimeter. Hold about seven thousand feet, then look outside again.",TrainingReference.Altimeter),
+                    Level("Airspeed cross-check","Check the airspeed needle. Aim for ninety knots with small power adjustments.",TrainingReference.Airspeed),
+                    Level("Heading cross-check","Read the heading at the top index. Hold zero nine zero, then look outside.",TrainingReference.Heading),
+                    left,rollLeft,right,rollRight};
+                left.instruction="Turn gently left toward zero six zero. Use a shallow, coordinated bank.";
+                rollLeft.instruction="Level the wings on zero six zero. Settle at seven thousand feet and ninety knots.";
+                right.instruction="Turn gently right toward zero nine zero. Keep the turn shallow and coordinated.";
+                rollRight.instruction="Level the wings on zero nine zero. Hold altitude and speed with small corrections.";
+                lesson.briefing="Learn the cockpit references, then practice level flight and gentle turns. The instructor coaches you as you fly. Menu pauses; X repeats the current cue.";
+            }
+            else
+            {
+                string[] cues=lesson.lessonId switch
+                {
+                    "01_taxi"=>new[]{"At idle, grip the yoke. Move it left and right, then center it.","Move the yoke gently forward and back, then center it.","Move the right thumbstick left and right, then center it. This controls rudder and ground steering.","With throttle at idle, squeeze both index triggers to apply both brakes.","Release the brakes. Add a little power; follow the taxiway west at walking speed.","Turn right at the connector toward the runway. Keep the taxi speed low.","Close the throttle and brake before the hold-short line. Do not enter the runway."},
+                    "03_climb_descent"=>new[]{"Add climb power, then set a gentle climbing attitude. Aim for seventy to eighty knots.","Approaching seventy-three hundred feet, lower the nose to level flight and adjust power.","Reduce power and establish a gentle descent toward seven thousand feet.","Begin leveling before seven thousand feet. Restore cruise power and settle near ninety knots.","Move the left thumbstick up or down a little to trim. Reduce the yoke input needed to stay level."},
+                    "04_takeoff"=>new[]{"While stopped, check runway alignment and the flap indication. This checkpoint has mixture and carb heat preset.","Release brakes and smoothly apply full power. Keep the centerline with rudder.","At about fifty-five knots, gently raise the nose. Establish the climb as the aircraft lifts off.","Climb straight ahead through six thousand feet. Hold seventy to eighty knots."},
+                    "05_pattern"=>new[]{"Keep the runway on your left. Hold sixty-three hundred feet on the north-side downwind.","Abeam the landing end, reduce power. Below flap speed, select ten degrees and begin descending.","Turn gently left onto base. Keep a shallow bank and a comfortable descent.","Align with the runway. Hold sixty to seventy knots on a steady final approach.","Go around. Full power, pitch for climb. Reduce full flaps to twenty degrees.","With positive climb and safe speed, reduce flaps to ten degrees.","Clear of obstacles, retract remaining flaps and climb straight ahead."},
+                    "06_landing"=>new[]{"Keep the runway centered. Hold sixty to seventy knots with a steady descent.","Look farther along the runway. Reduce power and gently arrest the descent for touchdown.","Keep directional control and brake smoothly to taxi speed.","Go around. Full power, pitch for climb. Reduce full flaps to twenty degrees.","With positive climb and safe speed, reduce flaps to ten degrees.","Clear of obstacles, retract remaining flaps and climb straight ahead."},
+                    _=>Array.Empty<string>()
+                };
+                for(int n=0;n<Math.Min(cues.Length,lesson.stages.Length);n++) lesson.stages[n].instruction=cues[n];
+                lesson.briefing=lesson.lessonId switch
+                {
+                    "01_taxi"=>"Start stopped. Learn the controls, then taxi slowly and stop before the runway. Both index triggers apply brakes; the right stick steers. Menu pauses.",
+                    "03_climb_descent"=>"Practice a climb, descent and level-off. Learn the instruments first. The left stick adjusts trim; the right stick controls rudder. Menu pauses.",
+                    "04_takeoff"=>"Start stopped on runway zero eight. Check the aircraft, take off and climb straight ahead. Review the references before starting; instructions become brief during the roll.",
+                    "05_pattern"=>"Practice the north-side pattern for runway zero eight. Learn the runway references before starting. A safe go-around is a successful outcome.",
+                    _=>"Start at a final-approach checkpoint. Practice a stable approach and landing, or choose a go-around. Review the controls first; do not force an unstable landing."
+                };
+            }
+            for(int n=0;n<lesson.stages.Length;n++)
+            {
+                var stage=lesson.stages[n];
+                if(lesson.lessonId!="02_first_flight"||n>=4) stage.reference=ReferenceFor(stage.task);
+                stage.narration=Voice(lesson.lessonId+"_"+n.ToString("00"),stage.instruction);
+            }
+            lesson.orientation=lesson.lessonId=="01_taxi" ? new[]{TrainingReference.Yoke,TrainingReference.Throttle,TrainingReference.Runway} :
+                new[]{TrainingReference.Outside,TrainingReference.Attitude,TrainingReference.Heading,TrainingReference.Altimeter,TrainingReference.Airspeed,TrainingReference.Throttle,TrainingReference.Slip,TrainingReference.Trim,TrainingReference.Flaps};
+            lesson.briefingNarration=Voice(lesson.lessonId+"_briefing",lesson.briefing);
+        }
+
+        private static TrainingReference ReferenceFor(TrainingTask task) => task switch
+        {
+            TrainingTask.RollControl or TrainingTask.PitchControl => TrainingReference.Yoke,
+            TrainingTask.RudderControl=>TrainingReference.Slip,
+            TrainingTask.BrakeControl or TrainingTask.Taxi or TrainingTask.Stop or TrainingTask.Final or TrainingTask.Landing or TrainingTask.Rollout or TrainingTask.Downwind or TrainingTask.Abeam or TrainingTask.Base=>TrainingReference.Runway,
+            TrainingTask.Turn=>TrainingReference.Heading,
+            TrainingTask.Climb or TrainingTask.Departure or TrainingTask.Rotation=>TrainingReference.Airspeed,
+            TrainingTask.Descend=>TrainingReference.VerticalSpeed,
+            TrainingTask.Trim=>TrainingReference.Trim,
+            TrainingTask.TakeoffRoll or TrainingTask.GoAroundPower=>TrainingReference.Throttle,
+            TrainingTask.TakeoffConfiguration or TrainingTask.GoAroundClimb or TrainingTask.GoAroundClean=>TrainingReference.Flaps,
+            _=>TrainingReference.Outside
+        };
+
+        private static void AuthorCoach(GameObject world,Transform ui,Transform seatRoot,ProductTrainingController training,FlightDynamicsCoordinator flight,TextMesh template)
+        {
+            var coach=ui.GetComponent<TrainingCoach>(); if(coach==null) coach=ui.gameObject.AddComponent<TrainingCoach>();
+            var batch=world.GetComponentInChildren<CockpitInstrumentV2BatchController>(true);
+            if(batch==null) throw new InvalidOperationException("The authored instrument layout is required for teaching anchors.");
+            var markers=new List<TrainingReferenceMarker>();
+            // Instrument references belong to the airframe, not the calibrated seat.
+            // Re-author the earlier seat children so a saved seat offset cannot move a pointer off its gauge.
+            foreach(var child in seatRoot.Cast<Transform>().Where(t=>t.name.StartsWith("TrainingReference_",StringComparison.Ordinal)).ToArray())
+                Object.DestroyImmediate(child.gameObject);
+            var markerParent=AnchorCockpitReferences(flight);
+            void Reference(TrainingReference id,string label,string text,CockpitInstrumentV2Function function=CockpitInstrumentV2Function.None)
+            {
+                GameObject marker=null;
+                Vector3 position=Vector3.zero; bool positioned=false;
+                if(function!=CockpitInstrumentV2Function.None)
+                {
+                    var binding=batch.Layout.Bindings.FirstOrDefault(b=>b.rotationFunction==function||b.translationFunction==function);
+                    if(binding.vertexCount<=0) throw new InvalidOperationException("Missing teaching binding: "+id);
+                    position=batch.NeutralizedSourceRenderer.transform.TransformPoint(binding.pivotLocal); positioned=true;
+                }
+                else if(id==TrainingReference.Attitude)
+                {
+                    // The attitude pivot is at the back of its ball; project it onto the gauge-face plane.
+                    var face=batch.Layout.Bindings.First(b=>b.rotationFunction==CockpitInstrumentV2Function.IndicatedAirspeedNeedleDegrees);
+                    var normal=face.rotationAxisLocal.normalized;
+                    var center=batch.Layout.AttitudeContract.pivotLocal;
+                    center-=normal*Vector3.Dot(center-face.pivotLocal,normal);
+                    position=batch.NeutralizedSourceRenderer.transform.TransformPoint(center); positioned=true;
+                }
+                else if(id==TrainingReference.Throttle||id==TrainingReference.Yoke||id==TrainingReference.Flaps)
+                {
+                    var target=id==TrainingReference.Throttle?CockpitTouchInteractionV2Target.Throttle:id==TrainingReference.Yoke?CockpitTouchInteractionV2Target.PilotYoke:CockpitTouchInteractionV2Target.FlapSelector;
+                    var touch=world.GetComponentInChildren<CockpitTouchInteractionV2Controller>(true);
+                    var bindings=new SerializedObject(touch).FindProperty("bindings");
+                    for(int n=0;n<bindings.arraySize;n++)
+                    {
+                        var b=bindings.GetArrayElementAtIndex(n);
+                        if(b.FindPropertyRelative("target").intValue!=(int)target) continue;
+                        var collider=b.FindPropertyRelative("targetCollider").objectReferenceValue as Collider;
+                        if(collider!=null) { position=collider is BoxCollider box?box.transform.TransformPoint(box.center):collider.bounds.center; positioned=true; break; }
+                    }
+                }
+                if(positioned)
+                {
+                    var root=Child(markerParent,"TrainingReference_"+id);
+                    root.position=position+(seatRoot.position-position).normalized*.014f; root.rotation=seatRoot.rotation;
+                    var ring=root.GetComponent<LineRenderer>(); if(ring==null) ring=root.gameObject.AddComponent<LineRenderer>();
+                    ring.useWorldSpace=false; ring.loop=true; ring.positionCount=33; ring.widthMultiplier=.002f;
+                    ring.sharedMaterial=AssetDatabase.LoadAssetAtPath<Material>(ProductStartupShowroomAuthoring.AccentMaterialPath);
+                    ring.shadowCastingMode=ShadowCastingMode.Off; ring.receiveShadows=false;
+                    for(int n=0;n<33;n++) { float a=2*Mathf.PI*n/33; ring.SetPosition(n,new Vector3(Mathf.Sin(a)*.047f,Mathf.Cos(a)*.047f,0)); }
+                    var name=Text(root,"Name",template,new Vector3(.05f,.048f,-.006f),.0026f,44); name.text=label;
+                    // Fixed index leader; all geometry stays cockpit-relative in both eyes.
+                    var pointer=Child(root,"ReadingIndex"); var line=pointer.GetComponent<LineRenderer>(); if(line==null) line=pointer.gameObject.AddComponent<LineRenderer>();
+                    line.useWorldSpace=false; line.positionCount=2; line.widthMultiplier=.002f; line.sharedMaterial=ring.sharedMaterial;
+                    line.SetPosition(0,new Vector3(.047f,.047f,0)); line.SetPosition(1,new Vector3(0,.033f,0));
+                    line.shadowCastingMode=ShadowCastingMode.Off; line.receiveShadows=false;
+                    marker=root.gameObject; marker.SetActive(false);
+                }
+                markers.Add(new TrainingReferenceMarker{reference=id,marker=marker,explanation=text,voice=Voice("reference_"+id.ToString().ToLowerInvariant(),text)});
+            }
+            Reference(TrainingReference.Outside,"Outside horizon","Look through the windshield. Use the distant horizon to judge aircraft attitude, and keep scanning for traffic. Cross-check instruments briefly, then look outside again.");
+            Reference(TrainingReference.Attitude,"Attitude indicator","The attitude indicator shows the airplane against a small artificial horizon. Compare it with the real horizon; avoid staring at the instrument.");
+            Reference(TrainingReference.Airspeed,"Airspeed - knots","This is the airspeed indicator. Read the needle against the knots scale. Ninety knots is the level-flight target for this exercise.",CockpitInstrumentV2Function.IndicatedAirspeedNeedleDegrees);
+            Reference(TrainingReference.Altimeter,"Altimeter - feet","This is the altimeter. Its numeric reading and hands show indicated altitude in feet. The level-flight target is seven thousand feet.",CockpitInstrumentV2Function.AltimeterHundredsNeedleDegrees);
+            Reference(TrainingReference.Heading,"Heading - top index","Read heading at the top index. Nine means zero nine zero degrees. This simulator's heading indicator uses true heading; use this dial for lesson targets, not the magnetic compass.",CockpitInstrumentV2Function.DirectionalGyroHeadingDegrees);
+            Reference(TrainingReference.VerticalSpeed,"Vertical speed","This needle shows climbing or descending in feet per minute. Use it to confirm a trend; make small attitude corrections and allow the indication to settle.",CockpitInstrumentV2Function.IndicatedVerticalSpeedNeedleDegrees);
+            Reference(TrainingReference.Slip,"Slip indicator","The ball shows coordination. Use gentle rudder toward the displaced ball, then ease the input as it centers. The right thumbstick controls rudder.",CockpitInstrumentV2Function.SlipSkidNormalized);
+            Reference(TrainingReference.Throttle,"Throttle","Grip the throttle knob to adjust power. Add or reduce power smoothly, then check how airspeed and climb change.");
+            Reference(TrainingReference.Yoke,"Yoke","Grip the yoke. Left and right inputs roll the airplane; forward and back inputs change pitch. Release the correcting input as the desired attitude is reached.");
+            Reference(TrainingReference.Flaps,"Flap selector","Use the flap selector to choose a position. Confirm the flap indication and keep within the taught airspeed range before extending flaps.");
+            Reference(TrainingReference.Trim,"Trim control","The left thumbstick adjusts trim during manual flight. Use small up or down inputs to reduce the yoke input needed to hold attitude. There is no force feedback.");
+            Reference(TrainingReference.Runway,"Runway reference","Identify runway zero eight and its paved edges outside. The north-side pattern keeps the runway to your left. For taxi, stay on the taxiway and stop before entering the runway.");
+            var lines=new List<TrainingCoachLine>();
+            void Cue(TrainingCue id,TrainingReference reference,string text) => lines.Add(new TrainingCoachLine{cue=id,reference=reference,text=text,voice=Voice("coach_"+id.ToString().ToLowerInvariant(),text)});
+            Cue(TrainingCue.RollLeft,TrainingReference.Attitude,"The right bank is too steep. Ease the yoke left to reduce it.");
+            Cue(TrainingCue.RollRight,TrainingReference.Attitude,"The left bank is too steep. Ease the yoke right to reduce it.");
+            Cue(TrainingCue.RolloutLeft,TrainingReference.Outside,"Approaching the target heading. Begin rolling left to wings level.");
+            Cue(TrainingCue.RolloutRight,TrainingReference.Outside,"Approaching the target heading. Begin rolling right to wings level.");
+            Cue(TrainingCue.TurnLeft,TrainingReference.Heading,"The target is to your left. Begin a gentle left turn.");
+            Cue(TrainingCue.TurnRight,TrainingReference.Heading,"The target is to your right. Begin a gentle right turn.");
+            Cue(TrainingCue.AltitudeLow,TrainingReference.Altimeter,"You are below the target altitude. Check attitude and power; establish a gentle climb if airspeed permits.");
+            Cue(TrainingCue.AltitudeHigh,TrainingReference.Altimeter,"You are above the target altitude. Ease toward a gentle descent and monitor airspeed.");
+            Cue(TrainingCue.SpeedLow,TrainingReference.Airspeed,"Airspeed is low. Check nose attitude and power before continuing the maneuver.");
+            Cue(TrainingCue.SpeedHigh,TrainingReference.Airspeed,"Airspeed is high. Check power and your descent attitude; make a small correction.");
+            Cue(TrainingCue.RudderLeft,TrainingReference.Slip,"The ball is left of center. Add a little left rudder, then ease it as the ball centers.");
+            Cue(TrainingCue.RudderRight,TrainingReference.Slip,"The ball is right of center. Add a little right rudder, then ease it as the ball centers.");
+            Cue(TrainingCue.TaxiFast,TrainingReference.Throttle,"Taxi speed is too high. Reduce power and brake gently back to walking speed.");
+            Cue(TrainingCue.Stop,TrainingReference.Runway,"Throttle idle. Apply both brakes and stop before the runway.");
+            Cue(TrainingCue.Power,TrainingReference.Throttle,"Increase power smoothly for this phase. Keep monitoring airspeed and direction.");
+            Cue(TrainingCue.Brakes,TrainingReference.Outside,"Squeeze both index triggers to apply both brakes. Keep throttle at idle.");
+            Cue(TrainingCue.Yoke,TrainingReference.Yoke,"Grip the yoke and move it through the requested directions, then center it.");
+            Cue(TrainingCue.Rudder,TrainingReference.Slip,"Use the right thumbstick for rudder. Move it both ways, then center it.");
+            Cue(TrainingCue.Trim,TrainingReference.Trim,"Use small left-thumbstick inputs to trim until less yoke input is needed.");
+            Cue(TrainingCue.Flaps,TrainingReference.Flaps,"Positive climb established. Reduce flaps to the next instructed setting.");
+            Cue(TrainingCue.AlignRunway,TrainingReference.Runway,"Check runway alignment. Use a gentle correction; go around if a safe alignment is not possible.");
+            Cue(TrainingCue.GoAround,TrainingReference.Throttle,"Unstable approach. Go around: full power, establish the climb, then retract flaps in stages.");
+            Cue(TrainingCue.Recovered,TrainingReference.Outside,"That correction is working. Let the aircraft settle and look outside.");
+            coach.Configure(training,flight,batch.AuthorityProvider,lines.ToArray(),markers.ToArray()); training.ConfigureCoachForAuthoring(coach);
+            AuthorWorldObjective(world,coach);
+        }
+
+        // Narrow re-authoring entry point: preserve lessons, voices, cockpit markers and controls.
+        private static Transform AnchorCockpitReferences(FlightDynamicsCoordinator flight)
+        {
+            var rig=flight.simulationRoot.GetComponent<QuestFlightLab.Runtime.AircraftReferenceFrameRig>();
+            if(rig==null || rig.AircraftVisualRoot==null)
+                throw new InvalidOperationException("Cockpit references require the authored aircraft visual root.");
+            var references=flight.simulationRoot.Find("TrainingCockpitReferences")
+                ?? rig.AircraftVisualRoot.Find("TrainingCockpitReferences")
+                ?? Child(rig.AircraftVisualRoot,"TrainingCockpitReferences");
+            // Match cockpit/seat presentation interpolation, never the raw physics pose.
+            references.SetParent(rig.AircraftVisualRoot,true);
+            return references;
+        }
+
+        public static void RunCockpitReferenceAnchorBatch()
+        {
+            try
+            {
+                var world=PrefabUtility.LoadPrefabContents(World);
+                try
+                {
+                    AnchorCockpitReferences(world.GetComponentInChildren<FlightDynamicsCoordinator>(true));
+                    PrefabUtility.SaveAsPrefabAsset(world,World);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(world); }
+                AssetDatabase.SaveAssets();
+                Debug.Log("[TrainingReference] Cockpit labels now share the cockpit presentation root.");
+                EditorApplication.Exit(0);
+            }
+            catch(Exception e) { Debug.LogException(e); EditorApplication.Exit(1); }
+        }
+
+        public static void RunWorldObjectiveBatch()
+        {
+            try
+            {
+                var world=PrefabUtility.LoadPrefabContents(World);
+                try
+                {
+                    AuthorWorldObjective(world,world.GetComponentInChildren<TrainingCoach>(true));
+                    PrefabUtility.SaveAsPrefabAsset(world,World);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(world); }
+                AssetDatabase.SaveAssets();
+                Debug.Log("[TrainingObjective] Authored elevated outdoor marker.");
+                EditorApplication.Exit(0);
+            }
+            catch(Exception e) { Debug.LogException(e); EditorApplication.Exit(1); }
+        }
+
+        private static void AuthorWorldObjective(GameObject world,TrainingCoach coach)
+        {
+            if(coach==null) throw new InvalidOperationException("Authored training coach is missing.");
+            string materialPath=Root+"/ObjectiveRibbon.mat";
+            var material=AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            var shader=Shader.Find("QuestFlight/Training/ObjectiveRibbon");
+            if(shader==null) throw new InvalidOperationException("Outdoor objective ribbon shader is missing.");
+            if(material==null) { material=new Material(shader); AssetDatabase.CreateAsset(material,materialPath); }
+            material.shader=shader;
+            material.SetColor("_Color",new Color(.08f,.72f,.95f,1));
+            material.SetColor("_CoreColor",new Color(.72f,.96f,1,1));
+            material.SetFloat("_Surface",0);
+            EditorUtility.SetDirty(material);
+            var landmark=Child(world.transform,"TrainingAirportReference");
+            // Fixed geometry avoids camera-facing ribbon joins flipping across eye height.
+            var outline=landmark.GetComponent<LineRenderer>();
+            if(outline!=null) UnityEngine.Object.DestroyImmediate(outline);
+            var accent=AssetDatabase.LoadAssetAtPath<Material>(ProductStartupShowroomAuthoring.AccentMaterialPath);
+            var corners=new[]{new Vector3(-4,0,-4),new Vector3(-4,0,4),new Vector3(4,0,4),new Vector3(4,0,-4)};
+            var pulse=Child(landmark,"ObjectivePulse");
+            var ring=pulse.GetComponent<LineRenderer>();
+            if(ring!=null) UnityEngine.Object.DestroyImmediate(ring);
+            var rounded=new List<Vector3>();
+            for(int n=0;n<4;n++)
+            {
+                var p=corners[n];
+                rounded.Add(p+(corners[(n+3)%4]-p).normalized*.45f);
+                rounded.Add(p+(corners[(n+1)%4]-p).normalized*.45f);
+            }
+            AuthorObjectiveOutline(landmark,rounded,.10f,"ObjectiveBoundary",accent);
+            AuthorObjectiveOutline(pulse,rounded,.07f,"ObjectiveRing",accent);
+
+            // A single low-opacity, open-topped shell adds depth without particles or lights.
+            string volumeMaterialPath=Root+"/ObjectiveVolume.mat";
+            var volumeMaterial=AssetDatabase.LoadAssetAtPath<Material>(volumeMaterialPath);
+            if(volumeMaterial==null) { volumeMaterial=new Material(shader); AssetDatabase.CreateAsset(volumeMaterial,volumeMaterialPath); }
+            volumeMaterial.shader=shader; volumeMaterial.SetFloat("_Surface",1);
+            volumeMaterial.SetColor("_Color",new Color(.06f,.70f,.88f,1));
+            volumeMaterial.renderQueue=2999; EditorUtility.SetDirty(volumeMaterial);
+            string meshPath=Root+"/ObjectiveVolume.asset";
+            var mesh=AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+            if(mesh==null) { mesh=new Mesh { name="ObjectiveVolume" }; AssetDatabase.CreateAsset(mesh,meshPath); }
+            var vertices=new List<Vector3>(); var uv=new List<Vector2>(); var indices=new List<int>();
+            for(int n=0;n<rounded.Count;n++)
+            {
+                int v=vertices.Count; var a=rounded[n]; var b=rounded[(n+1)%rounded.Count];
+                vertices.Add(a); vertices.Add(b); vertices.Add(b+Vector3.up*3.8f); vertices.Add(a+Vector3.up*3.8f);
+                uv.Add(new Vector2(0,0)); uv.Add(new Vector2(1,0)); uv.Add(new Vector2(1,1)); uv.Add(new Vector2(0,1));
+                indices.AddRange(new[]{v,v+1,v+2,v,v+2,v+3});
+            }
+            mesh.Clear(); mesh.SetVertices(vertices); mesh.SetUVs(0,uv); mesh.SetTriangles(indices,0); mesh.RecalculateBounds();
+            // White vertex color also keeps the ribbon shader usable for authored solid meshes.
+            mesh.colors=Enumerable.Repeat(Color.white,vertices.Count).ToArray(); EditorUtility.SetDirty(mesh);
+            var volume=Child(landmark,"ObjectiveVolume");
+            var filter=volume.GetComponent<MeshFilter>(); if(filter==null) filter=volume.gameObject.AddComponent<MeshFilter>();
+            var renderer=volume.GetComponent<MeshRenderer>(); if(renderer==null) renderer=volume.gameObject.AddComponent<MeshRenderer>();
+            filter.sharedMesh=mesh; renderer.sharedMaterial=volumeMaterial;
+            renderer.shadowCastingMode=ShadowCastingMode.Off; renderer.receiveShadows=false;
+            renderer.lightProbeUsage=LightProbeUsage.Off; renderer.reflectionProbeUsage=ReflectionProbeUsage.Off;
+            landmark.gameObject.SetActive(false); coach.ConfigureWorldMarker(landmark,pulse);
+        }
+
+        private static void AuthorObjectiveOutline(Transform target,List<Vector3> path,float width,string name,Material material)
+        {
+            string assetPath=Root+"/"+name+".asset";
+            var mesh=AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
+            if(mesh==null) { mesh=new Mesh { name=name }; AssetDatabase.CreateAsset(mesh,assetPath); }
+            var vertices=new List<Vector3>(); var indices=new List<int>();
+            // Closed four-sided tube: stable silhouette from above, below and eye level.
+            for(int n=0;n<path.Count;n++)
+            {
+                var incoming=(path[n]-path[(n+path.Count-1)%path.Count]).normalized;
+                var outgoing=(path[(n+1)%path.Count]-path[n]).normalized;
+                var outward=Vector3.Cross((incoming+outgoing).normalized,Vector3.up);
+                for(int k=0;k<4;k++)
+                {
+                    float angle=k*Mathf.PI*.5f;
+                    vertices.Add(path[n]+width*.5f*(outward*Mathf.Cos(angle)+Vector3.up*Mathf.Sin(angle)));
+                    int a=n*4+k,b=((n+1)%path.Count)*4+k;
+                    int c=((n+1)%path.Count)*4+(k+1)%4,d=n*4+(k+1)%4;
+                    indices.AddRange(new[]{a,b,c,a,c,d});
+                }
+            }
+            mesh.Clear(); mesh.SetVertices(vertices); mesh.SetTriangles(indices,0);
+            mesh.RecalculateNormals(); mesh.RecalculateBounds();
+            mesh.colors=Enumerable.Repeat(Color.white,vertices.Count).ToArray();
+            EditorUtility.SetDirty(mesh);
+            var filter=target.GetComponent<MeshFilter>(); if(filter==null)filter=target.gameObject.AddComponent<MeshFilter>();
+            var renderer=target.GetComponent<MeshRenderer>(); if(renderer==null)renderer=target.gameObject.AddComponent<MeshRenderer>();
+            filter.sharedMesh=mesh; renderer.sharedMaterial=material;
+            renderer.shadowCastingMode=ShadowCastingMode.Off; renderer.receiveShadows=false;
+            renderer.lightProbeUsage=LightProbeUsage.Off; renderer.reflectionProbeUsage=ReflectionProbeUsage.Off;
         }
 
         private static void AuthorAirborneTrim(TrainingLessonDefinition lesson, FlightDynamicsCoordinator flight)
@@ -225,6 +584,7 @@ namespace QuestFlight.Editor
 
         private static AudioClip Voice(string id, string text)
         {
+            scripts.RemoveAll(s=>s.id==id);
             scripts.Add(new VoiceScript { id = id, text = text });
             string path = Root + "/Voice/" + id + ".wav";
             var importer = AssetImporter.GetAtPath(path) as AudioImporter;

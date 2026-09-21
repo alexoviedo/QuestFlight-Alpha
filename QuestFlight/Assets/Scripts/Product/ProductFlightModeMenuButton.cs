@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Oculus.Interaction;
 using QuestFlightLab.Aircraft.CockpitDynamics;
 using QuestFlightLab.Runtime;
@@ -32,6 +32,9 @@ namespace QuestFlight.Product
         [SerializeField] private Color pressedColor = new Color(0.95f, 0.52f, 0.12f, 1f);
         [SerializeField] private MonoBehaviour[] pointables = Array.Empty<MonoBehaviour>();
         [SerializeField, Range(0.05f, 0.35f)] private float hoverExitGraceSeconds = 0.15f;
+
+        [SerializeField] private ProductUiSurface polishedSurface;
+        public void ConfigurePolishedSurface(ProductUiSurface value) => polishedSurface=value;
 
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private MaterialPropertyBlock _properties;
@@ -124,9 +127,12 @@ namespace QuestFlight.Product
             }
         }
 
+        private void Start() => RefreshVisual();
+
         private void OnEnable()
         {
-            Subscribe(true);
+            // Menu focus is exclusively thumbstick-driven; cockpit pointers remain unchanged.
+            foreach(var p in pointables)if(p!=null)p.enabled=false;
             _isFocused = menuView != null && menuView.IsFocused(this);
             _isPressed = false;
             RefreshVisual();
@@ -210,6 +216,8 @@ namespace QuestFlight.Product
                 coordinator.State !=
                     ProductFlightModeCoordinator.FlightModeState.Selection)
                 return;
+            if (coordinator.AuthoredNavigation != null &&
+                !coordinator.AuthoredNavigation.TryConsumeStartupSelection()) return;
 
             switch (action)
             {
@@ -226,7 +234,8 @@ namespace QuestFlight.Product
                     coordinator.ShowLessonsUnavailable();
                     break;
                 case MenuAction.SeatCalibration:
-                    seatCalibration.Open();
+                    if (coordinator.AuthoredNavigation != null) coordinator.AuthoredNavigation.OpenCalibration();
+                    else seatCalibration.Open();
                     break;
             }
         }
@@ -270,6 +279,7 @@ namespace QuestFlight.Product
 
         private void RefreshVisual()
         {
+            if(polishedSurface!=null) { polishedSurface.Present(_isFocused||_hoverVisualActive,_isPressed); return; }
             ApplyColor(_isPressed
                 ? pressedColor
                 : _hoverVisualActive

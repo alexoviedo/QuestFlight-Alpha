@@ -1,4 +1,4 @@
-using QuestFlightLab.Flight.Backends;
+﻿using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Input;
 using QuestFlightLab.Runtime;
 using UnityEngine;
@@ -25,10 +25,9 @@ namespace QuestFlight.Product
 
         public const string SelectionText =
             "QUESTFLIGHT\n" +
-            "A â€” DEMO FLIGHT\n" +
-            "B â€” FREE FLIGHT\n" +
-            "X â€” FLIGHT LESSONS\n" +
-            "MENU â€” SEAT CALIBRATION";
+            "POINT AND SELECT A FLIGHT\n" +
+            "A - SELECT    B / Y - BACK\n" +
+            "MENU - APP MENU";
         public const string PreparingText = "QUESTFLIGHT\nPREPARING AIRCRAFTâ€¦";
         public const string LessonsUnavailableText =
             "FLIGHT LESSONS ARE THE NEXT MILESTONE";
@@ -41,6 +40,9 @@ namespace QuestFlight.Product
         [SerializeField] private TextMesh modePanelText;
         [SerializeField] private ProductFlightModeMenuView modeMenuView;
         [SerializeField] private Training.ProductTrainingController training;
+        [SerializeField] private ProductAppNavigation navigation;
+        public ProductAppNavigation AuthoredNavigation => navigation;
+        public void ConfigureNavigationForAuthoring(ProductAppNavigation value) => navigation = value;
         public Training.ProductTrainingController AuthoredTraining => training;
         public void ConfigureTrainingForAuthoring(Training.ProductTrainingController value) => training = value;
         [SerializeField, Min(0.1f)] private float lessonsMessageSeconds = 2.5f;
@@ -76,6 +78,8 @@ namespace QuestFlight.Product
         private bool _lessonsWasPressed;
         private bool _demoCheckpointPending;
         private float _demoCheckpointAtUnscaledTime;
+        private FlightDynamicsInitialConditions _startupInitialConditions;
+        private bool _hasStartupInitialConditions;
 
         public void ConfigureAuthoredReferences(
             ProductDemoPilot authoredDemoPilot,
@@ -131,6 +135,16 @@ namespace QuestFlight.Product
                 return;
             }
 
+            if (flightCoordinator.initialConditionProvider == null)
+            {
+                EnterBlocked("The authored initial aircraft state is missing.");
+                return;
+            }
+            // Capture before flight moves the provider's aircraft-relative spawn transform.
+            // Rebuilding it after a lesson would turn that lesson's location into the new start.
+            _startupInitialConditions = flightCoordinator.initialConditionProvider.Build(GeodeticReference.Kbdu);
+            _hasStartupInitialConditions = true;
+
             productInput.ReleaseAllTouchOverrides();
             productInput.SetFlightLessonInputSuppressed(true);
             SetPanelVisible(true);
@@ -147,6 +161,8 @@ namespace QuestFlight.Product
             if (State != FlightModeState.Selection)
                 return;
 
+            if (navigation != null && navigation.IsOpen) return;
+
             if (seatCalibration != null && seatCalibration.IsOpen)
             {
                 SetPanelVisible(false);
@@ -156,7 +172,7 @@ namespace QuestFlight.Product
             }
 
             SetPanelVisible(true);
-            modeMenuView?.ReadTouchNavigationInput(false);
+            if (navigation == null) modeMenuView?.ReadTouchNavigationInput(false);
             if (flightCoordinator == null)
             {
                 EnterBlocked("The native flight authority reference is missing.");
@@ -183,13 +199,8 @@ namespace QuestFlight.Product
             if (Time.unscaledTime >= _lessonsMessageUntil)
                 SetPanelText(SelectionText);
 
-            ReadSelectionButtons(out bool demoDown, out bool freeFlightDown, out bool lessonsDown);
-            if (demoDown)
-                SelectDemo();
-            else if (freeFlightDown)
-                SelectFreeFlight();
-            else if (lessonsDown)
-                ShowLessonsUnavailable();
+            // A activates a labeled selection through the shared navigation owner.
+            // B/Y are reserved for Back everywhere, including startup.
         }
 
         public void SelectDemo()
@@ -303,11 +314,38 @@ namespace QuestFlight.Product
         private bool CanSelectInitializedMode()
         {
             if (State != FlightModeState.Selection ||
+                (navigation != null && navigation.IsOpen) ||
                 (seatCalibration != null && seatCalibration.IsOpen) ||
                 flightCoordinator == null ||
                 !flightCoordinator.IsInitialized)
                 return false;
             return true;
+        }
+
+        public void SetNavigationOverlayVisible(bool visible)
+        {
+            if (State == FlightModeState.Selection && modeMenuView != null)
+                modeMenuView.SelectionContentRoot.SetActive(!visible);
+        }
+
+        public void ReturnToMainMenu()
+        {
+            demoPilot.StopDemo();
+            productInput.ReleaseAllTouchOverrides();
+            productInput.DisableFlightLessonGuidance();
+            productInput.SetDeterministicMode(false);
+            productInput.SetFlightLessonInputSuppressed(true);
+            productInput.PrepareForFlightLessonRecovery(new QuestFlightLab.Training.FlightLessonV1.FlightLessonControlCommand { throttle=.1f,mixture=1 });
+            productInput.RequireTouchRelease();
+            _demoCheckpointPending=false;
+            _savedTimeScale=1; _ownsTimeScalePause=true; Time.timeScale=0;
+            State=FlightModeState.Selection;
+            if (!_hasStartupInitialConditions || !flightCoordinator.TryRecoverToInitialConditions(
+                _startupInitialConditions))
+            { EnterBlocked("Unable to restore the native initial aircraft state."); return; }
+            LastError=string.Empty; _loggedBlockedError=false;
+            modeMenuView.ShowMainSelection();
+            SetPanelText(SelectionText);
         }
 
         private string FreeFlightPostconditionFailure()

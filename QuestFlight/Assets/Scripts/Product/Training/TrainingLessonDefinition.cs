@@ -19,6 +19,8 @@ namespace QuestFlight.Product.Training
         [TextArea] public string instruction;
         public AudioClip narration;
         public TrainingTask task;
+        public TrainingReference reference;
+        public bool attitudeOnly;
         public float heading = 90;
         public float altitudeFeet = 7000;
         public float speedKnots = 90;
@@ -44,6 +46,7 @@ namespace QuestFlight.Product.Training
         public bool airportExercise;
         public int goAroundStage = -1;
         public TrainingStage[] stages = Array.Empty<TrainingStage>();
+        public TrainingReference[] orientation = Array.Empty<TrainingReference>();
 
         public bool IsValid => !string.IsNullOrWhiteSpace(lessonId) &&
             !string.IsNullOrWhiteSpace(displayName) && stages != null && stages.Length > 0 &&

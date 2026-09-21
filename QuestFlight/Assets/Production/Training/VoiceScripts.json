@@ -1,12 +1,8 @@
 {
     "clips": [
         {
-            "id": "01_taxi_briefing",
-            "text": "Start stopped on taxiway Alpha. Check the yoke, rudder and brakes, then taxi toward runway 08 and stop before entering it. The right thumbstick controls rudder; grasp the cockpit controls to operate them. A pauses, B repeats an instruction. This lesson does not include engine starting or runway entry."
-        },
-        {
             "id": "01_taxi_00",
-            "text": "At idle, grasp the yoke. Move it left and right, then center it."
+            "text": "At idle, grip the yoke. Move it left and right, then center it."
         },
         {
             "id": "01_taxi_01",
@@ -14,167 +10,327 @@
         },
         {
             "id": "01_taxi_02",
-            "text": "Move the right thumbstick left and right, then center it. It controls rudder and ground steering."
+            "text": "Move the right thumbstick left and right, then center it. This controls rudder and ground steering."
         },
         {
             "id": "01_taxi_03",
-            "text": "Keep the throttle at idle. Press both toe brakes and hold the airplane stopped."
+            "text": "With throttle at idle, squeeze both index triggers to apply both brakes."
         },
         {
             "id": "01_taxi_04",
-            "text": "Release the brakes. Add a little power and follow the taxiway west at walking speed, about 3 to 6 knots. Slow near the runway-end connector."
+            "text": "Release the brakes. Add a little power; follow the taxiway west at walking speed."
         },
         {
             "id": "01_taxi_05",
-            "text": "At the connector, turn right toward the runway. Keep the taxi speed low and be ready to stop before the hold-short line."
+            "text": "Turn right at the connector toward the runway. Keep the taxi speed low."
         },
         {
             "id": "01_taxi_06",
-            "text": "Close the throttle and apply both brakes. Stop before the hold-short line; do not enter the runway."
+            "text": "Close the throttle and brake before the hold-short line. Do not enter the runway."
         },
         {
-            "id": "02_first_flight_briefing",
-            "text": "Begin airborne east of the airport at 7000 feet and 90 knots. Look outside at the horizon, then cross-check the attitude indicator, airspeed and altimeter. Use small yoke movements. You will hold level flight, turn left and roll out, then return to the original heading. X requests assistance; assistance is recorded separately."
+            "id": "01_taxi_briefing",
+            "text": "Start stopped. Learn the controls, then taxi slowly and stop before the runway. Both index triggers apply brakes; the right stick steers. Menu pauses."
         },
         {
             "id": "02_first_flight_00",
-            "text": "You have control. Hold 7000 feet, 90 knots and heading 090 true. Level the wings against the outside horizon; make small corrections."
+            "text": "You have control. Keep the wings level against the outside horizon."
         },
         {
             "id": "02_first_flight_01",
-            "text": "Turn left toward heading 060 true. Use about 15 degrees of bank and enough rudder to keep the slip ball centered. Maintain 7000 feet."
+            "text": "Check the altimeter. Hold about seven thousand feet, then look outside again."
         },
         {
             "id": "02_first_flight_02",
-            "text": "Level the wings on heading 060 true. Hold 7000 feet and about 90 knots."
+            "text": "Check the airspeed needle. Aim for ninety knots with small power adjustments."
         },
         {
             "id": "02_first_flight_03",
-            "text": "Turn gently right to heading 090 true, maintaining altitude and coordinated flight."
+            "text": "Read the heading at the top index. Hold zero nine zero, then look outside."
         },
         {
             "id": "02_first_flight_04",
-            "text": "Roll out on heading 090 true. Settle back into level flight at 7000 feet and 90 knots."
+            "text": "Turn gently left toward zero six zero. Use a shallow, coordinated bank."
         },
         {
-            "id": "03_climb_descent_briefing",
-            "text": "Start in level flight at 7000 feet. Add power and climb to 7300 feet, level off, then descend to 7000 feet. Finally use the trim wheel to relieve sustained yoke pressure. Keep the heading at 090 true. The same real wind field remains active."
+            "id": "02_first_flight_05",
+            "text": "Level the wings on zero six zero. Settle at seven thousand feet and ninety knots."
+        },
+        {
+            "id": "02_first_flight_06",
+            "text": "Turn gently right toward zero nine zero. Keep the turn shallow and coordinated."
+        },
+        {
+            "id": "02_first_flight_07",
+            "text": "Level the wings on zero nine zero. Hold altitude and speed with small corrections."
+        },
+        {
+            "id": "02_first_flight_briefing",
+            "text": "Learn the cockpit references, then practice level flight and gentle turns. The instructor coaches you as you fly. Menu pauses; X repeats the current cue."
         },
         {
             "id": "03_climb_descent_00",
-            "text": "Add power and raise the nose gently. Climb toward 7300 feet at 70 to 80 knots, heading 090 true."
+            "text": "Add climb power, then set a gentle climbing attitude. Aim for seventy to eighty knots."
         },
         {
             "id": "03_climb_descent_01",
-            "text": "Lower the nose before passing the target, then adjust power for level flight at 7300 feet and about 90 knots."
+            "text": "Approaching seventy-three hundred feet, lower the nose to level flight and adjust power."
         },
         {
             "id": "03_climb_descent_02",
-            "text": "Reduce power and lower the nose slightly. Descend toward 7000 feet at a comfortable 300 to 500 feet per minute."
+            "text": "Reduce power and establish a gentle descent toward seven thousand feet."
         },
         {
             "id": "03_climb_descent_03",
-            "text": "Begin leveling before 7000 feet. Restore cruise power and settle at about 90 knots."
+            "text": "Begin leveling before seven thousand feet. Restore cruise power and settle near ninety knots."
         },
         {
             "id": "03_climb_descent_04",
-            "text": "Use small movements of the trim wheel to relieve yoke pressure. Keep 7000 feet, heading 090 true, and the wings level."
+            "text": "Move the left thumbstick up or down a little to trim. Reduce the yoke input needed to stay level."
         },
         {
-            "id": "04_takeoff_briefing",
-            "text": "Start lined up and stopped on runway 08. Check the available controls, apply power, rotate near 55 knots and climb at 70 to 80 knots. Maintain the runway direction. This exercise uses the existing traffic protection; it does not simulate radio clearance or a complete preflight checklist."
+            "id": "03_climb_descent_briefing",
+            "text": "Practice a climb, descent and level-off. Learn the instruments first. The left stick adjusts trim; the right stick controls rudder. Menu pauses."
         },
         {
             "id": "04_takeoff_00",
-            "text": "Check alignment with runway 08, flaps zero to ten degrees, carb heat cold, and mixture set for this exercise. Hold stopped while checking."
+            "text": "While stopped, check runway alignment and the flap indication. This checkpoint has mixture and carb heat preset."
         },
         {
             "id": "04_takeoff_01",
-            "text": "Release brakes, apply full power smoothly, and keep the runway centerline with rudder. At about 55 knots, prepare to raise the nose."
+            "text": "Release brakes and smoothly apply full power. Keep the centerline with rudder."
         },
         {
             "id": "04_takeoff_02",
-            "text": "Gently raise the nose near 55 knots. Let the airplane lift off, then adjust pitch toward a 70 to 80 knot climb."
+            "text": "At about fifty-five knots, gently raise the nose. Establish the climb as the aircraft lifts off."
         },
         {
             "id": "04_takeoff_03",
-            "text": "Continue straight ahead at 70 to 80 knots. Climb through 6000 feet; do not turn early over the airport."
+            "text": "Climb straight ahead through six thousand feet. Hold seventy to eighty knots."
         },
         {
-            "id": "05_pattern_briefing",
-            "text": "Begin on runway 08 left downwind at 6300 feet MSL, south of Jay Road. Fly the pattern, configure for approach and judge stability. If the approach is unstable, apply power and go around. This is a reset into a practice segment, not a real-world arrival clearance."
+            "id": "04_takeoff_briefing",
+            "text": "Start stopped on runway zero eight. Check the aircraft, take off and climb straight ahead. Review the references before starting; instructions become brief during the roll."
         },
         {
             "id": "05_pattern_00",
-            "text": "Hold the north-side downwind at 6300 feet and about 85 knots, heading 270 true. Keep the runway on your left and remain south of Jay Road."
+            "text": "Keep the runway on your left. Hold sixty-three hundred feet on the north-side downwind."
         },
         {
             "id": "05_pattern_01",
-            "text": "Abeam the landing end, reduce power, slow below flap-extension speed and select ten degrees of flaps. Begin a gentle descent; continue downwind before turning base."
+            "text": "Abeam the landing end, reduce power. Below flap speed, select ten degrees and begin descending."
         },
         {
             "id": "05_pattern_02",
-            "text": "Turn left onto base, heading 180 true. Descend at about 70 to 75 knots; use a gentle bank. If you overshoot final, go around instead of tightening the turn."
+            "text": "Turn gently left onto base. Keep a shallow bank and a comfortable descent."
         },
         {
             "id": "05_pattern_03",
-            "text": "Turn left onto final for runway 08. Align with the extended centerline, select landing flaps as needed and hold 60 to 70 knots. If unstable, apply full power and go around."
+            "text": "Align with the runway. Hold sixty to seventy knots on a steady final approach."
         },
         {
             "id": "05_pattern_04",
-            "text": "Go around. Apply full power and carb heat cold. Raise the nose for climb and reduce full flaps to twenty degrees."
+            "text": "Go around. Full power, pitch for climb. Reduce full flaps to twenty degrees."
         },
         {
             "id": "05_pattern_05",
-            "text": "Confirm a positive climb. With safe airspeed, reduce flaps to ten degrees. Hold the runway direction."
+            "text": "With positive climb and safe speed, reduce flaps to ten degrees."
         },
         {
             "id": "05_pattern_06",
-            "text": "Clear of obstacles, retract the remaining flaps and continue straight ahead at 70 to 80 knots."
+            "text": "Clear of obstacles, retract remaining flaps and climb straight ahead."
         },
         {
-            "id": "06_landing_briefing",
-            "text": "Start on final for runway 08 at about 65 knots with twenty degrees of flaps. Stabilize the approach, flare, touch down and slow to taxi speed. You can instead choose a go-around: power, climb, and retract flaps in stages. A sensible go-around is a successful outcome. Do not force a poor approach onto the runway."
+            "id": "05_pattern_briefing",
+            "text": "Practice the north-side pattern for runway zero eight. Learn the runway references before starting. A safe go-around is a successful outcome."
         },
         {
             "id": "06_landing_00",
-            "text": "You have control. Keep the runway centered and hold 60 to 70 knots with a steady descent. Check alignment and configuration. If unstable, go around."
+            "text": "Keep the runway centered. Hold sixty to seventy knots with a steady descent."
         },
         {
             "id": "06_landing_01",
-            "text": "As the runway rises in your view, look farther down it. Reduce power and ease the nose up to arrest the descent. Keep the wings level and aligned. Go around if the landing will not be safe."
+            "text": "Look farther along the runway. Reduce power and gently arrest the descent for touchdown."
         },
         {
             "id": "06_landing_02",
-            "text": "Maintain the centerline, lower the nose gently and brake smoothly. Slow below eight knots while remaining on the paved runway."
+            "text": "Keep directional control and brake smoothly to taxi speed."
         },
         {
             "id": "06_landing_03",
-            "text": "Go around. Full power, carb heat cold, and pitch for climb. Reduce full flaps to twenty degrees if necessary."
+            "text": "Go around. Full power, pitch for climb. Reduce full flaps to twenty degrees."
         },
         {
             "id": "06_landing_04",
-            "text": "Confirm positive climb, maintain safe airspeed and retract flaps to ten degrees. Keep the runway direction."
+            "text": "With positive climb and safe speed, reduce flaps to ten degrees."
         },
         {
             "id": "06_landing_05",
-            "text": "Once clear of obstacles, retract the remaining flaps and continue a 70 to 80 knot climb straight ahead."
+            "text": "Clear of obstacles, retract remaining flaps and climb straight ahead."
+        },
+        {
+            "id": "06_landing_briefing",
+            "text": "Start at a final-approach checkpoint. Practice a stable approach and landing, or choose a go-around. Review the controls first; do not force an unstable landing."
         },
         {
             "id": "demonstration",
-            "text": "The demonstration has control. Watch the outside horizon and attitude indicator as the airplane holds level, then turns gently left. Pause and restart the exercise when you are ready to practice yourself."
+            "text": "I have control. Watch the wings stay level against the outside horizon. Briefly cross-check the attitude indicator."
         },
         {
             "id": "assistance",
-            "text": "Assistance has control. I am holding near your current heading and altitude. Press X to take control when ready. This attempt will be marked assisted."
+            "text": "The instructor has control and is holding the aircraft. Open Menu and select Take control when ready."
         },
         {
             "id": "handback",
-            "text": "You have control. Assistance is off. Continue the instruction shown, or press B to hear it again."
+            "text": "You have control. Assistance is off. X repeats the current instruction; Menu pauses."
         },
         {
             "id": "go_around",
             "text": "The approach is unstable. Go around. Apply full power, carb heat cold, establish the climb and retract flaps in stages."
+        },
+        {
+            "id": "demonstration_turn",
+            "text": "I am beginning a gentle left turn. Watch the bank develop, then settle. Cross-check the heading as it changes."
+        },
+        {
+            "id": "reference_outside",
+            "text": "Look through the windshield. Use the distant horizon to judge aircraft attitude, and keep scanning for traffic. Cross-check instruments briefly, then look outside again."
+        },
+        {
+            "id": "reference_attitude",
+            "text": "The attitude indicator shows the airplane against a small artificial horizon. Compare it with the real horizon; avoid staring at the instrument."
+        },
+        {
+            "id": "reference_airspeed",
+            "text": "This is the airspeed indicator. Read the needle against the knots scale. Ninety knots is the level-flight target for this exercise."
+        },
+        {
+            "id": "reference_altimeter",
+            "text": "This is the altimeter. Its numeric reading and hands show indicated altitude in feet. The level-flight target is seven thousand feet."
+        },
+        {
+            "id": "reference_heading",
+            "text": "Read heading at the top index. Nine means zero nine zero degrees. This simulator's heading indicator uses true heading; use this dial for lesson targets, not the magnetic compass."
+        },
+        {
+            "id": "reference_verticalspeed",
+            "text": "This needle shows climbing or descending in feet per minute. Use it to confirm a trend; make small attitude corrections and allow the indication to settle."
+        },
+        {
+            "id": "reference_slip",
+            "text": "The ball shows coordination. Use gentle rudder toward the displaced ball, then ease the input as it centers. The right thumbstick controls rudder."
+        },
+        {
+            "id": "reference_throttle",
+            "text": "Grip the throttle knob to adjust power. Add or reduce power smoothly, then check how airspeed and climb change."
+        },
+        {
+            "id": "reference_yoke",
+            "text": "Grip the yoke. Left and right inputs roll the airplane; forward and back inputs change pitch. Release the correcting input as the desired attitude is reached."
+        },
+        {
+            "id": "reference_flaps",
+            "text": "Use the flap selector to choose a position. Confirm the flap indication and keep within the taught airspeed range before extending flaps."
+        },
+        {
+            "id": "reference_trim",
+            "text": "The left thumbstick adjusts trim during manual flight. Use small up or down inputs to reduce the yoke input needed to hold attitude. There is no force feedback."
+        },
+        {
+            "id": "reference_runway",
+            "text": "Identify runway zero eight and its paved edges outside. The north-side pattern keeps the runway to your left. For taxi, stay on the taxiway and stop before entering the runway."
+        },
+        {
+            "id": "coach_rollleft",
+            "text": "The right bank is too steep. Ease the yoke left to reduce it."
+        },
+        {
+            "id": "coach_rollright",
+            "text": "The left bank is too steep. Ease the yoke right to reduce it."
+        },
+        {
+            "id": "coach_rolloutleft",
+            "text": "Approaching the target heading. Begin rolling left to wings level."
+        },
+        {
+            "id": "coach_rolloutright",
+            "text": "Approaching the target heading. Begin rolling right to wings level."
+        },
+        {
+            "id": "coach_turnleft",
+            "text": "The target is to your left. Begin a gentle left turn."
+        },
+        {
+            "id": "coach_turnright",
+            "text": "The target is to your right. Begin a gentle right turn."
+        },
+        {
+            "id": "coach_altitudelow",
+            "text": "You are below the target altitude. Check attitude and power; establish a gentle climb if airspeed permits."
+        },
+        {
+            "id": "coach_altitudehigh",
+            "text": "You are above the target altitude. Ease toward a gentle descent and monitor airspeed."
+        },
+        {
+            "id": "coach_speedlow",
+            "text": "Airspeed is low. Check nose attitude and power before continuing the maneuver."
+        },
+        {
+            "id": "coach_speedhigh",
+            "text": "Airspeed is high. Check power and your descent attitude; make a small correction."
+        },
+        {
+            "id": "coach_rudderleft",
+            "text": "The ball is left of center. Add a little left rudder, then ease it as the ball centers."
+        },
+        {
+            "id": "coach_rudderright",
+            "text": "The ball is right of center. Add a little right rudder, then ease it as the ball centers."
+        },
+        {
+            "id": "coach_taxifast",
+            "text": "Taxi speed is too high. Reduce power and brake gently back to walking speed."
+        },
+        {
+            "id": "coach_stop",
+            "text": "Throttle idle. Apply both brakes and stop before the runway."
+        },
+        {
+            "id": "coach_power",
+            "text": "Increase power smoothly for this phase. Keep monitoring airspeed and direction."
+        },
+        {
+            "id": "coach_brakes",
+            "text": "Squeeze both index triggers to apply both brakes. Keep throttle at idle."
+        },
+        {
+            "id": "coach_yoke",
+            "text": "Grip the yoke and move it through the requested directions, then center it."
+        },
+        {
+            "id": "coach_rudder",
+            "text": "Use the right thumbstick for rudder. Move it both ways, then center it."
+        },
+        {
+            "id": "coach_trim",
+            "text": "Use small left-thumbstick inputs to trim until less yoke input is needed."
+        },
+        {
+            "id": "coach_flaps",
+            "text": "Positive climb established. Reduce flaps to the next instructed setting."
+        },
+        {
+            "id": "coach_alignrunway",
+            "text": "Check runway alignment. Use a gentle correction; go around if a safe alignment is not possible."
+        },
+        {
+            "id": "coach_goaround",
+            "text": "Unstable approach. Go around: full power, establish the climb, then retract flaps in stages."
+        },
+        {
+            "id": "coach_recovered",
+            "text": "That correction is working. Let the aircraft settle and look outside."
         }
     ]
 }

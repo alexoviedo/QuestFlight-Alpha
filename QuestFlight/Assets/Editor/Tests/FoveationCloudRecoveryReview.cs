@@ -20,7 +20,7 @@ namespace QuestFlightLab.Editor.Tests
             Directory.CreateDirectory(root);
             EditorSceneManager.OpenScene("Assets/Scenes/ProductionVerticalSlice.unity");
             var marker = UnityEngine.Object.FindFirstObjectByType<ProductionVerticalSliceRoot>();
-            Assert.AreEqual(3, new SerializedObject(marker).FindProperty("fixedFoveationLevel").intValue);
+            Assert.AreEqual((int)OVRManager.FoveatedRenderingLevel.Medium, new SerializedObject(marker).FindProperty("fixedFoveationLevel").intValue);
             var settings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
             Assert.IsTrue(settings.GetFeature<Meta.XR.MetaXRFoveationFeature>().enabled);
             Assert.IsTrue(settings.GetFeature<Meta.XR.MetaXRSubsampledLayout>().enabled);

@@ -148,7 +148,9 @@ namespace QuestFlight.Editor
                 "Assets/Editor/TrainingNativeValidation.cs",
                 "Assets/Editor/TrainingNativeValidation.cs.meta",
                 "Assets/Editor/Tests/ProductTrainingEditModeTests.cs",
-                "Assets/Editor/Tests/ProductTrainingEditModeTests.cs.meta"
+                "Assets/Editor/Tests/ProductTrainingEditModeTests.cs.meta",
+                "Assets/Editor/Tests/TrainingCoachingNavigationEditModeTests.cs",
+                "Assets/Editor/Tests/TrainingCoachingNavigationEditModeTests.cs.meta"
             };
 
         private static readonly HashSet<string> ApprovedJsbsimProductAssets =

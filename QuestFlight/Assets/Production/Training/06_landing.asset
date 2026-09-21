@@ -14,11 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 06_landing
   displayName: Landing and go-around
-  briefing: 'Start on final for runway 08 at about 65 knots with twenty degrees of
-    flaps. Stabilize the approach, flare, touch down and slow to taxi speed. You
-    can instead choose a go-around: power, climb, and retract flaps in stages. A
-    sensible go-around is a successful outcome. Do not force a poor approach onto
-    the runway.'
+  briefing: Start at a final-approach checkpoint. Practice a stable approach and
+    landing, or choose a go-around. Review the controls first; do not force an unstable
+    landing.
   briefingNarration: {fileID: 8300000, guid: 07f6c7fc0ebe70349812143b06228153, type: 3}
   start:
     latitudeDegrees: 40.0390917437007
@@ -39,10 +37,12 @@ MonoBehaviour:
   goAroundStage: 3
   stages:
   - title: Stabilize final
-    instruction: You have control. Keep the runway centered and hold 60 to 70 knots
-      with a steady descent. Check alignment and configuration. If unstable, go around.
+    instruction: Keep the runway centered. Hold sixty to seventy knots with a steady
+      descent.
     narration: {fileID: 8300000, guid: 13a73e5eee886734aa949e43f8c9d636, type: 3}
     task: 18
+    reference: 11
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 5680
     speedKnots: 65
@@ -51,11 +51,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Flare and touchdown
-    instruction: As the runway rises in your view, look farther down it. Reduce power
-      and ease the nose up to arrest the descent. Keep the wings level and aligned.
-      Go around if the landing will not be safe.
+    instruction: Look farther along the runway. Reduce power and gently arrest the
+      descent for touchdown.
     narration: {fileID: 8300000, guid: bad7764e7886aee4aa30219e083104ec, type: 3}
     task: 19
+    reference: 11
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 5300
     speedKnots: 65
@@ -64,10 +65,11 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Rollout
-    instruction: Maintain the centerline, lower the nose gently and brake smoothly.
-      Slow below eight knots while remaining on the paved runway.
+    instruction: Keep directional control and brake smoothly to taxi speed.
     narration: {fileID: 8300000, guid: 4fdf8d4cae59e344c8655f5c698b0345, type: 3}
     task: 20
+    reference: 11
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 5300
     speedKnots: 30
@@ -76,10 +78,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Go-around power
-    instruction: Go around. Full power, carb heat cold, and pitch for climb. Reduce
-      full flaps to twenty degrees if necessary.
+    instruction: Go around. Full power, pitch for climb. Reduce full flaps to twenty
+      degrees.
     narration: {fileID: 8300000, guid: ad23c551d8bfee7498e956003d56d521, type: 3}
     task: 21
+    reference: 7
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 65
@@ -88,10 +92,11 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Positive climb
-    instruction: Confirm positive climb, maintain safe airspeed and retract flaps
-      to ten degrees. Keep the runway direction.
+    instruction: With positive climb and safe speed, reduce flaps to ten degrees.
     narration: {fileID: 8300000, guid: 5811ab98becfa7a43822bd92c0c990af, type: 3}
     task: 22
+    reference: 9
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 65
@@ -100,10 +105,11 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Clean climb
-    instruction: Once clear of obstacles, retract the remaining flaps and continue
-      a 70 to 80 knot climb straight ahead.
+    instruction: Clear of obstacles, retract remaining flaps and climb straight ahead.
     narration: {fileID: 8300000, guid: 9d3decbd138e3c542aff6b135185e846, type: 3}
     task: 23
+    reference: 9
+    attitudeOnly: 0
     heading: 90
     altitudeFeet: 7000
     speedKnots: 75
@@ -111,3 +117,4 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
+  orientation: 000000000200000004000000030000000100000007000000060000000a00000009000000

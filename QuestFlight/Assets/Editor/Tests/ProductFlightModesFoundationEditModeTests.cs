@@ -14,15 +14,15 @@ namespace QuestFlight.Editor.Tests
 {
     public sealed class ProductFlightModesFoundationEditModeTests
     {
-        // September 18: approved training adds native-step observation and Training manual rudder/retry routing; remaining frozen sources unchanged.
+        // September 19: approved navigation gates Touch release, preserves trigger brakes, adds lesson trim, and pauses demo updates. Native physics/guidance sources remain frozen.
         private static readonly IReadOnlyDictionary<string, string> FrozenSha256 =
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Assets/Production/Profiles/KBDU_ExtendedReservoirLessonV1.asset"] = "7569be8a2672a2a7a89ed3e522150c65e327c9f0e7cfe911d4d5930289e210aa",
                 ["Assets/Scripts/Environment/GoldenEagleThermalSoaring.cs"] = "b4ee6522720493fbea23ef915344cfd3fa317f6e94356aff196abdd3426e1b23",
                 ["Assets/Scripts/Flight/Backends/FlightDynamicsCoordinator.cs"] = "e2565cfd3b870bef32259c59dce9ae212794070c078cd106b70839c3187abf9d",
-                ["Assets/Scripts/Input/ProductControlInput.cs"] = "6ea8e207c4e10d25a4f815fe556ba1a9f7792bce5542839aeab8679ac2abf7b7",
-                ["Assets/Scripts/Product/ProductDemoPilot.cs"] = "abe5d66c66350101d26e5e469b70b6fb699d3ce4aea8a2a0a25432d5f31fb3c5",
+                ["Assets/Scripts/Input/ProductControlInput.cs"] = "28fc2ed44760984ecab589e23576eeb1b947ddbbf40610679d6993801220daa9",
+                ["Assets/Scripts/Product/ProductDemoPilot.cs"] = "b3795ac7dda95f28ec2e15e34aaad020140e4820bb9f89b3a6ccb66a481b89da",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonAssistanceMixer.cs"] = "fb297d37923b9b629eed1ad8800b1bea7f424ecba1df397130d5591340f773c5",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonAssistanceMixer.cs.meta"] = "33737dd1003ac800fe690eae13f3dd34bc76d5539bc570f8cd544d20615e6c15",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonCrashClassifier.cs"] = "d589d8ec656ec9bff32b9ffe284a5a7bc9bad0feb4da1d1cfe632728bb9af5f7",
