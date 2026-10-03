@@ -1,0 +1,53 @@
+[
+  {
+    "species": "RedTailedHawk",
+    "source": "https://sketchfab.com/3d-models/red-tailed-hawk-in-flight-4abcab5af9044a939fb5a55bff9e5000",
+    "creator": "Oregon State University Ecampus",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "dbb440cfc1a0e6e64494aba9445d9cecc2caf21d6574d58fafd5c44c137d1a8e",
+    "wingspan_m": 1.25,
+    "triangles": [
+      3892,
+      900,
+      259
+    ],
+    "animation": "Original articulated flight loop; extended-wing glide derived from maximum-span pose",
+    "glide_frame": 54,
+    "edits": "Torso-weighted rigid feet, merged renderer/material, real scale, normalized heading, 1024 atlas, offline skinned LODs"
+  },
+  {
+    "species": "Osprey",
+    "source": "https://sketchfab.com/3d-models/osprey-in-flight-909d68cc4f9249a2878a37c618467f31",
+    "creator": "Oregon State University Ecampus",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "23f39dd5916e3859384901dc28032a6f1ac99e00af19e0539ed3c9b95efe813c",
+    "wingspan_m": 1.65,
+    "triangles": [
+      4072,
+      900,
+      260
+    ],
+    "animation": "Original articulated flight loop; extended-wing glide derived from maximum-span pose",
+    "glide_frame": 46,
+    "edits": "Torso-weighted rigid feet, merged renderer/material, real scale, normalized heading, 1024 atlas, offline skinned LODs"
+  },
+  {
+    "species": "CanadaGoose",
+    "source": "https://sketchfab.com/3d-models/canada-goose-in-flight-25fbbb9e607a4bccb05ae05c08fd0039",
+    "creator": "Oregon State University Ecampus",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "dbe736d77c7259722cf2782c218951ed97a781ab21567bf900fde92465ed3155",
+    "wingspan_m": 1.65,
+    "triangles": [
+      3354,
+      899,
+      259
+    ],
+    "animation": "Original articulated flight loop; extended-wing glide derived from maximum-span pose",
+    "glide_frame": 23,
+    "edits": "Torso-weighted rigid feet, merged renderer/material, real scale, normalized heading, 1024 atlas, offline skinned LODs"
+  }
+]

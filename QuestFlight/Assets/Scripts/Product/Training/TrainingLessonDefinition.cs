@@ -18,6 +18,8 @@ namespace QuestFlight.Product.Training
         public string title;
         [TextArea] public string instruction;
         public AudioClip narration;
+        [TextArea] public string successFeedback;
+        [TextArea] public string retryAdvice;
         public TrainingTask task;
         public TrainingReference reference;
         public bool attitudeOnly;
@@ -38,6 +40,8 @@ namespace QuestFlight.Product.Training
         public string displayName;
         [TextArea] public string briefing;
         public AudioClip briefingNarration;
+        [TextArea] public string learningGoal;
+        [TextArea] public string reflection;
         public FlightDynamicsInitialConditions start;
         public float initialThrottle = .62f;
         public float initialTrim;

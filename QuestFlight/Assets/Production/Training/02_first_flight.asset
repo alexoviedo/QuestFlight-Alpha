@@ -14,9 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 02_first_flight
   displayName: Level flight and gentle turns
-  briefing: Learn the cockpit references, then practice level flight and gentle turns.
-    The instructor coaches you as you fly. Menu pauses; X repeats the current cue.
+  briefing: Start airborne at seven thousand feet and ninety knots. Use the outside
+    horizon first, with short instrument checks. Then make a shallow left turn and
+    return right. A heading is the direction the nose points; these lesson targets
+    use the highlighted true-heading dial.
   briefingNarration: {fileID: 8300000, guid: cae490adc64efc046ac293119d10c0dd, type: 3}
+  learningGoal: Use small inputs, maintain a safe attitude, and roll out near the
+    target heading. Beginner targets allow modest deviations; correct them smoothly.
+  reflection: Did you return your eyes outside after checking each instrument?
   start:
     latitudeDegrees: 40.05467080422664
     longitudeDegrees: -105.21085768949152
@@ -35,9 +40,14 @@ MonoBehaviour:
   airportExercise: 0
   goAroundStage: -1
   stages:
-  - title: Wings level
-    instruction: You have control. Keep the wings level against the outside horizon.
+  - title: 'Outside: wings level'
+    instruction: You have control. Look through the windshield. Keep the nose steady
+      and the wings level against the distant horizon, using small yoke movements.
+      Avoid chasing every gust.
     narration: {fileID: 8300000, guid: c2086b0f7d412ee4abe977dd0e37f68b, type: 3}
+    successFeedback: You held a controlled, nearly wings-level attitude.
+    retryAdvice: Look at the distant horizon. Correct the bank gently, then ease
+      the turning input.
     task: 6
     reference: 0
     attitudeOnly: 1
@@ -48,10 +58,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Altitude cross-check
-    instruction: Check the altimeter. Hold about seven thousand feet, then look outside
-      again.
+  - title: 'Altitude: 7000 feet'
+    instruction: 'Find the highlighted altimeter: the round dial with several hands
+      and a number window. Aim for seven thousand feet with small pitch and power
+      corrections, then look outside again.'
     narration: {fileID: 8300000, guid: 997e29733d964c1498a1da9a8da05163, type: 3}
+    successFeedback: You held altitude near seven thousand feet.
+    retryAdvice: Check whether the altitude is rising or falling before correcting.
+      Return toward seven thousand feet gradually.
     task: 6
     reference: 3
     attitudeOnly: 0
@@ -62,10 +76,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Airspeed cross-check
-    instruction: Check the airspeed needle. Aim for ninety knots with small power
-      adjustments.
+  - title: 'Airspeed: 90 knots'
+    instruction: Find the round airspeed dial with the colored arcs. Read its needle
+      on the knots scale. Aim for ninety knots using small power adjustments while
+      keeping the nose steady.
     narration: {fileID: 8300000, guid: d8013fd23dc1c7e49bdbae54e294ad72, type: 3}
+    successFeedback: You held the target airspeed band without a large bank.
+    retryAdvice: Make a small power adjustment, wait for its effect, and cross-check
+      altitude.
     task: 6
     reference: 1
     attitudeOnly: 0
@@ -76,10 +94,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Heading cross-check
-    instruction: Read the heading at the top index. Hold zero nine zero, then look
-      outside.
+  - title: 'Heading: 090'
+    instruction: 'Find the heading dial with the rotating compass numbers. Read the
+      fixed index at the top: nine means zero nine zero. Hold that direction, then
+      look outside.'
     narration: {fileID: 8300000, guid: f733037202c2a714cbb566fc6e78f173, type: 3}
+    successFeedback: You held the nose close to heading zero nine zero.
+    retryAdvice: Read the top index, not the side of the dial. Make a small turn
+      toward zero nine zero.
     task: 6
     reference: 4
     attitudeOnly: 0
@@ -90,10 +112,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Gentle left turn
-    instruction: Turn gently left toward zero six zero. Use a shallow, coordinated
-      bank.
+  - title: Left turn to 060
+    instruction: Check the view to your left for traffic. Turn the yoke left to establish
+      about fifteen degrees of bank, then ease the input. Aim for zero six zero,
+      keeping near seven thousand feet.
     narration: {fileID: 8300000, guid: c53b01f2bc03ac94b87cef45d2f6a905, type: 3}
+    successFeedback: You rolled out near zero six zero with controlled bank and altitude.
+    retryAdvice: Use a shallow left bank. Before zero six zero arrives at the top
+      index, roll the wings level.
     task: 7
     reference: 4
     attitudeOnly: 0
@@ -104,10 +130,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Roll out
-    instruction: Level the wings on zero six zero. Settle at seven thousand feet
-      and ninety knots.
+  - title: Settle on 060
+    instruction: As zero six zero reaches the top index, level the wings. Hold about
+      seven thousand feet and ninety knots. Keep scanning outside instead of staring
+      at the dial.
     narration: {fileID: 8300000, guid: 21b46e8316d0afe4c97fe6177dc8909b, type: 3}
+    successFeedback: You settled on zero six zero with altitude and speed under control.
+    retryAdvice: Level the wings first, then make small corrections to altitude and
+      power.
     task: 6
     reference: 0
     attitudeOnly: 0
@@ -118,10 +148,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Gentle right turn
-    instruction: Turn gently right toward zero nine zero. Keep the turn shallow and
-      coordinated.
+  - title: Right turn to 090
+    instruction: Check right for traffic. Establish a shallow right bank toward zero
+      nine zero. Begin leveling just before that heading reaches the top index. Use
+      gentle rudder if the slip ball moves off center.
     narration: {fileID: 8300000, guid: 8976f7e26ada22f46afd51d381440231, type: 3}
+    successFeedback: You rolled out near zero nine zero in a controlled turn.
+    retryAdvice: Reduce the bank as you approach zero nine zero; avoid waiting until
+      you have passed it.
     task: 7
     reference: 4
     attitudeOnly: 0
@@ -132,10 +166,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Settle level
-    instruction: Level the wings on zero nine zero. Hold altitude and speed with
-      small corrections.
+  - title: Settle on 090
+    instruction: Keep the wings level and the nose on zero nine zero. Settle near
+      seven thousand feet and ninety knots with small corrections. Look outside between
+      instrument checks.
     narration: {fileID: 8300000, guid: 0d4d2b916eb7b634d9d4200d72ed2e45, type: 3}
+    successFeedback: You returned to steady flight on the original heading.
+    retryAdvice: Set attitude first, adjust power, then check heading and altitude
+      again.
     task: 6
     reference: 0
     attitudeOnly: 0

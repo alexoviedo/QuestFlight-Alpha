@@ -128,6 +128,8 @@ namespace QuestFlightLab.Training.FlightLessonV1
             }
 
             crashSettings = FlightLessonCrashSettings.ConservativeTrainingDefaults;
+            // Finite map coverage is owned by ProductMapBoundaryRecovery, not the old lesson circle.
+            crashSettings.maximumLessonRadiusMeters = float.MaxValue;
             recoveryTimings = FlightLessonRecoveryTimings.Default;
             recoveryTracePath = Path.Combine(
                 Application.persistentDataPath,
@@ -139,7 +141,18 @@ namespace QuestFlightLab.Training.FlightLessonV1
 
         private void FixedUpdate()
         {
-            if (!referencesValidated || !demoPilot.IsRunning)
+            if (!referencesValidated || !demoPilot.IsRunning || demoPilot.UserHasControls)
+            {
+                // A queued checkpoint must not survive a handoff or a new session.
+                if (recoveryStateMachine.IsActive) RestoreCompositorIdentity();
+                recoveryStateMachine.Cancel();
+                recoveryVerificationPending = false;
+                if (suppressionApplied) ReleaseRecoverySuppression();
+                initialized = false;
+                return;
+            }
+            // Invalid native state belongs to the local map recovery owner. Never send it to departure.
+            if (!flightCoordinator.enabled || !flightCoordinator.CurrentState.IsFinite || flightCoordinator.RecoveryHold)
                 return;
 
             // Native-development initialization may yield while copying runtime data.
@@ -170,6 +183,7 @@ namespace QuestFlightLab.Training.FlightLessonV1
                 if (reason != FlightLessonCrashReason.None)
                 {
                     LastCrashReason = reason;
+                    demoPilot.RecordRecovery();
                     recoverySequence++;
                     WriteRecoveryTrace("crash_detected", reason.ToString(), string.Empty);
                     Debug.LogWarning(
@@ -349,6 +363,7 @@ namespace QuestFlightLab.Training.FlightLessonV1
         private void OnDisable()
         {
             recoveryVerificationPending = false;
+            recoveryStateMachine.Cancel();
             ReleaseRecoverySuppression();
             RestoreCompositorIdentity();
             initialized = false;
@@ -529,23 +544,41 @@ namespace QuestFlightLab.Training.FlightLessonV1
                 return false;
 
             GeodeticReference origin = GeodeticReference.Kbdu;
-            double targetAltitudeMeters =
-                checkpoint.altitudeMslFeet * FlightFrameConversions.FeetToMeters;
-            Vector3 targetEnu = new Vector3(
-                checkpoint.positionUnityMeters.x,
-                (float)(targetAltitudeMeters - origin.altitudeMslMeters),
-                checkpoint.positionUnityMeters.z);
-            GeodeticReference targetGeodetic =
-                FlightFrameConversions.UnityToGeodetic(targetEnu, origin);
+            bool groundRestart = checkpoint.calibratedAirspeedKnots <= 5f;
+            Vector3 targetEnu = checkpoint.positionUnityMeters;
+            if (groundRestart)
+            {
+                // Departure checkpoints were authored at the runway end, just outside
+                // the pavement polygon. Search at most 40 m along its runway heading,
+                // requiring the whole aircraft footprint to lie on the verified surface.
+                float angle = checkpoint.headingDegreesTrue * Mathf.Deg2Rad;
+                Vector3 forward = new Vector3(Mathf.Sin(angle), 0, Mathf.Cos(angle));
+                Vector3 right = Vector3.Cross(Vector3.up, forward);
+                bool found = false;
+                for (int step = 0; step <= 8 && !found; step++)
+                {
+                    Vector3 candidate = checkpoint.positionUnityMeters + forward * (step * 5f);
+                    bool clear = true;
+                    for (int x = -1; x <= 1; x++)
+                    for (int z = -1; z <= 1; z++)
+                    {
+                        Vector3 at = candidate + right * (x * 6.5f) + forward * (z * 5f);
+                        if (!surface.TrySample(at.x, at.z, out var sample) || !sample.IsRunwayOrApron ||
+                            Vector3.Angle(sample.normal, Vector3.up) > 3f) clear = false;
+                    }
+                    if (clear && surface.TrySample(candidate.x, candidate.z, out terrain))
+                    { targetEnu = candidate; found = true; }
+                }
+                if (!found) return false;
+                targetEnu.y = terrain.heightMeters + 1.4f;
+            }
+            else targetEnu.y = checkpoint.altitudeMslFeet * (float)FlightFrameConversions.FeetToMeters - (float)origin.altitudeMslMeters;
+            GeodeticReference targetGeodetic = FlightFrameConversions.UnityToGeodetic(targetEnu, origin);
             GeodeticReference terrainGeodetic = FlightFrameConversions.UnityToGeodetic(
-                new Vector3(
-                    checkpoint.positionUnityMeters.x,
-                    terrain.heightMeters,
-                    checkpoint.positionUnityMeters.z),
-                origin);
-
-            if (targetAltitudeMeters < terrainGeodetic.altitudeMslMeters)
-                return false;
+                new Vector3(targetEnu.x, terrain.heightMeters, targetEnu.z), origin);
+            double targetAltitudeMeters = groundRestart ? targetGeodetic.altitudeMslMeters :
+                checkpoint.altitudeMslFeet * FlightFrameConversions.FeetToMeters;
+            if (targetAltitudeMeters < terrainGeodetic.altitudeMslMeters) return false;
 
             initialConditions = new FlightDynamicsInitialConditions
             {
@@ -553,10 +586,10 @@ namespace QuestFlightLab.Training.FlightLessonV1
                 longitudeDegrees = targetGeodetic.longitudeDegrees,
                 altitudeMslMeters = targetAltitudeMeters,
                 terrainElevationMslMeters = terrainGeodetic.altitudeMslMeters,
-                calibratedAirspeedKnots = checkpoint.calibratedAirspeedKnots,
+                calibratedAirspeedKnots = groundRestart ? 0d : checkpoint.calibratedAirspeedKnots,
                 headingDegrees = checkpoint.headingDegreesTrue,
-                pitchDegrees = checkpoint.pitchDegrees,
-                bankDegrees = checkpoint.bankDegrees,
+                pitchDegrees = groundRestart ? 0d : checkpoint.pitchDegrees,
+                bankDegrees = groundRestart ? 0d : checkpoint.bankDegrees,
                 flightPathAngleDegrees = 0d,
                 engineRunning = checkpoint.engineRunning
             };

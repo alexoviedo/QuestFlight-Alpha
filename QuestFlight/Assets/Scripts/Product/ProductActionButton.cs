@@ -31,12 +31,12 @@ namespace QuestFlight.Product
             if(visual!=null)visual.Present(focused,evt.Type==PointerEventType.Select);
             if (evt.Type == PointerEventType.Select) actions.InvokeAction(slot);
         }
-        public void Present(string text, bool selected)
+        public void Present(string text, bool selected,bool available=true)
         {
             bool visible = !string.IsNullOrEmpty(text);
             if (gameObject.activeSelf != visible) gameObject.SetActive(visible);
             if (!visible) return;
-            string value = text;
+            string value = available?text:"<color=#88959D>"+text+"</color>";
             if (label.text != value) label.text = value;
             focused=selected;
             label.color=new Color32(242,244,239,255);

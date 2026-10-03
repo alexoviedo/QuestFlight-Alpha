@@ -14,10 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 04_takeoff
   displayName: Takeoff and departure
-  briefing: Start stopped on runway zero eight. Check the aircraft, take off and
-    climb straight ahead. Review the references before starting; instructions become
-    brief during the roll.
+  briefing: Begin stopped and aligned on runway zero eight. This prepared checkpoint
+    supplies the engine setup; it is not a full run-up or takeoff checklist. Review
+    the highlighted controls before practice. During the roll, steer with the right
+    thumbstick and watch the airspeed needle.
   briefingNarration: {fileID: 8300000, guid: b353f4945bd486049bdac8e21410ff24, type: 3}
+  learningGoal: Stay on the runway, lift off near fifty-five knots and climb straight
+    ahead at seventy to eighty knots. Real high-altitude takeoff preparation requires
+    the aircraft checklist and performance planning.
+  reflection: Were you looking along the centerline, with only brief airspeed checks?
   start:
     latitudeDegrees: 40.03909497191087
     longitudeDegrees: -105.23259094603033
@@ -36,10 +41,14 @@ MonoBehaviour:
   airportExercise: 1
   goAroundStage: -1
   stages:
-  - title: Takeoff configuration
-    instruction: While stopped, check runway alignment and the flap indication. This
-      checkpoint has mixture and carb heat preset.
+  - title: Confirm takeoff setup
+    instruction: 'Keep stopped on the runway centerline. Check the flap selector
+      and indication: zero to ten degrees for this exercise. The checkpoint has mixture
+      and carb heat set. Identify the throttle and airspeed dial before rolling.'
     narration: {fileID: 8300000, guid: 9f257ed6b219f66498d2ba4c379a489e, type: 3}
+    successFeedback: You began stopped, aligned and configured for this checkpoint.
+    retryAdvice: Stay stopped and align with the runway. Check the flap indication
+      before adding power.
     task: 11
     reference: 9
     attitudeOnly: 0
@@ -50,10 +59,15 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Takeoff roll
-    instruction: Release brakes and smoothly apply full power. Keep the centerline
-      with rudder.
+  - title: Accelerate on centerline
+    instruction: Release both brakes and smoothly move the throttle fully forward.
+      Look along the centerline; steer with the steering thumbstick. Briefly check the
+      airspeed needle. Prepare to lift the nose near fifty-five knots.
     narration: {fileID: 8300000, guid: adb0aea07660e384f84fd88206a1a662, type: 3}
+    successFeedback: You accelerated on the runway with takeoff power and directional
+      control.
+    retryAdvice: Use full power smoothly and small rudder corrections. Prepare the
+      rotation before speed runs away.
     task: 12
     reference: 7
     attitudeOnly: 0
@@ -64,10 +78,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Rotate
-    instruction: At about fifty-five knots, gently raise the nose. Establish the
-      climb as the aircraft lifts off.
+  - title: Lift off
+    instruction: Near fifty-five knots, pull the yoke back gently to raise the nose.
+      Let the airplane fly off, then adjust pitch toward seventy to eighty knots.
+      Avoid a sudden pull.
     narration: {fileID: 8300000, guid: f3ce43a3a5d3f004d9e92dbba71602b7, type: 3}
+    successFeedback: You lifted off in a controlled nose-up attitude.
+    retryAdvice: Raise the nose gradually. If airspeed falls, ease the nose down
+      rather than pulling harder.
     task: 13
     reference: 1
     attitudeOnly: 0
@@ -78,10 +96,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Departure climb
-    instruction: Climb straight ahead through six thousand feet. Hold seventy to
-      eighty knots.
+  - title: Climb straight ahead
+    instruction: Climb straight ahead at seventy to eighty knots. Keep the wings
+      nearly level and pass six thousand feet on the altimeter. Continue scanning
+      outside.
     narration: {fileID: 8300000, guid: 5be478bec96d4a744853721d4db46a5f, type: 3}
+    successFeedback: You established the straight-ahead departure climb.
+    retryAdvice: Use a steady climb attitude, adequate power and small rudder corrections.
+      Monitor the airspeed needle.
     task: 14
     reference: 1
     attitudeOnly: 0

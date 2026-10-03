@@ -343,12 +343,20 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             ClearInteractionState();
         }
 
+        private bool leftReleaseGate,rightReleaseGate;
         private void Update()
         {
             InputDevice leftDevice =
                 InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
             InputDevice rightDevice =
                 InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+            bool tracked=leftDevice.TryGetFeatureValue(CommonUsages.isTracked,out bool lt)&&lt&&
+                rightDevice.TryGetFeatureValue(CommonUsages.isTracked,out bool rt)&&rt;
+            if(Time.timeScale<=0||!Application.isFocused||!tracked)
+            {
+                ReleaseActiveCaptures();FlushToSerializedConsumer();ClearInteractionState();
+                leftReleaseGate=rightReleaseGate=true;return;
+            }
             bool leftPressed =
                 ReadSelectButton(leftDevice, _leftWasPressed);
             bool rightPressed =
@@ -527,9 +535,19 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             float unscaledTime,
             int frameNumber)
         {
+            bool gate=hand==CockpitTouchInteractionV2Hand.Left?leftReleaseGate:rightReleaseGate;
+            if(gate)
+            {wasPressed=pressed;if(!pressed){if(hand==CockpitTouchInteractionV2Hand.Left)leftReleaseGate=false;else rightReleaseGate=false;}return;}
             bool pressedThisFrame = pressed && !wasPressed;
             bool releasedThisFrame = !pressed && wasPressed;
             wasPressed = pressed;
+            bool toggleYoke=QuestFlight.Product.ProductComfortPreferences.ToggleYoke&&activeBinding>=0&&activeBinding<BindingCount&&bindings[activeBinding].target==CockpitTouchInteractionV2Target.PilotYoke;
+            if(toggleYoke&&pressedThisFrame)
+            {
+                Enqueue(Command(bindings[activeBinding],hand,CockpitTouchInteractionV2Operation.EndGrab,pointer,activeHitWorldPosition,unscaledTime,frameNumber));
+                activeBinding=-1;if(hand==CockpitTouchInteractionV2Hand.Left)leftReleaseGate=true;else rightReleaseGate=true;return;
+            }
+            if(toggleYoke)releasedThisFrame=false;
 
             // Direct grabs commonly begin with the grip/trigger already held
             // while the hand moves onto a control. Re-evaluate acquisition
@@ -597,7 +615,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                         break;
                 }
             }
-            else if (pressed &&
+            else if ((pressed || toggleYoke) &&
                      activeBinding >= 0 &&
                      activeBinding < BindingCount &&
                      bindings[activeBinding].mode ==

@@ -45,6 +45,16 @@ project-authored deterministic derivatives. They use only:
 No new external download or license boundary was introduced. KOG_THORNS
 attribution and the existing change notice remain required.
 
+## Cockpit-visible original cowling derivative (2026-09-22)
+
+`QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_CockpitOriginalEngineCowling.asset` is a modified derivative of [Cessna172 by KOG_THORNS](https://sketchfab.com/3d-models/cessna172-d1b15841c29c43d0862667300bad55a4), under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution and modification notice are retained here and in `docs/ASSET_SOURCES.md`.
+
+Source GLB SHA-256: `a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872`. Derivative SHA-256: `e7b7c906901bebbcf0b95e19002483aff4fba0880d3249c838ad011d18ee3bef`; size 228,670 bytes. The deterministic `QuestFlightLab.Editor.CockpitEngineCowlAuthoring.AuthorExteriorBatch` method clips the original forward-body geometry at cockpit-local z=0.46 m, retains/interpolates the source normals and UV channels, and regenerates tangents/bounds. The result contains 2,520 triangles and 1,740 vertices. Existing original exterior material/textures are reused without duplication; the original imported binary and the dark footwell liner remain unchanged.
+
+## Airport terminal finish (2026-09-22)
+
+The airport-terminal orientation/material-scale correction introduces no new external binary assets. It reuses the existing project-authored terminal geometry and atlas source records in `QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/SOURCE_MANIFEST.json`. City imagery was inspected only as external reference evidence and is not incorporated into new runtime assets. Reproduction commands and the reference source are recorded in `docs/ASSET_SOURCES.md`.
+
 ## Airport near-field ground detail V1
 
 The near-field layer introduces no external binary asset. Geometry is generated
@@ -65,7 +75,7 @@ existing `KBDU_ContextVegetation.mat`.
 | Product asset | Source / creator | Terms | SHA-256 |
 | --- | --- | --- | --- |
 | `cessna172.glb` (26,962,216 bytes) | `Cessna172`, KOG_THORNS, [original Sketchfab model](https://sketchfab.com/3d-models/cessna172-d1b15841c29c43d0862667300bad55a4) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); attribution and change notice required | `a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872` |
-| `C172_FourPedalAssembly.asset` | Project-authored derivative of the frozen KOG_THORNS `cessna172.glb` pedal geometry; the missing copilot pedal is symmetry-derived and winding/tangents are corrected | CC BY 4.0; KOG_THORNS attribution retained; modified Unity runtime derivative | Source and output geometry/hash record: `Assets/Production/Cockpit/Pedals/C172_FourPedalAssemblyManifest.json` |
+| `C172_FourPedalAssembly.asset` | Project-authored derivative of the frozen KOG_THORNS `cessna172.glb` pedal geometry; four complete source footplates with corrected mirrored winding/tangents; project-authored fixed bearings and separate rudder/toe linkage (September 23 repair) | CC BY 4.0; KOG_THORNS attribution retained; modified Unity runtime derivative | Source and output geometry/hash record: `Assets/Production/Cockpit/Pedals/C172_FourPedalAssemblyManifest.json` |
 | `withered_grass_diff_1k.jpg` | Withered Grass, Charlotte Baglioni, [Poly Haven](https://polyhaven.com/a/withered_grass) | [CC0 1.0](https://polyhaven.com/license) | `8bebfb639ef74f651bc445526c46c845beee52a86d831848b82eb2bbbf2d98ee` |
 | `sparse_grass_diff_1k.jpg` | Sparse Grass, Amal Kumar, [Poly Haven](https://polyhaven.com/a/sparse_grass) | CC0 1.0 | `ae94f2b34597b9108eefd88217f55eccaec6d6b382e858a478ee92df90e66617` |
 | `dry_ground_01_diff_1k.jpg` | Dry Ground 01, Rob Tuytel, [Poly Haven](https://polyhaven.com/a/dry_ground_01) | CC0 1.0 | `75222fc97a82b635a09cf8f2891dd58bc42e49599b9fda920b2c50193fe85e9f` |
@@ -775,3 +785,8 @@ The habitat/tree atlases derive from Poly Haven `Pine Tree 01` (CC0 1.0); source
 Trainer cockpit textures and adjusted source geometry retain KOG_THORNS / CC BY 4.0 attribution in `C172_TrainerFinishManifest.json`; original gauge/yoke artwork is project-authored. The retained Trainer ButtonPlate mesh also derives from the same source, including the superseded authored variant kept for reproducibility.
 
 The visible-road contact bank and bridge/terrain derivatives retain the existing GIS/USGS/OSM rights, with source hashes and limitations in `KBDU_VisibleRoadLaneSurfaces_Source.json` and `docs/ROAD_REPAIR_IMPLEMENTATION_2026-09-18.md`. No raw download, abandoned pending bank, or unclear-license source file is added.
+
+
+## Distant branch cluster derivatives (2026-09-28)
+
+The two PNG atlases and ClusterQuad.asset under Assets/Production/Environment/MapBranchGrovesV1/DistantClusters derive from existing project assets. Needle artwork is Poly Haven Pine Tree 01, CC0 1.0: https://polyhaven.com/a/pine_tree_01 ; https://polyhaven.com/license . Exact input records are in MapBranchGrovesV1/TreeRealism/ConiferArt_SOURCE.json. Broadleaf artwork is project-owned generated output described in PhotorealAerialSurfaceV1/Canopy/ProductionNearFoliageAtlas_SourceManifest.json, subject to applicable OpenAI output terms. Geometry is project-authored. DistantClusters/SOURCE.json records derivative hashes. No new unclear-rights asset or source archive is introduced.

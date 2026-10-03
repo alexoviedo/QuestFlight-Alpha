@@ -14,9 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 05_pattern
   displayName: Pattern and approach decisions
-  briefing: Practice the north-side pattern for runway zero eight. Learn the runway
-    references before starting. A safe go-around is a successful outcome.
+  briefing: Begin in the runway zero eight left-hand pattern at sixty-three hundred
+    feet, with the runway on your left. Follow the marked practice route through
+    downwind, base and final. If alignment or speed cannot be recovered safely, go
+    around. These checkpoints do not authorize a real airport arrival.
   briefingNarration: {fileID: 8300000, guid: c720d84397695144a82e70730dce7efd, type: 3}
+  learningGoal: Manage configuration and a controlled approach. The local downwind
+    is south of Jay Road; watch for gliders. This simplified route is a practice
+    exercise, not a validated airport procedure.
+  reflection: Would a go-around have reduced your workload compared with trying to
+    rescue the approach?
   start:
     latitudeDegrees: 40.04701844816733
     longitudeDegrees: -105.22140336838336
@@ -35,10 +42,15 @@ MonoBehaviour:
   airportExercise: 1
   goAroundStage: 4
   stages:
-  - title: Downwind
-    instruction: Keep the runway on your left. Hold sixty-three hundred feet on the
-      north-side downwind.
+  - title: 'Downwind: runway on the left'
+    instruction: Keep the runway on your left. Hold about sixty-three hundred feet
+      and eighty-five knots, following the downwind marker. Use heading two seven
+      zero as a reference and remain south of Jay Road.
     narration: {fileID: 8300000, guid: 2815fedfe1d6d85458ec16d94bf78ad7, type: 3}
+    successFeedback: You reached the downwind checkpoint with altitude and speed
+      controlled.
+    retryAdvice: Keep a steady downwind track; use small wind corrections and keep
+      the runway in sight.
     task: 15
     reference: 11
     attitudeOnly: 0
@@ -49,10 +61,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: -500, y: 850}
     captureMeters: 200
-  - title: Abeam landing end
-    instruction: Abeam the landing end, reduce power. Below flap speed, select ten
-      degrees and begin descending.
+  - title: Configure and descend
+    instruction: At the marked abeam point, reduce power. Once below eighty-five
+      knots, move the flap selector to ten degrees and confirm the indication. Begin
+      a gentle descent toward the next marker.
     narration: {fileID: 8300000, guid: 5743734ddfd12344d9dbcc2966bb9134, type: 3}
+    successFeedback: You slowed, selected approach flaps and began descending.
+    retryAdvice: Reduce power first. Confirm a safe airspeed before extending flaps,
+      then manage the descent.
     task: 16
     reference: 11
     attitudeOnly: 0
@@ -64,9 +80,13 @@ MonoBehaviour:
     targetEnu: {x: -1200, y: 850}
     captureMeters: 230
   - title: Left base
-    instruction: Turn gently left onto base. Keep a shallow bank and a comfortable
-      descent.
+    instruction: Turn left toward heading one eight zero and the base marker. Keep
+      a shallow bank and about seventy to seventy-five knots. Check the runway position.
+      If final needs a steep turn, go around.
     narration: {fileID: 8300000, guid: e5006f6077eb9ce4fbde07bcac1b085f, type: 3}
+    successFeedback: You reached base with a controlled bank and approach speed.
+    retryAdvice: Slow the turn down. Do not steepen it to force the airplane back
+      toward the runway.
     task: 17
     reference: 11
     attitudeOnly: 0
@@ -77,10 +97,15 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: -1750, y: 350}
     captureMeters: 260
-  - title: Stable final
-    instruction: Align with the runway. Hold sixty to seventy knots on a steady final
-      approach.
+  - title: 'Final: stabilize or go around'
+    instruction: Turn left onto final and center the runway in the windshield. Aim
+      for sixty to seventy knots and a steady descent with landing flaps set. If
+      alignment or speed is not stable, apply power and go around.
     narration: {fileID: 8300000, guid: 4b4adac9072ed1648b5e419acc528afd, type: 3}
+    successFeedback: You established a controlled final approach for this practice
+      segment.
+    retryAdvice: Align early, settle the speed and descent, or choose a go-around
+      before running out of height.
     task: 18
     reference: 11
     attitudeOnly: 0
@@ -91,10 +116,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Go-around power
-    instruction: Go around. Full power, pitch for climb. Reduce full flaps to twenty
-      degrees.
+  - title: 'Go-around: power and attitude'
+    instruction: Apply full power, check carb heat cold, and set a controlled climb
+      attitude. If full flaps are selected, reduce them to twenty degrees. Keep the
+      runway direction.
     narration: {fileID: 8300000, guid: 81ea162c8d11ecd4ea6a813529f9456e, type: 3}
+    successFeedback: You applied go-around power and kept a safe flap transition.
+    retryAdvice: Power and safe pitch come first. Do not retract all the flaps at
+      once.
     task: 21
     reference: 7
     attitudeOnly: 0
@@ -105,9 +134,13 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Positive climb
-    instruction: With positive climb and safe speed, reduce flaps to ten degrees.
+  - title: 'Go-around: positive climb'
+    instruction: Confirm a positive climb on the vertical-speed dial and at least
+      sixty knots. Reduce flaps to ten degrees while keeping the runway direction.
     narration: {fileID: 8300000, guid: 3f118453ee031714eb1c6995be4462e7, type: 3}
+    successFeedback: You maintained a positive climb while reducing flaps to ten
+      degrees.
+    retryAdvice: Wait for a positive climb and safe speed before the next flap change.
     task: 22
     reference: 9
     attitudeOnly: 0
@@ -118,9 +151,13 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Clean climb
-    instruction: Clear of obstacles, retract remaining flaps and climb straight ahead.
+  - title: 'Go-around: clean climb'
+    instruction: Once clear of obstacles, retract the remaining flaps and continue
+      climbing straight ahead at seventy to eighty knots.
     narration: {fileID: 8300000, guid: 1cf749655b2f3ee4785998523288824e, type: 3}
+    successFeedback: You completed the go-around with a clean, controlled climb.
+    retryAdvice: Retract the final flap stage only when safely climbing and clear
+      of obstacles.
     task: 23
     reference: 9
     attitudeOnly: 0

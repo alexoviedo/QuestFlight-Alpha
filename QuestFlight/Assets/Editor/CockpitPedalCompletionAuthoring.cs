@@ -16,10 +16,10 @@ using UnityEngine.Rendering;
 namespace QuestFlight.Editor
 {
     /// <summary>
-    /// Deterministically completes the frozen three-pedal C172 source as one
+    /// Derives four complete footplates and separate C172-style linkages as one
     /// rigidly weighted four-pedal batch. The source GLB remains immutable.
     /// </summary>
-    public static class CockpitPedalCompletionAuthoring
+    public static partial class CockpitPedalCompletionAuthoring
     {
         public const string AircraftPrefabPath =
             "Assets/Production/Prefabs/ProductionC172AircraftRig.prefab";
@@ -53,20 +53,13 @@ namespace QuestFlight.Editor
         // Unity's glTF handedness conversion reflects source X. The complete
         // pilot station is therefore the two negative-X assemblies; the lone
         // copilot pedal is positive-X. Values are frozen source-local metres.
-        private const float PilotOuterMaximumX = -0.028f;
-        // Whole connected-component envelope for the frozen pilot-inner pedal.
-        // These limits deliberately sit outside the audited component bounds;
-        // they are never used to cut triangles or connected components.
-        private const float InnerComponentMinimumX = -0.019f;
-        private const float InnerComponentMaximumX = -0.008f;
-        private const float InnerComponentMinimumY = 0.030f;
-        private const float InnerComponentMaximumY = 0.049f;
-        private const float InnerComponentMinimumZ = -0.083f;
-        private const float InnerComponentMaximumZ = -0.050f;
-        private const float CopilotExistingMinimumX = 0.0166f;
         private const float MirrorPlaneX = 0f;
-        private const float PivotY = 0.03112f;
-        private const float PivotZ = -0.07475f;
+        private const float PivotY = 0.0465f;
+        private const float LeftBarZ = -0.074f;
+        private const float RightBarZ = -0.0685f;
+        private const float PlateLift = .008f;
+        private const float ToeY = .0453f-PlateLift;
+        private const float ToeZ = -.0615f;
 
         private enum PedalBone
         {
@@ -214,8 +207,9 @@ namespace QuestFlight.Editor
                 }
                 SkinnedMeshRenderer renderer = renderers[0];
                 if (renderer.sharedMesh == null ||
-                    renderer.sharedMesh.vertexCount <= 14635 ||
-                    renderer.sharedMesh.triangles.Length / 3 <= 12971 ||
+                    renderer.sharedMesh.vertexCount < 12000 ||
+                    renderer.sharedMesh.triangles.Length / 3 < 12576 ||
+                    renderer.sharedMesh.triangles.Length / 3 > 16913 ||
                     renderer.sharedMaterials.Length != 1 ||
                     renderer.bones.Length != 9)
                 {
@@ -306,179 +300,9 @@ namespace QuestFlight.Editor
             out int rejectedDuplicateComponents,
             out int rejectedDuplicateTriangles)
         {
-            Vector3[] sourceVertices = source.vertices;
-            Vector3[] sourceNormals = source.normals;
-            Vector4[] sourceTangents = source.tangents;
-            Color32[] sourceColors = ReadColors(source, visibilityStream);
-            List<Vector4>[] sourceUvs = ReadUvChannels(source);
-            int[] sourceTriangles = source.triangles;
-
-            var sourceTriangleKeys = new HashSet<string>(StringComparer.Ordinal);
-            for (int index = 0; index < sourceTriangles.Length; index += 3)
-            {
-                sourceTriangleKeys.Add(TriangleKey(
-                    sourceVertices[sourceTriangles[index]],
-                    sourceVertices[sourceTriangles[index + 1]],
-                    sourceVertices[sourceTriangles[index + 2]],
-                    false));
-            }
-
-            List<TriangleComponent> components = BuildTriangleComponents(
-                sourceVertices,
-                sourceTriangles);
-            sourceComponentCount = components.Count;
-            Require(sourceComponentCount == 81,
-                $"Frozen pedal connected-component count drifted: {sourceComponentCount}.");
-
-            rejectedDuplicateComponents = 0;
-            rejectedDuplicateTriangles = 0;
-            HashSet<int> innerVertices = new HashSet<int>();
-            List<int> innerTriangles = new List<int>();
-            mirroredComponentCount = 0;
-            foreach (TriangleComponent component in components)
-            {
-                if (!IsAuditedInnerPedalComponent(component.bounds))
-                    continue;
-
-                int duplicateTriangles = 0;
-                foreach (int triangleStart in component.triangleStarts)
-                {
-                    if (sourceTriangleKeys.Contains(TriangleKey(
-                            sourceVertices[sourceTriangles[triangleStart]],
-                            sourceVertices[sourceTriangles[triangleStart + 1]],
-                            sourceVertices[sourceTriangles[triangleStart + 2]],
-                            true)))
-                        duplicateTriangles++;
-                }
-                // A complete connected component may already exist on the copilot
-                // side. Exclude it atomically. Partial component overlap is a frozen
-                // source-contract failure; never cut faces to make it fit.
-                if (duplicateTriangles == component.triangleStarts.Count)
-                {
-                    rejectedDuplicateComponents++;
-                    rejectedDuplicateTriangles += duplicateTriangles;
-                    continue;
-                }
-                Require(duplicateTriangles == 0,
-                    "Audited pedal component has only partial mirrored overlap; " +
-                    "refusing to generate cut geometry.");
-
-                mirroredComponentCount++;
-                foreach (int triangleStart in component.triangleStarts)
-                {
-                    int a = sourceTriangles[triangleStart];
-                    int b = sourceTriangles[triangleStart + 1];
-                    int c = sourceTriangles[triangleStart + 2];
-                    innerVertices.Add(a);
-                    innerVertices.Add(b);
-                    innerVertices.Add(c);
-                    innerTriangles.Add(a);
-                    innerTriangles.Add(b);
-                    innerTriangles.Add(c);
-                }
-            }
-            Require(mirroredComponentCount == 16,
-                $"Audited inner-pedal component selection drifted: {mirroredComponentCount}.");
-            Require(innerVertices.Count == 4268 && innerTriangles.Count / 3 == 3942,
-                $"Audited whole-pedal geometry drifted: {innerVertices.Count} vertices, " +
-                $"{innerTriangles.Count / 3} triangles.");
-            Require(rejectedDuplicateComponents == 2 && rejectedDuplicateTriangles == 16,
-                $"Audited duplicate-component rejection drifted: " +
-                $"{rejectedDuplicateComponents} components, " +
-                $"{rejectedDuplicateTriangles} triangles.");
-
-            List<Vector3> vertices = new List<Vector3>(sourceVertices);
-            List<Vector3> normals = new List<Vector3>(sourceNormals);
-            List<Vector4> tangents = new List<Vector4>(sourceTangents);
-            List<Color32> colors = new List<Color32>(sourceColors);
-            // A connected source component is the minimum rigid ownership unit.
-            // Classifying individual vertices used to split the welded bridge at
-            // the pilot station across two bones, which stretched triangles and
-            // made the apparent hinge migrate. Assign every complete component to
-            // exactly one toe bone (the toe is parented beneath its rudder hinge),
-            // or leave cross-station/static geometry on the root bone.
-            BoneWeight[] sourceWeights = BuildRigidComponentWeights(
-                source.vertexCount,
-                sourceTriangles,
-                components);
-            List<BoneWeight> weights = new List<BoneWeight>(
-                source.vertexCount + innerVertices.Count);
-            weights.AddRange(sourceWeights);
-
-            Dictionary<int, int> mirrorMap = new Dictionary<int, int>();
-            foreach (int sourceIndex in innerVertices.OrderBy(value => value))
-            {
-                int destination = vertices.Count;
-                mirrorMap.Add(sourceIndex, destination);
-                Vector3 vertex = sourceVertices[sourceIndex];
-                vertex.x = 2f * MirrorPlaneX - vertex.x;
-                vertices.Add(vertex);
-                if (sourceNormals.Length == source.vertexCount)
-                {
-                    Vector3 normal = sourceNormals[sourceIndex];
-                    normal.x = -normal.x;
-                    normals.Add(normal);
-                }
-                if (sourceTangents.Length == source.vertexCount)
-                {
-                    Vector4 tangent = sourceTangents[sourceIndex];
-                    tangent.x = -tangent.x;
-                    tangent.w = -tangent.w;
-                    tangents.Add(tangent);
-                }
-                if (sourceColors.Length == source.vertexCount)
-                {
-                    Color32 visibility = sourceColors[sourceIndex];
-                    // Frozen channel contract is +Z,+X,-Z,-X in RGBA. Mirroring
-                    // about X must exchange +X and -X visibility.
-                    colors.Add(new Color32(
-                        visibility.r,
-                        visibility.a,
-                        visibility.b,
-                        visibility.g));
-                }
-                for (int channel = 0; channel < sourceUvs.Length; channel++)
-                {
-                    if (sourceUvs[channel].Count == source.vertexCount)
-                        sourceUvs[channel].Add(sourceUvs[channel][sourceIndex]);
-                }
-                weights.Add(RigidWeight(PedalBone.CopilotLeftToe));
-            }
-
-            List<int> triangles = new List<int>(
-                sourceTriangles.Length + innerTriangles.Count);
-            triangles.AddRange(sourceTriangles);
-            for (int index = 0; index < innerTriangles.Count; index += 3)
-            {
-                // Reflection reverses handedness, so reverse triangle winding.
-                triangles.Add(mirrorMap[innerTriangles[index]]);
-                triangles.Add(mirrorMap[innerTriangles[index + 2]]);
-                triangles.Add(mirrorMap[innerTriangles[index + 1]]);
-            }
-
-            Mesh mesh = new Mesh
-            {
-                name = "C172_FourPedalAssembly",
-                indexFormat = IndexFormat.UInt32
-            };
-            mesh.SetVertices(vertices);
-            if (normals.Count == vertices.Count) mesh.SetNormals(normals);
-            if (tangents.Count == vertices.Count) mesh.SetTangents(tangents);
-            if (colors.Count == vertices.Count) mesh.SetColors(colors);
-            for (int channel = 0; channel < sourceUvs.Length; channel++)
-            {
-                if (sourceUvs[channel].Count == vertices.Count)
-                    mesh.SetUVs(channel, sourceUvs[channel]);
-            }
-            mesh.SetTriangles(triangles, 0, true);
-            mesh.boneWeights = weights.ToArray();
-            Matrix4x4[] bindposes = new Matrix4x4[bones.Length];
-            for (int index = 0; index < bones.Length; index++)
-                bindposes[index] = bones[index].worldToLocalMatrix * rendererRoot.localToWorldMatrix;
-            mesh.bindposes = bindposes;
-            if (normals.Count != vertices.Count) mesh.RecalculateNormals();
-            mesh.RecalculateBounds();
-            return mesh;
+            return BuildLinkageMesh(source,visibilityStream,rendererRoot,bones,
+                out sourceComponentCount,out mirroredComponentCount,
+                out rejectedDuplicateComponents,out rejectedDuplicateTriangles);
         }
 
         private static List<TriangleComponent> BuildTriangleComponents(
@@ -550,17 +374,6 @@ namespace QuestFlight.Editor
                 result.Add(component);
             }
             return result;
-        }
-
-        private static bool IsAuditedInnerPedalComponent(Bounds bounds)
-        {
-            const float epsilon = 0.000001f;
-            return bounds.min.x >= InnerComponentMinimumX - epsilon &&
-                   bounds.max.x <= InnerComponentMaximumX + epsilon &&
-                   bounds.min.y >= InnerComponentMinimumY - epsilon &&
-                   bounds.max.y <= InnerComponentMaximumY + epsilon &&
-                   bounds.min.z >= InnerComponentMinimumZ - epsilon &&
-                   bounds.max.z <= InnerComponentMaximumZ + epsilon;
         }
 
         private static void ReplaceRuntimeVisibilityAuthority(
@@ -649,22 +462,6 @@ namespace QuestFlight.Editor
             return true;
         }
 
-        private static string TriangleKey(
-            Vector3 a,
-            Vector3 b,
-            Vector3 c,
-            bool mirrorX)
-        {
-            string[] vertices =
-            {
-                VertexKey(a, mirrorX),
-                VertexKey(b, mirrorX),
-                VertexKey(c, mirrorX)
-            };
-            Array.Sort(vertices, StringComparer.Ordinal);
-            return string.Join("|", vertices);
-        }
-
         private static string VertexKey(Vector3 value, bool mirrorX)
         {
             float x = mirrorX ? 2f * MirrorPlaneX - value.x : value.x;
@@ -673,52 +470,6 @@ namespace QuestFlight.Editor
                 Mathf.RoundToInt(x * scale).ToString(CultureInfo.InvariantCulture), ":",
                 Mathf.RoundToInt(value.y * scale).ToString(CultureInfo.InvariantCulture), ":",
                 Mathf.RoundToInt(value.z * scale).ToString(CultureInfo.InvariantCulture));
-        }
-
-        private static BoneWeight[] BuildRigidComponentWeights(
-            int vertexCount,
-            int[] triangles,
-            List<TriangleComponent> components)
-        {
-            BoneWeight[] result = new BoneWeight[vertexCount];
-            bool[] assigned = new bool[vertexCount];
-            for (int index = 0; index < result.Length; index++)
-                result[index] = RigidWeight(PedalBone.Root);
-
-            foreach (TriangleComponent component in components)
-            {
-                PedalBone owner = ClassifyOriginalComponent(component.bounds);
-                foreach (int triangleStart in component.triangleStarts)
-                {
-                    for (int corner = 0; corner < 3; corner++)
-                    {
-                        int vertex = triangles[triangleStart + corner];
-                        if (assigned[vertex])
-                        {
-                            Require(result[vertex].boneIndex0 == (int)owner,
-                                "One source vertex belongs to conflicting rigid pedal components.");
-                            continue;
-                        }
-                        result[vertex] = RigidWeight(owner);
-                        assigned[vertex] = true;
-                    }
-                }
-            }
-            return result;
-        }
-
-        private static PedalBone ClassifyOriginalComponent(Bounds bounds)
-        {
-            // Cross-station components are linkages or static cockpit geometry.
-            // Keeping those on the root is both mechanically plausible and, most
-            // importantly, prevents any welded surface from being pulled apart.
-            if (bounds.max.x < PilotOuterMaximumX)
-                return PedalBone.PilotLeftToe;
-            if (bounds.min.x >= PilotOuterMaximumX && bounds.max.x < -0.004f)
-                return PedalBone.PilotRightToe;
-            if (bounds.min.x >= CopilotExistingMinimumX)
-                return PedalBone.CopilotRightToe;
-            return PedalBone.Root;
         }
 
         private static BoneWeight RigidWeight(PedalBone bone)
@@ -920,9 +671,11 @@ namespace QuestFlight.Editor
                 pivot = new GameObject(name).transform;
                 pivot.SetParent(parent, false);
             }
+            bool left=name.Contains("Left");
+            float barZ=left?LeftBarZ:RightBarZ;
             pivot.localPosition = child
-                ? Vector3.zero
-                : new Vector3(x, PivotY, PivotZ);
+                ? new Vector3(0,ToeY-PivotY,ToeZ-barZ)
+                : new Vector3(x, PivotY, barZ);
             pivot.localRotation = Quaternion.identity;
             pivot.localScale = Vector3.one;
             return pivot;
@@ -956,17 +709,17 @@ namespace QuestFlight.Editor
         {
             string json =
                 "{\n" +
-                "  \"schema\": \"questflight.cockpit_four_pedal.v1\",\n" +
+                "  \"schema\": \"questflight.cockpit_four_pedal.v2\",\n" +
                 "  \"source_asset\": \"Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb\",\n" +
                 $"  \"source_sha256\": \"{CockpitMechanicalV2Contract.SourceGlbSha256}\",\n" +
                 "  \"source_license\": \"CC BY 4.0; KOG_THORNS; modified project derivative\",\n" +
-                "  \"derivation\": \"preserve three audited assemblies; mirror 16 complete welded connected components from the negative-X pilot inner assembly about source-local X=0; correct winding, tangent handedness, and +X/-X directional visibility; atomically reject already-present mirrored components\",\n" +
+                "  \"derivation\": \"four complete copies of audited source footplate components 0,35-40,48,49; preserve UVs and correct reflected winding, tangents and visibility; replace incomplete consumer floor hardware with fixed bearings, two rudder torque tubes, four arms and independent toe hinges following Cessna service manual Figure 10-2\",\n" +
                 $"  \"source_vertices\": {source.vertexCount},\n" +
                 $"  \"source_triangles\": {source.triangles.Length / 3},\n" +
                 $"  \"output_vertices\": {output.vertexCount},\n" +
                 $"  \"output_triangles\": {output.triangles.Length / 3},\n" +
                 $"  \"source_connected_components\": {sourceComponentCount},\n" +
-                $"  \"mirrored_connected_components\": {mirroredComponentCount},\n" +
+                $"  \"copied_footplate_components\": {mirroredComponentCount},\n" +
                 $"  \"rejected_duplicate_components\": {rejectedDuplicateComponents},\n" +
                 $"  \"rejected_duplicate_triangles\": {rejectedDuplicateTriangles},\n" +
                 "  \"pedal_assemblies\": 4,\n" +

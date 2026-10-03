@@ -161,6 +161,24 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
+        public void PausedPresentationKeepsAuthoritativeSnapshotValidOnEveryFrame()
+        {
+            var model = new CockpitSystemsModel();
+            var state = RepresentativeState();
+            var controls = RepresentativeControls();
+            Assert.That(model.Reset(state, controls, CockpitElectricalPowerInput.Unavailable), Is.True);
+            for (int frame = 0; frame < 4; frame++)
+            {
+                Assert.That(model.Step(state, controls, CockpitElectricalPowerInput.Unavailable, 0f), Is.True);
+                Assert.That(model.Current.isValid, Is.True);
+                Assert.That(model.Current.indicatedAirspeedKnots, Is.EqualTo(state.calibratedAirspeedKnots));
+            }
+            state.engineRpm = double.NaN;
+            Assert.That(model.Step(state, controls, CockpitElectricalPowerInput.Unavailable, 0f), Is.False);
+            Assert.That(model.Current.isValid, Is.False);
+        }
+
+        [Test]
         public void ControllerProviderExposesOnlySupportedPresentationChannels()
         {
             GameObject root = new GameObject("CockpitSystemsProviderTest");

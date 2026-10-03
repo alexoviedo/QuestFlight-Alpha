@@ -61,7 +61,7 @@ Material:
     - metallicRoughnessTexture_texCoord: 0
     - normalTexture_scale: 1
     - normalTexture_texCoord: 0
-    - occlusionTexture_strength: 0.78
+    - occlusionTexture_strength: 0.88
     - occlusionTexture_texCoord: 0
     - roughnessFactor: 0.9
     m_Colors:

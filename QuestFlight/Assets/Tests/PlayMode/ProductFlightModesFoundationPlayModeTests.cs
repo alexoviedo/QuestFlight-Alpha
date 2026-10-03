@@ -225,6 +225,9 @@ namespace QuestFlight.PlayModeTests
         public void FocusedActivationUsesTheExistingFreeFlightLifecycleExactlyOnce()
         {
             MakeNativeReady();
+            // This synchronous fixture has no headset focus. Test the button's
+            // mode dispatch without the separate shared-navigation focus gate.
+            _mode.ConfigureNavigationForAuthoring(null);
             ProductFlightModeMenuView view = _mode.AuthoredModeMenuView;
             view.MoveFocus(1);
             Assert.That(view.FocusedButton.Action,
@@ -242,19 +245,20 @@ namespace QuestFlight.PlayModeTests
         }
 
         [Test]
-        public void LessonsChoiceStaysPausedInSelectionWithoutActivatingLessonControlState()
+        public void LessonsChoiceDefersItsPauseUntilTheCockpitTransitionFinishes()
         {
             MakeNativeReady();
             _mode.ShowLessonsUnavailable();
             _mode.ShowLessonsUnavailable();
             Assert.That(_mode.State,
-                Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Selection));
-            Assert.That(Time.timeScale, Is.Zero);
+                Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Training));
+            Assert.That(Time.timeScale, Is.EqualTo(FixtureTimeScale));
             Assert.That(_demo.IsRunning, Is.False);
             Assert.That(_input.DeterministicMode, Is.False);
             Assert.That(_input.FlightLessonGuidanceActive, Is.False);
-            Assert.That(_mode.AuthoredModePanelText.text,
-                Is.EqualTo(ProductFlightModeCoordinator.LessonsUnavailableText));
+            Assert.That(_mode.AuthoredModeMenuView.TransitionPending, Is.True);
+            Assert.That(_mode.AuthoredTraining.State,
+                Is.EqualTo(QuestFlight.Product.Training.TrainingSessionState.Inactive));
         }
 
         [Test]
@@ -421,6 +425,78 @@ namespace QuestFlight.PlayModeTests
             Assert.That(Time.timeScale, Is.Zero);
             Object.DestroyImmediate(incomplete);
             Assert.That(Time.timeScale, Is.EqualTo(FixtureTimeScale).Within(0.000001f));
+        }
+
+        [Test]
+        public void ColdFreeFlightTransitionCanBecomeReadyWhileNavigationPausesFlight()
+        {
+            MakeNativeReady();
+            _mode.SelectFreeFlight();
+            _mode.AuthoredNavigation.OpenMenu();
+            Assert.That(Time.timeScale, Is.Zero);
+            var view = _mode.AuthoredModeMenuView;
+            for (int frame = 0; frame < 4; frame++)
+            {
+                Assert.That(view.AuthoredCockpitSystems.StepForTest(
+                    default, default, default, 0f), Is.True,
+                    "A paused native snapshot must remain valid on consecutive frames.");
+                InvokePrivate(view, "Update");
+            }
+            Assert.That(typeof(ProductFlightModeMenuView)
+                .GetField("_transitionPhase", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(view).ToString(), Is.Not.EqualTo("WaitingForCockpit"));
+            // Navigation owns the pause now; restore the fixture before its teardown.
+            Time.timeScale = FixtureTimeScale;
+        }
+
+        [Test]
+        public void TransitionReactivatesItsPresentationAfterCalibrationHidThePanel()
+        {
+            MakeNativeReady();
+            SetAutoProperty(_seat, "IsOpen", true);
+            InvokePrivate(_mode, "Update");
+            SetAutoProperty(_seat, "IsOpen", false);
+            _mode.SelectFreeFlight();
+            Assert.That(_mode.AuthoredModePanelRoot.activeInHierarchy, Is.True,
+                "The transition must not depend on another selection Update to reactivate it.");
+            Assert.That(_mode.AuthoredModeMenuView.TransitionContentRoot.activeInHierarchy,
+                Is.True);
+        }
+
+        [Test]
+        public void UnavailableCockpitReturnsToAnActionablePausedMenu()
+        {
+            MakeNativeReady();
+            _mode.SelectFreeFlight();
+            var view = _mode.AuthoredModeMenuView;
+            typeof(ProductFlightModeMenuView).GetField("_transitionWaitSeconds",
+                BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(view, ProductFlightModeMenuView.MaximumPreparationSeconds);
+            WithoutUnityLogging(() => InvokePrivate(view, "Update"));
+            Assert.That(view.TransitionPending, Is.False);
+            Assert.That(view.FadeOverlayRenderer.enabled, Is.False);
+            Assert.That(_mode.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Blocked));
+            Assert.That(_mode.AuthoredNavigation.IsOpen, Is.True);
+            Assert.That(Time.timeScale, Is.Zero);
+            Assert.That(_input.FlightLessonInputSuppressed, Is.True);
+        }
+
+        [Test]
+        public void ReturningToMainCancelsAQueuedActivityAndRestoresManualRestart()
+        {
+            MakeNativeReady();
+            var navigation = _mode.AuthoredNavigation;
+            typeof(ProductAppNavigation).GetField("pendingActivity",
+                BindingFlags.Instance | BindingFlags.NonPublic).SetValue(navigation, 3);
+            InvokePrivate(navigation, "ReturnMain");
+            Assert.That(typeof(ProductAppNavigation).GetField("pendingActivity",
+                BindingFlags.Instance | BindingFlags.NonPublic).GetValue(navigation), Is.EqualTo(-1));
+            Assert.That(_mode.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Selection));
+            Assert.That(_mode.AuthoredTraining.State, Is.EqualTo(QuestFlight.Product.Training.TrainingSessionState.Inactive));
+            _mode.SelectFreeFlight();
+            Assert.That(_mode.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.FreeFlight));
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+            Time.timeScale = FixtureTimeScale;
         }
 
         private void MakeNativeReady()

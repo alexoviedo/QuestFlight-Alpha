@@ -37,6 +37,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _CladdingTileMeters: 4
+    - _MasonryTileMeters: 1.4
+    - _MetricTerminalWalls: 1
     - _NormalStrength: 0.45
     - _ReflectionStrength: 0.1
     - _SpecularStrength: 0.15

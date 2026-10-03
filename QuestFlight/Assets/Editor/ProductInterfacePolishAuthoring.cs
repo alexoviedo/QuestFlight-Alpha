@@ -119,8 +119,8 @@ namespace QuestFlight.Editor
             var material=AssetDatabase.LoadAssetAtPath<Material>(path);
             if(material==null){material=new Material(source);AssetDatabase.CreateAsset(material,path);}
             material.CopyPropertiesFromMaterial(source);
-            if(text)material.shader=Shader.Find("TextMeshPro/Mobile/Distance Field Overlay");
-            else{material.SetFloat("_ZTest",(float)CompareFunction.Always);material.SetFloat("_ZWrite",0);}
+            if(text){material.shader=Shader.Find("TextMeshPro/Mobile/Distance Field");material.SetFloat("_ZTestMode",(float)CompareFunction.LessEqual);}
+            else{material.SetFloat("_ZTest",(float)CompareFunction.LessEqual);material.SetFloat("_ZWrite",0);}
             material.renderQueue=queue;EditorUtility.SetDirty(material);return material;
         }
         static void ModalText(TextMeshPro text,bool bold=false) => text.fontSharedMaterial=bold?modalSemibold:modalRegular;
@@ -168,7 +168,7 @@ namespace QuestFlight.Editor
             L("AircraftSubtitle","Boulder Municipal  ·  C172",new Vector3(-1.075f,.422f,1.44f),2.45f,1.15f,false,theme.secondary);
             string[] names={"DemoFlightCard","FreeFlightCard","LessonsCard","SeatCalibrationCard"};
             string[] titles={"Demo flight","Free flight","Flight lessons","Seat position"};
-            string[] descriptions={"A guided departure from Boulder","Explore Colorado at your own pace","Six exercises, one step at a time",""};
+            string[] descriptions={"Tour and landing · about 12–18 min · observe or take control","Fresh airport start · you fly · no time limit","Six guided exercises · begin with Cockpit and taxi",""};
             for(int i=0;i<4;i++)
             {
                 float y=.24f-i*.205f;float h=i==3?.085f:.175f;
@@ -212,6 +212,7 @@ namespace QuestFlight.Editor
             }
             var layout=panel.GetComponent<ProductUiPanelLayout>();if(layout==null)layout=panel.gameObject.AddComponent<ProductUiPanelLayout>();
             layout.Configure(title,body,hint,backing,buttons);nav.ConfigurePolishedLayout(layout);
+            layout.ConfigureCockpitClearance(world.GetComponentInChildren<AircraftReferenceFrameRig>(true).PilotSeatAnchor);
             EditorUtility.SetDirty(nav);
         }
         static void Instruction(GameObject world)
@@ -231,6 +232,7 @@ namespace QuestFlight.Editor
             ModalText(status);ModalText(title,true);ModalText(instruction);ModalText(hint);
             var component=root.GetComponent<ProductUiInstruction>();if(component==null)component=root.gameObject.AddComponent<ProductUiInstruction>();
             component.Configure(status,title,instruction,hint,surface.transform,progress.transform,theme);
+            component.ConfigureCockpitClearance(world.GetComponentInChildren<AircraftReferenceFrameRig>(true).PilotSeatAnchor);
             component.Present("Your controls","Check the yoke",instruction.text,0,7,true,false);
             controller.ConfigurePolishedInstruction(component);EditorUtility.SetDirty(controller);
         }

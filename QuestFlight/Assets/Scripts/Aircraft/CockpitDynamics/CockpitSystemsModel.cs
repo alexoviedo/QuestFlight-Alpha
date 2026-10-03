@@ -83,8 +83,10 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             CockpitElectricalPowerInput electricalInput,
             float deltaTimeSeconds)
         {
+            // Menu pauses freeze instrument response; they do not invalidate
+            // an otherwise authoritative native flight snapshot.
             if (!CanConsume(state, controls) || !IsFinite(deltaTimeSeconds) ||
-                deltaTimeSeconds <= 0f)
+                deltaTimeSeconds < 0f)
             {
                 Invalidate();
                 return false;

@@ -1,0 +1,60 @@
+{
+  "clips": [
+    {
+      "id": "showcase_intro",
+      "text": "Welcome aboard. We're already flying toward Boulder Municipal Airport. I'll fly the arrival, land, and stop clear of the runway. Enjoy the view. Menu pauses the flight and lets you take control."
+    },
+    {
+      "id": "tour_intro",
+      "text": "Welcome aboard. I'll fly us around Boulder and bring us back to land. Menu pauses the flight. Choose Take control whenever you want to fly."
+    },
+    {
+      "id": "tour_your_controls",
+      "text": "You have the controls. Choose Let the demo fly from the pause menu when you're ready to hand back."
+    },
+    {
+      "id": "tour_my_controls",
+      "text": "I've got the controls. I'll settle the airplane and rejoin the route ahead."
+    },
+    {
+      "id": "tour_final",
+      "text": "We're on final approach. I'll keep the runway centered and settle the airplane onto the main wheels."
+    },
+    {
+      "id": "tour_goaround",
+      "text": "This approach isn't settled. I'll climb away and try again."
+    },
+    {
+      "id": "tour_exit",
+      "text": "We're on the ground. I'll slow down and follow the taxiway clear of the runway."
+    },
+    {
+      "id": "tour_complete",
+      "text": "We're clear of the runway and stopped. Thanks for flying with me. Open Menu to choose another flight or try a lesson."
+    },
+    {
+      "id": "tour_reservoir",
+      "text": "Boulder Reservoir is a recreation area and part of the city's water supply. It makes a useful landmark when finding the airport."
+    },
+    {
+      "id": "tour_flatirons",
+      "text": "Those sloping rock faces along the foothills are the Flatirons. We're staying east of the rising terrain to enjoy the view with room to maneuver."
+    },
+    {
+      "id": "tour_east_boulder",
+      "text": "From here you can look across eastern Boulder toward the mountains. In a small airplane, most of your attention belongs outside, with brief checks of the instruments."
+    },
+    {
+      "id": "tour_eagle_left",
+      "text": "Golden eagle ahead, slightly left."
+    },
+    {
+      "id": "tour_eagle_right",
+      "text": "Golden eagle ahead, slightly right."
+    },
+    {
+      "id": "tour_eagle_ahead",
+      "text": "Golden eagle straight ahead."
+    }
+  ]
+}

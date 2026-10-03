@@ -27,6 +27,8 @@ tools/scenery/lidar/ept_snapshot.py whitespace=-blank-at-eof
 *.prefab text eol=lf merge=unityyamlmerge whitespace=-blank-at-eol,-blank-at-eof
 *.asset text eol=lf merge=unityyamlmerge whitespace=-blank-at-eol,-blank-at-eof
 *.mat text eol=lf merge=unityyamlmerge whitespace=-blank-at-eol,-blank-at-eof
+*.mixer text eol=lf merge=unityyamlmerge whitespace=-blank-at-eol,-blank-at-eof
+*.controller text eol=lf merge=unityyamlmerge whitespace=-blank-at-eol,-blank-at-eof
 *.meta text eol=lf merge=unityyamlmerge whitespace=-blank-at-eol,-blank-at-eof
 
 # Frozen JSBSim runtime payload hashes cover the exact promoted package bytes.

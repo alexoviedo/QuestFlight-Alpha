@@ -1,18 +1,19 @@
-param([string]$ProjectPath = (Join-Path (Split-Path -Parent $PSScriptRoot) 'QuestFlight'))
+param(
+    [string]$ProjectPath = (Join-Path (Split-Path -Parent $PSScriptRoot) 'QuestFlight'),
+    [Parameter(Mandatory=$true)][string]$PythonPath,
+    [Parameter(Mandatory=$true)][string]$OutputPath,
+    [Parameter(Mandatory=$true)][string]$CachePath,
+    [switch]$Audition,
+    [switch]$Promote,
+    [switch]$HeadsetCandidate
+)
 $ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName System.Speech
-$voiceRoot = Join-Path $ProjectPath 'Assets\Production\Training\Voice'
-$manifest = Get-Content -LiteralPath (Join-Path $ProjectPath 'Assets\Production\Training\VoiceScripts.json') -Raw | ConvertFrom-Json
-$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
-try {
-    $synth.SelectVoice('Microsoft David Desktop')
-    $synth.Rate = 0
-    foreach ($clip in $manifest.clips) {
-        if ($clip.id -notmatch '^[a-z0-9_]+$') { throw 'Invalid authored clip identifier' }
-        $destination = Join-Path $voiceRoot ($clip.id + '.wav')
-        $synth.SetOutputToWaveFile($destination)
-        $synth.Speak([string]$clip.text)
-        $synth.SetOutputToNull()
-    }
-} finally { $synth.Dispose() }
-Write-Output ('Generated {0} offline narration clips.' -f $manifest.clips.Count)
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$generator = Join-Path $repoRoot 'tools\audio\generate_kokoro_voice.py'
+$arguments = @($generator, '--project', $ProjectPath, '--output', $OutputPath, '--cache', $CachePath, '--voice', 'am_michael')
+if ($Audition) { $arguments += '--audition' }
+else { $arguments += @('--extra-manifest', (Join-Path $repoRoot 'tools\audio\demo_voice_scripts.json')) }
+if ($Promote) { $arguments += '--promote' }
+if ($HeadsetCandidate) { $arguments += '--headset-candidate' }
+& $PythonPath @arguments
+if ($LASTEXITCODE -ne 0) { throw 'Kokoro authoring failed. Existing recordings were not silently replaced with a Windows voice.' }

@@ -1,4 +1,4 @@
-﻿using QuestFlight.Product.Training;
+using QuestFlight.Product.Training;
 
 using QuestFlightLab.Input;
 
@@ -16,11 +16,11 @@ namespace QuestFlight.Product
 
     [DefaultExecutionOrder(-9900), DisallowMultipleComponent]
 
-    public sealed class ProductAppNavigation : MonoBehaviour, IProductPanelActions
+    public sealed partial class ProductAppNavigation : MonoBehaviour, IProductPanelActions
 
     {
 
-        public enum Page { None, App, ConfirmMain, Calibration, Explanation, Orientation }
+        public enum Page { None, App, ConfirmMain, Calibration, Explanation, Orientation, Settings, QuickStart, Guest, Tools, Controls, Comfort, Briefing, Map, Kneeboard, Activities, History, Summary, Report, Bindings, InputPreview, InstrumentHelp, Captions, ControlDiagram, Checklist }
 
         [SerializeField] private ProductFlightModeCoordinator modes;
 
@@ -53,6 +53,9 @@ namespace QuestFlight.Product
         private float nextNavigationTime;
 
         private bool pausedTraining, ownsPause;
+        private string pauseNotice;
+        private bool controllersSeen;
+        private float controllerMissingSince=-1;
 
         private float savedTimeScale = 1, refreshAt;
 
@@ -61,6 +64,20 @@ namespace QuestFlight.Product
         [SerializeField] private ProductUiPanelLayout polishedLayout;
 
         public void ConfigurePolishedLayout(ProductUiPanelLayout value) => polishedLayout=value;
+        [SerializeField] private AudioSource instructorVoice;
+        [SerializeField] private QuestFlightLab.Audio.ProductionC172AudioController aircraftAudio;
+        private float voiceLevel=1,aircraftLevel=1;
+        public static bool CaptionsEnabled => PlayerPrefs.GetInt("QuestFlight.Captions",1)!=0;
+        public static bool LargeInstructionTextEnabled => PlayerPrefs.GetInt("QuestFlight.LargeInstructionText",0)!=0;
+        public static bool FeedbackEnabled => PlayerPrefs.GetInt("QuestFlight.InterfaceFeedback",1)!=0;
+        [SerializeField] private ProductUiInstruction[] instructionPanels = System.Array.Empty<ProductUiInstruction>();
+        private Vector3[] instructionScales;
+        private bool firstUsePending;
+        private int guideStep;
+        private Page calibrationReturnPage=Page.App, guideReturnPage=Page.App;
+        public void ConfigureGuestPresentation(ProductUiInstruction[] panels) => instructionPanels=panels;
+
+        public void ConfigureAudio(AudioSource voice,QuestFlightLab.Audio.ProductionC172AudioController aircraft) { instructorVoice=voice;aircraftAudio=aircraft; }
 
         private string[] labels = new string[8];
 
@@ -80,6 +97,8 @@ namespace QuestFlight.Product
 
 
 
+        [SerializeField] private ProductFlightExperience experience;
+        public void ConfigureExperience(ProductFlightExperience value) => experience=value;
         private void Start()
 
         {
@@ -87,6 +106,12 @@ namespace QuestFlight.Product
             if (!HasAuthoredReferences) { Debug.LogError("[Navigation] Authored references missing.",this); enabled=false; return; }
 
             panel.SetActive(false); releaseRequired=true;
+            firstUsePending=PlayerPrefs.GetInt("QuestFlight.QuickStartSeen",0)==0;
+            instructionScales=new Vector3[instructionPanels.Length];
+            for(int n=0;n<instructionPanels.Length;n++)if(instructionPanels[n]!=null)instructionScales[n]=instructionPanels[n].transform.localScale;
+            if(!PlayerPrefs.HasKey("QuestFlight.TextScale") && LargeInstructionTextEnabled)ProductComfortPreferences.Set("TextScale",1.2f);
+            ApplyInstructionSize();
+            voiceLevel=Mathf.Clamp01(PlayerPrefs.GetFloat("QuestFlight.VoiceVolume",1));aircraftLevel=Mathf.Clamp01(PlayerPrefs.GetFloat("QuestFlight.AircraftVolume",1));ApplyAudioLevels();
 
         }
 
@@ -130,6 +155,20 @@ namespace QuestFlight.Product
             float rightAxis=OVRInput.Get(OVRInput.RawAxis2D.RThumbstick).y;
             float axis=Mathf.Abs(leftAxis)>=Mathf.Abs(rightAxis)?leftAxis:rightAxis;
             bool adjusting=CurrentPage==Page.Calibration && calibration.IsAdjustingSeat;
+            if(Application.platform==RuntimePlatform.Android)
+            {
+                bool connected=OVRInput.IsControllerConnected(OVRInput.Controller.LTouch)&&OVRInput.IsControllerConnected(OVRInput.Controller.RTouch)&&
+                    OVRInput.GetControllerOrientationTracked(OVRInput.Controller.LTouch)&&OVRInput.GetControllerOrientationTracked(OVRInput.Controller.RTouch);
+                if(connected){controllersSeen=true;controllerMissingSince=-1;}
+                else if(controllersSeen && input.AuthoredGamepad.Current.connected==false)
+                {
+                    if(controllerMissingSince<0)controllerMissingSince=Time.unscaledTime;
+                    bool manual=modes.State==ProductFlightModeCoordinator.FlightModeState.FreeFlight||modes.State==ProductFlightModeCoordinator.FlightModeState.Training||
+                        modes.State==ProductFlightModeCoordinator.FlightModeState.Demo&&modes.AuthoredDemoPilot.UserHasControls;
+                    if(manual&&!IsOpen&&Time.unscaledTime-controllerMissingSince>.75f)
+                    {OpenMenu();pauseNotice="A controller lost tracking or disconnected. Wake both controllers, then choose Resume. Flight remains paused.";input.RequireTouchRelease();}
+                }
+            }
 
             bool triggers=OVRInput.Get(OVRInput.RawAxis1D.LIndexTrigger)>.1f||OVRInput.Get(OVRInput.RawAxis1D.RIndexTrigger)>.1f;
 
@@ -143,6 +182,8 @@ namespace QuestFlight.Product
 
                 if (!IsOpen && (modes.State==ProductFlightModeCoordinator.FlightModeState.FreeFlight || modes.State==ProductFlightModeCoordinator.FlightModeState.Demo)) OpenMenu();
 
+                if(modes.State==ProductFlightModeCoordinator.FlightModeState.FreeFlight || modes.State==ProductFlightModeCoordinator.FlightModeState.Demo)
+                    pauseNotice="Flight paused while the headset or app focus was unavailable. Choose Resume when you are ready.";
                 releaseRequired=true; panel.SetActive(false); return;
 
             }
@@ -158,6 +199,12 @@ namespace QuestFlight.Product
 
             }
 
+            if(firstUsePending && !releaseRequired && !IsOpen && modes.State==ProductFlightModeCoordinator.FlightModeState.Selection && modes.AuthoredFlightCoordinator.IsInitialized && !modes.AuthoredModeMenuView.TransitionPending)
+            {
+                firstUsePending=false; OpenQuickStart(true); return;
+            }
+
+            UpdateSetupChecks();
             if (md) { Consume(); if (CurrentPage==Page.App) Resume(); else OpenMenu(); }
 
             else if (bd) { Consume(); Back(); }
@@ -167,6 +214,7 @@ namespace QuestFlight.Product
             {
 
                 Navigate(axis,adjusting);
+                AdjustFocusedSetting(adjusting);
 
                 if (ad && !adjusting) InvokeAction(focus);
 
@@ -196,7 +244,7 @@ namespace QuestFlight.Product
 
             if(adjusting) { releaseRequired=true; navigationDirection=0; }
 
-            if (CurrentPage==Page.Calibration && !calibration.IsOpen) CurrentPage=Page.App;
+            if (CurrentPage==Page.Calibration && !calibration.IsOpen) CurrentPage=calibrationReturnPage;
 
             if (training.State!=presentedState) { presentedState=training.State; focus=0; releaseRequired=true; }
 
@@ -207,6 +255,14 @@ namespace QuestFlight.Product
         private bool TrainingPanelVisible => modes.State==ProductFlightModeCoordinator.FlightModeState.Training &&
 
             training.State!=TrainingSessionState.Inactive && training.State!=TrainingSessionState.Preparing && !training.IsFlying;
+
+        private void OnApplicationPause(bool paused)
+        {
+            if(!paused||!HasAuthoredReferences||modes.State==ProductFlightModeCoordinator.FlightModeState.Selection)return;
+            if(!IsOpen)OpenMenu();
+            pauseNotice="Flight paused while the app was suspended. Choose Resume when ready.";
+            input.RequireTouchRelease();releaseRequired=true;
+        }
 
         private void Consume() { consumedFrame=Time.frameCount; releaseRequired=true; }
 
@@ -258,7 +314,24 @@ namespace QuestFlight.Product
 
         public void OpenCalibration()
 
-        { if (!IsOpen) OpenMenu(); CurrentPage=Page.Calibration; calibration.Open(); focus=0; Consume(); Refresh(); }
+        {
+            calibrationReturnPage=CurrentPage==Page.QuickStart?Page.QuickStart:Page.App;
+            if (!IsOpen) OpenMenu(); CurrentPage=Page.Calibration; calibration.Open(); focus=0; Consume(); Refresh();
+        }
+
+        public void OpenQuickStart(bool firstUse=false)
+        {
+            guideReturnPage=firstUse?Page.None:CurrentPage;
+            if(!IsOpen)OpenMenu();
+            CurrentPage=Page.QuickStart; guideStep=0;ResetSetupCheck();focus=0;Consume();Refresh();
+        }
+
+        private void FinishQuickStart()
+        {
+            PlayerPrefs.SetInt("QuestFlight.QuickStartSeen",1);PlayerPrefs.Save();
+            if(guideReturnPage==Page.None){Resume();return;}
+            CurrentPage=guideReturnPage;focus=0;Consume();Refresh();
+        }
 
         public void ShowOrientation()
 
@@ -267,8 +340,16 @@ namespace QuestFlight.Product
         public void Back()
 
         {
+            if(IsOpen || modes.State!=ProductFlightModeCoordinator.FlightModeState.Selection)ProductUiFeedback.Play(ProductUiFeedback.Cue.Back);
 
-            if (CurrentPage==Page.Calibration) { calibration.Cancel(); CurrentPage=Page.App; }
+            if (CurrentPage==Page.Calibration) { calibration.Cancel(); CurrentPage=calibrationReturnPage; }
+
+            else if(CurrentPage==Page.QuickStart) { if(guideStep>0){guideStep--;ResetSetupCheck();}else {FinishQuickStart();return;} }
+
+            else if (BackFromPolishPage()) { }
+            else if(CurrentPage==Page.Settings) CurrentPage=Page.Tools;
+
+            else if(CurrentPage==Page.Guest) CurrentPage=Page.Settings;
 
             else if (CurrentPage==Page.Orientation) CurrentPage=Page.None;
 
@@ -298,7 +379,12 @@ namespace QuestFlight.Product
 
         {
 
+            if (modes.State == ProductFlightModeCoordinator.FlightModeState.Blocked)
+            { ReturnMain(); return; }
+            if (recoveryAssistance != null) { Refresh(); return; }
             if (calibration.IsOpen || !FocusAvailable) return;
+            if(Application.platform==RuntimePlatform.Android&&controllerMissingSince>=0&&!input.AuthoredGamepad.Current.connected)
+            {pauseNotice="Wake both controllers before resuming. You can still return to the main menu.";Refresh();return;}
 
             CurrentPage=Page.None;
 
@@ -316,7 +402,7 @@ namespace QuestFlight.Product
 
             }
 
-            pausedTraining=ownsPause=false;
+            pausedTraining=ownsPause=false;pauseNotice=null;
 
             input.RequireTouchRelease();
 
@@ -327,10 +413,12 @@ namespace QuestFlight.Product
         private void ReturnMain()
 
         {
+            pendingActivity = -1;
+            recoveryAssistance = null;
 
             if (calibration.IsOpen) calibration.Cancel();
 
-            CurrentPage=Page.None; pausedTraining=ownsPause=false;
+            CurrentPage=Page.None; pausedTraining=ownsPause=false;pauseNotice=null;
 
             training.LeaveTraining();
 
@@ -340,7 +428,7 @@ namespace QuestFlight.Product
 
         }
 
-        public void FocusAction(int slot) { if (slot>=0&&slot<labels.Length&&!string.IsNullOrEmpty(labels[slot])) { focus=slot; Paint(); } }
+        public void FocusAction(int slot) { if (slot>=0&&slot<labels.Length&&!string.IsNullOrEmpty(labels[slot])&&actions[slot]!=0&&slot!=focus) { focus=slot; ProductUiFeedback.Play(ProductUiFeedback.Cue.Focus); if(CurrentPage==Page.Controls)Refresh();else Paint(); } }
 
         private void Navigate(float axis,bool suppressed)
         {
@@ -361,7 +449,7 @@ namespace QuestFlight.Product
 
             for(int next=focus+direction;next>=0&&next<labels.Length;next+=direction)
 
-                if(!string.IsNullOrEmpty(labels[next])) { FocusAction(next); break; }
+                if(!string.IsNullOrEmpty(labels[next])&&actions[next]!=0) { FocusAction(next); break; }
 
         }
 
@@ -369,12 +457,14 @@ namespace QuestFlight.Product
 
         {
 
-            if (!FocusAvailable || releaseRequired || ConsumedThisFrame || slot<0 || slot>=8 || string.IsNullOrEmpty(labels[slot])) return;
+            if (!FocusAvailable || releaseRequired || ConsumedThisFrame || slot<0 || slot>=8 || actions[slot]==0 || string.IsNullOrEmpty(labels[slot])) return;
 
             int action=actions[slot]; Consume();
+            if(action!=5)ProductUiFeedback.Play(ProductUiFeedback.Cue.Select);
 
             if (action>=100 && action<106) training.SelectLesson(action-100);
 
+            else if (InvokePolishAction(action)) { Refresh();return; }
             else switch(action)
 
             {
@@ -385,11 +475,17 @@ namespace QuestFlight.Product
 
                 case 3: if (modes.State==ProductFlightModeCoordinator.FlightModeState.Selection) ReturnMain(); else CurrentPage=Page.ConfirmMain; break;
 
-                case 4: ReturnMain(); return;
+                case 4:
+                    if(CurrentPage!=Page.Summary && (modes.State==ProductFlightModeCoordinator.FlightModeState.FreeFlight||modes.State==ProductFlightModeCoordinator.FlightModeState.Demo))
+                    {experience?.FinishFlight("Flight ended by pilot");ShowFlightSummary();return;}
+                    ReturnMain(); return;
 
                 case 5: Back(); return;
 
-                case 6: calibration.Save(); CurrentPage=Page.App; break;
+                case 6:
+                    calibration.Save();
+                    if(!calibration.IsOpen) { CurrentPage=calibrationReturnPage; if(CurrentPage==Page.QuickStart){guideStep=3;ResetSetupCheck();} }
+                    break;
 
                 case 7: calibration.ResetToDefault(); break;
 
@@ -416,25 +512,70 @@ namespace QuestFlight.Product
                 case 18: training.ShowReference(-1); break;
 
                 case 19: CurrentPage=Page.None; pausedTraining=false; training.StartWithoutPrompts(); input.RequireTouchRelease(); break;
+                case 20:
+                    modes.AuthoredDemoPilot.TakeUserControl(); Resume(); return;
+                case 21:
+                    if(modes.AuthoredDemoPilot.ResumeDemoControl(false)) Resume();
+                    else Refresh();
+                    return;
+                case 22:
+                    if(modes.AuthoredDemoPilot.ResumeDemoControl(true)) Resume();
+                    else Refresh();
+                    return;
+                case 23: voiceLevel=voiceLevel<=0?1:Mathf.Max(0,voiceLevel-.25f);ApplyAudioLevels();break;
+                case 24: aircraftLevel=aircraftLevel<=0?1:Mathf.Max(0,aircraftLevel-.25f);ApplyAudioLevels();break;
+                case 25: CurrentPage=Page.Settings;focus=0;break;
+                case 26:
+                    PlayerPrefs.SetInt("QuestFlight.LargeInstructionText",LargeInstructionTextEnabled?0:1);PlayerPrefs.Save();ApplyInstructionSize();break;
+                case 27:
+                    PlayerPrefs.SetInt("QuestFlight.InterfaceFeedback",FeedbackEnabled?0:1);PlayerPrefs.Save();break;
+                case 28: CurrentPage=Page.Guest;focus=0;break;
+                case 29:
+                    if(modes.State==ProductFlightModeCoordinator.FlightModeState.Selection && training.TrySetGuestSession(!training.IsGuestSession))
+                    { CurrentPage=Page.Settings;focus=5; }
+                    break;
+                case 30: OpenQuickStart();return;
+                case 31: if(guideStep<8){guideStep++;ResetSetupCheck();}else {FinishQuickStart();return;} break;
+                case 32: FinishQuickStart();return;
+                case 190: RestartRecoveryFlight(); return;
 
             }
 
-            focus=0; Refresh();
+            if(CurrentPage!=Page.Settings)focus=0; Refresh();
 
         }
 
         private void Choice(int slot,string name,int action) { labels[slot]=name; actions[slot]=action; }
+        private void ApplyAudioLevels()
+        {
+            if(instructorVoice!=null)instructorVoice.volume=voiceLevel;
+            if(aircraftAudio!=null)aircraftAudio.AircraftVolume=aircraftLevel;
+            PlayerPrefs.SetFloat("QuestFlight.VoiceVolume",voiceLevel);PlayerPrefs.SetFloat("QuestFlight.AircraftVolume",aircraftLevel);PlayerPrefs.Save();
+        }
+        private void ApplyInstructionSize()
+        {
+            if(instructionScales==null)return;
+            for(int n=0;n<instructionPanels.Length;n++)
+                if(instructionPanels[n]!=null)instructionPanels[n].transform.localScale=instructionScales[n];
+        }
 
         private void Refresh()
 
         {
 
             bool show=IsOpen||TrainingPanelVisible;
+            if(CurrentPage!=Page.InstrumentHelp)training.HideCockpitReference();
 
             if (panel.activeSelf!=show) panel.SetActive(show);
 
             modes.SetNavigationOverlayVisible(IsOpen);
+            bool selectionScreen=modes.State==ProductFlightModeCoordinator.FlightModeState.Selection;
+            bool cockpitPreview=CurrentPage==Page.InstrumentHelp||CurrentPage==Page.Calibration;
+            var eye=calibration.AuthoredReferenceFrameRig.TrackedCamera.transform;
+            if(selectionScreen)modes.AuthoredModeMenuView.SetSelectionPresentation(cockpitPreview,eye);
+            if(polishedLayout!=null)polishedLayout.SetPresentationContext(!selectionScreen||cockpitPreview,eye);
 
+            if(controlVisuals!=null)controlVisuals.Present(show&&(CurrentPage==Page.ControlDiagram||CurrentPage==Page.InputPreview),CurrentPage==Page.ControlDiagram);
             if (!show) return;
 
             bool compact=CurrentPage==Page.Orientation||CurrentPage==Page.Explanation;
@@ -457,13 +598,29 @@ namespace QuestFlight.Product
 
             footer.text="<b>[A]</b> Select   <b>[B / Y]</b> Back   <b>[Menu]</b> Pause / help\nThumbstick up / down moves selection";
 
-            if(CurrentPage==Page.App)
+            if (PresentRecoveryAssistance()) { }
+            else if (PresentPolishPage()) { }
+            else if(CurrentPage==Page.App)
 
             {
 
-                heading.text="Flight paused"; detail.text="Take a moment. Resume when you are ready.";
+                bool selection=modes.State==ProductFlightModeCoordinator.FlightModeState.Selection;
+                heading.text=selection?"Options and help":"Flight paused";
+                detail.text=training.IsGuestSession?"Guest session · lesson results stay separate from the owner's progress.":selection?"Prepare your seat, choose your preferences, then select a flight.":"Take a moment. Resume when you are ready.";
 
-                Choice(0,"Resume flight",1); Choice(1,"Seat calibration",2); Choice(2,"Main menu",3);
+                Choice(0,selection?"Choose a flight":"Resume flight",1); Choice(1,"Seat calibration",2);
+                if(!selection)Choice(2,"Restart / main menu",3);
+                Choice(7,"Flight tools / settings",40);
+                Choice(5,"Controls / sensitivity",41);
+                Choice(6,"Cockpit guide / instruments",125);
+                if(!string.IsNullOrEmpty(pauseNotice))detail.text=pauseNotice;
+                if(modes.State==ProductFlightModeCoordinator.FlightModeState.Demo)
+                {
+                    var demo=modes.AuthoredDemoPilot;
+                    detail.text=demo.OwnershipLabel+"\n"+(!string.IsNullOrEmpty(pauseNotice)?pauseNotice:demo.PresentationPhase);
+                    Choice(3,demo.UserHasControls?"Let the demo fly":"Take control",demo.UserHasControls?21:20);
+                    Choice(4,"Return to airport",22);
+                }
 
                 if(modes.State==ProductFlightModeCoordinator.FlightModeState.Training && training.State!=TrainingSessionState.Menu)
 
@@ -481,9 +638,37 @@ namespace QuestFlight.Product
 
             }
 
+            else if(CurrentPage==Page.Settings)
+            {
+                heading.text="Settings";
+                detail.text=training.IsGuestSession?"Guest session active. These audio and display preferences apply in every mode.":"Audio and display preferences apply in every mode.";
+                if(instructorVoice!=null)Choice(0,"Voice: "+Mathf.RoundToInt(voiceLevel*100)+"%",23);
+                if(aircraftAudio!=null)Choice(1,"Aircraft sound: "+Mathf.RoundToInt(aircraftLevel*100)+"%",24);
+                Choice(2,CaptionsEnabled?"Narration captions: on":"Narration captions: off",14);
+                Choice(3,"Readability / feedback",42);
+                Choice(4,"Controls and comfort",41);
+                Choice(5,training.IsGuestSession?"End guest session":"Start guest session",28);
+                Choice(6,"Quick start guide",30); Choice(7,"Back",5);
+                footer.text="Stick up / down: choose · left / right: adjust volume\n[A] Increase / select   [B / Y] Back   [Menu] Pause / help";
+            }
+            else if(CurrentPage==Page.Guest)
+            {
+                heading.text=training.IsGuestSession?"End guest session?":"Welcome, guest";
+                bool canChange=modes.State==ProductFlightModeCoordinator.FlightModeState.Selection;
+                detail.text=canChange?(training.IsGuestSession?"Guest lesson results will be cleared. The owner's saved progress will be restored unchanged.":"Try any flight or lesson. Guest lesson results are kept only for this app session and never change the owner's saved progress."):
+                    "Finish this flight and return to the main menu before changing the guest session. Your current flight is still paused.";
+                if(canChange)Choice(0,training.IsGuestSession?"End guest session":"Start guest session",29);
+                else Choice(0,"Return to main menu",3);
+                Choice(1,"Back to settings",5);
+            }
+            else if(CurrentPage==Page.QuickStart)
+            {
+                PresentSetup();
+            }
             else if(CurrentPage==Page.ConfirmMain)
 
-            { heading.text="End this session?"; detail.text="Return to the main menu. This flight ends; completed lesson progress is kept."; Choice(0,"Cancel - keep this session",5); Choice(1,"End session and return to main menu",4); }
+            { heading.text="End this session?"; detail.text=training.IsGuestSession?"This flight ends. Guest lesson results stay available until the guest session ends or the app closes.":"Return to the main menu. This flight ends; completed lesson progress is kept."; Choice(0,"Cancel - keep this session",5); Choice(1,"End session and return to main menu",4);
+                if(localRecovery!=null && (modes.State==ProductFlightModeCoordinator.FlightModeState.FreeFlight||modes.State==ProductFlightModeCoordinator.FlightModeState.Demo)) Choice(2,"Restart at runway (manual flight)",190); }
 
             else if(CurrentPage==Page.Calibration)
 
@@ -517,7 +702,7 @@ namespace QuestFlight.Product
 
                     case TrainingSessionState.Menu:
 
-                        heading.text="Flight lessons"; detail.text="Choose a lesson. Menu is always available; B / Y returns.";
+                        heading.text="Flight lessons"; detail.text=training.IsGuestSession?"Guest session · results do not change saved owner progress.":"Choose a lesson. Menu is always available; B / Y returns.";
 
                         for(int n=0;n<training.Lessons.Length;n++) Choice(n,(n+1).ToString("00")+"   "+training.Lessons[n].displayName+(training.IsLessonComplete(n)?"   <color=#9FD2B5>Complete</color>":""),100+n);
 
@@ -535,7 +720,7 @@ namespace QuestFlight.Product
 
                     case TrainingSessionState.Paused:
 
-                        detail.text="Exercise paused\n"+training.CurrentInstruction;
+                        detail.text=(string.IsNullOrEmpty(training.CurrentPauseReason)?"Exercise paused.":training.CurrentPauseReason)+"\n\n"+training.CurrentInstruction;
 
                         Choice(0,training.DemonstrationPaused?"Take control - start practice":"Resume flight",12); Choice(1,"Explain / show current step",9); Choice(2,"Restart exercise",10); Choice(3,"Lesson list",13); break;
 
@@ -557,9 +742,13 @@ namespace QuestFlight.Product
 
         }
 
-        private void Paint() { for(int n=0;n<buttons.Length;n++) buttons[n].Present(labels[n],n==focus); }
+        private void Paint()
+        {
+            if(focus<0||focus>=labels.Length||string.IsNullOrEmpty(labels[focus])||actions[focus]==0)
+                for(int n=0;n<labels.Length;n++)if(!string.IsNullOrEmpty(labels[n])&&actions[n]!=0){focus=n;break;}
+            for(int n=0;n<buttons.Length;n++)buttons[n].Present(labels[n],n==focus&&actions[n]!=0,actions[n]!=0);
+        }
 
     }
 
 }
-

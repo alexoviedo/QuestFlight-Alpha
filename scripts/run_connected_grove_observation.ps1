@@ -2,7 +2,7 @@
 param(
   [string]$AdbExe='C:/Program Files/Meta Quest Developer Hub/resources/bin/adb.exe',
   [string]$DeviceSerial='',
-  [ValidateSet('candidate','baseline')][string]$Variant='candidate',
+  [ValidateSet('candidate','baseline','source_geometry')][string]$Variant='candidate',
   [ValidateRange(0,8)][int]$Station=0,
   [switch]$VisibilityDiagnostic,
   [string]$OutputDir='',
@@ -21,7 +21,7 @@ function Adb([string[]]$Arguments){
   if($LASTEXITCODE -ne 0){throw ($result -join "`n")}
   return $result
 }
-$profile=if($Variant -eq 'baseline'){'connected_grove_off'}else{'production'}
+$profile=if($Variant -eq 'baseline'){'connected_grove_off'}elseif($Variant -eq 'source_geometry'){'grove_source_geometry'}else{'production'}
 $request=Join-Path $OutputDir "${Variant}_${Station}_request.json"
 [ordered]@{schema='questflight.acceptance-request.v1';expiresUtc=[DateTime]::UtcNow.AddMinutes(10).ToString('O');isolationProfile=$profile;startDemo=$false;groveObservation=$true;groveObservationStation=$Station;groveVisibilityDiagnostic=[bool]$VisibilityDiagnostic} |
   ConvertTo-Json | Set-Content -LiteralPath $request -Encoding utf8NoBOM

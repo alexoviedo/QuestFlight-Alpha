@@ -191,7 +191,6 @@ namespace QuestFlight.Product
                 case PointerEventType.Select:
                     _isPressed = true;
                     RefreshVisual();
-                    PlayFeedback(evt.Identifier);
                     InvokeAction();
                     break;
                 case PointerEventType.Unselect:
@@ -219,6 +218,7 @@ namespace QuestFlight.Product
             if (coordinator.AuthoredNavigation != null &&
                 !coordinator.AuthoredNavigation.TryConsumeStartupSelection()) return;
 
+            ProductUiFeedback.Play(ProductUiFeedback.Cue.Select);
             switch (action)
             {
                 case MenuAction.Weather:

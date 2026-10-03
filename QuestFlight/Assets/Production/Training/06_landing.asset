@@ -14,10 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 06_landing
   displayName: Landing and go-around
-  briefing: Start at a final-approach checkpoint. Practice a stable approach and
-    landing, or choose a go-around. Review the controls first; do not force an unstable
-    landing.
+  briefing: Begin already established on a practice final, with twenty degrees of
+    flaps. Stabilize, land and slow down, or choose a go-around. This is not a straight-in
+    arrival procedure for Boulder. Review the throttle, airspeed and flap references
+    before practice.
   briefingNarration: {fileID: 8300000, guid: 07f6c7fc0ebe70349812143b06228153, type: 3}
+  learningGoal: A controlled landing or a controlled go-around is a valid outcome.
+    Do not force an unstable approach onto the runway. The exercise observes aircraft
+    state, not every real-world checklist action.
+  reflection: Did you decide early enough whether to continue landing or go around?
   start:
     latitudeDegrees: 40.0390917437007
     longitudeDegrees: -105.25420359313061
@@ -36,10 +41,15 @@ MonoBehaviour:
   airportExercise: 1
   goAroundStage: 3
   stages:
-  - title: Stabilize final
-    instruction: Keep the runway centered. Hold sixty to seventy knots with a steady
-      descent.
+  - title: 'Final: speed and alignment'
+    instruction: Keep the runway centered ahead. Aim for sixty to seventy knots on
+      the airspeed dial and a steady descent with the wings nearly level. If you
+      cannot stabilize, go around.
     narration: {fileID: 8300000, guid: 13a73e5eee886734aa949e43f8c9d636, type: 3}
+    successFeedback: You established stable alignment, speed and descent before the
+      landing.
+    retryAdvice: Make small corrections early. If the approach remains unstable,
+      apply power and go around.
     task: 18
     reference: 11
     attitudeOnly: 0
@@ -50,10 +60,15 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Flare and touchdown
-    instruction: Look farther along the runway. Reduce power and gently arrest the
-      descent for touchdown.
+  - title: Round out and touch down
+    instruction: As you approach the runway, shift your view farther along it. Reduce
+      power and gradually raise the nose to ease the descent. Let the main wheels
+      settle; do not push the airplane onto the runway.
     narration: {fileID: 8300000, guid: bad7764e7886aee4aa30219e083104ec, type: 3}
+    successFeedback: You touched down within this exercise's runway and attitude
+      limits.
+    retryAdvice: Look farther down the runway, reduce power smoothly, and ease the
+      descent. Go around if the landing cannot be made safely.
     task: 19
     reference: 11
     attitudeOnly: 0
@@ -64,9 +79,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Rollout
-    instruction: Keep directional control and brake smoothly to taxi speed.
+  - title: Maintain control on rollout
+    instruction: Keep the nose tracking along the centerline with gentle rudder.
+      Let the nosewheel lower, hold idle power and brake smoothly with both index
+      triggers to a slow taxi pace.
     narration: {fileID: 8300000, guid: 4fdf8d4cae59e344c8655f5c698b0345, type: 3}
+    successFeedback: You slowed on the runway with directional control.
+    retryAdvice: Keep steering as you slow. Apply both brakes smoothly; do not let
+      the airplane drift off the pavement.
     task: 20
     reference: 11
     attitudeOnly: 0
@@ -77,10 +97,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Go-around power
-    instruction: Go around. Full power, pitch for climb. Reduce full flaps to twenty
-      degrees.
+  - title: 'Go-around: power and attitude'
+    instruction: Apply full power, check carb heat cold, and set a controlled climb
+      attitude. If full flaps are selected, reduce to twenty degrees. Keep the runway
+      direction.
     narration: {fileID: 8300000, guid: ad23c551d8bfee7498e956003d56d521, type: 3}
+    successFeedback: You began a controlled go-around rather than forcing a landing.
+    retryAdvice: Use full power and safe pitch. Keep some flap until the climb is
+      established.
     task: 21
     reference: 7
     attitudeOnly: 0
@@ -91,9 +115,12 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Positive climb
-    instruction: With positive climb and safe speed, reduce flaps to ten degrees.
+  - title: 'Go-around: positive climb'
+    instruction: With a positive climb and at least sixty knots, reduce flaps to
+      ten degrees. Keep the wings nearly level and continue along the runway direction.
     narration: {fileID: 8300000, guid: 5811ab98becfa7a43822bd92c0c990af, type: 3}
+    successFeedback: You kept a positive climb through the next flap reduction.
+    retryAdvice: Check climb and airspeed before reducing flaps further.
     task: 22
     reference: 9
     attitudeOnly: 0
@@ -104,9 +131,13 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Clean climb
-    instruction: Clear of obstacles, retract remaining flaps and climb straight ahead.
+  - title: 'Go-around: clean climb'
+    instruction: Clear of obstacles, retract the remaining flaps. Continue a straight-ahead
+      climb at seventy to eighty knots.
     narration: {fileID: 8300000, guid: 9d3decbd138e3c542aff6b135185e846, type: 3}
+    successFeedback: You completed a clean go-around climb.
+    retryAdvice: Wait until safely climbing clear of obstacles, then retract the
+      final flap stage.
     task: 23
     reference: 9
     attitudeOnly: 0

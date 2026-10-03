@@ -1,0 +1,2355 @@
+{
+  "schema": 1,
+  "method": "Kokoro token durations; regenerated waveform matched actual PCM within two quantization steps",
+  "clips": [
+    {
+      "id": "01_taxi_00",
+      "sha256": "727ceaf0838c28feaa8bca52274d67b3bb2f556094f9a7ee2e64201164df0bca",
+      "seconds": 10.75,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 3.4625,
+          "text": "Find the highlighted two-handled yoke in front of you."
+        },
+        {
+          "start": 3.4625,
+          "end": 7.875,
+          "text": "Hold it with a grip button. Turn it left, then right, then return it to the"
+        },
+        {
+          "start": 7.875,
+          "end": 10.65,
+          "text": "middle. Keep the airplane stopped."
+        }
+      ]
+    },
+    {
+      "id": "01_taxi_01",
+      "sha256": "cb64592ec875f636e1a7e2d5301565f49a11b2fb4e49239bba02a6b9a3ce2b5c",
+      "seconds": 9.425,
+      "phrases": [
+        {
+          "start": 0.425,
+          "end": 2.8625,
+          "text": "Now check pitch, a different movement."
+        },
+        {
+          "start": 2.8625,
+          "end": 7.05,
+          "text": "Keep holding the yoke. Push it away from you, pull it toward you, then"
+        },
+        {
+          "start": 7.05,
+          "end": 9.325,
+          "text": "return it to its middle position."
+        }
+      ]
+    },
+    {
+      "id": "01_taxi_02",
+      "sha256": "a67e1092d6a53b6603d96e68e85ca37f548920decb4d91e6bb85936e4725a474",
+      "seconds": 10.575,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 3.35,
+          "text": "In the airplane these are foot-pedal inputs."
+        },
+        {
+          "start": 3.35,
+          "end": 7.9875,
+          "text": "Here, move the steering thumbstick left, then right, and let it center."
+        },
+        {
+          "start": 7.9875,
+          "end": 10.475,
+          "text": "The yoke does not steer the nosewheel."
+        }
+      ]
+    },
+    {
+      "id": "01_taxi_03",
+      "sha256": "cb24e6ae070ee066e955c7cc07bd29a4cd4543455b27075f439d9910e9167de9",
+      "seconds": 10.475,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 3.2,
+          "text": "Pull the throttle knob fully back to idle."
+        },
+        {
+          "start": 3.2,
+          "end": 7.2125,
+          "text": "Squeeze both index triggers and keep the airplane stopped."
+        },
+        {
+          "start": 7.2125,
+          "end": 10.375,
+          "text": "Each trigger applies its side of the wheel brakes."
+        }
+      ]
+    },
+    {
+      "id": "01_taxi_04",
+      "sha256": "54b756c01d44c06fff965d6cf7270be2939c0cb42f640d9e964a4280634cbf93",
+      "seconds": 13.075,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 5.0,
+          "text": "Release both brakes. Grip the throttle and move it forward slightly."
+        },
+        {
+          "start": 5.0,
+          "end": 9.3625,
+          "text": "Follow the taxiway ahead toward the marker at walking pace, about three to"
+        },
+        {
+          "start": 9.3625,
+          "end": 12.975,
+          "text": "six knots. Steer with the steering thumbstick."
+        }
+      ]
+    },
+    {
+      "id": "01_taxi_05",
+      "sha256": "4acea6fe30503198d0e218868b4db115978074344af9d648c0c1314c922bc36a",
+      "seconds": 11.05,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.3875,
+          "text": "At the connector, slow down and turn right with the steering thumbstick"
+        },
+        {
+          "start": 4.3875,
+          "end": 8.9375,
+          "text": "toward the next marker. Straighten the nosewheel as the turn finishes."
+        },
+        {
+          "start": 8.9375,
+          "end": 10.95,
+          "text": "Stay on the taxiway."
+        }
+      ]
+    },
+    {
+      "id": "01_taxi_06",
+      "sha256": "fd33464ac74f2ccde5ec51332cba3ede18fd23eeff36247886986dc1995a36cc",
+      "seconds": 11.95,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.5,
+          "text": "Pull the throttle back to idle."
+        },
+        {
+          "start": 2.5,
+          "end": 7.175,
+          "text": "Squeeze both index triggers smoothly and stop inside the marked area"
+        },
+        {
+          "start": 7.175,
+          "end": 9.975,
+          "text": ". Keep the nose short of the runway entry;"
+        },
+        {
+          "start": 9.975,
+          "end": 11.85,
+          "text": "this lesson ends here."
+        }
+      ]
+    },
+    {
+      "id": "01_taxi_briefing",
+      "sha256": "79977abe12b25ce13125a7adde1dbb9ec818ab1cc87b98a359fc585fc99371a3",
+      "seconds": 15.825,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.8,
+          "text": "We start parked with the engine running."
+        },
+        {
+          "start": 2.8,
+          "end": 6.5875,
+          "text": "Learn roll and pitch as two different yoke movements, check steering and"
+        },
+        {
+          "start": 6.5875,
+          "end": 10.0125,
+          "text": "brakes, then taxi to the marked stopping area."
+        },
+        {
+          "start": 10.0125,
+          "end": 13.2375,
+          "text": "Keep clear of the runway. Menu pauses;"
+        },
+        {
+          "start": 13.2375,
+          "end": 15.725,
+          "text": "X repeats the current instruction."
+        }
+      ]
+    },
+    {
+      "id": "02_first_flight_00",
+      "sha256": "22f9c1a6f222f1f879af01f9ed4e3772b934d7d373ea25e9117525585b1b65d9",
+      "seconds": 11.8,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 3.4625,
+          "text": "You have control. Look through the windshield."
+        },
+        {
+          "start": 3.4625,
+          "end": 7.6875,
+          "text": "Keep the nose steady and the wings level against the distant horizon, using"
+        },
+        {
+          "start": 7.6875,
+          "end": 11.7,
+          "text": "small yoke movements. Avoid chasing every gust."
+        }
+      ]
+    },
+    {
+      "id": "02_first_flight_01",
+      "sha256": "2ba169471cddbfd8f18c76bc869c91cfb50217ab7eb32b92ecfbbd26b3c78d2c",
+      "seconds": 12.55,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.6625,
+          "text": "Find the highlighted altimeter: the round dial with several hands and a"
+        },
+        {
+          "start": 4.6625,
+          "end": 9.5,
+          "text": "number window. Aim for seven thousand feet with small pitch and power"
+        },
+        {
+          "start": 9.5,
+          "end": 12.45,
+          "text": "corrections, then look outside again."
+        }
+      ]
+    },
+    {
+      "id": "02_first_flight_02",
+      "sha256": "f50d274e1b03918e2785f37f29554c4ac47f6728635cbe61096cddff4ac1f446",
+      "seconds": 11.525,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 3.7375,
+          "text": "Find the round airspeed dial with the colored arcs."
+        },
+        {
+          "start": 3.7375,
+          "end": 6.2,
+          "text": "Read its needle on the knots scale."
+        },
+        {
+          "start": 6.2,
+          "end": 10.5125,
+          "text": "Aim for ninety knots using small power adjustments while keeping the nose"
+        },
+        {
+          "start": 10.5125,
+          "end": 11.425,
+          "text": "steady."
+        }
+      ]
+    },
+    {
+      "id": "02_first_flight_03",
+      "sha256": "c924c7d630dcfcb69c5ecdb5727d2c2bf4245d4dd4bb1ae7770dce784e211973",
+      "seconds": 11.4,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 3.775,
+          "text": "Find the heading dial with the rotating compass numbers."
+        },
+        {
+          "start": 3.775,
+          "end": 8.4625,
+          "text": "Read the fixed index at the top: nine means zero nine zero."
+        },
+        {
+          "start": 8.4625,
+          "end": 11.3,
+          "text": "Hold that direction, then look outside."
+        }
+      ]
+    },
+    {
+      "id": "02_first_flight_04",
+      "sha256": "b26dd2db4a54eb588b0bf40a55bc229778c093e8e729788b41d9374b840d96ac",
+      "seconds": 13.075,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.6875,
+          "text": "Check the view to your left for traffic."
+        },
+        {
+          "start": 2.6875,
+          "end": 7.325,
+          "text": "Turn the yoke left to establish about fifteen degrees of bank, then ease"
+        },
+        {
+          "start": 7.325,
+          "end": 12.1,
+          "text": "the input. Aim for zero six zero, keeping near seven thousand"
+        },
+        {
+          "start": 12.1,
+          "end": 12.975,
+          "text": "feet."
+        }
+      ]
+    },
+    {
+      "id": "02_first_flight_05",
+      "sha256": "dc5c3c16893c27c3c5b3394c61804e5165e11191fc9cad0868ce8d0a3b9d12fd",
+      "seconds": 12.025,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.9375,
+          "text": "As zero six zero reaches the top index, level the wings."
+        },
+        {
+          "start": 4.9375,
+          "end": 8.2375,
+          "text": "Hold about seven thousand feet and ninety knots."
+        },
+        {
+          "start": 8.2375,
+          "end": 11.925,
+          "text": "Keep scanning outside instead of staring at the dial."
+        }
+      ]
+    },
+    {
+      "id": "02_first_flight_06",
+      "sha256": "e3f4010c79807bd1cf67566f251ec8d6594a36ea5b38697813616df2e2417bfa",
+      "seconds": 13.625,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.9625,
+          "text": "Check right for traffic. Establish a shallow right bank toward zero nine"
+        },
+        {
+          "start": 4.9625,
+          "end": 9.725,
+          "text": "zero. Begin leveling just before that heading reaches the top index"
+        },
+        {
+          "start": 9.725,
+          "end": 13.525,
+          "text": ". Use gentle rudder if the slip ball moves off center."
+        }
+      ]
+    },
+    {
+      "id": "02_first_flight_07",
+      "sha256": "4854c0bb066c93175902dae4f5f67d6de3a55826408bea28120b73964fff9695",
+      "seconds": 11.825,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.2,
+          "text": "Keep the wings level and the nose on zero nine zero."
+        },
+        {
+          "start": 4.2,
+          "end": 8.8,
+          "text": "Settle near seven thousand feet and ninety knots with small corrections"
+        },
+        {
+          "start": 8.8,
+          "end": 11.725,
+          "text": ". Look outside between instrument checks."
+        }
+      ]
+    },
+    {
+      "id": "02_first_flight_briefing",
+      "sha256": "27205ab384364c47988e9136dd40329a5112707dce515c68d485e7a125e374e9",
+      "seconds": 18.475,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.0875,
+          "text": "Start airborne at seven thousand feet and ninety knots."
+        },
+        {
+          "start": 4.0875,
+          "end": 8.4625,
+          "text": "Use the outside horizon first, with short instrument checks."
+        },
+        {
+          "start": 8.4625,
+          "end": 11.7375,
+          "text": "Then make a shallow left turn and return right."
+        },
+        {
+          "start": 11.7375,
+          "end": 14.4625,
+          "text": "A heading is the direction the nose points;"
+        },
+        {
+          "start": 14.4625,
+          "end": 18.375,
+          "text": "these lesson targets use the highlighted true-heading dial."
+        }
+      ]
+    },
+    {
+      "id": "03_climb_descent_00",
+      "sha256": "927e0ee20a8cd1d3f20168a1b62f979f17cb3f19993132a1864fc12cd0f4a014",
+      "seconds": 13.025,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 3.525,
+          "text": "Add climb power and gently raise the nose."
+        },
+        {
+          "start": 3.525,
+          "end": 8.1125,
+          "text": "Aim for seventy to eighty knots on the airspeed dial and heading zero nine"
+        },
+        {
+          "start": 8.1125,
+          "end": 12.75,
+          "text": "zero. Watch the altimeter approach seventy-three hundred feet"
+        },
+        {
+          "start": 12.75,
+          "end": 12.925,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "03_climb_descent_01",
+      "sha256": "8ad0932c68d5d13c46e2307d87807030f9451dbabf1a47965c987d97aaac7b74",
+      "seconds": 13.325,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.275,
+          "text": "Start easing the nose toward level as you approach seventy-three hundred"
+        },
+        {
+          "start": 4.275,
+          "end": 9.25,
+          "text": "feet. Let the airplane accelerate, then reduce to cruise power"
+        },
+        {
+          "start": 9.25,
+          "end": 13.225,
+          "text": ". Settle near ninety knots and heading zero nine zero."
+        }
+      ]
+    },
+    {
+      "id": "03_climb_descent_02",
+      "sha256": "3fd834e9ccd2afaa7e7f9c4efc799fb41875bd8fa8bb87d251d555b2ef8ac076",
+      "seconds": 13.175,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 3.35,
+          "text": "Reduce power and lower the nose slightly."
+        },
+        {
+          "start": 3.35,
+          "end": 6.925,
+          "text": "Aim for roughly three to five hundred feet per minute down on the"
+        },
+        {
+          "start": 6.925,
+          "end": 11.7125,
+          "text": "vertical-speed dial. Keep heading zero nine zero and approach seven"
+        },
+        {
+          "start": 11.7125,
+          "end": 13.075,
+          "text": "thousand feet."
+        }
+      ]
+    },
+    {
+      "id": "03_climb_descent_03",
+      "sha256": "e9d27c2d14afb2b839422d5ca11cf48854bfd8ecbaee8471461da3ddae9cbaa4",
+      "seconds": 13.025,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.6375,
+          "text": "Begin raising the nose toward level before seven thousand feet."
+        },
+        {
+          "start": 4.6375,
+          "end": 9.1875,
+          "text": "Restore cruise power and settle near ninety knots, heading zero nine"
+        },
+        {
+          "start": 9.1875,
+          "end": 12.925,
+          "text": "zero. Allow the vertical-speed needle to settle."
+        }
+      ]
+    },
+    {
+      "id": "03_climb_descent_04",
+      "sha256": "b82162f5b891be31194a9777fffc72240b759f68aa0d62a0599cec11e9323df4",
+      "seconds": 14.45,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.9125,
+          "text": "Hold the level attitude with the yoke."
+        },
+        {
+          "start": 2.9125,
+          "end": 8.175,
+          "text": "Tap the trim thumbstick up or down a little, then ease your held yoke input"
+        },
+        {
+          "start": 8.175,
+          "end": 11.5125,
+          "text": ". Keep the direction that reduces the correction needed;"
+        },
+        {
+          "start": 11.5125,
+          "end": 14.35,
+          "text": "reverse it if the correction increases."
+        }
+      ]
+    },
+    {
+      "id": "03_climb_descent_briefing",
+      "sha256": "e3ff6ede63e00fe8539ba05f3c3993644e60622615167b5ce5fbad4400ba6a02",
+      "seconds": 17.675,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.5125,
+          "text": "Start at seven thousand feet."
+        },
+        {
+          "start": 2.5125,
+          "end": 7.0,
+          "text": "Climb to seventy-three hundred, level off, descend back, then trim."
+        },
+        {
+          "start": 7.0,
+          "end": 9.8375,
+          "text": "Set attitude and power before trimming."
+        },
+        {
+          "start": 9.8375,
+          "end": 14.0875,
+          "text": "In this simulator the trim thumbstick changes trim during flight;"
+        },
+        {
+          "start": 14.0875,
+          "end": 17.575,
+          "text": "it navigates menus only when a menu is open."
+        }
+      ]
+    },
+    {
+      "id": "04_takeoff_00",
+      "sha256": "822b13ff7813426aedc6bcd253f9658b5c56d017e7edfb9ec4f421e9d4c576a5",
+      "seconds": 15.95,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.95,
+          "text": "Keep stopped on the runway centerline."
+        },
+        {
+          "start": 2.95,
+          "end": 7.4375,
+          "text": "Check the flap selector and indication: zero to ten degrees for this"
+        },
+        {
+          "start": 7.4375,
+          "end": 11.7,
+          "text": "exercise. The checkpoint has mixture and carb heat set."
+        },
+        {
+          "start": 11.7,
+          "end": 15.85,
+          "text": "Identify the throttle and airspeed dial before rolling."
+        }
+      ]
+    },
+    {
+      "id": "04_takeoff_01",
+      "sha256": "900c2d91dc09ef44e3f128465a1b0912a11aaafb713bb127d628326dc25ec69e",
+      "seconds": 14.45,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.7875,
+          "text": "Release both brakes and smoothly move the throttle fully forward."
+        },
+        {
+          "start": 4.7875,
+          "end": 8.85,
+          "text": "Look along the centerline; steer with the steering thumbstick."
+        },
+        {
+          "start": 8.85,
+          "end": 11.0625,
+          "text": "Briefly check the airspeed needle."
+        },
+        {
+          "start": 11.0625,
+          "end": 14.35,
+          "text": "Prepare to lift the nose near fifty-five knots."
+        }
+      ]
+    },
+    {
+      "id": "04_takeoff_02",
+      "sha256": "f077beed7b471ffdc116ddbd475e580a750c8e70c5588db49a0171865de972c0",
+      "seconds": 11.65,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.8125,
+          "text": "Near fifty-five knots, pull the yoke back gently to raise the nose."
+        },
+        {
+          "start": 4.8125,
+          "end": 9.65,
+          "text": "Let the airplane fly off, then adjust pitch toward seventy to eighty knots"
+        },
+        {
+          "start": 9.65,
+          "end": 11.55,
+          "text": ". Avoid a sudden pull."
+        }
+      ]
+    },
+    {
+      "id": "04_takeoff_03",
+      "sha256": "a5169abb5be473f22ccbaa26db194eb516956499ddc2a69c27f6e04cec816fbe",
+      "seconds": 10.35,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 3.3375,
+          "text": "Climb straight ahead at seventy to eighty knots."
+        },
+        {
+          "start": 3.3375,
+          "end": 7.9625,
+          "text": "Keep the wings nearly level and pass six thousand feet on the altimeter."
+        },
+        {
+          "start": 7.9625,
+          "end": 10.25,
+          "text": "Continue scanning outside."
+        }
+      ]
+    },
+    {
+      "id": "04_takeoff_briefing",
+      "sha256": "cb3cc5024104ed65973b110b29eea6469d2e20fb53728c347a5e3a75a4257aed",
+      "seconds": 18.6,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 3.5875,
+          "text": "Begin stopped and aligned on runway zero eight."
+        },
+        {
+          "start": 3.5875,
+          "end": 6.8875,
+          "text": "This prepared checkpoint supplies the engine setup;"
+        },
+        {
+          "start": 6.8875,
+          "end": 10.1625,
+          "text": "it is not a full run-up or takeoff checklist."
+        },
+        {
+          "start": 10.1625,
+          "end": 13.3875,
+          "text": "Review the highlighted controls before practice."
+        },
+        {
+          "start": 13.3875,
+          "end": 17.6,
+          "text": "During the roll, steer with the steering thumbstick and watch the airspeed"
+        },
+        {
+          "start": 17.6,
+          "end": 18.5,
+          "text": "needle."
+        }
+      ]
+    },
+    {
+      "id": "05_pattern_00",
+      "sha256": "baff4cb335ea2917e1eebc5dd1c5f6ea38ec9446e13b25059a37b9573823af62",
+      "seconds": 13.5,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.4125,
+          "text": "Keep the runway on your left."
+        },
+        {
+          "start": 2.4125,
+          "end": 6.8375,
+          "text": "Hold about sixty-three hundred feet and eighty-five knots, following the"
+        },
+        {
+          "start": 6.8375,
+          "end": 11.7125,
+          "text": "downwind marker. Use heading two seven zero as a reference and remain"
+        },
+        {
+          "start": 11.7125,
+          "end": 13.4,
+          "text": "south of Jay Road."
+        }
+      ]
+    },
+    {
+      "id": "05_pattern_01",
+      "sha256": "9dc6038547b9a9e8d54bd2f56174234630ead95b4d56f8a7f0eef9fbcff3b142",
+      "seconds": 13.525,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 3.5125,
+          "text": "At the marked abeam point, reduce power."
+        },
+        {
+          "start": 3.5125,
+          "end": 8.15,
+          "text": "Once below eighty-five knots, move the flap selector to ten degrees"
+        },
+        {
+          "start": 8.15,
+          "end": 13.25,
+          "text": "and confirm the indication. Begin a gentle descent toward the next marker"
+        },
+        {
+          "start": 13.25,
+          "end": 13.425,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "05_pattern_02",
+      "sha256": "0384e7965f2834e399d1d4cd00e58eeec44e0b54c867da8cd9652f6e3033bf26",
+      "seconds": 13.1,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 3.9375,
+          "text": "Turn left toward heading one eight zero and the base marker."
+        },
+        {
+          "start": 3.9375,
+          "end": 8.0,
+          "text": "Keep a shallow bank and about seventy to seventy-five knots."
+        },
+        {
+          "start": 8.0,
+          "end": 12.825,
+          "text": "Check the runway position. If final needs a steep turn, go around"
+        },
+        {
+          "start": 12.825,
+          "end": 13.0,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "05_pattern_03",
+      "sha256": "c631b87f40a65703c282453db57e29c83a7d0f46551643e04daa0e9dd785a3e4",
+      "seconds": 14.6,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.475,
+          "text": "Turn left onto final and center the runway in the windshield."
+        },
+        {
+          "start": 4.475,
+          "end": 9.4,
+          "text": "Aim for sixty to seventy knots and a steady descent with landing flaps set"
+        },
+        {
+          "start": 9.4,
+          "end": 14.325,
+          "text": ". If alignment or speed is not stable, apply power and go around"
+        },
+        {
+          "start": 14.325,
+          "end": 14.5,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "05_pattern_04",
+      "sha256": "8acee8b72c84934efcca7a7d17ddb545c386e4f00e8d118b801b9ffed3fe8646",
+      "seconds": 11.9,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 5.45,
+          "text": "Apply full power, check carb heat cold, and set a controlled climb attitude"
+        },
+        {
+          "start": 5.45,
+          "end": 9.8625,
+          "text": ". If full flaps are selected, reduce them to twenty degrees."
+        },
+        {
+          "start": 9.8625,
+          "end": 11.8,
+          "text": "Keep the runway direction."
+        }
+      ]
+    },
+    {
+      "id": "05_pattern_05",
+      "sha256": "72736cbd5a9ec329b1c8e19fdceb64119485227b1e547b9672f7ff42b8d3b883",
+      "seconds": 10.1,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 5.5,
+          "text": "Confirm a positive climb on the vertical-speed dial and at least sixty knots"
+        },
+        {
+          "start": 5.5,
+          "end": 10.0,
+          "text": ". Reduce flaps to ten degrees while keeping the runway direction."
+        }
+      ]
+    },
+    {
+      "id": "05_pattern_06",
+      "sha256": "ac5cab6d0e2d3033af9aa9f93efbb27f26fe4270174c985b9e85b69c506cd385",
+      "seconds": 8.075,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 5.1625,
+          "text": "Once clear of obstacles, retract the remaining flaps and continue climbing"
+        },
+        {
+          "start": 5.1625,
+          "end": 7.975,
+          "text": "straight ahead at seventy to eighty knots."
+        }
+      ]
+    },
+    {
+      "id": "05_pattern_briefing",
+      "sha256": "bcdc30dbdb7051139647b35f7bf252698dd7c32bfac90aaf5a3dc0a2c2b51fce",
+      "seconds": 20.5,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 5.075,
+          "text": "Begin in the runway zero eight left-hand pattern at sixty-three hundred feet"
+        },
+        {
+          "start": 5.075,
+          "end": 7.2,
+          "text": ", with the runway on your left."
+        },
+        {
+          "start": 7.2,
+          "end": 11.8,
+          "text": "Follow the marked practice route through downwind, base and final."
+        },
+        {
+          "start": 11.8,
+          "end": 16.4,
+          "text": "If alignment or speed cannot be recovered safely, go around."
+        },
+        {
+          "start": 16.4,
+          "end": 20.4,
+          "text": "These checkpoints do not authorize a real airport arrival."
+        }
+      ]
+    },
+    {
+      "id": "06_landing_00",
+      "sha256": "cf2859803b4a274e2ca85f107c7c563966d60d6d4c5ebf6c0bdd29fece604192",
+      "seconds": 11.825,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.425,
+          "text": "Keep the runway centered ahead."
+        },
+        {
+          "start": 2.425,
+          "end": 6.925,
+          "text": "Aim for sixty to seventy knots on the airspeed dial and a steady descent"
+        },
+        {
+          "start": 6.925,
+          "end": 8.9,
+          "text": "with the wings nearly level."
+        },
+        {
+          "start": 8.9,
+          "end": 11.725,
+          "text": "If you cannot stabilize, go around."
+        }
+      ]
+    },
+    {
+      "id": "06_landing_01",
+      "sha256": "1510a94539a2ac65c82ba55994996a1325a5943943d3a1ff50740d64c727834a",
+      "seconds": 13.475,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.0875,
+          "text": "As you approach the runway, shift your view farther along it."
+        },
+        {
+          "start": 4.0875,
+          "end": 8.5625,
+          "text": "Reduce power and gradually raise the nose to ease the descent."
+        },
+        {
+          "start": 8.5625,
+          "end": 13.2,
+          "text": "Let the main wheels settle; do not push the airplane onto the runway"
+        },
+        {
+          "start": 13.2,
+          "end": 13.375,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "06_landing_02",
+      "sha256": "4bef6db4f25b9347549ff1019d49cf2217ceaebced8eedd5846201a947d7e7d0",
+      "seconds": 11.75,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.1375,
+          "text": "Keep the nose tracking along the centerline with gentle rudder."
+        },
+        {
+          "start": 4.1375,
+          "end": 9.0375,
+          "text": "Let the nosewheel lower, hold idle power and brake smoothly with both index"
+        },
+        {
+          "start": 9.0375,
+          "end": 11.65,
+          "text": "triggers to a slow taxi pace."
+        }
+      ]
+    },
+    {
+      "id": "06_landing_03",
+      "sha256": "2a8ceaef0cfe78a98f53142dfd83202145709284c71843f6b5917c87a8991159",
+      "seconds": 11.675,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 5.45,
+          "text": "Apply full power, check carb heat cold, and set a controlled climb attitude"
+        },
+        {
+          "start": 5.45,
+          "end": 9.6625,
+          "text": ". If full flaps are selected, reduce to twenty degrees."
+        },
+        {
+          "start": 9.6625,
+          "end": 11.575,
+          "text": "Keep the runway direction."
+        }
+      ]
+    },
+    {
+      "id": "06_landing_04",
+      "sha256": "9b5d5bb8ed21cc508ca7185369a4512967243a69c3a5f11650b3c79557fda062",
+      "seconds": 10.625,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 5.65,
+          "text": "With a positive climb and at least sixty knots, reduce flaps to ten degrees"
+        },
+        {
+          "start": 5.65,
+          "end": 10.35,
+          "text": ". Keep the wings nearly level and continue along the runway direction"
+        },
+        {
+          "start": 10.35,
+          "end": 10.525,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "06_landing_05",
+      "sha256": "8480f0f195c7dca1cba0b35f150a0a9ab0d3b7c4249d12ecf1ec1f26a8122f26",
+      "seconds": 7.775,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 3.8875,
+          "text": "Clear of obstacles, retract the remaining flaps."
+        },
+        {
+          "start": 3.8875,
+          "end": 7.675,
+          "text": "Continue a straight-ahead climb at seventy to eighty knots."
+        }
+      ]
+    },
+    {
+      "id": "06_landing_briefing",
+      "sha256": "d9be09d80d87e3998647f62801f1e5cddd032781fa80099dfd9d95b14c46fd2c",
+      "seconds": 18.0,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 5.05,
+          "text": "Begin already established on a practice final, with twenty degrees of flaps"
+        },
+        {
+          "start": 5.05,
+          "end": 9.65,
+          "text": ". Stabilize, land and slow down, or choose a go-around"
+        },
+        {
+          "start": 9.65,
+          "end": 13.2375,
+          "text": ". This is not a straight-in arrival procedure for Boulder."
+        },
+        {
+          "start": 13.2375,
+          "end": 17.9,
+          "text": "Review the throttle, airspeed and flap references before practice."
+        }
+      ]
+    },
+    {
+      "id": "demonstration",
+      "sha256": "b38103fb834e65ab63fc66b94505a56bdab59cc9b5a874509d3e4988f3781233",
+      "seconds": 12.525,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 5.125,
+          "text": "I have control. Watch the nose stay steady and the wings level against"
+        },
+        {
+          "start": 5.125,
+          "end": 9.55,
+          "text": "the distant horizon. Briefly cross-check the blue-and-brown attitude"
+        },
+        {
+          "start": 9.55,
+          "end": 12.425,
+          "text": "instrument, then look outside again."
+        }
+      ]
+    },
+    {
+      "id": "assistance",
+      "sha256": "0fc2de3456a92b96e370343272a55a3c3602847853b7c856c1524cf4b74582f9",
+      "seconds": 7.625,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.0875,
+          "text": "The instructor has control and is holding the aircraft."
+        },
+        {
+          "start": 4.0875,
+          "end": 7.525,
+          "text": "Open Menu and select Take control when ready."
+        }
+      ]
+    },
+    {
+      "id": "handback",
+      "sha256": "88c01b908755236875001cfc93454412756116e62fc79b154e06db45ec4ea01e",
+      "seconds": 8.45,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 3.325,
+          "text": "You have control. Flight assistance is off."
+        },
+        {
+          "start": 3.325,
+          "end": 6.8375,
+          "text": "Continue the current task. X repeats the instruction;"
+        },
+        {
+          "start": 6.8375,
+          "end": 8.35,
+          "text": "Menu pauses."
+        }
+      ]
+    },
+    {
+      "id": "go_around",
+      "sha256": "6ecbe1718de1edca7e0154a9f8ea592674f94421abe5b82fb9134cbf07d1ced6",
+      "seconds": 9.55,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 3.4375,
+          "text": "The approach is unstable. Go around."
+        },
+        {
+          "start": 3.4375,
+          "end": 8.175,
+          "text": "Apply full power, carb heat cold, establish the climb and retract flaps"
+        },
+        {
+          "start": 8.175,
+          "end": 9.45,
+          "text": "in stages."
+        }
+      ]
+    },
+    {
+      "id": "demonstration_turn",
+      "sha256": "05124e8b9ee14e3451cb87681d314508b284311089de6ad02cb473275507105d",
+      "seconds": 10.1,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 2.9125,
+          "text": "I am beginning a shallow left turn."
+        },
+        {
+          "start": 2.9125,
+          "end": 6.5375,
+          "text": "Watch the bank develop, then the turning input ease."
+        },
+        {
+          "start": 6.5375,
+          "end": 10.0,
+          "text": "I will begin leveling as the target heading approaches."
+        }
+      ]
+    },
+    {
+      "id": "reference_outside",
+      "sha256": "f2c97e7ede1f555fccf1f3964a6230b7c1d3607b4d01177d6f2a1051d346a51d",
+      "seconds": 12.225,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 5.075,
+          "text": "Look through the windshield at the distant horizon, where sky meets terrain."
+        },
+        {
+          "start": 5.075,
+          "end": 7.4375,
+          "text": "Use it to judge pitch and bank;"
+        },
+        {
+          "start": 7.4375,
+          "end": 11.95,
+          "text": "briefly cross-check the instruments, then look outside for traffic again"
+        },
+        {
+          "start": 11.95,
+          "end": 12.125,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "reference_attitude",
+      "sha256": "9ced58416569d3ad9988d9af383e1ad3e864a1fddb3f46c75b1b8388e05ab4fd",
+      "seconds": 14.725,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.3625,
+          "text": "Find the round blue-and-brown instrument in the upper center of the main"
+        },
+        {
+          "start": 4.3625,
+          "end": 8.825,
+          "text": "gauge group. Its fixed miniature airplane is your reference;"
+        },
+        {
+          "start": 8.825,
+          "end": 11.7375,
+          "text": "the artificial horizon moves behind it."
+        },
+        {
+          "start": 11.7375,
+          "end": 14.625,
+          "text": "Compare it with the outside horizon."
+        }
+      ]
+    },
+    {
+      "id": "reference_airspeed",
+      "sha256": "71b9330e181a20cf6da0b4247a729842f074114d1001220db315614d69ea349b",
+      "seconds": 14.7,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 5.025,
+          "text": "Find the round dial with colored arcs, left of the blue-and-brown attitude"
+        },
+        {
+          "start": 5.025,
+          "end": 9.5875,
+          "text": "instrument. Its needle reads speed through the air in knots, not"
+        },
+        {
+          "start": 9.5875,
+          "end": 14.425,
+          "text": "taxi speed over the ground. Use the target in the current instruction"
+        },
+        {
+          "start": 14.425,
+          "end": 14.6,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "reference_altimeter",
+      "sha256": "206a6531d34d7139cc7aa4702efe1fed023740231f818a4c6e49bc9a7a9de601",
+      "seconds": 14.425,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.675,
+          "text": "Find the round multi-hand dial to the right of the attitude instrument."
+        },
+        {
+          "start": 4.675,
+          "end": 9.3,
+          "text": "Its number window and hands show altitude in feet above sea level"
+        },
+        {
+          "start": 9.3,
+          "end": 14.15,
+          "text": ". Read the whole altitude, not only the fast-moving hundreds hand"
+        },
+        {
+          "start": 14.15,
+          "end": 14.325,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "reference_heading",
+      "sha256": "36385770da1ae31ab34063ce708772044d95e6f23c0beb5b3e1fc5c355604ddd",
+      "seconds": 15.775,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.7,
+          "text": "Find the rotating compass-card dial below the attitude instrument."
+        },
+        {
+          "start": 4.7,
+          "end": 7.1,
+          "text": "Read the fixed index at the top;"
+        },
+        {
+          "start": 7.1,
+          "end": 12.05,
+          "text": "9 means 090 degrees. This simulator uses true heading here"
+        },
+        {
+          "start": 12.05,
+          "end": 15.675,
+          "text": ", so use this highlighted dial for lesson targets."
+        }
+      ]
+    },
+    {
+      "id": "reference_verticalspeed",
+      "sha256": "b0bc47ea2fce4365dd62157821dff5f2838b97b931896f32fde372135576e8a8",
+      "seconds": 14.725,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.2125,
+          "text": "Find the round vertical-speed dial below the altimeter."
+        },
+        {
+          "start": 4.2125,
+          "end": 9.075,
+          "text": "Zero means level; the needle shows climb or descent in feet per minute"
+        },
+        {
+          "start": 9.075,
+          "end": 13.625,
+          "text": ". It lags attitude changes, so wait for the trend instead of chasing"
+        },
+        {
+          "start": 13.625,
+          "end": 14.625,
+          "text": "the needle."
+        }
+      ]
+    },
+    {
+      "id": "reference_slip",
+      "sha256": "b57357c3c9ce6fb02257794456f68d9f3e9f085c3eea906fa72af1b94753f9b5",
+      "seconds": 13.125,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.8875,
+          "text": "Find the small ball in the curved tube at the bottom of the turn instrument."
+        },
+        {
+          "start": 4.8875,
+          "end": 8.6125,
+          "text": "Center it with gentle rudder toward the displaced ball."
+        },
+        {
+          "start": 8.6125,
+          "end": 13.025,
+          "text": "The steering thumbstick supplies rudder input in this simulator."
+        }
+      ]
+    },
+    {
+      "id": "reference_throttle",
+      "sha256": "e0add99c9e2c1d66525a4249438d9fa96ef35c96fe27e6ff3278a92c664cbc09",
+      "seconds": 14.525,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.0625,
+          "text": "Find the highlighted throttle knob below the instrument panel."
+        },
+        {
+          "start": 4.0625,
+          "end": 8.625,
+          "text": "Hold a grip over it and move it forward for more power, back for less."
+        },
+        {
+          "start": 8.625,
+          "end": 12.15,
+          "text": "Identify this knob by its highlight before moving it;"
+        },
+        {
+          "start": 12.15,
+          "end": 14.425,
+          "text": "do not confuse it with mixture."
+        }
+      ]
+    },
+    {
+      "id": "reference_yoke",
+      "sha256": "24b178701cc80f2cd825ee0d32d5ff1deeda7e9857f30a336e2c2718d3ee0360",
+      "seconds": 14.6,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 3.7375,
+          "text": "The two-handled control in front of your seat is the yoke."
+        },
+        {
+          "start": 3.7375,
+          "end": 6.4375,
+          "text": "Turning it left or right changes bank."
+        },
+        {
+          "start": 6.4375,
+          "end": 9.9375,
+          "text": "Pushing it away or pulling it toward you changes pitch."
+        },
+        {
+          "start": 9.9375,
+          "end": 12.15,
+          "text": "Hold a controller grip to move it."
+        },
+        {
+          "start": 12.15,
+          "end": 14.5,
+          "text": "These are two different motions."
+        }
+      ]
+    },
+    {
+      "id": "reference_flaps",
+      "sha256": "3fafb6b5d73f662d60974972c1b1f7eb099b2be0681c274e83b9378bcbdf4ee0",
+      "seconds": 19.025,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.45,
+          "text": "Find the highlighted flap selector beside the center controls."
+        },
+        {
+          "start": 4.45,
+          "end": 8.5875,
+          "text": "Move it to the required detent and confirm the flap indication."
+        },
+        {
+          "start": 8.5875,
+          "end": 13.925,
+          "text": "For these lessons, slow below eighty-five knots before extending flaps"
+        },
+        {
+          "start": 13.925,
+          "end": 18.75,
+          "text": ". Use each indicated position, not an estimated lever movement"
+        },
+        {
+          "start": 18.75,
+          "end": 18.925,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "reference_trim",
+      "sha256": "5b466bf732aacc48a2d75b3769f127b3ee9b020696aec5b82347feaf1243fc43",
+      "seconds": 18.825,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.7625,
+          "text": "Trim reduces the yoke input needed to hold an established attitude."
+        },
+        {
+          "start": 4.7625,
+          "end": 9.6125,
+          "text": "During flight, tap the trim thumbstick up or down slightly and ease the held"
+        },
+        {
+          "start": 9.6125,
+          "end": 14.2625,
+          "text": "yoke input. Reverse the trim direction if the correction grows."
+        },
+        {
+          "start": 14.2625,
+          "end": 16.575,
+          "text": "Set attitude and power first;"
+        },
+        {
+          "start": 16.575,
+          "end": 18.725,
+          "text": "there is no force feedback."
+        }
+      ]
+    },
+    {
+      "id": "reference_runway",
+      "sha256": "fb60dd12725359f875474063052734f1af9ef27142659ee5028579c3f125c00d",
+      "seconds": 16.475,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.6625,
+          "text": "Look outside for the paved runway, its centerline and edges."
+        },
+        {
+          "start": 4.6625,
+          "end": 8.6125,
+          "text": "The elevated marker identifies the current practice area."
+        },
+        {
+          "start": 8.6125,
+          "end": 12.85,
+          "text": "Taxi only on the taxiway and stop before the runway entry;"
+        },
+        {
+          "start": 12.85,
+          "end": 16.375,
+          "text": "the marker is a teaching aid, not a clearance."
+        }
+      ]
+    },
+    {
+      "id": "coach_rollleft",
+      "sha256": "e79c8aea5f632d167bf54e87c97f0be9222580bc492268f5b6fa03721e1ac6a5",
+      "seconds": 6.45,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.825,
+          "text": "The right bank is steep. Turn the yoke gently left to reduce the bank, then"
+        },
+        {
+          "start": 4.825,
+          "end": 6.35,
+          "text": "ease the input."
+        }
+      ]
+    },
+    {
+      "id": "coach_rollright",
+      "sha256": "c91ff02069c43069a4cd10e586d5461c1b21eae279ce6a80db33e4231797d478",
+      "seconds": 6.475,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.875,
+          "text": "The left bank is steep. Turn the yoke gently right to reduce the bank, then"
+        },
+        {
+          "start": 4.875,
+          "end": 6.375,
+          "text": "ease the input."
+        }
+      ]
+    },
+    {
+      "id": "coach_rolloutleft",
+      "sha256": "f1d271ca81b045bdfca4e20e9b6d1dae9c0676acef2cd8393f4552b04568deff",
+      "seconds": 7.325,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.525,
+          "text": "The target heading is approaching."
+        },
+        {
+          "start": 2.525,
+          "end": 7.05,
+          "text": "Roll gently left to level the wings, then center the turning input"
+        },
+        {
+          "start": 7.05,
+          "end": 7.225,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "coach_rolloutright",
+      "sha256": "6f32ed8e0a29bcef744b29d76fef8034a51b796e122e87424e30679aea1a01d9",
+      "seconds": 7.325,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.525,
+          "text": "The target heading is approaching."
+        },
+        {
+          "start": 2.525,
+          "end": 7.05,
+          "text": "Roll gently right to level the wings, then center the turning input"
+        },
+        {
+          "start": 7.05,
+          "end": 7.225,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "coach_turnleft",
+      "sha256": "5be9f10adf87375ef4b8663e6d010771049a6f5071a24cf85653d01b40b42fb4",
+      "seconds": 9.05,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.675,
+          "text": "Your target heading is to the left."
+        },
+        {
+          "start": 2.675,
+          "end": 7.475,
+          "text": "Check outside, establish a shallow left bank, then watch the top index"
+        },
+        {
+          "start": 7.475,
+          "end": 8.95,
+          "text": "approach the target."
+        }
+      ]
+    },
+    {
+      "id": "coach_turnright",
+      "sha256": "cb269bcd51b264ff2142a61e1c29eb8ff8b298ede458ccebf5838706c78c37d2",
+      "seconds": 8.9,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.625,
+          "text": "Your target heading is to the right."
+        },
+        {
+          "start": 2.625,
+          "end": 7.325,
+          "text": "Check outside, establish a shallow right bank, then watch the top index"
+        },
+        {
+          "start": 7.325,
+          "end": 8.8,
+          "text": "approach the target."
+        }
+      ]
+    },
+    {
+      "id": "coach_altitudelow",
+      "sha256": "80f2743dd2eba270f270986784b3b0932a29fe23b8fa77d78db1a808e2dacd81",
+      "seconds": 8.825,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.7625,
+          "text": "You are low. Keep the wings nearly level and use a gentle climb toward the"
+        },
+        {
+          "start": 4.7625,
+          "end": 8.725,
+          "text": "target. Check airspeed and add power if needed."
+        }
+      ]
+    },
+    {
+      "id": "coach_altitudehigh",
+      "sha256": "d07b3236b45b7e895718d5e2e1866b429bc1bf6adc58e68014a55c5f140c40c0",
+      "seconds": 7.85,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 5.25,
+          "text": "You are high. Use a gentle descent toward the target and monitor airspeed"
+        },
+        {
+          "start": 5.25,
+          "end": 7.75,
+          "text": ". Begin leveling before you reach it."
+        }
+      ]
+    },
+    {
+      "id": "coach_speedlow",
+      "sha256": "700de91e1c772983a7035b6f718c3c56e95d3d5f1562d90d64462b4a5d14c99d",
+      "seconds": 10.45,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.4375,
+          "text": "Airspeed is below the target."
+        },
+        {
+          "start": 2.4375,
+          "end": 6.7625,
+          "text": "Ease an excessive nose-up attitude and add power as needed."
+        },
+        {
+          "start": 6.7625,
+          "end": 10.35,
+          "text": "Confirm the needle is recovering before continuing."
+        }
+      ]
+    },
+    {
+      "id": "coach_speedhigh",
+      "sha256": "1754deebb8502e229aef1552eb609ded8ab4d47093f9faece4832703261944ec",
+      "seconds": 9.2,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.4375,
+          "text": "Airspeed is above the target."
+        },
+        {
+          "start": 2.4375,
+          "end": 6.9,
+          "text": "Reduce power a little and avoid an excessive nose-down attitude."
+        },
+        {
+          "start": 6.9,
+          "end": 9.1,
+          "text": "Wait for the needle to respond."
+        }
+      ]
+    },
+    {
+      "id": "coach_rudderleft",
+      "sha256": "eb79a79bb4a74920b63b5d18ba45a66e89a9b9a5d69aaa9b9c729efe9f4c4ea7",
+      "seconds": 8.2,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.6375,
+          "text": "The slip ball is left of center."
+        },
+        {
+          "start": 2.6375,
+          "end": 6.6625,
+          "text": "Add a little left rudder with the steering thumbstick, then ease it as the"
+        },
+        {
+          "start": 6.6625,
+          "end": 8.1,
+          "text": "ball centers."
+        }
+      ]
+    },
+    {
+      "id": "coach_rudderright",
+      "sha256": "1ef89050210e3e0af0b9d0e9eacf7a391d7607dfb9ad21bd5b3de24877a4f111",
+      "seconds": 8.125,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.5875,
+          "text": "The slip ball is right of center."
+        },
+        {
+          "start": 2.5875,
+          "end": 6.6,
+          "text": "Add a little right rudder with the steering thumbstick, then ease it as the"
+        },
+        {
+          "start": 6.6,
+          "end": 8.025,
+          "text": "ball centers."
+        }
+      ]
+    },
+    {
+      "id": "coach_taxifast",
+      "sha256": "7defdd51b6d21aa3b6bfbe68a9a6336ac65429273dcf07e618e9b94096bd8f5f",
+      "seconds": 9.15,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.7375,
+          "text": "Taxi speed is high. Pull the throttle back and brake smoothly with both"
+        },
+        {
+          "start": 4.7375,
+          "end": 9.05,
+          "text": "index triggers. Slow to a walking pace before turning."
+        }
+      ]
+    },
+    {
+      "id": "coach_stop",
+      "sha256": "5bea5e5289cca2be437093b1fa62a3d9abb7b4013e7d5d7c2f742521285f4d74",
+      "seconds": 7.875,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 5.25,
+          "text": "The stopping area is ahead. Close the throttle and apply both brakes gently"
+        },
+        {
+          "start": 5.25,
+          "end": 7.775,
+          "text": ". Keep the nose short of the runway."
+        }
+      ]
+    },
+    {
+      "id": "coach_power",
+      "sha256": "54c7d100942709c8c1faa71d0f07d09d45a1d5fef099488cc139dfa61274adc5",
+      "seconds": 7.8,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 2.8625,
+          "text": "More power is needed for this task."
+        },
+        {
+          "start": 2.8625,
+          "end": 7.525,
+          "text": "Move the highlighted throttle forward smoothly and check airspeed and climb"
+        },
+        {
+          "start": 7.525,
+          "end": 7.7,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "coach_brakes",
+      "sha256": "183e19b5ccd535cda06fa34f77748ebb2dd15153a533af56734e69077830abe2",
+      "seconds": 6.775,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.9125,
+          "text": "Close the throttle to idle. Squeeze both index triggers together until"
+        },
+        {
+          "start": 4.9125,
+          "end": 6.675,
+          "text": "the airplane is stopped."
+        }
+      ]
+    },
+    {
+      "id": "coach_yoke",
+      "sha256": "87251e3bf0e0f024239a7d5aadd3bcb365fe4d80924b11e6f22e3717d15a121a",
+      "seconds": 9.05,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.0875,
+          "text": "Check the current instruction: turning the yoke controls roll;"
+        },
+        {
+          "start": 4.0875,
+          "end": 6.6125,
+          "text": "pushing and pulling controls pitch."
+        },
+        {
+          "start": 6.6125,
+          "end": 8.95,
+          "text": "Use only the requested motion."
+        }
+      ]
+    },
+    {
+      "id": "coach_rudder",
+      "sha256": "8a57020b903b88dd73c7d4e2914782b1eeffb1642826e80c427359b4a86aa353",
+      "seconds": 7.975,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 3.6375,
+          "text": "Use the steering thumbstick sideways for rudder."
+        },
+        {
+          "start": 3.6375,
+          "end": 7.875,
+          "text": "Ease the input as the airplane points in the intended direction."
+        }
+      ]
+    },
+    {
+      "id": "coach_trim",
+      "sha256": "ca1f5a75e487d805cb4e79c70080ddfbf901affa8385a24f73b494a9fbd4a3f0",
+      "seconds": 10.45,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.8625,
+          "text": "Hold the desired attitude first."
+        },
+        {
+          "start": 2.8625,
+          "end": 7.1875,
+          "text": "Tap the trim thumbstick to trim, then ease the yoke input."
+        },
+        {
+          "start": 7.1875,
+          "end": 10.35,
+          "text": "Reverse trim direction if the correction grows."
+        }
+      ]
+    },
+    {
+      "id": "coach_flaps",
+      "sha256": "f1c2df41c5f199e5a1a01aebd69d2bbab7506a82f600b17923707575baa916cd",
+      "seconds": 7.65,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 5.4125,
+          "text": "The climb is established. Move the highlighted flap selector to ten degrees"
+        },
+        {
+          "start": 5.4125,
+          "end": 7.55,
+          "text": "and confirm the indication."
+        }
+      ]
+    },
+    {
+      "id": "coach_alignrunway",
+      "sha256": "fe5260b939b7d8d877037267b97d78a013c692839e26ae8393086a17698b0084",
+      "seconds": 8.75,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.675,
+          "text": "The runway is off center. Correct early with a shallow turn."
+        },
+        {
+          "start": 4.675,
+          "end": 8.65,
+          "text": "If a steep correction is needed close to the ground, go around."
+        }
+      ]
+    },
+    {
+      "id": "coach_goaround",
+      "sha256": "26e50ddc821f1f1c0ef503d2d529be63ac36ac9ad989bc4a4d6c1c99502b878f",
+      "seconds": 10.525,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 5.175,
+          "text": "Go around. Apply full power, carb heat cold, and a controlled climb"
+        },
+        {
+          "start": 5.175,
+          "end": 10.25,
+          "text": "attitude. Retract flaps in stages as the climb becomes established"
+        },
+        {
+          "start": 10.25,
+          "end": 10.425,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "coach_recovered",
+      "sha256": "07095838a962ed1a96d350cd5ac9a4e8e6dd9eb857607289fbc0c0cb7628f591",
+      "seconds": 6.15,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.1625,
+          "text": "That correction has settled."
+        },
+        {
+          "start": 2.1625,
+          "end": 6.05,
+          "text": "Continue the current task and return your scan outside."
+        }
+      ]
+    },
+    {
+      "id": "coach_approach",
+      "sha256": "b1124facacfdf21e878ff1c95cb786efab5bef3c348e061246f1eb9185beb6ed",
+      "seconds": 7.9,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.175,
+          "text": "Check runway alignment, the airspeed needle and the descent."
+        },
+        {
+          "start": 4.175,
+          "end": 7.8,
+          "text": "If they cannot be stabilized safely, go around."
+        }
+      ]
+    },
+    {
+      "id": "coach_rollcheckleft",
+      "sha256": "e8e9b03266fd128d37029b9278f98ee8b84a14491bc65f9a895ec4f947e8991d",
+      "seconds": 5.15,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.875,
+          "text": "Turn the yoke left. This check is a turning motion, not a push or pull"
+        },
+        {
+          "start": 4.875,
+          "end": 5.05,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "coach_rollcheckright",
+      "sha256": "e31b3dba917c70abca622f61e0c03ebadfbf637fe5876daae977240b66ceb69b",
+      "seconds": 3.0,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 2.9,
+          "text": "Left checked. Now turn the yoke right."
+        }
+      ]
+    },
+    {
+      "id": "coach_rollcheckcenter",
+      "sha256": "f0550ccec75e33f9a6b2079ca415dbfc13744d721447c501edc083989546d4d7",
+      "seconds": 5.475,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 2.6875,
+          "text": "Both turning directions are checked."
+        },
+        {
+          "start": 2.6875,
+          "end": 5.375,
+          "text": "Return the yoke to the middle and hold it there."
+        }
+      ]
+    },
+    {
+      "id": "coach_pitchcheckforward",
+      "sha256": "8d5761a3643e28eb5e3247be3d797d14f055e4908493fcde5869efbadf9eeddb",
+      "seconds": 4.275,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.0625,
+          "text": "Push the yoke away from you."
+        },
+        {
+          "start": 2.0625,
+          "end": 4.175,
+          "text": "Keep it centered left to right."
+        }
+      ]
+    },
+    {
+      "id": "coach_pitchcheckback",
+      "sha256": "61fa967de025f3a4d732919c1ef040d88d2e42288c016254ed54139dedf9a522",
+      "seconds": 3.5,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 3.4,
+          "text": "Forward checked. Now pull the yoke toward you."
+        }
+      ]
+    },
+    {
+      "id": "coach_pitchcheckcenter",
+      "sha256": "0ebf1e127097c8b07e3b27bc02c6588a3c89422e2d4b82c8eeb14528eba90e97",
+      "seconds": 5.15,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.5125,
+          "text": "Both pitch directions are checked."
+        },
+        {
+          "start": 2.5125,
+          "end": 5.05,
+          "text": "Return the yoke to its middle position."
+        }
+      ]
+    },
+    {
+      "id": "coach_ruddercheckleft",
+      "sha256": "a6a91ba0d3bc942d69141964ccbbecb94a742c1e4e84eda1cc06d20e7f9d8a16",
+      "seconds": 2.7,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.6,
+          "text": "Move the steering thumbstick left."
+        }
+      ]
+    },
+    {
+      "id": "coach_ruddercheckright",
+      "sha256": "850765465ce880cd96262a5d73e6e4d6cb3a538acf663b29979e89e28207a15f",
+      "seconds": 3.6,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 3.5,
+          "text": "Left checked. Move the steering thumbstick right."
+        }
+      ]
+    },
+    {
+      "id": "coach_ruddercheckcenter",
+      "sha256": "9fffbf0338747a1444b7419edc9f11201562fd581a1ead4a351c7661b9bc884c",
+      "seconds": 5.825,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.6875,
+          "text": "Both steering directions are checked."
+        },
+        {
+          "start": 2.6875,
+          "end": 5.725,
+          "text": "Let the steering thumbstick return to center."
+        }
+      ]
+    },
+    {
+      "id": "tour_intro",
+      "sha256": "545b23f93e88da8a3076582cafefdd38ee6d2559fc8bb17be56a5f58f8463b2e",
+      "seconds": 10.175,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.975,
+          "text": "Welcome aboard. I'll fly us around Boulder and bring us back to land."
+        },
+        {
+          "start": 4.975,
+          "end": 9.9,
+          "text": "Menu pauses the flight. Choose Take control whenever you want to fly"
+        },
+        {
+          "start": 9.9,
+          "end": 10.075,
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "tour_your_controls",
+      "sha256": "020f647239503d579f8749b35aa07eecbff0c6b11fdae04995fdd81480bfcdbf",
+      "seconds": 6.55,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.8,
+          "text": "You have the controls. Choose Let the demo fly from the pause menu when"
+        },
+        {
+          "start": 4.8,
+          "end": 6.45,
+          "text": "you're ready to hand back."
+        }
+      ]
+    },
+    {
+      "id": "tour_my_controls",
+      "sha256": "9128a1b6c4ded6ca93bbb31777df0213afe29abb15e3121cd95ef49ef4d6489e",
+      "seconds": 5.125,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 5.025,
+          "text": "I've got the controls. I'll settle the airplane and rejoin the route ahead."
+        }
+      ]
+    },
+    {
+      "id": "tour_final",
+      "sha256": "56c8a175144b7ae4fb65a849f3a2e25c972dcbd38b8e8e17a59f634ae6a42625",
+      "seconds": 6.775,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.4625,
+          "text": "We're on final approach. I'll keep the runway centered and settle the"
+        },
+        {
+          "start": 4.4625,
+          "end": 6.675,
+          "text": "airplane onto the main wheels."
+        }
+      ]
+    },
+    {
+      "id": "tour_goaround",
+      "sha256": "485d320424841249ce9049f40f86fad1f79882e5c7b41a2838ec11c01528d763",
+      "seconds": 4.325,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 2.1,
+          "text": "This approach isn't settled."
+        },
+        {
+          "start": 2.1,
+          "end": 4.225,
+          "text": "I'll climb away and try again."
+        }
+      ]
+    },
+    {
+      "id": "tour_exit",
+      "sha256": "245ce730023cdf89586fea38b2df1159ab1cf190d35126552c01ac050003e7f8",
+      "seconds": 5.575,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.4,
+          "text": "We're on the ground. I'll slow down and follow the taxiway clear of the"
+        },
+        {
+          "start": 4.4,
+          "end": 5.475,
+          "text": "runway."
+        }
+      ]
+    },
+    {
+      "id": "tour_complete",
+      "sha256": "ec9800f73624ccdedf34cf7bea485338374b1933bf5040ee3ca986556ee13594",
+      "seconds": 8.075,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 2.6875,
+          "text": "We're clear of the runway and stopped."
+        },
+        {
+          "start": 2.6875,
+          "end": 7.0,
+          "text": "Thanks for flying with me. Open Menu to choose another flight or try a"
+        },
+        {
+          "start": 7.0,
+          "end": 7.975,
+          "text": "lesson."
+        }
+      ]
+    },
+    {
+      "id": "tour_reservoir",
+      "sha256": "9830faaa0a4311e8ba67783833aa66df06041c824dce79fffdd20ac50b1a326e",
+      "seconds": 9.475,
+      "phrases": [
+        {
+          "start": 0.425,
+          "end": 5.75,
+          "text": "Boulder Reservoir is a recreation area and part of the city's water supply"
+        },
+        {
+          "start": 5.75,
+          "end": 9.375,
+          "text": ". It makes a useful landmark when finding the airport."
+        }
+      ]
+    },
+    {
+      "id": "tour_flatirons",
+      "sha256": "c24f0d9cb93ba191f0c2c9e68141d851ab301c3965bd0f6e3e7e0754d6dcb462",
+      "seconds": 10.0,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.925,
+          "text": "Those sloping rock faces along the foothills are the Flatirons."
+        },
+        {
+          "start": 4.925,
+          "end": 8.825,
+          "text": "We're staying east of the rising terrain to enjoy the view with room to"
+        },
+        {
+          "start": 8.825,
+          "end": 9.9,
+          "text": "maneuver."
+        }
+      ]
+    },
+    {
+      "id": "tour_east_boulder",
+      "sha256": "52eace86a95fe884918a8a2312f4ca4073495d3c21c82c13362d6bacd9b45a53",
+      "seconds": 11.25,
+      "phrases": [
+        {
+          "start": 0.375,
+          "end": 4.3875,
+          "text": "From here you can look across eastern Boulder toward the mountains."
+        },
+        {
+          "start": 4.3875,
+          "end": 9.0375,
+          "text": "In a small airplane, most of your attention belongs outside, with"
+        },
+        {
+          "start": 9.0375,
+          "end": 11.15,
+          "text": "brief checks of the instruments."
+        }
+      ]
+    },
+    {
+      "id": "tour_eagle_left",
+      "sha256": "c9ee20c970e135d57b6a713016e5a42ab0939f6cbf146ffba70d5763b4bd3c70",
+      "seconds": 3.025,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 2.925,
+          "text": "Golden eagle ahead, slightly left."
+        }
+      ]
+    },
+    {
+      "id": "tour_eagle_right",
+      "sha256": "24ae40f38a6821ce3ff44f6d51de831eaa6a69c94ba33307b82dd6df96774bf0",
+      "seconds": 2.95,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 2.85,
+          "text": "Golden eagle ahead, slightly right."
+        }
+      ]
+    },
+    {
+      "id": "tour_eagle_ahead",
+      "sha256": "f29c4128cb7d61bb6e6b10267ef061072d8ca2891fd011facf56c5d1362372ea",
+      "seconds": 2.475,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 2.375,
+          "text": "Golden eagle straight ahead."
+        }
+      ]
+    },
+    {
+      "id": "showcase_intro",
+      "sha256": "3d6d95c0a4c595327b6df929068b736f76b7ef91129ccc198828925db84342d5",
+      "seconds": 14.0,
+      "phrases": [
+        {
+          "start": 0.4,
+          "end": 4.925,
+          "text": "Welcome aboard. We're already flying toward Boulder Municipal Airport"
+        },
+        {
+          "start": 4.925,
+          "end": 8.9625,
+          "text": ". I'll fly the arrival, land, and stop clear of the runway."
+        },
+        {
+          "start": 8.9625,
+          "end": 13.725,
+          "text": "Enjoy the view. Menu pauses the flight and lets you take control"
+        },
+        {
+          "start": 13.725,
+          "end": 13.9,
+          "text": "."
+        }
+      ]
+    }
+  ]
+}

@@ -21,6 +21,10 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
         private string _sessionId;
         private bool _simultaneousEnableResult;
         private const long MaximumTraceBytes = 256 * 1024;
+        private readonly StringBuilder pendingTrace = new StringBuilder(8192);
+        private long acceptedTraceBytes;
+        private float nextTraceFlush;
+        private bool traceWriteFailed;
 
         public bool SimultaneousEnableResult => _simultaneousEnableResult;
 
@@ -85,11 +89,25 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
 
         private void OnDisable()
         {
+            FlushTrace();
             OVRPlugin.SetSimultaneousHandsAndControllersEnabled(false);
         }
 
+        private void Update()
+        {
+            if (pendingTrace.Length > 0 && Time.unscaledTime >= nextTraceFlush)
+            {
+                FlushTrace();
+                nextTraceFlush = Time.unscaledTime + 1f;
+            }
+        }
+
+        private void OnApplicationPause(bool paused) { if (paused) FlushTrace(); }
+        private void OnApplicationQuit() { FlushTrace(); }
+
         private void OnDestroy()
         {
+            FlushTrace();
             if (_instance == this) _instance = null;
         }
 
@@ -172,15 +190,28 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
 
         private void WriteLine(string line)
         {
+            // The unique session file starts empty. Keep its bounded size in
+            // memory; interaction callbacks must not open/stat the disk per event.
+            if (traceWriteFailed || string.IsNullOrEmpty(_path)) return;
+            int bytes = Encoding.UTF8.GetByteCount(line) + Encoding.UTF8.GetByteCount(System.Environment.NewLine);
+            if (acceptedTraceBytes + bytes > MaximumTraceBytes) return;
+            acceptedTraceBytes += bytes;
+            pendingTrace.AppendLine(line);
+            if (pendingTrace.Length >= 16384) FlushTrace();
+        }
+
+        private void FlushTrace()
+        {
+            if (pendingTrace.Length == 0 || traceWriteFailed || string.IsNullOrEmpty(_path)) return;
             try
             {
-                if (File.Exists(_path) &&
-                    new FileInfo(_path).Length > MaximumTraceBytes)
-                    return;
-                File.AppendAllText(_path, line + System.Environment.NewLine);
+                File.AppendAllText(_path, pendingTrace.ToString());
+                pendingTrace.Clear();
             }
             catch (Exception exception)
             {
+                traceWriteFailed = true;
+                pendingTrace.Clear();
                 Debug.LogWarning(
                     "[QuestFlight][OVRInput] trace write failed: " +
                     exception.Message,

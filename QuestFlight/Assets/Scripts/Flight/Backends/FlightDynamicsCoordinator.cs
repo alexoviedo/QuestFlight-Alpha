@@ -43,6 +43,8 @@ namespace QuestFlightLab.Flight.Backends
 
         public FlightDynamicsBackendKind ActiveBackendKind =>
             _backend?.Kind ?? FlightDynamicsBackendKind.JSBSimNativeDevelopment;
+        public bool RecoveryHold { get; private set; }
+        public void SetRecoveryHold(bool hold) => RecoveryHold = hold;
         public bool IsInitialized => _backend != null && _backend.IsInitialized;
         public bool CoordinatorOwnsPresentationInterpolation => ShouldCoordinatorInterpolate(simulationRoot, presentationRoot);
         public string LastError { get; private set; } = string.Empty;
@@ -162,7 +164,7 @@ namespace QuestFlightLab.Flight.Backends
 
         private void FixedUpdate()
         {
-            if (!IsInitialized) return;
+            if (!IsInitialized || RecoveryHold) return;
             if (controls != null && controls.ConsumeResetRequest())
             {
                 ResetToConfiguredInitialConditions();
@@ -185,7 +187,7 @@ namespace QuestFlightLab.Flight.Backends
 
         public bool StepForTest(AircraftControlState controlState, double fixedDeltaTimeSeconds)
         {
-            if (!IsInitialized) return false;
+            if (!IsInitialized || RecoveryHold) return false;
             ApplyControls(controlState ?? NeutralIdleControls);
             return StepBackend(fixedDeltaTimeSeconds);
         }
@@ -225,11 +227,12 @@ namespace QuestFlightLab.Flight.Backends
         /// No backend or product hierarchy is constructed here.
         /// </summary>
         public bool TryRecoverToInitialConditions(
-            in FlightDynamicsInitialConditions initialConditions)
+            in FlightDynamicsInitialConditions initialConditions, bool preservePlayerControls = false)
         {
             if (!TryResetToInitialConditions(initialConditions))
                 return false;
             enabled = true;
+            if (preservePlayerControls && controls != null) ApplyControls(controls.Current);
             return true;
         }
 
@@ -249,6 +252,7 @@ namespace QuestFlightLab.Flight.Backends
             _accumulator?.Reset();
             ApplyBackendPose(_currentState);
             ApplyLegacyState(_currentState);
+            simulationRoot.GetComponent<AircraftReferenceFrameRig>()?.ResetPresentationHistory();
             LastError = string.Empty;
             return true;
         }
@@ -382,7 +386,7 @@ namespace QuestFlightLab.Flight.Backends
 
         private void StepBackendUnchecked(double fixedDeltaTimeSeconds)
         {
-            if (!IsInitialized) return;
+            if (!IsInitialized || RecoveryHold || !enabled) return;
             if (!StepBackend(fixedDeltaTimeSeconds)) enabled = false;
         }
 

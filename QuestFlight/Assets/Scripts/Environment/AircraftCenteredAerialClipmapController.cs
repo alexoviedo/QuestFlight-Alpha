@@ -62,6 +62,7 @@ namespace QuestFlightLab.Environment
         private bool refreshRunning;
         private Texture2D globalTexture;
         private bool globalReady;
+        public bool HasGlobalCoverage => globalReady;
         private bool clipmapActivated;
         private Vector2Int highFailureMinimum = new Vector2Int(int.MinValue, int.MinValue);
         private Vector2Int mediumFailureMinimum = new Vector2Int(int.MinValue, int.MinValue);

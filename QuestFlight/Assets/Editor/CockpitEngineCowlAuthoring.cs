@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuestFlightLab.Aircraft;
 using UnityEditor;
@@ -31,6 +32,17 @@ namespace QuestFlightLab.Editor
         public const string StableInteriorShaderPath =
             "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Shaders/" +
             "ProductionCockpitStableInterior.shader";
+        // Exterior identity deliberately avoids the interior-lighting classifier's
+        // Cessna_Interior/Static_/Dynamic_ tokens: this is sunlit exterior paint.
+        public const string ExteriorCowlObjectName = "Cessna_Exterior_CockpitEngineCowling";
+        public const string ExteriorCowlMeshPath =
+            "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/" +
+            "C172_CockpitOriginalEngineCowling.asset";
+        // AircraftVisualRoot metres: the panel/firewall is immediately behind this
+        // plane. Clip triangles rather than selecting their centroids, so no cabin
+        // wall triangle can reach back through the occupied cockpit.
+        private const float ExteriorCowlRearPlane = 0.46f;
+        private const int MaximumExteriorCowlTriangles = 3000;
 
         // Bounds were measured from the imported exterior in AircraftVisualRoot space.
         // The pilot eye is (-0.28, 0.94, -0.23), and the panel ends near z=0.41.
@@ -144,6 +156,199 @@ namespace QuestFlightLab.Editor
 
         public static void AuthorBatch() => Author();
         public static void ValidateBatch() => Validate();
+
+        [MenuItem("QuestFlight/Cockpit/Author Original Exterior Engine Cowling")]
+        public static void AuthorExteriorBatch()
+        {
+            Validate();
+            GameObject root = PrefabUtility.LoadPrefabContents(AircraftPrefabPath);
+            try
+            {
+                Transform visual = Find(root.transform, "AircraftVisualRoot");
+                Transform cockpit = Find(visual, "ImportedCockpitInterior");
+                Transform exterior = Find(visual, "ImportedAircraftExterior");
+                MeshRenderer source = exterior.GetComponentsInChildren<MeshRenderer>(true)
+                    .Single(item => item.name == SourceRendererName);
+                MeshFilter sourceFilter = source.GetComponent<MeshFilter>();
+                if (sourceFilter == null || sourceFilter.sharedMesh == null ||
+                    sourceFilter.sharedMesh.subMeshCount != 1 || source.sharedMaterials.Length != 1)
+                    throw new InvalidOperationException("The original C172 body source has changed.");
+
+                Matrix4x4 sourceToCockpit = cockpit.worldToLocalMatrix * source.transform.localToWorldMatrix;
+                Mesh mesh = ExtractExteriorCowl(sourceFilter.sharedMesh, sourceToCockpit);
+                EnsureFolderForAsset(ExteriorCowlMeshPath);
+                Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(ExteriorCowlMeshPath);
+                if (existing == null) AssetDatabase.CreateAsset(mesh, ExteriorCowlMeshPath);
+                else
+                {
+                    EditorUtility.CopySerialized(mesh, existing);
+                    UnityEngine.Object.DestroyImmediate(mesh);
+                    mesh = existing;
+                    EditorUtility.SetDirty(mesh);
+                }
+
+                Transform[] matches = cockpit.GetComponentsInChildren<Transform>(true)
+                    .Where(item => item.name == ExteriorCowlObjectName).ToArray();
+                if (matches.Length > 1)
+                    throw new InvalidOperationException("Duplicate original engine cowling objects.");
+                Transform cowl = matches.SingleOrDefault();
+                if (cowl == null)
+                {
+                    cowl = new GameObject(ExteriorCowlObjectName).transform;
+                    cowl.SetParent(cockpit, false);
+                }
+                cowl.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+                cowl.localScale = Vector3.one;
+                cowl.gameObject.layer = source.gameObject.layer;
+                MeshFilter filter = cowl.GetComponent<MeshFilter>();
+                if (filter == null) filter = cowl.gameObject.AddComponent<MeshFilter>();
+                MeshRenderer renderer = cowl.GetComponent<MeshRenderer>();
+                if (renderer == null) renderer = cowl.gameObject.AddComponent<MeshRenderer>();
+                filter.sharedMesh = mesh;
+                // Original paint, roughness, normal detail and UVs. Do not duplicate
+                // the existing textures or substitute the dark interior material.
+                renderer.sharedMaterial = source.sharedMaterial;
+                renderer.enabled = true;
+                renderer.shadowCastingMode = ShadowCastingMode.Off;
+                renderer.receiveShadows = source.receiveShadows;
+                renderer.lightProbeUsage = source.lightProbeUsage;
+                renderer.reflectionProbeUsage = source.reflectionProbeUsage;
+                renderer.probeAnchor = source.probeAnchor;
+                renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                renderer.allowOcclusionWhenDynamic = false;
+                renderer.additionalVertexStreams = null;
+                GameObjectUtility.SetStaticEditorFlags(cowl.gameObject, (StaticEditorFlags)0);
+
+                var visibility = visual.GetComponent<AircraftVisibilityProfileController>();
+                var serialized = new SerializedObject(visibility);
+                foreach (string name in new[] { "interiorRenderers", "exteriorRenderers", "cockpitOccludingExteriorRenderers" })
+                {
+                    SerializedProperty array = serialized.FindProperty(name);
+                    var renderers = Enumerable.Range(0, array.arraySize)
+                        .Select(index => array.GetArrayElementAtIndex(index).objectReferenceValue as Renderer)
+                        .Where(item => item != null && item != renderer).ToList();
+                    if (name == "interiorRenderers") renderers.Add(renderer);
+                    array.arraySize = renderers.Count;
+                    for (int index = 0; index < renderers.Count; index++)
+                        array.GetArrayElementAtIndex(index).objectReferenceValue = renderers[index];
+                }
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(visibility);
+                PrefabUtility.SaveAsPrefabAsset(root, AircraftPrefabPath);
+                Debug.Log($"[QuestFlight][CockpitCowl] Original exterior source=" +
+                    $"{AssetDatabase.GetAssetPath(sourceFilter.sharedMesh)}; sourceTriangles=" +
+                    $"{sourceFilter.sharedMesh.triangles.Length / 3}; cockpitCowlingTriangles=" +
+                    $"{mesh.triangles.Length / 3}; vertices={mesh.vertexCount}; bounds={mesh.bounds}; " +
+                    "one shared-material draw; zero new textures; original liner preserved.");
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+            AssetDatabase.SaveAssets();
+            ValidateExteriorBatch();
+        }
+
+        public static void ValidateExteriorBatch()
+        {
+            Validate();
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(AircraftPrefabPath);
+            Transform visual = Find(asset.transform, "AircraftVisualRoot");
+            Transform cowl = Find(visual, ExteriorCowlObjectName);
+            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(ExteriorCowlMeshPath);
+            MeshRenderer source = Find(visual, "ImportedAircraftExterior")
+                .GetComponentsInChildren<MeshRenderer>(true).Single(item => item.name == SourceRendererName);
+            MeshRenderer renderer = cowl == null ? null : cowl.GetComponent<MeshRenderer>();
+            if (mesh == null || renderer == null || cowl.GetComponent<MeshFilter>().sharedMesh != mesh ||
+                renderer.sharedMaterial != source.sharedMaterial || mesh.subMeshCount != 1 ||
+                mesh.triangles.Length / 3 > MaximumExteriorCowlTriangles || mesh.triangles.Length / 3 < 1000 ||
+                mesh.bounds.min.z < ExteriorCowlRearPlane - 0.0001f || mesh.bounds.max.z < 1.9f ||
+                mesh.bounds.max.z > 2.0f || mesh.bounds.size.x < 1.1f || mesh.bounds.size.x > 1.4f ||
+                cowl.GetComponents<Collider>().Length != 0 || renderer.shadowCastingMode != ShadowCastingMode.Off)
+                throw new InvalidOperationException("Original-model cockpit cowling failed its bounded source contract.");
+            var visibility = visual.GetComponent<AircraftVisibilityProfileController>();
+            var serialized = new SerializedObject(visibility);
+            foreach (string name in new[] { "interiorRenderers", "exteriorRenderers", "cockpitOccludingExteriorRenderers" })
+            {
+                SerializedProperty array = serialized.FindProperty(name);
+                int count = Enumerable.Range(0, array.arraySize).Count(index =>
+                    array.GetArrayElementAtIndex(index).objectReferenceValue == renderer);
+                if (count != (name == "interiorRenderers" ? 1 : 0))
+                    throw new InvalidOperationException("Cockpit cowling visibility would duplicate or hide its exterior.");
+            }
+        }
+
+        private struct CowlVertex
+        {
+            public long key;
+            public Vector3 position, normal;
+            public Vector2 uv, uv2;
+        }
+
+        private static Mesh ExtractExteriorCowl(Mesh source, Matrix4x4 transform)
+        {
+            Vector3[] sourceVertices = source.vertices;
+            Vector3[] sourceNormals = source.normals;
+            Vector2[] sourceUv = source.uv;
+            Vector2[] sourceUv2 = source.uv2;
+            if (sourceNormals.Length != sourceVertices.Length || sourceUv.Length != sourceVertices.Length)
+                throw new InvalidOperationException("Original cowl paint coordinates and normals must be preserved.");
+            Matrix4x4 normalTransform = transform.inverse.transpose;
+            var vertices = new CowlVertex[sourceVertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+                vertices[i] = new CowlVertex { key = i,
+                    position = transform.MultiplyPoint3x4(sourceVertices[i]),
+                    normal = normalTransform.MultiplyVector(sourceNormals[i]).normalized,
+                    uv = sourceUv[i], uv2 = sourceUv2.Length == sourceVertices.Length ? sourceUv2[i] : sourceUv[i] };
+            var positions = new List<Vector3>();
+            var normals = new List<Vector3>();
+            var uv = new List<Vector2>();
+            var uv2 = new List<Vector2>();
+            var triangles = new List<int>();
+            var indices = new Dictionary<long, int>();
+            int Add(CowlVertex vertex)
+            {
+                if (indices.TryGetValue(vertex.key, out int index)) return index;
+                index = positions.Count;
+                indices.Add(vertex.key, index);
+                positions.Add(vertex.position); normals.Add(vertex.normal);
+                uv.Add(vertex.uv); uv2.Add(vertex.uv2);
+                return index;
+            }
+            var clipped = new List<CowlVertex>(4);
+            int[] sourceTriangles = source.triangles;
+            for (int t = 0; t < sourceTriangles.Length; t += 3)
+            {
+                clipped.Clear();
+                for (int edge = 0; edge < 3; edge++)
+                {
+                    CowlVertex a = vertices[sourceTriangles[t + edge]];
+                    CowlVertex b = vertices[sourceTriangles[t + (edge + 1) % 3]];
+                    bool insideA = a.position.z >= ExteriorCowlRearPlane;
+                    bool insideB = b.position.z >= ExteriorCowlRearPlane;
+                    if (insideA) clipped.Add(a);
+                    if (insideA == insideB) continue;
+                    float ratio = (ExteriorCowlRearPlane - a.position.z) / (b.position.z - a.position.z);
+                    clipped.Add(new CowlVertex {
+                        key = (1L << 62) | (Math.Min(a.key, b.key) << 32) | Math.Max(a.key, b.key),
+                        position = Vector3.LerpUnclamped(a.position, b.position, ratio),
+                        normal = Vector3.LerpUnclamped(a.normal, b.normal, ratio).normalized,
+                        uv = Vector2.LerpUnclamped(a.uv, b.uv, ratio),
+                        uv2 = Vector2.LerpUnclamped(a.uv2, b.uv2, ratio) });
+                }
+                for (int corner = 1; corner + 1 < clipped.Count; corner++)
+                {
+                    if (Vector3.Cross(clipped[corner].position - clipped[0].position,
+                        clipped[corner + 1].position - clipped[0].position).sqrMagnitude < 1e-14f) continue;
+                    triangles.Add(Add(clipped[0])); triangles.Add(Add(clipped[corner]));
+                    triangles.Add(Add(clipped[corner + 1]));
+                }
+            }
+            if (triangles.Count / 3 > MaximumExteriorCowlTriangles)
+                throw new InvalidOperationException("The source cowl exceeds its reviewed triangle budget.");
+            var mesh = new Mesh { name = "C172 Original Cockpit Engine Cowling", indexFormat = IndexFormat.UInt16 };
+            mesh.SetVertices(positions); mesh.SetNormals(normals);
+            mesh.SetUVs(0, uv); mesh.SetUVs(1, uv2); mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateTangents(); mesh.RecalculateBounds();
+            return mesh;
+        }
 
         public static void Validate()
         {

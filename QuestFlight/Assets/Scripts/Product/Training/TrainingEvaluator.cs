@@ -10,6 +10,8 @@ namespace QuestFlight.Product.Training
         public float ElapsedSeconds { get; private set; }
         public string Feedback { get; private set; } = "";
         public bool Complete { get; private set; }
+        public int ControlPhase { get; private set; }
+        public bool IsControlCheck(TrainingTask task) => task==TrainingTask.RollControl || task==TrainingTask.PitchControl || task==TrainingTask.RudderControl;
         public bool TimedOut { get; private set; }
         public bool Assisted { get; private set; }
         public bool Landed { get; private set; }
@@ -20,7 +22,7 @@ namespace QuestFlight.Product.Training
         public float GoodSeconds { get; private set; }
         public float TotalSeconds { get; private set; }
         private float outsideSeconds, startTrim, startFlaps;
-        private bool positiveControl, negativeControl, trimMoved, hadAirborne;
+        private bool trimMoved, hadAirborne;
         private bool previousWheels;
         private float previousSink;
 
@@ -36,7 +38,8 @@ namespace QuestFlight.Product.Training
         public void BeginStage(float trim, float flaps = 0)
         {
             HeldSeconds = ElapsedSeconds = outsideSeconds = 0;
-            Complete = TimedOut = positiveControl = negativeControl = trimMoved = false;
+            Complete = TimedOut = trimMoved = false;
+            ControlPhase=0;
             startTrim = trim;
             startFlaps = flaps;
             Feedback = "Follow the instruction above.";
@@ -85,9 +88,11 @@ namespace QuestFlight.Product.Training
                 case TrainingTask.PitchControl:
                 case TrainingTask.RudderControl:
                     float axis = stage.task == TrainingTask.RollControl ? c.aileron : stage.task == TrainingTask.PitchControl ? c.elevator : c.rudder;
-                    positiveControl |= axis > .25f; negativeControl |= axis < -.25f;
-                    good = positiveControl && negativeControl && Mathf.Abs(axis) < .15f;
-                    correction = "Move the control both ways, then center it.";
+                    bool stopped=s.weightOnWheels && s.groundSpeedKnots<1 && c.throttle<.2f;
+                    if(stopped && ControlPhase==0 && axis<-.25f)ControlPhase=1;
+                    else if(stopped && ControlPhase==1 && axis>.25f)ControlPhase=2;
+                    good = stopped && ControlPhase==2 && Mathf.Abs(axis)<.15f;
+                    correction = !stopped ? "Close the throttle and hold both brakes. Check the controls while stopped." : ControlInstruction(stage.task,ControlPhase);
                     break;
                 case TrainingTask.BrakeControl:
                     good = c.leftToeBrake > .35f && c.rightToeBrake > .35f && s.groundSpeedKnots < 1 && c.throttle < .2f;
@@ -108,14 +113,20 @@ namespace QuestFlight.Product.Training
                     MaximumAltitudeError = Mathf.Max(MaximumAltitudeError, altError);
                     MaximumHeadingError = Mathf.Max(MaximumHeadingError, headingError); break;
                 case TrainingTask.Turn:
-                    good = headingError <= 12 && altError < 200 && Mathf.Abs(bank) < 25 && Mathf.Abs((float)s.sideslipDegrees) < 8;
-                    correction = "Bank gently toward the heading; use rudder to keep the ball centered."; break;
+                    good = headingError <= 8 && altError <= 150 && Mathf.Abs(bank) <= 6 && speed>=75 && speed<=105 && Mathf.Abs((float)s.sideslipDegrees) < 8;
+                    correction = headingError>8 ? "Turn gently toward the target heading; begin leveling before reaching it." : "The heading is close. Level the wings and settle altitude and airspeed."; break;
                 case TrainingTask.Climb:
+                    float climbLead=Mathf.Clamp(vs/10f,25,100);
+                    good=!s.weightOnWheels && alt>=stage.altitudeFeet-climbLead && alt<=stage.altitudeFeet+150 && headingError<15 &&
+                        (vs>100 || Mathf.Abs(alt-stage.altitudeFeet)<=100 && Mathf.Abs(vs)<=250) && speed>=65 && speed<=90;
+                    correction="Climb at 70 to 80 knots. Begin leveling just before the target altitude.";
+                    break;
                 case TrainingTask.Departure:
                     good = !s.weightOnWheels && alt >= stage.altitudeFeet && headingError < 15 && vs > 100 && speed >= 65 && speed <= 90;
                     correction = "Hold the departure heading and a positive climb at 70 to 80 knots."; break;
                 case TrainingTask.Descend:
-                    good = alt <= stage.altitudeFeet + 100 && alt >= stage.altitudeFeet - 150 && vs < -100 && vs > -800 && speed >= 75 && speed <= 110 && headingError < 15;
+                    good = alt <= stage.altitudeFeet + Mathf.Clamp(-vs/10f,25,80) && alt >= stage.altitudeFeet - 150 &&
+                        (vs < -100 && vs > -800 || Mathf.Abs(alt-stage.altitudeFeet)<=100 && Mathf.Abs(vs)<=250) && speed >= 75 && speed <= 110 && headingError < 15;
                     correction = "Reduce power; descend gently toward the target altitude."; break;
                 case TrainingTask.Trim:
                     trimMoved |= Mathf.Abs(c.trim - startTrim) > .025f;
@@ -164,9 +175,16 @@ namespace QuestFlight.Product.Training
             // Short excursions retain progress; longer excursions require a fresh stable interval.
             if (good) { HeldSeconds += dt; GoodSeconds += dt; outsideSeconds = 0; }
             else { outsideSeconds += dt; if (outsideSeconds > .6f) HeldSeconds = 0; }
-            Feedback = good ? "Good. Hold this condition." : correction;
+            Feedback = good ? IsControlCheck(stage.task) ? "Movement checked. Keep the control centered." : "On target. Keep the correction small and continue scanning." : correction;
             Complete = good && HeldSeconds >= stage.dwellSeconds;
             TimedOut = ElapsedSeconds >= stage.timeoutSeconds;
+        }
+
+        public static string ControlInstruction(TrainingTask task,int phase)
+        {
+            if(task==TrainingTask.RollControl)return phase==0?"Turn the yoke left.":phase==1?"Left checked. Turn the yoke right.":"Both directions checked. Return the yoke to the middle.";
+            if(task==TrainingTask.PitchControl)return phase==0?"Push the yoke away from you.":phase==1?"Forward checked. Pull the yoke toward you.":"Both directions checked. Return the yoke to its middle position.";
+            return phase==0?"Move the steering thumbstick left.":phase==1?"Left checked. Move the steering thumbstick right.":"Both directions checked. Let the steering thumbstick center.";
         }
 
         public static bool OnRunway(Vector3 p) => p.x >= -630 && p.x <= 680 && Mathf.Abs(p.z + 30) <= 11;

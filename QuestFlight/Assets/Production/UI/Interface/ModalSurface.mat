@@ -26,7 +26,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _Focus: 0
-    - _ZTest: 8
+    - _ZTest: 4
     - _ZWrite: 0
     m_Colors:
     - _Accent: {r: 0.4699999, g: 0.78, b: 0.91, a: 1}

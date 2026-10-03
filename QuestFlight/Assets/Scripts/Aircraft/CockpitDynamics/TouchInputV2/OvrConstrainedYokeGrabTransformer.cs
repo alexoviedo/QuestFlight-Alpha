@@ -168,12 +168,12 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
                 pitchAxisLocal.normalized);
             float aileron = Mathf.Clamp(
                 _baselineAileron -
-                signedRollDegrees / rollMaximumDegrees,
+                signedRollDegrees / (rollMaximumDegrees * QuestFlight.Product.ProductComfortPreferences.RollTravel),
                 -1f,
                 1f);
             float elevator = Mathf.Clamp(
                 _baselineElevator -
-                pitchDelta / pitchHalfTravelMeters,
+                pitchDelta / (pitchHalfTravelMeters * QuestFlight.Product.ProductComfortPreferences.PitchTravel),
                 -1f,
                 1f);
             bool accepted = inputAuthority.TryUpdateTouchOverride(

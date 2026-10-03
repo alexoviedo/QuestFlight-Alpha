@@ -14,9 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 01_taxi
   displayName: Cockpit and taxi
-  briefing: Start stopped. Learn the controls, then taxi slowly and stop before the
-    runway. Both index triggers apply brakes; the right stick steers. Menu pauses.
+  briefing: We start parked with the engine running. Learn roll and pitch as two
+    different yoke movements, check steering and brakes, then taxi to the marked
+    stopping area. Keep clear of the runway. Menu pauses; X repeats the current instruction.
   briefingNarration: {fileID: 8300000, guid: 342c401618466274cb0d3ea83a1fca64, type: 3}
+  learningGoal: Demonstrate both control axes, taxi slowly, and stop before the runway.
+    This is a control familiarization exercise, not a complete aircraft preflight.
+  reflection: 'Which helped you stop accurately: reducing power early or braking
+    late?'
   start:
     latitudeDegrees: 40.03854574952252
     longitudeDegrees: -105.2323566122907
@@ -35,9 +40,15 @@ MonoBehaviour:
   airportExercise: 1
   goAroundStage: -1
   stages:
-  - title: Check roll
-    instruction: At idle, grip the yoke. Move it left and right, then center it.
+  - title: 'Yoke: turn left and right'
+    instruction: Find the highlighted two-handled yoke in front of you. Hold it with
+      a grip button. Turn it left, then right, then return it to the middle. Keep
+      the airplane stopped.
     narration: {fileID: 8300000, guid: 19dc7aeecf062364c830f70f1d0daf4f, type: 3}
+    successFeedback: You demonstrated left and right roll input and centered the
+      yoke.
+    retryAdvice: Turn the yoke, rather than pushing it. Move left, then right, then
+      center.
     task: 0
     reference: 8
     attitudeOnly: 0
@@ -48,9 +59,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Check pitch
-    instruction: Move the yoke gently forward and back, then center it.
+  - title: 'Yoke: push and pull'
+    instruction: Now check pitch, a different movement. Keep holding the yoke. Push
+      it away from you, pull it toward you, then return it to its middle position.
     narration: {fileID: 8300000, guid: fa84df69b3afd3f428673e2a026c2686, type: 3}
+    successFeedback: You demonstrated forward and aft pitch input and returned to
+      neutral.
+    retryAdvice: Push the yoke away, pull it back, then return to the middle. Do
+      not turn it.
     task: 1
     reference: 8
     attitudeOnly: 0
@@ -61,10 +77,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Check rudder
-    instruction: Move the right thumbstick left and right, then center it. This controls
-      rudder and ground steering.
+  - title: Rudder and steering
+    instruction: In the airplane these are foot-pedal inputs. Here, move the right
+      thumbstick left, then right, and let it center. The yoke does not steer the
+      nosewheel.
     narration: {fileID: 8300000, guid: 88d4278d6b7140347a552cdaac151313, type: 3}
+    successFeedback: You demonstrated both steering directions and centered the input.
+    retryAdvice: Move the steering thumbstick sideways in both directions, then let
+      go.
     task: 2
     reference: 6
     attitudeOnly: 0
@@ -75,10 +95,13 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Check brakes
-    instruction: With throttle at idle, squeeze both index triggers to apply both
-      brakes.
+  - title: Hold both brakes
+    instruction: Pull the throttle knob fully back to idle. Squeeze both index triggers
+      and keep the airplane stopped. Each trigger applies its side of the wheel brakes.
     narration: {fileID: 8300000, guid: bb7845a458be52c4c8653e6cda21c75b, type: 3}
+    successFeedback: You held the airplane stopped with both brakes and idle power.
+    retryAdvice: Use both index triggers together. Check that the throttle is fully
+      back.
     task: 3
     reference: 11
     attitudeOnly: 0
@@ -89,10 +112,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Taxi west
-    instruction: Release the brakes. Add a little power; follow the taxiway west
-      at walking speed.
+  - title: Taxi to the connector
+    instruction: Release both brakes. Grip the throttle and move it forward slightly.
+      Follow the taxiway ahead toward the marker at walking pace, about three to
+      six knots. Steer with the steering thumbstick.
     narration: {fileID: 8300000, guid: 5fb3798724be13d4480d1c1d2c4027f2, type: 3}
+    successFeedback: You reached the connector at a controlled taxi speed.
+    retryAdvice: Use less power to slow down. Follow the taxiway to the marker; the
+      yoke does not steer on the ground.
     task: 4
     reference: 11
     attitudeOnly: 0
@@ -103,10 +130,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: -600, y: -91}
     captureMeters: 20
-  - title: Turn toward hold short
-    instruction: Turn right at the connector toward the runway. Keep the taxi speed
-      low.
+  - title: Turn toward the stopping area
+    instruction: At the connector, slow down and turn right with the steering thumbstick
+      toward the next marker. Straighten the nosewheel as the turn finishes. Stay
+      on the taxiway.
     narration: {fileID: 8300000, guid: fde3e86ab2dd13c43b19d58f609eba48, type: 3}
+    successFeedback: You completed the turn toward the stopping area slowly.
+    retryAdvice: Slow before turning, use right rudder, then center the stick. Approach
+      the marker slowly.
     task: 4
     reference: 11
     attitudeOnly: 0
@@ -117,10 +148,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: -620, y: -80}
     captureMeters: 14
-  - title: Stop before runway
-    instruction: Close the throttle and brake before the hold-short line. Do not
-      enter the runway.
+  - title: Stop before the runway
+    instruction: Pull the throttle back to idle. Squeeze both index triggers smoothly
+      and stop inside the marked area. Keep the nose short of the runway entry; this
+      lesson ends here.
     narration: {fileID: 8300000, guid: 6cf1c573f2793964aaef7d10f539b169, type: 3}
+    successFeedback: You stopped in the marked area without entering the runway.
+    retryAdvice: Close the throttle earlier and brake gently. Stop before the runway,
+      not on it.
     task: 5
     reference: 11
     attitudeOnly: 0

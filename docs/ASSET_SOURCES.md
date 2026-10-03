@@ -13,6 +13,14 @@ This file records only assets present in the clean product dependency closure. L
 
 The flyable product aircraft is neither runtime-generated nor substituted. The imported asset is tracked with Git LFS and its exact hash is verified by `scripts/sync_local_aircraft_asset.ps1 -VerifyOnly`. Separately authored parked-aircraft scenery is non-interactive environment context and never replaces the flyable product aircraft.
 
+### Cockpit-visible original cowling derivative (2026-09-22)
+
+- Derivative: `QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_CockpitOriginalEngineCowling.asset`.
+- Source: the recorded KOG_THORNS C172 above, CC BY 4.0; source SHA-256 `a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872`.
+- Changes: `CockpitEngineCowlAuthoring.AuthorExteriorBatch` transforms the original `Cessna_Exterior_Body_MAT_0_Body_MAT_0` mesh into cockpit coordinates and clips triangles at local `z=0.46 m`, preserving source surface positions, interpolated normals, and UV channels. Tangents and bounds are regenerated. The 2,520-triangle, 1,740-vertex derivative reuses the original exterior material/textures; the existing dark liner and imported source asset are unchanged. It is enabled only by the cockpit visibility profile, avoiding overlap with the complete external-view fuselage.
+- Reproduce the mesh in Unity: `QuestFlightLab.Editor.CockpitEngineCowlAuthoring.AuthorExteriorBatch`. For product integration, `QuestFlight.Editor.DemoFinishAuthoring.RunBatch` authors the aircraft first and then serializes the new renderer into the startup showroom suppression list. No runtime mesh construction occurs.
+- Derived asset SHA-256: `e7b7c906901bebbcf0b95e19002483aff4fba0880d3249c838ad011d18ee3bef` (228,670 bytes). KOG_THORNS attribution and this modification notice apply to the derivative.
+
 ## KBDU-Inspired Environment Data
 
 The product contains bounded, optimized derivatives rather than raw downloads.
@@ -89,6 +97,24 @@ The recovery branch covers 27,679 OSM Produced Work records with 2,875 fixed clo
 
 The legacy macro albedo remains a synthetic land-cover derivative. The current near/mid/far runtime atlases are bounded public-domain NAIP derivatives and are not current navigation data or a production-photorealism claim. No Google Maps, Google Earth, Street View, paid, or unclear-license content is included.
 
+## Airport terminal finish (2026-09-22)
+
+This correction reuses the project-authored `ExecutiveTerminal` LOD meshes and existing `AirportCoreTerminalAtlas` textures. Texture source/license/hash records remain in `QuestFlight/Assets/Production/Environment/AirportCoreV4/Materials/SOURCE_MANIFEST.json`; no new photograph or texture pixels are included in the product.
+
+The source specification (`tools/kbdu_airport_core_v4/buildings/airport_core_building_spec.json`) places the terminal facade toward the east apron. The imported geometry had reversed that direction. The [City airport address map](https://bouldercolorado.gov/airport-hangar-addresses) identifies building 3335, and the [City 2020 orthophoto service](https://gis.bouldercolorado.gov/ags_svr1/rest/services/raster/AP2020Cached9inWM/MapServer) shows its apron-side overhang on the east and vehicle parking on the west. The inspected reference crop remains external at `T2-QuestFlight-product-artifacts/demo_finish_20260922/terminal_city_2020.jpg`; local ENU extent is x=-440..-325 m, z=-280..-170 m. It is reference evidence only.
+
+Reproduce with `QuestFlightLab.Editor.AirportTerminalFinishAuthoring.AuthorBatch`, then `QuestFlight.Editor.ProductLightingRefreshBatch.RunBatch` to refresh the existing bounded lightmap. The terminal parent receives a 180-degree yaw at the unchanged source footprint; all three LODs inherit it. `AirportCoreV4Authoring` also preserves the corrected rotation on regeneration. The terminal material alone enables `_MetricTerminalWalls=1`: atlas tile 0 repeats every 1.4 m and tile 1 every 4 m on vertical walls using a single dominant wall-plane projection. The mapping preserves the source 0.012 atlas gutters and computes mip gradients before wrapping. Other atlas tiles and non-wall faces retain original coordinates. There are no added meshes, textures, draw calls, or texture samples. These material scales are presentation choices, not surveyed masonry dimensions.
+
 ## Future Asset Rule
 
 Every committed binary must have a source, license, and hash record. Raw captures, downloads, archives, caches, and unclear-license assets remain outside Git.
+
+
+### C172 complete pedal linkage repair — 2026-09-23
+
+`Assets/Production/Cockpit/Pedals/C172_FourPedalAssembly.asset` remains a CC BY 4.0 derivative of KOG_THORNS C172 (frozen source SHA-256 `a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872`). Four full footplates preserve the original texture coordinates. Project-authored fixed bearings and separate rudder/toe hinges replace incomplete source floor hardware. Reference: Cessna 172 service manual Figure 10-2; visual dimensions approximate. Output: 15,440 vertices, 13,024 triangles, one material, nine bones. Mesh SHA-256: `aa13dd4a58df306ca67c7cc8355006657a458b2c82a98880fd43ba7c030ecdb9`. See the paired v2 derivation manifest and [repair evidence](evidence/COCKPIT_CLEARANCE_PEDALS_2026-09-23.md).
+
+
+## Distant branch cluster candidate (2026-09-28)
+
+Assets/Production/Environment/MapBranchGrovesV1/DistantClusters contains offline captures generated by GroveClusterAuthoring.Bake from project-authored BranchCluster.asset, the project-owned broadleaf atlas and the Poly Haven Pine Tree 01 needle atlas. DistantClusters/SOURCE.json records exact input/output SHA-256 hashes and original provenance records. No new downloaded artwork is used. The 36 reusable templates each have 25 views; two 2048-square atlases use Android ASTC 6x6. These are candidate LOD derivatives, not measured Quest performance or botanical accuracy.

@@ -25,12 +25,12 @@ namespace QuestFlight.Product
 
         public const string SelectionText =
             "QUESTFLIGHT\n" +
-            "POINT AND SELECT A FLIGHT\n" +
+            "THUMBSTICK - CHOOSE A FLIGHT\n" +
             "A - SELECT    B / Y - BACK\n" +
             "MENU - APP MENU";
-        public const string PreparingText = "QUESTFLIGHT\nPREPARING AIRCRAFTâ€¦";
+        public const string PreparingText = "QUESTFLIGHT\nPreparing your aircraft…";
         public const string LessonsUnavailableText =
-            "FLIGHT LESSONS ARE THE NEXT MILESTONE";
+            "FLIGHT LESSONS ARE UNAVAILABLE. RETURN TO THE MAIN MENU AND TRY AGAIN.";
 
         [SerializeField] private ProductDemoPilot demoPilot;
         [SerializeField] private ProductControlInput productInput;
@@ -49,6 +49,7 @@ namespace QuestFlight.Product
 
         public FlightModeState State { get; private set; } = FlightModeState.Selection;
         public string LastError { get; private set; } = string.Empty;
+        public int FlightSessionVersion { get; private set; }
         public ProductDemoPilot AuthoredDemoPilot => demoPilot;
         public ProductControlInput AuthoredProductInput => productInput;
         public FlightDynamicsCoordinator AuthoredFlightCoordinator => flightCoordinator;
@@ -147,6 +148,7 @@ namespace QuestFlight.Product
 
             productInput.ReleaseAllTouchOverrides();
             productInput.SetFlightLessonInputSuppressed(true);
+            modeMenuView.TransitionFailed += HandleTransitionFailure;
             SetPanelVisible(true);
             SetPanelText(PreparingText);
         }
@@ -203,14 +205,16 @@ namespace QuestFlight.Product
             // B/Y are reserved for Back everywhere, including startup.
         }
 
-        public void SelectDemo()
+        public void SelectDemo()=>SelectDemoCore(false);
+        public void SelectShortShowcase()=>SelectDemoCore(true);
+        private void SelectDemoCore(bool shortShowcase)
         {
             if (!CanSelectInitializedMode())
                 return;
 
             productInput.ReleaseAllTouchOverrides();
             demoPilot.StartDemo();
-            if (!demoPilot.IsRunning)
+            if (!demoPilot.IsRunning || (shortShowcase&&!demoPilot.StartShortArrival()))
             {
                 EnterBlocked(
                     "Demo failed to start through ProductDemoPilot.StartDemo(). Inspect its serialized route and sources.");
@@ -245,6 +249,17 @@ namespace QuestFlight.Product
                 demoPilot.BuildFailureDiagnostic() + " " +
                 productInput.BuildFlightLessonFailureDiagnostic(),
                 this);
+        }
+
+        public bool CompleteExplicitRunwayRestart()
+        {
+            if ((State != FlightModeState.Demo && State != FlightModeState.FreeFlight) ||
+                !flightCoordinator.IsInitialized || !flightCoordinator.CurrentState.IsFinite ||
+                flightCoordinator.CurrentState.calibratedAirspeedKnots > 5) return false;
+            State = FlightModeState.FreeFlight;
+            _demoCheckpointPending = false;
+            FlightSessionVersion++;
+            return true;
         }
 
         public void SelectFreeFlight()
@@ -376,6 +391,12 @@ namespace QuestFlight.Product
                 return;
 
             State = FlightModeState.Blocked;
+            if (!_ownsTimeScalePause && Time.timeScale > 0f)
+            {
+                _savedTimeScale = Time.timeScale;
+                _ownsTimeScalePause = true;
+            }
+            Time.timeScale = 0f;
             LastError = string.IsNullOrWhiteSpace(error)
                 ? "Flight mode startup failed. Inspect the serialized product configuration."
                 : error;
@@ -386,7 +407,7 @@ namespace QuestFlight.Product
                 productInput.SetFlightLessonInputSuppressed(true);
             }
             SetPanelVisible(true);
-            SetPanelText("FLIGHT MODE STARTUP BLOCKED\n" + LastError);
+            SetPanelText("Flight could not start\nReturn to the main menu and try again. If this continues, restart QuestFlight and report the build number. Your saved progress is kept.");
             if (!_loggedBlockedError)
             {
                 Debug.LogError("[QuestFlight][FlightModes] " + LastError, this);
@@ -404,7 +425,16 @@ namespace QuestFlight.Product
 
         private void OnDestroy()
         {
+            if (modeMenuView != null)
+                modeMenuView.TransitionFailed -= HandleTransitionFailure;
             RestoreSavedTimeScaleOnce();
+        }
+
+        private void HandleTransitionFailure(string reason)
+        {
+            training?.LeaveTraining();
+            EnterBlocked(reason);
+            navigation?.OpenMenu();
         }
 
         private void ReadSelectionButtons(
@@ -455,6 +485,7 @@ namespace QuestFlight.Product
 
         private void BeginSuccessfulTransition(string selectedMode)
         {
+            FlightSessionVersion++;
             if (modeMenuView != null)
                 modeMenuView.BeginModeTransition(selectedMode);
             else

@@ -35,8 +35,8 @@ namespace QuestFlightLab.Editor
             var document=JsonUtility.FromJson<Pages>(File.ReadAllText(aerial+"/clipmap_manifest.json"));
             float westExtent=4000;
             string west=System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_WEST_EXTENT");
-            if(!string.IsNullOrEmpty(west) && (!float.TryParse(west,System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out westExtent) || westExtent<4000 || westExtent>8000))
-                throw new InvalidDataException("Simulator west extent must be between 4000 and 8000 metres.");
+            if(!string.IsNullOrEmpty(west) && (!float.TryParse(west,System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out westExtent) || westExtent<4000 || westExtent>12096))
+                throw new InvalidDataException("Simulator west extent must be between 4000 and 12096 metres.");
             // Bounded airport inspection, not whole-map simulator acceptance.
             var names=new HashSet<string>(document.pages.Where(p=>p.tier=="global" ||
                 p.local_bounds_meters[0]<4000 && p.local_bounds_meters[2]>-westExtent &&
@@ -107,7 +107,7 @@ namespace QuestFlightLab.Editor
             File.WriteAllText(buildings+"/bundle_index.json",JsonUtility.ToJson(index,true));
             string report=System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_BUILD_REPORT");
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(report),"simulator_scenery_scope.txt"),
-                $"Windows QA only. Airport aerial coverage +/-4 km, expanded to bundle boundaries: {pages.Length} pages / {aerialBuilds.Length} bundles; {builds.Count} building bundles.\n"+
+                $"Windows QA only. Aerial coverage west={westExtent}m, east/north/south=4000m, expanded to bundle boundaries: {pages.Length} pages / {aerialBuilds.Length} bundles; {builds.Count} building bundles.\n"+
                 "BC7 development textures; not Android ASTC fidelity or Quest timing evidence. The known 016_016 source exception uses the hash-verified accepted decoded texture.\n"+
                 "Unconverted distant aerial bundles remain Android inputs: do not claim whole-map Windows coverage.\n");
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);

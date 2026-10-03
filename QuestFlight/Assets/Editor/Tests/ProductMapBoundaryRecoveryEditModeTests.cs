@@ -63,7 +63,7 @@ namespace QuestFlight.Editor.Tests
                 };
 
                 bool built = ProductMapBoundaryRecoveryPolicy.TryBuildRecoveryInitialConditions(
-                    state, terrain, 3000f, 300f, 70f,
+                    state, terrain, 1800f, 300f, 80f,
                     out FlightDynamicsInitialConditions result,
                     out string failure);
 
@@ -73,7 +73,7 @@ namespace QuestFlight.Editor.Tests
                     result.longitudeDegrees,
                     result.altitudeMslMeters,
                     GeodeticReference.Kbdu);
-                Assert.That(recovered.x, Is.EqualTo(9000f).Within(0.5f));
+                Assert.That(recovered.x, Is.EqualTo(10200f).Within(0.5f));
                 Assert.That(recovered.z, Is.EqualTo(1200f).Within(0.5f));
                 Assert.That(result.headingDegrees, Is.InRange(260d, 280d));
                 Assert.That(result.altitudeMslMeters,
@@ -116,7 +116,7 @@ namespace QuestFlight.Editor.Tests
                          ".position =", ".rotation =", ".localPosition =", ".localRotation ="
                      })
                 Assert.That(source, Does.Not.Contain(forbidden), forbidden);
-            Assert.That(source, Does.Contain("TryResetToInitialConditions"));
+            Assert.That(source, Does.Contain("TryRecoverToInitialConditions"));
             Assert.That(source, Does.Not.Contain("ResetToConfiguredInitialConditions"));
         }
 

@@ -1520,14 +1520,17 @@ namespace QuestFlightLab.Environment
         private void PrepareDrawFrustum(Camera camera)
         {
             drawStereo = camera.stereoEnabled;
+            // Include a small angular margin for XR pose prediction. A fixed
+            // 25 cm bounds pad alone becomes negligible for distant conifers.
+            Matrix4x4 guard=Matrix4x4.Scale(new Vector3(.90f,.90f,1));
             if (drawStereo)
             {
-                GeometryUtility.CalculateFrustumPlanes(camera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left) *
+                GeometryUtility.CalculateFrustumPlanes(guard * camera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left) *
                     camera.GetStereoViewMatrix(Camera.StereoscopicEye.Left), drawPlanesLeft);
-                GeometryUtility.CalculateFrustumPlanes(camera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right) *
+                GeometryUtility.CalculateFrustumPlanes(guard * camera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right) *
                     camera.GetStereoViewMatrix(Camera.StereoscopicEye.Right), drawPlanesRight);
             }
-            else GeometryUtility.CalculateFrustumPlanes(camera, drawPlanesLeft);
+            else GeometryUtility.CalculateFrustumPlanes(guard * camera.projectionMatrix * camera.worldToCameraMatrix, drawPlanesLeft);
         }
 
         private bool IsMeshInsideDrawFrustum(Matrix4x4 matrix, Bounds bounds) =>

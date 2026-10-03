@@ -5,9 +5,9 @@
     "title": "1964 Cessna 172E - Interior - Start, Idle, Takeoff, Flight",
     "author": "JLWSound",
     "page": "https://freesound.org/people/JLWSound/sounds/322321/",
-    "download": "https://cdn.freesound.org/previews/322/322321_2489703-lq.mp3",
+    "download": "https://cdn.freesound.org/previews/322/322321_2489703-hq.mp3",
     "license": "CC0 1.0",
-    "rawSha256": "c7494eba6878dbde3092e1180edff96d263154c091bfb043c8f490dcb3571b3e",
+    "rawSha256": "17cfa6b1cb4fc9c0a8f778024aa4e1e172f473ea0a2809eb7fb8955c71e72c9a",
     "rawCommitted": false
   },
   "processing": {
@@ -19,8 +19,8 @@
         465
       ],
       "idle": [
-        600,
-        612
+        490,
+        502
       ],
       "propHigh": [
         820,
@@ -31,48 +31,51 @@
         892
       ]
     },
-    "notes": "Engine layers are edited from the real recording; auxiliary cues are deterministic project-authored synthesis."
+    "notes": "Engine layers are edited from the real recording; auxiliary cues are deterministic project-authored synthesis.",
+    "loopSeam": "Tail/head overlap removes duplicated overlap; wrap samples remain contiguous in the source recording.",
+    "levelReference": "Existing engine-clip RMS, with a -1 dBFS peak ceiling.",
+    "idleRevision": "Replaced reported contaminated 600-612 excerpt; 490-502 candidate has no detected speech in ASR scan. Human listening acceptance pending; ASR is not proof of absence."
   },
   "outputs": [
     {
       "path": "C172_Engine_Start.wav",
-      "sha256": "4bce2a5020f15d31c0fbb1261ca0d7282e62b0501883ac9d9036b0d7eb9eefdf",
+      "sha256": "0e61d28a8c01572d7dcd9f109f34d24a5d1b47d4bbaecf385978f1dd945a401a",
       "sampleRate": 48000,
       "channels": 2
     },
     {
       "path": "C172_Engine_Idle_Loop.wav",
-      "sha256": "33ac0ae8819d54052bc76412ce33a93ec3b83f13600d13c924626d426f9fb77b",
+      "sha256": "82440665ddf68589cc42d8b5d8b64a08ff7e7b40378d72d9a1099558056d92f6",
       "sampleRate": 48000,
       "channels": 2
     },
     {
       "path": "C172_Engine_Cruise_Loop.wav",
-      "sha256": "e77925df40778652c387940844bb7a4916d8e8bc0a12e46fc1f9cdac5996854f",
+      "sha256": "eb1d1eeab1f245ca0c7f457647561263ae42a044931e7094587a90a61aed037e",
       "sampleRate": 48000,
       "channels": 2
     },
     {
       "path": "C172_Propeller_High_Loop.wav",
-      "sha256": "24bd7040cd5a35586ed4a12ed37e33b696dd47e40ea97f0c868e721e1521d512",
+      "sha256": "b1b1e33be5eca678fada778f94ee739530b49795744b7766f4683f403aa72a6e",
       "sampleRate": 48000,
       "channels": 2
     },
     {
       "path": "C172_Wind_Low_Loop.wav",
-      "sha256": "d504839c35790cfae937913c68a12cca84d7aa0355ff8e1385cbc73b83288623",
+      "sha256": "26cc139fb73cbddfc7cb8c2469b7b5abd708764710f419b2dacd56184a8aaf31",
       "sampleRate": 48000,
       "channels": 2
     },
     {
       "path": "C172_Wind_High_Loop.wav",
-      "sha256": "7b22ead90f49ab03292bd757e147ca52740d6b97cfd5ed3886b2509eae12e2c5",
+      "sha256": "e4950821a2044ec037ccb536a095fba27491c3552c4a8c3e9f595ba613ec92f2",
       "sampleRate": 48000,
       "channels": 2
     },
     {
       "path": "C172_Ground_Roll_Loop.wav",
-      "sha256": "a813d1ff5cfd4eed2a178b0b55c09112f36d6403bdbc7e957e826ef25644ddac",
+      "sha256": "870deb561f9bad5c374a1c83f0fc312e9b524957f62886b2c390854b9724ea1c",
       "sampleRate": 48000,
       "channels": 2
     },

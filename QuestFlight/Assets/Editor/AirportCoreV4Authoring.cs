@@ -1114,7 +1114,7 @@ namespace QuestFlight.Editor
                 AssetDatabase.DeleteAsset(MaterialsFolder + "/AirportCoreCleanPlate.mat");
 
                 root.executiveTerminal = CreateLodAsset(content, "ExecutiveTerminal_3335", models["ExecutiveTerminal"],
-                    terminalMaterial, Ground(surface, -385.25f, -224.125f), Quaternion.identity, true);
+                    terminalMaterial, Ground(surface, -385.25f, -224.125f), Quaternion.Euler(0f, 180f, 0f), true);
                 root.type2HangarRow = CreateLodAsset(content, "Type2THangarRow_3354", models["Type2THangarRow"],
                     hangarMaterial, Ground(surface, -392.25f, -344.875f), Quaternion.identity, true);
 

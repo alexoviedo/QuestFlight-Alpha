@@ -28,6 +28,7 @@ namespace QuestFlightLab.Runtime
         public long runtimeDrawCalls;
         public long runtimeTriangles;
         public long groveSelectionCount, groveUploadedBytes;
+        public int groveClusterInstances,groveReplacedCells,groveSourceTriangles,groveSubmittedCells;
         public double groveGatherTotalMs, groveFillTotalMs, groveBufferUploadTotalMs, groveOwnershipUploadTotalMs;
     }
 
@@ -192,6 +193,7 @@ namespace QuestFlightLab.Runtime
             {
                 if(!grove.isActiveAndEnabled||grove.LastDraws==0||camera!=null&&(camera.cullingMask&(1<<grove.gameObject.layer))==0)continue;
                 branchDraws+=grove.LastDraws;drawCalls+=grove.LastDraws;triangles+=grove.SelectedTriangles;materials.Add(grove.branchMaterial);
+                if(grove.ClusterInstances>0&&grove.distantClusterMaterial!=null)materials.Add(grove.distantClusterMaterial);
             }
             if (camera != null && camera.clearFlags == CameraClearFlags.Skybox && RenderSettings.skybox != null)
             {
@@ -383,6 +385,7 @@ namespace QuestFlightLab.Runtime
         public const string TrafficOffIsolationProfile = "traffic_off";
         public const string VegetationOffIsolationProfile = "vegetation_off";
         public const string ConnectedGroveOffIsolationProfile = "connected_grove_off";
+        public const string GroveSourceGeometryIsolationProfile = "grove_source_geometry";
         public const string BuildingsOffIsolationProfile = "buildings_off";
         public const string WaterOffIsolationProfile = "water_off";
         public const string BuildingsVegetationOffIsolationProfile = "buildings_vegetation_off";
@@ -404,6 +407,7 @@ namespace QuestFlightLab.Runtime
             public readonly List<Behaviour> disabledBehaviours = new List<Behaviour>();
             public float previousWaterDisabled;
             public readonly Dictionary<Material,float> previousCloudSampling = new Dictionary<Material,float>();
+            public readonly Dictionary<MapBranchGroveRenderer,bool> previousGroveClusters = new Dictionary<MapBranchGroveRenderer,bool>();
         }
 
         [SerializeField] private float readinessTimeoutSeconds = DefaultReadinessTimeoutSeconds;
@@ -884,6 +888,10 @@ namespace QuestFlightLab.Runtime
                     gcAllocatedBytes = allocatedBytes,
                     managedAllocationCount = managedAllocationCount,
                     groveSelectionCount = measuredGrove == null ? 0 : measuredGrove.SelectionCount,
+                    groveClusterInstances = measuredGrove == null ? 0 : measuredGrove.ClusterInstances,
+                    groveReplacedCells = measuredGrove == null ? 0 : measuredGrove.ReplacedBranchCells,
+                    groveSourceTriangles = measuredGrove == null ? 0 : measuredGrove.SourceSelectedTriangles,
+                    groveSubmittedCells = measuredGrove == null ? 0 : measuredGrove.SubmittedBranchCells,
                     groveUploadedBytes = measuredGrove == null ? 0 : measuredGrove.UploadedBytes,
                     groveGatherTotalMs = measuredGrove == null ? 0 : measuredGrove.GatherTotalMs,
                     groveFillTotalMs = measuredGrove == null ? 0 : measuredGrove.FillTotalMs,
@@ -1154,6 +1162,7 @@ namespace QuestFlightLab.Runtime
             string.Equals(profile, TrafficOffIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, VegetationOffIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, ConnectedGroveOffIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, GroveSourceGeometryIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, BuildingsOffIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, WaterOffIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, BuildingsVegetationOffIsolationProfile, StringComparison.Ordinal) ||
@@ -1174,6 +1183,12 @@ namespace QuestFlightLab.Runtime
                 return state;
             }
             if (environment == null) return state;
+            if(state.profile==GroveSourceGeometryIsolationProfile)
+            {
+                foreach(var grove in environment.GetComponentsInChildren<MapBranchGroveRenderer>(true))
+                {state.previousGroveClusters.Add(grove,grove.distantClustersEnabled);grove.distantClustersEnabled=false;}
+                return state;
+            }
             foreach (var clouds in environment.GetComponentsInChildren<BoulderCloudField>(true))
             {
                 var material = clouds.SharedCloudMaterial;
@@ -1234,6 +1249,8 @@ namespace QuestFlightLab.Runtime
         private static void RestoreDiagnosticIsolation(DiagnosticIsolationState state)
         {
             if (state == null) return;
+            foreach(var setting in state.previousGroveClusters)
+                if(setting.Key!=null)setting.Key.distantClustersEnabled=setting.Value;
             foreach (var setting in state.previousCloudSampling)
                 if (setting.Key != null) setting.Key.SetFloat("_CloudSamplingLod",setting.Value);
             foreach (Renderer renderer in state.disabledRenderers)

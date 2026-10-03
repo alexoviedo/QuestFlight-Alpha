@@ -39,10 +39,32 @@ namespace QuestFlight.Product
         private TransitionPhase _transitionPhase;
         private float _transitionProgress;
         private int _readyFrames;
+        private float _transitionWaitSeconds;
+        public const float MaximumPreparationSeconds = 10f;
+        public event System.Action<string> TransitionFailed;
         private bool[] _aircraftForceRenderingOffStates;
         private bool[] _worldForceRenderingOffStates;
         private bool _aircraftPresentationHidden;
         private bool _worldPresentationHidden;
+        private bool _cockpitPreview;
+        private bool _selectionPlaced;
+
+        public void SetSelectionPresentation(bool cockpitPreview, Transform eye)
+        {
+            if(cockpitPreview!=_cockpitPreview)
+            {
+                _cockpitPreview=cockpitPreview;
+                showroomContentRoot.SetActive(!cockpitPreview);
+                if(cockpitPreview) { RestoreAircraftPresentation(); RestoreWorldPresentation(); }
+                else { HideAircraftPresentation(); HideWorldPresentation(); }
+            }
+            if(!_selectionPlaced && eye!=null)
+            {
+                // Snapshot only on entry. UI follows neither head pitch nor head turns.
+                selectionContentRoot.transform.localPosition=showroomContentRoot.transform.InverseTransformPoint(eye.position)+new Vector3(.45f,-.12f,0);
+                _selectionPlaced=true;
+            }
+        }
         private int _focusedIndex;
         private int _navigationDirection;
         private float _nextNavigationTime;
@@ -229,6 +251,8 @@ namespace QuestFlight.Product
 
         private void OnDisable()
         {
+            _cockpitPreview=false;
+            _selectionPlaced=false;
             ResetNavigationState();
             RestoreAircraftPresentation();
             RestoreWorldPresentation();
@@ -238,9 +262,15 @@ namespace QuestFlight.Product
 
         private void Update()
         {
+            AdvanceTransition(Time.unscaledDeltaTime);
+        }
+
+        public void AdvanceTransition(float unscaledDeltaTime)
+        {
             switch (_transitionPhase)
             {
                 case TransitionPhase.WaitingForCockpit:
+                    _transitionWaitSeconds += unscaledDeltaTime;
                     if (CockpitPresentationReady)
                         _readyFrames++;
                     else
@@ -250,10 +280,17 @@ namespace QuestFlight.Product
                         _transitionProgress = 0f;
                         _transitionPhase = TransitionPhase.FadingToBlack;
                     }
+                    else if (cockpitSystems == null || !cockpitSystems.isActiveAndEnabled ||
+                             _transitionWaitSeconds >= MaximumPreparationSeconds)
+                    {
+                        string reason = "Cockpit presentation did not become ready within the flight preparation deadline.";
+                        ShowMainSelection();
+                        TransitionFailed?.Invoke(reason);
+                    }
                     break;
 
                 case TransitionPhase.FadingToBlack:
-                    _transitionProgress += Time.unscaledDeltaTime /
+                    _transitionProgress += unscaledDeltaTime /
                                            Mathf.Max(0.01f, fadeToBlackSeconds);
                     SetFadeOpacity(Mathf.Clamp01(_transitionProgress));
                     if (_transitionProgress >= 1f)
@@ -267,7 +304,7 @@ namespace QuestFlight.Product
                     break;
 
                 case TransitionPhase.FadingFromBlack:
-                    _transitionProgress += Time.unscaledDeltaTime /
+                    _transitionProgress += unscaledDeltaTime /
                                            Mathf.Max(0.01f, fadeFromBlackSeconds);
                     SetFadeOpacity(1f - Mathf.Clamp01(_transitionProgress));
                     if (_transitionProgress >= 1f)
@@ -317,6 +354,10 @@ namespace QuestFlight.Product
             if (_transitionPhase != TransitionPhase.Idle)
                 return;
 
+            // Calibration can have hidden this root before its final Update.
+            // A successful selection must own activation of its transition.
+            gameObject.SetActive(true);
+            showroomContentRoot.SetActive(true);
             selectionContentRoot.SetActive(false);
             transitionContentRoot.SetActive(true);
             transitionText.text = string.IsNullOrWhiteSpace(selectedMode)
@@ -324,6 +365,7 @@ namespace QuestFlight.Product
                 : "Starting " + selectedMode;
             ProductUiLabel.Sync(transitionText);
             _readyFrames = 0;
+            _transitionWaitSeconds = 0f;
             _transitionProgress = 0f;
             _transitionPhase = TransitionPhase.WaitingForCockpit;
         }
@@ -333,6 +375,8 @@ namespace QuestFlight.Product
 
         public void ShowMainSelection()
         {
+            _cockpitPreview=false;
+            _selectionPlaced=false;
             gameObject.SetActive(true);
             showroomContentRoot.SetActive(true);
             selectionContentRoot.SetActive(true);
@@ -340,6 +384,7 @@ namespace QuestFlight.Product
             _transitionPhase = TransitionPhase.Idle;
             _transitionProgress = 0f;
             _readyFrames = 0;
+            _transitionWaitSeconds = 0f;
             SetFadeOpacity(0f);
             SetMessage(ProductFlightModeCoordinator.SelectionText);
             SetFocusIndex(0, true);
@@ -479,6 +524,7 @@ namespace QuestFlight.Product
             for (int buttonIndex = 0; buttonIndex < menuButtons.Length; buttonIndex++)
                 menuButtons[buttonIndex]?.SetFocused(buttonIndex == index);
             _focusedIndex = index;
+            if (!force) ProductUiFeedback.Play(ProductUiFeedback.Cue.Focus);
         }
 
         private void ResetNavigationState()

@@ -1,14 +1,14 @@
 {
-    "compiler_version": "terrain-grounded-shell-compiler-v17-20260917",
+    "compiler_version": "terrain-grounded-shell-compiler-v18-wrrf-20260922",
     "rollout": "selective",
     "triangle_ceiling": 235000,
-    "represented_buildings": 57440,
+    "represented_buildings": 57439,
     "page_count": 576,
     "nonempty_page_count": 483,
     "active_page_slots": 24,
-    "nominal_gable_roofs": 23656,
+    "nominal_gable_roofs": 23647,
     "nominal_hip_roofs": 5078,
-    "positive_rise_pitched_roofs": 28734,
+    "positive_rise_pitched_roofs": 28725,
     "safe_gable_roofs": 10685,
     "safe_compact_hip_roofs": 659,
     "safe_short_ridge_hip_roofs": 1683,
@@ -18,8 +18,8 @@
     "selected_short_ridge_hip_roofs": 679,
     "selected_roofs": 5962,
     "budget_rejected_safe_roofs": 7065,
-    "ambiguous_or_unsupported_roofs": 15707,
-    "baseline_total_triangles": 613550,
+    "ambiguous_or_unsupported_roofs": 15698,
+    "baseline_total_triangles": 615540,
     "all_safe_added_triangles": 50790,
     "selected_added_triangles": 23252,
     "baseline_maximum_selected_triangles": 233298,
@@ -33,7 +33,7 @@
     "rejection_reasons": [
         {
             "name": "ambiguous-gable-axis",
-            "count": 1663
+            "count": 1662
         },
         {
             "name": "exact-landmark",
@@ -45,7 +45,7 @@
         },
         {
             "name": "not-four-corner",
-            "count": 839
+            "count": 831
         },
         {
             "name": "short-edge",
@@ -3125,12 +3125,12 @@
         {
             "column": 15,
             "row": 12,
-            "baseline_triangles": 1178,
+            "baseline_triangles": 1932,
             "safe_candidate_roofs": 21,
             "all_safe_added_triangles": 82,
             "selected_roofs": 21,
             "selected_added_triangles": 82,
-            "final_triangles": 1260
+            "final_triangles": 2014
         },
         {
             "column": 16,
@@ -3365,12 +3365,12 @@
         {
             "column": 15,
             "row": 13,
-            "baseline_triangles": 3302,
+            "baseline_triangles": 4538,
             "safe_candidate_roofs": 66,
             "all_safe_added_triangles": 256,
             "selected_roofs": 66,
             "selected_added_triangles": 256,
-            "final_triangles": 3558
+            "final_triangles": 4794
         },
         {
             "column": 16,

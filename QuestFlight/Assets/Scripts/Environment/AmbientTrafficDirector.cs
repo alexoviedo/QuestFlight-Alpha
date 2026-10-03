@@ -94,6 +94,7 @@ namespace QuestFlightLab.Environment
                 bool decide = decisionCountdown <= 0;
                 if (decide) decisionCountdown = 0.1f;
                 PlayerProtectsRunway = ProtectsRunway(state.positionUnityMeters, state.velocityUnityMetersPerSecond, state.weightOnWheels) ||
+                    (flightMode != null && flightMode.AuthoredDemoPilot != null && flightMode.AuthoredDemoPilot.ReservesRunway) ||
                     (flightMode != null && flightMode.State == ProductFlightModeCoordinator.FlightModeState.Training &&
                      flightMode.AuthoredTraining != null && flightMode.AuthoredTraining.ReservesRunway);
                 if(decide) AllocateGroundMovement();

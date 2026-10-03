@@ -50,13 +50,20 @@ namespace QuestFlightLab.Editor
                 typeof(ProductTrainingController).GetProperty("State").SetValue(mode.AuthoredTraining,TrainingSessionState.Menu);
                 nav.SendMessage("Refresh");Pair("lessons");
                 mode.AuthoredTraining.SelectLesson(0);nav.SendMessage("Refresh");Pair("briefing");
+                // Content-only review of the new debrief hierarchy; no progress is saved.
+                typeof(ProductTrainingController).GetProperty("State").SetValue(mode.AuthoredTraining,TrainingSessionState.Debrief);
+                typeof(ProductTrainingController).GetProperty("LastDebrief").SetValue(mode.AuthoredTraining,
+                    "Guided practice complete\nYou stopped in the marked area without entering the runway.\n\nNext practice: Close the throttle earlier and brake gently. Stop before the runway, not on it.\n\nReflect: Which helped you stop accurately: reducing power early or braking late?");
+                nav.SendMessage("Refresh");Pair("debrief");
+                typeof(ProductTrainingController).GetProperty("State").SetValue(mode.AuthoredTraining,TrainingSessionState.Briefing);
                 nav.ShowOrientation();nav.SendMessage("Refresh");Pair("reference",12);
                 nav.Back();nav.OpenCalibration();nav.SendMessage("Refresh");Pair("calibration");nav.Back();nav.Resume();
                 // Authored cue composition at the taxi start; explicit preview, not evidence of lesson progression.
                 var instruction=c.scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<ProductUiInstruction>(true)).Single();
                 var navObject=new UnityEditor.SerializedObject(nav).FindProperty("panel").objectReferenceValue as GameObject;
                 navObject.SetActive(false);instruction.gameObject.SetActive(true);
-                instruction.Present("Your controls","Check roll",mode.AuthoredTraining.Lessons[0].stages[0].instruction,0,7,true,false);
+                instruction.Present("Your controls",mode.AuthoredTraining.Lessons[0].stages[0].title,
+                    mode.AuthoredTraining.Lessons[0].stages[0].instruction+"\n\nNow: Left checked. Turn the yoke right.",0,7,true,false);
                 Pair("instruction",8);
                 instruction.Present("Your controls","Go around","Unstable approach — go around",0,7,true,true);Pair("urgent",8);
                 report.classification="INTERFACE_EDITOR_CAPTURES_REVIEW_REQUIRED";

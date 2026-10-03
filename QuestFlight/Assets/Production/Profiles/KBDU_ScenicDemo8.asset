@@ -1,0 +1,312 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d977110fd901fd3478747dca3e53d103, type: 3}
+  m_Name: KBDU_ScenicDemo8
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Training.FlightLessonV1.FlightLessonRouteProfile
+  definition:
+    schemaVersion: 1.0
+    lessonId: boulder_scenic_demo_8
+    displayName: Boulder scenic tour
+    operationalDisclaimer: Simulator sightseeing route; not an official airport procedure
+      or navigation aid.
+    provenanceUrls: []
+    officialOperatingFacts: []
+    initialRecoveryCheckpointIndex: 0
+    waypoints:
+    - id: runway_start
+      positionUnityMeters: {x: -630, y: 0, z: -30}
+      altitudeMslFeet: 5290
+      calibratedAirspeedKnots: 55
+      captureRadiusMeters: 40
+    - id: departure_gate
+      positionUnityMeters: {x: 1400, y: 0, z: -30}
+      altitudeMslFeet: 6000
+      calibratedAirspeedKnots: 74
+      captureRadiusMeters: 80
+    - id: climb_gate
+      positionUnityMeters: {x: 1800, y: 0, z: 2000}
+      altitudeMslFeet: 6900
+      calibratedAirspeedKnots: 85
+      captureRadiusMeters: 180
+    - id: reservoir_entry
+      positionUnityMeters: {x: 800, y: 0, z: 3600}
+      altitudeMslFeet: 7500
+      calibratedAirspeedKnots: 90
+      captureRadiusMeters: 180
+    - id: reservoir_vista
+      positionUnityMeters: {x: -700, y: 0, z: 4300}
+      altitudeMslFeet: 7500
+      calibratedAirspeedKnots: 90
+      captureRadiusMeters: 180
+    - id: foothills_entry
+      positionUnityMeters: {x: -1900, y: 0, z: 2300}
+      altitudeMslFeet: 7500
+      calibratedAirspeedKnots: 90
+      captureRadiusMeters: 180
+    - id: flatirons_vista
+      positionUnityMeters: {x: -2200, y: 0, z: -1900}
+      altitudeMslFeet: 7500
+      calibratedAirspeedKnots: 90
+      captureRadiusMeters: 180
+    - id: city_vista
+      positionUnityMeters: {x: 1500, y: 0, z: -2700}
+      altitudeMslFeet: 7500
+      calibratedAirspeedKnots: 90
+      captureRadiusMeters: 180
+    - id: east_return
+      positionUnityMeters: {x: 3900, y: 0, z: -1600}
+      altitudeMslFeet: 7200
+      calibratedAirspeedKnots: 90
+      captureRadiusMeters: 180
+    - id: arrival_gate
+      positionUnityMeters: {x: 3800, y: 0, z: 950}
+      altitudeMslFeet: 6500
+      calibratedAirspeedKnots: 85
+      captureRadiusMeters: 130
+    - id: downwind_entry
+      positionUnityMeters: {x: 1900, y: 0, z: 950}
+      altitudeMslFeet: 6300
+      calibratedAirspeedKnots: 80
+      captureRadiusMeters: 100
+    - id: downwind_end
+      positionUnityMeters: {x: -1500, y: 0, z: 950}
+      altitudeMslFeet: 6100
+      calibratedAirspeedKnots: 75
+      captureRadiusMeters: 50
+    - id: base_entry
+      positionUnityMeters: {x: -2050, y: 0, z: 400}
+      altitudeMslFeet: 5800
+      calibratedAirspeedKnots: 70
+      captureRadiusMeters: 100
+    - id: base_end
+      positionUnityMeters: {x: -2050, y: 0, z: 250}
+      altitudeMslFeet: 5700
+      calibratedAirspeedKnots: 68
+      captureRadiusMeters: 70
+    - id: final_intercept
+      positionUnityMeters: {x: -1770, y: 0, z: -30}
+      altitudeMslFeet: 5600
+      calibratedAirspeedKnots: 65
+      captureRadiusMeters: 100
+    - id: runway_threshold
+      positionUnityMeters: {x: -630, y: 0, z: -30}
+      altitudeMslFeet: 5290
+      calibratedAirspeedKnots: 65
+      captureRadiusMeters: 35
+    - id: rollout
+      positionUnityMeters: {x: 350, y: 0, z: -30}
+      altitudeMslFeet: 5290
+      calibratedAirspeedKnots: 15
+      captureRadiusMeters: 35
+    segments:
+    - id: departure_gate
+      kind: 0
+      geometry: 0
+      startWaypointIndex: 0
+      endWaypointIndex: 1
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 350
+      maximumBankDegrees: 8
+      maximumClimbRateFeetPerMinute: 1100
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: climb_gate
+      kind: 1
+      geometry: 0
+      startWaypointIndex: 1
+      endWaypointIndex: 2
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 350
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: reservoir_entry
+      kind: 1
+      geometry: 0
+      startWaypointIndex: 2
+      endWaypointIndex: 3
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 350
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: reservoir_vista
+      kind: 3
+      geometry: 0
+      startWaypointIndex: 3
+      endWaypointIndex: 4
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 350
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: foothills_entry
+      kind: 3
+      geometry: 0
+      startWaypointIndex: 4
+      endWaypointIndex: 5
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 350
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: flatirons_vista
+      kind: 3
+      geometry: 0
+      startWaypointIndex: 5
+      endWaypointIndex: 6
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 350
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: city_vista
+      kind: 3
+      geometry: 0
+      startWaypointIndex: 6
+      endWaypointIndex: 7
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 350
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: east_return
+      kind: 3
+      geometry: 0
+      startWaypointIndex: 7
+      endWaypointIndex: 8
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 350
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: arrival_gate
+      kind: 4
+      geometry: 0
+      startWaypointIndex: 8
+      endWaypointIndex: 9
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 350
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: downwind_entry
+      kind: 5
+      geometry: 0
+      startWaypointIndex: 9
+      endWaypointIndex: 10
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 150
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: downwind_end
+      kind: 6
+      geometry: 0
+      startWaypointIndex: 10
+      endWaypointIndex: 11
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 150
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: base_entry
+      kind: 7
+      geometry: 1
+      startWaypointIndex: 11
+      endWaypointIndex: 12
+      arcCenterUnityMeters: {x: -1500, y: 0, z: 400}
+      arcClockwise: 0
+      lookAheadMeters: 150
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: base_end
+      kind: 7
+      geometry: 0
+      startWaypointIndex: 12
+      endWaypointIndex: 13
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 150
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: final_intercept
+      kind: 8
+      geometry: 1
+      startWaypointIndex: 13
+      endWaypointIndex: 14
+      arcCenterUnityMeters: {x: -1770, y: 0, z: 250}
+      arcClockwise: 0
+      lookAheadMeters: 100
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: runway_threshold
+      kind: 8
+      geometry: 0
+      startWaypointIndex: 14
+      endWaypointIndex: 15
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 150
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    - id: rollout
+      kind: 9
+      geometry: 0
+      startWaypointIndex: 15
+      endWaypointIndex: 16
+      arcCenterUnityMeters: {x: 0, y: 0, z: 0}
+      arcClockwise: 0
+      lookAheadMeters: 150
+      maximumBankDegrees: 23
+      maximumClimbRateFeetPerMinute: 800
+      completionAltitudeToleranceFeet: 0
+      recoveryCheckpointOnCompletion: -1
+    recoveryCheckpoints:
+    - id: departure
+      resumeSegmentIndex: 0
+      positionUnityMeters: {x: -630, y: 0, z: -30}
+      altitudeMslFeet: 5290
+      calibratedAirspeedKnots: 0
+      headingDegreesTrue: 90
+      pitchDegrees: 0
+      bankDegrees: 0
+      engineRunning: 1

@@ -1,0 +1,63 @@
+{
+  "source": "Original project-authored mathematical waveforms, no sampled third-party audio",
+  "created": "2026-09-22",
+  "rights": "Project-authored; no external asset license required",
+  "outputs": [
+    {
+      "file": "Focus.wav",
+      "sha256": "e9df7428198c680dd4f5f9615bb7e46a11b67e9763bb1ef7632c2a3dbf8415c4",
+      "seconds": 0.038,
+      "sampleRate": 48000,
+      "channels": 1,
+      "recipe": {
+        "startHz": 520,
+        "endHz": 490,
+        "gain": 0.13,
+        "envelope": "sin(pi*t/duration)^2 * exp(-3*t/duration)",
+        "harmonic2": 0.17
+      }
+    },
+    {
+      "file": "Select.wav",
+      "sha256": "57485f2f7dc4a463c480c779c1e6c2bc938aab047824bfa45e1bbd80893b05ef",
+      "seconds": 0.075,
+      "sampleRate": 48000,
+      "channels": 1,
+      "recipe": {
+        "startHz": 600,
+        "endHz": 760,
+        "gain": 0.19,
+        "envelope": "sin(pi*t/duration)^2 * exp(-3*t/duration)",
+        "harmonic2": 0.17
+      }
+    },
+    {
+      "file": "Back.wav",
+      "sha256": "1248302eb5eeea76bcffbf559c1dc2365da9fca5390cfbb2194735e814eaa4cd",
+      "seconds": 0.065,
+      "sampleRate": 48000,
+      "channels": 1,
+      "recipe": {
+        "startHz": 520,
+        "endHz": 410,
+        "gain": 0.16,
+        "envelope": "sin(pi*t/duration)^2 * exp(-3*t/duration)",
+        "harmonic2": 0.17
+      }
+    },
+    {
+      "file": "Confirm.wav",
+      "sha256": "a2dcf07ef45bbc98075c82ed84f29505a1f22f60a2b5540416e7ee156979f76b",
+      "seconds": 0.105,
+      "sampleRate": 48000,
+      "channels": 1,
+      "recipe": {
+        "startHz": 600,
+        "endHz": 840,
+        "gain": 0.18,
+        "envelope": "sin(pi*t/duration)^2 * exp(-3*t/duration)",
+        "harmonic2": 0.17
+      }
+    }
+  ]
+}

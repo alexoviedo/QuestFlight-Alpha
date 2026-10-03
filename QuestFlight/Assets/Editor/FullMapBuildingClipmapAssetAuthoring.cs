@@ -148,7 +148,7 @@ namespace QuestFlight.Editor
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat";
         private const int BundleRegionCells = 2;
         private const string SourceDatabaseContractVersion = "full-map-building-clipmap-v1";
-        private const string MeshCompilerVersion = "terrain-grounded-shell-compiler-v17-20260917";
+        private const string MeshCompilerVersion = "terrain-grounded-shell-compiler-v18-wrrf-20260922";
         private const string FacadeContractVersion = "boulder-semantic-facades-v2";
         private const int MaximumSelectedTriangleCeiling = 235000;
         private const int AuthoredMaximumSelectedTriangles = 235000;
@@ -624,6 +624,43 @@ namespace QuestFlight.Editor
             ValidateAuthoredProduct(database);
         }
 
+        // Reviewed against the City 2020 WRRF orthophoto, 4049 N 75th Street.
+        // Exact source identities keep this correction bounded to the observed tanks.
+        private static readonly Dictionary<int, string> WrrfTanks = new Dictionary<int, string>
+        {
+            {34297,"BLDG45183"}, {34292,"BLDG8836"}, {34296,"BLDG8880"},
+            {34293,"BLDG8932"}, {34295,"BLDG8933"}, {33610,"BLDG8958"},
+            {34221,"BLDG9015"}, {34225,"BLDG8469"}, {34223,"BLDG8470"},
+            {33609,"BLDG8489"}, {34215,"BLDG8560"}, {34213,"BLDG8564"},
+            {33606,"BLDG8572"}, {33605,"BLDG8576"}, {33611,"BLDG8691"},
+            {33612,"BLDG8758"}, {34291,"BLDG8802"}
+        };
+
+        private static bool IsWrrfTank(Building b) => WrrfTanks.ContainsKey(b.id);
+        private static bool HasWrrfDome(Building b) => b.id == 33610 || b.id == 33612;
+        private static bool IsWrrfPlatform(Building b) => b.id == 34222;
+        private static int[] SourceRing(Building b) =>
+            IsWrrfTank(b) || IsWrrfPlatform(b) ? b.lod0_q : b.lod2_q;
+        private static int BaselineTriangles(Building b, int vertices) =>
+            HasWrrfDome(b) ? 5 * vertices : 3 * vertices - 2;
+
+        private static void ApplyReviewedWrrfSemantics(Database database)
+        {
+            var byId = database.pages.SelectMany(p => p.buildings ?? Array.Empty<Building>())
+                .ToDictionary(b => b.id);
+            foreach (var pair in WrrfTanks.Concat(new[] {new KeyValuePair<int,string>(34222,"BLDG8498")}))
+            {
+                if (!byId.TryGetValue(pair.Key, out Building b) || b.source_id != pair.Value)
+                    throw new InvalidOperationException("WRRF source identity changed: " + pair.Key);
+                // Tank covers are not residential gables. Retain source rise only for
+                // the two unmistakable circular digester domes; other covers stay flat.
+                b.roof_id = 0;
+                if (!HasWrrfDome(b)) b.roof_rise_dm = 0;
+                b.material_id = 9; // Existing warm precast concrete atlas layer.
+                b.secondary_material_id = -1;
+            }
+        }
+
         private static Database LoadDatabase()
         {
             TextAsset source = AssetDatabase.LoadAssetAtPath<TextAsset>(DatabasePath);
@@ -635,6 +672,7 @@ namespace QuestFlight.Editor
                 database.pages == null || database.pages.Length != database.columns * database.rows ||
                 database.runtime_window_cells != AircraftCenteredBuildingClipmapController.GridSize)
                 throw new InvalidOperationException("Full-map building database contract is invalid.");
+            ApplyReviewedWrrfSemantics(database);
             return database;
         }
 
@@ -842,7 +880,7 @@ namespace QuestFlight.Editor
                     if (building.roof_id == FullMapBuildingRoofTopology.HipRoofId) nominalHips++;
                     if (pitched && building.roof_rise_dm > 0) positiveRisePitched++;
 
-                    int[] ring = building.lod2_q;
+                    int[] ring = SourceRing(building);
                     if (ring == null || ring.Length < 6 || ring.Length % 2 != 0)
                         throw new InvalidOperationException("Building source ring is invalid: " + building.id);
                     Vector2[] source = new Vector2[ring.Length / 2];
@@ -855,7 +893,7 @@ namespace QuestFlight.Editor
                         throw new InvalidOperationException(
                             "Stable shell compilation produced an invalid footprint: " + building.id);
 
-                    int baselineTriangles = 3 * compiled.Length - 2;
+                    int baselineTriangles = BaselineTriangles(building, compiled.Length);
                     baselinePageTriangles[pageIndex] += baselineTriangles;
                     allSafePageTriangles[pageIndex] += baselineTriangles;
                     if (!pitched) continue;
@@ -1042,7 +1080,7 @@ namespace QuestFlight.Editor
             foreach (Building building in page.buildings ?? Array.Empty<Building>())
             {
                 if (exclusions.Contains(building.id)) continue;
-                int[] ring = building.lod2_q;
+                int[] ring = SourceRing(building);
                 if (ring == null || ring.Length < 6 || ring.Length % 2 != 0) continue;
                 Vector2[] polygon = new Vector2[ring.Length / 2];
                 for (int i = 0; i < polygon.Length; i++)
@@ -1077,7 +1115,7 @@ namespace QuestFlight.Editor
             Vector2[] validSource = IsSimplePolygon(normalizedSource)
                 ? normalizedSource
                 : ConvexHull(normalizedSource);
-            if (building.landmark || validSource.Length <= 3) return validSource;
+            if (building.landmark || IsWrrfTank(building) || IsWrrfPlatform(building) || validSource.Length <= 3) return validSource;
 
             // Bounded City2020 Valmont reference crop. Preserve recorded outlines only;
             // source heights, roof classification and the global triangle ceiling remain unchanged.
@@ -1314,7 +1352,8 @@ namespace QuestFlight.Editor
                 Vector2 outward = ExteriorNormal(polygon, i);
                 float facadeRole = i == frontWall ? 0f :
                     Vector2.Dot(outward, frontNormal) < -0.72f ? 2f : 1f;
-                Vector2 facadeSemantics = new Vector2(length, facadeRole);
+                Vector2 facadeSemantics = new Vector2(length,
+                    IsWrrfTank(building) || IsWrrfPlatform(building) ? 3f : facadeRole);
                 float packedStyleAndSecondary = building.facade_style_id +
                     (Mathf.Clamp(building.secondary_material_id, -1, 15) + 1) / 32f;
                 Vector4 facadeParameters = new Vector4(
@@ -1325,9 +1364,54 @@ namespace QuestFlight.Editor
                     new Vector2(0f, a.y - baseY), new Vector2(length, b.y - baseY),
                     new Vector2(length, c.y - baseY), new Vector2(0f, d.y - baseY),
                     facadeSemantics, facadeParameters, wallTint);
+                if (IsWrrfTank(building))
+                {
+                    // Share geometric normals across the ring without adding vertices.
+                    int start = builder.vertices.Count - 4;
+                    for (int corner = 0; corner < 4; corner++)
+                    {
+                        int vertex = (i + (corner == 1 || corner == 2 ? 1 : 0)) % polygon.Length;
+                        Vector2 outwardSmooth = (ExteriorNormal(polygon, vertex) +
+                            ExteriorNormal(polygon, (vertex + polygon.Length - 1) % polygon.Length)).normalized;
+                        builder.normals[start + corner] = new Vector3(outwardSmooth.x, 0f, outwardSmooth.y);
+                        builder.tangents[start + corner] = new Vector4(-outwardSmooth.y, 0f, outwardSmooth.x, -1f);
+                        Color32 smoothTint = builder.colors[start + corner]; smoothTint.a = 0;
+                        builder.colors[start + corner] = smoothTint;
+                    }
+                }
             }
 
             if (!includeRoof) return;
+            if (HasWrrfDome(building))
+            {
+                Vector2 center = Vector2.zero;
+                foreach (Vector2 point in polygon) center += point;
+                center /= polygon.Length;
+                float radius = polygon.Average(point => Vector2.Distance(point, center));
+                Vector3 apex = new Vector3(center.x, wallTop + roofRise, center.y);
+                Vector3 DomePoint(Vector2 point, float scale) => new Vector3(
+                    Mathf.Lerp(center.x, point.x, scale), wallTop + roofRise * (1f - scale * scale),
+                    Mathf.Lerp(center.y, point.y, scale));
+                void DomeTriangle(Vector3 a, Vector3 b, Vector3 c)
+                {
+                    AddTriangle(builder, a, b, c, roofCell, roofParameters, tint, true);
+                    for (int v = builder.vertices.Count - 3; v < builder.vertices.Count; v++)
+                    {
+                        Vector3 point = builder.vertices[v];
+                        builder.normals[v] = new Vector3(2f * roofRise * (point.x-center.x) / (radius*radius),
+                            1f, 2f * roofRise * (point.z-center.y) / (radius*radius)).normalized;
+                    }
+                }
+                for (int i = 0; i < polygon.Length; i++)
+                {
+                    int j = (i + 1) % polygon.Length;
+                    Vector3 innerA = DomePoint(polygon[i], 0.55f), innerB = DomePoint(polygon[j], 0.55f);
+                    DomeTriangle(roof[i], innerB, roof[j]);
+                    DomeTriangle(roof[i], innerA, innerB);
+                    DomeTriangle(innerA, apex, innerB);
+                }
+                return;
+            }
             if (roofOverride != null)
             {
                 for (int index = 0; index < roofOverride.indices.Length; index += 3)
@@ -1707,7 +1791,7 @@ namespace QuestFlight.Editor
             foreach (Building building in page.buildings ?? Array.Empty<Building>())
             {
                 if (exclusions.Contains(building.id)) continue;
-                int[] ring = building.lod2_q;
+                int[] ring = SourceRing(building);
                 if (ring == null || ring.Length < 6 || ring.Length % 2 != 0) continue;
                 float pageMinX = -database.map_half_extent_meters + page.column * database.page_size_meters;
                 float pageMinZ = -database.map_half_extent_meters + page.row * database.page_size_meters;
@@ -1730,7 +1814,7 @@ namespace QuestFlight.Editor
                 report.maximum_inflation_percent = Mathf.Max(report.maximum_inflation_percent, inflation);
                 report.maximum_centroid_shift_meters = Mathf.Max(report.maximum_centroid_shift_meters, error.centroidMeters);
                 report.maximum_boundary_error_meters = Mathf.Max(report.maximum_boundary_error_meters, error.boundaryMeters);
-                int triangles = 3 * compiled.Length - 2;
+                int triangles = BaselineTriangles(building, compiled.Length);
                 if (roofAllocation.IsSelected(building.id))
                     triangles += roofAllocation.candidateRoofs[building.id].AddedTriangleCount;
                 pageTriangles[page.column, page.row] += triangles;
@@ -2119,7 +2203,14 @@ namespace QuestFlight.Editor
                     throw new InvalidOperationException(
                         $"Semantic tower exclusion no longer identifies one exact source shell: {exclusion.building_id}.");
             }
-            return new HashSet<int>(authority.exclusions.Select(record => record.building_id));
+            var exclusions = new HashSet<int>(authority.exclusions.Select(record => record.building_id));
+            // County aggregate overlaps the City's individual clarifiers and service
+            // platform. Orthophoto confirms no tall building around those four tanks.
+            if (!buildings.TryGetValue(44816, out Building duplicate) ||
+                duplicate.source_id != "COUNTY:1N7013090019:3468")
+                throw new InvalidOperationException("Reviewed WRRF aggregate identity changed.");
+            exclusions.Add(44816);
+            return exclusions;
         }
     }
 }

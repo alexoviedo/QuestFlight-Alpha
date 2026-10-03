@@ -47,6 +47,12 @@ namespace QuestFlightLab.Input
         public event System.Action TrainingRestartRequested;
         public bool DeterministicMode => deterministicMode;
         public bool FlightLessonGuidanceActive => _flightLessonGuidanceActive;
+        public bool DemoOwnsControls { get; set; }
+        public static FlightLessonControlCommand ToFlightLessonCommand(QuestFlightLab.Flight.Backends.FlightDynamicsControlSnapshot s)
+        {
+            return new FlightLessonControlCommand { aileron=s.aileron,elevator=s.elevator,rudder=s.rudder,throttle=s.throttle,
+                mixture=s.mixture,trim=s.trim,flaps=s.flaps,leftToeBrake=s.leftToeBrake,rightToeBrake=s.rightToeBrake };
+        }
         public bool FlightLessonInputSuppressed => _flightLessonInputSuppressed;
         public int FlightLessonResetVersion => _flightLessonResetVersion;
         public GamepadInputReader AuthoredGamepad => gamepad;
@@ -107,6 +113,7 @@ namespace QuestFlightLab.Input
 
         public bool CanAcceptTouchOverrides =>
             enabled &&
+            !DemoOwnsControls &&
             gameObject.activeInHierarchy &&
             !_flightLessonInputSuppressed &&
             !_touchControlsRequireRelease &&
@@ -506,7 +513,7 @@ namespace QuestFlightLab.Input
                     _throttle = Mathf.Clamp01(
                         _throttle + snapshot.rightStickY *
                         throttleRatePerSecond * Time.unscaledDeltaTime);
-                _trim = Mathf.Clamp(_trim + snapshot.dpadY * trimRatePerSecond * Time.unscaledDeltaTime, -1f, 1f);
+                _trim = Mathf.Clamp(_trim + snapshot.dpadY * trimRatePerSecond * ProductComfortPreferences.TrimRate(false) * Time.unscaledDeltaTime, -1f, 1f);
             }
 
             bool flapDown = WasPressed(snapshot.buttonWest, _previousButtonWest);
@@ -533,36 +540,34 @@ namespace QuestFlightLab.Input
                 Application.isFocused && OVRManager.hasInputFocus &&
                 _touchFlightMode != null &&
                 (_touchFlightMode.State == ProductFlightModeCoordinator.FlightModeState.FreeFlight ||
+                 _touchFlightMode.State == ProductFlightModeCoordinator.FlightModeState.Demo && _touchFlightMode.AuthoredDemoPilot.UserHasControls ||
                  _touchFlightMode.State == ProductFlightModeCoordinator.FlightModeState.Training) &&
                 _touchFlightMode.AuthoredSeatCalibration != null &&
                 !_touchFlightMode.AuthoredSeatCalibration.IsOpen;
             bool touchRudderAvailable = touchFlightControlsAvailable &&
-                OVRInput.IsControllerConnected(OVRInput.Controller.RTouch) &&
-                OVRInput.GetControllerOrientationTracked(OVRInput.Controller.RTouch);
+                OVRInput.IsControllerConnected(ProductComfortPreferences.RudderController) &&
+                OVRInput.GetControllerOrientationTracked(ProductComfortPreferences.RudderController);
             float touchRudderX = touchRudderAvailable
-                ? OVRInput.Get(OVRInput.RawAxis2D.RThumbstick, OVRInput.Controller.RTouch).x
+                ? ProductComfortPreferences.RawRudder
                 : 0f;
             Current.rudder = ResolveTouchThumbstickRudder(
                 Current.rudder, touchRudderX, touchRudderAvailable, ref _touchRudderArmed);
             // Each Touch index trigger applies its corresponding toe brake.
-            if(touchFlightControlsAvailable && OVRInput.IsControllerConnected(OVRInput.Controller.LTouch) &&
-                OVRInput.GetControllerOrientationTracked(OVRInput.Controller.LTouch))
+            if(touchFlightControlsAvailable && OVRInput.IsControllerConnected(ProductComfortPreferences.TrimController) &&
+                OVRInput.GetControllerOrientationTracked(ProductComfortPreferences.TrimController))
             {
-                float trimInput=OVRInput.Get(OVRInput.RawAxis2D.LThumbstick).y;
+                float trimInput=ProductComfortPreferences.RawTrim;
                 if(Mathf.Abs(trimInput)>.25f)
                 {
-                    _trim=Mathf.Clamp(_trim+trimInput*trimRatePerSecond*Mathf.Min(Time.unscaledDeltaTime,.05f),-1f,1f);
+                    _trim=Mathf.Clamp(_trim+trimInput*trimRatePerSecond*ProductComfortPreferences.TrimRate(true)*Mathf.Min(Time.unscaledDeltaTime,.05f),-1f,1f);
                     Current.trim=_trim; _trimManuallyOwned=true;
                 }
             }
-            if (touchFlightControlsAvailable &&
-                OVRInput.IsControllerConnected(OVRInput.Controller.LTouch) &&
-                OVRInput.GetControllerOrientationTracked(OVRInput.Controller.LTouch))
-                Current.leftToeBrake = Mathf.Max(Current.leftToeBrake, Mathf.Clamp01(
-                    OVRInput.Get(OVRInput.RawAxis1D.LIndexTrigger, OVRInput.Controller.LTouch)));
-            if (touchRudderAvailable)
-                Current.rightToeBrake = Mathf.Max(Current.rightToeBrake, Mathf.Clamp01(
-                    OVRInput.Get(OVRInput.RawAxis1D.RIndexTrigger, OVRInput.Controller.RTouch)));
+            float touchLeftBrake=touchFlightControlsAvailable&&OVRInput.IsControllerConnected(OVRInput.Controller.LTouch)&&OVRInput.GetControllerOrientationTracked(OVRInput.Controller.LTouch)
+                ?OVRInput.Get(OVRInput.RawAxis1D.LIndexTrigger,OVRInput.Controller.LTouch):0;
+            float touchRightBrake=touchFlightControlsAvailable&&OVRInput.IsControllerConnected(OVRInput.Controller.RTouch)&&OVRInput.GetControllerOrientationTracked(OVRInput.Controller.RTouch)
+                ?OVRInput.Get(OVRInput.RawAxis1D.RIndexTrigger,OVRInput.Controller.RTouch):0;
+            ResolveTouchBrakes(Current.leftToeBrake,Current.rightToeBrake,touchLeftBrake,touchRightBrake,ProductComfortPreferences.CombinedBrakes,out Current.leftToeBrake,out Current.rightToeBrake);
             if (_flightLessonGuidanceActive)
                 ApplyFlightLessonGuidance(snapshot, Time.unscaledTime, Time.unscaledDeltaTime, Current);
             CaptureBaseControls(Current);
@@ -584,7 +589,7 @@ namespace QuestFlightLab.Input
         public static float ResolveTouchThumbstickRudder(
             float baseRudder, float stickX, bool available, ref bool armed)
         {
-            const float deadzone = 0.12f;
+            float deadzone = ProductComfortPreferences.RudderDeadzone;
             if (!available || !IsFinite(stickX))
             {
                 armed = false;
@@ -596,7 +601,14 @@ namespace QuestFlightLab.Input
                 armed = true;
                 return baseRudder;
             }
-            return armed ? Mathf.Sign(stickX) * Mathf.Clamp01((magnitude - deadzone) / (1f - deadzone)) : baseRudder;
+            return armed ? ProductComfortPreferences.Axis(stickX, deadzone, ProductComfortPreferences.RudderCurve) : baseRudder;
+        }
+
+        public static void ResolveTouchBrakes(float baseLeft,float baseRight,float touchLeft,float touchRight,bool combined,out float left,out float right)
+        {
+            touchLeft=Mathf.Clamp01(touchLeft);touchRight=Mathf.Clamp01(touchRight);
+            if(combined)touchLeft=touchRight=Mathf.Max(touchLeft,touchRight);
+            left=Mathf.Max(baseLeft,touchLeft);right=Mathf.Max(baseRight,touchRight);
         }
 
         private void OnApplicationFocus(bool focused)
@@ -780,6 +792,7 @@ namespace QuestFlightLab.Input
         private void ApplyTouchOverrides(
             AircraftControlState controls)
         {
+            if (DemoOwnsControls && _flightLessonGuidanceActive) return;
             if (controls == null)
                 return;
             if (_touchYoke.active)
@@ -870,6 +883,11 @@ namespace QuestFlightLab.Input
         {
             if (controls == null)
                 return;
+            if (DemoOwnsControls)
+            {
+                CopyFlightLessonCommandInto(_flightLessonGuidance, controls);
+                return;
+            }
 
             bool manualPrimaryAvailable = snapshot != null && snapshot.connected;
             FlightLessonControlCommand manual = ToFlightLessonCommand(controls);

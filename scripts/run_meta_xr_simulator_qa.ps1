@@ -9,6 +9,8 @@ param(
     [switch]$LiveSmokeWhenRecordingsMissing,
     [string]$RecordSession,
     [string]$DevelopmentScratchRoot,
+    [ValidateRange(300, 3600)]
+    [int]$BuildTimeoutSeconds = 900,
     [int]$SessionTimeoutSeconds = 240,
     [int]$CaptureWidth = 1440,
     [int]$CaptureHeight = 1440
@@ -49,6 +51,8 @@ $developmentCopyRemoved = $false
 $developmentCleanupError = $null
 
 $sessionCatalog = @(
+    [ordered]@{ id = "wildlife_demo"; description = "Natural demo eagle encounter and Michael cue"; delaySeconds = 0; startDemo = $true },
+    [ordered]@{ id = "wildlife_habitat"; description = "Native free-flight start beside reservoir goose habitat"; delaySeconds = 4; startDemo = $false },
     [ordered]@{ id = "ambient_airport"; description = "Ordinary runway start: early taxi and airborne traffic"; delaySeconds = 22; startDemo = $false },
     [ordered]@{ id = "ambient_departure"; description = "Ordinary authored departure with ambient traffic"; delaySeconds = 42; startDemo = $true },
     [ordered]@{ id = "ambient_foothill"; description = "Supplemental native foothill start, not normal-route coverage"; delaySeconds = 4; startDemo = $false },
@@ -351,9 +355,9 @@ function Build-SimulatorDevelopmentPlayer {
             "-logFile", ('"{0}"' -f $buildLog)
         )
         $process = Start-Process -FilePath $unityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
-        if (-not $process.WaitForExit(900000)) {
+        if (-not $process.WaitForExit($BuildTimeoutSeconds * 1000)) {
             Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
-            throw "Meta XR Simulator development player build exceeded 900 seconds. See $buildLog"
+            throw "Meta XR Simulator development player build exceeded $BuildTimeoutSeconds seconds. See $buildLog"
         }
         if ($process.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $playerPath -PathType Leaf)) {
             throw "Meta XR Simulator development player build failed (exit $($process.ExitCode)). See $buildLog"

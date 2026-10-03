@@ -97,6 +97,7 @@ namespace QuestFlightLab.Training.FlightLessonV1
     public sealed class FlightLessonRecoveryLivenessGate
     {
         public const int RequiredConsecutiveSteps = 3;
+        public const float MinimumObservationSeconds = .5f;
         public const float TimeoutSeconds = 1f;
         private const double MinimumTimeAdvanceSeconds = 0.000001d;
         private const float MinimumMotionMeters = 0.05f;
@@ -159,6 +160,13 @@ namespace QuestFlightLab.Training.FlightLessonV1
                 return FlightLessonRecoveryLivenessStatus.Failed;
             }
 
+            if (System.Math.Abs(state.pitchDegrees) > 35 || System.Math.Abs(state.bankDegrees) > 55 ||
+                state.angularVelocityBodyDegreesPerSecond.magnitude > 120)
+            {
+                active = false;
+                failure = "Recovery attitude or angular rate is unsafe.";
+                return FlightLessonRecoveryLivenessStatus.Failed;
+            }
             bool timeAdvanced =
                 state.simulationTimeSeconds >
                 lastSimulationTime + MinimumTimeAdvanceSeconds;
@@ -176,7 +184,9 @@ namespace QuestFlightLab.Training.FlightLessonV1
                              baseline.positionUnityMeters,
                              state.positionUnityMeters) >=
                          MinimumMotionMeters;
-            if (consecutiveAdvancingSteps >= RequiredConsecutiveSteps && moved)
+            if (consecutiveAdvancingSteps >= RequiredConsecutiveSteps && moved &&
+                state.simulationTimeSeconds - baseline.simulationTimeSeconds >= MinimumObservationSeconds &&
+                elapsedSeconds >= MinimumObservationSeconds)
             {
                 active = false;
                 return FlightLessonRecoveryLivenessStatus.Passed;
@@ -205,6 +215,8 @@ namespace QuestFlightLab.Training.FlightLessonV1
 
         public FlightLessonRecoveryPhase Phase => phase;
         public bool IsActive => phase != FlightLessonRecoveryPhase.Idle && phase != FlightLessonRecoveryPhase.Failed;
+
+        public void Cancel() { phase = FlightLessonRecoveryPhase.Idle; elapsed = 0f; emittedResetRequest = false; request = default; }
 
         public bool TryBegin(
             FlightLessonCrashReason reason,

@@ -1,0 +1,41 @@
+{
+    "schema": "questflight.distant-branch-clusters.v1",
+    "generator": "GroveClusterAuthoring.Bake",
+    "license": "Needle imagery: Poly Haven Pine Tree 01, CC0 1.0, https://polyhaven.com/a/pine_tree_01 ; https://polyhaven.com/license . Broadleaf: project-owned generated artwork, subject to applicable OpenAI output terms; no third-party image inputs. Geometry: project-authored derivative.",
+    "provenance": [
+        "Assets/Production/Environment/MapBranchGrovesV1/TreeRealism/ConiferArt_SOURCE.json",
+        "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/ProductionNearFoliageAtlas_SourceManifest.json"
+    ],
+    "templates": 36,
+    "viewsPerTemplate": 25,
+    "framePixels": 64,
+    "representation": "Two families, nine terrain slope fits, two/three upper-card variants. Directions -35/0/45 degrees x eight azimuths plus zenith. Shared small groups, not whole-grove textures; performance acceptance pending.",
+    "inputs": [
+        {
+            "path": "Assets/Production/Environment/MapBranchGrovesV1/BranchCluster.asset",
+            "sha256": "e354236c098ea99eac928dded290d90066a346d9015a53bdd5df8b374155ba14"
+        },
+        {
+            "path": "Assets/Production/Environment/MapBranchGrovesV1/TreeRealism/NeedleBranchAtlas.png",
+            "sha256": "8d1da9717365a3ddea2a5526717742754b388c0235d3434d6fe8264127cc9313"
+        },
+        {
+            "path": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Canopy/Textures/ProductionNearFoliageAtlas_RGBA.png",
+            "sha256": "aae5ad67afc5e63dc0ce762bcae1bac819ebd7403dcd5d922af2fc1e474c671c"
+        }
+    ],
+    "outputs": [
+        {
+            "path": "Assets/Production/Environment/MapBranchGrovesV1/DistantClusters/BranchClusterColor.png",
+            "sha256": "6b2bcfefef881cdbc19d7554c7b282deef6b06a426a3981bc83f837e9fc914bb"
+        },
+        {
+            "path": "Assets/Production/Environment/MapBranchGrovesV1/DistantClusters/BranchClusterNormal.png",
+            "sha256": "67f1c623819757c9430a62fd60239ed843b6d0323861580efdce42ea3f4552b1"
+        },
+        {
+            "path": "Assets/Production/Environment/MapBranchGrovesV1/DistantClusters/ClusterQuad.asset",
+            "sha256": "002c400ba62a2b02fe355bac1c9e619b11b61382a9d4183ccf462ba4b8f1dbd7"
+        }
+    ]
+}

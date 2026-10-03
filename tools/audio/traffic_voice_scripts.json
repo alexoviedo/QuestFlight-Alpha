@@ -1,0 +1,100 @@
+{
+  "clips": [
+    {
+      "id": "radio_cessna0_hold_8",
+      "text": "Boulder traffic, Cessna two one alpha, holding short of runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cessna0_takeoff_8",
+      "text": "Boulder traffic, Cessna two one alpha, departing runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cessna0_approach_8",
+      "text": "Boulder traffic, Cessna two one alpha, on final for runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cessna0_clear_8",
+      "text": "Boulder traffic, Cessna two one alpha, clear of runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cessna0_hold_26",
+      "text": "Boulder traffic, Cessna two one alpha, holding short of runway two six, Boulder."
+    },
+    {
+      "id": "radio_cessna0_takeoff_26",
+      "text": "Boulder traffic, Cessna two one alpha, departing runway two six, Boulder."
+    },
+    {
+      "id": "radio_cessna0_approach_26",
+      "text": "Boulder traffic, Cessna two one alpha, on final for runway two six, Boulder."
+    },
+    {
+      "id": "radio_cessna0_clear_26",
+      "text": "Boulder traffic, Cessna two one alpha, clear of runway two six, Boulder."
+    },
+    {
+      "id": "radio_cub1_hold_8",
+      "text": "Boulder traffic, Cub six charlie, holding short of runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cub1_takeoff_8",
+      "text": "Boulder traffic, Cub six charlie, departing runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cub1_approach_8",
+      "text": "Boulder traffic, Cub six charlie, on final for runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cub1_clear_8",
+      "text": "Boulder traffic, Cub six charlie, clear of runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cub1_hold_26",
+      "text": "Boulder traffic, Cub six charlie, holding short of runway two six, Boulder."
+    },
+    {
+      "id": "radio_cub1_takeoff_26",
+      "text": "Boulder traffic, Cub six charlie, departing runway two six, Boulder."
+    },
+    {
+      "id": "radio_cub1_approach_26",
+      "text": "Boulder traffic, Cub six charlie, on final for runway two six, Boulder."
+    },
+    {
+      "id": "radio_cub1_clear_26",
+      "text": "Boulder traffic, Cub six charlie, clear of runway two six, Boulder."
+    },
+    {
+      "id": "radio_cessna2_hold_8",
+      "text": "Boulder traffic, Cessna three two bravo, holding short of runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cessna2_takeoff_8",
+      "text": "Boulder traffic, Cessna three two bravo, departing runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cessna2_approach_8",
+      "text": "Boulder traffic, Cessna three two bravo, on final for runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cessna2_clear_8",
+      "text": "Boulder traffic, Cessna three two bravo, clear of runway zero eight, Boulder."
+    },
+    {
+      "id": "radio_cessna2_hold_26",
+      "text": "Boulder traffic, Cessna three two bravo, holding short of runway two six, Boulder."
+    },
+    {
+      "id": "radio_cessna2_takeoff_26",
+      "text": "Boulder traffic, Cessna three two bravo, departing runway two six, Boulder."
+    },
+    {
+      "id": "radio_cessna2_approach_26",
+      "text": "Boulder traffic, Cessna three two bravo, on final for runway two six, Boulder."
+    },
+    {
+      "id": "radio_cessna2_clear_26",
+      "text": "Boulder traffic, Cessna three two bravo, clear of runway two six, Boulder."
+    }
+  ]
+}

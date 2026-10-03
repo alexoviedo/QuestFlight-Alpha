@@ -4,6 +4,7 @@ using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Runtime;
 using QuestFlightLab.Training.FlightLessonV1;
 using UnityEngine;
+using QuestFlightLab.Environment;
 
 namespace QuestFlight.Product
 {
@@ -40,12 +41,43 @@ namespace QuestFlight.Product
         [SerializeField] private FlightDynamicsCoordinator flightCoordinator;
         [SerializeField] private FlightLessonRouteProfile routeProfile;
         [SerializeField] private bool autoStartDemo;
+        [SerializeField] private AmbientAircraftRoute exitRoute;
+        [SerializeField] private AmbientTrafficDirector traffic;
+        [SerializeField] private FlightLessonRouteProfile runway26Profile;
+        [SerializeField] private AmbientAircraftRoute runway26Exit;
+        private AmbientAircraftRoute activeExitRoute;
+        private bool rejoining;
+        private Vector3 rejoinPoint;
+        private float rejoinAltitude;
+        private readonly DemoLandingController landing = new DemoLandingController();
+        private readonly DemoEnrouteGuidance enroute = new DemoEnrouteGuidance();
+        private bool landingActive;
+        private int goAroundCount;
+        public bool UserHasControls { get; private set; }
+        public bool NeedsAssistance { get; private set; }
+        public bool HadRecovery { get; private set; }
+        public bool ShortShowcase { get; private set; }
+        public void RecordRecovery() { HadRecovery=true; }
+        public bool ReservesRunway => IsRunning && !UserHasControls && !NeedsAssistance &&
+            ((landingActive && landing.Phase!=DemoLandingController.LandingPhase.Stopped) || (_routeDefinition != null && _progress.currentSegmentIndex == 0));
+        public string OwnershipLabel => NeedsAssistance ? "Demo needs assistance" : UserHasControls ? "Your controls" : landingActive ? "Demo landing" : "Demo flying";
+        public void ConfigureTourForAuthoring(AmbientAircraftRoute exit, AmbientTrafficDirector director) { exitRoute=exit; traffic=director; }
+        public void ConfigureRunway26ForAuthoring(FlightLessonRouteProfile profile,AmbientAircraftRoute exit) { runway26Profile=profile;runway26Exit=exit; }
         [SerializeField, Min(0f)] private float runwayHeadingGain = 0.025f;
         [SerializeField, Min(0f)] private float runwayCrossTrackGain = 0.015f;
         [SerializeField, Range(0.02f, 0.25f)] private float maximumRunwayRudder = 0.14f;
 
         public bool IsRunning { get; private set; }
         public string Phase { get; private set; } = "ready";
+        public string PresentationPhase => !IsRunning ? "Ready for the next flight" :
+            Phase=="complete_clear_of_runway" ? "Parked clear of the runway" :
+            Phase=="stopped_after_recovery" ? "Stopped safely after recovery" :
+            landingActive ? landing.Phase==DemoLandingController.LandingPhase.GoAround ? "Going around for another approach" :
+                landing.Phase==DemoLandingController.LandingPhase.Flare ? "Landing" :
+                landing.Phase==DemoLandingController.LandingPhase.Rollout ? "Slowing down on the runway" :
+                landing.Phase==DemoLandingController.LandingPhase.TaxiExit ? "Leaving the runway" : "Approaching the runway" :
+            Phase.Contains("taxi") ? "Taxiing to the runway" : Phase.Contains("takeoff")||Phase.Contains("rotation") ? "Taking off" :
+            Phase.Contains("climb") ? "Climbing away from the airport" : "Following the Boulder route";
         public ProductControlInput AuthoredProductInput => productInput;
         public DeterministicGamepadInputSource AuthoredDeterministicInput => deterministicInput;
         public bool HasAuthoredSources => productInput != null &&
@@ -115,10 +147,20 @@ namespace QuestFlight.Product
 
         public void StartDemo()
         {
+            ShortShowcase=false;
             if (!HasAuthoredSources)
             {
                 Debug.LogError("[QuestFlight][Demo] Authored product input references are missing.", this);
                 return;
+            }
+            _routeDefinition=null;
+            activeExitRoute=exitRoute;rejoining=false;
+            if(flightCoordinator.IsInitialized && runway26Profile!=null)
+            {
+                Vector3 wind=flightCoordinator.windField.Sample(Vector3.zero,0);
+                if(new Vector2(wind.x,wind.z).magnitude>8 || Mathf.Abs(wind.z)>4)
+                {Debug.LogError("[Demo] Wind is outside the validated automated-flight envelope.");return;}
+                if(wind.x>1) { _routeDefinition=runway26Profile.Definition;activeExitRoute=runway26Exit; }
             }
             if (!EnsureRouteDefinition(out string routeError))
             {
@@ -130,8 +172,20 @@ namespace QuestFlight.Product
             RecordControlReset("StartDemo");
             _progress = FlightLessonProgressState.InitialFor(_routeDefinition);
             _guidanceController.Reset();
+            enroute.Reset();
             ResetTakeoffGuidance(true);
             _guidanceSuppressed = false;
+            UserHasControls=false; NeedsAssistance=false; landingActive=false;goAroundCount=0;HadRecovery=false;
+            if(flightCoordinator.IsInitialized && runway26Profile!=null)
+            {
+                Vector3 p=_routeDefinition.waypoints[0].positionUnityMeters;
+                if(!flightCoordinator.terrainSurface.TrySample(p.x,p.z,out var ground))return;
+                p.y=ground.heightMeters+1.4f;
+                var geo=FlightFrameConversions.UnityToGeodetic(p,GeodeticReference.Kbdu);
+                var initial=new FlightDynamicsInitialConditions {latitudeDegrees=geo.latitudeDegrees,longitudeDegrees=geo.longitudeDegrees,altitudeMslMeters=geo.altitudeMslMeters,
+                    terrainElevationMslMeters=GeodeticReference.Kbdu.altitudeMslMeters+ground.heightMeters,headingDegrees=activeExitRoute.runwayDirection==26?270:90,engineRunning=true};
+                if(!flightCoordinator.TryResetToInitialConditions(initial))return;
+            }
             _lastInputResetVersion = productInput.FlightLessonResetVersion;
             deterministicInput.SetControls(_appliedControls);
             IsRunning = true;
@@ -141,10 +195,36 @@ namespace QuestFlight.Product
             // live gamepad for shared authority; the deterministic source mirrors the
             // bounded guidance command as the no-player fallback.
             productInput.SetDeterministicMode(true);
+            productInput.DemoOwnsControls=true;
             productInput.SetFlightLessonInputSuppressed(false);
             productInput.SetFlightLessonGuidance(
                 true,
                 ProductControlInput.ToFlightLessonCommand(_appliedControls));
+        }
+
+        public bool StartShortArrival()
+        {
+            if(!IsRunning||!TryBuildShortArrival(_routeDefinition,flightCoordinator.terrainSurface,out var initial,out int segment))return false;
+            if(!flightCoordinator.TryResetToInitialConditions(initial))return false;
+            if(!RestoreLessonSegment(segment))return false;
+            _scheduledControls.SetNeutral(.5f);_appliedControls.SetNeutral(.5f);
+            ShortShowcase=true;return true;
+        }
+        public static bool TryBuildShortArrival(FlightLessonRouteDefinition route,ProductionTerrainSurfaceAsset terrain,out FlightDynamicsInitialConditions initial,out int segment)
+        {
+            initial=default;segment=-1;if(route==null||terrain==null)return false;
+            for(int i=0;i<route.segments.Length;i++)
+            {
+                var s=route.segments[i];var start=route.waypoints[s.startWaypointIndex];
+                if(start.id!="arrival_gate")continue;
+                Vector3 p=start.positionUnityMeters;p.y=start.altitudeMslFeet*.3048f-(float)GeodeticReference.Kbdu.altitudeMslMeters;
+                if(!terrain.TrySample(p.x,p.z,out var ground)||p.y-ground.heightMeters<120)return false;
+                Vector3 delta=route.waypoints[s.endWaypointIndex].positionUnityMeters-p;
+                var geo=FlightFrameConversions.UnityToGeodetic(p,GeodeticReference.Kbdu);
+                initial=new FlightDynamicsInitialConditions{latitudeDegrees=geo.latitudeDegrees,longitudeDegrees=geo.longitudeDegrees,altitudeMslMeters=geo.altitudeMslMeters,terrainElevationMslMeters=GeodeticReference.Kbdu.altitudeMslMeters+ground.heightMeters,headingDegrees=Mathf.Repeat(Mathf.Atan2(delta.x,delta.z)*Mathf.Rad2Deg,360),calibratedAirspeedKnots=start.calibratedAirspeedKnots,engineRunning=true};
+                segment=i;return true;
+            }
+            return false;
         }
 
         public void StopDemo()
@@ -152,12 +232,14 @@ namespace QuestFlight.Product
             IsRunning = false;
             Phase = "ready";
             _guidanceSuppressed = false;
+            UserHasControls=false; NeedsAssistance=false; landingActive=false;
             _guidanceController.Reset();
             ResetTakeoffGuidance(true);
             deterministicInput?.SetControls(AircraftControlState.Neutral(0.10f));
             if (productInput != null)
             {
                 productInput.SetFlightLessonInputSuppressed(false);
+                productInput.DemoOwnsControls=false;
                 productInput.DisableFlightLessonGuidance();
                 productInput.SetDeterministicMode(false);
             }
@@ -170,6 +252,8 @@ namespace QuestFlight.Product
                 return;
             if (_guidanceSuppressed)
                 return;
+            if (UserHasControls) return;
+            if (NeedsAssistance) { traffic?.flightMode?.AuthoredNavigation?.OpenMenu();return; }
 
             if (_lastInputResetVersion != productInput.FlightLessonResetVersion)
             {
@@ -195,20 +279,58 @@ namespace QuestFlight.Product
                 return;
             }
 
+            if(TryEvaluateGuidance(state,Mathf.Max(.0001f,Time.unscaledDeltaTime),out var evaluated,out var evaluatedPhase))
+                ApplyGuidanceCommand(evaluated,evaluatedPhase);
+        }
+
+        public bool TryEvaluateGuidance(in FlightDynamicsState state,float guidanceDeltaTime,out FlightLessonControlCommand evaluated,out string evaluatedPhase,bool? runwayClearOverride=null)
+        {
+            evaluated=default;evaluatedPhase="guidance_unavailable";
+            if(UserHasControls || NeedsAssistance || !state.IsFinite) return false;
+            if(rejoining)
+            {
+                Vector3 delta=rejoinPoint-state.positionUnityMeters;delta.y=0;
+                if(delta.magnitude<150) {rejoining=false;_progress.currentSegmentIndex++;enroute.Reset();}
+                else
+                {
+                    var join=new FlightLessonGuidanceIntent("rejoining_tour",FlightLessonSegmentKind.Cruise,rejoinPoint,0,0,rejoinAltitude,85,20,700,0);
+                    evaluated=enroute.Step(state,join,guidanceDeltaTime);evaluatedPhase="rejoining_tour";return true;
+                }
+            }
             FlightLessonAircraftNavigationState navigation =
                 BuildNavigationState(state);
-            _progress = FlightLessonNavigator.AdvanceIfCaptured(
+            int finalIndex=FinalSegmentIndex();
+            if(!landingActive && !(_progress.currentSegmentIndex==0 && state.altitudeMslMeters/.3048<5800)) _progress = FlightLessonNavigator.AdvanceIfCaptured(
                 _routeDefinition,
                 _progress,
                 navigation);
+            if(landingActive || finalIndex>=0 && _progress.currentSegmentIndex>=finalIndex)
+            {
+                if(!landingActive)
+                {
+                    var threshold=_routeDefinition.waypoints[_routeDefinition.segments[finalIndex].endWaypointIndex].positionUnityMeters;
+                    var end=threshold+Vector3.right*(activeExitRoute!=null && activeExitRoute.runwayDirection==26?-1260:1260);
+                    if(flightCoordinator.terrainSurface.TrySample(threshold.x,threshold.z,out var surface)) threshold.y=surface.heightMeters;
+                    landing.Reset(threshold,end,activeExitRoute!=null?activeExitRoute.segments[10].points:null);landingActive=true;
+                }
+                evaluated=landing.Step(state,guidanceDeltaTime,runwayClearOverride ?? (traffic==null || traffic.RunwayOwner<0));
+                evaluatedPhase="landing_"+landing.Phase.ToString().ToLowerInvariant();
+                if(landing.Phase==DemoLandingController.LandingPhase.GoAround && state.altitudeAglMeters>120 && state.verticalSpeedFeetPerMinute>100)
+                {
+                    if(++goAroundCount>2) { NeedsAssistance=true;Phase="Automatic landing unavailable - pause and restart";return false; }
+                    int pattern=FindSegment(FlightLessonSegmentKind.PatternEntry);
+                    if(pattern>=0) { _progress.currentSegmentIndex=pattern;_progress.lessonComplete=false;landingActive=false;_guidanceController.Reset(); }
+                }
+                if(landing.Phase==DemoLandingController.LandingPhase.Stopped) { _progress.lessonComplete=!HadRecovery;evaluatedPhase=HadRecovery?"stopped_after_recovery":"complete_clear_of_runway"; }
+                return true;
+            }
             if (_progress.lessonComplete)
             {
                 FlightLessonControlCommand complete = LessonCompleteCommand();
-                ApplyGuidanceCommand(complete, "lesson_complete");
-                return;
+                evaluated=complete;evaluatedPhase="lesson_complete";
+                return true;
             }
 
-            float guidanceDeltaTime = Mathf.Max(0.0001f, Time.unscaledDeltaTime);
             if (!FlightLessonNavigator.TryEvaluate(
                     _routeDefinition,
                     _progress,
@@ -216,7 +338,29 @@ namespace QuestFlight.Product
                     out FlightLessonGuidanceIntent intent))
             {
                 Phase = "guidance_unavailable";
-                return;
+                return false;
+            }
+            var activeSegment=_routeDefinition.segments[_progress.currentSegmentIndex];
+            if(activeSegment.geometry==FlightLessonPathGeometry.Arc)
+            {
+                var start=_routeDefinition.waypoints[activeSegment.startWaypointIndex];
+                var end=_routeDefinition.waypoints[activeSegment.endWaypointIndex];
+                Vector3 a=start.positionUnityMeters-activeSegment.arcCenterUnityMeters;
+                Vector3 b=end.positionUnityMeters-activeSegment.arcCenterUnityMeters;
+                Vector3 p=state.positionUnityMeters-activeSegment.arcCenterUnityMeters;
+                float first=Mathf.Atan2(a.z,a.x)*Mathf.Rad2Deg;
+                float last=Mathf.Atan2(b.z,b.x)*Mathf.Rad2Deg;
+                float current=Mathf.Atan2(p.z,p.x)*Mathf.Rad2Deg;
+                float direction=activeSegment.arcClockwise?-1:1;
+                float total=Mathf.Abs(Mathf.DeltaAngle(first,last));
+                float travel=Mathf.Clamp(Mathf.DeltaAngle(first,current)*direction,0,total);
+                float radius=new Vector2(a.x,a.z).magnitude;
+                float look=Mathf.Min(total,travel+activeSegment.lookAheadMeters/radius*Mathf.Rad2Deg);
+                float angle=(first+look*direction)*Mathf.Deg2Rad;
+                Vector3 lookPoint=activeSegment.arcCenterUnityMeters+new Vector3(Mathf.Cos(angle),0,Mathf.Sin(angle))*radius;
+                float fraction=travel/total;
+                intent=new FlightLessonGuidanceIntent(intent.segmentId,intent.segmentKind,lookPoint,intent.desiredTrackDegreesTrue,intent.crossTrackErrorMeters,
+                    Mathf.Lerp(start.altitudeMslFeet,end.altitudeMslFeet,fraction),Mathf.Lerp(start.calibratedAirspeedKnots,end.calibratedAirspeedKnots,fraction),intent.maximumBankDegrees,intent.maximumClimbRateFeetPerMinute,fraction);
             }
 
             if (TryBuildGuidedTakeoffCommand(
@@ -226,23 +370,86 @@ namespace QuestFlight.Product
                     out FlightLessonControlCommand takeoffCommand,
                     out string takeoffPhase))
             {
-                ApplyGuidanceCommand(takeoffCommand, takeoffPhase);
-                return;
+                evaluated=takeoffCommand;evaluatedPhase=takeoffPhase;
+                return true;
             }
 
-            if (!_guidanceController.TryStep(
-                    intent,
-                    BuildGuidanceAircraftState(state),
-                    guidanceDeltaTime,
-                    FlightLessonGuidanceControllerSettings.Default,
-                    out FlightLessonControlCommand command))
+            var profileStart=_routeDefinition.waypoints[activeSegment.startWaypointIndex];
+            var profileEnd=_routeDefinition.waypoints[activeSegment.endWaypointIndex];
+            float profileLength=Vector3.Distance(profileStart.positionUnityMeters,profileEnd.positionUnityMeters);
+            if(activeSegment.geometry==FlightLessonPathGeometry.Arc)
             {
-                Phase = "guidance_unavailable";
-                return;
+                Vector3 a=profileStart.positionUnityMeters-activeSegment.arcCenterUnityMeters,b=profileEnd.positionUnityMeters-activeSegment.arcCenterUnityMeters;
+                profileLength=a.magnitude*Vector3.Angle(a,b)*Mathf.Deg2Rad;
             }
+            float feedforward=intent.normalizedSegmentProgress<.99f?(profileEnd.altitudeMslFeet-profileStart.altitudeMslFeet)/Mathf.Max(1,profileLength)*(float)state.groundSpeedKnots*.514444f*60:0;
+            FlightLessonControlCommand command=enroute.Step(state,intent,guidanceDeltaTime,feedforward);
 
             ConfigureCommandForSegment(intent, ref command);
-            ApplyGuidanceCommand(command, intent.segmentId);
+            evaluated=command;evaluatedPhase=intent.segmentId;
+            return true;
+        }
+
+        private int FinalSegmentIndex()
+        {
+            for(int i=0;i<_routeDefinition.segments.Length-1;i++)
+                if(_routeDefinition.segments[i].kind==FlightLessonSegmentKind.Final && _routeDefinition.segments[i+1].kind==FlightLessonSegmentKind.Rollout)return i;
+            return -1;
+        }
+        private int FindSegment(FlightLessonSegmentKind kind)
+        { for(int i=0;i<_routeDefinition.segments.Length;i++)if(_routeDefinition.segments[i].kind==kind)return i;return -1; }
+
+        public void TakeUserControl()
+        {
+            if(!IsRunning)return;
+            var controls=ProductControlInput.ToFlightLessonCommand(flightCoordinator.LastAppliedControls);
+            productInput.DemoOwnsControls=false;productInput.DisableFlightLessonGuidance();productInput.SetDeterministicMode(false);
+            productInput.PrepareForFlightLessonRecovery(controls);productInput.SetFlightLessonInputSuppressed(false);productInput.RequireTouchRelease();
+            UserHasControls=true;NeedsAssistance=false;Phase="your_controls";
+        }
+
+        public bool ResumeDemoControl(bool returnToAirport)
+        {
+            if(!IsRunning || !flightCoordinator.IsInitialized)return false;
+            var state=flightCoordinator.CurrentState;
+            return TryResumeFromState(state,ProductControlInput.ToFlightLessonCommand(flightCoordinator.LastAppliedControls),returnToAirport);
+        }
+
+        public bool TryResumeFromState(in FlightDynamicsState state,in FlightLessonControlCommand applied,bool returnToAirport)
+        {
+            if(!IsRunning || !state.IsFinite)return false;
+            if(state.weightOnWheels || state.altitudeAglMeters<60 || state.calibratedAirspeedKnots<45 || Mathf.Abs((float)state.bankDegrees)>60)
+            { Phase="Cannot safely rejoin here - keep control or restart";return false; }
+            int first=returnToAirport?FindSegment(FlightLessonSegmentKind.Return):Mathf.Max(1,_progress.currentSegmentIndex);
+            int last=FindSegment(FlightLessonSegmentKind.PatternEntry);
+            int selected=-1;float best=float.MaxValue;
+            for(int i=Mathf.Max(1,first);i<=last;i++)
+            {
+                Vector3 point=_routeDefinition.waypoints[_routeDefinition.segments[i].endWaypointIndex].positionUnityMeters;
+                float altitude=_routeDefinition.waypoints[_routeDefinition.segments[i].endWaypointIndex].altitudeMslFeet*.3048f-(float)GeodeticReference.Kbdu.altitudeMslMeters;
+                point.y=Mathf.Max(state.positionUnityMeters.y,altitude);
+                float distance=Vector3.Distance(state.positionUnityMeters,point);
+                if(distance>6500 || distance<350 || distance>=best)continue;
+                bool clear=true;
+                for(int n=1;n<=24;n++)
+                {
+                    Vector3 p=Vector3.Lerp(state.positionUnityMeters,point,n/24f);
+                    if(!flightCoordinator.terrainSurface.TrySample(p.x,p.z,out var ground) || p.y-ground.heightMeters<100) {clear=false;break;}
+                    Vector3 across=Vector3.Cross(Vector3.up,(point-state.positionUnityMeters).normalized)*400;
+                    foreach(float side in new[]{-1f,1f})
+                        if(!flightCoordinator.terrainSurface.TrySample(p.x+across.x*side,p.z+across.z*side,out var edge) || p.y-edge.heightMeters<100)clear=false;
+                }
+                if(clear){best=distance;selected=i;rejoinPoint=point;}
+            }
+            if(selected<0){Phase="No safe rejoin corridor - keep control or restart";return false;}
+            _progress.currentSegmentIndex=selected;_progress.lessonComplete=false;landingActive=false;
+            rejoining=true;rejoinAltitude=(rejoinPoint.y+(float)GeodeticReference.Kbdu.altitudeMslMeters)/.3048f;
+            _guidanceController.Reset();enroute.Reset();ResetTakeoffGuidance(false);
+            ProductControlInput.CopyFlightLessonCommandInto(applied,_appliedControls);
+            UserHasControls=false;NeedsAssistance=false;_guidanceSuppressed=false;
+            productInput.SetDeterministicMode(true);productInput.DemoOwnsControls=true;
+            productInput.SetFlightLessonGuidance(true,ProductControlInput.ToFlightLessonCommand(_appliedControls));
+            Phase=returnToAirport?"returning_to_airport":"rejoining_tour";return true;
         }
 
         private void ApplyGuidanceCommand(
@@ -268,12 +475,14 @@ namespace QuestFlight.Product
 
         public bool RestoreLessonSegment(int segmentIndex)
         {
+            if (UserHasControls) return false;
             if (!EnsureRouteDefinition(out _) ||
                 segmentIndex < 0 ||
                 segmentIndex >= _routeDefinition.segments.Length)
                 return false;
 
             _progress.currentSegmentIndex = segmentIndex;
+            landingActive=false;rejoining=false;enroute.Reset();
             _progress.lessonComplete = false;
             _progress.latestRecoveryCheckpointIndex = LatestCheckpointBefore(
                 _routeDefinition,

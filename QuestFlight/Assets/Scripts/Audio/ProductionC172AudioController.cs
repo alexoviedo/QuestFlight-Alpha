@@ -46,6 +46,23 @@ namespace QuestFlightLab.Audio
         private float _smoothedAirspeed;
         private float _smoothedGroundSpeed;
         private float _smoothedAoA;
+        private float _smoothedAircraftVolume = 1f;
+        private float _smoothedRollGain;
+        private float _smoothedFlapGain;
+        private float _lastAirborneSinkFeetPerMinute;
+        private double _previousSimulationTime;
+        private bool _starterCueActive;
+        private bool _starterCueStopping;
+        private bool _starterCuePaused;
+        private float _starterCueGain;
+        [SerializeField] private AudioSource instructorVoice;
+        private float speechGain=1;
+        private float speechReleaseAt;
+        private float nextGroundPulse,previousFlapCommand;
+        [SerializeField] private AudioSource trafficRadio;
+        public void ConfigureTrafficRadio(AudioSource source) => trafficRadio=source;
+        public float AircraftVolume { get; set; } = 1;
+        public void ConfigureInstructorVoice(AudioSource source) => instructorVoice=source;
 
         public ProductionC172AudioProfile Profile => profile;
 
@@ -118,24 +135,45 @@ namespace QuestFlightLab.Audio
 
             float dt = Mathf.Max(Time.unscaledDeltaTime, 0.0001f);
             float response = 1f - Mathf.Exp(-5f * dt);
+            if (state.simulationTimeSeconds < _previousSimulationTime)
+            {
+                // A new flight/lesson is not a touchdown or a burst of switch changes.
+                _initialized = false;
+                _lastAirborneSinkFeetPerMinute = 0f;
+                StopStarterCue();
+            }
+            _previousSimulationTime = state.simulationTimeSeconds;
+            bool speaking=instructorVoice!=null&&instructorVoice.isPlaying&&instructorVoice.volume>.01f;
+            if(speaking)speechReleaseAt=Time.unscaledTime+.4f;
+            bool speechHold=speaking||Time.unscaledTime<speechReleaseAt;
+            // Keep speech intelligible over engine/wind; restore the normal mix smoothly afterward.
+            speechGain=Mathf.Lerp(speechGain,speechHold ? .32f : trafficRadio!=null&&trafficRadio.isPlaying ? .60f : 1f,1-Mathf.Exp(-dt*(speechHold?8:2)));
+            _smoothedAircraftVolume = Mathf.Lerp(_smoothedAircraftVolume, Mathf.Clamp01(AircraftVolume), response);
+            float bedGain=speechGain*_smoothedAircraftVolume;
+            // PlayOneShot also multiplies AudioSource.volume. These authored sources
+            // start silent, so explicitly apply the same aircraft preference here.
+            float cockpitGain = _smoothedAircraftVolume * Mathf.Lerp(0.65f, 1f, speechGain);
+            Set(cockpitOneShot, cockpitGain, 1f);
+            Set(airframeOneShot, _smoothedAircraftVolume, 1f);
             _smoothedRpm = Mathf.Lerp(_smoothedRpm, (float)state.engineRpm, response);
             _smoothedAirspeed = Mathf.Lerp(_smoothedAirspeed, (float)state.calibratedAirspeedKnots, response);
             _smoothedGroundSpeed = Mathf.Lerp(_smoothedGroundSpeed, (float)state.groundSpeedKnots, response);
             _smoothedAoA = Mathf.Lerp(_smoothedAoA, (float)state.angleOfAttackDegrees, response);
 
             EngineMix engine = EvaluateEngineMix(_smoothedRpm, profile.idleRpm, profile.maximumRpm);
-            Set(engineIdle, engine.idleGain * 0.62f, engine.idlePitch);
-            Set(engineCruise, engine.cruiseGain * 0.67f, engine.cruisePitch);
-            Set(propeller, engine.propellerGain * 0.30f, engine.propellerPitch);
+            Set(engineIdle, engine.idleGain * 0.62f * bedGain, engine.idlePitch);
+            Set(engineCruise, engine.cruiseGain * 0.67f * bedGain, engine.cruisePitch);
+            Set(propeller, engine.propellerGain * 0.30f * bedGain, engine.propellerPitch);
 
             float wind = EvaluateWind(_smoothedAirspeed, profile.windFullScaleKnots);
-            Set(windLow, Mathf.Sqrt(wind) * 0.27f, Mathf.Lerp(0.86f, 1.12f, wind));
-            Set(windHigh, wind * wind * 0.21f, Mathf.Lerp(0.90f, 1.18f, wind));
+            Set(windLow, Mathf.Sqrt(wind) * 0.27f * bedGain, Mathf.Lerp(0.86f, 1.12f, wind));
+            Set(windHigh, wind * wind * 0.21f * bedGain, Mathf.Lerp(0.90f, 1.18f, wind));
 
             float roll = state.weightOnWheels
                 ? Mathf.Clamp01(_smoothedGroundSpeed / profile.groundRollFullScaleKnots)
                 : 0f;
-            Set(groundRoll, roll * 0.24f, Mathf.Lerp(0.82f, 1.18f, roll));
+            _smoothedRollGain = Mathf.Lerp(_smoothedRollGain, roll, response);
+            Set(groundRoll, _smoothedRollGain * 0.24f * bedGain, Mathf.Lerp(0.82f, 1.18f, roll));
 
             float stall = EvaluateStallCue(
                 state.weightOnWheels,
@@ -144,20 +182,27 @@ namespace QuestFlightLab.Audio
                 profile.stallHornFullAoADegrees,
                 legacyAircraftState != null && legacyAircraftState.stallWarning,
                 legacyAircraftState != null ? legacyAircraftState.stallIntensity : 0f);
+            // The warning has its own mixer bus and remains audible with aircraft
+            // effects turned down or while the instructor is talking.
             Set(stallHorn, stall * 0.42f, 1f);
 
-            UpdateSystemCues(state, dt);
+            UpdateSystemCues(state, dt, cockpitGain);
+            if (!state.weightOnWheels)
+                _lastAirborneSinkFeetPerMinute = Mathf.Max(0f, -(float)state.verticalSpeedFeetPerMinute);
             _previousWeightOnWheels = state.weightOnWheels;
         }
 
-        private void UpdateSystemCues(in FlightDynamicsState state, float dt)
+        private void UpdateSystemCues(in FlightDynamicsState state, float dt, float cockpitGain)
         {
             if (cockpitSystems == null || !cockpitSystems.HasValidSystemsV2Snapshot) return;
             CockpitSystemsSnapshotV2 systems = cockpitSystems.CurrentSystemsV2Snapshot;
 
-            float flapRate = Mathf.Abs(systems.actualFlapDegrees - _previousFlapDegrees) / Mathf.Max(dt, 0.001f);
+            float flapRate = _initialized
+                ? Mathf.Abs(systems.actualFlapDegrees - _previousFlapDegrees) / Mathf.Max(dt, 0.001f)
+                : 0f;
             float flapGain = Mathf.SmoothStep(0f, 0.18f, Mathf.Clamp01(flapRate / 2.0f));
-            Set(flapMotor, flapGain, 1f);
+            _smoothedFlapGain = Mathf.Lerp(_smoothedFlapGain, flapGain, 1f - Mathf.Exp(-10f * dt));
+            Set(flapMotor, _smoothedFlapGain * cockpitGain, 1f);
 
             if (!_initialized)
             {
@@ -168,30 +213,41 @@ namespace QuestFlightLab.Audio
                 _previousIgnition = systems.ignitionSwitchPosition;
                 _previousFuelSelector = systems.fuelSelectorPosition;
                 _previousFlapDegrees = systems.actualFlapDegrees;
+                previousFlapCommand=systems.flapSelectorCommandNormalized;
                 _previousWeightOnWheels = state.weightOnWheels;
                 _smoothedRpm = systems.engineRpm;
                 _initialized = true;
                 return;
             }
 
-            if (systems.starterMotorPowered && !_previousStarter && profile.engineStart != null)
-                cockpitOneShot.PlayOneShot(profile.engineStart, 0.55f);
+            UpdateStarterCue(systems, dt, cockpitGain);
 
             bool changed =
                 systems.batteryMasterOn != _previousBattery ||
                 systems.alternatorMasterOn != _previousAlternator ||
                 systems.avionicsMasterOn != _previousAvionics ||
                 systems.ignitionSwitchPosition != _previousIgnition ||
-                systems.fuelSelectorPosition != _previousFuelSelector;
-            if (changed && profile.switchClick != null)
-                cockpitOneShot.PlayOneShot(profile.switchClick, 0.65f);
-
-            if (!_previousWeightOnWheels && state.weightOnWheels && profile.touchdown != null)
+                systems.fuelSelectorPosition != _previousFuelSelector || Mathf.Abs(previousFlapCommand-systems.flapSelectorCommandNormalized)>.01f;
+            previousFlapCommand=systems.flapSelectorCommandNormalized;
+            if (changed && Time.timeScale > 0f && profile.switchClick != null)
             {
-                float impact = Mathf.InverseLerp(40f, 650f, Mathf.Abs((float)state.verticalSpeedFeetPerMinute));
-                airframeOneShot.PlayOneShot(profile.touchdown, Mathf.Lerp(0.16f, 0.48f, impact));
+                cockpitOneShot.PlayOneShot(profile.switchClick, 0.65f);
+                QuestFlight.Product.ProductUiFeedback.FlightPulse(.065f,.03f);
             }
 
+            if (!_previousWeightOnWheels && state.weightOnWheels && Time.timeScale > 0f && profile.touchdown != null)
+            {
+                // Contact can already have zeroed or reversed vertical velocity.
+                // The last airborne descent rate represents the actual arrival.
+                float impact = Mathf.InverseLerp(40f, 650f, _lastAirborneSinkFeetPerMinute);
+                // Keep impact and switch one-shots separate from the source that
+                // is faded/stopped when cranking ends.
+                cockpitOneShot.PlayOneShot(profile.touchdown, Mathf.Lerp(0.16f, 0.48f, impact));
+                QuestFlight.Product.ProductUiFeedback.FlightPulse(Mathf.Lerp(.05f,.16f,impact),.09f);
+            }
+
+            if(Time.timeScale>0 && state.weightOnWheels && state.groundSpeedKnots>8 && Time.time>=nextGroundPulse)
+            {nextGroundPulse=Time.time+1.4f;QuestFlight.Product.ProductUiFeedback.FlightPulse(Mathf.Lerp(.018f,.04f,Mathf.Clamp01((float)state.groundSpeedKnots/55)),.022f);}
             _previousStarter = systems.starterMotorPowered;
             _previousBattery = systems.batteryMasterOn;
             _previousAlternator = systems.alternatorMasterOn;
@@ -199,6 +255,58 @@ namespace QuestFlightLab.Audio
             _previousIgnition = systems.ignitionSwitchPosition;
             _previousFuelSelector = systems.fuelSelectorPosition;
             _previousFlapDegrees = systems.actualFlapDegrees;
+        }
+
+        private void UpdateStarterCue(in CockpitSystemsSnapshotV2 systems, float dt, float cockpitGain)
+        {
+            if (airframeOneShot == null) return;
+            if (Time.timeScale <= 0f)
+            {
+                if (_starterCueActive && !_starterCuePaused)
+                {
+                    airframeOneShot.Pause();
+                    _starterCuePaused = true;
+                }
+                return;
+            }
+            if (_starterCuePaused)
+            {
+                airframeOneShot.UnPause();
+                _starterCuePaused = false;
+            }
+            if (systems.starterMotorPowered && !_previousStarter &&
+                systems.engineRpm < profile.idleRpm * 0.6f && profile.engineStart != null)
+            {
+                // The recording includes the engine catching and idling. Only play
+                // its cranking lead-in while our own starter is actually engaged;
+                // the existing RPM layers provide the running engine sound.
+                airframeOneShot.Stop();
+                airframeOneShot.clip = profile.engineStart;
+                airframeOneShot.Play();
+                _starterCueActive = true;
+                _starterCueStopping = false;
+                _starterCueGain = 0.55f;
+            }
+            if (!_starterCueActive) return;
+            _starterCueStopping |= !systems.starterMotorPowered || systems.engineRpm >= profile.idleRpm * 0.8f;
+            if (_starterCueStopping)
+                _starterCueGain = Mathf.MoveTowards(_starterCueGain, 0f, dt * (0.55f / 0.16f));
+            if (_starterCueGain <= 0f || !airframeOneShot.isPlaying)
+            {
+                StopStarterCue();
+                Set(airframeOneShot, cockpitGain, 1f);
+            }
+            else Set(airframeOneShot, cockpitGain * _starterCueGain, 1f);
+        }
+
+        private void StopStarterCue()
+        {
+            if (!_starterCueActive) return;
+            airframeOneShot.Stop();
+            airframeOneShot.clip = null;
+            _starterCueActive = false;
+            _starterCueStopping = false;
+            _starterCuePaused = false;
         }
 
         private static void StartLoop(AudioSource source)

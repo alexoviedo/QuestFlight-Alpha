@@ -161,7 +161,7 @@ namespace QuestFlightLab.Editor.Tests.Training.FlightLessonV1
             gate.Begin(state, true);
 
             for (int step = 1;
-                 step < FlightLessonRecoveryLivenessGate.RequiredConsecutiveSteps;
+                 step < 25;
                  step++)
             {
                 state = LiveState(
@@ -178,12 +178,12 @@ namespace QuestFlightLab.Editor.Tests.Training.FlightLessonV1
                     pendingFailure);
             }
 
-            state = LiveState(10.06d, new Vector3(0f, 0f, 0.09f), 30f);
+            state = LiveState(10.52d, new Vector3(0f, 0f, 15.6f), 30f);
             Assert.That(gate.Observe(
                     state,
                     true,
                     true,
-                    0.02f,
+                    0.04f,
                     out string failure),
                 Is.EqualTo(FlightLessonRecoveryLivenessStatus.Passed),
                 failure);

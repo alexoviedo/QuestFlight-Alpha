@@ -9,6 +9,9 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
         _NormalStrength ("Normal Strength", Range(0,1)) = 0.72
         _SpecularStrength ("Specular Strength", Range(0,1)) = 0.42
         _ReflectionStrength ("Reflection Strength", Range(0,1)) = 0.34
+        _MetricTerminalWalls ("Terminal Masonry and Cladding in Metres", Float) = 0
+        _MasonryTileMeters ("Masonry Atlas Tile Width in Metres", Float) = 1.4
+        _CladdingTileMeters ("Cladding Atlas Tile Width in Metres", Float) = 4
     }
 
     SubShader
@@ -18,6 +21,39 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
         Cull Back
         ZWrite On
         ZTest LEqual
+
+        CGINCLUDE
+        float _MetricTerminalWalls;
+        float _MasonryTileMeters;
+        float _CladdingTileMeters;
+
+        // Opt-in for the terminal only. The source atlas assigns masonry to tile0
+        // and vertical cladding to tile1. All roof, glazing, sign, trim and prop
+        // tiles retain their authored coordinates. A single dominant wall plane
+        // avoids triplanar blending and its additional texture samples.
+        float2 TerminalWallUv(float2 atlasUv, float3 worldPosition, float3 worldNormal,
+            out float2 unwrappedUv, out float3 wallTangent, out float metricWall)
+        {
+            unwrappedUv = atlasUv;
+            wallTangent = float3(1, 0, 0);
+            metricWall = 0;
+            float2 tile = floor(atlasUv * 4.0);
+            if (_MetricTerminalWalls < 0.5 || abs(worldNormal.y) > 0.7 ||
+                tile.y != 0 || tile.x < 0 || tile.x > 1)
+                return atlasUv;
+
+            metricWall = 1;
+            wallTangent = abs(worldNormal.x) > abs(worldNormal.z)
+                ? float3(0, 0, worldNormal.x > 0 ? -1 : 1)
+                : float3(worldNormal.z > 0 ? 1 : -1, 0, 0);
+            float meters = tile.x < 0.5 ? _MasonryTileMeters : _CladdingTileMeters;
+            float2 repeatUv = float2(dot(worldPosition, wallTangent), worldPosition.y) / max(meters, 0.25);
+            // Match the source generator's 0.012 atlas gutter. Derivatives are
+            // taken BEFORE frac so tile seams do not request unrelated coarse mips.
+            unwrappedUv = repeatUv * 0.226;
+            return tile * 0.25 + 0.012 + frac(repeatUv) * 0.226;
+        }
+        ENDCG
 
         Pass
         {
@@ -84,17 +120,29 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
             fixed4 frag(v2f input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-                fixed3 albedo = tex2D(_MainTex, input.uv).rgb * _Tint.rgb;
-                half3 mrao = tex2D(_MRAOTex, input.uv).rgb;
+                float2 unwrappedUv;
+                float3 wallTangent;
+                float metricWall;
+                float2 sampleUv = TerminalWallUv(input.uv, input.worldPosition, input.worldNormal,
+                    unwrappedUv, wallTangent, metricWall);
+                float2 atlasDx = ddx(unwrappedUv), atlasDy = ddy(unwrappedUv);
+                fixed3 albedo = tex2Dgrad(_MainTex, sampleUv, atlasDx, atlasDy).rgb * _Tint.rgb;
+                half3 mrao = tex2Dgrad(_MRAOTex, sampleUv, atlasDx, atlasDy).rgb;
                 half metallic = saturate(mrao.r);
                 half roughness = saturate(mrao.g);
                 half ao = lerp(0.58, 1.0, mrao.b);
 
                 half3 normal = normalize(input.worldNormal);
-                half3 tangentNormal = UnpackNormal(tex2D(_NormalTex, input.uv));
+                half3 tangentNormal = UnpackNormal(tex2Dgrad(_NormalTex, sampleUv, atlasDx, atlasDy));
                 tangentNormal.xy *= _NormalStrength;
                 tangentNormal = normalize(tangentNormal);
-                UNITY_BRANCH if (dot(input.worldTangent, input.worldTangent) > 0.1)
+                UNITY_BRANCH if (metricWall > 0.5)
+                {
+                    half3 tangent = normalize(wallTangent - normal * dot(normal, wallTangent));
+                    half3 bitangent = cross(normal, tangent);
+                    normal = normalize(tangent * tangentNormal.x + bitangent * tangentNormal.y + normal * tangentNormal.z);
+                }
+                else if (dot(input.worldTangent, input.worldTangent) > 0.1)
                 {
                     normal = normalize(
                         input.worldTangent * tangentNormal.x +
@@ -146,6 +194,7 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
             CGPROGRAM
             #pragma vertex vertMeta
             #pragma fragment fragMeta
+            #pragma target 3.0
             #pragma shader_feature EDITOR_VISUALIZATION
             #include "UnityCG.cginc"
             #include "UnityMetaPass.cginc"
@@ -156,6 +205,7 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
             struct appdata_meta_custom
             {
                 float4 vertex : POSITION;
+                float3 normal : NORMAL;
                 float2 uv : TEXCOORD0;
                 float2 uv1 : TEXCOORD1;
                 float2 uv2 : TEXCOORD2;
@@ -165,6 +215,8 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
             {
                 float4 position : SV_POSITION;
                 float2 uv : TEXCOORD0;
+                float3 worldPosition : TEXCOORD1;
+                float3 worldNormal : TEXCOORD2;
             };
 
             v2f_meta_custom vertMeta(appdata_meta_custom input)
@@ -173,6 +225,8 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
                 output.position = UnityMetaVertexPosition(input.vertex, input.uv1, input.uv2,
                     unity_LightmapST, unity_DynamicLightmapST);
                 output.uv = input.uv;
+                output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
+                output.worldNormal = UnityObjectToWorldNormal(input.normal);
                 return output;
             }
 
@@ -180,7 +234,12 @@ Shader "QuestFlight/AirportCoreV4/BakedLit"
             {
                 UnityMetaInput meta;
                 UNITY_INITIALIZE_OUTPUT(UnityMetaInput, meta);
-                meta.Albedo = tex2D(_MainTex, input.uv).rgb * _Tint.rgb;
+                float2 unwrappedUv;
+                float3 wallTangent;
+                float metricWall;
+                float2 sampleUv = TerminalWallUv(input.uv, input.worldPosition, input.worldNormal,
+                    unwrappedUv, wallTangent, metricWall);
+                meta.Albedo = tex2Dgrad(_MainTex, sampleUv, ddx(unwrappedUv), ddy(unwrappedUv)).rgb * _Tint.rgb;
                 meta.Emission = 0;
                 return UnityMetaFragment(meta);
             }

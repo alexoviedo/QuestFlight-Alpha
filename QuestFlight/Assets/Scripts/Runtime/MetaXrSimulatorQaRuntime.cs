@@ -43,6 +43,8 @@ namespace QuestFlightLab.Runtime
 
         private static readonly Definition[] Definitions =
         {
+            new Definition("wildlife_demo", "Natural demo eagle encounter", 0f, true),
+            new Definition("wildlife_habitat", "Reservoir wildlife native start", 4f, false),
             new Definition("cockpit_neutral", "Cockpit neutral forward view", 4f, false),
             new Definition("head_pan", "Slow head pan left, right, up, and down", 8f, false),
             new Definition("rear_view", "180-degree rearward view", 6f, false),
@@ -209,9 +211,42 @@ namespace QuestFlightLab.Runtime
                 if (trainingView == "orientation") { mode.AuthoredNavigation.ShowOrientation(); mode.AuthoredTraining.ShowReference(1); }
                 if (trainingView == "app") mode.AuthoredNavigation.OpenMenu();
                 if (trainingView == "calibration") mode.AuthoredNavigation.OpenCalibration();
+                if (trainingView == "polish")
+                {
+                    mode.AuthoredNavigation.OpenMenu();
+                    typeof(ProductAppNavigation).GetProperty("CurrentPage").SetValue(mode.AuthoredNavigation,ProductAppNavigation.Page.Controls);
+                    typeof(ProductAppNavigation).GetMethod("Refresh",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(mode.AuthoredNavigation,null);
+                }
                 Debug.Log($"[TrainingQA] requested={trainingView} state={mode.AuthoredTraining.State} focused={Application.isFocused}");
             }
             else if(!startDemo) Object.FindFirstObjectByType<ProductFlightModeCoordinator>()?.SelectFreeFlight();
+
+            if(_sessionId.StartsWith("wildlife_",StringComparison.Ordinal))
+            {
+                float transitionDeadline=Time.realtimeSinceStartup+15;
+                while(Time.timeScale<=0 && Time.realtimeSinceStartup<transitionDeadline)yield return null;
+                yield return null;
+                // As with training QA, measure terrain stability after the authored
+                // showroom-to-world visibility switch, not across that switch.
+                if(_mountainProbe!=null)
+                {_mountainProbe.Initialize(_mountainProbe.transform,_mountainProbe.transform.parent);_mountainProbe.BeginCapture(rig.TrackedCamera);}
+            }
+
+            // Development-only mountain foliage witness. Use an existing authored
+            // observation start through native JSBSim, never a tracked-eye write.
+            if (ReadBool("QFL_META_XR_SIMULATOR_TREE_VIEW", false))
+            {
+                var mode=Object.FindFirstObjectByType<ProductFlightModeCoordinator>();
+                float deadline=Time.realtimeSinceStartup+15;
+                while(mode.AuthoredModeMenuView.TransitionPending && Time.realtimeSinceStartup<deadline)yield return null;
+                var grove=Object.FindFirstObjectByType<MapBranchGroveRenderer>();
+                if(mode.AuthoredModeMenuView.TransitionPending || grove==null || grove.observationStarts.Length<7 ||
+                    !atmosphereAuthority.TryRecoverToInitialConditions(grove.observationStarts[6].Build(GeodeticReference.Kbdu)))
+                {_errors.Add("Tree QA observation start failed.");WriteStartupFailure(productRoot,rig);yield break;}
+                yield return null;yield return null;
+                if(_mountainProbe!=null)
+                {_mountainProbe.Initialize(_mountainProbe.transform,_mountainProbe.transform.parent);_mountainProbe.BeginCapture(rig.TrackedCamera);}
+            }
 
             // Development-only scenario placement goes through native reset; tracked eye poses stay OpenXR-owned.
             if(System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_AMBIENT_VIEW")=="foothill")
@@ -254,6 +289,33 @@ namespace QuestFlightLab.Runtime
                 }
             }
 
+            if(_sessionId=="wildlife_habitat")
+            {
+                var birds=Object.FindFirstObjectByType<HabitatBirdDirector>();
+                // Free-flight selection pauses during the showroom fade. Do not use
+                // an uninitialized bird transform as a native flight checkpoint.
+                float readyDeadline=Time.realtimeSinceStartup+15;
+                while(Time.timeScale<=0 && Time.realtimeSinceStartup<readyDeadline)yield return null;
+                yield return null;yield return null;
+                if(Time.timeScale<=0 || birds.modes.State!=ProductFlightModeCoordinator.FlightModeState.FreeFlight)
+                {_errors.Add("Free-flight transition did not complete for wildlife capture.");WriteStartupFailure(productRoot,rig);yield break;}
+                var flock=birds.birds[6];
+                Vector3 heading=Vector3.ProjectOnPlane(flock.Velocity,Vector3.up).normalized;
+                Vector3 at=flock.transform.position-heading*140-Vector3.up*10;
+                var geo=FlightFrameConversions.UnityToGeodetic(at,GeodeticReference.Kbdu);
+                var initial=atmosphereAuthority.LastResetInitialConditions;
+                initial.latitudeDegrees=geo.latitudeDegrees;initial.longitudeDegrees=geo.longitudeDegrees;initial.altitudeMslMeters=geo.altitudeMslMeters;
+                initial.calibratedAirspeedKnots=75;initial.headingDegrees=Mathf.Repeat(Mathf.Atan2(heading.x,heading.z)*Mathf.Rad2Deg,360);
+                initial.pitchDegrees=0;initial.bankDegrees=0;initial.flightPathAngleDegrees=0;
+                if(!atmosphereAuthority.TryRecoverToInitialConditions(initial))throw new InvalidOperationException(atmosphereAuthority.LastError);
+            }
+            if(_sessionId=="wildlife_demo")
+            {
+                var birds=Object.FindFirstObjectByType<HabitatBirdDirector>();
+                float deadline=Time.realtimeSinceStartup+200;
+                while(Time.realtimeSinceStartup<deadline && !birds.TryGetEagleCue(out _))yield return null;
+                if(!birds.TryGetEagleCue(out _))_errors.Add("No eligible pilot-view eagle encounter within 200 seconds.");
+            }
             float delay = ReadFloat(
                 "QFL_META_XR_SIMULATOR_CAPTURE_DELAY_SECONDS",
                 definition != null ? definition.captureDelaySeconds : 5f);
@@ -303,6 +365,101 @@ namespace QuestFlightLab.Runtime
                 yield return new WaitForSeconds(1);
             }
             yield return new WaitForEndOfFrame();
+            if(ReadBool("QFL_META_XR_SIMULATOR_COCKPIT_CLEARANCE",false))
+            {
+                // Development-only witness cameras; never alter the tracked camera.
+                Camera tracked=rig.TrackedCamera;
+                foreach(float pitch in new[]{0f,48f})
+                {
+                    var center=tracked.transform.position;
+                    var turn=Matrix4x4.Translate(center)*Matrix4x4.Rotate(
+                        Quaternion.AngleAxis(pitch,rig.AircraftSimulationRoot.right))*Matrix4x4.Translate(-center);
+                    for(int eye=0;eye<2;eye++)
+                    {
+                        var side=(Camera.StereoscopicEye)eye;
+                        var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side)*turn.inverse,tracked.GetStereoProjectionMatrix(side),1440,1440);
+                        File.WriteAllBytes(Path.Combine(_outputDirectory,$"cockpit_clearance_{pitch}_{side}.png"),texture.EncodeToPNG());
+                        Object.Destroy(texture);
+                    }
+                }
+            }
+            if(trainingView=="polish")
+            {
+                // Development-only presentation witnesses; read tracked eye matrices.
+                var nav=Object.FindFirstObjectByType<ProductAppNavigation>();
+                var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+                foreach(var page in new[]{ProductAppNavigation.Page.Map,ProductAppNavigation.Page.Kneeboard,ProductAppNavigation.Page.Comfort,ProductAppNavigation.Page.Controls,ProductAppNavigation.Page.Bindings,ProductAppNavigation.Page.InputPreview,ProductAppNavigation.Page.InstrumentHelp,ProductAppNavigation.Page.Captions,ProductAppNavigation.Page.ControlDiagram,ProductAppNavigation.Page.Checklist})
+                {
+                    typeof(ProductAppNavigation).GetProperty("CurrentPage").SetValue(nav,page);
+                    typeof(ProductAppNavigation).GetMethod("Refresh",flags).Invoke(nav,null);
+                    yield return new WaitForEndOfFrame();
+                    for(int eye=0;eye<2;eye++)
+                    {
+                        var side=(Camera.StereoscopicEye)eye;var tracked=rig.TrackedCamera;
+                        var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side),tracked.GetStereoProjectionMatrix(side),1440,1440);
+                        File.WriteAllBytes(Path.Combine(_outputDirectory,"polish_"+page+"_"+side+".png"),texture.EncodeToPNG());Object.Destroy(texture);
+                    }
+                }
+                var radio=Object.FindFirstObjectByType<ProductTrafficRadio>();
+                var caption=(TMPro.TextMeshPro)typeof(ProductTrafficRadio).GetField("caption",flags).GetValue(radio);
+                var panel=(GameObject)typeof(ProductAppNavigation).GetField("panel",flags).GetValue(nav);
+                radio.enabled=false;nav.enabled=false;panel.SetActive(false);
+                caption.text="RADIO / 122.725\nBoulder traffic, Cub six charlie, departing runway zero eight, Boulder.";
+                caption.color=Color.white;caption.transform.parent.gameObject.SetActive(true);
+                yield return new WaitForEndOfFrame();
+                for(int eye=0;eye<2;eye++)
+                {
+                    var side=(Camera.StereoscopicEye)eye;var tracked=rig.TrackedCamera;
+                    var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side),tracked.GetStereoProjectionMatrix(side),1440,1440);
+                    File.WriteAllBytes(Path.Combine(_outputDirectory,"polish_radio_"+side+".png"),texture.EncodeToPNG());Object.Destroy(texture);
+                }
+                caption.transform.parent.gameObject.SetActive(false);
+                var instruction=Object.FindFirstObjectByType<ProductUiInstruction>(FindObjectsInactive.Include);
+                var lesson=Object.FindFirstObjectByType<QuestFlight.Product.Training.ProductTrainingController>();
+                bool lessonEnabled=lesson.enabled;lesson.enabled=false;
+                bool hadSize=PlayerPrefs.HasKey("QuestFlight.CaptionScale"),hadSolid=PlayerPrefs.HasKey("QuestFlight.SolidCaptions");
+                float oldSize=PlayerPrefs.GetFloat("QuestFlight.CaptionScale",1);int oldSolid=PlayerPrefs.GetInt("QuestFlight.SolidCaptions",1);
+                try
+                {
+                    foreach(bool solid in new[]{true,false})
+                    {
+                        PlayerPrefs.SetFloat("QuestFlight.CaptionScale",1.6f);PlayerPrefs.SetInt("QuestFlight.SolidCaptions",solid?1:0);
+                        instruction.gameObject.SetActive(true);instruction.Present("Instructor","Follow the taxiway","Use small rudder movements to keep the nose on the yellow centerline.",2,8,true,false);
+                        yield return new WaitForEndOfFrame();
+                        for(int eye=0;eye<2;eye++)
+                        {
+                            var side=(Camera.StereoscopicEye)eye;var tracked=rig.TrackedCamera;
+                            var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side),tracked.GetStereoProjectionMatrix(side),1440,1440);
+                            File.WriteAllBytes(Path.Combine(_outputDirectory,"polish_caption_"+(solid?"solid_":"translucent_")+side+".png"),texture.EncodeToPNG());Object.Destroy(texture);
+                        }
+                    }
+                }
+                finally
+                {
+                    instruction.gameObject.SetActive(false);lesson.enabled=lessonEnabled;
+                    if(hadSize)PlayerPrefs.SetFloat("QuestFlight.CaptionScale",oldSize);else PlayerPrefs.DeleteKey("QuestFlight.CaptionScale");
+                    if(hadSolid)PlayerPrefs.SetInt("QuestFlight.SolidCaptions",oldSolid);else PlayerPrefs.DeleteKey("QuestFlight.SolidCaptions");
+                }
+                radio.enabled=true;nav.enabled=true;panel.SetActive(true);
+                var menuModes=Object.FindFirstObjectByType<ProductFlightModeCoordinator>();
+                menuModes.ReturnToMainMenu();
+                foreach(var page in new[]{ProductAppNavigation.Page.None,ProductAppNavigation.Page.Controls,ProductAppNavigation.Page.InstrumentHelp,ProductAppNavigation.Page.Calibration,ProductAppNavigation.Page.App})
+                {
+                    typeof(ProductAppNavigation).GetProperty("CurrentPage").SetValue(nav,page);
+                    if(page==ProductAppNavigation.Page.InstrumentHelp)typeof(ProductAppNavigation).GetMethod("ShowInstrumentHelp",flags).Invoke(nav,null);
+                    typeof(ProductAppNavigation).GetMethod("Refresh",flags).Invoke(nav,null);
+                    yield return new WaitForEndOfFrame();
+                    for(int eye=0;eye<2;eye++)
+                    {
+                        var side=(Camera.StereoscopicEye)eye;var tracked=rig.TrackedCamera;
+                        var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side),tracked.GetStereoProjectionMatrix(side),1440,1440);
+                        File.WriteAllBytes(Path.Combine(_outputDirectory,"selection_"+page+"_"+side+".png"),texture.EncodeToPNG());Object.Destroy(texture);
+                    }
+                }
+                typeof(ProductAppNavigation).GetProperty("CurrentPage").SetValue(nav,ProductAppNavigation.Page.Controls);
+                typeof(ProductAppNavigation).GetMethod("Refresh",flags).Invoke(nav,null);
+                yield return new WaitForEndOfFrame();
+            }
             Capture(productRoot, rig, definition);
         }
 

@@ -1,0 +1,2 @@
+# Presentation finish assets
+Controller outlines, graph lines, labels and caption material/shader are original project-authored geometry/code; same terms as project source. No external art. Caption timings derive from the existing pinned Kokoro Michael model and are tied to the shipped PCM recordings; audio sources and hashes are recorded in Training/Voice/KOKORO_SOURCE_MANIFEST.json. No runtime models or external service. All objects are explicitly authored in the product prefab.

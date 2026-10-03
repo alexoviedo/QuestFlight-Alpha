@@ -8,7 +8,7 @@ namespace QuestFlight.Product.Training
     public enum TrainingReference { Outside, Airspeed, Attitude, Altimeter, Heading, VerticalSpeed, Slip, Throttle, Yoke, Flaps, Trim, Runway }
     public enum TrainingCue { None, RollLeft, RollRight, RolloutLeft, RolloutRight, TurnLeft, TurnRight,
         AltitudeLow, AltitudeHigh, SpeedLow, SpeedHigh, RudderLeft, RudderRight, TaxiFast, Stop,
-        Power, Brakes, Yoke, Rudder, Trim, Flaps, AlignRunway, Approach, GoAround, Recovered }
+        Power, Brakes, Yoke, Rudder, Trim, Flaps, AlignRunway, Approach, GoAround, Recovered, RollCheckLeft, RollCheckRight, RollCheckCenter, PitchCheckForward, PitchCheckBack, PitchCheckCenter, RudderCheckLeft, RudderCheckRight, RudderCheckCenter }
     [Serializable] public struct TrainingCoachLine
     { public TrainingCue cue; public TrainingReference reference; public string text; public AudioClip voice; }
     [Serializable] public struct TrainingReferenceMarker
@@ -32,6 +32,9 @@ namespace QuestFlight.Product.Training
         private int lastStage=-1;
         private float lastHeading, turnRate;
         private bool hadError;
+        private bool inspecting;
+        public void ShowForInspection(TrainingReference reference){inspecting=true;Show(reference,3600);}
+        public void EndInspection(){if(inspecting){inspecting=false;Hide();}}
         public TrainingReference CurrentReference { get; private set; }
         public void Configure(ProductTrainingController controller, FlightDynamicsCoordinator authority, MonoBehaviour instruments,
             TrainingCoachLine[] authoredLines, TrainingReferenceMarker[] authoredMarkers)
@@ -74,6 +77,7 @@ namespace QuestFlight.Product.Training
         private void Update()
         {
             if(training==null || flight==null) return;
+            if(inspecting)return;
             if(training.State==TrainingSessionState.Inactive) { Hide(); return; }
             if(Time.unscaledTime>hideAt)
                 foreach(var marker in markers) if(marker.marker!=null) marker.marker.SetActive(false);
@@ -95,6 +99,14 @@ namespace QuestFlight.Product.Training
             turnRate=Mathf.Lerp(turnRate,delta/.1f,.25f); lastHeading=(float)state.headingDegrees;
             if(!TryIndications(out var indicated)) return;
             var cue=Evaluate(training.CurrentStage,state,flight.LastAppliedControls,indicated,turnRate);
+            bool controlCheck=training.Evaluator.IsControlCheck(training.CurrentStage.task);
+            if(controlCheck)
+            {
+                if(training.Evaluator.Complete) return;
+                var first=training.CurrentStage.task==TrainingTask.RollControl?TrainingCue.RollCheckLeft:training.CurrentStage.task==TrainingTask.PitchControl?TrainingCue.PitchCheckForward:TrainingCue.RudderCheckLeft;
+                cue=(TrainingCue)((int)first+training.Evaluator.ControlPhase);
+                if(!state.weightOnWheels||state.groundSpeedKnots>=1||flight.LastAppliedControls.throttle>=.2f)cue=TrainingCue.Brakes;
+            }
             bool urgent=cue==TrainingCue.GoAround;
             bool transition=cue==TrainingCue.RolloutLeft||cue==TrainingCue.RolloutRight;
             if(cue!=candidate) { candidate=cue; observedSince=Time.unscaledTime; }
@@ -117,6 +129,7 @@ namespace QuestFlight.Product.Training
                 if(line.cue==cue)
                 {
                     training.PresentCoachCue(line.text,line.voice,interrupt);
+                    if(cue!=TrainingCue.Recovered)training.RecordCoaching(cue);
                     Show(line.reference); lastSpoken=cue;
                     nextSpeech=Time.unscaledTime+Mathf.Max(4,line.voice!=null?line.voice.length+3:5);
                     repeatAfter=Time.unscaledTime+Mathf.Max(8,line.voice!=null?line.voice.length+4:8);
@@ -139,8 +152,8 @@ namespace QuestFlight.Product.Training
                 if((stage.task==TrainingTask.Taxi||stage.task==TrainingTask.Stop) && s.groundSpeedKnots>8) return TrainingCue.TaxiFast;
                 if(stage.task==TrainingTask.Stop && s.groundSpeedKnots>.7) return TrainingCue.Stop;
                 if(stage.task==TrainingTask.BrakeControl && (c.leftToeBrake<.35f||c.rightToeBrake<.35f)) return TrainingCue.Brakes;
-                if(stage.task==TrainingTask.RollControl||stage.task==TrainingTask.PitchControl) return TrainingCue.Yoke;
-                if(stage.task==TrainingTask.RudderControl) return TrainingCue.Rudder;
+                // Control-check coaching is selected from observed movement progress in Update.
+
                 if(stage.task==TrainingTask.TakeoffRoll && c.throttle<.9f) return TrainingCue.Power;
                 if(stage.task==TrainingTask.Taxi && Mathf.Abs(heading)>18) return heading>0?TrainingCue.TurnRight:TrainingCue.TurnLeft;
                 return TrainingCue.None;
@@ -152,7 +165,7 @@ namespace QuestFlight.Product.Training
                 return bank>0?TrainingCue.RolloutLeft:TrainingCue.RolloutRight;
             if((turning||stage.task==TrainingTask.Level||stage.task==TrainingTask.Downwind) && !stage.attitudeOnly &&
                 (stage.task!=TrainingTask.Level||stage.reference==TrainingReference.Heading||stage.reference==TrainingReference.Outside) &&
-                Mathf.Abs(heading)>15 && (Mathf.Abs(bank)<3||Mathf.Sign(bank)!=Mathf.Sign(heading)))
+                Mathf.Abs(heading)>(stage.task==TrainingTask.Turn?8:12) && (Mathf.Abs(bank)<3||Mathf.Sign(bank)!=Mathf.Sign(heading)))
                 return heading>0?TrainingCue.TurnRight:TrainingCue.TurnLeft;
             if(speed<Mathf.Max(55,stage.speedKnots-15)) return TrainingCue.SpeedLow;
             if(speed>stage.speedKnots+20 && !turning) return TrainingCue.SpeedHigh;

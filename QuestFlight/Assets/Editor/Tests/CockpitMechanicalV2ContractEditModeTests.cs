@@ -110,10 +110,10 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(renderer.enabled, Is.True);
                 Assert.That(renderer.sharedMaterials.Length, Is.EqualTo(1));
                 Assert.That(renderer.bones.Length, Is.EqualTo(9));
-                Assert.That(renderer.sharedMesh.vertexCount, Is.EqualTo(18903));
+                Assert.That(renderer.sharedMesh.vertexCount, Is.EqualTo(15440));
                 Assert.That(
                     renderer.sharedMesh.triangles.Length / 3,
-                    Is.EqualTo(16913));
+                    Is.EqualTo(13024));
                 BoneWeight[] rigidWeights = renderer.sharedMesh.boneWeights;
                 int[] rigidTriangles = renderer.sharedMesh.triangles;
                 Assert.That(rigidWeights, Has.Length.EqualTo(renderer.sharedMesh.vertexCount));
@@ -132,20 +132,31 @@ namespace QuestFlightLab.Tests.EditMode
                     Assert.That(rigidWeights[rigidTriangles[triangle + 2]].boneIndex0,
                         Is.EqualTo(owner), $"Triangle {triangle / 3} spans pedal bones.");
                 }
+                // Complete equal footplates, independent toe hinges, and fixed
+                // bearings: guard the missing heel and moving base regressions.
+                int[] ownedTriangles=new int[9];
+                for(int t=0;t<rigidTriangles.Length;t+=3)ownedTriangles[rigidWeights[rigidTriangles[t]].boneIndex0]++;
+                Assert.That(ownedTriangles[0],Is.EqualTo(48),"Floor bearings must stay on the fixed root.");
+                for(int p=0;p<4;p++)
+                {
+                    Assert.That(ownedTriangles[2+p*2],Is.EqualTo(3144),"Every footplate must have its full heel, crown and tread.");
+                    Assert.That(ownedTriangles[1+p*2],Is.GreaterThan(0),"Rudder arm must not be attached to the toe brake.");
+                    Assert.That(renderer.bones[2+p*2].localPosition.magnitude,Is.GreaterThan(.009f),"Toe and rudder hinges must be distinct.");
+                }
                 StringAssert.Contains(
                     "\"source_connected_components\": 81",
                     File.ReadAllText(
                         CockpitPedalCompletionAuthoring.ManifestPath));
                 StringAssert.Contains(
-                    "\"mirrored_connected_components\": 16",
+                    "\"copied_footplate_components\": 36",
                     File.ReadAllText(
                         CockpitPedalCompletionAuthoring.ManifestPath));
                 StringAssert.Contains(
-                    "\"rejected_duplicate_components\": 2",
+                    "\"rejected_duplicate_components\": 0",
                     File.ReadAllText(
                         CockpitPedalCompletionAuthoring.ManifestPath));
                 StringAssert.Contains(
-                    "\"rejected_duplicate_triangles\": 16",
+                    "\"rejected_duplicate_triangles\": 0",
                     File.ReadAllText(
                         CockpitPedalCompletionAuthoring.ManifestPath));
 

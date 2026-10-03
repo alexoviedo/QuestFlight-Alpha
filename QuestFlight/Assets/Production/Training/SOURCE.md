@@ -1,10 +1,12 @@
-# Training asset provenance
+# Training and demo narration provenance
 
-The six lesson `.asset` files, `VoiceScripts.json`, and every `Voice/*.wav` file are original QuestFlight content authored for the approved Flight Training V1 milestone, September 18–19, 2026. There are no downloaded recordings, aircraft models, photographs, or third-party curriculum packages in this directory.
+September 21, 2026: the user selected Kokoro's American English `am_michael` voice after the two-voice audition. The current library contains 93 lesson/reference/coaching clips and 10 scenic-demo/status clips. These are candidate recordings pending full human listening acceptance.
 
-Each WAV is generated from the matching `id` and original `text` in `VoiceScripts.json` by `scripts/generate_training_voice.ps1`, using the installed Windows Speech API and Microsoft David Desktop voice. The speech engine and voice software are not included in the application. These original scripts and generated recordings are project-owned content distributed with the owner's authorized QuestFlight builds; no separate public-domain or third-party recording-license claim is made.
+The lesson, reference and coaching copy is original QuestFlight content in `LessonTeachingContent.json` and `VoiceScripts.json`. Tour copy is authored in `tools/audio/demo_voice_scripts.json`. No commercial lesson script was copied.
 
-Unity imports the recordings as mono 22.05 kHz Vorbis, compressed in memory. Only one narration source plays at a time. WAV sources are retained to reproduce the import; their `.meta` GUIDs must be preserved.
+Recordings are generated locally with `tools/audio/generate_kokoro_voice.py` through the wrapper `scripts/generate_training_voice.ps1`. The generator is Kokoro 0.9.4 / Misaki 0.9.4, model `hexgrad/Kokoro-82M` v1.0, revision `f3ff3571791e39611d31c381e3a41a3af07b4987`. Model and official implementation are Apache-2.0 licensed: https://huggingface.co/hexgrad/Kokoro-82M and https://github.com/hexgrad/kokoro . The per-clip source text, model revision, voice hash, generation settings, package versions and WAV hashes are recorded in `Voice/KOKORO_SOURCE_MANIFEST.json`. No model weights or Python runtime ship with the Android app.
+
+The former Microsoft David Desktop recordings were replaced in place; existing Unity GUIDs remain unchanged. Masters are mono 24 kHz PCM WAV; Unity imports mono 24 kHz Vorbis, compressed in memory, with one shared instructor source. Asset regeneration must not overwrite Kokoro with Windows speech. The authoring environment stays outside Git; its package inventory is `tools/audio/kokoro-environment-lock.txt`.
 
 Instructional references, paraphrased into short original cues:
 

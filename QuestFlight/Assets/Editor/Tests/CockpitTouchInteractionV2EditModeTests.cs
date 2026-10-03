@@ -342,6 +342,22 @@ namespace QuestFlightLab.Tests.EditMode
                 StringAssert.DoesNotContain(value, source, value);
         }
 
+        [Test]
+        public void OptionalYokeToggleHoldsAfterReleaseAndReleasesOnSecondPress()
+        {
+            string key="QuestFlight.ToggleYoke";bool had=PlayerPrefs.HasKey(key);int old=PlayerPrefs.GetInt(key);PlayerPrefs.SetInt(key,1);
+            try
+            {
+                _controller.ConfigureAuthoredReferences(_left,_right,~0,.8f,new[]{Binding("near_yoke",_nearCollider,CockpitTouchInteractionV2Target.PilotYoke,CockpitTouchInteractionV2Hand.Left)},null);
+                Physics.SyncTransforms();
+                _controller.ProcessPointerForTest(CockpitTouchInteractionV2Hand.Left,true,1,10);AssertCommand(CockpitTouchInteractionV2Operation.BeginGrab,CockpitTouchInteractionV2Target.PilotYoke,"near_yoke");
+                _controller.ProcessPointerForTest(CockpitTouchInteractionV2Hand.Left,false,1.1f,11);AssertCommand(CockpitTouchInteractionV2Operation.UpdateGrab,CockpitTouchInteractionV2Target.PilotYoke,"near_yoke");
+                _controller.ProcessPointerForTest(CockpitTouchInteractionV2Hand.Left,true,1.2f,12);AssertCommand(CockpitTouchInteractionV2Operation.EndGrab,CockpitTouchInteractionV2Target.PilotYoke,"near_yoke");
+                _controller.ProcessPointerForTest(CockpitTouchInteractionV2Hand.Left,true,1.3f,13);Assert.That(_controller.TryDequeueCommand(out _),Is.False);
+            }
+            finally{if(had)PlayerPrefs.SetInt(key,old);else PlayerPrefs.DeleteKey(key);}
+        }
+
         private void AssertCommand(
             CockpitTouchInteractionV2Operation operation,
             CockpitTouchInteractionV2Target target,

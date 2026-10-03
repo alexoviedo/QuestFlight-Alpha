@@ -100,6 +100,7 @@ namespace QuestFlight.Editor
             finally { PrefabUtility.UnloadPrefabContents(world); }
             File.WriteAllText(Root + "/VoiceScripts.json", JsonUtility.ToJson(new VoiceManifest { clips = scripts.ToArray() }, true));
             AssetDatabase.SaveAssets(); AssetDatabase.Refresh();
+            if(File.Exists(Root+"/LessonTeachingContent.json")) ProductLessonTeachingAuthoring.Apply();
         }
 
         private static void AuthorNavigation(Transform inputRoot, Transform seatRoot, ProductFlightModeCoordinator mode,

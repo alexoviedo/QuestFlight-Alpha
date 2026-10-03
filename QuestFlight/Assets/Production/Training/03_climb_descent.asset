@@ -14,9 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 03_climb_descent
   displayName: Climbs, descents and trim
-  briefing: Practice a climb, descent and level-off. Learn the instruments first.
-    The left stick adjusts trim; the right stick controls rudder. Menu pauses.
+  briefing: Start at seven thousand feet. Climb to seventy-three hundred, level off,
+    descend back, then trim. Set attitude and power before trimming. In this simulator
+    the trim thumbstick changes trim during flight; it navigates menus only when
+    a menu is open.
   briefingNarration: {fileID: 8300000, guid: cbef6bf7c57cea946bfa7dec72fb4080, type: 3}
+  learningGoal: Anticipate each level-off, then stabilize altitude, heading and speed.
+    Trim reduces sustained yoke input; the controllers cannot reproduce real control
+    forces.
+  reflection: Did you begin leveling before the target altitude, or chase it after
+    passing it?
   start:
     latitudeDegrees: 40.055571596122014
     longitudeDegrees: -105.21437258689055
@@ -35,10 +42,14 @@ MonoBehaviour:
   airportExercise: 0
   goAroundStage: -1
   stages:
-  - title: Climb
-    instruction: Add climb power, then set a gentle climbing attitude. Aim for seventy
-      to eighty knots.
+  - title: Climb toward 7300
+    instruction: Add climb power and gently raise the nose. Aim for seventy to eighty
+      knots on the airspeed dial and heading zero nine zero. Watch the altimeter
+      approach seventy-three hundred feet.
     narration: {fileID: 8300000, guid: e414d80d9ddcb564cb45d509d59ea5e9, type: 3}
+    successFeedback: You approached the climb target at a safe climbing speed.
+    retryAdvice: Use pitch to manage climb airspeed and adequate power for the climb.
+      Do not keep raising the nose if speed falls.
     task: 8
     reference: 1
     attitudeOnly: 0
@@ -50,9 +61,13 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Level at 7300
-    instruction: Approaching seventy-three hundred feet, lower the nose to level
-      flight and adjust power.
+    instruction: Start easing the nose toward level as you approach seventy-three
+      hundred feet. Let the airplane accelerate, then reduce to cruise power. Settle
+      near ninety knots and heading zero nine zero.
     narration: {fileID: 8300000, guid: 8a5605cc14f888c4795d8a9a03c25d3f, type: 3}
+    successFeedback: You stabilized near seventy-three hundred feet.
+    retryAdvice: Anticipate the level-off. Lower the nose smoothly, then adjust power
+      as speed builds.
     task: 6
     reference: 0
     attitudeOnly: 0
@@ -63,10 +78,14 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Descend
-    instruction: Reduce power and establish a gentle descent toward seven thousand
-      feet.
+  - title: Descend toward 7000
+    instruction: Reduce power and lower the nose slightly. Aim for roughly three
+      to five hundred feet per minute down on the vertical-speed dial. Keep heading
+      zero nine zero and approach seven thousand feet.
     narration: {fileID: 8300000, guid: cbea92fdac83ad749bf48c19cce0802d, type: 3}
+    successFeedback: You approached seven thousand feet in a controlled descent.
+    retryAdvice: Use a modest descent, keep speed under control, and prepare to level
+      before seven thousand feet.
     task: 9
     reference: 5
     attitudeOnly: 0
@@ -78,9 +97,13 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Level at 7000
-    instruction: Begin leveling before seven thousand feet. Restore cruise power
-      and settle near ninety knots.
+    instruction: Begin raising the nose toward level before seven thousand feet.
+      Restore cruise power and settle near ninety knots, heading zero nine zero.
+      Allow the vertical-speed needle to settle.
     narration: {fileID: 8300000, guid: ab0c2cc1d7371d2408c74e2b469c6bb7, type: 3}
+    successFeedback: You stabilized near seven thousand feet after the descent.
+    retryAdvice: Restore power as you level off. Watch the altitude trend before
+      making another pitch change.
     task: 6
     reference: 0
     attitudeOnly: 0
@@ -91,10 +114,15 @@ MonoBehaviour:
     timeoutSeconds: 180
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
-  - title: Trim off pressure
-    instruction: Move the left thumbstick up or down a little to trim. Reduce the
-      yoke input needed to stay level.
+  - title: Trim the steady attitude
+    instruction: Hold the level attitude with the yoke. Tap the trim thumbstick up
+      or down a little, then ease your held yoke input. Keep the direction that reduces
+      the correction needed; reverse it if the correction increases.
     narration: {fileID: 8300000, guid: 3c76954f770871041a1d9263dff2dcf7, type: 3}
+    successFeedback: You adjusted trim and maintained steady flight with reduced
+      yoke input.
+    retryAdvice: Settle attitude and speed first. Use a small trim change, then check
+      whether less yoke input is needed.
     task: 10
     reference: 10
     attitudeOnly: 0

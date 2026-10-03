@@ -14,7 +14,7 @@ param(
   [int]$ReadinessTimeoutSeconds = 120,
   [ValidateRange(60, 180)]
   [int]$MeasurementTimeoutSeconds = 90,
-  [ValidateSet('production', 'sky_only', 'clouds_off', 'clouds_full_sampling', 'traffic_off', 'vegetation_off', 'connected_grove_off', 'buildings_off', 'water_off', 'buildings_vegetation_off', 'reduced_texture_tier')]
+  [ValidateSet('production', 'sky_only', 'clouds_off', 'clouds_full_sampling', 'traffic_off', 'vegetation_off', 'connected_grove_off', 'grove_source_geometry', 'buildings_off', 'water_off', 'buildings_vegetation_off', 'reduced_texture_tier')]
   [string]$IsolationProfile = 'production',
   [ValidateRange(-1, 4)]
   [int]$DiagnosticFoveationLevel = -1,

@@ -12,12 +12,15 @@ namespace QuestFlight.Product
         [SerializeField] private TextMeshPro display;
         public TextMeshPro Display => display;
         public void Configure(TextMesh value,TextMeshPro view) { source=value; display=view; Refresh(); }
+        private float authoredFontSize;
         private void OnEnable() => Refresh();
         public void Refresh()
         {
             if(source==null||display==null)return;
+            if(Application.isPlaying) { if(authoredFontSize<=0)authoredFontSize=display.fontSize;display.fontSize=authoredFontSize*ProductComfortPreferences.TextScale; }
             if(display.text!=source.text)display.text=source.text;
-            if(display.color!=source.color)display.color=source.color;
+            Color color=ProductComfortPreferences.HighContrast?Color.white:source.color;
+            if(display.color!=color)display.color=color;
         }
         public static void Sync(TextMesh source)
         { if(source!=null && source.TryGetComponent<ProductUiLabel>(out var label))label.Refresh(); }
