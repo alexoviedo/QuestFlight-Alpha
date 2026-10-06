@@ -35,8 +35,16 @@ model at runtime.
 
 Use Unity `6000.3.8f1` and open `QuestFlight/Assets/Scenes/ProductionVerticalSlice.unity`.
 
+The current SpaceWarp candidate uses pinned URP 17.3.0 with RenderGraph. SpaceWarp
+is optional in Settings → Display and readability, defaults off, and still needs
+physical Quest acceptance. Implementation, diagnostics, known approximation limits
+and hardware checks are described in
+[`docs/APPLICATION_SPACEWARP_IMPLEMENTATION_2026-10-03.md`](docs/APPLICATION_SPACEWARP_IMPLEMENTATION_2026-10-03.md).
+Use the current-product wrapper below; the older extraction validator remains a
+separate historical gate and is not proof of this candidate's readiness.
+
 ```powershell
-.\scripts\validate_product.ps1
+.\scripts\validate_current_product.ps1 -ArtifactDir ..\T2-QuestFlight-product-artifacts\current-validation
 .\scripts\run_production_visual_qa.ps1
 .\scripts\run_quest_performance_budget.ps1
 .\scripts\run_simulator_visual_gate.ps1
