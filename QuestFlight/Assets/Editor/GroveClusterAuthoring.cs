@@ -87,7 +87,7 @@ namespace QuestFlightLab.Editor
             var colorPixels=new Color32[2048*2048];var normalPixels=new Color32[colorPixels.Length];
             var buffer=new ComputeBuffer(4,48);var properties=new MaterialPropertyBlock();properties.SetBuffer("_BranchCells",buffer);
             var command=new CommandBuffer{name="Offline accepted branch capture"};
-            camera.AddCommandBuffer(CameraEvent.BeforeForwardOpaque,command);camera.targetTexture=target;
+            camera.targetTexture=target;
             var cells=new Cell[4];var previousTarget=RenderTexture.active;
             try
             {
@@ -117,7 +117,11 @@ namespace QuestFlightLab.Editor
                         int frame=template*25+view;
                         for(int pass=0;pass<2;pass++)
                         {
-                            bakeMaterial.SetFloat("_BakeNormal",pass);camera.Render();RenderTexture.active=target;
+                            bakeMaterial.SetFloat("_BakeNormal",pass);
+                            command.Clear();command.SetRenderTarget(target);command.ClearRenderTarget(true,true,Color.clear);
+                            command.SetViewProjectionMatrices(camera.worldToCameraMatrix,GL.GetGPUProjectionMatrix(camera.projectionMatrix,true));
+                            command.DrawMeshInstancedProcedural(source.branchMesh,variant==0?2:1,bakeMaterial,0,4,properties);
+                            Graphics.ExecuteCommandBuffer(command);RenderTexture.active=target;
                             readback.ReadPixels(new Rect(0,0,128,128),0,0);readback.Apply(false,false);var pixels=readback.GetPixels();
                             var atlas=pass==0?colorPixels:normalPixels;
                             int covered=0;
@@ -138,7 +142,7 @@ namespace QuestFlightLab.Editor
             }
             finally
             {
-                RenderTexture.active=previousTarget;camera.RemoveCommandBuffer(CameraEvent.BeforeForwardOpaque,command);command.Release();buffer.Release();
+                RenderTexture.active=previousTarget;command.Release();buffer.Release();
                 camera.targetTexture=null;target.Release();UnityEngine.Object.DestroyImmediate(target);UnityEngine.Object.DestroyImmediate(readback);
                 UnityEngine.Object.DestroyImmediate(colorAtlas);UnityEngine.Object.DestroyImmediate(normalAtlas);UnityEngine.Object.DestroyImmediate(bakeMaterial);UnityEngine.Object.DestroyImmediate(host);
                 ShaderUtil.allowAsyncCompilation=previousAsync;

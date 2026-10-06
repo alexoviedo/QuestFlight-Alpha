@@ -19,7 +19,9 @@ namespace QuestFlight.PlayModeTests
         public void SetUp()
         {
             savedScale = Time.timeScale;
-            Time.timeScale = 1f;
+            // Reproduce the serialized zero-time-scale cold launch. Startup
+            // must establish a running flight rather than restore this pause.
+            Time.timeScale = 0f;
             world = UnityEngine.Object.Instantiate(Resources.Load<GameObject>(
                 "QuestFlightLab/Production/ProductionWorldRoot"));
             modes = world.GetComponentInChildren<ProductFlightModeCoordinator>(true);
@@ -63,6 +65,7 @@ namespace QuestFlight.PlayModeTests
         {
             modes.SelectFreeFlight();
             Assert.That(modes.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.FreeFlight));
+            Assert.That(Time.timeScale, Is.EqualTo(1f), "First Free Flight must release the startup pause.");
             FinishTransition();
             for (int cycle = 0; cycle < 2; cycle++)
             {

@@ -9,7 +9,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.Analog
     /// Allocation-free CPU vertex animator for the single combined analog mesh.
     /// All arrays/lists are allocated once during authored controller startup.
     /// </summary>
-    public sealed class AnalogInstrumentMeshAnimator
+    public sealed class AnalogInstrumentMeshAnimator : IDisposable
     {
         private const MeshUpdateFlags UploadFlags =
             MeshUpdateFlags.DontRecalculateBounds |
@@ -23,6 +23,8 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.Analog
         private readonly List<Vector3> _workingVertices;
         private readonly List<Vector3> _workingNormals;
         private readonly List<Vector4> _workingTangents;
+        private QuestFlight.Rendering.ProductDeformedMeshHistory motionHistory;
+        public void Dispose() => motionHistory?.Dispose();
         private readonly float[] _lastDialAngles = new float[2];
 
         public AnalogInstrumentMeshAnimator(
@@ -120,6 +122,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.Analog
             if (!uploadToMesh) return;
             if (destinationMesh == null)
                 throw new ArgumentNullException(nameof(destinationMesh));
+            (motionHistory ??= new QuestFlight.Rendering.ProductDeformedMeshHistory()).Upload(destinationMesh,_workingVertices);
             destinationMesh.SetVertices(
                 _workingVertices, 0, _workingVertices.Count, UploadFlags);
             destinationMesh.SetNormals(

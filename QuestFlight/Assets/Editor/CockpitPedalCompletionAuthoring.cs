@@ -134,7 +134,7 @@ namespace QuestFlight.Editor
                 renderer.lightProbeUsage = sourceRenderer.lightProbeUsage;
                 renderer.reflectionProbeUsage = sourceRenderer.reflectionProbeUsage;
                 renderer.motionVectorGenerationMode =
-                    MotionVectorGenerationMode.ForceNoMotion;
+                    MotionVectorGenerationMode.Object;
                 renderer.probeAnchor = sourceRenderer.probeAnchor;
                 sourceRenderer.enabled = false;
                 ReplaceRuntimeVisibilityAuthority(

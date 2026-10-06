@@ -3,10 +3,12 @@ param(
   [string]$AdbExe='C:/Program Files/Meta Quest Developer Hub/resources/bin/adb.exe',
   [string]$DeviceSerial='2G0YC5ZG8907TD',
   [Parameter(Mandatory=$true)][string]$OutputDir,
-  [int[]]$Stations=@(0,1,2,3,4,5,6,7,8)
+  [int[]]$Stations=@(0,1,2,3,4,5,6,7,8),
+  [switch]$KeepHeadsetAwake
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'quest_proximity_state.ps1')
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 function Adb([string[]]$Arguments) {
   $result=& $AdbExe -s $DeviceSerial @Arguments 2>&1
@@ -16,9 +18,10 @@ function Adb([string[]]$Arguments) {
 $previous=(Adb @('shell','settings','get','global','stay_on_while_plugged_in') | Out-String).Trim()
 $previous | Set-Content (Join-Path $OutputDir 'stay_awake_before.txt')
 $results=@()
+$originalVirtualProximity=Get-QuestVirtualProximityState -Dump ((Adb @('shell','dumpsys','oculus.internal.power.IVrPowerManager/default')) | Out-String)
+$originalVirtualProximity | Set-Content (Join-Path $OutputDir 'virtual_proximity_before.txt')
 try {
   [void](Adb @('shell','svc','power','stayon','usb'))
-  [void](Adb @('shell','am','broadcast','-a','com.oculus.vrpowermanager.automation_disable'))
   [void](Adb @('shell','am','broadcast','-a','com.oculus.vrpowermanager.prox_close'))
   [void](Adb @('shell','input','keyevent','KEYCODE_WAKEUP'))
   Start-Sleep -Seconds 2
@@ -54,9 +57,11 @@ try {
 } finally {
   & $AdbExe -s $DeviceSerial shell am force-stop com.alexoviedo.t2.questflight | Out-Null
   & $AdbExe -s $DeviceSerial shell rm -f /sdcard/Android/data/com.alexoviedo.t2.questflight/files/qfl_acceptance_request.json | Out-Null
-  & $AdbExe -s $DeviceSerial shell am broadcast -a com.oculus.vrpowermanager.prox_far | Out-Null
-  & $AdbExe -s $DeviceSerial shell am broadcast -a com.oculus.vrpowermanager.automation_enable | Out-Null
+  $restoreAction=Get-QuestProximityRestoreAction -PreviousState $originalVirtualProximity -KeepAwake:$KeepHeadsetAwake
+  & $AdbExe -s $DeviceSerial shell am broadcast -a $restoreAction | Out-Null
+  "Previous=$originalVirtualProximity; KeepAwake=$KeepHeadsetAwake; sent=$restoreAction" | Set-Content (Join-Path $OutputDir 'quest_power_automation_restore.txt')
   if(!$previous -or $previous -eq 'null'){& $AdbExe -s $DeviceSerial shell settings delete global stay_on_while_plugged_in | Out-Null}
   else{& $AdbExe -s $DeviceSerial shell settings put global stay_on_while_plugged_in $previous | Out-Null}
   & $AdbExe -s $DeviceSerial shell settings get global stay_on_while_plugged_in | Set-Content (Join-Path $OutputDir 'stay_awake_restored.txt')
+  & $AdbExe -s $DeviceSerial shell dumpsys oculus.internal.power.IVrPowerManager/default | Set-Content (Join-Path $OutputDir 'virtual_proximity_after.txt')
 }

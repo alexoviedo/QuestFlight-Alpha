@@ -116,6 +116,8 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.Analog
                 layout.DynamicInstrumentMesh.name + "_Runtime";
             _runtimeDynamicMesh.MarkDynamic();
             dynamicInstrumentFilter.sharedMesh = _runtimeDynamicMesh;
+            var motionProperties = new MaterialPropertyBlock();
+            dynamicInstrumentRenderer.GetPropertyBlock(motionProperties);motionProperties.SetFloat("_QFPreviousVertices",1);dynamicInstrumentRenderer.SetPropertyBlock(motionProperties);
             _animator = new AnalogInstrumentMeshAnimator(
                 layout.DynamicInstrumentMesh, layout.Bindings);
             dynamicInstrumentRenderer.enabled = false;
@@ -129,6 +131,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.Analog
 
         private void OnDestroy()
         {
+            _animator?.Dispose();
             if (_runtimeDynamicMesh == null) return;
             Destroy(_runtimeDynamicMesh);
             _runtimeDynamicMesh = null;

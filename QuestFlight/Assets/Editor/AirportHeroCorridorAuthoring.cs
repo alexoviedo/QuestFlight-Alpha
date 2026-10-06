@@ -255,7 +255,7 @@ namespace QuestFlightLab.Editor
             renderer.sharedMaterial = material;
             renderer.shadowCastingMode = shadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
             renderer.receiveShadows = shadows;
-            renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+            renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
             renderer.lightProbeUsage = LightProbeUsage.BlendProbes;
             renderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbes;
             renderer.scaleInLightmap = 0f;

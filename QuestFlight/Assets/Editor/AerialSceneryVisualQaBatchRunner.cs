@@ -229,7 +229,7 @@ namespace QuestFlight.Editor
             try
             {
                 camera.targetTexture = target;
-                camera.Render();
+                QuestFlight.Rendering.ProductRenderCapture.Render(camera);
                 RenderTexture.active = target;
                 image.ReadPixels(new Rect(0, 0, width, height), 0, 0, false);
                 image.Apply(false, false);

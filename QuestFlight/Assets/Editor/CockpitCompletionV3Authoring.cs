@@ -327,7 +327,7 @@ namespace QuestFlight.Editor
             renderer.reflectionProbeUsage =
                 ReflectionProbeUsage.BlendProbesAndSkybox;
             renderer.motionVectorGenerationMode =
-                MotionVectorGenerationMode.ForceNoMotion;
+                MotionVectorGenerationMode.Object;
             renderer.allowOcclusionWhenDynamic = false;
             renderer.additionalVertexStreams = null;
             EditorUtility.SetDirty(filter);

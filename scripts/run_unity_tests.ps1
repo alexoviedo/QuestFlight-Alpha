@@ -4,7 +4,8 @@ param(
   [ValidateSet('EditMode','PlayMode')]
   [string]$TestPlatform = 'EditMode',
   [string]$ArtifactDir = '',
-  [int]$TimeoutSeconds = 300
+  [int]$TimeoutSeconds = 300,
+  [string]$TestFilter = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -30,12 +31,15 @@ if (Test-Path $lock) {
 }
 $args = @(
   '-batchmode',
+  '-buildTarget', 'Android',
   '-projectPath', $ProjectPath,
   '-runTests',
   '-testPlatform', $unityTestPlatform,
   '-testResults', $results,
   '-logFile', $log
 )
+
+if ($TestFilter) { $args += @('-testFilter', $TestFilter) }
 
 $process = Start-Process -FilePath $UnityExe -ArgumentList $args -PassThru -WindowStyle Hidden
 if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
@@ -50,4 +54,8 @@ if (!(Test-Path $results)) {
   throw "Unity $TestPlatform tests exited with code 0 but did not produce test results. Log: $log Expected results: $results"
 }
 
+[xml]$testXml = Get-Content -LiteralPath $results -Raw
+if ($testXml.'test-run'.result -ne 'Passed' -or [int]$testXml.'test-run'.failed -gt 0) {
+  throw "Unity $TestPlatform result is $($testXml.'test-run'.result), failed=$($testXml.'test-run'.failed). Results: $results"
+}
 Write-Host "Unity $TestPlatform test results: $results"

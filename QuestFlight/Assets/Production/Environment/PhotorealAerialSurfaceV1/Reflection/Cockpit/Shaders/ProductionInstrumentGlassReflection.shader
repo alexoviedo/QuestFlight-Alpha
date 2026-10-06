@@ -26,7 +26,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
 
         Pass
         {
-            Tags { "LightMode"="ForwardBase" }
+            Tags { "LightMode"="UniversalForward" }
             CGPROGRAM
             #pragma target 3.0
             #pragma vertex vert
@@ -107,7 +107,9 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Instrument Glass Reflection"
                                      (0.20h + opticalFresnel * 0.55h);
                 return fixed4(reflectedRadiance, 0.0h);
             }
-            ENDCG
+            
+#pragma multi_compile_instancing
+ENDCG
         }
     }
     Fallback Off

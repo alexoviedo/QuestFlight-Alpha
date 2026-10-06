@@ -70,10 +70,12 @@ namespace QuestFlightLab.Runtime
         {
             if (PilotSeatAnchor == null) return;
             PilotSeatAnchor.SetLocalPositionAndRotation(localPosition, localRotation);
+            QuestFlight.Rendering.ProductSpaceWarpController.InvalidateHistory();
         }
 
         public void ApplyCalibration(Vector3 localOffset, float yawDegrees)
         {
+            QuestFlight.Rendering.ProductSpaceWarpController.InvalidateHistory();
             CalibrationOffset = localOffset;
             CalibrationYawDegrees = NormalizeAngle(yawDegrees);
             if (UserViewCalibrationOffset != null)
@@ -97,6 +99,7 @@ namespace QuestFlightLab.Runtime
             Quaternion originCorrection = Quaternion.Euler(0f, -trackedYaw, 0f);
 
             // The XR Origin may move for an explicit recenter; the tracked camera is never written.
+            QuestFlight.Rendering.ProductSpaceWarpController.InvalidateHistory();
             XrOrigin.localRotation = originCorrection;
             XrOrigin.localPosition = -(originCorrection * trackedPosition);
             return true;
@@ -104,6 +107,7 @@ namespace QuestFlightLab.Runtime
 
         public void ResetTrackingSpaceOffset()
         {
+            QuestFlight.Rendering.ProductSpaceWarpController.InvalidateHistory();
             if (XrOrigin == null) return;
             XrOrigin.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
         }
@@ -138,6 +142,7 @@ namespace QuestFlightLab.Runtime
 
         public void ResetPresentationHistory()
         {
+            QuestFlight.Rendering.ProductSpaceWarpController.InvalidateHistory();
             _previousSimulationPosition = transform.position;
             _previousSimulationRotation = transform.rotation;
             _currentSimulationPosition = transform.position;
@@ -166,6 +171,7 @@ namespace QuestFlightLab.Runtime
                 Vector3.Distance(_currentSimulationPosition, position) > teleportDistanceMeters ||
                 Quaternion.Angle(_currentSimulationRotation, rotation) > teleportAngleDegrees)
             {
+                QuestFlight.Rendering.ProductSpaceWarpController.InvalidateHistory();
                 _previousSimulationPosition = position;
                 _previousSimulationRotation = rotation;
             }

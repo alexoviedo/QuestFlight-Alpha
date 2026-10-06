@@ -32,7 +32,7 @@ namespace QuestFlight.Editor.Tests
             var previousTarget = RenderTexture.active; bool previousFog = RenderSettings.fog;
             try
             {
-                RenderSettings.fog = false; camera.targetTexture = target; camera.Render();
+                RenderSettings.fog = false; camera.targetTexture = target; QuestFlight.Rendering.ProductRenderCapture.Render(camera);
                 RenderTexture.active = target; pixels.ReadPixels(new Rect(0, 0, 128, 128), 0, 0); pixels.Apply();
                 string captureRoot = System.Environment.GetEnvironmentVariable("QFL_CANOPY_UV_TEST_CAPTURE_ROOT");
                 if (!string.IsNullOrEmpty(captureRoot))

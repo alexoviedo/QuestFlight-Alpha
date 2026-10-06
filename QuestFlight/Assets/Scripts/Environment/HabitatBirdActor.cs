@@ -33,6 +33,16 @@ namespace QuestFlightLab.Environment
         private float bank,animationClock;
         private bool flapping,animationStarted;
         private bool visibilityInitialized;
+        private MaterialPropertyBlock motionProperties;
+        private int motionResetFrame=-10;
+        private void UpdateMotionHistory()
+        {
+            if(Lod<0)return;
+            motionProperties ??= new MaterialPropertyBlock();
+            var renderer=lods[Lod];renderer.GetPropertyBlock(motionProperties);
+            motionProperties.SetFloat("_QFResetObjectMotion",Time.frameCount<=motionResetFrame+1?1:0);renderer.SetPropertyBlock(motionProperties);
+            renderer.motionVectorGenerationMode=UnityEngine.MotionVectorGenerationMode.Object;renderer.skinnedMotionVectors=true;
+        }
         private static readonly int Flap=Animator.StringToHash("FlapLoop"),Soar=Animator.StringToHash("SoarIdle");
 
         public void ResetBird(Vector3 center,float ground)
@@ -62,7 +72,7 @@ namespace QuestFlightLab.Environment
             float targetBank=-Mathf.Atan(airspeed*yaw*Mathf.Deg2Rad/Mathf.Max(dt,.001f)/9.81f)*Mathf.Rad2Deg;
             bank=Mathf.MoveTowards(bank,Mathf.Clamp(targetBank,-30,30),35*dt);
             transform.rotation=Quaternion.LookRotation(AirVelocity,Vector3.up)*Quaternion.AngleAxis(bank,Vector3.forward);
-            animationClock+=dt;
+            animationClock+=dt;UpdateMotionHistory();
             bool flap=goose || Powered || Mathf.Repeat(animationClock+phase,14)<1.2f;
             if(animator.enabled && (!animationStarted || flap!=flapping))
             {
@@ -89,7 +99,7 @@ namespace QuestFlightLab.Environment
                 animator.Update(0);animationStarted=true;
             }
             for(int i=0;i<lods.Length;i++)lods[i].enabled=i==requested;
-            Lod=requested;
+            Lod=requested;motionResetFrame=Time.frameCount;UpdateMotionHistory();
         }
     }
 }

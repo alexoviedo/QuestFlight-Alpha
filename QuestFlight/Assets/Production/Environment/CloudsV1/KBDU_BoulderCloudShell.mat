@@ -24,19 +24,31 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _CloudOccupancy:
+        m_Texture: {fileID: 11700000, guid: 1f87519143c22184b8aef36b5f6bdd53, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _DensitySlices:
         m_Texture: {fileID: 2800000, guid: dcdadaee21298b8439df8e9e68e352d9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _DensityVolume:
+        m_Texture: {fileID: 11700000, guid: c0ccdde4538bde5498147dd4e71fafd2, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _CloudEmptySkipping: 0
+    - _CloudMotionOpacity: 0.5
     - _CloudSamplingLod: 1
+    - _CloudVolumeSampling: 1
     - _DensityGain: 1.9
     - _Extinction: 4.6
     - _KBDUCloudExteriorOpacity: 1
     - _MaximumDistance: 18000
     - _MinimumStepMetres: 60
     - _SilverLining: 0.4
+    - _XRMotionVectorsPass: 1
     m_Colors:
     - _AmbientColor: {r: 0.68, g: 0.72, b: 0.77, a: 1}
     - _LitColor: {r: 0.94, g: 0.95, b: 0.97, a: 1}

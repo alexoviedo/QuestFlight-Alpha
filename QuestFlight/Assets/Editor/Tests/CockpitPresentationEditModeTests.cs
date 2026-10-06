@@ -65,7 +65,7 @@ namespace QuestFlightLab.Tests.EditMode
                             : ReflectionProbeUsage.BlendProbesAndSkybox;
                     Assert.That(renderer.reflectionProbeUsage,
                         Is.EqualTo(expectedReflectionUsage), renderer.name);
-                    Assert.That(renderer.motionVectorGenerationMode, Is.EqualTo(MotionVectorGenerationMode.ForceNoMotion), renderer.name);
+                    Assert.That(renderer.motionVectorGenerationMode, Is.EqualTo(MotionVectorGenerationMode.Object), renderer.name);
                     foreach (Material material in renderer.sharedMaterials)
                     {
                         Assert.That(material, Is.Not.Null, renderer.name);

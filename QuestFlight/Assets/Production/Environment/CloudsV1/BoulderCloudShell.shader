@@ -2,6 +2,12 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
 {
     Properties
     {
+        _CloudMotionOpacity("Dominant cloud motion opacity",Range(.1,1))=.5
+        [HideInInspector] _XRMotionVectorsPass("XR motion",Float)=1
+        _DensityVolume ("Offline density volume", 3D) = "" {}
+        _CloudOccupancy ("Conservative occupied cells", 3D) = "" {}
+        _CloudVolumeSampling ("Use density volume", Float) = 0
+        _CloudEmptySkipping ("Skip empty cells", Float) = 0
         _DensitySlices ("VDB Density Slice Atlas", 2D) = "black" {}
         _LitColor ("Sky-Matched Lit Color", Color) = (0.94,0.95,0.97,1)
         _AmbientColor ("Ambient Vapor Color", Color) = (0.68,0.72,0.77,1)
@@ -31,7 +37,7 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
 
         Pass
         {
-            Tags { "LightMode"="ForwardBase" }
+            Tags { "LightMode"="UniversalForward" }
             CGPROGRAM
             #pragma target 3.5
             #pragma vertex vert
@@ -40,6 +46,7 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
 
+            #include "CloudVolumeSampling.cginc"
             sampler2D _DensitySlices;
             half4 _LitColor;
             half4 _AmbientColor;
@@ -153,6 +160,7 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
 
             half4 SampleDensityVolume(float3 coordinate)
             {
+                if (_CloudVolumeSampling > .5) return SampleCloudVolume(coordinate);
                 coordinate = saturate(coordinate);
                 float slicePosition = coordinate.z * (SliceCount - 1.0);
                 float lowerSlice = floor(slicePosition);
@@ -244,6 +252,15 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
                         break;
                     // Reuse the affine local ray without changing the march lattice.
                     float3 sampleLocal = rayOriginLocal + rayDirectionLocal * sampleDistance;
+                    int emptySamples = EmptyCloudSamples(sampleLocal, rayDirectionLocal, input.volumeParameters.x, stepLength);
+                    if (emptySamples > 0)
+                    {
+                        emptySamples = min(emptySamples, MaximumMarchSteps-stepIndex);
+                        // Repeated addition matches the original floating point lattice exactly.
+                        for (int skipped=0; skipped<emptySamples; skipped++) sampleDistance += stepLength;
+                        stepIndex += emptySamples-1;
+                        continue;
+                    }
                     half lightTransmittance;
                     half density = EvaluateDensity(
                         sampleLocal, input.volumeParameters, lightTransmittance);
@@ -268,6 +285,273 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
             }
             ENDCG
         }
-    }
+    
+Pass {
+            Name "XRMotionVectors" Tags { "LightMode"="XRMotionVectors" }
+            Blend Off ZWrite On ZTest LEqual ColorMask RGBA
+            Stencil { Ref 1 WriteMask 1 Comp Always Pass Replace }
+            CGPROGRAM
+
+            #pragma target 4.5
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile_instancing
+            #include "UnityCG.cginc"
+            #include "Lighting.cginc"
+#include "Assets/Shaders/ProductSpaceWarpMotion.cginc"
+float4 _QFPreviousCloudDrift; float _CloudMotionOpacity;
+
+            #include "CloudVolumeSampling.cginc"
+            sampler2D _DensitySlices;
+            half4 _LitColor;
+            half4 _AmbientColor;
+            half4 _UndersideColor;
+            half _DensityGain;
+            half _Extinction;
+            half _SilverLining;
+            float _MaximumDistance;
+            half _MinimumStepMetres;
+            float _CloudSamplingLod;
+            half _KBDUCloudExteriorOpacity;
+            float4 _CloudDrift;
+            float3 _CloudWrapCenter;
+
+            static const int MaximumMarchSteps = 48;
+            static const float SliceCount = 64.0;
+            static const float SliceColumns = 8.0;
+            static const float SliceRows = 8.0;
+
+            struct appdata
+            {
+                float4 vertex : POSITION;
+                float3 volumeCenter : TEXCOORD1;
+                float3 volumeRadii : TEXCOORD2;
+                float2 volumeParameters : TEXCOORD3;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+
+            struct v2f
+            {
+                float4 position : SV_POSITION;
+                float3 worldPosition : TEXCOORD0;
+                float3 volumeCenter : TEXCOORD1;
+                float3 volumeRadii : TEXCOORD2;
+                float2 volumeParameters : TEXCOORD3;
+                UNITY_VERTEX_OUTPUT_STEREO
+                float samplingBudget : TEXCOORD4;
+                float windVisibility : TEXCOORD5;
+            };
+
+            v2f vert(appdata input)
+            {
+                UNITY_SETUP_INSTANCE_ID(input);
+                v2f output;
+                UNITY_INITIALIZE_OUTPUT(v2f, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.windVisibility=1;
+                if(_CloudDrift.w>0.5)
+                {
+                    float3 center=input.volumeCenter+_CloudDrift.xyz;
+                    center.xz=_CloudWrapCenter.xz+frac((center.xz-_CloudWrapCenter.xz+16000)/32000)*32000-16000;
+                    input.vertex.xyz+=center-input.volumeCenter;
+                    input.volumeCenter=center;
+                    // Formation fades completely before wrapping; both eyes share this world-space admission.
+                    float edge=max(abs(center.x-_CloudWrapCenter.x),abs(center.z-_CloudWrapCenter.z));
+                    output.windVisibility=1-smoothstep(12000,15000,edge);
+                }
+                output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
+                output.position = mul(_NonJitteredViewProjMatrixStereo[QFEye()],float4(output.worldPosition,1));
+                output.volumeCenter = input.volumeCenter;
+                output.volumeRadii = input.volumeRadii;
+                output.volumeParameters = input.volumeParameters;
+                output.samplingBudget = MaximumMarchSteps;
+                if (_CloudSamplingLod > 0.5)
+                {
+                    // One conservative budget per formation, shared by both eyes.
+                    float3 lodCamera = _WorldSpaceCameraPos;
+                    float projectionScale = abs(UNITY_MATRIX_P[1][1]);
+                    #if defined(UNITY_SINGLE_PASS_STEREO)
+                        lodCamera = (unity_StereoWorldSpaceCameraPos[0] + unity_StereoWorldSpaceCameraPos[1]) * 0.5;
+                        projectionScale = max(abs(unity_StereoMatrixP[0][1][1]), abs(unity_StereoMatrixP[1][1][1]));
+                    #endif
+                    float3 localCamera = mul(unity_WorldToObject, float4(lodCamera, 1)).xyz;
+                    float3 delta = abs(localCamera - input.volumeCenter);
+                    float surfaceDistance = length(max(delta - input.volumeRadii, 0));
+                    // Bounding-sphere screen fraction protects large distant formations.
+                    float radius = length(input.volumeRadii);
+                    float projectedFraction = radius * projectionScale / max(length(delta) - radius, 1);
+                    float middleWeight = smoothstep(1500, 3500, surfaceDistance) *
+                        (1 - smoothstep(0.35, 0.65, projectedFraction));
+                    float farWeight = smoothstep(5000, 9000, surfaceDistance) *
+                        (1 - smoothstep(0.12, 0.25, projectedFraction));
+                    output.samplingBudget = lerp(lerp(48.0, 24.0, middleWeight), 12.0, farWeight);
+                }
+                return output;
+            }
+
+            bool IntersectUnitBox(float3 origin, float3 direction, out float entry, out float exit)
+            {
+                float3 safeDirection = direction;
+                safeDirection += (1.0 - step(1e-6, abs(safeDirection))) * 1e-6;
+                float3 inverseDirection = 1.0 / safeDirection;
+                float3 first = (-0.5 - origin) * inverseDirection;
+                float3 second = (0.5 - origin) * inverseDirection;
+                float3 lower = min(first, second);
+                float3 upper = max(first, second);
+                entry = max(lower.x, max(lower.y, lower.z));
+                exit = min(upper.x, min(upper.y, upper.z));
+                return exit > max(entry, 0.0);
+            }
+
+            float2 SliceUv(float2 xy, float slice)
+            {
+                float column = fmod(slice, SliceColumns);
+                float row = floor(slice / SliceColumns);
+                // Half-texel inset prevents bilinear filtering across tiles.
+                float2 inset = float2(0.5 / 512.0, 0.5 / 256.0);
+                float2 extent = float2(1.0 / SliceColumns, 1.0 / SliceRows) - 2.0 * inset;
+                return float2(column / SliceColumns, row / SliceRows) + inset + saturate(xy) * extent;
+            }
+
+            half4 SampleDensityVolume(float3 coordinate)
+            {
+                if (_CloudVolumeSampling > .5) return SampleCloudVolume(coordinate);
+                coordinate = saturate(coordinate);
+                float slicePosition = coordinate.z * (SliceCount - 1.0);
+                float lowerSlice = floor(slicePosition);
+                float upperSlice = min(lowerSlice + 1.0, SliceCount - 1.0);
+                float fraction = slicePosition - lowerSlice;
+                half4 lower = tex2Dlod(_DensitySlices, float4(SliceUv(coordinate.xy, lowerSlice), 0, 0));
+                half4 upper = tex2Dlod(_DensitySlices, float4(SliceUv(coordinate.xy, upperSlice), 0, 0));
+                return lerp(lower, upper, fraction);
+            }
+
+            half EvaluateDensity(
+                float3 localPosition,
+                half2 volumeParameters,
+                out half lightTransmittance)
+            {
+                float normalizedHeight = saturate(localPosition.y + 0.5);
+                float3 densityCoordinate = saturate(localPosition + 0.5);
+                if (volumeParameters.x > 0.5h)
+                    densityCoordinate.x = 1.0 - densityCoordinate.x;
+                half4 densityData = SampleDensityVolume(densityCoordinate);
+                half archetype = lerp(densityData.r, densityData.g, volumeParameters.x);
+
+                half baseRamp = smoothstep(0.015h, 0.10h, normalizedHeight);
+                half topStart = lerp(0.60h, 0.76h, volumeParameters.x);
+                half topRamp = 1.0h - smoothstep(topStart, 0.98h, normalizedHeight);
+                half verticalShape = baseRamp * topRamp;
+                half body = smoothstep(0.07h, 0.48h, archetype);
+                // Erosion may only remove vapor. A signed term made empty
+                // atlas voxels positive and exposed the rectangular proxy.
+                half erosion = max(densityData.a - 0.5h, 0.0h) *
+                    0.12h * (1.0h - body);
+                half density = saturate(
+                    (body - erosion) * verticalShape * volumeParameters.y * _DensityGain);
+                half verticalIllumination = lerp(
+                    0.38h, 1.0h, smoothstep(0.10h, 0.82h, normalizedHeight));
+                lightTransmittance = saturate(
+                    densityData.b * 0.72h + normalizedHeight * 0.24h) *
+                    verticalIllumination;
+                return density;
+            }
+
+            float4 frag(v2f input, out float depth : SV_Depth) : SV_Target
+            {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                float3 cameraWorld = _WorldSpaceCameraPos;
+                #if defined(UNITY_SINGLE_PASS_STEREO)
+                    cameraWorld = unity_StereoWorldSpaceCameraPos[unity_StereoEyeIndex];
+                #endif
+                float3 rayDirectionWorld = normalize(input.worldPosition - cameraWorld);
+                float3 rootOrigin = mul(unity_WorldToObject, float4(cameraWorld, 1.0)).xyz;
+                float3 rootDirection = mul((float3x3)unity_WorldToObject, rayDirectionWorld);
+                float3 diameter = max(input.volumeRadii * 2.0, 0.001);
+                clip(input.windVisibility-0.001);
+                float3 rayOriginLocal = (rootOrigin - input.volumeCenter) / diameter;
+                float3 rayDirectionLocal = rootDirection / diameter;
+
+                float entry;
+                float exit;
+                if (!IntersectUnitBox(rayOriginLocal, rayDirectionLocal, entry, exit))
+                    discard;
+
+                bool cameraInside = all(abs(rayOriginLocal) < 0.5001);
+                float expectedSurfaceDistance = cameraInside ? exit : max(entry, 0.0);
+                float fragmentDistance = dot(input.worldPosition - cameraWorld, rayDirectionWorld);
+                float surfaceTolerance = max(4.0, abs(expectedSurfaceDistance) * 0.0025);
+                if (abs(fragmentDistance - expectedSurfaceDistance) > surfaceTolerance)
+                    discard;
+
+                float rayStart = max(entry, 0.0);
+                float rayEnd = min(exit, _MaximumDistance);
+                float span = rayEnd - rayStart;
+                if (span <= 0.01)
+                    discard;
+
+                // Cover the whole ray interval; optical depth below uses this spacing.
+                // Keep the exact original lattice when the experiment is disabled.
+                float stepLength = max((float)_MinimumStepMetres, span / input.samplingBudget);
+                float sampleDistance = rayStart + stepLength * 0.5;
+                half transmittance = 1.0h;
+                half3 accumulated = 0.0h; float weightedDistance=0, totalWeight=0;
+                half3 sunDirection = normalize(_WorldSpaceLightPos0.xyz);
+                half sunAlignment = saturate(dot(rayDirectionWorld, sunDirection));
+                half phase = 0.72h + _SilverLining * pow(sunAlignment, 8.0h);
+
+                [loop]
+                for (int stepIndex = 0; stepIndex < MaximumMarchSteps; stepIndex++)
+                {
+                    if (sampleDistance >= rayEnd || transmittance < 0.025h)
+                        break;
+                    // Reuse the affine local ray without changing the march lattice.
+                    float3 sampleLocal = rayOriginLocal + rayDirectionLocal * sampleDistance;
+                    int emptySamples = EmptyCloudSamples(sampleLocal, rayDirectionLocal, input.volumeParameters.x, stepLength);
+                    if (emptySamples > 0)
+                    {
+                        emptySamples = min(emptySamples, MaximumMarchSteps-stepIndex);
+                        // Repeated addition matches the original floating point lattice exactly.
+                        for (int skipped=0; skipped<emptySamples; skipped++) sampleDistance += stepLength;
+                        stepIndex += emptySamples-1;
+                        continue;
+                    }
+                    half lightTransmittance;
+                    half density = EvaluateDensity(
+                        sampleLocal, input.volumeParameters, lightTransmittance);
+                    if (density > 0.001h)
+                    {
+                        half opticalDepth = density * _Extinction * (stepLength * 0.001h);
+                        half sampleOpacity = 1.0h - exp2(-opticalDepth * 1.442695h);
+                        half powder = 1.0h - exp2(-density * 2.6h);
+                        half3 skyLight = lerp(_UndersideColor.rgb, _AmbientColor.rgb, lightTransmittance);
+                        half3 directLight = _LitColor.rgb * lightTransmittance * phase;
+                        half3 scattering = lerp(skyLight, directLight, saturate(0.30h + powder * 0.48h));
+                        accumulated += transmittance * scattering * sampleOpacity;
+                        weightedDistance += sampleDistance*transmittance*sampleOpacity;
+                        totalWeight += transmittance*sampleOpacity;
+                        transmittance *= 1.0h - sampleOpacity;
+                    }
+                    sampleDistance += stepLength;
+                }
+
+                half opacity = saturate((1.0h - transmittance) * _KBDUCloudExteriorOpacity * input.windVisibility);
+                if (opacity < 0.002h)
+                    discard;
+                clip(opacity-_CloudMotionOpacity);
+                float3 samplePoint=cameraWorld+rayDirectionWorld*(weightedDistance/max(totalWeight,.0001));
+                float3 drift=_CloudDrift.xyz-_QFPreviousCloudDrift.xyz;
+                // Periodic wind accumulation can wrap without physical motion.
+                drift=frac((drift+16000)/32000)*32000-16000;
+                float3 oldPoint=samplePoint-mul((float3x3)unity_ObjectToWorld,drift);
+                float4 current=mul(_NonJitteredViewProjMatrixStereo[QFEye()],float4(samplePoint,1));
+                float4 previous=mul(_PrevViewProjMatrixStereo[QFEye()],float4(oldPoint,1));
+                depth=current.z/current.w;
+                return QFMotion(current,previous,1);
+            }
+            
+ENDCG
+}
+}
     Fallback Off
 }

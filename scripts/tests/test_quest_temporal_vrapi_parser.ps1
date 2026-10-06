@@ -71,6 +71,7 @@ function Write-VrApiFixture {
     [double]$CpuAndGpuMs = 12.0,
     [int]$Stale = 0,
     [int]$Tear = 0,
+    [double]$BoundaryGpuMs = 0,
     [switch]$IncludeOtherPidRow,
     [switch]$IncludeControllerDialog
   )
@@ -92,7 +93,8 @@ function Write-VrApiFixture {
     $timestamp = $start.AddSeconds($index + 1).ToString('MM-dd HH:mm:ss.fff', $invariantCulture)
     $fov = $(if (($index % 2) -eq 0) { 0 } else { 2 })
     $cpuAndGpu = $CpuAndGpuMs.ToString('0.00', $invariantCulture)
-    $lines += "$timestamp  4242  4244 I VrApi   : FPS=72/$RefreshRateHz,Tear=$Tear,Stale=$Stale,Fov=$fov,CPU4/GPU=2/2,1382/456MHz,PLS=0,Temp=31.0C/0.0C,App=9.00ms,GD=0.00ms,CPU&GPU=${cpuAndGpu}ms,GPU%=0.70,CPU%=0.30,CFL=13.80/18.00,ICFLp95=17.00,SF=1.00"
+    $boundaryGpu = $BoundaryGpuMs.ToString('0.00', $invariantCulture)
+    $lines += "$timestamp  4242  4244 I VrApi   : FPS=72/$RefreshRateHz,Tear=$Tear,Stale=$Stale,Fov=$fov,CPU4/GPU=2/2,1382/456MHz,PLS=0,Temp=31.0C/0.0C,App=9.00ms,GD=${boundaryGpu}ms,CPU&GPU=${cpuAndGpu}ms,GPU%=0.70,CPU%=0.30,CFL=13.80/18.00,ICFLp95=17.00,SF=1.00"
   }
 
   $endTimestamp = $start.AddSeconds($SampleCount + 1).ToString('MM-dd HH:mm:ss.fff', $invariantCulture)
@@ -281,7 +283,15 @@ try {
     }
   }
 
-  Write-Host 'Quest VrApi parser regression tests passed: product-PID timing/budgets, launch dialogs, and thermal events versus telemetry configuration names.'
+  $boundaryLog = Join-Path $testRoot 'boundary_gpu.txt'
+  Write-VrApiFixture -Path $boundaryLog -SampleCount 60 -BoundaryGpuMs 3.5
+  $boundary = Invoke-ParserFixture -Logcat $boundaryLog -Evidence $passingEvidence -Output (Join-Path $testRoot 'output_boundary_gpu')
+  if ($boundary.vrApiAppPidWindow.averageDirectGpuMs -ne 9 -or
+      $boundary.vrApiAppPidWindow.averageBoundaryGpuMs -ne 3.5 -or
+      $boundary.vrApiAppPidWindow.cpuExecutionTimingAvailable) {
+    throw 'Application GPU, boundary GPU, and CPU execution semantics are conflated.'
+  }
+  Write-Host 'Quest VrApi parser regression tests passed: product-PID timing/budgets, distinct App/GD semantics, launch dialogs, and thermal events versus telemetry configuration names.'
 }
 finally {
   Remove-Item -LiteralPath $testRoot -Recurse -Force -ErrorAction SilentlyContinue

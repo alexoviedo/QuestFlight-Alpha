@@ -1,0 +1,999 @@
+{
+  "assets": [
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/Cinemachine.png",
+      "sha256": "3841fa64b887ddf68d6f0175bc8e99dd32637df547bcb174b3e760bd3275f092",
+      "bytes": 66152,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/InspectorIcons/FreeformLight.png",
+      "sha256": "99176afc9d13d9aecdf01ef337c69fb6fb3a60c0929675ffe0804c7ff5067aa1",
+      "bytes": 801,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/InspectorIcons/GlobalLight.png",
+      "sha256": "504a7aeb46a056bd5024f5e298bd6c161611f70f1f5584288019729d845cb830",
+      "bytes": 844,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/InspectorIcons/ParametricLight.png",
+      "sha256": "3d7f874bd228d4091b5ac5d1271cec320239d3e0b26792e58a6663484aa95a0d",
+      "bytes": 879,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/InspectorIcons/PointLight.png",
+      "sha256": "43a5b8cf9f618623d6d47f4dc2d7c8ea1aa64f694f66b05d10098100e7644e2d",
+      "bytes": 14193,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/InspectorIcons/SpriteLight.png",
+      "sha256": "9d514ce4860e0cea1a6b5f6fb451ae00d3e120c92cec879ebd8ed0363acf982a",
+      "bytes": 777,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/LightCapBottomLeft.png",
+      "sha256": "2cdf8dada44398f008651a4d3251a9a1de81cea3e6a917221a3ec87438a3443e",
+      "bytes": 2532,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/LightCapBottomRight.png",
+      "sha256": "80097f5b6e8306280f423baa63c51e7ee29f92b4c99c38e0beae34fe5f01f66d",
+      "bytes": 2531,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/LightCapDown.png",
+      "sha256": "e6eebb301c295dfaaf0d49abbc0e419bf7aba3f3463c190187db1eec0b4d7dbd",
+      "bytes": 2396,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/LightCapTopLeft.png",
+      "sha256": "659bf2e81f6a047a88d65f629be3b63fd91429d1ab602ea777420d1cbeba153c",
+      "bytes": 2506,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/LightCapTopRight.png",
+      "sha256": "9919d1d5df864999afec6e24900ea088567bd5d0ccb4b5f88bc30e19b59fdde0",
+      "bytes": 2694,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/LightCapUp.png",
+      "sha256": "2f2951ede2844685108426893e97f5d4b1e3b3673e28b6de7ca3161263092693",
+      "bytes": 3436,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/PixelPerfectCamera.png",
+      "sha256": "3c5f54593888c53ac325ab16e14f9fb3a2cda84dd7103a41da341655e1bcd291",
+      "bytes": 2733,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/SceneViewIcons/FreeformLight.png",
+      "sha256": "d9ed71808ee9b33047d35841f9ec4212388d8f69e81d60526e8591035f34b04e",
+      "bytes": 24280,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/SceneViewIcons/GlobalLight.png",
+      "sha256": "ccb95bc888b957458614d8f3c5cf92ec6a99a022a9fc25bd3e37cbc9d94921c1",
+      "bytes": 27065,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/SceneViewIcons/ParametricLight.png",
+      "sha256": "a6748ec8644cc0ec5270d59d1598cd3b8b2dcd3acd3fe00a18a4347a11839f54",
+      "bytes": 19797,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/SceneViewIcons/PointLight.png",
+      "sha256": "40b81cc5e564681dff38dc65448e2cb9708b3a5df26911d88a6403dc6cdeb790",
+      "bytes": 11890,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/SceneViewIcons/SpriteLight.png",
+      "sha256": "3a0bac87758e06e8f54e5e671ccec6630eb309d40b521a282f030bf39bd21d54",
+      "bytes": 16995,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/2D/Resources/Sparkle.png",
+      "sha256": "2432c4016903df7a0bd7b9cf422341c4a8d62049d8f41aa68507793b45352c92",
+      "bytes": 3250,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/Decal/Resources/DecalGizmo.png",
+      "sha256": "d26db046287dd6a26a821c58861b58efe79532f9cf711817479c12dc6921b5b2",
+      "bytes": 4491,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/Gizmos/Camera_Base.png",
+      "sha256": "08b4050e81f0b48e1b1683f409d503695ae4b797484fcd7163c69daa12da7b0d",
+      "bytes": 6467,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/Gizmos/Camera_Offscreen.png",
+      "sha256": "aaa16966baf515c1da7e06a8a9019d17af8bb2182b5f5fec491f54e965b433d1",
+      "bytes": 7102,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/Gizmos/Camera_Overlay.png",
+      "sha256": "49dc7c87c23f0a592e1a0d9c36e26a94f62ad5701d696880f5f09f4a5bc483a7",
+      "bytes": 4735,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/Gizmos/Camera_PostProcessing.png",
+      "sha256": "a2f34f175f2c0b063f3d20692a7e01e5d27458f2d4fb5abc56e4d082c0f97ce9",
+      "bytes": 7036,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/Gizmos/Camera_UI.png",
+      "sha256": "8f02451ffd777e5aa75f13cce59dc387057725de36f7e8f175c85e23e1d2d74f",
+      "bytes": 4988,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/SceneTemplates/Indoors/LightingData.asset",
+      "sha256": "aaf84f6f68c078e2bcaa923d74e0ce14b24c579b0fb743bacf9d42f1e3ac37cf",
+      "bytes": 21256,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/SceneTemplates/Indoors/ReflectionProbe-0.exr",
+      "sha256": "cacc5d14182353fcb226bbc088acd0e54678deed0d830a8195e13b230c810f36",
+      "bytes": 163137,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/SceneTemplates/Standard/LightingData.asset",
+      "sha256": "fed934b86024b5cf4e7783047497e43ad813394bdb651c1e283c61986d2bfb86",
+      "bytes": 17800,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/SceneTemplates/Standard/ReflectionProbe-0.exr",
+      "sha256": "fa9262ea63957ab378f44f031702bb1ae3d2c1ea3c68d7d7e32afd6659a68be1",
+      "bytes": 216109,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/GraphTemplates/2D/2DSpriteLitTemplateThumbnail.png",
+      "sha256": "cad3514e505f301fb66cf566b47c4ff03239ae2705f58c3b1055ca0de958a7a3",
+      "bytes": 705790,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/GraphTemplates/2D/2DSpriteUnlitTemplateThumbnail.png",
+      "sha256": "cf71aaec422d83aec3bfb0e4d000447215377d5e76b094315e7b9b186976f720",
+      "bytes": 646443,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/GraphTemplates/FullscreenBasicTemplateThumbnail.png",
+      "sha256": "a4c5d50365472459430d1db5bad4d26e2fba85050d21e679a5bb65af875af4d7",
+      "bytes": 678660,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/GraphTemplates/UITKBasicTemplate.png",
+      "sha256": "456ecc5e21a56b45279d194f2105a16ac6c9565a4d70d5cd588ac65de484d17d",
+      "bytes": 282357,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/GraphTemplates/UITKFullTemplate.png",
+      "sha256": "c7d5c4d854233ffca5bfdfa709d111950d0fa6556c4de7260ce22408500a75d2",
+      "bytes": 423886,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Runtime/2D/Data/Textures/FalloffLookupTexture.png",
+      "sha256": "12c3b60a50ba5e6e45317fac91dc9b1ed6a37df413c0c624711e8e573ffb925a",
+      "bytes": 28361,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/CameraStacking/3D Skybox/3DSkybox/LightingData.asset",
+      "sha256": "85992c9a34ad9fb042e8d39b0767e1940bf3e05c97b7c23d117c4ace0c9fc7f9",
+      "bytes": 18192,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/CameraStacking/3D Skybox/3DSkybox/ReflectionProbe-0.exr",
+      "sha256": "91888bcde5c1c39685690f6c7aae74c0f0af85d51576f26951d3791808f95288",
+      "bytes": 163995,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/CameraStacking/MixedFOV/MixedFOV/LightingData.asset",
+      "sha256": "769a18992439a9272891dcab44f8b836cd1af6fc58bc9ea6b2200a1309da43f9",
+      "bytes": 19944,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/CameraStacking/MixedFOV/MixedFOV/Lightmap-0_comp_dir.png",
+      "sha256": "b8044ceaf1cb4ce3f0941da03ddf28c837763b624bf36c55eac8ee078ec849c5",
+      "bytes": 6218,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/CameraStacking/MixedFOV/MixedFOV/Lightmap-0_comp_light.exr",
+      "sha256": "85cff1d3fcb6583103b670d5d49c6f6366b4e9e7a23b19e1def146177d6b0878",
+      "bytes": 18487,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/CameraStacking/MixedFOV/MixedFOV/ReflectionProbe-0.exr",
+      "sha256": "290997e76f6020414245f923f374279163fcebc37ea55c4f21b9b7cb513d93fb",
+      "bytes": 164044,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Decals/BlobShadow/BlobShadow/LightingData.asset",
+      "sha256": "1fc693975dc54b025df31b374d6069ce442af93a6ea4daaf02351bf1baedbb16",
+      "bytes": 18192,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Decals/BlobShadow/BlobShadow/ReflectionProbe-0.exr",
+      "sha256": "8c3dd6438f7e774152648decc5fd6ed5c011425edf137bc55bfb4985d1e6ca4e",
+      "bytes": 163988,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Decals/PaintSplat/PaintSplat/LightingData.asset",
+      "sha256": "b95de22aa648d58f4bbc63a75a9cb05d3b3b17be414a030300b258a1d3efd081",
+      "bytes": 18220,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Decals/PaintSplat/PaintSplat/ReflectionProbe-0.exr",
+      "sha256": "b0771d8441f103505885b91b42873f64a08078c8d07e773b7875673e8337cfb5",
+      "bytes": 170541,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/LensFlares/SunFlare/LightingData.asset",
+      "sha256": "3ffb97ba57c603cf3214f428351e6da025688f5cc43a90d507db178ea34ae2fd",
+      "bytes": 18192,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/LensFlares/SunFlare/ReflectionProbe-0.exr",
+      "sha256": "c2c19b45ec573e0e8a893acc14fb8859723006932530ecaad21c548ce81ed31f",
+      "bytes": 171060,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/LensFlares/Textures/PartialRIng.png",
+      "sha256": "ef5ad4987484f40ebb2c7a79d4a070f511e506e6dfcdcd164b453a4d1a4690df",
+      "bytes": 616658,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/LensFlares/Textures/Ring.png",
+      "sha256": "5f22880e6bf9b65b3109315bd1d964cb7379d78cc3a8bd37ddab9d813b3c59dc",
+      "bytes": 2727935,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/LensFlares/Textures/Shimmer.png",
+      "sha256": "91c9378c931241ba43b9290df2da5074c18128f649986b9eee7f6a6c911e5203",
+      "bytes": 625217,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Lighting/Reflection Probes/Reflection Probes/LightingData.asset",
+      "sha256": "d05da254d734b1351132432bdd36ca6e8ae8feb7a97da8ef53bac432de039e5c",
+      "bytes": 18636,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Lighting/Reflection Probes/Reflection Probes/ReflectionProbe-0.exr",
+      "sha256": "cd40abed1234127a1abbeb05ba83f545740a2766e072857ab67166bdf4c49abe",
+      "bytes": 187558,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Lighting/Reflection Probes/Reflection Probes/ReflectionProbe-1.exr",
+      "sha256": "412058d69600b0c80acfa3875159bec71d57796f9daabfae669014e4b0cf07d5",
+      "bytes": 187876,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Lighting/Reflection Probes/Reflection Probes/ReflectionProbe-2.exr",
+      "sha256": "e13c80371796ed83a7a38285fad4cdb3f4356ea2336f7d622a6da6d4fc9928a9",
+      "bytes": 189602,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Lighting/Reflection Probes/Reflection Probes/ReflectionProbe-3.exr",
+      "sha256": "3d328ace71aacf3ecd539e4bcf1d94eef87e9150871795ac720190d376328e20",
+      "bytes": 160085,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Lighting/Reflection Probes/Reflection Probes/ReflectionProbe-4.exr",
+      "sha256": "83af117cffe67c957290ba0dcb408c4288418618f0ad7df512b2e7ee41e6329c",
+      "bytes": 111449,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Lighting/Reflection Probes/Reflection Probes/ReflectionProbe-5.exr",
+      "sha256": "c0a068b977ebb9571398e5990c07b9a79fe8b5a7170f3225e10fc8c941915c02",
+      "bytes": 196863,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Lighting/Reflection Probes/Reflection Probes/ReflectionProbe-6.exr",
+      "sha256": "3c3a99b339d704c24dfa483b46f78d3970d5cc9052b5822c0465cda2bc408ce3",
+      "bytes": 167765,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Lighting/Reflection Probes/Reflection Probes/ReflectionProbe-7.exr",
+      "sha256": "7b32427d2d08527278fbfb01c1b43de86c66afb956c877e02e12be13bc43042e",
+      "bytes": 194956,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Lighting/Reflection Probes/Reflection Probes/ReflectionProbe-8.exr",
+      "sha256": "33417008a32c86a515653a5acaf40dea013353ad84bf9271cea79a4e77ad48d7",
+      "bytes": 197392,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Lighting/Reflection Probes/Reflection Probes/ReflectionProbe-9.exr",
+      "sha256": "0ab71e1eebcce4212a45258c64658a4aea529f74ca23565e1a46ad1690b56cd0",
+      "bytes": 195152,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/AmbientOcclusion/AmbientOcclusion/LightingData.asset",
+      "sha256": "6953be227b1cf29c15d4ee818b2515447bea410b4c64ed0f48d69da4f9ec684e",
+      "bytes": 17736,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/AmbientOcclusion/AmbientOcclusion/ReflectionProbe-0.exr",
+      "sha256": "290997e76f6020414245f923f374279163fcebc37ea55c4f21b9b7cb513d93fb",
+      "bytes": 164044,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/DistortTunnel/Plane/Plane.png",
+      "sha256": "087e58f0503065fc059988127b0ee4565961d21f7febb5edf82f9d7f98fe356c",
+      "bytes": 63077,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/DistortTunnel/Plane/plane.fbx",
+      "sha256": "37cc5da89b876c8ed4960c067379f702c1da1997ab19cdd255cf59da04d19044",
+      "bytes": 19516,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/DistortTunnel/TunnelStar.png",
+      "sha256": "c3a12dfc5037f9ad0a49667131552c2e8ec189b670da2a3f742b5e7cfcd4bd8e",
+      "bytes": 7249,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/GlitchEffect/GlitchEffect/LightingData.asset",
+      "sha256": "a718adf3adbaff49871301f20fbdc587c29333031c3a455228c3d408c76de76e",
+      "bytes": 18192,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/GlitchEffect/GlitchEffect/ReflectionProbe-0.exr",
+      "sha256": "dd7bdb060f6d241f711e4fc1d2f7309924de492f6c76c119c076b0119ebfacbc",
+      "bytes": 53892,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/OcclusionEffect/OcclusionEffect/LightingData.asset",
+      "sha256": "60642f6f11e0bbfd3fce947354ae3c47c98932eaa7d2a00e0dabe2358b8ee731",
+      "bytes": 18112,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/OcclusionEffect/OcclusionEffect/ReflectionProbe-0.exr",
+      "sha256": "290997e76f6020414245f923f374279163fcebc37ea55c4f21b9b7cb513d93fb",
+      "bytes": 164044,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/TrailEffect/SandBoxModel.fbx",
+      "sha256": "f4099ad549970278111845cadd13279cded6934bb7c19845becc30fe2ef7731e",
+      "bytes": 159372,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/TrailEffect/TrailEffect/LightingData.asset",
+      "sha256": "721e35f1dbc76b35db2c3aa96602e9cb89efbbcc065d16c9157898833ceaa0a8",
+      "bytes": 18192,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/RendererFeatures/TrailEffect/TrailEffect/ReflectionProbe-0.exr",
+      "sha256": "1d88a2946194618b4d41e19641cc5ee52aac15e6209f3c5b0bbe9fadc274d31e",
+      "bytes": 161459,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Shaders/Lit/Lit/LightingData.asset",
+      "sha256": "3d7ca6f079fff3a69bd5fc8ce9639c7c1b88855c45f141eaa8317048a65241b8",
+      "bytes": 18240,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Shaders/Lit/Lit/ReflectionProbe-0.exr",
+      "sha256": "74ea9b02039217a56261b54da2838aed9df94c36fab179634af5391ac00e048b",
+      "bytes": 213117,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Shaders/Lit/Lit/ReflectionProbe-1.exr",
+      "sha256": "3c009ff140394cc6d896bacbd83f888f28c55454df56e5027ae153481ba85490",
+      "bytes": 164539,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Shaders/Lit/Models/UVSphere.fbx",
+      "sha256": "42ee416f3a28f520588bb1254d60c991a63e9dfbf03046e9565c7d5fe39a3306",
+      "bytes": 33852,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Shaders/Lit/Textures/Coins_Base.png",
+      "sha256": "6eea8c45671ccf1adf567958afdc86fac4c45984e5a652b5fa54c4320d1497be",
+      "bytes": 6610843,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Shaders/Lit/Textures/Coins_Emission.png",
+      "sha256": "ef89d3bbad40ba852c47a72ec40ce5677325d99b7ca55b1e8b70ed9231ee32ff",
+      "bytes": 563378,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Shaders/Lit/Textures/Coins_Height.png",
+      "sha256": "93b92519f7be1b8d67e433edcae748435be9a6232b10d5ba7937e75304e85a3b",
+      "bytes": 1639758,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Shaders/Lit/Textures/Coins_Metallic.png",
+      "sha256": "4a8fda0b2a772cd522f910ed250df9a3434bc2a5ef4fa02f1832e700c4dc12fd",
+      "bytes": 2341242,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Shaders/Lit/Textures/Coins_Normal.png",
+      "sha256": "9dfd9a4261cd9bc8aaa7073f1aca7035dafebc0c170d57dfc5e40a24a71b47c5",
+      "bytes": 6742965,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/Shaders/Lit/Textures/Coins_Occlusion.png",
+      "sha256": "4299cba7ce1a77418cf0fb6d2ca34d097ca8440be16ab16ba3e3cb9c097837bf",
+      "bytes": 1921428,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/SharedAssets/Fonts/Lato-Regular.ttf",
+      "sha256": "7ae714b63c2c8b940bdd211a0cc678f01168a34eea8aa13c0df25364f29238a7",
+      "bytes": 120196,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Samples~/URPPackageSamples/SharedAssets/Textures/Checker.png",
+      "sha256": "6ddf8e96d29546e15cb60b4a4afb0e0a2658352734ead2c30f559eec52c738c9",
+      "bytes": 407,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Shaders/FullscreenInvertColorsTemplate.png",
+      "sha256": "dc16b144fa93a28f738f36eda223d89fd7b246b3a74c5b0e750b14811bcb4924",
+      "bytes": 658189,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/2D/Sparkle.png",
+      "sha256": "2432c4016903df7a0bd7b9cf422341c4a8d62049d8f41aa68507793b45352c92",
+      "bytes": 3250,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BayerMatrix.png",
+      "sha256": "ab857985cb2fbbda35a23b55d0da84e26684cf8979ae777341e9dd9b952d940c",
+      "bytes": 597,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_0.png",
+      "sha256": "cf5280f77247d7a029c4e6c7c37d3ca233ad1189e39703608b5224b425032036",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_1.png",
+      "sha256": "bb962e645c074d7ccaa05da10dfc63d300552845b1c60220199697f452bbee9e",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_10.png",
+      "sha256": "4354c6a217a5add3c614a7a59d6e04e5d1be14d2937364f281fd1919bf37d013",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_11.png",
+      "sha256": "490f1ac6e0ade24d8c115dc7ec3c08672a84ea9e10bbb246b2eb7adb7ce96853",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_12.png",
+      "sha256": "bd62e15d43dfa805782d6461c433f274fbeaf8d60a608672a42d7a2b0e691062",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_13.png",
+      "sha256": "75cf9d9e8155501810bd6d5dae4cc12a2ef1d530a7c133227db7efaba0660d01",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_14.png",
+      "sha256": "e8576a7250ddc398e69b3821af0a8a7bf1c981c26e0eb326c867c3ad13eaaed5",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_15.png",
+      "sha256": "284607d8ee7b80d7fcebf53193a5477c3cc06903e271a2ff665e0354656c14c6",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_16.png",
+      "sha256": "b8c896444fd218e10698906269f949fedd33c3e81a6a52e4da812b91252b656f",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_17.png",
+      "sha256": "852571a69ae73632915feaed17a45f50da76c7653a287a55de1782263bf03a9f",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_18.png",
+      "sha256": "6f5093fca5e4031f76f52d0e30d4f104755316712544e142c6af5f5726e92f54",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_19.png",
+      "sha256": "35b0d8d3ff3052f391b5ffc8c6f223e5ebb7a3698e3f1aa6e6869420540ac45c",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_2.png",
+      "sha256": "eb763adf35a97279b581663de8c692f47a89b556443d260b308e9b3b9c82fa9c",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_20.png",
+      "sha256": "727a57f9061f118e4c93c2e9c67712b5f56a041c91e9f2b7233eb6604d4cd3a1",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_21.png",
+      "sha256": "8ae9b97ff3c2d4f565a34f63ad290b2e47996376d799ab705f575a69b4c1a07b",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_22.png",
+      "sha256": "e5eeddcd318088182a6b011739793a77748e87e5e594502844d7662908bab7f8",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_23.png",
+      "sha256": "472cdf0fd5b7905f6e46a41970f2fe12c7884f3c0578eb3e481d935113707917",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_24.png",
+      "sha256": "df44a2a080d3e22853343792f3c87a2a9f846c1da2ac5dafe11b6e99a839db14",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_25.png",
+      "sha256": "2f1a46bac549eb0efc5a3249ede54806b86145e61157e72939db3dfd1381dd66",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_26.png",
+      "sha256": "f2a14a6057757e7cb859b5c5598e68bb09ba4a9e9a5e646dc8c210e1eab6f14e",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_27.png",
+      "sha256": "6f4f4a048ac82a1747bf3c634289bd434f32ab3fdc7a7d4c5de5c2b9dff77c1a",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_28.png",
+      "sha256": "bcd1b2274feaa7fda986457f3fdb83e28f679b08ec0d22e13dfe16710824f380",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_29.png",
+      "sha256": "c444d0e6eaf51d9e9d0beb23e22afa81f44c8532103526d468a2159fdeb4fd32",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_3.png",
+      "sha256": "cfe506434c592237cf8f9e5ae2ada55a83946f8224dfe5d935afbd5ad6f324ef",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_30.png",
+      "sha256": "9cfbf8d6dd085b1fc4841eecffe433ca9844d9c8d3dbd3619ea7fe0a32a3aeb9",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_31.png",
+      "sha256": "9bd9e78ffe3c735e845ac622b9bea371b9bfd68339b7fcb472e3bd6f58789771",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_4.png",
+      "sha256": "29fa52bc2b45b894291df90239acdabcf05f20ee343723bb0bd6bb0a51db0b0f",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_5.png",
+      "sha256": "3177dd550d087a78f9aae2116e500034cf677643fee02b74fb92e1324bec9199",
+      "bytes": 1011,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_6.png",
+      "sha256": "eda087de32456e271178730119c52641b5628d48fc782c38399f6b259ffcc121",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_7.png",
+      "sha256": "c08955fae20eeb607afdd3a6104df8d5ffe8c7920a9e9a493057aaa93897ecf0",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_8.png",
+      "sha256": "517c88d36520eb78bed54f8ade983e4bbf20e232515d79a25854774d9a8e769d",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise16/L/LDR_LLL1_9.png",
+      "sha256": "519284e06252c1be8f6049559c06c0296acddaf6953398a6ab43d79b6ece06ec",
+      "bytes": 1014,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise256/LDR_LLL1_0.png",
+      "sha256": "90564273ed872da744aa7cc87d81b0090c7103eab2f223225c357909b41da803",
+      "bytes": 99216,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise256/LDR_LLL1_1.png",
+      "sha256": "7360c0d8880110ec841114c6aea59c39123d1fb8b261e6bf9fc9573b65b0d0ea",
+      "bytes": 99204,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise256/LDR_LLL1_2.png",
+      "sha256": "d7db3110bd3f60169e09066e061e161e522625b013a557e923eb384a97316d5f",
+      "bytes": 99123,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise256/LDR_LLL1_3.png",
+      "sha256": "19c67a1256b2c20c779470719386737aaa3366bd2058197bbfc3ebea71e5de29",
+      "bytes": 99283,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise256/LDR_LLL1_4.png",
+      "sha256": "2c928bfffc64c339f980c02a022bf0ac2e3b37df29b079e44625b97fdde76058",
+      "bytes": 99205,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise256/LDR_LLL1_5.png",
+      "sha256": "5c9977b8fc9b7c83d00ca60937977824badc5eb2ce3c744539f96cb22796157b",
+      "bytes": 99194,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise256/LDR_LLL1_6.png",
+      "sha256": "e35af946a68313ad0973bc298bfb2db18238f885ee04b4a7e760c75acafc777a",
+      "bytes": 99248,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise256/LDR_LLL1_7.png",
+      "sha256": "c8cf3f8d5f95fc139f19676f5a34cba46f7e31d61ef6bf826df7aeefc09680d4",
+      "bytes": 99137,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/BlueNoise64/L/LDR_LLL1_0.png",
+      "sha256": "140c55bd97c21b9b22008d7054b492333fec67fbfc1a1b266e5b0209b647eed4",
+      "bytes": 7115,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/DebugFont.tga",
+      "sha256": "a89bb057dd2a4442a582856c1ba6da4ae12c0ed1534696a191e54baa9de6dfc3",
+      "bytes": 98348,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/FilmGrain/Large01.png",
+      "sha256": "5a362d4d91a1c00395bb5ead5b23933f213d51f1f46bf35e9d84d3fabcc41aa2",
+      "bytes": 111712,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/FilmGrain/Large02.png",
+      "sha256": "156bf1876f04533477c57a06821a01818ed6c8c88b937be6ba12d4ea1b6dbf7c",
+      "bytes": 132267,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/FilmGrain/Medium01.png",
+      "sha256": "3c4037a5b64ff1ee65852038ea931871bf5ee4eeedec896be75362fe1bcd2785",
+      "bytes": 147940,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/FilmGrain/Medium02.png",
+      "sha256": "3dd77147f8ff1acbe40a639c199500202d960f8db9fa26e9ca0bada483a531d8",
+      "bytes": 165091,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/FilmGrain/Medium03.png",
+      "sha256": "fd01f022f743c0d3508b37421b5070a2a6263d4d966ea4532902c5930880b312",
+      "bytes": 163662,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/FilmGrain/Medium04.png",
+      "sha256": "6e7ea6b73413a6dd244c9948351afa3838d8d606e1840c7d948544b62666c828",
+      "bytes": 139347,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/FilmGrain/Medium05.png",
+      "sha256": "b963d8d662439cb5047bebcddfd8e758b04eae4135ebbba89dde85f9151fbccf",
+      "bytes": 168183,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/FilmGrain/Medium06.png",
+      "sha256": "67645d1dde72645dbe45cdf17bce2493da1f9982f6717c203ac059d0a8a69d71",
+      "bytes": 131307,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/FilmGrain/Thin01.png",
+      "sha256": "bed8cd1fc2f330638afd1707ff981b288c83f99c3fbbcc0dc0d9acbdc49683d9",
+      "bytes": 152067,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/FilmGrain/Thin02.png",
+      "sha256": "d0a2704d54931629bb5cec4e75ec2532355f36c38141b2a25a2c2e9fe3637367",
+      "bytes": 169753,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/SMAA/AreaTex.tga",
+      "sha256": "84779b2c0dd6ee236bccd3a2046404ffeb8fda5bf4b24857f59ec5c3bd1270cf",
+      "bytes": 358444,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    },
+    {
+      "path": "QuestFlight/Packages/com.unity.render-pipelines.universal/Textures/SMAA/SearchTex.tga",
+      "sha256": "96661ff73a56093bf2284bf4789027f33cd11d3203d2bde0f33cdd1d4336c89f",
+      "bytes": 3116,
+      "source": "Unity registry com.unity.render-pipelines.universal@17.3.0",
+      "license": "Package LICENSE.md (Unity Companion License); Third Party Notices.md where applicable"
+    }
+  ],
+  "unresolved": []
+}

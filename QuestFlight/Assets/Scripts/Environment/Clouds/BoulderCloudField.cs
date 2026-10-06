@@ -32,7 +32,9 @@ namespace QuestFlightLab.Environment
         public QuestFlightLab.Flight.Backends.FlightDynamicsCoordinator windAuthority;
         private double previousWindTime;
         private bool windClockInitialized;
-        private Vector3 cloudDrift, cloudWrapCenter;
+        private Vector3 cloudDrift, cloudWrapCenter, renderedCloudDrift;
+        private void CompleteCloudFrame(Camera camera) { renderedCloudDrift=cloudDrift; }
+        private void ResetCloudHistory() { renderedCloudDrift=cloudDrift; }
         private MaterialPropertyBlock windProperties;
         private bool cloudWrapActive;
         public const float CloudWrapPeriod = 32000;
@@ -101,6 +103,8 @@ namespace QuestFlightLab.Environment
 
         private void OnEnable()
         {
+            QuestFlight.Rendering.ProductSpaceWarpController.FrameCompleted += CompleteCloudFrame;
+            QuestFlight.Rendering.ProductSpaceWarpController.HistoryInvalidated += ResetCloudHistory;
             windClockInitialized = false;
             cloudDrift=Vector3.zero;cloudWrapActive=false;
             if(windProperties==null)windProperties=new MaterialPropertyBlock();
@@ -110,6 +114,8 @@ namespace QuestFlightLab.Environment
 
         private void OnDisable()
         {
+            QuestFlight.Rendering.ProductSpaceWarpController.FrameCompleted -= CompleteCloudFrame;
+            QuestFlight.Rendering.ProductSpaceWarpController.HistoryInvalidated -= ResetCloudHistory;
             cloudWrapActive=false;
             foreach(var renderer in sectorRenderers)if(renderer!=null){renderer.SetPropertyBlock(null);renderer.ResetLocalBounds();}
             RestoreBaseline();
@@ -158,6 +164,7 @@ namespace QuestFlightLab.Environment
             cloudDrift+=localWind*(float)elapsed;
             cloudDrift.x=Mathf.Repeat(cloudDrift.x+CloudWrapPeriod*.5f,CloudWrapPeriod)-CloudWrapPeriod*.5f;
             cloudDrift.z=Mathf.Repeat(cloudDrift.z+CloudWrapPeriod*.5f,CloudWrapPeriod)-CloudWrapPeriod*.5f;
+            windProperties.SetVector("_QFPreviousCloudDrift",renderedCloudDrift);
             windProperties.SetVector(DriftId,new Vector4(cloudDrift.x,0,cloudDrift.z,1));
             windProperties.SetVector(WrapId,cloudWrapCenter);
             foreach(var renderer in sectorRenderers)

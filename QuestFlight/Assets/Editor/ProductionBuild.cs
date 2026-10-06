@@ -45,9 +45,10 @@ namespace QuestFlight.Editor
                 Environment.GetEnvironmentVariable("QUESTFLIGHT_DEVELOPMENT_BUILD"),
                 "1",
                 StringComparison.Ordinal);
-            BuildOptions buildOptions = development
-                ? BuildOptions.Development | BuildOptions.AllowDebugging | BuildOptions.ConnectWithProfiler
-                : BuildOptions.None;
+            // Development enables the bounded attachment diagnostics. It must not
+            // implicitly start a managed debugger or an unattended profiler: the
+            // latter buffers samples even when no Editor can receive them.
+            BuildOptions buildOptions = development ? BuildOptions.Development : BuildOptions.None;
             BuildPlayerOptions options = new BuildPlayerOptions
             {
                 scenes = new[] { ProductProjectConfigurator.ProductionScenePath },

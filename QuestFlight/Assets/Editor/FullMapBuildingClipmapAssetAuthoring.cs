@@ -2033,7 +2033,7 @@ namespace QuestFlight.Editor
                     renderer.receiveShadows = false;
                     renderer.lightProbeUsage = LightProbeUsage.BlendProbes;
                     renderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbes;
-                    renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                    renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
                     renderer.allowOcclusionWhenDynamic = true;
                     controller.pageFilters[i] = filter; controller.pageRenderers[i] = renderer;
                 }

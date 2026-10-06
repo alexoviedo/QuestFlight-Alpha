@@ -18,24 +18,30 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Local Shadow Depth"
             #pragma fragment frag
             #include "UnityCG.cginc"
 
-            float4 _CockpitLocalShadowDepthParams;
+            float4 _CockpitLocalShadowDepthParams; float4x4 _QFShadowView, _QFShadowVP;
 
             struct appdata
             {
                 float4 vertex : POSITION;
-            };
+            
+UNITY_VERTEX_INPUT_INSTANCE_ID
+};
 
             struct v2f
             {
                 float4 position : SV_POSITION;
                 float linearDepth : TEXCOORD0;
-            };
+            
+UNITY_VERTEX_OUTPUT_STEREO
+};
 
             v2f vert(appdata input)
             {
+UNITY_SETUP_INSTANCE_ID(input);
                 v2f output;
-                float4 viewPosition = mul(UNITY_MATRIX_MV, input.vertex);
-                output.position = UnityObjectToClipPos(input.vertex);
+UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                float4 viewPosition = mul(_QFShadowView, mul(unity_ObjectToWorld,input.vertex));
+                output.position = mul(_QFShadowVP,mul(unity_ObjectToWorld,input.vertex));
                 output.linearDepth = saturate(
                     (-viewPosition.z - _CockpitLocalShadowDepthParams.x) *
                     _CockpitLocalShadowDepthParams.z);
@@ -44,10 +50,13 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Local Shadow Depth"
 
             half4 frag(v2f input) : SV_Target
             {
+UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half depth = saturate(input.linearDepth);
                 return half4(depth, depth * depth, 0.0h, 1.0h);
             }
-            ENDCG
+            
+#pragma multi_compile_instancing
+ENDCG
         }
     }
     Fallback Off

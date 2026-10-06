@@ -395,6 +395,19 @@ $apk = Join-Path $ProjectPath 'Builds\Android\QuestFlight-production.apk'
 if (-not (Test-Path -LiteralPath $apk)) { throw "Unity exited without the product APK: $apk" }
 & python $payloadTool --apk $apk --inventory $payloadInventory
 if ($LASTEXITCODE -ne 0) { throw 'APK does not contain the authored scenery payload; do not install it.' }
+# Check the packaged player, not just the requested build options. Diagnostic
+# attachment capture must not silently turn on CPU profiling or script debugging.
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$apkArchive = [IO.Compression.ZipFile]::OpenRead($apk)
+try {
+  $bootEntry = $apkArchive.GetEntry('assets/bin/Data/boot.config')
+  if ($null -eq $bootEntry) { throw 'APK boot.config is missing; cannot verify player diagnostics.' }
+  $bootReader = [IO.StreamReader]::new($bootEntry.Open())
+  try { $bootConfig = $bootReader.ReadToEnd() } finally { $bootReader.Dispose() }
+  if ($bootConfig -match '(?m)^(profiler-enable|player-connection-debug|wait-for-managed-debugger|wait-for-native-debugger)=1\s*$') {
+    throw 'APK has automatic profiling or script debugging enabled; do not install it for product acceptance.'
+  }
+} finally { $apkArchive.Dispose() }
 $hash = Get-Sha256Hex -LiteralPath $apk
 [ordered]@{
   generatedUtc = [DateTime]::UtcNow.ToString('O')
@@ -410,6 +423,7 @@ $hash = Get-Sha256Hex -LiteralPath $apk
   sceneryPayloadVerified = $true
   sceneryPayloadInventory = $payloadInventory
   development = [bool]$Development
+  unattendedProfilingDisabled = $true
   nativeJsbsimRequired = $true
   unityPrototypeAllowed = $false
   projectPathPreflightPassed = $true

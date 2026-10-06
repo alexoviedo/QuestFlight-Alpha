@@ -50,6 +50,9 @@ namespace QuestFlightLab.Environment
         internal Quaternion attitude = Quaternion.identity;
         private static readonly int AccentId = Shader.PropertyToID("_PaintAccent");
         private static readonly int TintId = Shader.PropertyToID("_Tint");
+        QuestFlight.Rendering.ProductRigidRendererHistory motionHistory;
+        void OnEnable() { motionHistory = new QuestFlight.Rendering.ProductRigidRendererHistory(); }
+        void OnDisable() { motionHistory?.Dispose(); motionHistory = null; }
 
         public void Initialize(int direction, bool returning = false)
         {
@@ -74,6 +77,8 @@ namespace QuestFlightLab.Environment
             transform.position = Position;
             var properties = new MaterialPropertyBlock(); properties.SetColor(TintId, tint); properties.SetColor(AccentId,paintAccent);
             foreach (Renderer r in renderers) if (r != null) r.SetPropertyBlock(properties);
+            motionHistory?.Reset();
+            motionHistory?.Upload(renderers);
         }
 
         internal void SetVisible(bool visible)
@@ -125,6 +130,7 @@ namespace QuestFlightLab.Environment
             float flap = Phase == AmbientFlightPhase.Approach || Phase == AmbientFlightPhase.Landing || Phase == AmbientFlightPhase.Rollout ? 25 : Phase == AmbientFlightPhase.Takeoff ? 10 : 0;
             foreach (Transform f in flaps) if (f != null && f.gameObject.activeInHierarchy) f.localRotation = Quaternion.RotateTowards(f.localRotation, Quaternion.Euler(-flap, 0, 0), 15 * dt);
             SetVisible(!Suppressed);
+            motionHistory?.Upload(renderers);
         }
     }
 }

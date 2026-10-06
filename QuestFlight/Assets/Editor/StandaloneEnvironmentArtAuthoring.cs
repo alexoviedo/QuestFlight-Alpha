@@ -886,7 +886,7 @@ namespace QuestFlight.Editor
             renderer.receiveShadows = receiveShadows;
             renderer.lightProbeUsage = LightProbeUsage.Off;
             renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
-            renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+            renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
             GameObjectUtility.SetStaticEditorFlags(
                 renderer.gameObject,
                 batchingStatic ? StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic : StaticEditorFlags.OccludeeStatic);

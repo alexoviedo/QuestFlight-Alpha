@@ -227,7 +227,7 @@ namespace QuestFlightLab.Environment.Editor.Tests
             try
             {
                 camera.targetTexture = render;
-                camera.Render();
+                QuestFlight.Rendering.ProductRenderCapture.Render(camera);
                 RenderTexture.active = render;
                 texture.ReadPixels(new Rect(0, 0, Width, Height), 0, 0, false);
                 texture.Apply(false, false);

@@ -245,7 +245,8 @@ namespace QuestFlightLab.EditorTests
                 "The unbound historical water source remains available for provenance and later polish.");
             Assert.That(reservoirSource.shader, Is.SameAs(reservoir));
             Assert.That(reservoirSource.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
-            Assert.That(reservoirSource.passCount, Is.EqualTo(1));
+            Assert.That(reservoirSource.passCount, Is.EqualTo(2));
+            Assert.That(reservoirSource.FindPass("XRMotionVectors"), Is.GreaterThanOrEqualTo(0));
             Assert.That(contract.GetComponentsInChildren<Renderer>(true)
                 .SelectMany(renderer => renderer.sharedMaterials)
                 .Where(material => material != null)

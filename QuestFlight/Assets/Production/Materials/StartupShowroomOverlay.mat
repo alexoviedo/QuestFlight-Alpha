@@ -33,6 +33,7 @@ Material:
     - _GradientStrength: 0
     - _Opacity: 0
     - _UseMainTex: 0
+    - _XRMotionVectorsPass: 1
     - _ZTest: 8
     - _ZWrite: 0
     m_Colors:

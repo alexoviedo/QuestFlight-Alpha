@@ -72,7 +72,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(material, Is.Not.Null);
             Assert.That(material.shader.name, Is.EqualTo(ProductionEnvironmentRoot.ProductionReservoirShaderName));
             Assert.That(material.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
-            Assert.That(material.passCount, Is.EqualTo(1));
+            Assert.That(material.passCount, Is.EqualTo(2));
             Assert.That(material.GetTexture("_DepthShoreRoughness"), Is.Not.Null);
             Assert.That(material.GetTexture("_TerrainMacroAlbedo"), Is.Not.Null);
             Assert.That(material.GetFloat("_OrthophotoInfluence"), Is.InRange(0.65f, 0.85f));

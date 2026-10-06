@@ -92,13 +92,16 @@ namespace QuestFlightLab.Environment
         private void OnEnable()
         {
             Camera.onPreCull -= DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw -= DrawForCamera;
             Camera.onPreCull += DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw += DrawForCamera;
             Prepare();
         }
 
         private void OnDisable()
         {
             Camera.onPreCull -= DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw -= DrawForCamera;
         }
 
 #if UNITY_EDITOR
@@ -122,6 +125,7 @@ namespace QuestFlightLab.Environment
 
         private void DrawForCamera(Camera camera)
         {
+            if(QuestFlight.Rendering.ProductRenderSubmission.Preparing)return;
             if (camera == null || !enabled || !gameObject.activeInHierarchy ||
                 !gameObject.scene.IsValid() || sharedClumpMesh == null ||
                 sharedMaterial == null || instances == null ||
@@ -160,7 +164,7 @@ namespace QuestFlightLab.Environment
             if (count == 0)
                 return;
             properties.SetVectorArray(InstanceTintId, visibleTints);
-            Graphics.DrawMeshInstanced(
+            QuestFlight.Rendering.ProductRenderSubmission.DrawMeshInstanced(
                 sharedClumpMesh,
                 0,
                 sharedMaterial,

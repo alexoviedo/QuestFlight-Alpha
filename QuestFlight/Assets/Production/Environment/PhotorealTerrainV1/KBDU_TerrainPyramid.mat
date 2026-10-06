@@ -94,6 +94,7 @@ Material:
     - _FullMapWaterSunGlintStrength: 0.24
     - _NearSourceNormalStrength: 0.42
     - _Roughness: 0.92
+    - _XRMotionVectorsPass: 1
     m_Colors:
     - _AerialCanopyLocalBounds: {r: -2048, g: -2048, b: 0.00024414062, a: 0.00024414062}
     - _AerialCanopyProductToSourceRow0: {r: 0.99960136, g: 0.0025375222, b: -3.0146167e-11, a: 0}

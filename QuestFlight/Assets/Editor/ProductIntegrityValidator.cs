@@ -69,6 +69,9 @@ namespace QuestFlight.Editor
                 , ["com.meta.xr.sdk.interaction"] = "205.0.0"
                 , ["com.meta.xr.sdk.interaction.ovr"] = "205.0.0"
                 , ["com.unity.xr.hands"] = "1.7.3"
+                , ["com.unity.render-pipelines.universal"] = "17.3.0"
+                , ["com.unity.render-pipelines.core"] = "17.3.0"
+                , ["com.unity.shadergraph"] = "17.3.0"
             };
 
         private static readonly HashSet<string> AllowedManifestPackages = new HashSet<string>(StringComparer.Ordinal)
@@ -83,6 +86,9 @@ namespace QuestFlight.Editor
             "com.meta.xr.sdk.interaction",
             "com.meta.xr.sdk.interaction.ovr",
             "com.unity.xr.hands",
+            "com.unity.render-pipelines.universal",
+            "com.unity.render-pipelines.core",
+            "com.unity.shadergraph",
             "com.unity.modules.ai",
             "com.unity.modules.animation",
             "com.unity.modules.androidjni",

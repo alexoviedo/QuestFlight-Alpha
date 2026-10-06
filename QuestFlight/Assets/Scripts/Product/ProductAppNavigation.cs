@@ -20,7 +20,7 @@ namespace QuestFlight.Product
 
     {
 
-        public enum Page { None, App, ConfirmMain, Calibration, Explanation, Orientation, Settings, QuickStart, Guest, Tools, Controls, Comfort, Briefing, Map, Kneeboard, Activities, History, Summary, Report, Bindings, InputPreview, InstrumentHelp, Captions, ControlDiagram, Checklist }
+        public enum Page { None, App, ConfirmMain, Calibration, Explanation, Orientation, Settings, QuickStart, Guest, Tools, Controls, Comfort, Briefing, Map, Kneeboard, Activities, History, Summary, Report, Bindings, InputPreview, InstrumentHelp, Captions, ControlDiagram, Checklist, Graphics }
 
         [SerializeField] private ProductFlightModeCoordinator modes;
 
@@ -645,7 +645,7 @@ namespace QuestFlight.Product
                 if(instructorVoice!=null)Choice(0,"Voice: "+Mathf.RoundToInt(voiceLevel*100)+"%",23);
                 if(aircraftAudio!=null)Choice(1,"Aircraft sound: "+Mathf.RoundToInt(aircraftLevel*100)+"%",24);
                 Choice(2,CaptionsEnabled?"Narration captions: on":"Narration captions: off",14);
-                Choice(3,"Readability / feedback",42);
+                Choice(3,"Display / readability",195);
                 Choice(4,"Controls and comfort",41);
                 Choice(5,training.IsGuestSession?"End guest session":"Start guest session",28);
                 Choice(6,"Quick start guide",30); Choice(7,"Back",5);

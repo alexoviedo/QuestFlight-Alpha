@@ -1,0 +1,44 @@
+[
+  {
+    "asset": "Assets/Production/Rendering/VendorMotion/OculusRayVisual.shader",
+    "source": "QuestFlight/Library/PackageCache/com.meta.xr.sdk.interaction@b67d311217e9/Runtime/Shaders/OculusRayVisual.shader",
+    "sha256": "42eb0ee1bb66a57898e6fad24a804079beb7d07916ed12a2aec1df22cdd4e0cb",
+    "license": "Oculus SDK License; upstream SDK headers/includes retained"
+  },
+  {
+    "asset": "Assets/Production/Rendering/VendorMotion/OculusRayCursor.shader",
+    "source": "QuestFlight/Library/PackageCache/com.meta.xr.sdk.interaction@b67d311217e9/Runtime/Shaders/OculusRayCursor.shader",
+    "sha256": "71888d2717637196548a4858601306c1241014eaea3fdaba38497d04f9a7a779",
+    "license": "Oculus SDK License; upstream SDK headers/includes retained"
+  },
+  {
+    "asset": "Assets/Production/Rendering/VendorMotion/OculusHand.shader",
+    "source": "QuestFlight/Library/PackageCache/com.meta.xr.sdk.interaction@b67d311217e9/Runtime/Shaders/OculusHand.shader",
+    "sha256": "9a6ad2bb5162f0f5ee0c2547975986d05fca25349578a33a371d41c47b68f2bd",
+    "license": "Oculus SDK License; upstream SDK headers/includes retained"
+  },
+  {
+    "asset": "Assets/Production/Rendering/VendorMotion/Hotspot.shader",
+    "source": "QuestFlight/Library/PackageCache/com.meta.xr.sdk.interaction@b67d311217e9/Runtime/Shaders/Locomotion/Hotspot.shader",
+    "sha256": "0bdaf360888a93d0b586d62b453f5b190c50e9bc4c4b572c56daabd85040effc",
+    "license": "Oculus SDK License; upstream SDK headers/includes retained"
+  },
+  {
+    "asset": "Assets/Production/Rendering/VendorMotion/TransparentVertexTexture.shader",
+    "source": "QuestFlight/Library/PackageCache/com.meta.xr.sdk.interaction@b67d311217e9/Runtime/Shaders/Locomotion/TransparentVertexTexture.shader",
+    "sha256": "98178f1f83f7ccc59d695091ac40bce398a724bbffbdb7306e988df828b3baa6",
+    "license": "Oculus SDK License; upstream SDK headers/includes retained"
+  },
+  {
+    "asset": "Assets/Production/Rendering/VendorMotion/TransparentTexture.shader",
+    "source": "QuestFlight/Library/PackageCache/com.meta.xr.sdk.core@c0efcbf2ba70/Editor/BuildingBlocks/BlockData/RoomModel/Shaders/TransparentTexture.shader",
+    "sha256": "e10facf6a3aa21785d430bc1de1e7d3a3a4e260d323c6e2b4b988645e80d5967",
+    "license": "MIT (upstream Unity shader header)"
+  },
+  {
+    "asset": "Assets/Production/Rendering/VendorMotion/TunnelingEffect.shader",
+    "source": "QuestFlight/Library/PackageCache/com.meta.xr.sdk.interaction@b67d311217e9/Runtime/Shaders/Locomotion/TunnelingEffect.shader",
+    "sha256": "0e64056d876c1604b5ce8637a65be8eb483b5f287b3ede2cb2e8e1b64168bf7b",
+    "license": "Oculus SDK License; installed package derivative"
+  }
+]

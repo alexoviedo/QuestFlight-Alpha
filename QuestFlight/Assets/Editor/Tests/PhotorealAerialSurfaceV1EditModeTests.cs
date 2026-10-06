@@ -317,7 +317,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(buildingMaterial.shader.name, Is.EqualTo(FullMapBuildingClipmapAssetAuthoring.ShaderName));
             Assert.That(materials.All(material => material.renderQueue <= (int)UnityEngine.Rendering.RenderQueue.Geometry),
                 Is.True);
-            Assert.That(materials.All(material => material.passCount == 1), Is.True);
+            Assert.That(materials.All(material => material.passCount == 2 && material.FindPass("XRMotionVectors") >= 0), Is.True);
             string shaderSource = File.ReadAllText(Path.GetFullPath(
                 Path.Combine(Application.dataPath, "..", ShaderPath)));
             Assert.That(shaderSource, Does.Contain("input.semanticData"));

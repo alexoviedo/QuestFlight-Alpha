@@ -120,7 +120,10 @@ namespace QuestFlightLab.Environment
             if(Application.isPlaying)
             {
                 Initialize();StartCoroutine(Stream());
-                Camera.onPreCull-=DrawForCamera;Camera.onPreCull+=DrawForCamera;
+                Camera.onPreCull-=DrawForCamera;
+                QuestFlight.Rendering.ProductRenderSubmission.Draw -= DrawForCamera;
+                Camera.onPreCull+=DrawForCamera;
+                QuestFlight.Rendering.ProductRenderSubmission.Draw += DrawForCamera;
             }
         }
         private void Desired(Vector3 p)
@@ -416,7 +419,7 @@ namespace QuestFlightLab.Environment
 #if UNITY_EDITOR
                 if(!Application.isPlaying)properties.SetFloat("_Diagnostic",DiagnosticTierForVisualQa>=0?(tier==DiagnosticTierForVisualQa?1:0):branchMaterial.GetFloat("_Diagnostic"));
 #endif
-                Graphics.DrawMeshInstancedProcedural(branchMesh,tier,branchMaterial,drawBounds,drawCounts[tier],properties,ShadowCastingMode.Off,false,gameObject.layer,camera,LightProbeUsage.Off);
+                QuestFlight.Rendering.ProductRenderSubmission.DrawMeshInstancedProcedural(branchMesh,tier,branchMaterial,drawBounds,drawCounts[tier],properties,ShadowCastingMode.Off,false,gameObject.layer,camera,LightProbeUsage.Off);
                 offset+=drawCounts[tier];LastDraws++;
             }
             DrawProxies(camera);
@@ -434,6 +437,7 @@ namespace QuestFlightLab.Environment
         private void OnDisable()
         {
             Camera.onPreCull-=DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw -= DrawForCamera;
             StopAllCoroutines();Shader.SetGlobalFloat("_MapGroveOwnershipActive",0);pages.Clear();buffer?.Release();buffer=null;
             if(ownershipTexture!=null){if(Application.isPlaying)Destroy(ownershipTexture);else DestroyImmediate(ownershipTexture);}
             selectionEpoch=1;previousOwnershipCount=0;ownershipMark=0;ownershipUploaded=false;pageFadesActive=false;cachedGpuCells=0;

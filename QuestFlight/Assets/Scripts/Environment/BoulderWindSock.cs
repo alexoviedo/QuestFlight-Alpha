@@ -10,6 +10,16 @@ namespace QuestFlightLab.Environment
         public Transform fabric;
         private float countdown;
         private Quaternion target = Quaternion.Euler(80,0,0);
+        private QuestFlight.Rendering.ProductRigidRendererHistory motionHistory;
+        private Renderer[] motionRenderers;
+        private void OnEnable()
+        {
+            motionRenderers = fabric != null ? fabric.GetComponentsInChildren<Renderer>(true) : System.Array.Empty<Renderer>();
+            motionHistory = new QuestFlight.Rendering.ProductRigidRendererHistory();
+            motionHistory.Upload(motionRenderers);
+        }
+        private void LateUpdate() { motionHistory?.Upload(motionRenderers); }
+        private void OnDisable() { motionHistory?.Dispose(); motionHistory = null; }
         private void Update()
         {
             if (windField == null || player == null || fabric == null || !player.IsInitialized) return;

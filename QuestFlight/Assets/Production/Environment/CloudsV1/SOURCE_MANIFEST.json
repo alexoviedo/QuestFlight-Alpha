@@ -43,6 +43,15 @@
       "sha256": "1a42fb731d80b46e1fd2c92adfa434b60f934ae51ed784c55c7ea8ac8aaf08b4",
       "logicalDimensions": "256x256 RGBA weather and occupancy",
       "runtimeImport": "linear, bilinear, clamp, mipmapped, Android ASTC 6x6"
+    },
+    "samplingVolumes": {
+      "compiler": "Assets/Editor/BoulderCloudVolumeAuthoring.cs",
+      "source": "KBDU_CloudDensitySlices_RGBA.png",
+      "density": "Generated/KBDU_CloudDensityVolume.asset",
+      "occupancy": "Generated/KBDU_CloudOccupancy.asset",
+      "license": "Same project-owned derivative of recorded CC0 sources",
+      "runtimeImport": "RGBA32 linear no mipmaps; density bilinear, occupancy point; not CPU readable",
+      "policy": "Atlas remains reference. Occupancy applies only to uncompressed volume sampling."
     }
   },
   "runtimeTechnique": {

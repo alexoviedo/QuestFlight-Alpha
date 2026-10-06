@@ -12,6 +12,28 @@ namespace QuestFlightLab.Environment.Editor.Tests
     public sealed class KbduTrafficV1EditModeTests
     {
         [Test]
+        public void ParkedPresentationCacheExactlyPreservesEveryAuthoredPose()
+        {
+            GameObject root = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(TrafficPrefab));
+            try
+            {
+                var runtime = root.GetComponent<KbduTrafficRuntime>();
+                var matrices = (Matrix4x4[])typeof(KbduTrafficRuntime).GetField(
+                    "parkedPresentationMatrices", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(runtime);
+                var manifest = JsonUtility.FromJson<ManifestRecord>(AssetDatabase.LoadAssetAtPath<TextAsset>(Manifest).text);
+                Assert.That(matrices.Length, Is.EqualTo(manifest.parked.Length));
+                for (int index = 0; index < matrices.Length; index++)
+                {
+                    var vehicle = manifest.parked[index];
+                    var expected = Matrix4x4.TRS(new Vector3(vehicle.x, vehicle.y, vehicle.z),
+                        Quaternion.Euler(vehicle.pitch_degrees, vehicle.yaw_degrees, vehicle.roll_degrees), Vector3.one);
+                    Assert.That(matrices[index], Is.EqualTo(expected), "Parked vehicle " + index);
+                }
+            }
+            finally { UnityEngine.Object.DestroyImmediate(root); }
+        }
+
+        [Test]
         public void NearBudgetEvictionsRetainEveryVehicleAsEitherDetailOrProxy()
         {
             GameObject root = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(TrafficPrefab));
@@ -21,15 +43,15 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 var runtime = root.GetComponent<KbduTrafficRuntime>();
                 Camera camera = cameraObject.AddComponent<Camera>();
                 camera.enabled = false;
-                var consider = (Action<Camera, Vector3, int, int, Matrix4x4, int>)Delegate.CreateDelegate(
-                    typeof(Action<Camera, Vector3, int, int, Matrix4x4, int>), runtime,
+                var consider = (Action<Vector3, Vector3, int, int, Matrix4x4, int>)Delegate.CreateDelegate(
+                    typeof(Action<Vector3, Vector3, int, int, Matrix4x4, int>), runtime,
                     typeof(KbduTrafficRuntime).GetMethod("ConsiderVisible", BindingFlags.Instance | BindingFlags.NonPublic));
                 // Every later car is closer, repeatedly evicting the worst detail
                 // candidate. All 96 are well inside the visible traffic range.
                 for (int i = 0; i < 96; i++)
                 {
                     Vector3 position = new Vector3(0, 0, 100 - i * 0.5f);
-                    consider(camera, position, 0, 0, Matrix4x4.Translate(position), i);
+                    consider(camera.transform.position, position, 0, 0, Matrix4x4.Translate(position), i);
                 }
                 T Field<T>(string name) => (T)typeof(KbduTrafficRuntime)
                     .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(runtime);
@@ -547,7 +569,11 @@ namespace QuestFlightLab.Environment.Editor.Tests
         private sealed class ParkedRecord
         {
             public float x;
+            public float y;
             public float z;
+            public float pitch_degrees;
+            public float yaw_degrees;
+            public float roll_degrees;
             public int archetype;
             public int paint_index;
         }

@@ -245,7 +245,7 @@ namespace QuestFlight.Editor
                 RenderTextureReadWrite.sRGB, 4);
             RenderTexture previousActive = RenderTexture.active;
             camera.targetTexture = rt;
-            camera.Render();
+            QuestFlight.Rendering.ProductRenderCapture.Render(camera);
             RenderTexture.active = rt;
             Texture2D capture = new Texture2D(Width, Height, TextureFormat.RGB24, false, false);
             capture.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);

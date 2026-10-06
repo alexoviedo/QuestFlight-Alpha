@@ -113,7 +113,7 @@ namespace QuestFlightLab.Editor
                 renderer.reflectionProbeUsage =
                     ReflectionProbeUsage.BlendProbesAndSkybox;
                 renderer.probeAnchor = null;
-                renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
                 renderer.allowOcclusionWhenDynamic = false;
                 GameObjectUtility.SetStaticEditorFlags(cowl.gameObject, (StaticEditorFlags)0);
 
@@ -214,7 +214,7 @@ namespace QuestFlightLab.Editor
                 renderer.lightProbeUsage = source.lightProbeUsage;
                 renderer.reflectionProbeUsage = source.reflectionProbeUsage;
                 renderer.probeAnchor = source.probeAnchor;
-                renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
                 renderer.allowOcclusionWhenDynamic = false;
                 renderer.additionalVertexStreams = null;
                 GameObjectUtility.SetStaticEditorFlags(cowl.gameObject, (StaticEditorFlags)0);

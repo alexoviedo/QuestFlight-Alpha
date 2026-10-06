@@ -63,6 +63,7 @@ Material:
     - _CornerSofteningWidthMeters: 0.35
     - _NormalScale: 0.34
     - _WindowReflection: 0.38
+    - _XRMotionVectorsPass: 1
     m_Colors:
     - _FarWorldMinInvSize: {r: -12000, g: -12000, b: 0.000041666666, a: 0.000041666666}
     - _MidBlendStartEnd: {r: 5000, g: 6000, b: 0, a: 0}

@@ -257,7 +257,7 @@ namespace QuestFlight.Editor
                 shadowRenderer.receiveShadows = false;
                 shadowRenderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
                 shadowRenderer.lightProbeUsage = LightProbeUsage.Off;
-                shadowRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                shadowRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
                 AircraftRunwayBlobShadow shadow = shadowObject.AddComponent<AircraftRunwayBlobShadow>();
                 shadow.ConfigureAuthoredReferences(aircraft, environment, shadowRenderer);
                 shadow.UpdateShadowPoseNow();

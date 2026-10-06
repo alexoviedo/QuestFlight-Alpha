@@ -140,6 +140,11 @@ namespace QuestFlightLab.Environment
         [SerializeField] private int authoredMaximumDrawCount;
 
         private readonly Matrix4x4[][] nearMatrices = CreateMatrixGroups();
+        private readonly Matrix4x4[][] nearPreviousMatrices = CreateMatrixGroups(), farPreviousMatrices = CreateProxyMatrixGroups();
+        private Dictionary<(int,int,long),Matrix4x4> renderedVehicles = new Dictionary<(int,int,long),Matrix4x4>(8192), frameVehicles = new Dictionary<(int,int,long),Matrix4x4>(8192);
+        private void CompleteVehicleFrame(Camera camera) { if(camera!=lastPreparedCamera)return; var old=renderedVehicles;renderedVehicles=frameVehicles;frameVehicles=old;frameVehicles.Clear(); }
+        private void ResetVehicleHistory() { renderedVehicles.Clear();frameVehicles.Clear();lastPreparedFrame=-1; }
+
         private readonly Vector4[][] nearBodyTints = CreateVectorGroups();
         private readonly Vector4[][] nearTrailerTints = CreateVectorGroups();
         private readonly int[] nearCounts = new int[KbduTrafficRuntime.ArchetypeCount];
@@ -147,13 +152,22 @@ namespace QuestFlightLab.Environment
         private readonly Vector4[][] farBodyTints = CreateProxyVectorGroups();
         private readonly Vector4[][] farTrailerTints = CreateProxyVectorGroups();
         private readonly int[] farCounts = new int[KbduTrafficRuntime.ProxyArchetypeCount];
-        private readonly MaterialPropertyBlock[] nearPropertyBlocks =
-            new MaterialPropertyBlock[KbduTrafficRuntime.ArchetypeCount];
-        private readonly MaterialPropertyBlock[] farPropertyBlocks =
-            new MaterialPropertyBlock[KbduTrafficRuntime.ProxyArchetypeCount];
-        private readonly Matrix4x4[] chunkMatrices = new Matrix4x4[DrawMeshInstancedLimit];
-        private readonly Vector4[] chunkBodyTints = new Vector4[DrawMeshInstancedLimit];
-        private readonly Vector4[] chunkTrailerTints = new Vector4[DrawMeshInstancedLimit];
+        private sealed class PreparedTrafficBatch
+        {
+            public Mesh Mesh;
+            public int Count;
+            public readonly Matrix4x4[] Matrices = new Matrix4x4[DrawMeshInstancedLimit];
+            public readonly Vector4[] BodyTints = new Vector4[DrawMeshInstancedLimit];
+            public readonly Vector4[] TrailerTints = new Vector4[DrawMeshInstancedLimit];
+            public readonly Vector4[][] PreviousRows = {
+                new Vector4[DrawMeshInstancedLimit], new Vector4[DrawMeshInstancedLimit],
+                new Vector4[DrawMeshInstancedLimit], new Vector4[DrawMeshInstancedLimit] };
+            public readonly MaterialPropertyBlock Properties = new MaterialPropertyBlock();
+        }
+        private readonly List<PreparedTrafficBatch> preparedBatches = new List<PreparedTrafficBatch>();
+        private int preparedBatchCount;
+        private static readonly Unity.Profiling.ProfilerMarker PackMarker =
+            new Unity.Profiling.ProfilerMarker("QuestFlight.Traffic.PackVisibleChunks");
         private readonly Plane[] leftCullPlanes = new Plane[6];
         private readonly Plane[] rightCullPlanes = new Plane[6];
         private bool cullStereo, cullBoundsValid;
@@ -446,15 +460,23 @@ namespace QuestFlightLab.Environment
 
         private void OnEnable()
         {
+            QuestFlight.Rendering.ProductSpaceWarpController.FrameCompleted += CompleteVehicleFrame;
+            QuestFlight.Rendering.ProductSpaceWarpController.HistoryInvalidated += ResetVehicleHistory;
             scheduleClockSeconds = 0f;
             contractValid = TryValidateContract(out _);
             Camera.onPreCull -= DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw -= DrawForCamera;
             Camera.onPreCull += DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw += DrawForCamera;
         }
 
         private void OnDisable()
         {
+            QuestFlight.Rendering.ProductSpaceWarpController.FrameCompleted -= CompleteVehicleFrame;
+            QuestFlight.Rendering.ProductSpaceWarpController.HistoryInvalidated -= ResetVehicleHistory;
+            ResetVehicleHistory();
             Camera.onPreCull -= DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw -= DrawForCamera;
             lastPreparedFrame = -1;
             lastPreparedCamera = null;
         }
@@ -556,8 +578,27 @@ namespace QuestFlightLab.Environment
 #if UNITY_EDITOR
             if (DisableFrustumCullingForVisualQa) return true;
 #endif
-            return !cullBoundsValid || GeometryUtility.TestPlanesAABB(leftCullPlanes, corridor.conservativeBounds) ||
-                cullStereo && GeometryUtility.TestPlanesAABB(rightCullPlanes, corridor.conservativeBounds);
+            return !cullBoundsValid || BoundsInsidePlanes(leftCullPlanes, corridor.conservativeBounds) ||
+                cullStereo && BoundsInsidePlanes(rightCullPlanes, corridor.conservativeBounds);
+        }
+
+        // The frame's six planes already live in managed storage. Avoid repeated
+        // managed/native array marshalling for every corridor, in both eyes.
+        // Use the same AABB support point test, with a 1 mm conservative margin
+        // so rounding at a plane never makes an otherwise visible vehicle vanish.
+        private static bool BoundsInsidePlanes(Plane[] planes, Bounds bounds)
+        {
+            Vector3 center = bounds.center, extents = bounds.extents;
+            for (int index = 0; index < planes.Length; index++)
+            {
+                Plane plane = planes[index];
+                Vector3 normal = plane.normal;
+                float radius = Mathf.Abs(normal.x) * extents.x +
+                    Mathf.Abs(normal.y) * extents.y + Mathf.Abs(normal.z) * extents.z;
+                if (Vector3.Dot(normal, center) + plane.distance + radius < -0.001f)
+                    return false;
+            }
+            return true;
         }
 
         // Continue a stream only at an exact, unambiguous two-road endpoint with
@@ -759,6 +800,7 @@ namespace QuestFlightLab.Environment
 
         private void DrawForCamera(Camera camera)
         {
+            if(QuestFlight.Rendering.ProductRenderSubmission.Preparing)return;
             if (camera == null || !enabled || !contractValid ||
                 !gameObject.activeInHierarchy || !gameObject.scene.IsValid() ||
                 (camera.cullingMask & (1 << gameObject.layer)) == 0)
@@ -768,24 +810,12 @@ namespace QuestFlightLab.Environment
             if (lastPreparedFrame != Time.frameCount || lastPreparedCamera != camera)
             {
                 PrepareVisibleInstances(camera, scheduleClockSeconds);
+                PrepareBatches();
                 lastPreparedFrame = Time.frameCount;
                 lastPreparedCamera = camera;
             }
             Material material = acceptedVehicleAssets.SharedOpaqueMaterial;
-            Mesh[] nearMeshes = acceptedVehicleAssets.NearArchetypeMeshes;
-            for (int archetype = 0; archetype < nearCounts.Length; archetype++)
-            {
-                SubmitChunks(nearMeshes[archetype], material, nearMatrices[archetype],
-                    nearBodyTints[archetype], nearTrailerTints[archetype], nearCounts[archetype],
-                    nearPropertyBlocks, archetype, camera);
-            }
-            Mesh[] farMeshes = acceptedVehicleAssets.FarProxyMeshes;
-            for (int archetype = 0; archetype < farCounts.Length; archetype++)
-            {
-                SubmitChunks(farMeshes[archetype], material, farMatrices[archetype],
-                    farBodyTints[archetype], farTrailerTints[archetype], farCounts[archetype],
-                    farPropertyBlocks, archetype, camera);
-            }
+            DrawPrepared(camera, material);
             if (!submissionLogged && Application.isPlaying)
             {
                 submissionLogged = true;
@@ -904,7 +934,7 @@ namespace QuestFlightLab.Environment
                         stream.direction * 131, PaintPalette.Length);
                     AppendInstance(position, rotation, distance, archetype, paint,
                         corridorIndex, direction, EvaluateVisibilityEnvelope(vehicleAge + stream.ageOffset,
-                            stream.lifetime, distance), RetainNearLod(stream.root, stream.direction, departure, distance));
+                            stream.lifetime, distance), RetainNearLod(stream.root, stream.direction, departure, distance), (stream.root, stream.direction, departure));
                 }
             }
         }
@@ -1107,9 +1137,10 @@ namespace QuestFlightLab.Environment
             int corridorIndex,
             int direction,
             float visibility,
-            bool near)
+            bool near, (int,int,long) motionIdentity)
         {
             Matrix4x4 matrix = Matrix4x4.TRS(position, rotation, Vector3.one);
+            Matrix4x4 previousMatrix=renderedVehicles.TryGetValue(motionIdentity,out var prior)?prior:matrix;
             Vector4 bodyTint = PaintPalette[paintIndex];
             bodyTint.w = visibility;
 #if UNITY_EDITOR
@@ -1127,7 +1158,9 @@ namespace QuestFlightLab.Environment
                     droppedInstanceCount++;
                     return;
                 }
+                frameVehicles[motionIdentity]=matrix;
                 nearMatrices[archetype][count] = matrix;
+                nearPreviousMatrices[archetype][count]=previousMatrix;
                 nearBodyTints[archetype][count] = bodyTint;
                 nearTrailerTints[archetype][count] = TrailerPalette[paintIndex];
                 nearCounts[archetype] = count + 1;
@@ -1143,38 +1176,69 @@ namespace QuestFlightLab.Environment
                     droppedInstanceCount++;
                     return;
                 }
+                frameVehicles[motionIdentity]=matrix;
                 farMatrices[proxy][count] = matrix;
+                farPreviousMatrices[proxy][count]=previousMatrix;
                 farBodyTints[proxy][count] = bodyTint;
                 farTrailerTints[proxy][count] = TrailerPalette[paintIndex];
                 farCounts[proxy] = count + 1;
             }
         }
 
-        private void SubmitChunks(
-            Mesh mesh,
-            Material material,
-            Matrix4x4[] matrices,
-            Vector4[] bodyTints,
-            Vector4[] trailerTints,
-            int count,
-            MaterialPropertyBlock[] propertyBlocks,
-            int group,
-            Camera camera)
+        private void PrepareBatches()
+        {
+            using var sample = PackMarker.Auto();
+            preparedBatchCount = 0;
+            Mesh[] nearMeshes = acceptedVehicleAssets.NearArchetypeMeshes;
+            for (int archetype = 0; archetype < nearCounts.Length; archetype++)
+            {
+                PackChunks(nearMeshes[archetype], nearMatrices[archetype], nearPreviousMatrices[archetype],
+                    nearBodyTints[archetype], nearTrailerTints[archetype], nearCounts[archetype]);
+            }
+            Mesh[] farMeshes = acceptedVehicleAssets.FarProxyMeshes;
+            for (int archetype = 0; archetype < farCounts.Length; archetype++)
+            {
+                PackChunks(farMeshes[archetype], farMatrices[archetype], farPreviousMatrices[archetype],
+                    farBodyTints[archetype], farTrailerTints[archetype], farCounts[archetype]);
+            }
+        }
+
+        private void PackChunks(Mesh mesh, Matrix4x4[] matrices, Matrix4x4[] previousMatrices,
+            Vector4[] bodyTints, Vector4[] trailerTints, int count)
         {
             for (int offset = 0; offset < count; offset += DrawMeshInstancedLimit)
             {
+                if (preparedBatchCount == preparedBatches.Count)
+                    preparedBatches.Add(new PreparedTrafficBatch());
+                PreparedTrafficBatch batch = preparedBatches[preparedBatchCount++];
                 int chunkCount = Mathf.Min(DrawMeshInstancedLimit, count - offset);
-                Array.Copy(matrices, offset, chunkMatrices, 0, chunkCount);
-                Array.Copy(bodyTints, offset, chunkBodyTints, 0, chunkCount);
-                Array.Copy(trailerTints, offset, chunkTrailerTints, 0, chunkCount);
-                MaterialPropertyBlock propertyBlock = propertyBlocks[group] ??
-                    (propertyBlocks[group] = new MaterialPropertyBlock());
-                propertyBlock.Clear();
-                propertyBlock.SetVectorArray("_BodyTint", chunkBodyTints);
-                propertyBlock.SetVectorArray("_TrailerTint", chunkTrailerTints);
-                Graphics.DrawMeshInstanced(mesh, 0, material, chunkMatrices, chunkCount,
-                    propertyBlock, ShadowCastingMode.Off, false, gameObject.layer, camera,
-                    LightProbeUsage.Off, null);
+                batch.Mesh = mesh;
+                batch.Count = chunkCount;
+                Array.Copy(matrices, offset, batch.Matrices, 0, chunkCount);
+                Array.Copy(bodyTints, offset, batch.BodyTints, 0, chunkCount);
+                Array.Copy(trailerTints, offset, batch.TrailerTints, 0, chunkCount);
+                for (int i = 0; i < chunkCount; i++)
+                    for (int row = 0; row < 4; row++)
+                        batch.PreviousRows[row][i] = previousMatrices[offset + i].GetRow(row);
+                var properties = batch.Properties;
+                properties.SetVectorArray("_BodyTint", batch.BodyTints);
+                properties.SetVectorArray("_TrailerTint", batch.TrailerTints);
+                properties.SetFloat("_QFHasPreviousInstances", 1);
+                properties.SetVectorArray("_QFPreviousRow0", batch.PreviousRows[0]);
+                properties.SetVectorArray("_QFPreviousRow1", batch.PreviousRows[1]);
+                properties.SetVectorArray("_QFPreviousRow2", batch.PreviousRows[2]);
+                properties.SetVectorArray("_QFPreviousRow3", batch.PreviousRows[3]);
+            }
+        }
+
+        private void DrawPrepared(Camera camera, Material material)
+        {
+            for (int index = 0; index < preparedBatchCount; index++)
+            {
+                PreparedTrafficBatch batch = preparedBatches[index];
+                QuestFlight.Rendering.ProductRenderSubmission.DrawMeshInstanced(
+                    batch.Mesh, 0, material, batch.Matrices, batch.Count, batch.Properties,
+                    ShadowCastingMode.Off, false, gameObject.layer, camera, LightProbeUsage.Off, null);
             }
         }
 

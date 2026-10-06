@@ -2,6 +2,8 @@ Shader "QuestFlightLab/Production Stable Water"
 {
     Properties
     {
+        [HideInInspector] _XRMotionVectorsPass("XR motion",Float)=1
+
         [HideInInspector] _MainTex ("Compatibility", 2D) = "white" {}
         [Normal] _BroadNormal ("Broad wave normal", 2D) = "bump" {}
         [Normal] _RippleNormal ("Fine ripple normal", 2D) = "bump" {}
@@ -47,7 +49,7 @@ Shader "QuestFlightLab/Production Stable Water"
 
         Pass
         {
-            Tags { "LightMode"="ForwardBase" }
+            Tags { "LightMode"="UniversalForward" }
             CGPROGRAM
             #pragma target 3.0
             #pragma vertex vert
@@ -215,6 +217,230 @@ Shader "QuestFlightLab/Production Stable Water"
             }
             ENDCG
         }
-    }
+    
+        Pass
+        {
+            Name "XRMotionVectors"
+            Tags { "LightMode"="XRMotionVectors" }
+            Cull Back Blend Off ZWrite On ZTest LEqual ColorMask RGBA
+            Stencil { Ref 1 WriteMask 1 Comp Always Pass Replace }
+            CGPROGRAM
+#define QF_STATIC_WORLD_GEOMETRY 1
+
+            #pragma target 4.5
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile_fog
+            #pragma multi_compile_instancing
+            #include "UnityCG.cginc"
+#include "Assets/Shaders/ProductSpaceWarpMotion.cginc"
+            #include "Lighting.cginc"
+
+            sampler2D _BroadNormal;
+            sampler2D _RippleNormal;
+            sampler2D _DepthShoreRoughness;
+            samplerCUBE _EnvironmentCube;
+
+            fixed4 _Color;
+            fixed4 _ShoreColor;
+            fixed4 _ShoreBandColor;
+            fixed4 _HorizonColor;
+            float4 _BasinCenterExtent;
+            half4 _EnvironmentRotationSinCos;
+            half4 _BroadNormalScroll;
+            half4 _RippleNormalScroll;
+            half _BroadNormalMeters;
+            half _RippleNormalMeters;
+            half _BroadNormalStrength;
+            half _FineNormalStrength;
+            half _RippleStrength;
+            half _DepthContrast;
+            half _SurfaceVariation;
+            half _ShoreBandStrength;
+            half _Roughness;
+            half _RoughnessMin;
+            half _RoughnessMax;
+            half _EnvironmentMaxMip;
+            half _EnvironmentIntensity;
+            half _ReflectionFloor;
+            half _FresnelF0;
+            half _GlintStrength;
+
+            struct appdata
+            {
+                float4 vertex : POSITION;
+                half3 normal : NORMAL;
+                
+float3 qfPreviousVertex : TEXCOORD4;
+UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+
+            struct v2f
+            {
+                float4 position : SV_POSITION;
+                float3 worldPosition : TEXCOORD0;
+                half3 worldNormal : TEXCOORD1;
+                half2 basinUv : TEXCOORD2;
+                UNITY_FOG_COORDS(3)
+                
+float4 qfCurrent : TEXCOORD14; float4 qfPrevious : TEXCOORD15;
+UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            half SchlickFresnel(half normalDotView, half f0)
+            {
+                half oneMinus = 1.0h - saturate(normalDotView);
+                half oneMinus2 = oneMinus * oneMinus;
+                half oneMinus5 = oneMinus2 * oneMinus2 * oneMinus;
+                return f0 + (1.0h - f0) * oneMinus5;
+            }
+
+            half3 RotateEnvironmentDirection(half3 direction)
+            {
+                half sine = _EnvironmentRotationSinCos.x;
+                half cosine = _EnvironmentRotationSinCos.y;
+                return half3(
+                    direction.x * cosine - direction.z * sine,
+                    direction.y,
+                    direction.x * sine + direction.z * cosine);
+            }
+
+            v2f QFColorVertex(appdata input, out float4 qfWorld)
+            {
+                v2f output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_INITIALIZE_OUTPUT(v2f, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.position = QFObjectToMotionClip(input.vertex, qfWorld);
+                output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
+                output.worldNormal = UnityObjectToWorldNormal(input.normal);
+                output.basinUv =
+                    (output.worldPosition.xz - _BasinCenterExtent.xy) /
+                    max(_BasinCenterExtent.zw * 2.0, float2(1.0, 1.0)) + 0.5;
+                UNITY_TRANSFER_FOG(output, output.position);
+                return output;
+            }
+
+            fixed4 QFColorFragment(v2f input) : SV_Target
+            {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
+                half3 packedMask = tex2D(_DepthShoreRoughness, saturate(input.basinUv)).rgb;
+                half depth = saturate(packedMask.r * _DepthContrast);
+                half shoreBand = saturate(packedMask.g);
+                half shoreTransition = saturate(max(
+                    shoreBand,
+                    1.0h - smoothstep(0.0h, 0.16h, depth)));
+
+                // The surface mesh remains immutable. Only two project-authored normal
+                // textures scroll, producing stable low-cost wave motion with no geometry work.
+                half2 broadUv = input.worldPosition.xz / max(_BroadNormalMeters, 1.0h) +
+                    _Time.y * _BroadNormalScroll.xy;
+                half2 rippleUv = input.worldPosition.xz / max(_RippleNormalMeters, 1.0h) +
+                    _Time.y * _RippleNormalScroll.xy;
+                half3 broadNormal = UnpackNormal(tex2D(_BroadNormal, broadUv));
+                half3 fineNormal = UnpackNormal(tex2D(_RippleNormal, rippleUv));
+                half2 slope = broadNormal.xy * _BroadNormalStrength + fineNormal.xy * _FineNormalStrength;
+                half shoreNormalScale = lerp(0.45h, 1.0h, smoothstep(0.0h, 0.24h, depth));
+                slope *= _RippleStrength * shoreNormalScale;
+                half vertical = sqrt(saturate(1.0h - min(dot(slope, slope), 0.96h)));
+                half3 waveNormal = normalize(half3(slope.x, vertical, slope.y));
+                half3 normal = normalize(lerp(normalize(input.worldNormal), waveNormal, 0.92h));
+
+                half roughness = saturate(
+                    lerp(_RoughnessMin, _RoughnessMax, packedMask.b) +
+                    (_Roughness - 0.5h) * 0.12h + shoreTransition * 0.14h);
+
+                half3 viewDirection = normalize(_WorldSpaceCameraPos - input.worldPosition);
+                half3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
+                half3 halfDirection = normalize(viewDirection + lightDirection);
+                half normalDotView = saturate(dot(normal, viewDirection));
+                half normalDotLight = saturate(dot(normal, lightDirection));
+                half normalDotHalf = saturate(dot(normal, halfDirection));
+
+                half fresnel = SchlickFresnel(normalDotView, _FresnelF0);
+                half3 reflectionDirection = RotateEnvironmentDirection(reflect(-viewDirection, normal));
+                half3 skyReflection = texCUBElod(_EnvironmentCube,
+                    half4(reflectionDirection, roughness * _EnvironmentMaxMip)).rgb;
+                skyReflection *= _HorizonColor.rgb * _EnvironmentIntensity;
+                half reflectionPeak = max(skyReflection.r, max(skyReflection.g, skyReflection.b));
+                skyReflection *= rcp(1.0h + reflectionPeak * 0.42h);
+
+                half colorVariation = lerp(
+                    1.0h - _SurfaceVariation,
+                    1.0h + _SurfaceVariation,
+                    packedMask.b);
+                half3 waterColor = lerp(_ShoreColor.rgb, _Color.rgb, smoothstep(0.02h, 0.82h, depth));
+                waterColor *= colorVariation;
+                waterColor = lerp(
+                    waterColor,
+                    _ShoreBandColor.rgb,
+                    shoreTransition * _ShoreBandStrength);
+
+                half3 ambient = max(ShadeSH9(half4(normal, 1.0h)), half3(0.025h, 0.025h, 0.025h));
+                half3 litWater = waterColor * (ambient + _LightColor0.rgb * normalDotLight * 0.20h);
+                half shoreReflectionScale = lerp(0.55h, 1.0h, smoothstep(0.0h, 0.18h, depth));
+                half reflectionWeight = saturate(
+                    (_ReflectionFloor + fresnel * (1.0h - roughness * 0.35h)) * shoreReflectionScale);
+                half3 color = lerp(litWater, skyReflection, reflectionWeight);
+
+                // One bounded main-sun highlight supplies glitter without a probe, screen
+                // sample, secondary camera, or transparent layer.
+                half specularExponent = exp2(lerp(9.0h, 5.0h, roughness));
+                half sunGlint = pow(normalDotHalf, specularExponent) *
+                    (1.0h - roughness) * _GlintStrength * normalDotLight;
+                sunGlint = min(sunGlint, 0.12h);
+                color += _LightColor0.rgb * sunGlint;
+
+                fixed4 output = fixed4(color, 1.0h);
+                UNITY_APPLY_FOG(input.fogCoord, output);
+                return output;
+            }
+            
+v2f QFPreviousVertex(appdata input, out float4 qfWorld)
+            {
+                v2f output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_INITIALIZE_OUTPUT(v2f, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.position = QFObjectToMotionClip(input.vertex, qfWorld);
+                output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
+                output.worldNormal = UnityObjectToWorldNormal(input.normal);
+                output.basinUv =
+                    (output.worldPosition.xz - _BasinCenterExtent.xy) /
+                    max(_BasinCenterExtent.zw * 2.0, float2(1.0, 1.0)) + 0.5;
+                UNITY_TRANSFER_FOG(output, output.position);
+                return output;
+            }
+v2f vert(appdata v)
+{
+    UNITY_SETUP_INSTANCE_ID(v);
+    float4 world;
+    v2f o=QFColorVertex(v,world);
+    #if !defined(QF_STATIC_WORLD_GEOMETRY)
+    if (_QFHasPreviousModel < .5 && (_QFPreviousVertices > .5 || unity_MotionVectorsParams.x == 1))
+        v.vertex.xyz=v.qfPreviousVertex;
+    #endif
+    float4 previousWorld;
+    v2f old=QFPreviousVertex(v,previousWorld);
+    float4 oldWorld=QFPreviousWorld(previousWorld);
+    if (_QFResetObjectMotion > .5) oldWorld=world;
+    o.qfCurrent=o.position;
+    o.qfPrevious=mul(_PrevViewProjMatrixStereo[QFEye()],oldWorld);
+    
+    o.position=o.qfCurrent;
+    return o;
+}
+float4 frag(v2f v) : SV_Target
+{
+    UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(v);
+    float coverage=QFColorFragment(v).a;
+    clip(coverage-0.001);
+    return QFMotion(v.qfCurrent,v.qfPrevious,coverage);
+}
+
+            ENDCG
+        }
+}
     Fallback Off
 }

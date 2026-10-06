@@ -17,7 +17,7 @@ namespace QuestFlightLab.Editor
             var context=LoadContext(1280,720,report);var grove=context.environment.GetComponentInChildren<MapBranchGroveRenderer>(true);
             if(grove==null||!grove.enabled)throw new InvalidOperationException("Map grove absent/disabled in product scene");
             Camera.CameraCallback draw=c=>{if(c==context.camera)grove.DrawForVisualQa(c);};
-            Camera.onPreCull+=draw;string previous=System.Environment.GetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW");System.Environment.SetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW","1");
+            Camera.onPreCull+=draw;QuestFlight.Rendering.ProductRenderSubmission.Draw+=draw;string previous=System.Environment.GetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW");System.Environment.SetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW","1");
             string previousBranch=System.Environment.GetEnvironmentVariable("QFL_MAP_BRANCH_REVIEW_ACTIVE");System.Environment.SetEnvironmentVariable("QFL_MAP_BRANCH_REVIEW_ACTIVE","1");
             try
             {
@@ -58,7 +58,7 @@ namespace QuestFlightLab.Editor
             }
             finally
             {
-                grove.branchMaterial.SetFloat("_Diagnostic",0);Camera.onPreCull-=draw;grove.ClearForVisualQa();
+                grove.branchMaterial.SetFloat("_Diagnostic",0);Camera.onPreCull-=draw;QuestFlight.Rendering.ProductRenderSubmission.Draw-=draw;grove.ClearForVisualQa();
                 System.Environment.SetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW",previous);
                 System.Environment.SetEnvironmentVariable("QFL_MAP_BRANCH_REVIEW_ACTIVE",previousBranch);
             }

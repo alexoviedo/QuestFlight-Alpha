@@ -165,12 +165,16 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
             combinedDynamicRenderer.GetPropertyBlock(_materialProperties);
             _sourceMaterialProperties = new MaterialPropertyBlock();
             neutralizedSourceRenderer.GetPropertyBlock(_sourceMaterialProperties);
+            _materialProperties.SetFloat("_QFPreviousVertices",1);
+            QuestFlight.Rendering.ProductSpaceWarpController.FrameCompleted += FinishMotionFrame;
             ApplyAttitudeBallRotation(Quaternion.identity);
             ApplyAltitudeDigitsProperty(0);
         }
 
         private void OnDestroy()
         {
+            motionHistory?.Dispose();
+            QuestFlight.Rendering.ProductSpaceWarpController.FrameCompleted -= FinishMotionFrame;
             if (_runtimeMesh == null) return;
             Destroy(_runtimeMesh);
             _runtimeMesh = null;
@@ -347,6 +351,8 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
                 neutralizedSourceRenderer.GetPropertyBlock(
                     _sourceMaterialProperties);
             }
+            currentAttitude = new Vector4(rotation.x, rotation.y, rotation.z, rotation.w);
+            _sourceMaterialProperties.SetVector("_QFPreviousAttitudeRotation",presentedAttitude);
             CockpitInstrumentV2AttitudeContract contract =
                 layout.AttitudeContract;
             _sourceMaterialProperties.SetVector(
@@ -359,8 +365,12 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
                 _sourceMaterialProperties);
         }
 
+        private QuestFlight.Rendering.ProductDeformedMeshHistory motionHistory;
+        private Vector4 presentedAttitude = new Vector4(0,0,0,1), currentAttitude = new Vector4(0,0,0,1);
+        private void FinishMotionFrame(Camera camera) { presentedAttitude = currentAttitude; }
         private void Upload()
         {
+            (motionHistory ??= new QuestFlight.Rendering.ProductDeformedMeshHistory()).Upload(_runtimeMesh,_workingVertices);
             _runtimeMesh.SetVertices(
                 _workingVertices, 0, _workingVertices.Count, UploadFlags);
             _runtimeMesh.SetNormals(

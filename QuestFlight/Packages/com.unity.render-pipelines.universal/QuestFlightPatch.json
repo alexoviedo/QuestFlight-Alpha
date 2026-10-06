@@ -1,0 +1,15 @@
+{
+  "package": "com.unity.render-pipelines.universal",
+  "version": "17.3.0",
+  "source": "Unity 6000.3.8f1 Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.render-pipelines.universal",
+  "license": "Unity Companion License; see LICENSE.md",
+  "changes": [
+    "Shaders/XR/XRMotionVector.shader: reconstruct sky motion with the provider inverse VP rather than the potentially Y-flipped intermediate color inverse VP",
+    "Runtime/Passes/XRDepthMotionPass.cs: expose provider motion/depth attachments; reset camera history; supply inverse eye matrices; disable ordinary object batching independently of XR stereo variants",
+    "Runtime/Passes/XRSpaceWarpFrameData.cs: camera reset requests and RenderGraph attachment access; matching foveation capability query",
+    "ShaderLibrary/ObjectMotionVectors.hlsl: seed motion for newly visible/reused renderers",
+    "Editor/ShaderGraph/Includes/MotionVectorPass.hlsl: preserve 3D NDC depth motion for SpaceWarp; renderer history reset for ShaderGraph materials"
+  ],
+  "thirdPartyBinaryAssets": "Original package resources retained under upstream license; no downloaded content introduced",
+  "hardwareAcceptance": "Pending; embedding does not establish Quest compatibility/performance"
+}

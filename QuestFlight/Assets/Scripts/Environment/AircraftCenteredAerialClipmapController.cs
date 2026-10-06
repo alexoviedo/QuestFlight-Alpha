@@ -198,9 +198,10 @@ namespace QuestFlightLab.Environment
                     yield break;
                 }
                 AssetBundle bundle = DownloadHandlerAssetBundle.GetContent(request);
+                AssetBundleRequest assetRequest=null;
                 try
                 {
-                    AssetBundleRequest assetRequest = bundle.LoadAssetAsync<Texture2D>("KBDU_2020_global_000_000");
+                    assetRequest = bundle.LoadAssetAsync<Texture2D>("KBDU_2020_global_000_000");
                     yield return assetRequest;
                     globalTexture = assetRequest.asset as Texture2D;
                     if (globalTexture == null)
@@ -214,7 +215,7 @@ namespace QuestFlightLab.Environment
                 }
                 finally
                 {
-                    bundle.Unload(globalTexture == null);
+                    ReleaseBundleAfterLoad(bundle,assetRequest,globalTexture == null);
                 }
             }
         }
@@ -230,6 +231,8 @@ namespace QuestFlightLab.Environment
 
             float started = Time.realtimeSinceStartup;
             Dictionary<string, AssetBundle> bundles = new Dictionary<string, AssetBundle>();
+            AssetBundle pendingBundle=null;
+            AssetBundleRequest pendingAsset=null;
             bool failed = false;
             int copied = 0;
             try
@@ -272,6 +275,7 @@ namespace QuestFlightLab.Environment
 
                         string assetName = AssetName(tier, column, row);
                         AssetBundleRequest assetRequest = bundle.LoadAssetAsync<Texture2D>(assetName);
+                        pendingBundle=bundle;pendingAsset=assetRequest;
                         yield return assetRequest;
                         Texture2D page = assetRequest.asset as Texture2D;
                         if (page == null)
@@ -298,7 +302,8 @@ namespace QuestFlightLab.Environment
             }
             finally
             {
-                foreach (AssetBundle bundle in bundles.Values) bundle.Unload(true);
+                foreach (AssetBundle bundle in bundles.Values)
+                    ReleaseBundleAfterLoad(bundle,bundle==pendingBundle?pendingAsset:null,true);
             }
             if (!failed && copied == SliceCount)
             {
@@ -428,12 +433,24 @@ namespace QuestFlightLab.Environment
 
         private void OnDisable()
         {
+            StopAllCoroutines();
             refreshRunning = false;
             SetConsumerFloat("_ClipmapEnabled", 0f);
             clipmapActivated = false;
             DestroyArray(highRuntime);
             DestroyArray(mediumRuntime);
-            if (globalTexture != null) Destroy(globalTexture);
+            // This is a loaded AssetBundle asset, not a runtime-created texture.
+            if (globalTexture != null) { SetConsumerTexture("_ClipGlobalAlbedo",null); Resources.UnloadAsset(globalTexture); globalTexture=null; }
+        }
+
+        private static void ReleaseBundleAfterLoad(AssetBundle bundle,AssetBundleRequest request,bool unloadAssets)
+        {
+            if(bundle==null)return;
+            // A coroutine can be disposed during scene/session shutdown while
+            // LoadAssetAsync is pending. Unity forbids unloading that bundle yet.
+            if(request!=null && !request.isDone)
+                request.completed+=_=>{if(bundle!=null)bundle.Unload(unloadAssets);};
+            else bundle.Unload(unloadAssets);
         }
 
         private static void DestroyArray(TierRuntime runtime)

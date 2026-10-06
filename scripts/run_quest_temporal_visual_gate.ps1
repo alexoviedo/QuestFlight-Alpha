@@ -14,7 +14,7 @@ param(
   [int]$ReadinessTimeoutSeconds = 120,
   [ValidateRange(60, 180)]
   [int]$MeasurementTimeoutSeconds = 90,
-  [ValidateSet('production', 'sky_only', 'clouds_off', 'clouds_full_sampling', 'traffic_off', 'vegetation_off', 'connected_grove_off', 'grove_source_geometry', 'buildings_off', 'water_off', 'buildings_vegetation_off', 'reduced_texture_tier')]
+  [ValidateSet('production', 'sky_only', 'clouds_off', 'clouds_full_sampling', 'clouds_atlas', 'clouds_volume', 'clouds_volume_skip', 'traffic_off', 'vegetation_off', 'connected_grove_off', 'grove_source_geometry', 'buildings_off', 'water_off', 'buildings_vegetation_off', 'reduced_texture_tier')]
   [string]$IsolationProfile = 'production',
   [ValidateRange(-1, 4)]
   [int]$DiagnosticFoveationLevel = -1,
@@ -22,11 +22,13 @@ param(
   [switch]$SkipScreenRecording,
   [switch]$StaticEvidenceOnly,
   [switch]$SuppressOperatorPrompt,
-  [switch]$NoHumanWitness
+  [switch]$NoHumanWitness,
+  [switch]$KeepHeadsetAwake
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'quest_proximity_state.ps1')
 
 $RequiredRefreshRateHz = 72.0
 $QuestFrameBudgetMs = 1000.0 / $RequiredRefreshRateHz
@@ -252,7 +254,9 @@ function Get-VrApiEvidence {
       stale10 = Get-RegexInt $metrics 'Stale2/5/10/max=\d+/\d+/(\d+)/'
       staleMax = Get-RegexInt $metrics 'Stale2/5/10/max=\d+/\d+/\d+/(\d+)'
       appMs = Get-RegexDouble $metrics 'App=([0-9.]+)ms'
-      gpuDurationMs = Get-RegexDouble $metrics 'GD=([0-9.]+)ms'
+      # App is application GPU duration; GD is Guardian/boundary GPU duration.
+      gpuDurationMs = Get-RegexDouble $metrics 'App=([0-9.]+)ms'
+      boundaryGpuMs = Get-RegexDouble $metrics 'GD=([0-9.]+)ms'
       cpuAndGpuMs = Get-RegexDouble $metrics 'CPU&GPU=([0-9.]+)ms'
       gpuUtilization = Get-RegexDouble $metrics 'GPU%=([0-9.]+)'
       cpuUtilization = Get-RegexDouble $metrics 'CPU%=([0-9.]+)'
@@ -323,6 +327,9 @@ function Get-VrApiEvidence {
     directGpuTimingAvailable = $directGpu.Count -gt 0
     averageDirectGpuMs = Get-Average $directGpu
     p95DirectGpuMs = Get-Percentile $directGpu 0.95
+    averageBoundaryGpuMs = Get-Average @($samples | ForEach-Object { $_.boundaryGpuMs })
+    cpuExecutionTimingAvailable = $false
+    percentileSampleUnit = 'one-second VrApi aggregates, not individual frames'
     averageGpuUtilization = Get-Average @($samples | ForEach-Object { $_.gpuUtilization })
     p95GpuUtilization = Get-Percentile @($samples | ForEach-Object { $_.gpuUtilization }) 0.95
     averageCpuUtilization = Get-Average @($samples | ForEach-Object { $_.cpuUtilization })
@@ -340,7 +347,7 @@ function Get-VrApiEvidence {
     averageCflPrimaryMs = Get-Average @($samples | ForEach-Object { $_.cflPrimaryMs })
     p95CflSecondaryMs = Get-Percentile @($samples | ForEach-Object { $_.cflSecondaryMs }) 0.95
     p95IcflP95Ms = Get-Percentile @($samples | ForEach-Object { $_.icflP95Ms }) 0.95
-    semantics = 'App, CPU&GPU, GPU%, CPU%, stale, tear, clocks, levels, and thermal fields are VrApi rows filtered to a verified product PID and SF=1.00. SF=1.00 alone never identifies the app. Acceptance requires at least 55 timestamped one-second rows spanning at least 54 seconds of the 60-second measurement. Fov is recorded as telemetry because supported Quest firmware has emitted product rows with both Fov=0 and Fov=2. GD is direct GPU duration only when nonzero.'
+    semantics = 'App/directGpu is application GPU time. GD is boundary GPU time, including when nonzero. CPU&GPU is render-thread-start to GPU-completion wall time, including waits; it is not CPU execution time and must not be added to App. Percentiles describe one-second aggregates. Rows require a verified product PID and SF=1.00; SF alone does not identify the app. Acceptance requires 55 timestamped rows spanning 54 seconds of the 60-second window. This retained gate targets native 72 Hz, not 36 Hz application SpaceWarp acceptance.'
   }
   return [pscustomobject]@{ summary = $summary; samples = @($samples) }
 }
@@ -835,7 +842,7 @@ function Write-GateSummary {
   $workloadOverRatio = 1.0
   $workloadSampleCount = 0
   if ([bool](Get-ObjectProperty $VrApi 'available' $false)) {
-    $workloadSource = 'VrApi app-PID CPU&GPU one-second samples'
+    $workloadSource = 'VrApi app-PID render-thread-start to GPU-completion wall time (one-second aggregates)'
     $workloadAverage = [double](Get-ObjectProperty $VrApi 'averageCpuAndGpuMs' 0)
     $workloadP95 = [double](Get-ObjectProperty $VrApi 'p95CpuAndGpuMs' 0)
     $workloadOverRatio = [double](Get-ObjectProperty $VrApi 'cpuAndGpuSamplesOverBudgetRatio' 1)
@@ -942,7 +949,7 @@ function Write-GateSummary {
     workloadGate = [ordered]@{
       passed = $workloadGatePass
       source = $workloadSource
-      semantics = 'Execution-workload evidence. App-PID VrApi CPU&GPU one-second samples are authoritative for the physical hard gate; Unity FrameTimingManager is only a fallback diagnostic.'
+      semantics = 'Legacy workload field names contain wall-time evidence, not CPU execution or spare compute budget. CPU&GPU includes submission/scheduling waits through GPU completion; Unity fallback can include XR waits. Existing native-72-Hz thresholds remain unchanged. These fields do not establish application SpaceWarp acceptance.'
       sampleCount = $workloadSampleCount
       coveragePassed = $workloadCoveragePass
       averageMs = $workloadAverage
@@ -991,7 +998,7 @@ function Write-GateSummary {
     })
     logcatPath = $LogcatPath
     metricSemantics = [ordered]@{
-      deliveredInterval = 'Unity Time.unscaledDeltaTime is the delivered-frame cadence. At synchronized 72 Hz it naturally centers near 13.889 ms, so it is reported separately from execution workload.'
+      deliveredInterval = 'Unity Time.unscaledDeltaTime is delivered-frame cadence, reported separately from GPU duration and render-thread-to-GPU wall time. None of these alone measures CPU execution.'
       workload = 'Unity FrameTimingManager CPU/GPU values are workload evidence, but CPU may include XR wait and Quest GPU values may be zero.'
       vrApi = 'VrApi is filtered to the app PID plus SF=1.00 and sliced between the measurement-start and evidence-written markers. At least 55 timestamped rows spanning at least 54 seconds are required. Fov is recorded but is not used as an app-identity filter.'
       acceptance = 'Physical machine acceptance uses sufficiently covered exact-window app-PID VrApi CPU&GPU average/p95/over-budget samples, stale, tear, verified 72 Hz, and runtime budgets including no more than two transparent material slots. Unity delivered cadence remains separately disclosed.'
@@ -1123,6 +1130,7 @@ $screen = [pscustomobject]@{ started = $false; pulled = $false; bytes = 0; error
 $originalStayAwakeSetting = ''
 $stayAwakeSettingChanged = $false
 $questPowerAutomationChanged = $false
+$originalVirtualProximity = ''
 $launchBlocked = $false
 $originalFoveationOverride = ''
 $foveationOverrideChanged = $false
@@ -1152,9 +1160,11 @@ try {
   Invoke-Adb -Arguments @('shell', 'svc', 'power', 'stayon', 'usb') -AllowFailure | Out-Null
   $stayAwakeSettingChanged = $true
   if ($NoHumanWitness) {
-    Invoke-Adb -Arguments @('shell', 'am', 'broadcast', '-a', 'com.oculus.vrpowermanager.automation_disable') -AllowFailure | Out-Null
-    Invoke-Adb -Arguments @('shell', 'am', 'broadcast', '-a', 'com.oculus.vrpowermanager.prox_close') -AllowFailure | Out-Null
+    $powerDump = Invoke-Adb -Arguments @('shell', 'dumpsys', 'oculus.internal.power.IVrPowerManager/default')
+    $originalVirtualProximity = Get-QuestVirtualProximityState -Dump ($powerDump | Out-String)
+    Set-Content -LiteralPath (Join-Path $OutputDir 'virtual_proximity_before.txt') -Value $originalVirtualProximity
     $questPowerAutomationChanged = $true
+    Invoke-Adb -Arguments @('shell', 'am', 'broadcast', '-a', 'com.oculus.vrpowermanager.prox_close') -AllowFailure | Out-Null
   }
   Invoke-Adb -Arguments @('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP') -AllowFailure | Out-Null
   Start-Sleep -Seconds 2
@@ -1305,10 +1315,10 @@ try {
       Set-Content -LiteralPath (Join-Path $OutputDir 'foveation_override_restored.txt') -Encoding UTF8
   }
   if ($questPowerAutomationChanged) {
-    Invoke-Adb -Arguments @('shell', 'am', 'broadcast', '-a', 'com.oculus.vrpowermanager.prox_far') -AllowFailure | Out-Null
-    Invoke-Adb -Arguments @('shell', 'am', 'broadcast', '-a', 'com.oculus.vrpowermanager.automation_enable') -AllowFailure | Out-Null
+    $restoreAction = Get-QuestProximityRestoreAction -PreviousState $originalVirtualProximity -KeepAwake:$KeepHeadsetAwake
+    Invoke-Adb -Arguments @('shell', 'am', 'broadcast', '-a', $restoreAction) -AllowFailure | Out-Null
     Set-Content -LiteralPath (Join-Path $OutputDir 'quest_power_automation_restore.txt') `
-      -Value 'prox_far and automation_enable broadcasts sent' -Encoding UTF8
+      -Value "Previous=$originalVirtualProximity; KeepAwake=$KeepHeadsetAwake; sent=$restoreAction" -Encoding UTF8
   }
   if ($stayAwakeSettingChanged) {
     if ([string]::IsNullOrWhiteSpace($originalStayAwakeSetting) -or $originalStayAwakeSetting -eq 'null') {
@@ -1320,6 +1330,10 @@ try {
     Set-Content -LiteralPath (Join-Path $OutputDir 'stay_awake_setting_after_restore.txt') -Value $restored -Encoding UTF8
   }
   Start-Sleep -Milliseconds 500
+  if ($questPowerAutomationChanged) {
+    Invoke-Adb -Arguments @('shell', 'dumpsys', 'oculus.internal.power.IVrPowerManager/default') -AllowFailure |
+      Set-Content -LiteralPath (Join-Path $OutputDir 'virtual_proximity_after.txt') -Encoding UTF8
+  }
 }
 
 if (Test-Path -LiteralPath $logcatPath) {

@@ -112,7 +112,10 @@ namespace QuestFlight.Product
 
             _selectionStarted = true;
             State = FlightModeState.Selection;
-            _savedTimeScale = Time.timeScale;
+            // A serialized editor/test pause is not a requested paused flight.
+            // Selection owns the startup pause and must have a running value
+            // to restore on the very first mode selection.
+            _savedTimeScale = Time.timeScale > 0f ? Time.timeScale : 1f;
             _ownsTimeScalePause = true;
             Time.timeScale = 0f;
 

@@ -100,7 +100,7 @@ namespace QuestFlight.Editor
             blurRenderer.lightProbeUsage = LightProbeUsage.Off;
             blurRenderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
             blurRenderer.motionVectorGenerationMode =
-                MotionVectorGenerationMode.ForceNoMotion;
+                MotionVectorGenerationMode.Object;
             blurRenderer.allowOcclusionWhenDynamic = false;
             blurRenderer.enabled = false;
 

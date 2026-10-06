@@ -381,7 +381,7 @@ namespace QuestFlightLab.Editor.Tests
             try
             {
                 camera.targetTexture = target;
-                camera.Render();
+                QuestFlight.Rendering.ProductRenderCapture.Render(camera);
                 RenderTexture.active = target;
                 Texture2D texture = new Texture2D(Width, Height, TextureFormat.RGB24, false, false);
                 texture.ReadPixels(new Rect(0, 0, Width, Height), 0, 0, false);

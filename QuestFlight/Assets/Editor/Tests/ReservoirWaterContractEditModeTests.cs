@@ -77,7 +77,7 @@ namespace QuestFlight.Editor.Tests
                 Assert.That(material.GetTexture("_DepthShoreRoughness"), Is.Not.Null);
                 Assert.That(material.GetFloat("_ZWrite"), Is.GreaterThan(0.5f));
                 Assert.That(material.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
-                Assert.That(material.passCount, Is.EqualTo(1));
+                Assert.That(material.passCount, Is.EqualTo(2));
                 Vector4 rotation = material.GetVector("_EnvironmentRotationSinCos");
                 Assert.That(rotation.x, Is.EqualTo(Mathf.Sin(35f * Mathf.Deg2Rad)).Within(0.0001f));
                 Assert.That(rotation.y, Is.EqualTo(Mathf.Cos(35f * Mathf.Deg2Rad)).Within(0.0001f));
@@ -95,7 +95,7 @@ namespace QuestFlight.Editor.Tests
             Material material = AssetDatabase.LoadAssetAtPath<Material>(ReservoirWaterMaterialAuthoring.MaterialPath);
             Assert.That(material, Is.Not.Null);
             Assert.That(material.shader.name, Is.EqualTo(ReservoirWaterMaterialAuthoring.ShaderName));
-            Assert.That(material.passCount, Is.EqualTo(1));
+            Assert.That(material.passCount, Is.EqualTo(2));
             Assert.That(material.renderQueue, Is.LessThan((int)RenderQueue.Transparent));
             Assert.That(material.GetFloat("_ZWrite"), Is.GreaterThan(0.5f));
             Assert.That(material.GetTexture("_BroadNormal"), Is.Not.Null);
@@ -110,6 +110,10 @@ namespace QuestFlight.Editor.Tests
             string assetPath = AssetDatabase.GetAssetPath(shader);
             string absolutePath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", assetPath));
             string source = File.ReadAllText(absolutePath);
+            Assert.That(source, Does.Contain("Fallback Off"));
+            int motion=source.IndexOf("Name \"XRMotionVectors\"",StringComparison.Ordinal);
+            Assert.That(motion,Is.GreaterThan(0),"The additional XR pass must exist.");
+            source=source.Substring(0,source.LastIndexOf("Pass",motion,StringComparison.Ordinal));
             Assert.That(source, Does.Contain("ZWrite On"));
             Assert.That(source, Does.Contain("SchlickFresnel"));
             Assert.That(source, Does.Contain("texCUBElod(_EnvironmentCube"));
@@ -152,7 +156,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(mesh.subMeshCount, Is.EqualTo(1));
             Assert.That(material.shader.name, Is.EqualTo(ProductionEnvironmentRoot.ProductionReservoirShaderName));
             Assert.That(material.renderQueue, Is.EqualTo((int)RenderQueue.Geometry + 5));
-            Assert.That(material.passCount, Is.EqualTo(1));
+            Assert.That(material.passCount, Is.EqualTo(2));
             Assert.That(material.enableInstancing, Is.True);
             Assert.That(material.GetTexture("_WaveNormalA"), Is.Not.Null);
             Assert.That(material.GetTexture("_WaveNormalB"), Is.Not.Null);
@@ -174,10 +178,13 @@ namespace QuestFlight.Editor.Tests
                 Is.Empty);
             string absolutePath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", V4ShaderPath));
             string source = File.ReadAllText(absolutePath);
+            Assert.That(source, Does.Contain("Fallback Off"));
+            int motion=source.IndexOf("Name \"XRMotionVectors\"",StringComparison.Ordinal);
+            Assert.That(motion,Is.GreaterThan(0),"The additional XR pass must exist.");
+            source=source.Substring(0,source.LastIndexOf("Pass",motion,StringComparison.Ordinal));
             Assert.That(source, Does.Contain("\"RenderType\"=\"Opaque\""));
             Assert.That(source, Does.Contain("\"Queue\"=\"Geometry+5\""));
             Assert.That(source, Does.Contain("ZWrite On"));
-            Assert.That(source, Does.Contain("Fallback Off"));
             Assert.That(source, Does.Contain("texCUBElod(_EnvironmentCube"));
             Assert.That(source, Does.Contain("UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO"));
             Assert.That(source, Does.Contain("UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX"));

@@ -1391,7 +1391,7 @@ namespace QuestFlight.Editor
             renderer.sharedMaterial = material;
             renderer.shadowCastingMode = shadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
             renderer.receiveShadows = shadows;
-            renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+            renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
             renderer.lightProbeUsage = contributeGi ? LightProbeUsage.Off : LightProbeUsage.BlendProbes;
             renderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbes;
             renderer.scaleInLightmap = contributeGi ? 0.25f : 0f;

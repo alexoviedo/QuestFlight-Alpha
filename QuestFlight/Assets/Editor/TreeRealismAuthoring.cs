@@ -173,7 +173,7 @@ namespace QuestFlightLab.Editor
             string previous=System.Environment.GetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW");
             string previousBranch=System.Environment.GetEnvironmentVariable("QFL_MAP_BRANCH_REVIEW_ACTIVE");
             System.Environment.SetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW","1");
-            System.Environment.SetEnvironmentVariable("QFL_MAP_BRANCH_REVIEW_ACTIVE","1");Camera.onPreCull+=draw;
+            System.Environment.SetEnvironmentVariable("QFL_MAP_BRANCH_REVIEW_ACTIVE","1");Camera.onPreCull+=draw;QuestFlight.Rendering.ProductRenderSubmission.Draw+=draw;
             try
             {
                 foreach(int site in new[]{0,3,6})foreach(int yaw in new[]{-70,70})foreach(int eye in new[]{-1,1})
@@ -193,7 +193,7 @@ namespace QuestFlightLab.Editor
             }
             finally
             {
-                Camera.onPreCull-=draw;grove.ClearForVisualQa();
+                Camera.onPreCull-=draw;QuestFlight.Rendering.ProductRenderSubmission.Draw-=draw;grove.ClearForVisualQa();
                 System.Environment.SetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW",previous);
                 System.Environment.SetEnvironmentVariable("QFL_MAP_BRANCH_REVIEW_ACTIVE",previousBranch);
             }

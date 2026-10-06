@@ -66,7 +66,7 @@ namespace QuestFlightLab.Editor.Tests
                         camera.transform.position = center + offsets[pose];
                         camera.transform.LookAt(center);
                         camera.transform.position += camera.transform.right * (eye == 0 ? -0.032f : 0.032f);
-                        camera.Render();
+                        QuestFlight.Rendering.ProductRenderCapture.Render(camera);
                         var previous = RenderTexture.active;
                         RenderTexture.active = target;
                         var pixels = new Texture2D(1280,720,TextureFormat.RGB24,false);

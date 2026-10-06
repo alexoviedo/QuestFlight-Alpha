@@ -82,6 +82,7 @@ namespace QuestFlightLab.Editor
             Texture2D density = ImportDataTexture(DensityPath, 512, mipmaps: false);
             ImportDataTexture(CoveragePath, 256, mipmaps: true);
             Material material = BuildMaterial(density);
+            BoulderCloudVolumeAuthoring.Build();
             Formation[] formations = BuildFormations();
             BoulderCloudProfile profile = BuildProfile(formations);
             Mesh volumeMesh = BuildVolumeMesh(profile, formations);
@@ -206,6 +207,10 @@ namespace QuestFlightLab.Editor
             authored.SetFloat("_SilverLining", 0.40f);
             authored.SetFloat("_MaximumDistance", 18000f);
             authored.SetFloat("_MinimumStepMetres", 60f);
+            // Same-route Quest measurements favor hardware volume filtering; empty
+            // skipping was slower in both SpaceWarp modes. Keep regeneration aligned.
+            authored.SetFloat("_CloudVolumeSampling", 1f);
+            authored.SetFloat("_CloudEmptySkipping", 0f);
             authored.enableInstancing = false;
             authored.renderQueue = (int)RenderQueue.Transparent - 20;
             if (existing == null)

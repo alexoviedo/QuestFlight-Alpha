@@ -64,7 +64,8 @@ namespace QuestFlightLab.Environment.Editor.Tests
                 FullMapWaterReflectionAuthoring.TerrainMaterialPath);
             Assert.That(terrain, Is.Not.Null);
             Assert.That(terrain.renderQueue, Is.LessThan(2500));
-            Assert.That(terrain.passCount, Is.EqualTo(1));
+            Assert.That(terrain.passCount, Is.EqualTo(2));
+            Assert.That(terrain.FindPass("XRMotionVectors"), Is.GreaterThanOrEqualTo(0));
             Assert.That(terrain.GetTexture("_FullMapWaterMask"),
                 Is.SameAs(root.fullMapWaterMask));
             Vector4 bounds = terrain.GetVector("_FullMapWaterWorldMinInvSize");

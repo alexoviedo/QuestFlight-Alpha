@@ -398,12 +398,15 @@ namespace QuestFlightLab.Environment
                 InitializeSimulation();
             }
             Camera.onPreCull -= DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw -= DrawForCamera;
             Camera.onPreCull += DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw += DrawForCamera;
         }
 
         private void OnDisable()
         {
             Camera.onPreCull -= DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw -= DrawForCamera;
             simulationInitialized = false;
             simulationAccumulator = 0f;
             lastPreparedFrame = -1;
@@ -430,6 +433,8 @@ namespace QuestFlightLab.Environment
             }
         }
 
+        private Matrix4x4[] parkedPresentationMatrices = Array.Empty<Matrix4x4>();
+
         private void ParseManifest()
         {
             if (parsedManifest == null && trafficManifest != null)
@@ -438,6 +443,15 @@ namespace QuestFlightLab.Environment
                 int parkedCount = parsedManifest?.parked?.Length ?? 0;
                 int movingCount = parsedManifest?.moving?.Length ?? 0;
                 previousLodTier = new byte[parkedCount + movingCount];
+                parkedPresentationMatrices = new Matrix4x4[parkedCount];
+                for (int index = 0; index < parkedCount; index++)
+                {
+                    ParkedRecord vehicle = parsedManifest.parked[index];
+                    parkedPresentationMatrices[index] = Matrix4x4.TRS(
+                        new Vector3(vehicle.x, vehicle.y, vehicle.z),
+                        Quaternion.Euler(vehicle.pitch_degrees, vehicle.yaw_degrees, vehicle.roll_degrees),
+                        Vector3.one);
+                }
             }
         }
 
@@ -860,6 +874,7 @@ namespace QuestFlightLab.Environment
 
         private void DrawForCamera(Camera camera)
         {
+            if(QuestFlight.Rendering.ProductRenderSubmission.Preparing)return;
             if (camera == null ||
                 !enabled ||
                 !gameObject.activeInHierarchy ||
@@ -870,7 +885,8 @@ namespace QuestFlightLab.Environment
             {
                 return;
             }
-            if (lastPreparedFrame != Time.frameCount || lastPreparedCamera != camera)
+            bool rebuild = lastPreparedFrame != Time.frameCount || lastPreparedCamera != camera;
+            if (rebuild)
             {
                 PrepareVisibleInstances(camera);
                 lastPreparedFrame = Time.frameCount;
@@ -888,14 +904,12 @@ namespace QuestFlightLab.Environment
                 MaterialPropertyBlock propertyBlock =
                     nearPropertyBlocks[archetype] ??
                     (nearPropertyBlocks[archetype] = new MaterialPropertyBlock());
-                propertyBlock.Clear();
-                propertyBlock.SetVectorArray(
-                    "_BodyTint",
-                    nearPaintTints[archetype]);
-                propertyBlock.SetVectorArray(
-                    "_TrailerTint",
-                    nearTrailerTints[archetype]);
-                Graphics.DrawMeshInstanced(
+                if (rebuild)
+                {
+                    propertyBlock.SetVectorArray("_BodyTint", nearPaintTints[archetype]);
+                    propertyBlock.SetVectorArray("_TrailerTint", nearTrailerTints[archetype]);
+                }
+                QuestFlight.Rendering.ProductRenderSubmission.DrawMeshInstanced(
                     nearArchetypeMeshes[archetype],
                     0,
                     sharedOpaqueMaterial,
@@ -922,14 +936,12 @@ namespace QuestFlightLab.Environment
                     farPropertyBlocks[archetype] ??
                     (farPropertyBlocks[archetype] =
                         new MaterialPropertyBlock());
-                propertyBlock.Clear();
-                propertyBlock.SetVectorArray(
-                    "_BodyTint",
-                    farPaintTints[archetype]);
-                propertyBlock.SetVectorArray(
-                    "_TrailerTint",
-                    farTrailerTints[archetype]);
-                Graphics.DrawMeshInstanced(
+                if (rebuild)
+                {
+                    propertyBlock.SetVectorArray("_BodyTint", farPaintTints[archetype]);
+                    propertyBlock.SetVectorArray("_TrailerTint", farTrailerTints[archetype]);
+                }
+                QuestFlight.Rendering.ProductRenderSubmission.DrawMeshInstanced(
                     farProxyMeshes[archetype],
                     0,
                     sharedOpaqueMaterial,
@@ -1003,12 +1015,9 @@ namespace QuestFlightLab.Environment
                     ParkedRecord vehicle = parked[index];
                     Vector3 position =
                         new Vector3(vehicle.x, vehicle.y, vehicle.z);
-                    Matrix4x4 matrix = Matrix4x4.TRS(
-                        position,
-                        Quaternion.Euler(vehicle.pitch_degrees, vehicle.yaw_degrees, vehicle.roll_degrees),
-                        Vector3.one);
+                    Matrix4x4 matrix = parkedPresentationMatrices[index];
                     ConsiderVisible(
-                        camera,
+                        cameraPosition,
                         position,
                         vehicle.archetype,
                         vehicle.paint_index,
@@ -1043,7 +1052,7 @@ namespace QuestFlightLab.Environment
                     EvaluateRoute(route, distance, out Vector3 position, out Quaternion rotation);
                     Matrix4x4 matrix = Matrix4x4.TRS(position, rotation, Vector3.one);
                     ConsiderVisible(
-                        camera,
+                        cameraPosition,
                         position,
                         vehicle.archetype,
                         vehicle.paint_index,
@@ -1104,7 +1113,7 @@ namespace QuestFlightLab.Environment
         }
 
         private void ConsiderVisible(
-            Camera camera,
+            Vector3 cameraPosition,
             Vector3 position,
             int archetype,
             int paintIndex,
@@ -1118,7 +1127,7 @@ namespace QuestFlightLab.Environment
             {
                 return;
             }
-            Vector3 toVehicle = position - camera.transform.position;
+            Vector3 toVehicle = position - cameraPosition;
             float distanceSquared = toVehicle.sqrMagnitude;
             float distance = Mathf.Sqrt(distanceSquared);
             byte previousTier =
@@ -1142,7 +1151,7 @@ namespace QuestFlightLab.Environment
                     paintIndex,
                     matrix,
                     vehicleId,
-                    camera.transform.position))
+                    cameraPosition))
             {
                 return;
             }

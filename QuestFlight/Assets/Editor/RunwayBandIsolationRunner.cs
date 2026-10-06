@@ -262,7 +262,7 @@ namespace QuestFlight.Editor
             RenderTexture previousActive = RenderTexture.active;
             RenderTexture previousTarget = camera.targetTexture;
             camera.targetTexture = rt;
-            camera.Render();
+            QuestFlight.Rendering.ProductRenderCapture.Render(camera);
             RenderTexture.active = rt;
             Texture2D result = new Texture2D(Width, Height, TextureFormat.RGB24, false, false);
             result.ReadPixels(new Rect(0,0,Width,Height), 0, 0);
@@ -440,7 +440,7 @@ namespace QuestFlight.Editor
                 foreach (CameraPose pose in Enum.GetValues(typeof(CameraPose)))
                 {
                     SetCamera(camera, env, pose);
-                    camera.Render();
+                    QuestFlight.Rendering.ProductRenderCapture.Render(camera);
                     Array events = (Array)getEvents.Invoke(null, null);
                     FrameDebuggerView view = new FrameDebuggerView { id = pose.ToString(), totalEvents = (int)count.GetValue(null) };
                     for (int index=0; index<events.Length; index++)

@@ -233,7 +233,7 @@ namespace QuestFlightLab.Aircraft
             {
                 if (renderer == null) continue;
                 report.rendererCount++;
-                renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
                 renderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbesAndSkybox;
                 report.reflectionAwareRendererCount++;
 
@@ -396,7 +396,7 @@ namespace QuestFlightLab.Aircraft
 
             cockpitLocalShadowCamera.enabled = false;
             cockpitLocalShadowCamera.targetTexture = cockpitLocalShadowMap;
-            cockpitLocalShadowCamera.stereoTargetEye = StereoTargetEyeMask.None;
+            if(GraphicsSettings.currentRenderPipeline==null)cockpitLocalShadowCamera.stereoTargetEye = StereoTargetEyeMask.None;
             cockpitLocalShadowCamera.allowHDR = false;
             cockpitLocalShadowCamera.allowMSAA = false;
             cockpitLocalShadowCamera.useOcclusionCulling = false;
@@ -478,9 +478,20 @@ namespace QuestFlightLab.Aircraft
             cockpitLocalShadowCasterProxy.enabled = true;
             try
             {
-                cockpitLocalShadowCamera.RenderWithShader(
-                    cockpitLocalShadowDepthShader, string.Empty);
-                cockpitLocalShadowMap.GenerateMips();
+                if (GraphicsSettings.currentRenderPipeline != null)
+                {
+                    QuestFlight.Rendering.ProductCockpitShadowPass.Texture = cockpitLocalShadowMap;
+                    QuestFlight.Rendering.ProductCockpitShadowPass.Mesh = cockpitLocalShadowCasterProxy.GetComponent<MeshFilter>().sharedMesh;
+                    QuestFlight.Rendering.ProductCockpitShadowPass.Model = cockpitLocalShadowCasterProxy.localToWorldMatrix;
+                    QuestFlight.Rendering.ProductCockpitShadowPass.View = worldToCamera;
+                    QuestFlight.Rendering.ProductCockpitShadowPass.Projection = gpuProjection;
+                    QuestFlight.Rendering.ProductCockpitShadowPass.Shader = cockpitLocalShadowDepthShader;
+                }
+                else
+                {
+                    cockpitLocalShadowCamera.RenderWithShader(cockpitLocalShadowDepthShader, string.Empty);
+                    cockpitLocalShadowMap.GenerateMips();
+                }
             }
             finally
             {
@@ -506,6 +517,8 @@ namespace QuestFlightLab.Aircraft
 
         private static void ResetCockpitLocalShadowGlobals()
         {
+            QuestFlight.Rendering.ProductCockpitShadowPass.Texture=null;
+            QuestFlight.Rendering.ProductCockpitShadowPass.Mesh=null;
             Shader.SetGlobalFloat(CockpitLocalShadowEnabledId, 0f);
             Shader.SetGlobalFloat(CockpitLocalShadowStrengthId, 0f);
         }
@@ -548,7 +561,7 @@ namespace QuestFlightLab.Aircraft
                     Mathf.Max(existing.g, target),
                     Mathf.Max(existing.b, target * 1.04f),
                     1f));
-                material.EnableKeyword("_EMISSION");
+                material.EnableKeyword(material.shader.name=="Shader Graphs/glTF-pbrMetallicRoughness"?"_EMISSIVE":"_EMISSION");
             }
             report.readableInstrumentMaterialCount++;
         }
@@ -600,7 +613,7 @@ namespace QuestFlightLab.Aircraft
                 Mathf.Max(existing.g, lift),
                 Mathf.Max(existing.b, lift * 1.04f),
                 1f));
-            material.EnableKeyword("_EMISSION");
+            material.EnableKeyword(material.shader.name=="Shader Graphs/glTF-pbrMetallicRoughness"?"_EMISSIVE":"_EMISSION");
             report.readableInstrumentMaterialCount++;
         }
 

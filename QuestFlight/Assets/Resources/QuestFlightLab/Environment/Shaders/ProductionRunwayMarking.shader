@@ -2,6 +2,8 @@ Shader "QuestFlightLab/Production Runway Marking"
 {
     Properties
     {
+        [HideInInspector] _XRMotionVectorsPass("XR motion",Float)=1
+
         _Color ("Faded marking color", Color) = (0.82,0.81,0.75,1)
         [HideInInspector] _ZWrite ("ZWrite", Float) = 1
     }
@@ -15,7 +17,7 @@ Shader "QuestFlightLab/Production Runway Marking"
         Offset -1, -1
         Pass
         {
-            Tags { "LightMode"="ForwardBase" }
+            Tags { "LightMode"="UniversalForward" }
             CGPROGRAM
             #pragma target 2.0
             #pragma vertex vert
@@ -63,6 +65,106 @@ Shader "QuestFlightLab/Production Runway Marking"
             }
             ENDCG
         }
-    }
+    
+        Pass
+        {
+            Name "XRMotionVectors"
+            Tags { "LightMode"="XRMotionVectors" }
+            Cull Back Blend Off ZWrite On ZTest LEqual ColorMask RGBA
+            Stencil { Ref 1 WriteMask 1 Comp Always Pass Replace }
+            CGPROGRAM
+#define QF_STATIC_WORLD_GEOMETRY 1
+
+            #pragma target 4.5
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile_fog
+            #pragma multi_compile_instancing
+            #include "UnityCG.cginc"
+#include "Assets/Shaders/ProductSpaceWarpMotion.cginc"
+            #include "Lighting.cginc"
+            fixed4 _Color;
+            struct appdata
+            {
+                float4 vertex : POSITION;
+                half3 normal : NORMAL;
+                
+float3 qfPreviousVertex : TEXCOORD4;
+UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+            struct v2f
+            {
+                float4 position : SV_POSITION;
+                half3 worldNormal : TEXCOORD0;
+                UNITY_FOG_COORDS(1)
+                
+float4 qfCurrent : TEXCOORD14; float4 qfPrevious : TEXCOORD15;
+UNITY_VERTEX_OUTPUT_STEREO
+            };
+            v2f QFColorVertex(appdata input, out float4 qfWorld)
+            {
+                UNITY_SETUP_INSTANCE_ID(input);
+                v2f output;
+                UNITY_INITIALIZE_OUTPUT(v2f, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.position = QFObjectToMotionClip(input.vertex, qfWorld);
+                output.worldNormal = UnityObjectToWorldNormal(input.normal);
+                UNITY_TRANSFER_FOG(output, output.position);
+                return output;
+            }
+            fixed4 QFColorFragment(v2f input) : SV_Target
+            {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
+                half3 normal = normalize(input.worldNormal);
+                half diffuse = saturate(dot(normal, normalize(_WorldSpaceLightPos0.xyz)));
+                half3 irradiance = saturate(max(ShadeSH9(half4(normal, 1.0)), 0.0h) * 0.35h +
+                    _LightColor0.rgb * (0.08h + diffuse * 0.55h));
+                fixed4 output = fixed4(_Color.rgb * irradiance, 1.0);
+                UNITY_APPLY_FOG(input.fogCoord, output);
+                return output;
+            }
+            
+v2f QFPreviousVertex(appdata input, out float4 qfWorld)
+            {
+                UNITY_SETUP_INSTANCE_ID(input);
+                v2f output;
+                UNITY_INITIALIZE_OUTPUT(v2f, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.position = QFObjectToMotionClip(input.vertex, qfWorld);
+                output.worldNormal = UnityObjectToWorldNormal(input.normal);
+                UNITY_TRANSFER_FOG(output, output.position);
+                return output;
+            }
+v2f vert(appdata v)
+{
+    UNITY_SETUP_INSTANCE_ID(v);
+    float4 world;
+    v2f o=QFColorVertex(v,world);
+    #if !defined(QF_STATIC_WORLD_GEOMETRY)
+    if (_QFHasPreviousModel < .5 && (_QFPreviousVertices > .5 || unity_MotionVectorsParams.x == 1))
+        v.vertex.xyz=v.qfPreviousVertex;
+    #endif
+    float4 previousWorld;
+    v2f old=QFPreviousVertex(v,previousWorld);
+    float4 oldWorld=QFPreviousWorld(previousWorld);
+    if (_QFResetObjectMotion > .5) oldWorld=world;
+    o.qfCurrent=o.position;
+    o.qfPrevious=mul(_PrevViewProjMatrixStereo[QFEye()],oldWorld);
+    
+    o.position=o.qfCurrent;
+    return o;
+}
+float4 frag(v2f v) : SV_Target
+{
+    UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(v);
+    float coverage=QFColorFragment(v).a;
+    clip(coverage-0.001);
+    return QFMotion(v.qfCurrent,v.qfPrevious,coverage);
+}
+
+            ENDCG
+        }
+}
     Fallback "Diffuse"
 }

@@ -420,7 +420,7 @@ namespace QuestFlight.Editor
                 dynamicRenderer.reflectionProbeUsage =
                     ReflectionProbeUsage.BlendProbesAndSkybox;
                 dynamicRenderer.motionVectorGenerationMode =
-                    MotionVectorGenerationMode.ForceNoMotion;
+                    MotionVectorGenerationMode.Object;
                 dynamicRenderer.allowOcclusionWhenDynamic = false;
                 EnsureInteriorVisibilityRenderer(root, dynamicRenderer);
 

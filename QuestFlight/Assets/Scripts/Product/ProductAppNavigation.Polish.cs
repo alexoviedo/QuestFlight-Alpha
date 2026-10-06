@@ -21,6 +21,7 @@ namespace QuestFlight.Product
         {
             switch(CurrentPage)
             {
+                case Page.Graphics:CurrentPage=Page.Settings;return true;
                 case Page.Tools:CurrentPage=Page.App;return true;
                 case Page.Controls:CurrentPage=controlsReturn;return true;
                 case Page.Comfort:CurrentPage=Page.Settings;return true;
@@ -40,6 +41,8 @@ namespace QuestFlight.Product
             if(AdjustSetting(action,1))return true;
             switch(action)
             {
+                case 195:CurrentPage=Page.Graphics;break;
+                case 196:QuestFlight.Rendering.ProductSpaceWarpController.SetRequested(!QuestFlight.Rendering.ProductSpaceWarpController.Requested);break;
                 case 40:CurrentPage=Page.Tools;break;
                 case 41:controlsReturn=CurrentPage;CurrentPage=Page.Controls;break;
                 case 42:CurrentPage=Page.Comfort;break;
@@ -154,6 +157,11 @@ namespace QuestFlight.Product
                     heading.text="Cockpit guide · "+InstrumentNames[instrumentHelpIndex];detail.text=training.ExplainReference(InstrumentReferences[instrumentHelpIndex]);
                     if(modes.State!=ProductFlightModeCoordinator.FlightModeState.Training)detail.text=detail.text.Replace("Use the target in the current instruction.","Keep scanning outside as well as the instruments.");
                     Choice(0,"Next instrument",126);Choice(1,"Previous instrument",127);Choice(2,"Back",5);return true;
+                case Page.Graphics:
+                    heading.text="Display and readability";
+                    detail.text="SpaceWarp starts airborne at 5,500 ft MSL and pauses below 5,450 ft or on the ground. Status: "+QuestFlight.Rendering.ProductSpaceWarpController.Status;
+                    Choice(0,"SpaceWarp: "+(QuestFlight.Rendering.ProductSpaceWarpController.Requested?"on":"off"),196);
+                    Choice(1,"Readability and feedback",42);Choice(2,"Back",5);return true;
                 case Page.Comfort:
                     heading.text="Readability and feedback";detail.text="Menu and narration sizes are separate. Preferences are saved on this headset.";
                     footer.text="Stick up / down: choose · left / right: adjust\n[A] Change / select   [B / Y] Back";

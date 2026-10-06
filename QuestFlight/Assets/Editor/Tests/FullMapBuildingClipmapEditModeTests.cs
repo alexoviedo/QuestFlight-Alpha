@@ -14,6 +14,119 @@ namespace QuestFlight.Editor.Tests
 {
     public sealed class FullMapBuildingClipmapEditModeTests
     {
+        [Test]
+        public void FacadeDetailCellsUseGeneratorTopDownCoordinates()
+        {
+            var texture = new Texture2D(2,2,TextureFormat.RGBA32,false);
+            try
+            {
+                Assert.IsTrue(texture.LoadImage(File.ReadAllBytes(FullMapBuildingClipmapAssetAuthoring.DetailPath)));
+                for(int style=0;style<6;style++) foreach(int offset in new[]{0,8})
+                {
+                    int cell=offset+style;
+                    float u=(cell%4+.5f)*.25f;
+                    float v=(3-cell/4+.5f)*.25f;
+                    Assert.Greater(texture.GetPixelBilinear(u,v).a,.99f,$"Missing detail cell {cell}");
+                }
+                string shader=File.ReadAllText("Assets/Shaders/FullMapBuildingClipmap.shader");
+                StringAssert.Contains("3.0h - floor(cell * 0.25h)",shader);
+                StringAssert.Contains("return (cellOrigin + safeUv) * 0.25;",shader);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(texture); }
+        }
+        [TestCase(32,7,false)] [TestCase(128,7,false)]
+        [TestCase(32,3,true)] [TestCase(128,3,true)]
+        [TestCase(32,4,true)] [TestCase(128,4,true)]
+        [TestCase(32,7,true)]
+        public void DistantFacadeTemporalSamplingEvidence(int resolution, int materialId, bool fullMaterial)
+        {
+            string output = System.Environment.GetEnvironmentVariable("QF_BUILDING_FLICKER_QA");
+            if (string.IsNullOrEmpty(output)) Assert.Ignore("Explicit external evidence directory required.");
+            output = Path.Combine(output,fullMaterial ? $"full_{materialId}_{resolution}" : resolution.ToString());
+            Directory.CreateDirectory(output);
+            var initObject = new GameObject("Facade probe pipeline initialization");
+            var initCamera = initObject.AddComponent<Camera>();
+            var initTarget = new RenderTexture(16,16,24);
+            try { initCamera.targetTexture=initTarget;QuestFlight.Rendering.ProductRenderCapture.Render(initCamera); }
+            finally { UnityEngine.Object.DestroyImmediate(initObject);initTarget.Release();UnityEngine.Object.DestroyImmediate(initTarget); }
+            bool asynchronous = ShaderUtil.allowAsyncCompilation;
+            ShaderUtil.allowAsyncCompilation = false;
+            var material = new Material(AssetDatabase.LoadAssetAtPath<Material>(FullMapBuildingClipmapAssetAuthoring.MaterialPath));
+            string source = File.ReadAllText("Assets/Shaders/FullMapBuildingClipmap.shader");
+            string controlSource = source.Replace("Shader \"QuestFlight/Full Map Building Clipmap\"", "Shader \"Hidden/QuestFlight/FacadeNoWindowsProbe\"")
+                .Replace("\"AerialClipmapSampling.cginc\"", "\"Assets/Shaders/AerialClipmapSampling.cginc\"")
+                .Replace("return horizontal * vertical * withinWall * validFloor * hasCompleteBay * allowed;", "return 0;");
+            Assert.AreNotEqual(source, controlSource);
+            var controlShader = ShaderUtil.CreateShaderAsset(controlSource);
+            var control = new Material(material) { shader = controlShader };
+            var mesh = new Mesh();
+            mesh.vertices = new[] { new Vector3(-1,-1,.5f),new Vector3(1,-1,.5f),new Vector3(1,1,.5f),new Vector3(-1,1,.5f) };
+            mesh.triangles = new[] {0,1,2,0,2,3,2,1,0,3,2,0};
+            mesh.normals = Enumerable.Repeat(Vector3.back,4).ToArray();
+            mesh.tangents = Enumerable.Repeat(new Vector4(1,0,0,1),4).ToArray();
+            mesh.colors = Enumerable.Repeat(Color.white,4).ToArray();
+            // A 98.2m residential facade has approximately one bay per pixel
+            // in the distant case; 128px also checks resolved, nearby detail.
+            mesh.SetUVs(1, Enumerable.Repeat(new Vector2(98.2f,1),4).ToList());
+            mesh.SetUVs(2, Enumerable.Repeat(new Vector4(0,materialId,30,fullMaterial?3:0),4).ToList());
+            var rt = new RenderTexture(resolution,resolution,24,RenderTextureFormat.ARGBFloat,RenderTextureReadWrite.Linear);
+            var pixels = new Texture2D(resolution,resolution,TextureFormat.RGBAFloat,false,true);
+            var oldTarget = RenderTexture.active;
+            var wall = new GameObject("Isolated facade sampling wall");wall.layer=31;
+            wall.AddComponent<MeshFilter>().sharedMesh=mesh;
+            var renderer=wall.AddComponent<MeshRenderer>();
+            var cameraObject=new GameObject("Facade evidence camera");var camera=cameraObject.AddComponent<Camera>();
+            camera.enabled=false;camera.orthographic=true;camera.orthographicSize=1;camera.aspect=1;
+            camera.nearClipPlane=.1f;camera.farClipPlane=10;camera.cullingMask=1<<31;
+            camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=Color.clear;camera.targetTexture=rt;
+            var noNormals = new Material(material); noNormals.SetFloat("_NormalScale",0);
+            var noReflection = new Material(material); noReflection.SetFloat("_WindowReflection",0);
+            var variants = fullMaterial ? new[]{material,noNormals,noReflection,control} : new[]{material,control};
+            var oldSun = RenderSettings.sun;
+            var sunObject = new GameObject("Facade diagnostic sun");
+            var sun = sunObject.AddComponent<Light>(); sun.type=LightType.Directional;
+            sun.intensity=1; sun.transform.rotation=Quaternion.Euler(8,8,0);
+            if(fullMaterial) RenderSettings.sun=sun; else sun.enabled=false;
+            var values = new double[variants.Length,2,24];
+            try
+            {
+                rt.Create();
+                if(!fullMaterial) foreach(var mat in variants)
+                {mat.enableInstancing=false;mat.SetFloat("_AmbientLift",.7f);mat.SetFloat("_NormalScale",0);mat.SetFloat("_WindowReflection",0);mat.SetFloat("_CornerSofteningStrength",0);}
+                for(int variant=0;variant<variants.Length;variant++)for(int phase=0;phase<24;phase++)
+                {
+                    float offset=phase*3.0f/24;
+                    mesh.uv=new[]{new Vector2(offset,0),new Vector2(98.2f+offset,0),new Vector2(98.2f+offset,30),new Vector2(offset,30)};
+                    renderer.sharedMaterial=variants[variant];
+                    for(int eye=0;eye<2;eye++)
+                    {
+                        camera.transform.position=new Vector3(eye==0?-.01f:.01f,0,-5);
+                        QuestFlight.Rendering.ProductRenderCapture.Render(camera);
+                        RenderTexture.active=rt;pixels.ReadPixels(new Rect(0,0,resolution,resolution),0,0);pixels.Apply();
+                        double sum=0;int count=0;
+                        for(int y=resolution/4;y<resolution*3/4;y++)for(int x=resolution/4;x<resolution*3/4;x++){var c=pixels.GetPixel(x,y);Assert.Greater(c.a,.9f,$"Missing coverage variant={variant} eye={eye} phase={phase} pixel={x},{y}");sum+=(c.r+c.g+c.b)/3;count++;}
+                        values[variant,eye,phase]=sum/count;
+                        File.WriteAllBytes(Path.Combine(output,$"variant{variant}_eye{eye}_phase{phase:D2}.png"),pixels.EncodeToPNG());
+                    }
+                }
+                var report=new List<string>{"variant,eye,phase,mean_luminance"};
+                for(int variant=0;variant<variants.Length;variant++)for(int eye=0;eye<2;eye++)for(int phase=0;phase<24;phase++)
+                    report.Add($"{variant},{eye},{phase},{values[variant,eye,phase].ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+                File.WriteAllLines(Path.Combine(output,"sampling.csv"),report);
+                Assert.IsFalse(ShaderUtil.ShaderHasError(material.shader));
+                Assert.IsFalse(ShaderUtil.ShaderHasError(controlShader));
+                if(!fullMaterial) for(int eye=0;eye<2;eye++)
+                {
+                    var rendered=Enumerable.Range(0,24).Select(p=>values[0,eye,p]).ToArray();
+                    var suppressed=Enumerable.Range(0,24).Select(p=>values[1,eye,p]).ToArray();
+                    Assert.Greater(suppressed.Average()-rendered.Average(),.02,"Keep real window coverage instead of hiding windows.");
+                    if(resolution==32)
+                        Assert.Less(rendered.Max()-rendered.Min(),.001,"Unresolved windows must not flash under subpixel movement.");
+                }
+            }
+            finally
+            {RenderSettings.sun=oldSun;UnityEngine.Object.DestroyImmediate(sunObject);UnityEngine.Object.DestroyImmediate(noNormals);UnityEngine.Object.DestroyImmediate(noReflection);ShaderUtil.allowAsyncCompilation=asynchronous;RenderTexture.active=oldTarget;UnityEngine.Object.DestroyImmediate(cameraObject);UnityEngine.Object.DestroyImmediate(wall);rt.Release();UnityEngine.Object.DestroyImmediate(rt);UnityEngine.Object.DestroyImmediate(pixels);UnityEngine.Object.DestroyImmediate(mesh);UnityEngine.Object.DestroyImmediate(material);UnityEngine.Object.DestroyImmediate(control);UnityEngine.Object.DestroyImmediate(controlShader);}
+        }
         [TestCase(950f)]
         [TestCase(-100f)]
         public void GroundingRejectsGrossAbsoluteElevationErrors(float sourceBase)
@@ -214,6 +327,9 @@ namespace QuestFlight.Editor.Tests
             Assert.That(detailImporter.GetPlatformTextureSettings("Android").format,
                 Is.EqualTo(TextureImporterFormat.ASTC_6x6));
             string shader = Read("Assets/Shaders/FullMapBuildingClipmap.shader");
+            int motion=shader.IndexOf("Name \"XRMotionVectors\"",StringComparison.Ordinal);
+            Assert.That(motion,Is.GreaterThan(0),"The additional XR pass must exist.");
+            shader=shader.Substring(0,shader.LastIndexOf("Pass",motion,StringComparison.Ordinal));
             Assert.That(shader, Does.Contain("i.detailUv"));
             Assert.That(shader, Does.Contain("WindowMask"));
             Assert.That(shader, Does.Contain("MaterialTileMeters"));

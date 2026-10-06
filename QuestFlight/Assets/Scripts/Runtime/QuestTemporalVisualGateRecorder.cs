@@ -20,6 +20,8 @@ namespace QuestFlightLab.Runtime
         public int unityFrameCount;
         public float elapsedSeconds;
         public float frameMs;
+        public bool spaceWarpRequested, spaceWarpEnabled, spaceWarpSubmissionObserved;
+        public uint spaceWarpHistoryGeneration;
         public bool frameTimingAvailable;
         public float cpuFrameMs;
         public float gpuFrameMs;
@@ -382,6 +384,9 @@ namespace QuestFlightLab.Runtime
         public const string SkyOnlyIsolationProfile = "sky_only";
         public const string CloudsOffIsolationProfile = "clouds_off";
         public const string CloudsFullSamplingIsolationProfile = "clouds_full_sampling";
+        public const string CloudsVolumeIsolationProfile = "clouds_volume";
+        public const string CloudsVolumeSkipIsolationProfile = "clouds_volume_skip";
+        public const string CloudsAtlasIsolationProfile = "clouds_atlas";
         public const string TrafficOffIsolationProfile = "traffic_off";
         public const string VegetationOffIsolationProfile = "vegetation_off";
         public const string ConnectedGroveOffIsolationProfile = "connected_grove_off";
@@ -407,6 +412,7 @@ namespace QuestFlightLab.Runtime
             public readonly List<Behaviour> disabledBehaviours = new List<Behaviour>();
             public float previousWaterDisabled;
             public readonly Dictionary<Material,float> previousCloudSampling = new Dictionary<Material,float>();
+            public readonly Dictionary<Material,Vector2> previousCloudVolume = new Dictionary<Material,Vector2>();
             public readonly Dictionary<MapBranchGroveRenderer,bool> previousGroveClusters = new Dictionary<MapBranchGroveRenderer,bool>();
         }
 
@@ -878,6 +884,10 @@ namespace QuestFlightLab.Runtime
                 }
                 report.frameSamples.Add(new QuestTemporalFrameSample
                 {
+                    spaceWarpRequested = QuestFlight.Rendering.ProductSpaceWarpController.Requested,
+                    spaceWarpEnabled = QuestFlight.Rendering.ProductSpaceWarpController.Active,
+                    spaceWarpSubmissionObserved = QuestFlight.Rendering.ProductSpaceWarpController.SubmissionObserved,
+                    spaceWarpHistoryGeneration = QuestFlight.Rendering.ProductSpaceWarpController.HistoryGeneration,
                     sequence = sequence++,
                     unityFrameCount = Time.frameCount,
                     elapsedSeconds = Time.realtimeSinceStartup - measurementStarted,
@@ -1159,6 +1169,9 @@ namespace QuestFlightLab.Runtime
             string.Equals(profile, SkyOnlyIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, CloudsOffIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, CloudsFullSamplingIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, CloudsVolumeIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, CloudsVolumeSkipIsolationProfile, StringComparison.Ordinal) ||
+            string.Equals(profile, CloudsAtlasIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, TrafficOffIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, VegetationOffIsolationProfile, StringComparison.Ordinal) ||
             string.Equals(profile, ConnectedGroveOffIsolationProfile, StringComparison.Ordinal) ||
@@ -1193,6 +1206,14 @@ namespace QuestFlightLab.Runtime
             {
                 var material = clouds.SharedCloudMaterial;
                 if (material == null || !material.HasProperty("_CloudSamplingLod")) continue;
+                if (state.profile == CloudsVolumeIsolationProfile || state.profile == CloudsVolumeSkipIsolationProfile || state.profile == CloudsAtlasIsolationProfile)
+                {
+                    if (!state.previousCloudVolume.ContainsKey(material))
+                        state.previousCloudVolume.Add(material, new Vector2(material.GetFloat("_CloudVolumeSampling"), material.GetFloat("_CloudEmptySkipping")));
+                    material.SetFloat("_CloudVolumeSampling", state.profile == CloudsAtlasIsolationProfile ? 0 : 1);
+                    material.SetFloat("_CloudEmptySkipping", state.profile == CloudsVolumeSkipIsolationProfile ? 1 : 0);
+                    Debug.Log($"{LogPrefix} Cloud volume={material.GetFloat("_CloudVolumeSampling")}; emptySkip={material.GetFloat("_CloudEmptySkipping")}");
+                }
                 if (state.profile == CloudsFullSamplingIsolationProfile && !state.previousCloudSampling.ContainsKey(material))
                 {
                     state.previousCloudSampling.Add(material,material.GetFloat("_CloudSamplingLod"));
@@ -1200,7 +1221,8 @@ namespace QuestFlightLab.Runtime
                 }
                 Debug.Log($"{LogPrefix} Cloud sampling profile={state.profile}; actualLod={material.GetFloat("_CloudSamplingLod")}");
             }
-            if (state.profile == ProductionIsolationProfile || state.profile == CloudsFullSamplingIsolationProfile) return state;
+            if (state.profile == ProductionIsolationProfile || state.profile == CloudsFullSamplingIsolationProfile ||
+                state.profile == CloudsVolumeIsolationProfile || state.profile == CloudsVolumeSkipIsolationProfile || state.profile == CloudsAtlasIsolationProfile) return state;
             bool sky = state.profile == SkyOnlyIsolationProfile;
             bool trees = sky || state.profile == VegetationOffIsolationProfile ||
                 state.profile == BuildingsVegetationOffIsolationProfile;
@@ -1253,6 +1275,8 @@ namespace QuestFlightLab.Runtime
                 if(setting.Key!=null)setting.Key.distantClustersEnabled=setting.Value;
             foreach (var setting in state.previousCloudSampling)
                 if (setting.Key != null) setting.Key.SetFloat("_CloudSamplingLod",setting.Value);
+            foreach (var setting in state.previousCloudVolume)
+                if (setting.Key != null) { setting.Key.SetFloat("_CloudVolumeSampling",setting.Value.x); setting.Key.SetFloat("_CloudEmptySkipping",setting.Value.y); }
             foreach (Renderer renderer in state.disabledRenderers)
                 if (renderer != null) renderer.forceRenderingOff = false;
             foreach (Behaviour behaviour in state.disabledBehaviours)

@@ -1,0 +1,193 @@
+{
+  "baseline": "fdcc160c23360676ca9d87aa3626009785f8e28f",
+  "shaders": [
+    {
+      "path": "QuestFlight\\Assets\\Shaders\\AmbientAircraftExterior.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Shaders\\BridgeConcrete.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Shaders\\FullMapBuildingClipmap.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\TextMesh Pro\\Shaders\\TMP_SDF-Mobile.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Scripts\\Environment\\MapBranchGrove.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Scripts\\Environment\\MapBranchGroveCluster.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Resources\\QuestFlightLab\\Environment\\Shaders\\AircraftRunwayBlobShadow.shader",
+      "policy": "background depth and motion"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Resources\\QuestFlightLab\\Environment\\Shaders\\ProductionFarTerrain.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Resources\\QuestFlightLab\\Environment\\Shaders\\ProductionMacroGround.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Resources\\QuestFlightLab\\Environment\\Shaders\\ProductionRunwayMarking.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Resources\\QuestFlightLab\\Environment\\Shaders\\ProductionSparseVegetation.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Resources\\QuestFlightLab\\Environment\\Shaders\\ProductionStableWater.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Materials\\StartupShowroomFade.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Materials\\StartupShowroomUnlit.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Training\\ObjectiveRibbon.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\UI\\Interface\\CaptionSurface.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\UI\\Interface\\InterfaceSurface.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Materials\\Cockpit\\ProductionPropellerBlur.shader",
+      "policy": "background depth and motion"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\AirportFenceV1\\AirportPerimeterFence.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\CloudsV1\\BoulderCloudShell.shader",
+      "policy": "opacity-weighted volume depth, wrapped wind displacement"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\NeighborhoodFoliageV1\\NeighborhoodCanopyReview.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealTerrainV1\\KBDU_OpaqueVegetationContext.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealTerrainV1\\KBDU_OsmBuildingContext.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealTerrainV1\\KBDU_TerrainPyramid.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\SemanticTowersV1\\SemanticTowerOpaque.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\TrafficV1\\Materials\\KBDU_TrafficVehicle.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealAerialSurfaceV1\\Materials\\ProductionSemanticSurface.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealAerialSurfaceV1\\Reflection\\Cockpit\\Shaders\\ProductionCockpitInstrumentV2.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealAerialSurfaceV1\\Reflection\\Cockpit\\Shaders\\ProductionCockpitLocalShadowDepth.shader",
+      "policy": "specialized"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealAerialSurfaceV1\\Reflection\\Cockpit\\Shaders\\ProductionCockpitStableInterior.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealAerialSurfaceV1\\Reflection\\Cockpit\\Shaders\\ProductionCockpitWindowReflection.shader",
+      "policy": "background depth and motion"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealAerialSurfaceV1\\Reflection\\Cockpit\\Shaders\\ProductionInstrumentDisplayReadout.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealAerialSurfaceV1\\Reflection\\Cockpit\\Shaders\\ProductionInstrumentGlassReflection.shader",
+      "policy": "background depth and motion"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\PhotorealAerialSurfaceV1\\Reflection\\Cockpit\\Shaders\\ProductionMagneticCompass.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\AirportCoreV4\\Materials\\AirportCoreBakedLit.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\AirportCoreV4\\Runway\\AirportCoreContinuousRunway.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\AirportCoreV4\\Water\\Shaders\\KBDUReservoirWaterV4.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\AirportCoreV4\\Vegetation\\Shaders\\KBDUVegetationHeroV4.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\AerialSceneryV1\\Buildings\\KBDU_AerialBuildingShell.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Environment\\AerialSceneryV1\\Vegetation\\Shaders\\AerialVegetationOpaque.shader",
+      "policy": "immutable world geometry; matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Rendering\\VendorMotion\\OculusRayVisual.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Rendering\\VendorMotion\\OculusRayCursor.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Rendering\\VendorMotion\\OculusHand.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Rendering\\VendorMotion\\Hotspot.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Rendering\\VendorMotion\\TransparentVertexTexture.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Rendering\\VendorMotion\\TunnelingEffect.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    },
+    {
+      "path": "QuestFlight\\Assets\\Production\\Rendering\\VendorMotion\\TransparentTexture.shader",
+      "policy": "matched coverage, previous geometry and XR depth"
+    }
+  ]
+}

@@ -66,7 +66,7 @@ namespace QuestFlightLab.Editor.Tests
             var previous=RenderTexture.active;camera.targetTexture=target;
             try
             {
-                camera.Render();RenderTexture.active=target;
+                QuestFlight.Rendering.ProductRenderCapture.Render(camera);RenderTexture.active=target;
                 var image=new Texture2D(1280,720,TextureFormat.RGB24,false,false);
                 image.ReadPixels(new Rect(0,0,1280,720),0,0);image.Apply();
                 File.WriteAllBytes(path,image.EncodeToPNG());Object.DestroyImmediate(image);

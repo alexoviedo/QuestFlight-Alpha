@@ -75,7 +75,7 @@ namespace QuestFlight.Editor
                     renderer.receiveShadows = false;
                     renderer.lightProbeUsage = LightProbeUsage.Off;
                     renderer.reflectionProbeUsage = ReflectionProbeUsage.Simple;
-                    renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                    renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
                 }
 
                 Validate(cockpitRoot, renderers);

@@ -339,7 +339,7 @@ namespace QuestFlight.Editor
                 renderer.lightProbeUsage = LightProbeUsage.Off;
                 renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
                 renderer.motionVectorGenerationMode =
-                    MotionVectorGenerationMode.ForceNoMotion;
+                    MotionVectorGenerationMode.Object;
                 EnsureInteriorVisibilityRenderer(root, renderer);
                 var controller = child.AddComponent<CockpitMagneticCompassController>();
                 var batch = root.GetComponentInChildren<CockpitInstrumentV2BatchController>(true);

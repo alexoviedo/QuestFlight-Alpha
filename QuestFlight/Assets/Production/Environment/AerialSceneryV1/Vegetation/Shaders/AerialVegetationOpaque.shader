@@ -2,6 +2,8 @@ Shader "QuestFlight/Aerial Scenery V1/Vegetation Atlas Cutout"
 {
     Properties
     {
+        [HideInInspector] _XRMotionVectorsPass("XR motion",Float)=1
+
         _Atlas ("Project-authored color/alpha atlas", 2D) = "white" {}
         [NoScaleOffset] _SurfaceAtlas ("Packed normal XY / roughness / AO", 2D) = "bump" {}
         _Cutoff ("Alpha clip threshold", Range(0,1)) = 0.42
@@ -26,7 +28,7 @@ Shader "QuestFlight/Aerial Scenery V1/Vegetation Atlas Cutout"
 
         Pass
         {
-            Tags { "LightMode"="ForwardBase" }
+            Tags { "LightMode"="UniversalForward" }
             CGPROGRAM
             #pragma target 3.0
             #pragma vertex vert
@@ -97,6 +99,7 @@ Shader "QuestFlight/Aerial Scenery V1/Vegetation Atlas Cutout"
 
             fixed4 frag(v2f input, fixed facing : VFACE) : SV_Target
             {
+UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 UNITY_SETUP_INSTANCE_ID(input);
                 fixed4 atlas = tex2D(_Atlas, input.uv);
                 clip(atlas.a - _Cutoff);
@@ -128,6 +131,169 @@ Shader "QuestFlight/Aerial Scenery V1/Vegetation Atlas Cutout"
             }
             ENDCG
         }
-    }
+    
+        Pass
+        {
+            Name "XRMotionVectors"
+            Tags { "LightMode"="XRMotionVectors" }
+            Cull Off Blend Off ZWrite On ZTest LEqual ColorMask RGBA
+            Stencil { Ref 1 WriteMask 1 Comp Always Pass Replace }
+            CGPROGRAM
+#define QF_STATIC_WORLD_GEOMETRY 1
+
+            #pragma target 4.5
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile_instancing
+            #pragma multi_compile_fog
+            #include "UnityCG.cginc"
+#include "Assets/Shaders/ProductSpaceWarpMotion.cginc"
+            #include "Lighting.cginc"
+
+            sampler2D _Atlas;
+            float4 _Atlas_ST;
+            sampler2D _SurfaceAtlas;
+            fixed4 _Tint;
+            half _Cutoff;
+            half _AmbientStrength;
+            half _SunWrap;
+            half _SurfaceOcclusionStrength;
+            half _VertexOcclusionStrength;
+            half _NormalStrength;
+
+            UNITY_INSTANCING_BUFFER_START(Props)
+                UNITY_DEFINE_INSTANCED_PROP(fixed4, _InstanceTint)
+            UNITY_INSTANCING_BUFFER_END(Props)
+
+            struct appdata
+            {
+                float4 vertex : POSITION;
+                half3 normal : NORMAL;
+                half4 tangent : TANGENT;
+                float2 uv : TEXCOORD0;
+                fixed4 color : COLOR;
+                
+float3 qfPreviousVertex : TEXCOORD4;
+UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+
+            struct v2f
+            {
+                float4 position : SV_POSITION;
+                float2 uv : TEXCOORD0;
+                half3 normalWorld : TEXCOORD1;
+                half3 tangentWorld : TEXCOORD2;
+                half3 bitangentWorld : TEXCOORD3;
+                half3 viewDirectionWorld : TEXCOORD4;
+                fixed4 color : COLOR;
+                UNITY_FOG_COORDS(5)
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+                
+float4 qfCurrent : TEXCOORD14; float4 qfPrevious : TEXCOORD15;
+UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            v2f QFColorVertex(appdata input, out float4 qfWorld)
+            {
+                v2f output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_TRANSFER_INSTANCE_ID(input, output);
+                UNITY_INITIALIZE_OUTPUT(v2f, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.position = QFObjectToMotionClip(input.vertex, qfWorld);
+                output.uv = TRANSFORM_TEX(input.uv, _Atlas);
+                output.normalWorld = UnityObjectToWorldNormal(input.normal);
+                output.tangentWorld = normalize(UnityObjectToWorldDir(input.tangent.xyz));
+                half tangentSign = input.tangent.w * unity_WorldTransformParams.w;
+                output.bitangentWorld = normalize(cross(output.normalWorld, output.tangentWorld) * tangentSign);
+                float3 worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
+                output.viewDirectionWorld = _WorldSpaceCameraPos.xyz - worldPosition;
+                output.color = input.color;
+                UNITY_TRANSFER_FOG(output, output.position);
+                return output;
+            }
+
+            fixed4 QFColorFragment(v2f input, fixed facing : VFACE) : SV_Target
+            {
+UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                UNITY_SETUP_INSTANCE_ID(input);
+                fixed4 atlas = tex2D(_Atlas, input.uv);
+                clip(atlas.a - _Cutoff);
+                half4 surface = tex2D(_SurfaceAtlas, input.uv);
+                half2 normalXY = (surface.rg * 2.0h - 1.0h) * _NormalStrength;
+                half3 normalTangent = normalize(half3(normalXY, sqrt(saturate(1.0h - dot(normalXY, normalXY)))));
+                half3 normalWorld = normalize(
+                    input.tangentWorld * normalTangent.x
+                    + input.bitangentWorld * normalTangent.y
+                    + input.normalWorld * normalTangent.z);
+                normalWorld *= facing >= 0.0h ? 1.0h : -1.0h;
+
+                half3 ambient = max(ShadeSH9(half4(normalWorld, 1.0h)), 0.0h);
+                half ndl = dot(normalWorld, normalize(_WorldSpaceLightPos0.xyz));
+                half wrapped = saturate((ndl + _SunWrap) / (1.0h + _SunWrap));
+                half vertexAO = lerp(1.0h, input.color.a, _VertexOcclusionStrength);
+                half packedAO = lerp(1.0h, surface.a, _SurfaceOcclusionStrength);
+                half3 lighting = max(0.26h, ambient * _AmbientStrength + _LightColor0.rgb * wrapped * 0.70h);
+                half roughness = surface.b;
+                half3 halfVector = normalize(normalize(input.viewDirectionWorld) + normalize(_WorldSpaceLightPos0.xyz));
+                half specular = pow(saturate(dot(normalWorld, halfVector)), lerp(48.0h, 8.0h, roughness));
+                fixed4 instanceTint = UNITY_ACCESS_INSTANCED_PROP(Props, _InstanceTint);
+                fixed3 color = atlas.rgb * input.color.rgb * _Tint.rgb * instanceTint.rgb;
+                color *= lighting * vertexAO * packedAO;
+                color += _LightColor0.rgb * specular * lerp(0.10h, 0.025h, roughness);
+                fixed4 output = fixed4(color, 1.0h);
+                UNITY_APPLY_FOG(input.fogCoord, output);
+                return output;
+            }
+            
+v2f QFPreviousVertex(appdata input, out float4 qfWorld)
+            {
+                v2f output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_TRANSFER_INSTANCE_ID(input, output);
+                UNITY_INITIALIZE_OUTPUT(v2f, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.position = QFObjectToMotionClip(input.vertex, qfWorld);
+                output.uv = TRANSFORM_TEX(input.uv, _Atlas);
+                output.normalWorld = UnityObjectToWorldNormal(input.normal);
+                output.tangentWorld = normalize(UnityObjectToWorldDir(input.tangent.xyz));
+                half tangentSign = input.tangent.w * unity_WorldTransformParams.w;
+                output.bitangentWorld = normalize(cross(output.normalWorld, output.tangentWorld) * tangentSign);
+                float3 worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
+                output.viewDirectionWorld = _WorldSpaceCameraPos.xyz - worldPosition;
+                output.color = input.color;
+                UNITY_TRANSFER_FOG(output, output.position);
+                return output;
+            }
+v2f vert(appdata v)
+{
+    UNITY_SETUP_INSTANCE_ID(v);
+    float4 world;
+    v2f o=QFColorVertex(v,world);
+    #if !defined(QF_STATIC_WORLD_GEOMETRY)
+    if (_QFHasPreviousModel < .5 && (_QFPreviousVertices > .5 || unity_MotionVectorsParams.x == 1))
+        v.vertex.xyz=v.qfPreviousVertex;
+    #endif
+    float4 previousWorld;
+    v2f old=QFPreviousVertex(v,previousWorld);
+    float4 oldWorld=QFPreviousWorld(previousWorld);
+    if (_QFResetObjectMotion > .5) oldWorld=world;
+    o.qfCurrent=o.position;
+    o.qfPrevious=mul(_PrevViewProjMatrixStereo[QFEye()],oldWorld);
+    
+    o.position=o.qfCurrent;
+    return o;
+}
+float4 frag(v2f v, fixed facing : VFACE) : SV_Target
+{
+    UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(v);
+    float coverage=QFColorFragment(v, facing).a;
+    clip(coverage-0.001);
+    return QFMotion(v.qfCurrent,v.qfPrevious,coverage);
+}
+
+            ENDCG
+        }
+}
     Fallback Off
 }

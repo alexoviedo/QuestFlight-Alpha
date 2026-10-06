@@ -35,7 +35,7 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
 
         Pass
         {
-            Tags { "LightMode"="ForwardBase" }
+            Tags { "LightMode"="UniversalForward" }
             CGPROGRAM
             #pragma target 3.0
             #pragma vertex vert
@@ -181,7 +181,9 @@ Shader "QuestFlight/Photoreal Aerial Surface V1/Cockpit Window Reflection"
                 premultiplied += _LightColor0.rgb * sunGlint * _DirectGlintStrength;
                 return fixed4(premultiplied, opacity);
             }
-            ENDCG
+            
+#pragma multi_compile_instancing
+ENDCG
         }
     }
     Fallback Off

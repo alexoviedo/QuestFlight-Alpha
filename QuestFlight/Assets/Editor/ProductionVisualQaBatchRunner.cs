@@ -895,6 +895,13 @@ namespace QuestFlightLab.Editor
             modeCoordinator.AuthoredModeMenuView.CompleteTransitionForVisualQa();
             modeCoordinator.AuthoredModePanelRoot.SetActive(false);
 
+            // Demo selection resets the native aircraft to its route's runway.
+            // The eye cached before selection is no longer inside that aircraft.
+            pilotEye = context.rig.PilotSeatAnchor.position;
+            pilotForward = aircraft.rotation;
+            context.originalAircraftPosition = aircraft.position;
+            context.originalAircraftRotation = aircraft.rotation;
+
             Capture(context, report, outputDir, width, height, new ShotDefinition(
                 "01_default_cockpit", "Default cockpit", "cockpit", pilotEye, pilotForward, 72f, ViewProfile.Cockpit));
             Capture(context, report, outputDir, width, height, new ShotDefinition(
@@ -2373,7 +2380,7 @@ namespace QuestFlightLab.Editor
                     if(qaMapGrove!=null&&qaMapGrove.enabled)
                     {
                         qaMapGrove.PrepareForVisualQa(context.camera);
-                        qaMapDraw=c=>{if(c==context.camera)qaMapGrove.DrawForVisualQa(c);};Camera.onPreCull+=qaMapDraw;
+                        qaMapDraw=c=>{if(c==context.camera)qaMapGrove.DrawForVisualQa(c);};Camera.onPreCull+=qaMapDraw;QuestFlight.Rendering.ProductRenderSubmission.Draw+=qaMapDraw;
                     }
                     else qaMapGrove=null;
                 }
@@ -2480,7 +2487,7 @@ namespace QuestFlightLab.Editor
                 if (qaDisabledSunOcclusion != null)
                     qaDisabledSunOcclusion.enabled = qaDisabledSunOcclusionState;
                 validationCloudField?.RestoreAtmosphereForValidation();
-                if(qaMapDraw!=null)Camera.onPreCull-=qaMapDraw;
+                if(qaMapDraw!=null){Camera.onPreCull-=qaMapDraw;QuestFlight.Rendering.ProductRenderSubmission.Draw-=qaMapDraw;}
                 qaMapGrove?.ClearForVisualQa();
                 if (texture != null) Object.DestroyImmediate(texture);
             }
@@ -2623,7 +2630,7 @@ namespace QuestFlightLab.Editor
                 for (int yaw = -180; yaw <= 180; yaw += 15)
                 {
                     context.camera.transform.rotation = context.originalAircraftRotation * Quaternion.Euler(0f, yaw, 0f);
-                    context.camera.Render();
+                    QuestFlight.Rendering.ProductRenderCapture.Render(context.camera);
                     ProductionMountainSweepSample sample = new ProductionMountainSweepSample
                     {
                         yawDegrees = yaw,
@@ -2692,7 +2699,7 @@ namespace QuestFlightLab.Editor
             try
             {
                 camera.targetTexture = target;
-                camera.Render();
+                QuestFlight.Rendering.ProductRenderCapture.Render(camera);
                 stats.available = UnityStats.drawCalls > 0 || UnityStats.triangles > 0;
                 stats.drawCalls = UnityStats.drawCalls;
                 stats.batches = UnityStats.batches;

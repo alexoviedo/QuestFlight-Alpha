@@ -230,7 +230,7 @@ namespace QuestFlightLab.Editor
                 renderers[0].sharedMaterial = material;
                 renderers[0].shadowCastingMode = ShadowCastingMode.Off;
                 renderers[0].receiveShadows = true;
-                renderers[0].motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                renderers[0].motionVectorGenerationMode = MotionVectorGenerationMode.Object;
                 renderers[0].lightProbeUsage = LightProbeUsage.BlendProbes;
 
                 GoldenEagleThermalSoaring behavior = root.AddComponent<GoldenEagleThermalSoaring>();

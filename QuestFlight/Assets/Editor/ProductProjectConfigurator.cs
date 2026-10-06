@@ -49,8 +49,12 @@ namespace QuestFlight.Editor
 
             EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ASTC;
             QualitySettings.vSyncCount = 0;
+            // Never package a pause left behind by an editor inspection/test.
+            // The authored mode coordinator pauses the startup menu itself.
+            Time.timeScale = 1f;
             ConfigureEveryQualityLevelForQuest();
             EnableOpenXrForAndroid();
+            ProductSpaceWarpAuthoring.ConfigurePipeline();
 
             if (!File.Exists(ProductionScenePath))
                 throw new FileNotFoundException("The authored production scene has not been extracted yet.", ProductionScenePath);

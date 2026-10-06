@@ -179,12 +179,22 @@ namespace QuestFlightLab.Environment
         private readonly Vector4[] shrubTints = new Vector4[MaximumShrubInstances];
         private readonly float[] shrubFades = new float[MaximumShrubInstances];
         private readonly float[] shrubFrames = new float[MaximumShrubInstances];
-        private readonly Matrix4x4[] batchMatrices =
-            new Matrix4x4[MaximumInstancesPerDraw];
-        private readonly Vector4[] batchTints =
-            new Vector4[MaximumInstancesPerDraw];
-        private readonly float[] batchFades = new float[MaximumInstancesPerDraw];
-        private readonly float[] batchFrames = new float[MaximumInstancesPerDraw];
+        // Each chunk owns its properties: color and XR motion reuse the same
+        // admitted instances without repacking or mutating another queued draw.
+        private sealed class PreparedTreeBatch
+        {
+            public Mesh Mesh;
+            public int Count;
+            public readonly Matrix4x4[] Matrices = new Matrix4x4[MaximumInstancesPerDraw];
+            public readonly Vector4[] Tints = new Vector4[MaximumInstancesPerDraw];
+            public readonly float[] Fades = new float[MaximumInstancesPerDraw];
+            public readonly float[] Frames = new float[MaximumInstancesPerDraw];
+            public readonly MaterialPropertyBlock Properties = new MaterialPropertyBlock();
+        }
+        private readonly List<PreparedTreeBatch> preparedBatches = new List<PreparedTreeBatch>();
+        private int preparedBatchCount;
+        private static readonly Unity.Profiling.ProfilerMarker PackMarker =
+            new Unity.Profiling.ProfilerMarker("QuestFlight.Trees.PackVisibleChunks");
 
         private struct RuntimeInstance
         {
@@ -290,10 +300,6 @@ namespace QuestFlightLab.Environment
         private float[] transitionStarts = Array.Empty<float>();
         private float[] lastStateChanges = Array.Empty<float>();
 
-        private MaterialPropertyBlock lod0Properties;
-        private MaterialPropertyBlock lod1Properties;
-        private MaterialPropertyBlock lod2Properties;
-        private MaterialPropertyBlock shrubProperties;
         private MaterialPropertyBlock groveProperties;
 
         public Material SharedCanopyMaterial => sharedCanopyMaterial;
@@ -432,13 +438,17 @@ namespace QuestFlightLab.Environment
         {
             RefreshReplacementCenters();
             Camera.onPreCull -= DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw -= DrawForCamera;
             Camera.onPreCull += DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw += DrawForCamera;
             Prepare();
         }
 
         private void OnDisable()
         {
+            preparedFrame=-1;preparedCamera=null;
             Camera.onPreCull -= DrawForCamera;
+            QuestFlight.Rendering.ProductRenderSubmission.Draw -= DrawForCamera;
         }
 
 #if UNITY_EDITOR
@@ -490,10 +500,6 @@ namespace QuestFlightLab.Environment
 
         private void Prepare()
         {
-            lod0Properties ??= new MaterialPropertyBlock();
-            lod1Properties ??= new MaterialPropertyBlock();
-            lod2Properties ??= new MaterialPropertyBlock();
-            shrubProperties ??= new MaterialPropertyBlock();
             groveProperties ??= new MaterialPropertyBlock();
             EnsureRuntimeInstances();
             int count = runtimeInstances == null ? 0 : runtimeInstances.Length;
@@ -686,8 +692,14 @@ namespace QuestFlightLab.Environment
             loadedDatabaseInstanceId = databaseId;
         }
 
+        private int preparedFrame=-1;
+        private Camera preparedCamera;
+        private Matrix4x4 preparedView,preparedProjection;
+        private uint preparedGeneration;
+        private int preparedLod0,preparedLod1,preparedLod2,preparedShrubs;
         private void DrawForCamera(Camera camera)
         {
+            if(QuestFlight.Rendering.ProductRenderSubmission.Preparing)return;
             if (camera == null || !enabled || !gameObject.activeInHierarchy ||
                 !gameObject.scene.IsValid() || sharedCanopyMaterial == null ||
                 lod0Mesh == null || lod1Mesh == null || lod2Mesh == null ||
@@ -701,6 +713,10 @@ namespace QuestFlightLab.Environment
             if ((camera.cullingMask & (1 << layer)) == 0)
                 return;
 
+            if(Application.isPlaying && preparedFrame==Time.frameCount && preparedCamera==camera &&
+                preparedGeneration==QuestFlight.Rendering.ProductSpaceWarpController.HistoryGeneration &&
+                preparedView==camera.worldToCameraMatrix && preparedProjection==camera.projectionMatrix)
+            { DrawPrepared(camera,layer); return; }
             Prepare();
             Vector3 cameraPosition = camera.transform.position;
             Vector3 cameraForward = camera.transform.forward;
@@ -733,6 +749,9 @@ namespace QuestFlightLab.Environment
             }
             PrepareDrawFrustum(camera);
             BuildAndDraw(camera, cameraPosition, layer, now);
+            preparedFrame=Time.frameCount;preparedCamera=camera;
+            preparedGeneration=QuestFlight.Rendering.ProductSpaceWarpController.HistoryGeneration;
+            preparedView=camera.worldToCameraMatrix;preparedProjection=camera.projectionMatrix;
             if (refreshSelection)
                 UpdateSelectionHistory();
         }
@@ -1314,14 +1333,23 @@ namespace QuestFlightLab.Environment
                     ref groveCount);
             }
 
+            preparedLod0=lod0Count;preparedLod1=lod1Count;preparedLod2=lod2Count;preparedShrubs=shrubCount;
+            PrepareBatches(camera, layer);
+            DrawPrepared(camera,layer);
+        }
+
+        // Color and XR motion submit identical selected geometry and fades.
+        private void PrepareBatches(Camera camera,int layer)
+        {
+            using var sample = PackMarker.Auto();
+            preparedBatchCount = 0;
             DrawTier(
                 lod0Mesh,
                 lod0Matrices,
                 lod0Tints,
                 lod0Fades,
                 lod0Frames,
-                lod0Count,
-                lod0Properties,
+                preparedLod0,
                 camera,
                 layer);
             DrawTier(
@@ -1330,8 +1358,7 @@ namespace QuestFlightLab.Environment
                 lod1Tints,
                 lod1Fades,
                 lod1Frames,
-                lod1Count,
-                lod1Properties,
+                preparedLod1,
                 camera,
                 layer);
             DrawTier(
@@ -1340,8 +1367,7 @@ namespace QuestFlightLab.Environment
                 lod2Tints,
                 lod2Fades,
                 lod2Frames,
-                lod2Count,
-                lod2Properties,
+                preparedLod2,
                 camera,
                 layer);
             DrawTier(
@@ -1350,8 +1376,7 @@ namespace QuestFlightLab.Environment
                 shrubTints,
                 shrubFades,
                 shrubFrames,
-                shrubCount,
-                shrubProperties,
+                preparedShrubs,
                 camera,
                 layer);
         }
@@ -1482,13 +1507,13 @@ namespace QuestFlightLab.Environment
             float[] fades,
             float[] frames,
             int count,
-            MaterialPropertyBlock properties,
             Camera camera,
             int layer)
         {
             if (count <= 0)
                 return;
             Bounds bounds = mesh.bounds;
+            PreparedTreeBatch batch = null;
             int batchCount = 0;
             for (int source = 0; source < count; source++)
             {
@@ -1501,16 +1526,24 @@ namespace QuestFlightLab.Environment
                 if (!Application.isPlaying && DisableDrawCullingForVisualQa) retain = true;
 #endif
                 if (!retain) continue;
-                batchMatrices[batchCount] = matrices[source];
-                batchTints[batchCount] = tints[source];
-                batchFades[batchCount] = fades[source];
-                batchFrames[batchCount] = frames[source];
+                if (batch == null)
+                {
+                    if (preparedBatchCount == preparedBatches.Count)
+                        preparedBatches.Add(new PreparedTreeBatch());
+                    batch = preparedBatches[preparedBatchCount++];
+                    batch.Mesh = mesh;
+                }
+                batch.Matrices[batchCount] = matrices[source];
+                batch.Tints[batchCount] = tints[source];
+                batch.Fades[batchCount] = fades[source];
+                batch.Frames[batchCount] = frames[source];
                 batchCount++;
                 if (batchCount != MaximumInstancesPerDraw) continue;
-                SubmitTreeBatch(mesh, batchCount, properties, camera, layer);
+                PackTreeBatch(batch, batchCount);
                 batchCount = 0;
+                batch = null;
             }
-            if (batchCount > 0) SubmitTreeBatch(mesh, batchCount, properties, camera, layer);
+            if (batchCount > 0) PackTreeBatch(batch, batchCount);
         }
 
         private readonly Plane[] drawPlanesLeft = new Plane[6];
@@ -1553,30 +1586,29 @@ namespace QuestFlightLab.Environment
             return true;
         }
 
-        private void SubmitTreeBatch(Mesh mesh, int batchCount, MaterialPropertyBlock properties, Camera camera, int layer)
+        private static void PackTreeBatch(PreparedTreeBatch batch, int count)
         {
-#if UNITY_EDITOR
-                if (!Application.isPlaying)
-                    ObserveHybridPrototypeTierForVisualQa?.Invoke(mesh, batchCount);
-#endif
-                properties.SetVectorArray(InstanceTintId, batchTints);
-                properties.SetFloat("_TreePrototypeHeight",mesh.bounds.max.y);
-                properties.SetFloatArray(InstanceFadeId, batchFades);
-                properties.SetFloatArray(ImpostorFrameId, batchFrames);
-                Graphics.DrawMeshInstanced(
-                    mesh,
-                    0,
-                    sharedCanopyMaterial,
-                    batchMatrices,
-                    batchCount,
-                    properties,
-                    ShadowCastingMode.Off,
-                    false,
-                    layer,
-                    camera,
-                    LightProbeUsage.Off,
-                null);
+            batch.Count = count;
+            batch.Properties.SetVectorArray(InstanceTintId, batch.Tints);
+            batch.Properties.SetFloat("_TreePrototypeHeight", batch.Mesh.bounds.max.y);
+            batch.Properties.SetFloatArray(InstanceFadeId, batch.Fades);
+            batch.Properties.SetFloatArray(ImpostorFrameId, batch.Frames);
         }
 
+        private void DrawPrepared(Camera camera, int layer)
+        {
+            for (int index = 0; index < preparedBatchCount; index++)
+            {
+                PreparedTreeBatch batch = preparedBatches[index];
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                    ObserveHybridPrototypeTierForVisualQa?.Invoke(batch.Mesh, batch.Count);
+#endif
+                QuestFlight.Rendering.ProductRenderSubmission.DrawMeshInstanced(
+                    batch.Mesh, 0, sharedCanopyMaterial, batch.Matrices, batch.Count,
+                    batch.Properties, ShadowCastingMode.Off, false, layer, camera,
+                    LightProbeUsage.Off, null);
+            }
+        }
     }
 }

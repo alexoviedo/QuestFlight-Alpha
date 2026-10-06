@@ -157,7 +157,7 @@ namespace QuestFlightLab.Editor
                 };
                 AirportCloseTreeLodRenderer.ObserveHybridPrototypeTierForVisualQa=(m,n)=>
                 { if(cost!=null) { cost.treeDraws+=(n+1022)/1023; cost.treeTriangles+=n*(int)m.GetIndexCount(0)/3; } };
-                Camera.onPreCull+=draw;
+                Camera.onPreCull+=draw;QuestFlight.Rendering.ProductRenderSubmission.Draw+=draw;
                 foreach(bool candidate in new[]{false,true})
                 {
                     string output=Path.Combine(root,candidate?"candidate":"control");
@@ -191,7 +191,7 @@ namespace QuestFlightLab.Editor
             }
             finally
             {
-                Camera.onPreCull-=draw;
+                Camera.onPreCull-=draw;QuestFlight.Rendering.ProductRenderSubmission.Draw-=draw;
                 AirportCloseTreeLodRenderer.OmitHybridPrototypeInstanceForVisualQa=null;
                 AirportCloseTreeLodRenderer.ObserveHybridPrototypeTierForVisualQa=null;
                 System.Environment.SetEnvironmentVariable("QFL_SETTLED_SCENERY_PREVIEW",previous);

@@ -97,7 +97,7 @@ namespace QuestFlightLab.Environment.Editor
                         renderer.shadowCastingMode = ShadowCastingMode.Off;
                         renderer.receiveShadows = false;
                         renderer.motionVectorGenerationMode =
-                            MotionVectorGenerationMode.ForceNoMotion;
+                            MotionVectorGenerationMode.Object;
                         renderer.lightProbeUsage = LightProbeUsage.BlendProbes;
                         renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
                         renderer.scaleInLightmap = 0f;

@@ -339,7 +339,7 @@ namespace QuestFlightLab.Runtime
                 for(int eye=0;eye<2;eye++)
                 {
                     var side=(Camera.StereoscopicEye)eye;
-                    var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side),tracked.GetStereoProjectionMatrix(side),1440,1440);
+                    var texture=RenderEye(tracked,EyeView(tracked,side),EyeProjection(tracked,side),1440,1440);
                     File.WriteAllBytes(Path.Combine(_outputDirectory,$"temporal_{frame:00}_{side}.png"),texture.EncodeToPNG());
                     Object.Destroy(texture);
                 }
@@ -354,8 +354,8 @@ namespace QuestFlightLab.Runtime
                         for(int eye=0;eye<2;eye++)
                         {
                             var side=(Camera.StereoscopicEye)eye;
-                            var view=tracked.GetStereoViewMatrix(side)*turn.inverse;
-                            var texture=RenderEye(tracked,view,tracked.GetStereoProjectionMatrix(side),1440,1440);
+                            var view=EyeView(tracked,side)*turn.inverse;
+                            var texture=RenderEye(tracked,view,EyeProjection(tracked,side),1440,1440);
                             File.WriteAllBytes(Path.Combine(_outputDirectory,$"window_{yaw}_{frame:00}_{side}.png"),texture.EncodeToPNG());
                             Object.Destroy(texture);
                         }
@@ -377,7 +377,7 @@ namespace QuestFlightLab.Runtime
                     for(int eye=0;eye<2;eye++)
                     {
                         var side=(Camera.StereoscopicEye)eye;
-                        var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side)*turn.inverse,tracked.GetStereoProjectionMatrix(side),1440,1440);
+                        var texture=RenderEye(tracked,EyeView(tracked,side)*turn.inverse,EyeProjection(tracked,side),1440,1440);
                         File.WriteAllBytes(Path.Combine(_outputDirectory,$"cockpit_clearance_{pitch}_{side}.png"),texture.EncodeToPNG());
                         Object.Destroy(texture);
                     }
@@ -396,7 +396,7 @@ namespace QuestFlightLab.Runtime
                     for(int eye=0;eye<2;eye++)
                     {
                         var side=(Camera.StereoscopicEye)eye;var tracked=rig.TrackedCamera;
-                        var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side),tracked.GetStereoProjectionMatrix(side),1440,1440);
+                        var texture=RenderEye(tracked,EyeView(tracked,side),EyeProjection(tracked,side),1440,1440);
                         File.WriteAllBytes(Path.Combine(_outputDirectory,"polish_"+page+"_"+side+".png"),texture.EncodeToPNG());Object.Destroy(texture);
                     }
                 }
@@ -410,7 +410,7 @@ namespace QuestFlightLab.Runtime
                 for(int eye=0;eye<2;eye++)
                 {
                     var side=(Camera.StereoscopicEye)eye;var tracked=rig.TrackedCamera;
-                    var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side),tracked.GetStereoProjectionMatrix(side),1440,1440);
+                    var texture=RenderEye(tracked,EyeView(tracked,side),EyeProjection(tracked,side),1440,1440);
                     File.WriteAllBytes(Path.Combine(_outputDirectory,"polish_radio_"+side+".png"),texture.EncodeToPNG());Object.Destroy(texture);
                 }
                 caption.transform.parent.gameObject.SetActive(false);
@@ -429,7 +429,7 @@ namespace QuestFlightLab.Runtime
                         for(int eye=0;eye<2;eye++)
                         {
                             var side=(Camera.StereoscopicEye)eye;var tracked=rig.TrackedCamera;
-                            var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side),tracked.GetStereoProjectionMatrix(side),1440,1440);
+                            var texture=RenderEye(tracked,EyeView(tracked,side),EyeProjection(tracked,side),1440,1440);
                             File.WriteAllBytes(Path.Combine(_outputDirectory,"polish_caption_"+(solid?"solid_":"translucent_")+side+".png"),texture.EncodeToPNG());Object.Destroy(texture);
                         }
                     }
@@ -452,7 +452,7 @@ namespace QuestFlightLab.Runtime
                     for(int eye=0;eye<2;eye++)
                     {
                         var side=(Camera.StereoscopicEye)eye;var tracked=rig.TrackedCamera;
-                        var texture=RenderEye(tracked,tracked.GetStereoViewMatrix(side),tracked.GetStereoProjectionMatrix(side),1440,1440);
+                        var texture=RenderEye(tracked,EyeView(tracked,side),EyeProjection(tracked,side),1440,1440);
                         File.WriteAllBytes(Path.Combine(_outputDirectory,"selection_"+page+"_"+side+".png"),texture.EncodeToPNG());Object.Destroy(texture);
                     }
                 }
@@ -507,10 +507,10 @@ namespace QuestFlightLab.Runtime
             try
             {
                 Camera tracked = rig.TrackedCamera;
-                Matrix4x4 leftView = tracked.GetStereoViewMatrix(Camera.StereoscopicEye.Left);
-                Matrix4x4 rightView = tracked.GetStereoViewMatrix(Camera.StereoscopicEye.Right);
-                Matrix4x4 leftProjection = tracked.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
-                Matrix4x4 rightProjection = tracked.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right);
+                Matrix4x4 leftView = EyeView(tracked,Camera.StereoscopicEye.Left);
+                Matrix4x4 rightView = EyeView(tracked,Camera.StereoscopicEye.Right);
+                Matrix4x4 leftProjection = EyeProjection(tracked,Camera.StereoscopicEye.Left);
+                Matrix4x4 rightProjection = EyeProjection(tracked,Camera.StereoscopicEye.Right);
                 report.leftEye = EyeMetadata.FromMatrices(leftView, leftProjection);
                 report.rightEye = EyeMetadata.FromMatrices(rightView, rightProjection);
                 report.eyeSeparationMeters = Vector3.Distance(report.leftEye.worldPosition, report.rightEye.worldPosition);
@@ -722,6 +722,36 @@ namespace QuestFlightLab.Runtime
                 report.rightControllerInputDevice.valid;
         }
 
+        // URP consumes the display's XR render parameters directly. Camera's
+        // legacy stereo matrices can remain identity outside its render pass.
+        // Never synthesize eye separation or modify the tracked camera to capture.
+        private static XRDisplaySubsystem.XRRenderParameter EyeParameter(Camera camera, Camera.StereoscopicEye eye)
+        {
+            var displays = new List<XRDisplaySubsystem>();
+            SubsystemManager.GetSubsystems(displays);
+            foreach (var display in displays)
+            {
+                if (!display.running) continue;
+                int index = 0;
+                for (int passIndex = 0; passIndex < display.GetRenderPassCount(); passIndex++)
+                {
+                    display.GetRenderPass(passIndex, out var pass);
+                    for (int parameter = 0; parameter < pass.GetRenderParameterCount(); parameter++)
+                    {
+                        pass.GetRenderParameter(camera, parameter, out var data);
+                        if (index++ == (int)eye) return data;
+                    }
+                }
+            }
+            throw new InvalidOperationException("XR provider did not expose both eye render parameters; stereo capture is invalid.");
+        }
+        private static Matrix4x4 EyeView(Camera camera, Camera.StereoscopicEye eye)
+            => UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline == null
+                ? camera.GetStereoViewMatrix(eye) : EyeParameter(camera, eye).view;
+        private static Matrix4x4 EyeProjection(Camera camera, Camera.StereoscopicEye eye)
+            => UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline == null
+                ? camera.GetStereoProjectionMatrix(eye) : EyeParameter(camera, eye).projection;
+
         private static Texture2D RenderEye(
             Camera tracked,
             Matrix4x4 view,
@@ -763,9 +793,9 @@ namespace QuestFlightLab.Runtime
             };
             try
             {
-                Camera.onPreCull += drawGroves;
+                Camera.onPreCull += drawGroves;QuestFlight.Rendering.ProductRenderSubmission.Draw+=drawGroves;
                 camera.targetTexture = target;
-                camera.Render();
+                QuestFlight.Rendering.ProductRenderCapture.Render(camera);
                 RenderTexture.active = target;
                 Texture2D texture = new Texture2D(width, height, TextureFormat.RGB24, false, false);
                 texture.ReadPixels(new Rect(0, 0, width, height), 0, 0, false);
@@ -774,7 +804,7 @@ namespace QuestFlightLab.Runtime
             }
             finally
             {
-                Camera.onPreCull -= drawGroves;
+                Camera.onPreCull -= drawGroves;QuestFlight.Rendering.ProductRenderSubmission.Draw-=drawGroves;
                 camera.targetTexture = null;
                 RenderTexture.active = previous;
                 target.Release();

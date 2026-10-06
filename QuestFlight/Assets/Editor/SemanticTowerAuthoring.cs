@@ -185,7 +185,7 @@ namespace QuestFlight.Editor
             renderer.receiveShadows = false;
             renderer.lightProbeUsage = LightProbeUsage.BlendProbes;
             renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
-            renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+            renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
             renderer.allowOcclusionWhenDynamic = true;
             return renderer;
         }

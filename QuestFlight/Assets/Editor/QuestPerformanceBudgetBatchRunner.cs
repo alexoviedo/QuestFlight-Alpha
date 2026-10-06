@@ -592,7 +592,7 @@ namespace QuestFlight.Editor
             {
                 camera.targetTexture = target;
                 camera.SetReplacementShader(shader, string.Empty);
-                camera.Render();
+                QuestFlight.Rendering.ProductRenderCapture.Render(camera);
                 camera.ResetReplacementShader();
                 RenderTexture.active = target;
                 texture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
