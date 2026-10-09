@@ -52,9 +52,11 @@ namespace QuestFlightLab.Editor.Tests
                 PrefabUtility.RecordPrefabInstancePropertyModifications(environment);
                 EditorUtility.SetDirty(environment);
                 EditorSceneManager.MarkSceneDirty(scene);
-                EditorSceneManager.SaveScene(scene);
+                if (!environment.TryValidateContract(out string report))
+                    throw new InvalidOperationException("Repaired environment is invalid: " + report);
+                if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Repair scene save failed.");
                 AssetDatabase.SaveAssets();
-                Debug.Log("REGRESSION repaired environment=" + environment.TryValidateContract(out string report) + " " + report);
+                Debug.Log("REGRESSION repaired environment=" + report);
                 EditorApplication.Exit(0);
             }
             catch (Exception exception) { Debug.LogException(exception); EditorApplication.Exit(1); }

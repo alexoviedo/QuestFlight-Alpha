@@ -1,12 +1,13 @@
 param(
   [string]$UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe',
-  [string]$ProjectPath = 'C:\Users\ovied\Dev\T2\T2-QuestFlight\QuestFlight',
+  [string]$ProjectPath = (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'QuestFlight'),
   [string]$ArtifactDir = '',
   [int]$TimeoutSeconds = 600,
   [switch]$RequirePass
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'scripts/process_arguments.ps1')
 
 if (!(Test-Path -LiteralPath $UnityExe)) { throw "Unity not found: $UnityExe" }
 if (!(Test-Path -LiteralPath $ProjectPath)) { throw "Unity project not found: $ProjectPath" }
@@ -36,7 +37,7 @@ try {
     '-executeMethod', 'QuestFlight.Editor.FlightDynamicsValidation.FlightDynamicsEvidenceBatch.RunBatch',
     '-logFile', $log
   )
-  $process = Start-Process -FilePath $UnityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+  $process = Start-Process -FilePath $UnityExe -ArgumentList (ConvertTo-ProcessArgumentString $arguments) -PassThru -WindowStyle Hidden
   if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
     Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
     throw "Flight-dynamics validation exceeded ${TimeoutSeconds}s and was stopped. Log: $log"

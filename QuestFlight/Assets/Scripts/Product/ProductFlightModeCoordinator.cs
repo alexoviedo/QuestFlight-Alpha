@@ -358,7 +358,7 @@ namespace QuestFlight.Product
             _demoCheckpointPending=false;
             _savedTimeScale=1; _ownsTimeScalePause=true; Time.timeScale=0;
             State=FlightModeState.Selection;
-            if (!_hasStartupInitialConditions || !flightCoordinator.TryRecoverToInitialConditions(
+            if (!_hasStartupInitialConditions || !flightCoordinator.TryStartNewFlight(
                 _startupInitialConditions))
             { EnterBlocked("Unable to restore the native initial aircraft state."); return; }
             LastError=string.Empty; _loggedBlockedError=false;

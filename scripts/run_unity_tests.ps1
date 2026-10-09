@@ -1,6 +1,6 @@
 param(
   [string]$UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe',
-  [string]$ProjectPath = 'C:\Users\ovied\Dev\T2\T2-QuestFlight\QuestFlight',
+  [string]$ProjectPath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'QuestFlight'),
   [ValidateSet('EditMode','PlayMode')]
   [string]$TestPlatform = 'EditMode',
   [string]$ArtifactDir = '',
@@ -9,6 +9,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'process_arguments.ps1')
 
 if (!(Test-Path $UnityExe)) { throw "Unity not found: $UnityExe" }
 if (!(Test-Path $ProjectPath)) { throw "Project not found: $ProjectPath" }
@@ -19,6 +20,7 @@ if ([string]::IsNullOrWhiteSpace($ArtifactDir)) {
 }
 
 New-Item -ItemType Directory -Force -Path $ArtifactDir | Out-Null
+$ArtifactDir = (Resolve-Path -LiteralPath $ArtifactDir).Path
 $unityTestPlatform = $TestPlatform.ToLowerInvariant()
 $log = Join-Path $ArtifactDir "unity_${TestPlatform}_tests.log"
 $results = Join-Path $ArtifactDir "unity_${TestPlatform}_test_results.xml"
@@ -41,7 +43,7 @@ $args = @(
 
 if ($TestFilter) { $args += @('-testFilter', $TestFilter) }
 
-$process = Start-Process -FilePath $UnityExe -ArgumentList $args -PassThru -WindowStyle Hidden
+$process = Start-Process -FilePath $UnityExe -ArgumentList (ConvertTo-ProcessArgumentString $args) -PassThru -WindowStyle Hidden
 if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
   Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
   throw "Unity $TestPlatform tests exceeded ${TimeoutSeconds}s and were stopped. Log: $log Results: $results"

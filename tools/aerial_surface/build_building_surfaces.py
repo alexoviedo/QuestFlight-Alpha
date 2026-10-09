@@ -80,6 +80,7 @@ MESH_BATCH_CELL_METERS = 2000.0
 MINIMUM_FOOTPRINT_AREA_RATIO = 0.90
 MAXIMUM_FOOTPRINT_AREA_RATIO = 1.05
 MAXIMUM_HAUSDORFF_ERROR_METERS = 10.0
+MAXIMUM_HAUSDORFF_ERROR_BY_BAND = {"0-2km": 10.0, "2-4km": 30.0}
 
 # Shared AirportCore atlas tiles.  Context meshes carry these compact semantic
 # selectors as vertex colors so every face of one source building resolves to
@@ -1063,6 +1064,7 @@ def build(
     dtm_base_by_zone: Counter[str] = Counter()
     area_ratios: list[float] = []
     hausdorff_errors: list[float] = []
+    hausdorff_errors_by_band: dict[str, list[float]] = defaultdict(list)
     source_point_total = 0
     hero_exclusions: list[dict[str, Any]] = []
     for feature_index in sorted(owned_recipe):
@@ -1114,7 +1116,7 @@ def build(
         # boundary simplification. The orthophoto supplies the sub-pixel shape;
         # recovered topology pays for the detailed near-airport sightline.
         simplified, simplification = simplify_footprint(
-            source_points, 30.0 if zone == "2-4km" else MAXIMUM_HAUSDORFF_ERROR_METERS
+            source_points, MAXIMUM_HAUSDORFF_ERROR_BY_BAND[zone]
         )
         reversed_winding = signed_area2(simplified) < 0
         points = list(reversed(simplified)) if reversed_winding else list(simplified)
@@ -1125,6 +1127,7 @@ def build(
         represented_by_zone[zone] += 1
         area_ratios.append(float(simplification["area_ratio"]))
         hausdorff_errors.append(float(simplification["hausdorff_meters"]))
+        hausdorff_errors_by_band[zone].append(float(simplification["hausdorff_meters"]))
         source_point_total += int(simplification["source_point_count"])
         legacy_base_y = float(owned_recipe[feature_index]["base_y_meters"])
         if len(rows):
@@ -1388,7 +1391,7 @@ def build(
         "limitations": [
             "Not for navigation and not surveyed building geometry.",
             "Lidar building heights are return-structure heuristics; the source has no LAS building class and no surveyed vertical-error study.",
-            "Runtime prisms use a deterministic error-bounded footprint simplification (area ratio 0.90-1.05 and sampled Hausdorff <=10 m) to satisfy the selected-scene triangle ceiling; the source identity and error metrics remain in the manifest.",
+            "Runtime prisms use a deterministic error-bounded footprint simplification (area ratio 0.90-1.05 and sampled Hausdorff <=10 m near / <=30 m outer) to satisfy the selected-scene triangle ceiling; the source identity and error metrics remain in the manifest.",
             "Active AirportCore hero replacement footprints are excluded and remain owned by ProductionHeroObjectLayer.",
             "The runtime binary is an offline-authored data asset and is not integrated into the product scene by this workstream.",
             "Serialized size and total topology are static budgets, not physical Quest performance evidence.",
@@ -1428,9 +1431,9 @@ def build(
                 "area_ratio_minimum": float(np.min(area_ratios)),
                 "area_ratio_p50": float(np.percentile(area_ratios, 50.0)),
                 "area_ratio_p95": float(np.percentile(area_ratios, 95.0)),
-                "maximum_allowed_hausdorff_meters": {
-                    "0-2km": MAXIMUM_HAUSDORFF_ERROR_METERS,
-                    "2-4km": 30.0,
+                "maximum_allowed_hausdorff_meters": dict(MAXIMUM_HAUSDORFF_ERROR_BY_BAND),
+                "sampled_hausdorff_maximum_meters_by_band": {
+                    zone: max(hausdorff_errors_by_band[zone]) for zone in OWNERSHIP_ZONES
                 },
                 "sampled_hausdorff_maximum_meters": float(np.max(hausdorff_errors)),
                 "sampled_hausdorff_p50_meters": float(np.percentile(hausdorff_errors, 50.0)),

@@ -146,15 +146,21 @@ are:
 
 | Band | Original footprints | Hero exclusions | Non-hero denominator | Represented | Coverage |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 0-2 km | 1,831 | 2 | 1,829 | 1,829 | 100% |
+| 0-2 km | 1,831 | 83 | 1,748 | 1,748 | 100% |
 | 2-4 km | 7,863 | 0 | 7,863 | 7,863 | 100% |
 
-The two active AirportCore replacements are feature indices 3121 and 3137
-(OSM IDs 77434544 and 78054463). They cover 1,953.75 square meters in total.
-They are excluded from `ProductionBuildingSurfaceLayer`, remain owned by
-`ProductionHeroObjectLayer`, and are counted separately rather than removed
-from the coverage evidence. The shared footprint exclusion mask includes both
-building-layer and hero-building footprints so canopy cannot claim either.
+The earlier two-core-only denominator excluded feature indices 3121 and 3137
+(OSM IDs 77434544 and 78054463), covering 1,953.75 square meters. The current
+source contract also includes 81 distinct airport-corridor replacement IDs,
+with no overlap with those two core IDs: 83 exclusions covering 35,400.625 square
+meters in total. The validator conserves their exact identities from the
+[core source](../tools/kbdu_airport_core_v4/buildings/airport_core_replacement_footprints.json)
+and [corridor source](../tools/kbdu_airport_hero_corridor/airport_hero_corridor_manifest.json)
+against the [building manifest](../QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/ProductionBuildingSurfaceLayer_Manifest.json)
+and compiled nonhero payload. They remain owned by `ProductionHeroObjectLayer`
+and are counted separately in coverage evidence. The shared footprint exclusion
+mask includes both building-layer and hero-building footprints so canopy cannot
+claim either.
 
 No building geometry is authored beyond 4 kilometers by this layer. The far
 region remains the orthophoto/terrain representation.
@@ -186,14 +192,15 @@ simplified footprint must satisfy:
 
 - source-area ratio from 0.90 through 1.05;
 - maximum inflation of 5%;
-- sampled symmetric Hausdorff error no greater than 10 meters.
+- sampled symmetric Hausdorff error no greater than 10 meters in the 0-2 km ownership band and 30 meters in the 2-4 km ownership band. The validator independently recomputes each record against the source footprint and recipe band; an outer allowance never applies to a near record.
 
 The manifest records per-build area, Hausdorff, and vertex-reduction
-statistics. The current result reduces 67,156 source footprint points to
-41,715 points (37.8834%), with area-ratio bounds 0.90 to 1.05 and sampled
-Hausdorff maximum 10 meters.
+statistics. The current result reduces 66,635 source footprint points to
+40,859 points (38.6824%), with area-ratio bounds 0.90 to 1.05. Current per-band
+Hausdorff maxima are independently measured in the building manifest; the
+older global 10 meter statement described the near-band contract only.
 
-The generated layer is 128,092 closed-surface triangles and 83,430 expanded
+The generated layer is 124,992 closed-surface triangles and 81,718 expanded
 vertices, below the hard 130,000-triangle ceiling. It is emitted as a compact
 semantic binary plus 16 populated, 2-kilometer coordinate-preserving OBJ source
 batches under `Buildings/Generated`. An editor-only compiler converts those

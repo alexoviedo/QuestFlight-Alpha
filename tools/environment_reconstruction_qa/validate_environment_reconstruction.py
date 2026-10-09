@@ -350,6 +350,34 @@ def validate_placement_aggregate(result: CategoryResult, data: dict[str, Any], a
     category_counts = aggregate.get("fullInventoryCategoryCounts")
     if not isinstance(category_counts, dict):
         result.fail("MISSING_CATEGORY_COUNTS", "aggregateValidation.fullInventoryCategoryCounts must be an object.", "aggregateValidation.fullInventoryCategoryCounts")
+    if require_bool(result, aggregate, "summaryPassed", "aggregateValidation") is not True:
+        result.fail("PLACEMENT_SUMMARY_FAILED", "The source Unity placement summary did not pass.", "aggregateValidation.summaryPassed")
+    if isinstance(category_counts, dict):
+        if any(not finite_number(value) or value < 0 or int(value) != value for value in category_counts.values()):
+            result.fail("PLACEMENT_CATEGORY_COUNT", "Full inventory categories must contain nonnegative integer counts.")
+        elif rows is not None and sum(category_counts.values()) != rows:
+            result.fail("PLACEMENT_CATEGORY_COUNT", "Full inventory category totals do not equal CSV row count.")
+    declared_categories = data.get("categoryCounts")
+    if not isinstance(declared_categories, dict):
+        result.fail("MISSING_CATEGORY_COUNTS", "categoryCounts must be an object.", "categoryCounts")
+    else:
+        for category in ("building", "tree", "parked_aircraft", "airport_prop", "fence", "road", "water_body"):
+            count = declared_categories.get(category)
+            if not finite_number(count) or count < 1 or int(count) != count:
+                result.fail("MISSING_PLACEMENT_CATEGORY", f"Aggregate has no measured '{category}' count.", f"categoryCounts.{category}")
+        if isinstance(category_counts, dict) and all(finite_number(value) and value >= 0 for value in category_counts.values()):
+            aliases = {"building":"building", "tree":"tree", "shrub":"tree", "parkedaircraft":"parked_aircraft", "airportprop":"airport_prop", "airportobject":"airport_prop", "fence":"fence", "road":"road", "water":"water_body", "waterbody":"water_body"}
+            normalized = collections.Counter()
+            for raw, count in category_counts.items():
+                normalized[aliases.get(re.sub(r"[^a-z]", "", raw.lower()), "other")] += count
+            for category in ("building", "tree", "parked_aircraft", "airport_prop", "fence", "road", "water_body"):
+                if normalized[category] != declared_categories.get(category):
+                    result.fail("PLACEMENT_CATEGORY_COUNT", f"Declared '{category}' count disagrees with full inventory.", f"categoryCounts.{category}")
+        if all(finite_number(value) and value >= 0 and int(value) == value for value in declared_categories.values()):
+            if rows is not None and sum(declared_categories.values()) != rows:
+                result.fail("PLACEMENT_CATEGORY_COUNT", "Declared category totals do not equal CSV row count.")
+        else:
+            result.fail("PLACEMENT_CATEGORY_COUNT", "Declared category counts must be nonnegative integers.")
     for key, code in (("duplicateStableIds", "DUPLICATE_STABLE_ID"), ("missingFootprints", "MISSING_FOOTPRINT"), ("invalidLicenses", "MISSING_LICENSE")):
         value = require_number(result, aggregate, key, "aggregateValidation")
         if value is not None and value != 0:
@@ -385,7 +413,31 @@ def validate_placement_aggregate(result: CategoryResult, data: dict[str, Any], a
         result.fail("VEGETATION_EXCLUSIONS_UNVALIDATED", f"{exclusions:g} vegetation instances lack exclusion-mask validation.", "aggregateValidation.unvalidatedVegetationExclusions")
 
 
+def validate_placement_runway(result: CategoryResult, data: dict[str, Any]) -> None:
+    runway = data.get("runway")
+    if not isinstance(runway, dict):
+        result.fail("MISSING_RUNWAY_VALIDATION", "runway validation object is required.", "runway")
+    else:
+        layer_count = require_number(result, runway, "authoritativeLayerCount", "runway")
+        if layer_count is not None and layer_count != 1:
+            result.fail("DUPLICATE_RUNWAY_LAYER", f"Exactly one runway layer is required; got {layer_count:g}.", "runway.authoritativeLayerCount")
+        for key, code in (("zFightingDetected", "RUNWAY_Z_FIGHTING"), ("floatingMarkingsDetected", "RUNWAY_FLOATING_MARKINGS")):
+            value = require_bool(result, runway, key, "runway")
+            if value is True:
+                result.fail(code, f"runway.{key} must be false.", f"runway.{key}")
+        runway_limits = (
+            ("runwayTerrainMaximumGapMeters", "runwayTerrainMaximumGapMeters", "RUNWAY_TERRAIN_GAP"),
+            ("markingRunwayMaximumGapMeters", "markingRunwayMaximumGapMeters", "RUNWAY_MARKING_GAP"),
+            ("colliderSurfaceMaximumDisagreementMeters", "runwayColliderMaximumDisagreementMeters", "RUNWAY_COLLIDER_DISAGREEMENT"),
+        )
+        for key, limit_key, code in runway_limits:
+            value = require_number(result, runway, key, "runway")
+            if value is not None and value > LIMITS[limit_key]:
+                result.fail(code, f"{key} {value:g} exceeds {LIMITS[limit_key]:g}.", f"runway.{key}")
+
+
 def validate_placement(result: CategoryResult, data: dict[str, Any]) -> None:
+    validate_placement_runway(result, data)
     instances = data.get("instances")
     if not isinstance(instances, list) or not instances:
         aggregate = data.get("aggregateValidation")
@@ -543,26 +595,7 @@ def validate_placement(result: CategoryResult, data: dict[str, Any]) -> None:
             "instances",
         )
 
-    runway = data.get("runway")
-    if not isinstance(runway, dict):
-        result.fail("MISSING_RUNWAY_VALIDATION", "runway validation object is required.", "runway")
-    else:
-        layer_count = require_number(result, runway, "authoritativeLayerCount", "runway")
-        if layer_count is not None and layer_count != 1:
-            result.fail("DUPLICATE_RUNWAY_LAYER", f"Exactly one runway layer is required; got {layer_count:g}.", "runway.authoritativeLayerCount")
-        for key, code in (("zFightingDetected", "RUNWAY_Z_FIGHTING"), ("floatingMarkingsDetected", "RUNWAY_FLOATING_MARKINGS")):
-            value = require_bool(result, runway, key, "runway")
-            if value is True:
-                result.fail(code, f"runway.{key} must be false.", f"runway.{key}")
-        runway_limits = (
-            ("runwayTerrainMaximumGapMeters", "runwayTerrainMaximumGapMeters", "RUNWAY_TERRAIN_GAP"),
-            ("markingRunwayMaximumGapMeters", "markingRunwayMaximumGapMeters", "RUNWAY_MARKING_GAP"),
-            ("colliderSurfaceMaximumDisagreementMeters", "runwayColliderMaximumDisagreementMeters", "RUNWAY_COLLIDER_DISAGREEMENT"),
-        )
-        for key, limit_key, code in runway_limits:
-            value = require_number(result, runway, key, "runway")
-            if value is not None and value > LIMITS[limit_key]:
-                result.fail(code, f"{key} {value:g} exceeds {LIMITS[limit_key]:g}.", f"runway.{key}")
+
 
 
 BUILDING_ZONE_LIMITS = {

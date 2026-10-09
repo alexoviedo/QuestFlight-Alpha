@@ -12,6 +12,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "simulator_evidence_policy.ps1")
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($ArtifactRoot)) {
@@ -142,7 +143,7 @@ else {
             rightControllerInputDevice = if ($sessionReport) { $sessionReport.rightControllerInputDevice } else { $null }
             warnings = if ($sessionReport) { @($sessionReport.warnings) } else { @() }
             errors = if ($sessionReport) { @($sessionReport.errors) } else { @() }
-            passed = $null -ne $sessionReport -and [bool]$sessionReport.passed
+            passed = [bool]$run.sessionPassed -and (Test-SimulatorSessionEvidence -Report $sessionReport -ExitCode $run.playerExitCode -TimedOut $run.timedOut -RunId $run.runId -PlayerSha256 $run.playerSha256 -SourceIdentitySha256 $run.sourceIdentitySha256 -SessionId $run.id)
             classification = if ($sessionReport) { [string]$sessionReport.classification } else { "NO_SESSION_REPORT" }
         }
     }

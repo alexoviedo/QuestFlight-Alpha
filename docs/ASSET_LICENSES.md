@@ -212,11 +212,13 @@ The far mesh is a deterministic project-authored mesh derived from the frozen pu
 
 The 60,038-byte `Terrain_AirportPatch_Near_Transition_Mesh.asset` is a deterministic project-authored seam interpolation between the existing public-domain USGS-derived airport patch and near terrain. It adds no source data and has SHA-256 `8524212a4814473cc25733babeb0457b1f667b5913981726a3676e3364791c2a`. Its exact size/hash and the other standalone recovery meshes are pinned in `tools/kbdu_airport_art/kbdu_environment_integration_manifest.json`.
 
-### Native JSBSim package binaries
+### Historical native JSBSim package binary snapshot
 
-These four development-gated binaries are built from JSBSim 1.3.1 revision `3b25f25e49b42d0489c04ac805674fc1450ca579` and the project C ABI wrapper. JSBSim and the linked package are distributed under GNU LGPL-2.1-or-later; source/revision/build/license records and all 18 package payload hashes are pinned by `Packages/com.alexoviedo.questflight.jsbsim/SOURCE_MANIFEST.json` (SHA-256 `4b5ea046f70fb1b51ba762f1d7fc3dd4365354686287b59d7600f71434340d21`).
+The following historical four-binary snapshot was built from JSBSim 1.3.1 revision `3b25f25e49b42d0489c04ac805674fc1450ca579` and the project C ABI wrapper. JSBSim and the linked package are distributed under GNU LGPL-2.1-or-later; source/revision/build/license records and that revision's 18 payload hashes were pinned by `Packages/com.alexoviedo.questflight.jsbsim/SOURCE_MANIFEST.json` (SHA-256 `4b5ea046f70fb1b51ba762f1d7fc3dd4365354686287b59d7600f71434340d21`).
 
-| Package binary | Bytes | SHA-256 |
+Current binary and payload identities are authoritative in [SOURCE_MANIFEST.json](../QuestFlight/Packages/com.alexoviedo.questflight.jsbsim/SOURCE_MANIFEST.json). The table below preserves historical provenance and is not current build acceptance. The native runtime is now the sole flight authority; Windows binaries are Editor support. Model rights remain distinct from the LGPL library.
+
+| Historical package binary | Bytes | SHA-256 |
 | --- | ---: | --- |
 | `Runtime/Plugins/Windows/x86_64/JSBSim.dll` | 2,007,040 | `9f80c6af748ede9c0addff022ce78337dfa2930046e3a8cfe155cc610b942bc7` |
 | `Runtime/Plugins/Windows/x86_64/qfl_jsbsim_native.dll` | 37,888 | `5ee4ccd81cc296a946c843cacf0ea5ab0d132c78c3dba3c9056eeddb612c83d4` |
@@ -790,3 +792,30 @@ The visible-road contact bank and bridge/terrain derivatives retain the existing
 ## Distant branch cluster derivatives (2026-09-28)
 
 The two PNG atlases and ClusterQuad.asset under Assets/Production/Environment/MapBranchGrovesV1/DistantClusters derive from existing project assets. Needle artwork is Poly Haven Pine Tree 01, CC0 1.0: https://polyhaven.com/a/pine_tree_01 ; https://polyhaven.com/license . Exact input records are in MapBranchGrovesV1/TreeRealism/ConiferArt_SOURCE.json. Broadleaf artwork is project-owned generated output described in PhotorealAerialSurfaceV1/Canopy/ProductionNearFoliageAtlas_SourceManifest.json, subject to applicable OpenAI output terms. Geometry is project-authored. DistantClusters/SOURCE.json records derivative hashes. No new unclear-rights asset or source archive is introduced.
+
+## Bounded 35-pixel font correction (2026-10-08)
+
+The existing project-authored 5x7 row designs remain authoritative. Only the two
+font consumers were regenerated after correcting uint shift aliasing to ulong:
+`CockpitAvionicsV2PresentationAuthoring.RegenerateGlyphAtlasesBatch` calls the
+existing atlas writers and preserves GUIDs/import settings. No new external art
+or font source is included. Original binary/meta copies remain local outside Git.
+
+| Existing derivative | Corrected SHA-256 | Source/license |
+| --- | --- | --- |
+| C172_V2GlyphAtlas.asset | `7ad8c6932adad2b4a0fefaf00cb632b7c4c8ba38444aac4fea99658e1af4631e` | Project-owned fixed bitmap definitions and Unity generators; existing CockpitV3 provenance remains applicable. |
+| C172_InstrumentV2Atlas.png | `7eea613c567ce92822d08ed8c2d8711d8c8f645850fe29cf01815843985b664c` | Project-owned fixed bitmap definitions and Unity generators; existing CockpitV3 provenance remains applicable. |
+
+## Cockpit cowling visibility stream (2026-10-09 checkpoint)
+
+`Cessna_Exterior_CockpitEngineCowling_16d807dd_Visibility.asset` contains the
+project-generated directional-visibility vertex stream for the existing
+CC BY 4.0 KOG_THORNS cowling derivative recorded above. It contains no new
+external art. `CockpitDirectionalVisibilityAuthoring` computes the stream in
+its isolated authored bake scene; `C172_CockpitDirectionalVisibility.json`
+records the source mesh, renderer path, vertex count and stream identity.
+The original source attribution and modification notice remain applicable.
+The 17,424-byte serialized stream has SHA-256
+`dad3982106d550afae31ce2c11512ada6e5c331e629094b00c6c7fc94b38d4ed`.
+Its paired meta/GUID is preserved. This provenance entry does not establish
+stereo or physical visual acceptance.

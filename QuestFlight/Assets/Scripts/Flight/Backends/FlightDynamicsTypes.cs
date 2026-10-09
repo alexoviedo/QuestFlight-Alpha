@@ -141,6 +141,13 @@ namespace QuestFlightLab.Flight.Backends
         public Quaternion rotationUnity;
         public Vector3 velocityUnityMetersPerSecond;
         public Vector3 angularVelocityBodyDegreesPerSecond;
+        // Version 1: actuator diagnostics and physical true-NED ground velocity.
+        // Zero means unavailable, so a command can never stand in for telemetry.
+        public int nativeTelemetryVersion;
+        public double actualFlapNormalized;
+        public Vector3 groundVelocityNedMetersPerSecond;
+
+        public bool HasNativeTelemetry => nativeTelemetryVersion == 1;
 
         public bool IsFinite =>
             IsFiniteNumber(simulationTimeSeconds) &&
@@ -170,7 +177,12 @@ namespace QuestFlightLab.Flight.Backends
             IsFiniteNumber(velocityUnityMetersPerSecond.z) &&
             IsFiniteNumber(angularVelocityBodyDegreesPerSecond.x) &&
             IsFiniteNumber(angularVelocityBodyDegreesPerSecond.y) &&
-            IsFiniteNumber(angularVelocityBodyDegreesPerSecond.z);
+            IsFiniteNumber(angularVelocityBodyDegreesPerSecond.z) &&
+            (!HasNativeTelemetry ||
+             (IsFiniteNumber(actualFlapNormalized) && actualFlapNormalized >= 0.0 && actualFlapNormalized <= 1.0 &&
+              IsFiniteNumber(groundVelocityNedMetersPerSecond.x) &&
+              IsFiniteNumber(groundVelocityNedMetersPerSecond.y) &&
+              IsFiniteNumber(groundVelocityNedMetersPerSecond.z)));
 
         private static bool IsFiniteNumber(double value)
         {

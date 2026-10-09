@@ -147,6 +147,8 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         public double bankDegrees;
         public double angleOfAttackDegrees;
         public double sideslipDegrees;
+        public double groundTrackDegrees;
+        public bool groundTrackAvailable;
         public double yawRateDegreesPerSecond;
         public bool weightOnWheels;
         public double weightPounds;
@@ -164,6 +166,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         public string schemaVersion = FlightDynamicsAcceptanceContract.ContractVersion;
         public string hashAlgorithm = "SHA-256";
         public string effectiveParameterSha256 = string.Empty;
+        public string parameterScope = "Unity UI/training-reference configuration; not native aircraft aerodynamic inputs.";
         public bool nestedGroupsSerialized;
         public bool duplicateLegacyFieldsDetected;
         public string detail = string.Empty;
@@ -177,6 +180,8 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         public double fixedStepSeconds = FlightDynamicsAcceptanceContract.FixedStepSeconds;
         public string scope = "Engineering regression evidence only; not certification, training-credit, or handling-fidelity approval.";
         public ProductionFlightConfigEvidence productionConfig = new ProductionFlightConfigEvidence();
+        public NativeFlightInputEvidence nativeInputs = new NativeFlightInputEvidence();
+        public List<FlightScenarioInputEvidence> scenarioInputs = new List<FlightScenarioInputEvidence>();
         public List<FlightScenarioEvidence> scenarios = new List<FlightScenarioEvidence>();
 
         public int CountStatus(FlightEvidenceStatus wanted)
@@ -191,7 +196,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
 
     public static class FlightDynamicsAcceptanceContract
     {
-        public const string ContractVersion = "questflight-flight-dynamics-evidence-v2";
+        public const string ContractVersion = "questflight-flight-dynamics-evidence-v3";
         public const double FixedStepSeconds = 1.0 / 120.0;
         // Matches FlightDynamicsInitialConditions.KbduRunway and the serialized
         // production spawn datum. This is CG/reference-point AGL, not an

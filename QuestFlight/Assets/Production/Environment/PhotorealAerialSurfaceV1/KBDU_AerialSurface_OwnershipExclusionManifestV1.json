@@ -1,9 +1,9 @@
 {
   "asset_manifests": {
     "building": {
-      "bytes": 46708,
+      "bytes": 48243,
       "path": "QuestFlight/Assets/Production/Environment/PhotorealAerialSurfaceV1/Buildings/ProductionBuildingSurfaceLayer_Manifest.json",
-      "sha256": "7869dad7df1bf31e5fdbb4794bf5420805e47a9cb480205de92294a8b8993a32"
+      "sha256": "9ce3d9b0b162a2714f6c85175817f1ddd7f88dbf6bb377f5e5c6b4db7fad9088"
     },
     "canopy": {
       "bytes": 39364,

@@ -2,15 +2,235 @@
   "schema": "questflight.reservoir-watercraft-derivatives-v1",
   "pipeline": "tools/reservoir_watercraft/prepare_watercraft_assets.py",
   "derivatives": [
-    { "id": "DINGHY_SAIL_UP", "triangles": 1062, "fbx_sha256": "187D98F12781A35F7F2D0FAED51F2329689535685FAB82F1731C853455B0277C", "shipping_status": "PREPARED_UNUSED_NO_UNAMBIGUOUS_UNDERWAY_SOURCE_PLACEMENT" },
-    { "id": "DINGHY_STORED", "triangles": 74, "fbx_sha256": "201118C13BE804F5E728F61D8EF21736E8AFFEE8E806128C1DF379787839758A", "shipping_status": "SELECTED" },
-    { "id": "MOORED_DAY_SAILER", "triangles": 154, "fbx_sha256": "5AEF06E8CCB6E78AB226E711172FF5C1376148FADFAC82D18A6F114B761BEC6C", "shipping_status": "SELECTED" },
-    { "id": "DAY_SAILER_UNDERWAY", "triangles": 170, "fbx_sha256": "C0A092E1A3D9F046627C31A969F4E8E0C42CE6FD914175E63FCC7BCBCF1C2183", "shipping_status": "PREPARED_UNUSED_SOURCE_CRAFT_WAS_POWERED" },
-    { "id": "POWERBOAT_AFLOAT", "triangles": 170, "fbx_sha256": "C13A28A13E4F78201A22E975DD7082EEE64CB37D6B2A7C3DC70CF4510164C06C", "shipping_status": "SELECTED" },
-    { "id": "POWERBOAT_TRAILERED", "triangles": 274, "fbx_sha256": "2A6E2AC80AEABA8B683D93B72EA741AC8C3DEE64AAEC2A4CC8E7FBD0192CAFFD", "shipping_status": "SELECTED" },
-    { "id": "TOURING_KAYAK_AFLOAT", "triangles": 342, "fbx_sha256": "E773012AB82D9C3EE7126A14E52C74A6B041F3ABF40A93BB0B0EABBD2CA2FF32", "shipping_status": "PREPARED_UNUSED_NO_UNAMBIGUOUS_AFLOAT_SOURCE_PLACEMENT" },
-    { "id": "TOURING_KAYAK_STORED", "triangles": 330, "fbx_sha256": "45869591266F37A69885228A807D03E2F72A31C7BE3E6B65CCEFD6B7A80825BD", "shipping_status": "SELECTED" },
-    { "id": "SUP_AFLOAT", "triangles": 96, "fbx_sha256": "BA12DC1247C44B63BEE4342A3A5B9ACAC0DDB62A79B8A4C6A5AF3C586B49E181", "shipping_status": "PREPARED_UNUSED_NO_UNAMBIGUOUS_AFLOAT_SOURCE_PLACEMENT" },
-    { "id": "SUP_STORED", "triangles": 56, "fbx_sha256": "7D0CED118A013877032CFA84F8834C416F4EEDC8A2C2452111FCFF8A51AD5C8D", "shipping_status": "SELECTED" }
-  ]
+    {
+      "id": "DINGHY_SAIL_UP",
+      "triangles": 1062,
+      "fbx_sha256": "187D98F12781A35F7F2D0FAED51F2329689535685FAB82F1731C853455B0277C",
+      "shipping_status": "PREPARED_UNUSED_NO_UNAMBIGUOUS_UNDERWAY_SOURCE_PLACEMENT"
+    },
+    {
+      "id": "DINGHY_STORED",
+      "triangles": 74,
+      "fbx_sha256": "201118C13BE804F5E728F61D8EF21736E8AFFEE8E806128C1DF379787839758A",
+      "shipping_status": "SELECTED"
+    },
+    {
+      "id": "MOORED_DAY_SAILER",
+      "triangles": 154,
+      "fbx_sha256": "5AEF06E8CCB6E78AB226E711172FF5C1376148FADFAC82D18A6F114B761BEC6C",
+      "shipping_status": "SELECTED"
+    },
+    {
+      "id": "DAY_SAILER_UNDERWAY",
+      "triangles": 170,
+      "fbx_sha256": "C0A092E1A3D9F046627C31A969F4E8E0C42CE6FD914175E63FCC7BCBCF1C2183",
+      "shipping_status": "PREPARED_UNUSED_SOURCE_CRAFT_WAS_POWERED"
+    },
+    {
+      "id": "POWERBOAT_AFLOAT",
+      "triangles": 170,
+      "fbx_sha256": "C13A28A13E4F78201A22E975DD7082EEE64CB37D6B2A7C3DC70CF4510164C06C",
+      "shipping_status": "SELECTED"
+    },
+    {
+      "id": "POWERBOAT_TRAILERED",
+      "triangles": 274,
+      "fbx_sha256": "2A6E2AC80AEABA8B683D93B72EA741AC8C3DEE64AAEC2A4CC8E7FBD0192CAFFD",
+      "shipping_status": "SELECTED"
+    },
+    {
+      "id": "TOURING_KAYAK_AFLOAT",
+      "triangles": 342,
+      "fbx_sha256": "E773012AB82D9C3EE7126A14E52C74A6B041F3ABF40A93BB0B0EABBD2CA2FF32",
+      "shipping_status": "PREPARED_UNUSED_NO_UNAMBIGUOUS_AFLOAT_SOURCE_PLACEMENT"
+    },
+    {
+      "id": "TOURING_KAYAK_STORED",
+      "triangles": 330,
+      "fbx_sha256": "45869591266F37A69885228A807D03E2F72A31C7BE3E6B65CCEFD6B7A80825BD",
+      "shipping_status": "SELECTED"
+    },
+    {
+      "id": "SUP_AFLOAT",
+      "triangles": 96,
+      "fbx_sha256": "BA12DC1247C44B63BEE4342A3A5B9ACAC0DDB62A79B8A4C6A5AF3C586B49E181",
+      "shipping_status": "PREPARED_UNUSED_NO_UNAMBIGUOUS_AFLOAT_SOURCE_PLACEMENT"
+    },
+    {
+      "id": "SUP_STORED",
+      "triangles": 56,
+      "fbx_sha256": "7D0CED118A013877032CFA84F8834C416F4EEDC8A2C2452111FCFF8A51AD5C8D",
+      "shipping_status": "SELECTED"
+    }
+  ],
+  "current_derivation": {
+    "classification": "CURRENT_SOURCE_BACKED_SIX_SELECTED_DERIVATIVES_NOT_HISTORICAL_EXACT_FBX_RESTORATION",
+    "generator_sha256": "09d11fa496d8cf4b2209eb84c8eff6fbd9c0aaa6fd39f2d556e159476fa6ae64",
+    "blender_version": "5.1.2",
+    "blender_executable_sha256": "1e6624af112b3c936f4b038b025ebd2bf00ae72c4b62881a6787166d71c58fa5",
+    "historical_derivative_manifest_sha256": "e4e51e1b5830d71949f3728a3b1b8e859668bffe3e9cde1319f88d7eeb7308d9",
+    "compiler_sha256": "35d5e2d5c5dd5f165a67f4cd7294e560e5645126a8fe499dd81083d9648b155b",
+    "historical_selected_records_retained": true,
+    "derivatives": [
+      {
+        "id": "DINGHY_STORED",
+        "triangles": 84,
+        "fbx_sha256": "9d241c2dd5c51bd210018fa45757668c671d09fd85fc57b86c551d5ecbd6afd7",
+        "shipping_status": "SELECTED",
+        "bounds_size": {
+          "x": 1.44,
+          "y": 0.5875,
+          "z": 4.2
+        },
+        "canonical_source": "laser_47",
+        "source_archive_sha256": "6457f933db7f0d6aabc427ac478aae51a154ea50bb69897e98b5a53b2420c04c",
+        "source_members": [
+          {
+            "member": "source/laser4_7.fbx",
+            "sha256": "7da6a587dcb9ed981537aa2535f33d946685dbb40b47d7c809a5bac523669305"
+          }
+        ],
+        "source_nested_archive_sha256": null,
+        "recorded_source_status": "ACCEPTED",
+        "recorded_license_label": "CC Attribution",
+        "rights_assessment": "UNCHANGED; current local derivative provenance is not commercial redistribution authorization."
+      },
+      {
+        "id": "MOORED_DAY_SAILER",
+        "triangles": 164,
+        "fbx_sha256": "874ce06eca9498b716e5a6efead016449c41bff853966cab63fd0a71047e298f",
+        "shipping_status": "SELECTED",
+        "bounds_size": {
+          "x": 2.2,
+          "y": 7.73,
+          "z": 6.4
+        },
+        "canonical_source": "j80_sailboat",
+        "source_archive_sha256": "067e2fd25a1fc9accdcef0bd4a435e071aa14bd6083bbd8f85e71ff48c368fd5",
+        "source_members": [
+          {
+            "member": "sketchfab.obj",
+            "sha256": "ffb5caa3a9bfaa12010741eef14dd42261fdd2582cf0b8a77648ccb6b271583e"
+          },
+          {
+            "member": "sketchfab.mtl",
+            "sha256": "ccfbb3e8dea484d8133d6ffcead0776f325747aa1fa3c9fbc07b33da44b81562"
+          }
+        ],
+        "source_nested_archive_sha256": "2c6c0f8e910cbc645e38e767640daefeac87b9f4e4f6ffabc7afe8ad8c09c730",
+        "recorded_source_status": "PRIVATE_SOURCE_REFERENCE_ACCEPTED_FOR_SOURCE_MEASURED_DERIVATIVE",
+        "recorded_license_label": "CC Attribution-NonCommercial-NoDerivs",
+        "rights_assessment": "UNCHANGED; current local derivative provenance is not commercial redistribution authorization."
+      },
+      {
+        "id": "POWERBOAT_AFLOAT",
+        "triangles": 180,
+        "fbx_sha256": "9ea30177403209db6fcef75dd375f8e69676c6f6296df73e59d6574ba3a7a819",
+        "shipping_status": "SELECTED",
+        "bounds_size": {
+          "x": 2.44,
+          "y": 2.49,
+          "z": 7.0
+        },
+        "canonical_source": "yamaha_212x_trailer",
+        "source_archive_sha256": "ab5d72682106c3123dc7032c83d31e8a52880f0df2e4802d7aa8848986717f96",
+        "source_members": [
+          {
+            "member": "Untitled.obj",
+            "sha256": "e4450e4f5635392b5cbc2f475d6d25e7d48dff21f8120ceadee51db7911b99e7"
+          },
+          {
+            "member": "Untitled.mtl",
+            "sha256": "1432ffd2fc6bd21baf5d703f2c014bde185ca7f8c5f3e4535b88479e6ef4b62d"
+          }
+        ],
+        "source_nested_archive_sha256": "d8a0b971a654c3f94d824036ba504bc1d0c06757cbc9004adf85f1b9de1f847f",
+        "recorded_source_status": "ACCEPTED_SOURCE_MEASURED_DERIVATIVE",
+        "recorded_license_label": "CC Attribution",
+        "rights_assessment": "UNCHANGED; current local derivative provenance is not commercial redistribution authorization."
+      },
+      {
+        "id": "POWERBOAT_TRAILERED",
+        "triangles": 284,
+        "fbx_sha256": "aaf1db427ad4a8f8c4b800e404a8536def9870159ea19a4cd4509973c4c065c1",
+        "shipping_status": "SELECTED",
+        "bounds_size": {
+          "x": 2.56,
+          "y": 2.51,
+          "z": 8.55
+        },
+        "canonical_source": "yamaha_212x_trailer",
+        "source_archive_sha256": "ab5d72682106c3123dc7032c83d31e8a52880f0df2e4802d7aa8848986717f96",
+        "source_members": [
+          {
+            "member": "Untitled.obj",
+            "sha256": "e4450e4f5635392b5cbc2f475d6d25e7d48dff21f8120ceadee51db7911b99e7"
+          },
+          {
+            "member": "Untitled.mtl",
+            "sha256": "1432ffd2fc6bd21baf5d703f2c014bde185ca7f8c5f3e4535b88479e6ef4b62d"
+          }
+        ],
+        "source_nested_archive_sha256": "d8a0b971a654c3f94d824036ba504bc1d0c06757cbc9004adf85f1b9de1f847f",
+        "recorded_source_status": "ACCEPTED_SOURCE_MEASURED_DERIVATIVE",
+        "recorded_license_label": "CC Attribution",
+        "rights_assessment": "UNCHANGED; current local derivative provenance is not commercial redistribution authorization."
+      },
+      {
+        "id": "TOURING_KAYAK_STORED",
+        "triangles": 330,
+        "fbx_sha256": "54487aca157d80e0b9e4a04853c3f1ec00737d974020cd37e6fb51b92a14f22d",
+        "shipping_status": "SELECTED",
+        "bounds_size": {
+          "x": 0.716703,
+          "y": 0.420525,
+          "z": 4.503379
+        },
+        "canonical_source": "wooden_kayak_paddle",
+        "source_archive_sha256": "e12a9749ace9810847cf7b0b0b434d1b09f45dd794e0dc4b3f50aa85c92e64a9",
+        "source_members": [
+          {
+            "member": "source/Kayak.fbx",
+            "sha256": "1b0fd11b6f0ca68333c0360cb9d2eb4e32e08aaff05e49685cadb5dbb5f05872"
+          }
+        ],
+        "source_nested_archive_sha256": null,
+        "recorded_source_status": "ACCEPTED_GEOMETRY_ONLY_MODERN_PLASTIC_CONVERSION",
+        "recorded_license_label": "CC Attribution",
+        "rights_assessment": "UNCHANGED; current local derivative provenance is not commercial redistribution authorization."
+      },
+      {
+        "id": "SUP_STORED",
+        "triangles": 56,
+        "fbx_sha256": "2cdad806f451511fb19fc648a9573dd5207fec45c19f95c23687919a762640ff",
+        "shipping_status": "SELECTED",
+        "bounds_size": {
+          "x": 0.86,
+          "y": 0.163,
+          "z": 3.2
+        },
+        "canonical_source": "paddle_board",
+        "source_archive_sha256": "ae65a191a6a6ff4c7067e47f6917e040244fce571d025503a38f04f75961d9f6",
+        "source_members": [
+          {
+            "member": "paddleboard.fbx",
+            "sha256": "14548c3310f1783f1c44b383465acbb5a5e7e6233165323ee97123dae4f2136b"
+          }
+        ],
+        "source_nested_archive_sha256": "2ffbe47f6e97347149199f629bfac0817e556ee91e6db0922c5db473d8554c2a",
+        "recorded_source_status": "ACCEPTED_SOURCE_MEASURED_DERIVATIVE",
+        "recorded_license_label": "CC Attribution",
+        "rights_assessment": "UNCHANGED; current local derivative provenance is not commercial redistribution authorization."
+      }
+    ],
+    "unity_import_contract": {
+      "unity_version": "6000.3.8f1",
+      "bake_axis_conversion": false,
+      "global_scale": 1,
+      "materials": "None",
+      "import_animation": false,
+      "geometry_basis": "Raw source Mesh vertices already expressed in authored product XYZ axes; FBX conversion root is not the product hierarchy.",
+      "actual_negative_control": "Pinned import bakeAxisConversion=true rotates every raw vertex exactly180degrees aroundlocalY; opposite root rotation is irrelevant to compiler rawMesh consumption. Original all15boat orientation comparison rejects this output."
+    }
+  }
 }

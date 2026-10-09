@@ -6,30 +6,29 @@ The shared JSBSim library is upstream JSBSim 1.3.1 at revision
 LGPL-2.1-or-later. The complete license text travels with the runtime data at
 `RuntimeData/JSBSim-1.3.1/COPYING.txt`.
 
-The small project-owned C ABI wrapper source is frozen in the private
-`alexoviedo/T2-QuestFlightLab` repository at commit
-`cd4131fa7732a6db2d7387921dfef33e2c206970`. The exact paths and source hashes
-are recorded in `SOURCE_MANIFEST.json`.
+The project-owned C ABI wrapper is maintained in `alexoviedo/T2-QuestFlight`.
+`SOURCE_MANIFEST.json` records the current base commit, modified-working-tree
+identity, exact header/implementation input SHA256, line-ending policy, native
+binary hashes, architecture and build flags. `frozenCommit` identifies the base
+of the local remediation candidate; it is not a claim that the candidate is
+clean or committed. Historical Lab commits describe earlier builds only.
 
-The wrapper record includes both the CRLF Windows build-input SHA256 and the
-canonical LF SHA256/Git blob ID. This makes the provenance independent of a
-checkout's line-ending policy without obscuring the exact compiled bytes.
-
-The Android ARM64 libraries were rebuilt with Unity's NDK 27.2.12479018 and
-both `-Wl,-z,max-page-size=16384` and
-`-Wl,-z,common-page-size=16384`. Fresh APK extraction verified that every ELF
-LOAD segment in both libraries is aligned to 16 KiB. Windows x86_64 libraries
-remain development/editor support only.
+Android ARM64 libraries use the pinned Unity NDK and 16 KiB linker page
+alignment flags recorded in that manifest. Every candidate still requires
+fresh APK extraction and ELF validation; a historical APK check cannot prove a
+new candidate. Windows x86_64 libraries support development and Editor tests.
 
 The libraries remain replaceable shared objects. The package imports only the
 native ABI, bounded C172 runtime data, and provenance; it does not import R&D
 scenes, runtime coordinators, debug overlays, or training systems.
 
-The `c172x` aircraft XML is a separate model payload. Its own header declares
-GPL and includes an upstream non-sale statement. QuestFlight's model derivative
-is therefore restricted to the owner's private personal-use product; the
-package does not characterize that model payload as LGPL or claim public or
-commercial redistribution rights. See
+The `c172x` XML is a separate model payload with configuration identity
+`qfl-c172p-private-fidelity-v2`. Its header declares GPL and an upstream
+non-sale statement. On 2026-09-18 the owner authorized free public alpha
+publication and removed the project-imposed private-use hold, as recorded in
+`LICENSE.md` and `SOURCE_MANIFEST.json`. That project decision neither changes
+upstream licenses nor establishes additional third-party rights. Independent
+release rights evidence remains tracked by FN-029/M14. See
 `C172P_MODEL_CONFIGURATION.md` and `FLIGHT_DYNAMICS_MODEL_PROVENANCE.json`.
 
 Native JSBSim is the sole product authority, but that architecture decision does

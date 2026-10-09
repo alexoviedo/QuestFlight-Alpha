@@ -203,7 +203,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(controller.pageTriangleCounts, Has.Length.EqualTo(576));
             Assert.That(controller.pageBuildingCounts, Has.Length.EqualTo(576));
             Assert.That(controller.pageRoofAreasSquareMeters, Has.Length.EqualTo(576));
-            Assert.That(controller.pageBuildingCounts.Sum(), Is.EqualTo(57440));
+            Assert.That(controller.pageBuildingCounts.Sum(), Is.EqualTo(57439));
 
             var scene = EditorSceneManager.OpenScene(
                 FullMapBuildingClipmapAssetAuthoring.ScenePath, OpenSceneMode.Single);
@@ -264,7 +264,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(authoring, Does.Contain("CompileStableFootprint"));
             Assert.That(authoring, Does.Contain("OrdinaryFootprintVertexLimit"));
             Assert.That(authoring, Does.Not.Contain("CoverageWallMinimumAreaSquareMeters"));
-            Assert.That(authoring, Does.Contain("building.lod2_q"));
+            Assert.That(authoring, Does.Contain("IsWrrfTank(b) || IsWrrfPlatform(b) ? b.lod0_q : b.lod2_q"));
             Assert.That(authoring, Does.Not.Contain("building.area_m2 < 2000f"));
             Assert.That(authoring, Does.Not.Contain("building.area_m2 < 8000f"));
         }
@@ -358,7 +358,7 @@ namespace QuestFlight.Editor.Tests
             Assert.That(Occurrences(shader, "UNITY_SAMPLE_TEX2DARRAY(_FacadeAlbedo"), Is.EqualTo(1));
             Assert.That(Occurrences(shader, "UNITY_SAMPLE_TEX2DARRAY(_FacadeNormal"), Is.EqualTo(1));
             Assert.That(Occurrences(shader, "UNITY_SAMPLE_TEX2DARRAY(_FacadeMRAO"), Is.EqualTo(1));
-            Assert.That(Occurrences(shader, "tex2D(_FacadeDetail"), Is.EqualTo(2));
+            Assert.That(Occurrences(shader, "tex2D(_FacadeDetail"), Is.EqualTo(1));
             Assert.That(shader, Does.Not.Contain("#pragma shader_feature"));
             Assert.That(shader, Does.Not.Contain("tex2D(_MainTex"),
                 "Wall rendering must not fall back to the retired semantic-incoherent atlas.");
@@ -571,6 +571,40 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
+        public void ReviewedWrrfExclusionRejectsChangedSourceIdentityAndDuplicateShells()
+        {
+            Type owner=typeof(FullMapBuildingClipmapAssetAuthoring);
+            Type databaseType=owner.GetNestedType("Database", BindingFlags.NonPublic);
+            object database=JsonUtility.FromJson(File.ReadAllText(FullMapBuildingClipmapAssetAuthoring.DatabasePath),databaseType);
+            MethodInfo validate=owner.GetMethod("LoadValidatedSemanticTowerExclusions",BindingFlags.Static|BindingFlags.NonPublic);
+            var exclusions=(HashSet<int>)validate.Invoke(null,new[]{database});
+            Assert.That(exclusions.Contains(44816),Is.True,"The observed overlapping WRRF county aggregate must be excluded.");
+            Array pages=(Array)databaseType.GetField("pages").GetValue(database);
+            object firstPage=null,duplicate=null;FieldInfo buildingsField=null;
+            foreach(object page in pages)
+            {
+                FieldInfo field=page.GetType().GetField("buildings");
+                Array candidates=(Array)field.GetValue(page);
+                if(candidates==null)continue;
+                foreach(object building in candidates)
+                    if((int)building.GetType().GetField("id").GetValue(building)==44816)
+                    { firstPage=page;duplicate=building;buildingsField=field; }
+            }
+            Assert.That(duplicate,Is.Not.Null);
+            FieldInfo sourceId=duplicate.GetType().GetField("source_id");
+            object original=sourceId.GetValue(duplicate);sourceId.SetValue(duplicate,"UnreviewedSource");
+            TargetInvocationException changed=Assert.Throws<TargetInvocationException>(()=>validate.Invoke(null,new[]{database}));
+            Assert.That(changed.InnerException,Is.TypeOf<InvalidOperationException>());
+            sourceId.SetValue(duplicate,original);
+            Array buildings=(Array)buildingsField.GetValue(firstPage);
+            Array repeated=Array.CreateInstance(duplicate.GetType(),buildings.Length+1);
+            Array.Copy(buildings,repeated,buildings.Length);repeated.SetValue(duplicate,buildings.Length);
+            buildingsField.SetValue(firstPage,repeated);
+            TargetInvocationException repeatedError=Assert.Throws<TargetInvocationException>(()=>validate.Invoke(null,new[]{database}));
+            Assert.That(repeatedError.InnerException,Is.TypeOf<ArgumentException>());
+        }
+
+        [Test]
         public void GeneratedRoofAllocationIsSelectiveDeterministicAndExactlyBudgeted()
         {
             TextAsset source = AssetDatabase.LoadAssetAtPath<TextAsset>(
@@ -578,13 +612,13 @@ namespace QuestFlight.Editor.Tests
             Assert.That(source, Is.Not.Null);
             RoofAllocationTestReport report = JsonUtility.FromJson<RoofAllocationTestReport>(source.text);
             Assert.That(report.compiler_version,
-                Is.EqualTo("terrain-grounded-shell-compiler-v17-20260917"));
+                Is.EqualTo("terrain-grounded-shell-compiler-v18-wrrf-20260922"));
             Assert.That(report.rollout, Is.EqualTo("selective"));
-            Assert.That(report.represented_buildings, Is.EqualTo(57440));
+            Assert.That(report.represented_buildings, Is.EqualTo(57439));
             Assert.That(report.page_count, Is.EqualTo(576));
             Assert.That(report.nonempty_page_count, Is.EqualTo(483));
             Assert.That(report.active_page_slots, Is.EqualTo(24));
-            Assert.That(report.nominal_gable_roofs + report.nominal_hip_roofs, Is.EqualTo(28734));
+            Assert.That(report.nominal_gable_roofs + report.nominal_hip_roofs, Is.EqualTo(28725));
             Assert.That(report.safe_roofs, Is.EqualTo(13027));
             Assert.That(report.selected_gable_roofs, Is.EqualTo(4985));
             Assert.That(report.selected_compact_hip_roofs, Is.EqualTo(298));
@@ -598,8 +632,8 @@ namespace QuestFlight.Editor.Tests
             Assert.That(report.final_maximum_selected_triangles, Is.EqualTo(235000));
             Assert.That(report.remaining_triangle_margin, Is.Zero);
             Assert.That(report.pages, Has.Length.EqualTo(576));
-            Assert.That(report.pages.Sum(page => page.baseline_triangles), Is.EqualTo(613373 + 177));
-            Assert.That(report.pages.Sum(page => page.final_triangles), Is.EqualTo(636625 + 177));
+            Assert.That(report.pages.Sum(page => page.baseline_triangles), Is.EqualTo(615540));
+            Assert.That(report.pages.Sum(page => page.final_triangles), Is.EqualTo(638792));
             Assert.That(report.pages.Select(page => page.final_triangles)
                 .OrderByDescending(value => value).Take(24).Sum(), Is.EqualTo(235000));
             Assert.That(report.selected_building_ids, Has.Length.EqualTo(report.selected_roofs));
@@ -746,7 +780,7 @@ namespace QuestFlight.Editor.Tests
                 FullMapBuildingClipmapAssetAuthoring.CompilationReportPath);
             Assert.That(report, Is.Not.Null);
             Assert.That(report.text, Does.Contain(
-                "terrain-grounded-shell-compiler-v17-20260917"));
+                "terrain-grounded-shell-compiler-v18-wrrf-20260922"));
             Assert.That(report.text, Does.Contain("\"foundation_embed_meters\": 1.6"));
             Assert.That(report.text, Does.Contain("\"maximum_roof_wall_seam_meters\": 0.0"));
             Assert.That(report.text, Does.Contain("\"maximum_vertical_corner_seam_meters\": 0.0"));
@@ -866,55 +900,38 @@ namespace QuestFlight.Editor.Tests
 
                 vertices += mesh.vertexCount;
                 triangles += (long)mesh.GetIndexCount(0) / 3;
-                int cursor = 0;
+                int[] indices = mesh.triangles;
+                int cursor = 0, indexCursor = 0;
                 while (cursor < mesh.vertexCount)
                 {
-                    bool roof = parameters[cursor].x >= 0.5f;
-                    bool gableInfill = !roof && atlasCells[cursor].y > 2.5f;
-                    int runStart = cursor;
-                    while (cursor < mesh.vertexCount &&
-                           (parameters[cursor].x >= 0.5f) == roof &&
-                           (!roof && atlasCells[cursor].y > 2.5f) == gableInfill)
-                        cursor++;
-                    if (roof)
+                    // WRRF curved wall quads use atlas role 3, which also labels
+                    // triangular gable infills. Geometry determines primitive kind.
+                    bool quad = indexCursor + 5 < indices.Length &&
+                        indices[indexCursor] == cursor && indices[indexCursor+1] == cursor+2 &&
+                        indices[indexCursor+2] == cursor+1 && indices[indexCursor+3] == cursor &&
+                        indices[indexCursor+4] == cursor+3 && indices[indexCursor+5] == cursor+2;
+                    int count = quad ? 4 : 3;
+                    Assert.That(cursor + count, Is.LessThanOrEqualTo(mesh.vertexCount));
+                    bool roof = parameters[cursor].x >= .5f;
+                    Color32 first = colors[cursor];
+                    for (int offset = 0; offset < count; offset++)
                     {
-                        for (int index = runStart; index < cursor; index++)
-                            if (colors[index].a != FullMapBuildingCornerEncoding.LegacyDisabledPacked)
-                                nonSentinelRoofVertices++;
-                        continue;
-                    }
-
-                    if (gableInfill)
-                    {
-                        if ((cursor - runStart) % 3 != 0) nonConstantWallQuads++;
-                        for (int index = runStart; index < cursor; index++)
-                            if (colors[index].a != 0) nonConstantWallQuads++;
-                        continue;
-                    }
-
-                    if ((cursor - runStart) % 4 != 0)
-                    {
-                        nonConstantWallQuads++;
-                        continue;
-                    }
-                    for (int start = runStart; start < cursor; start += 4)
-                    {
-                        Color32 first = colors[start];
-                        bool constant = true;
-                        for (int offset = 0; offset < 4; offset++)
+                        Color32 value = colors[cursor+offset];
+                        if (roof && value.a != FullMapBuildingCornerEncoding.LegacyDisabledPacked)
+                            nonSentinelRoofVertices++;
+                        if (!roof && quad)
                         {
-                            Color32 value = colors[start + offset];
-                            constant &= value.r == first.r && value.g == first.g &&
-                                        value.b == first.b && value.a == first.a;
-                            if (value.a == FullMapBuildingCornerEncoding.LegacyDisabledPacked)
-                                legacyWallVertices++;
+                            if (value.r != first.r || value.g != first.g || value.b != first.b || value.a != first.a)
+                                nonConstantWallQuads++;
+                            if (value.a == FullMapBuildingCornerEncoding.LegacyDisabledPacked) legacyWallVertices++;
                         }
-                        if (!constant) nonConstantWallQuads++;
-                        if (FullMapBuildingCornerEncoding.DecodeStart(first.a) > 0f ||
-                            FullMapBuildingCornerEncoding.DecodeEnd(first.a) > 0f)
-                            encodedWallQuads++;
+                        if (!roof && !quad && value.a != 0) nonConstantWallQuads++;
                     }
+                    if (!roof && quad && (FullMapBuildingCornerEncoding.DecodeStart(first.a) > 0f ||
+                        FullMapBuildingCornerEncoding.DecodeEnd(first.a) > 0f)) encodedWallQuads++;
+                    cursor += count; indexCursor += quad ? 6 : 3;
                 }
+                Assert.That(indexCursor, Is.EqualTo(indices.Length));
             }
 
             Assert.That(incompleteStreams, Is.Zero);
@@ -925,9 +942,45 @@ namespace QuestFlight.Editor.Tests
             Assert.That(nonConstantWallQuads, Is.Zero,
                 "Packed endpoints must be constant across each duplicated wall quad.");
             Assert.That(encodedWallQuads, Is.GreaterThan(200000));
-            Assert.That(vertices, Is.EqualTo(1424373 + 413));
-            Assert.That(triangles, Is.EqualTo(636625 + 177));
+            Assert.That(vertices, Is.EqualTo(1429540), "Current v18 WRRF/Valmont shell topology; producer replay is checked separately.");
+            Assert.That(triangles, Is.EqualTo(638792));
         }
+
+        [Test]
+        public void CurrentCompilerReproducesReviewedWrrfPagesWithoutSavingAssets()
+        {
+            Type author=typeof(FullMapBuildingClipmapAssetAuthoring);
+            object database=author.GetMethod("LoadDatabase",BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,null);
+            var exclusions=(HashSet<int>)author.GetMethod("LoadValidatedSemanticTowerExclusions",BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,new[]{database});
+            object allocation=author.GetMethod("BuildRoofAllocation",BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,new object[]{database,exclusions});
+            var terrain=AssetDatabase.LoadAssetAtPath<ProductionTerrainSurfaceAsset>(FullMapBuildingClipmapAssetAuthoring.TerrainSurfacePath);
+            Array pages=(Array)database.GetType().GetField("pages").GetValue(database);
+            var isTank=author.GetMethod("IsWrrfTank",BindingFlags.Static|BindingFlags.NonPublic);
+            var build=author.GetMethod("BuildPageMesh",BindingFlags.Static|BindingFlags.NonPublic);
+            int verified=0;
+            foreach(object page in pages)
+            {
+                Array buildings=(Array)page.GetType().GetField("buildings").GetValue(page);
+                if(buildings==null || !buildings.Cast<object>().Any(building=>(bool)isTank.Invoke(null,new[]{building})))continue;
+                int column=(int)page.GetType().GetField("column").GetValue(page),row=(int)page.GetType().GetField("row").GetValue(page);
+                string path=$"{FullMapBuildingClipmapAssetAuthoring.GeneratedRoot}/KBDU_buildings_stable_{column:D3}_{row:D3}.asset";
+                string before=Sha256(path);Mesh actual=AssetDatabase.LoadAssetAtPath<Mesh>(path);
+                Mesh replay=(Mesh)build.Invoke(null,new object[]{database,page,terrain,allocation,exclusions});
+                try
+                {
+                    Assert.That(replay.vertexCount,Is.EqualTo(actual.vertexCount),path);
+                    Assert.That(replay.triangles,Is.EqualTo(actual.triangles),path);
+                    Assert.That(replay.vertices,Is.EqualTo(actual.vertices),path);
+                    Assert.That(replay.colors32,Is.EqualTo(actual.colors32),path);
+                    Assert.That(Sha256(path),Is.EqualTo(before),"Read-only producer replay preserves asset bytes.");
+                    verified++;
+                }
+                finally { UnityEngine.Object.DestroyImmediate(replay); }
+            }
+            Assert.That(verified,Is.InRange(1,3),"Bounded reviewed WRRF pages only.");
+        }
+
+        private static string Sha256(string path) => AuthoringBundleVerifier.Sha256(path);
 
         private static int Occurrences(string source, string value)
         {

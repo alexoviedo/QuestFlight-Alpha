@@ -1,0 +1,1099 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "65d35377e16da50b3a7d8d4fb6200a1860272ba3",
+  "scope": "Exact tracked serialized current product registrations supplement frozen extraction baseline. Dependency permission does not establish public-distribution rights.",
+  "paths": [
+    "Assets/Production/Materials/StartupShowroomAccent.mat",
+    "Assets/Production/Materials/StartupShowroomBackdrop.mat",
+    "Assets/Production/Materials/StartupShowroomOverlay.mat",
+    "Assets/Production/Materials/StartupShowroomShell.mat",
+    "Assets/Production/Materials/StartupShowroomSurface.mat",
+    "Assets/Production/Materials/StartupShowroomText.mat",
+    "Assets/Production/Profiles/KBDU_ScenicDemo26.asset",
+    "Assets/Production/Profiles/KBDU_ScenicDemo8.asset",
+    "Assets/Production/Rendering/Materials/0000000000000000e000000000000000_10100.mat",
+    "Assets/Production/Rendering/Materials/0000000000000000f000000000000000_10302.mat",
+    "Assets/Production/Rendering/Materials/3abd38e0d18db6c49b2c96961d69d024_2100000.mat",
+    "Assets/Production/Rendering/Materials/3dc9b36eb85fa424489d9d859f737ab4_2100000.mat",
+    "Assets/Production/Rendering/Materials/4586bbc8f000620428a7a2c0ff17013b_2100000.mat",
+    "Assets/Production/Rendering/Materials/697d9a99ae3c7784bbef700ed300a1ca_2100000.mat",
+    "Assets/Production/Rendering/Materials/7c03a1f52a4ed51428913c25ec54afc0_2100000.mat",
+    "Assets/Production/Rendering/Materials/861c253c01be7f7489f64e9ac001a10c_2100000.mat",
+    "Assets/Production/Rendering/Materials/bf59b10353515d4479c50bf628679733_2100000.mat",
+    "Assets/Production/Rendering/Materials/c2ace68b1ed79454a8d2febfb98c4a2b_2100000.mat",
+    "Assets/Production/Rendering/Materials/d641a50c4fe4ee3489a64cf52b76ae79_2100000.mat",
+    "Assets/Production/Rendering/Materials/e0c493fb22c458946bd44e502efbecd7_2100000.mat",
+    "Assets/Production/Rendering/Materials/ed965723b6756dc4faaa410790e98e31_2100000.mat",
+    "Assets/Production/Rendering/Materials/f76ac96be52ce764aa832df99e34d87a_2100000.mat",
+    "Assets/Production/Rendering/VendorMotion/Hotspot.shader",
+    "Assets/Production/Rendering/VendorMotion/OculusHand.shader",
+    "Assets/Production/Rendering/VendorMotion/OculusRayCursor.shader",
+    "Assets/Production/Rendering/VendorMotion/OculusRayVisual.shader",
+    "Assets/Production/Rendering/VendorMotion/TransparentTexture.shader",
+    "Assets/Production/Rendering/VendorMotion/TransparentVertexTexture.shader",
+    "Assets/Production/Rendering/VendorMotion/TunnelingEffect.shader",
+    "Assets/Production/Training/01_taxi.asset",
+    "Assets/Production/Training/02_first_flight.asset",
+    "Assets/Production/Training/03_climb_descent.asset",
+    "Assets/Production/Training/04_takeoff.asset",
+    "Assets/Production/Training/05_pattern.asset",
+    "Assets/Production/Training/06_landing.asset",
+    "Assets/Production/Training/CaptionTimings.json",
+    "Assets/Production/Training/ObjectiveBoundary.asset",
+    "Assets/Production/Training/ObjectiveRibbon.shader",
+    "Assets/Production/Training/ObjectiveRing.asset",
+    "Assets/Production/Training/ObjectiveVolume.asset",
+    "Assets/Production/Training/ObjectiveVolume.mat",
+    "Assets/Production/Training/Voice/01_taxi_00.wav",
+    "Assets/Production/Training/Voice/01_taxi_01.wav",
+    "Assets/Production/Training/Voice/01_taxi_02.wav",
+    "Assets/Production/Training/Voice/01_taxi_03.wav",
+    "Assets/Production/Training/Voice/01_taxi_04.wav",
+    "Assets/Production/Training/Voice/01_taxi_05.wav",
+    "Assets/Production/Training/Voice/01_taxi_06.wav",
+    "Assets/Production/Training/Voice/01_taxi_briefing.wav",
+    "Assets/Production/Training/Voice/02_first_flight_00.wav",
+    "Assets/Production/Training/Voice/02_first_flight_01.wav",
+    "Assets/Production/Training/Voice/02_first_flight_02.wav",
+    "Assets/Production/Training/Voice/02_first_flight_03.wav",
+    "Assets/Production/Training/Voice/02_first_flight_04.wav",
+    "Assets/Production/Training/Voice/02_first_flight_05.wav",
+    "Assets/Production/Training/Voice/02_first_flight_06.wav",
+    "Assets/Production/Training/Voice/02_first_flight_07.wav",
+    "Assets/Production/Training/Voice/02_first_flight_briefing.wav",
+    "Assets/Production/Training/Voice/03_climb_descent_00.wav",
+    "Assets/Production/Training/Voice/03_climb_descent_01.wav",
+    "Assets/Production/Training/Voice/03_climb_descent_02.wav",
+    "Assets/Production/Training/Voice/03_climb_descent_03.wav",
+    "Assets/Production/Training/Voice/03_climb_descent_04.wav",
+    "Assets/Production/Training/Voice/03_climb_descent_briefing.wav",
+    "Assets/Production/Training/Voice/04_takeoff_00.wav",
+    "Assets/Production/Training/Voice/04_takeoff_01.wav",
+    "Assets/Production/Training/Voice/04_takeoff_02.wav",
+    "Assets/Production/Training/Voice/04_takeoff_03.wav",
+    "Assets/Production/Training/Voice/04_takeoff_briefing.wav",
+    "Assets/Production/Training/Voice/05_pattern_00.wav",
+    "Assets/Production/Training/Voice/05_pattern_01.wav",
+    "Assets/Production/Training/Voice/05_pattern_02.wav",
+    "Assets/Production/Training/Voice/05_pattern_03.wav",
+    "Assets/Production/Training/Voice/05_pattern_04.wav",
+    "Assets/Production/Training/Voice/05_pattern_05.wav",
+    "Assets/Production/Training/Voice/05_pattern_06.wav",
+    "Assets/Production/Training/Voice/05_pattern_briefing.wav",
+    "Assets/Production/Training/Voice/06_landing_00.wav",
+    "Assets/Production/Training/Voice/06_landing_01.wav",
+    "Assets/Production/Training/Voice/06_landing_02.wav",
+    "Assets/Production/Training/Voice/06_landing_03.wav",
+    "Assets/Production/Training/Voice/06_landing_04.wav",
+    "Assets/Production/Training/Voice/06_landing_05.wav",
+    "Assets/Production/Training/Voice/06_landing_briefing.wav",
+    "Assets/Production/Training/Voice/assistance.wav",
+    "Assets/Production/Training/Voice/coach_alignrunway.wav",
+    "Assets/Production/Training/Voice/coach_altitudehigh.wav",
+    "Assets/Production/Training/Voice/coach_altitudelow.wav",
+    "Assets/Production/Training/Voice/coach_approach.wav",
+    "Assets/Production/Training/Voice/coach_brakes.wav",
+    "Assets/Production/Training/Voice/coach_flaps.wav",
+    "Assets/Production/Training/Voice/coach_goaround.wav",
+    "Assets/Production/Training/Voice/coach_pitchcheckback.wav",
+    "Assets/Production/Training/Voice/coach_pitchcheckcenter.wav",
+    "Assets/Production/Training/Voice/coach_pitchcheckforward.wav",
+    "Assets/Production/Training/Voice/coach_power.wav",
+    "Assets/Production/Training/Voice/coach_recovered.wav",
+    "Assets/Production/Training/Voice/coach_rollcheckcenter.wav",
+    "Assets/Production/Training/Voice/coach_rollcheckleft.wav",
+    "Assets/Production/Training/Voice/coach_rollcheckright.wav",
+    "Assets/Production/Training/Voice/coach_rollleft.wav",
+    "Assets/Production/Training/Voice/coach_rolloutleft.wav",
+    "Assets/Production/Training/Voice/coach_rolloutright.wav",
+    "Assets/Production/Training/Voice/coach_rollright.wav",
+    "Assets/Production/Training/Voice/coach_rudder.wav",
+    "Assets/Production/Training/Voice/coach_ruddercheckcenter.wav",
+    "Assets/Production/Training/Voice/coach_ruddercheckleft.wav",
+    "Assets/Production/Training/Voice/coach_ruddercheckright.wav",
+    "Assets/Production/Training/Voice/coach_rudderleft.wav",
+    "Assets/Production/Training/Voice/coach_rudderright.wav",
+    "Assets/Production/Training/Voice/coach_speedhigh.wav",
+    "Assets/Production/Training/Voice/coach_speedlow.wav",
+    "Assets/Production/Training/Voice/coach_stop.wav",
+    "Assets/Production/Training/Voice/coach_taxifast.wav",
+    "Assets/Production/Training/Voice/coach_trim.wav",
+    "Assets/Production/Training/Voice/coach_turnleft.wav",
+    "Assets/Production/Training/Voice/coach_turnright.wav",
+    "Assets/Production/Training/Voice/coach_yoke.wav",
+    "Assets/Production/Training/Voice/demonstration.wav",
+    "Assets/Production/Training/Voice/demonstration_turn.wav",
+    "Assets/Production/Training/Voice/go_around.wav",
+    "Assets/Production/Training/Voice/handback.wav",
+    "Assets/Production/Training/Voice/radio_cessna0_approach_26.wav",
+    "Assets/Production/Training/Voice/radio_cessna0_approach_8.wav",
+    "Assets/Production/Training/Voice/radio_cessna0_clear_26.wav",
+    "Assets/Production/Training/Voice/radio_cessna0_clear_8.wav",
+    "Assets/Production/Training/Voice/radio_cessna0_hold_26.wav",
+    "Assets/Production/Training/Voice/radio_cessna0_hold_8.wav",
+    "Assets/Production/Training/Voice/radio_cessna0_takeoff_26.wav",
+    "Assets/Production/Training/Voice/radio_cessna0_takeoff_8.wav",
+    "Assets/Production/Training/Voice/radio_cessna2_approach_26.wav",
+    "Assets/Production/Training/Voice/radio_cessna2_approach_8.wav",
+    "Assets/Production/Training/Voice/radio_cessna2_clear_26.wav",
+    "Assets/Production/Training/Voice/radio_cessna2_clear_8.wav",
+    "Assets/Production/Training/Voice/radio_cessna2_hold_26.wav",
+    "Assets/Production/Training/Voice/radio_cessna2_hold_8.wav",
+    "Assets/Production/Training/Voice/radio_cessna2_takeoff_26.wav",
+    "Assets/Production/Training/Voice/radio_cessna2_takeoff_8.wav",
+    "Assets/Production/Training/Voice/radio_cub1_approach_26.wav",
+    "Assets/Production/Training/Voice/radio_cub1_approach_8.wav",
+    "Assets/Production/Training/Voice/radio_cub1_clear_26.wav",
+    "Assets/Production/Training/Voice/radio_cub1_clear_8.wav",
+    "Assets/Production/Training/Voice/radio_cub1_hold_26.wav",
+    "Assets/Production/Training/Voice/radio_cub1_hold_8.wav",
+    "Assets/Production/Training/Voice/radio_cub1_takeoff_26.wav",
+    "Assets/Production/Training/Voice/radio_cub1_takeoff_8.wav",
+    "Assets/Production/Training/Voice/reference_airspeed.wav",
+    "Assets/Production/Training/Voice/reference_altimeter.wav",
+    "Assets/Production/Training/Voice/reference_attitude.wav",
+    "Assets/Production/Training/Voice/reference_flaps.wav",
+    "Assets/Production/Training/Voice/reference_heading.wav",
+    "Assets/Production/Training/Voice/reference_outside.wav",
+    "Assets/Production/Training/Voice/reference_runway.wav",
+    "Assets/Production/Training/Voice/reference_slip.wav",
+    "Assets/Production/Training/Voice/reference_throttle.wav",
+    "Assets/Production/Training/Voice/reference_trim.wav",
+    "Assets/Production/Training/Voice/reference_verticalspeed.wav",
+    "Assets/Production/Training/Voice/reference_yoke.wav",
+    "Assets/Production/Training/Voice/showcase_intro.wav",
+    "Assets/Production/Training/Voice/tour_complete.wav",
+    "Assets/Production/Training/Voice/tour_eagle_ahead.wav",
+    "Assets/Production/Training/Voice/tour_eagle_left.wav",
+    "Assets/Production/Training/Voice/tour_eagle_right.wav",
+    "Assets/Production/Training/Voice/tour_east_boulder.wav",
+    "Assets/Production/Training/Voice/tour_exit.wav",
+    "Assets/Production/Training/Voice/tour_final.wav",
+    "Assets/Production/Training/Voice/tour_flatirons.wav",
+    "Assets/Production/Training/Voice/tour_goaround.wav",
+    "Assets/Production/Training/Voice/tour_intro.wav",
+    "Assets/Production/Training/Voice/tour_my_controls.wav",
+    "Assets/Production/Training/Voice/tour_reservoir.wav",
+    "Assets/Production/Training/Voice/tour_your_controls.wav",
+    "Assets/Production/UI/Interface/CaptionSurface.shader",
+    "Assets/Production/UI/Interface/Inter-Regular-SDF.asset",
+    "Assets/Production/UI/Interface/Inter-Semibold-SDF.asset",
+    "Assets/Production/UI/Interface/InterRegularOverlay.mat",
+    "Assets/Production/UI/Interface/InterSemiboldOverlay.mat",
+    "Assets/Production/UI/Interface/InterfaceQuad.asset",
+    "Assets/Production/UI/Interface/InterfaceSurface.mat",
+    "Assets/Production/UI/Interface/InterfaceSurface.shader",
+    "Assets/Production/UI/Interface/InterfaceTheme.asset",
+    "Assets/Production/UI/Interface/ModalAction.mat",
+    "Assets/Production/UI/Interface/ModalSurface.mat",
+    "Assets/Production/UI/ReleasePolish/AircraftArrow.asset",
+    "Assets/Production/UI/ReleasePolish/BoulderTerrainOverview.png",
+    "Assets/Production/UI/ReleasePolish/CaptionBackground.mat",
+    "Assets/Production/UI/ReleasePolish/ControlCyan.mat",
+    "Assets/Production/UI/ReleasePolish/ControlGold.mat",
+    "Assets/Production/UI/ReleasePolish/ControlMuted.mat",
+    "Assets/Production/UI/ReleasePolish/FlownPath.mat",
+    "Assets/Production/UI/ReleasePolish/LessonDestination.mat",
+    "Assets/Production/UI/ReleasePolish/LocalMap.asset",
+    "Assets/Production/UI/ReleasePolish/MapInk.mat",
+    "Assets/Production/UI/ReleasePolish/SelectedRoute.mat",
+    "Assets/Production/UI/ReleasePolish/TerrainOverview.mat",
+    "Assets/Scripts/Environment/AmbientAircraftActor.cs",
+    "Assets/Scripts/Environment/AmbientAircraftRoute.cs",
+    "Assets/Scripts/Environment/AmbientTrafficDirector.cs",
+    "Assets/Scripts/Environment/BoulderWindFieldProfile.cs",
+    "Assets/Scripts/Environment/BoulderWindSock.cs",
+    "Assets/Scripts/Environment/MapBranchGrove.shader",
+    "Assets/Scripts/Environment/MapBranchGroveRenderer.cs",
+    "Assets/Scripts/Product/ProductActionButton.cs",
+    "Assets/Scripts/Product/ProductAppNavigation.cs",
+    "Assets/Scripts/Product/ProductControlVisuals.cs",
+    "Assets/Scripts/Product/ProductDemoNarration.cs",
+    "Assets/Scripts/Product/ProductFlightExperience.cs",
+    "Assets/Scripts/Product/ProductTrafficRadio.cs",
+    "Assets/Scripts/Product/ProductUiInstruction.cs",
+    "Assets/Scripts/Product/ProductUiLabel.cs",
+    "Assets/Scripts/Product/ProductUiPanelLayout.cs",
+    "Assets/Scripts/Product/ProductUiSurface.cs",
+    "Assets/Scripts/Product/ProductUiTheme.cs",
+    "Assets/Scripts/Rendering/ProductSpaceWarpController.cs",
+    "Assets/Shaders/AmbientAircraftExterior.shader",
+    "Assets/Shaders/BridgeConcrete.shader",
+    "Assets/Shaders/ProductWorldText.shader",
+    "Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile.shader"
+  ],
+  "provenance": [
+    {
+      "path": "Assets/Production/Materials/StartupShowroomAccent.mat",
+      "context": "QuestFlight/Assets/Editor/ProductStartupShowroomAuthoring.cs"
+    },
+    {
+      "path": "Assets/Production/Materials/StartupShowroomBackdrop.mat",
+      "context": "QuestFlight/Assets/Editor/ProductStartupShowroomAuthoring.cs"
+    },
+    {
+      "path": "Assets/Production/Materials/StartupShowroomOverlay.mat",
+      "context": "QuestFlight/Assets/Editor/ProductStartupShowroomAuthoring.cs"
+    },
+    {
+      "path": "Assets/Production/Materials/StartupShowroomShell.mat",
+      "context": "QuestFlight/Assets/Editor/ProductStartupShowroomAuthoring.cs"
+    },
+    {
+      "path": "Assets/Production/Materials/StartupShowroomSurface.mat",
+      "context": "QuestFlight/Assets/Editor/ProductStartupShowroomAuthoring.cs"
+    },
+    {
+      "path": "Assets/Production/Materials/StartupShowroomText.mat",
+      "context": "QuestFlight/Assets/Editor/ProductStartupShowroomAuthoring.cs"
+    },
+    {
+      "path": "Assets/Production/Profiles/KBDU_ScenicDemo26.asset",
+      "context": "QuestFlight/Assets/Editor/DemoTourAuthoring.cs"
+    },
+    {
+      "path": "Assets/Production/Profiles/KBDU_ScenicDemo8.asset",
+      "context": "QuestFlight/Assets/Editor/DemoTourAuthoring.cs"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/0000000000000000e000000000000000_10100.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/0000000000000000f000000000000000_10302.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/3abd38e0d18db6c49b2c96961d69d024_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/3dc9b36eb85fa424489d9d859f737ab4_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/4586bbc8f000620428a7a2c0ff17013b_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/697d9a99ae3c7784bbef700ed300a1ca_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/7c03a1f52a4ed51428913c25ec54afc0_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/861c253c01be7f7489f64e9ac001a10c_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/bf59b10353515d4479c50bf628679733_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/c2ace68b1ed79454a8d2febfb98c4a2b_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/d641a50c4fe4ee3489a64cf52b76ae79_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/e0c493fb22c458946bd44e502efbecd7_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/ed965723b6756dc4faaa410790e98e31_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/Materials/f76ac96be52ce764aa832df99e34d87a_2100000.mat",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAudit.cs Authoring.Apply: exact material adaptation; rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/VendorMotion/Hotspot.shader",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAuthoring.cs; adapted vendor source rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/VendorMotion/OculusHand.shader",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAuthoring.cs; adapted vendor source rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/VendorMotion/OculusRayCursor.shader",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAuthoring.cs; adapted vendor source rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/VendorMotion/OculusRayVisual.shader",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAuthoring.cs; adapted vendor source rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/VendorMotion/TransparentTexture.shader",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAuthoring.cs; adapted vendor source rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/VendorMotion/TransparentVertexTexture.shader",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAuthoring.cs; adapted vendor source rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Rendering/VendorMotion/TunnelingEffect.shader",
+      "context": "QuestFlight/Assets/Editor/ProductSpaceWarpAuthoring.cs; adapted vendor source rights assessed separately"
+    },
+    {
+      "path": "Assets/Production/Training/01_taxi.asset",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/02_first_flight.asset",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/03_climb_descent.asset",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/04_takeoff.asset",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/05_pattern.asset",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/06_landing.asset",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/CaptionTimings.json",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/ObjectiveBoundary.asset",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/ObjectiveRibbon.shader",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/ObjectiveRing.asset",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/ObjectiveVolume.asset",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/ObjectiveVolume.mat",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/01_taxi_00.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/01_taxi_01.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/01_taxi_02.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/01_taxi_03.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/01_taxi_04.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/01_taxi_05.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/01_taxi_06.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/01_taxi_briefing.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/02_first_flight_00.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/02_first_flight_01.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/02_first_flight_02.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/02_first_flight_03.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/02_first_flight_04.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/02_first_flight_05.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/02_first_flight_06.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/02_first_flight_07.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/02_first_flight_briefing.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/03_climb_descent_00.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/03_climb_descent_01.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/03_climb_descent_02.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/03_climb_descent_03.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/03_climb_descent_04.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/03_climb_descent_briefing.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/04_takeoff_00.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/04_takeoff_01.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/04_takeoff_02.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/04_takeoff_03.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/04_takeoff_briefing.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/05_pattern_00.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/05_pattern_01.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/05_pattern_02.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/05_pattern_03.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/05_pattern_04.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/05_pattern_05.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/05_pattern_06.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/05_pattern_briefing.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/06_landing_00.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/06_landing_01.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/06_landing_02.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/06_landing_03.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/06_landing_04.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/06_landing_05.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/06_landing_briefing.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/assistance.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_alignrunway.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_altitudehigh.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_altitudelow.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_approach.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_brakes.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_flaps.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_goaround.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_pitchcheckback.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_pitchcheckcenter.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_pitchcheckforward.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_power.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_recovered.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_rollcheckcenter.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_rollcheckleft.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_rollcheckright.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_rollleft.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_rolloutleft.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_rolloutright.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_rollright.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_rudder.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_ruddercheckcenter.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_ruddercheckleft.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_ruddercheckright.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_rudderleft.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_rudderright.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_speedhigh.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_speedlow.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_stop.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_taxifast.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_trim.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_turnleft.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_turnright.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/coach_yoke.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/demonstration.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/demonstration_turn.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/go_around.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/handback.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna0_approach_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna0_approach_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna0_clear_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna0_clear_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna0_hold_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna0_hold_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna0_takeoff_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna0_takeoff_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna2_approach_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna2_approach_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna2_clear_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna2_clear_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna2_hold_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna2_hold_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna2_takeoff_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cessna2_takeoff_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cub1_approach_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cub1_approach_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cub1_clear_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cub1_clear_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cub1_hold_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cub1_hold_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cub1_takeoff_26.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/radio_cub1_takeoff_8.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_airspeed.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_altimeter.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_attitude.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_flaps.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_heading.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_outside.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_runway.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_slip.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_throttle.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_trim.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_verticalspeed.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/reference_yoke.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/showcase_intro.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_complete.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_eagle_ahead.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_eagle_left.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_eagle_right.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_east_boulder.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_exit.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_final.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_flatirons.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_goaround.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_intro.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_my_controls.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_reservoir.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/Training/Voice/tour_your_controls.wav",
+      "context": "QuestFlight/Assets/Editor/ProductTrainingAuthoring.cs; tools/audio/author_caption_timings.py"
+    },
+    {
+      "path": "Assets/Production/UI/Interface/CaptionSurface.shader",
+      "context": "QuestFlight/Assets/Editor/ProductInterfacePolishAuthoring.cs; font source/license record assessed separately; QuestFlight/Assets/Production/UI/Interface/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/Interface/Inter-Regular-SDF.asset",
+      "context": "QuestFlight/Assets/Editor/ProductInterfacePolishAuthoring.cs; font source/license record assessed separately; QuestFlight/Assets/Production/UI/Interface/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/Interface/Inter-Semibold-SDF.asset",
+      "context": "QuestFlight/Assets/Editor/ProductInterfacePolishAuthoring.cs; font source/license record assessed separately; QuestFlight/Assets/Production/UI/Interface/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/Interface/InterRegularOverlay.mat",
+      "context": "QuestFlight/Assets/Editor/ProductInterfacePolishAuthoring.cs; font source/license record assessed separately; QuestFlight/Assets/Production/UI/Interface/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/Interface/InterSemiboldOverlay.mat",
+      "context": "QuestFlight/Assets/Editor/ProductInterfacePolishAuthoring.cs; font source/license record assessed separately; QuestFlight/Assets/Production/UI/Interface/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/Interface/InterfaceQuad.asset",
+      "context": "QuestFlight/Assets/Editor/ProductInterfacePolishAuthoring.cs; font source/license record assessed separately; QuestFlight/Assets/Production/UI/Interface/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/Interface/InterfaceSurface.mat",
+      "context": "QuestFlight/Assets/Editor/ProductInterfacePolishAuthoring.cs; font source/license record assessed separately; QuestFlight/Assets/Production/UI/Interface/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/Interface/InterfaceSurface.shader",
+      "context": "QuestFlight/Assets/Editor/ProductInterfacePolishAuthoring.cs; font source/license record assessed separately; QuestFlight/Assets/Production/UI/Interface/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/Interface/InterfaceTheme.asset",
+      "context": "QuestFlight/Assets/Editor/ProductInterfacePolishAuthoring.cs; font source/license record assessed separately; QuestFlight/Assets/Production/UI/Interface/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/Interface/ModalAction.mat",
+      "context": "QuestFlight/Assets/Editor/ProductInterfacePolishAuthoring.cs; font source/license record assessed separately; QuestFlight/Assets/Production/UI/Interface/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/Interface/ModalSurface.mat",
+      "context": "QuestFlight/Assets/Editor/ProductInterfacePolishAuthoring.cs; font source/license record assessed separately; QuestFlight/Assets/Production/UI/Interface/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/AircraftArrow.asset",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/BoulderTerrainOverview.png",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/CaptionBackground.mat",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/ControlCyan.mat",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/ControlGold.mat",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/ControlMuted.mat",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/FlownPath.mat",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/LessonDestination.mat",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/LocalMap.asset",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/MapInk.mat",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/SelectedRoute.mat",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Production/UI/ReleasePolish/TerrainOverview.mat",
+      "context": "QuestFlight/Assets/Editor/ProductReleasePolishAuthoring.cs; source/license records assessed separately; QuestFlight/Assets/Production/UI/ReleasePolish/SOURCE.md"
+    },
+    {
+      "path": "Assets/Scripts/Environment/AmbientAircraftActor.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Environment/AmbientAircraftActor.cs"
+    },
+    {
+      "path": "Assets/Scripts/Environment/AmbientAircraftRoute.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Environment/AmbientAircraftRoute.cs"
+    },
+    {
+      "path": "Assets/Scripts/Environment/AmbientTrafficDirector.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Environment/AmbientTrafficDirector.cs"
+    },
+    {
+      "path": "Assets/Scripts/Environment/BoulderWindFieldProfile.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Environment/BoulderWindFieldProfile.cs"
+    },
+    {
+      "path": "Assets/Scripts/Environment/BoulderWindSock.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Environment/BoulderWindSock.cs"
+    },
+    {
+      "path": "Assets/Scripts/Environment/MapBranchGrove.shader",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Environment/MapBranchGrove.shader"
+    },
+    {
+      "path": "Assets/Scripts/Environment/MapBranchGroveRenderer.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Environment/MapBranchGroveRenderer.cs"
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductActionButton.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Product/ProductActionButton.cs"
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductAppNavigation.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Product/ProductAppNavigation.cs"
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductControlVisuals.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Product/ProductControlVisuals.cs"
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductDemoNarration.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Product/ProductDemoNarration.cs"
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductFlightExperience.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Product/ProductFlightExperience.cs"
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductTrafficRadio.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Product/ProductTrafficRadio.cs"
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductUiInstruction.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Product/ProductUiInstruction.cs"
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductUiLabel.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Product/ProductUiLabel.cs"
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductUiPanelLayout.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Product/ProductUiPanelLayout.cs"
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductUiSurface.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Product/ProductUiSurface.cs"
+    },
+    {
+      "path": "Assets/Scripts/Product/ProductUiTheme.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Product/ProductUiTheme.cs"
+    },
+    {
+      "path": "Assets/Scripts/Rendering/ProductSpaceWarpController.cs",
+      "context": "Current exact authored source at QuestFlight/Assets/Scripts/Rendering/ProductSpaceWarpController.cs"
+    },
+    {
+      "path": "Assets/Shaders/AmbientAircraftExterior.shader",
+      "context": "Current exact authored source at QuestFlight/Assets/Shaders/AmbientAircraftExterior.shader"
+    },
+    {
+      "path": "Assets/Shaders/BridgeConcrete.shader",
+      "context": "Current exact authored source at QuestFlight/Assets/Shaders/BridgeConcrete.shader"
+    },
+    {
+      "path": "Assets/Shaders/ProductWorldText.shader",
+      "context": "Current exact authored source at QuestFlight/Assets/Shaders/ProductWorldText.shader"
+    },
+    {
+      "path": "Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile.shader",
+      "context": "Existing exact vendor shader at audited source SHA; source/license records assessed separately"
+    }
+  ]
+}

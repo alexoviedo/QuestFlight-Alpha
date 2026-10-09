@@ -1,5 +1,7 @@
 [CmdletBinding()]
 param(
+  [string]$ProjectPath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'QuestFlight'),
+  [string]$UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe',
   [string]$SigningConfig = (Join-Path $env:USERPROFILE '.questflight\signing\meta-alpha-signing.json'),
   [string]$ArtifactDir = '',
   [ValidateRange(60, 3600)]
@@ -8,6 +10,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+if (-not (Test-Path -LiteralPath $UnityExe -PathType Leaf)) { throw "Unity not found: $UnityExe" }
 
 if (-not (Test-Path -LiteralPath $SigningConfig)) {
   throw "QuestFlight Meta signing configuration was not found: $SigningConfig"
@@ -27,10 +31,10 @@ if (-not (Test-Path -LiteralPath ([string]$config.keystorePath))) {
 
 if ([string]::IsNullOrWhiteSpace($ArtifactDir)) {
   $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-  $ArtifactDir = "C:\Users\ovied\Dev\T2\T2-QuestFlight-product-artifacts\meta_release_$stamp"
+  $ArtifactDir = Join-Path ((Split-Path $ProjectPath -Parent) + '-product-artifacts') "meta_release_$stamp"
 }
 
-$projectSettingsPath = Join-Path $PSScriptRoot '..\QuestFlight\ProjectSettings\ProjectSettings.asset'
+$projectSettingsPath = Join-Path $ProjectPath 'ProjectSettings\ProjectSettings.asset'
 $projectSettingsBytes = [IO.File]::ReadAllBytes($projectSettingsPath)
 
 $previous = @{
@@ -49,6 +53,8 @@ try {
   $env:QUESTFLIGHT_ANDROID_KEYALIAS_PASSWORD = [string]$config.keyPassword
 
   & (Join-Path $PSScriptRoot 'build_production_quest.ps1') `
+    -ProjectPath $ProjectPath `
+    -UnityExe $UnityExe `
     -ArtifactDir $ArtifactDir `
     -TimeoutSeconds $TimeoutSeconds
 } finally {

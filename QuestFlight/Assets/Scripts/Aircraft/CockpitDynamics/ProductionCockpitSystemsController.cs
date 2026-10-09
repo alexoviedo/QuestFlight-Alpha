@@ -346,6 +346,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
                     systems.gpsDistanceNauticalMiles;
                 snapshot.gpsGroundTrackDegrees =
                     systems.gpsGroundTrackDegrees;
+                snapshot.gpsGroundTrackAvailable = systems.gpsGroundTrackAvailable;
                 snapshot.gpsAltitudeMslFeet = systems.gpsAltitudeMslFeet;
             }
             if (systems.Has(CockpitSystemsAvailabilityV2.ComRadios))

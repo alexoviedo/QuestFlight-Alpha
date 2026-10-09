@@ -44,10 +44,18 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             public float MeanVisibility;
         }
 
-        public static void AuthorAndIntegrate()
+        public static void AuthorAndIntegrate() => AuthorAndIntegrate(false);
+
+        public static void RepairMismatchedStreamsBatch()
+        {
+            try { AuthorAndIntegrate(true); EditorApplication.Exit(0); }
+            catch (Exception error) { Debug.LogException(error); EditorApplication.Exit(1); }
+        }
+
+        private static void AuthorAndIntegrate(bool onlyMismatched)
         {
             EnsureFolder(AssetFolder);
-            Dictionary<string, StreamRecord> records = BakeStreams();
+            Dictionary<string, StreamRecord> records = BakeStreams(onlyMismatched);
             IntegrateStreams(records);
             AssetDatabase.SaveAssets();
             WriteManifest(records.Values.OrderBy(record => record.RendererPath).ToArray());
@@ -86,14 +94,12 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 throw new InvalidOperationException("Cockpit directional-visibility manifest is missing or stale.");
         }
 
-        private static Dictionary<string, StreamRecord> BakeStreams()
+        private static Dictionary<string, StreamRecord> BakeStreams(bool onlyMismatched = false)
         {
             GameObject aircraftAsset = AssetDatabase.LoadAssetAtPath<GameObject>(
                 PhotorealAerialReflectionAuthoring.AircraftPrefabPath);
             if (aircraftAsset == null) throw new InvalidOperationException("Aircraft prefab is missing.");
-            Scene scene = SceneManager.GetActiveScene();
-            if (!scene.IsValid() || !scene.isLoaded)
-                throw new InvalidOperationException("A loaded editor scene is required for cockpit visibility baking.");
+            Scene scene = EditorSceneManager.NewPreviewScene();
             GameObject instance = null;
             try
             {
@@ -109,6 +115,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     throw new InvalidOperationException("Aircraft visual/cockpit root is missing for visibility baking.");
 
                 MeshRenderer[] renderers = EligibleRenderers(cockpit).ToArray();
+                var owned = new List<Collider>(renderers.Length);
                 foreach (MeshRenderer renderer in renderers)
                 {
                     renderer.gameObject.layer = BakeLayer;
@@ -117,8 +124,10 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     collider.sharedMesh = mesh;
                     collider.convex = false;
                     collider.enabled = true;
+                    owned.Add(collider);
                 }
 
+                Collider[] ownedColliders = owned.ToArray();
                 Physics.SyncTransforms();
                 Vector3[][] directions = BuildSoftDirections();
                 var result = new Dictionary<string, StreamRecord>(StringComparer.Ordinal);
@@ -130,39 +139,21 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                     if (vertices.Length == 0 || normals.Length != vertices.Length)
                         throw new InvalidOperationException(
                             "Cockpit source mesh lacks readable positions/normals: " + renderer.name);
-                    Color32[] visibility = new Color32[vertices.Length];
-                    double total = 0d;
-                    for (int vertexIndex = 0; vertexIndex < vertices.Length; vertexIndex++)
-                    {
-                        Vector3 worldPosition = renderer.transform.TransformPoint(vertices[vertexIndex]);
-                        Vector3 worldNormal = renderer.transform.TransformDirection(normals[vertexIndex]).normalized;
-                        byte[] channels = new byte[DirectionCount];
-                        for (int directionIndex = 0; directionIndex < DirectionCount; directionIndex++)
-                        {
-                            int visibleSamples = 0;
-                            for (int sampleIndex = 0; sampleIndex < SoftSampleCount; sampleIndex++)
-                            {
-                                Vector3 worldDirection = visual.TransformDirection(
-                                    directions[directionIndex][sampleIndex]).normalized;
-                                Vector3 origin = worldPosition +
-                                    worldNormal * OriginNormalOffsetMeters +
-                                    worldDirection * OriginLightOffsetMeters;
-                                if (!Physics.Raycast(origin, worldDirection, RayDistanceMeters,
-                                        1 << BakeLayer, QueryTriggerInteraction.Ignore))
-                                    visibleSamples++;
-                            }
-                            float value = visibleSamples / (float)SoftSampleCount;
-                            channels[directionIndex] = (byte)Mathf.RoundToInt(value * 255f);
-                            total += value;
-                        }
-                        visibility[vertexIndex] = new Color32(
-                            channels[0], channels[1], channels[2], channels[3]);
-                    }
+                    Mesh prior = renderer.additionalVertexStreams;
+                    bool keepExisting = onlyMismatched && prior != null && prior.vertexCount == vertices.Length &&
+                        prior.HasVertexAttribute(VertexAttribute.Color) &&
+                        prior.GetVertexAttributeFormat(VertexAttribute.Color) == VertexAttributeFormat.UNorm8 &&
+                        prior.GetVertexAttributeDimension(VertexAttribute.Color) == 4;
+                    Color32[] visibility = keepExisting ? prior.colors32 : CalculateVisibility(renderer, visual, ownedColliders, directions);
+                    double total = visibility.Sum(value => (value.r + value.g + value.b + value.a) / 255d);
 
                     string rendererPath = AnimationUtility.CalculateTransformPath(renderer.transform, visual);
                     string streamPath = AssetFolder + "/" + Sanitize(renderer.name) + "_" +
                         StableId(rendererPath) + "_Visibility.asset";
-                    Mesh stream = AssetDatabase.LoadAssetAtPath<Mesh>(streamPath);
+                    Mesh stream = keepExisting ? prior : AssetDatabase.LoadAssetAtPath<Mesh>(streamPath);
+                    if (keepExisting) streamPath = AssetDatabase.GetAssetPath(prior);
+                    if (!keepExisting)
+                    {
                     if (stream == null)
                     {
                         stream = new Mesh();
@@ -180,6 +171,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                         MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
                     stream.bounds = source.bounds;
                     EditorUtility.SetDirty(stream);
+                    }
                     result.Add(rendererPath, new StreamRecord
                     {
                         RendererPath = rendererPath,
@@ -194,7 +186,43 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             finally
             {
                 if (instance != null) UnityEngine.Object.DestroyImmediate(instance);
+                EditorSceneManager.ClosePreviewScene(scene);
             }
+        }
+
+        private static Color32[] CalculateVisibility(MeshRenderer renderer, Transform visual,
+            Collider[] ownedColliders, Vector3[][] directions)
+        {
+            Vector3[] vertices=renderer.GetComponent<MeshFilter>().sharedMesh.vertices;
+            Vector3[] normals=renderer.GetComponent<MeshFilter>().sharedMesh.normals;
+            Color32[] visibility = new Color32[vertices.Length];
+            for (int vertexIndex = 0; vertexIndex < vertices.Length; vertexIndex++)
+            {
+                Vector3 worldPosition = renderer.transform.TransformPoint(vertices[vertexIndex]);
+                Vector3 worldNormal = renderer.transform.TransformDirection(normals[vertexIndex]).normalized;
+                byte[] channels = new byte[DirectionCount];
+                for (int directionIndex = 0; directionIndex < DirectionCount; directionIndex++)
+                {
+                    int visibleSamples = 0;
+                    for (int sampleIndex = 0; sampleIndex < SoftSampleCount; sampleIndex++)
+                    {
+                        Vector3 worldDirection = visual.TransformDirection(
+                            directions[directionIndex][sampleIndex]).normalized;
+                        Vector3 origin = worldPosition +
+                            worldNormal * OriginNormalOffsetMeters +
+                            worldDirection * OriginLightOffsetMeters;
+                        Ray ray = new Ray(origin, worldDirection);
+                        if (!ownedColliders.Any(collider => collider != null && collider.Raycast(ray, out _, RayDistanceMeters)))
+                            visibleSamples++;
+                    }
+                    float value = visibleSamples / (float)SoftSampleCount;
+                    channels[directionIndex] = (byte)Mathf.RoundToInt(value * 255f);
+                    }
+                visibility[vertexIndex] = new Color32(
+                    channels[0], channels[1], channels[2], channels[3]);
+            }
+
+            return visibility;
         }
 
         private static void IntegrateStreams(IReadOnlyDictionary<string, StreamRecord> records)

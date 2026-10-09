@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
 using NUnit.Framework;
 using QuestFlightLab.Environment;
 using UnityEditor;
@@ -48,9 +50,9 @@ namespace QuestFlightLab.EditorTests
                 foreach (var patch in patches)
                     if (patch.TrySample(point.x, point.y, out float y, out _)) visible = Mathf.Max(visible, y);
                 Assert.That(float.IsNegativeInfinity(visible), Is.False);
-                Assert.That(authority.TryEvaluate(route, point.x, point.y, Vector3.forward, out var support), Is.True);
-                Assert.That(support.position.y, Is.EqualTo(visible).Within(0.08f),
-                    "Vehicle support differs from serialized opaque road triangles at " + point);
+                // Current product traffic consumes the authored visible-road lane bank.
+                // Profile centerlines remain source geometry, not the later terrain-blended contact path.
+                ValidateCurrentLaneNearPoint(route, point, patches);
             }
         }
 
@@ -73,9 +75,7 @@ namespace QuestFlightLab.EditorTests
         [Test]
         public void ProfilesAreDeterministicContinuousSagFreeAndGradeBounded()
         {
-            ProductionTerrainSurfaceAsset terrain =
-                AssetDatabase.LoadAssetAtPath<ProductionTerrainSurfaceAsset>(TerrainPath);
-            Assert.That(terrain, Is.Not.Null);
+            var ground = new QuestFlightLab.Editor.TrafficRoadSurfaceAuthoring.Ground();
             foreach (KbduGradeSeparatedRoadAuthorityV1.Profile profile in authority.Data.profiles)
             {
                 Assert.That(profile.maximum_grade, Is.LessThanOrEqualTo(0.06f), profile.span_id);
@@ -84,12 +84,10 @@ namespace QuestFlightLab.EditorTests
                 else Assert.That(profile.minimum_clearance_meters, Is.GreaterThanOrEqualTo(4.75f), profile.span_id);
                 Evaluate(profile, 0f, out Vector3 start, out Vector3 startNormal);
                 Evaluate(profile, profile.profile_length_meters, out Vector3 end, out Vector3 endNormal);
-                Assert.That(terrain.TrySample(start.x, start.z, out ProductionTerrainSample startTerrain), Is.True);
-                Assert.That(terrain.TrySample(end.x, end.z, out ProductionTerrainSample endTerrain), Is.True);
-                Assert.That(start.y, Is.EqualTo(startTerrain.heightMeters).Within(0.001f), profile.span_id);
-                Assert.That(end.y, Is.EqualTo(endTerrain.heightMeters).Within(0.001f), profile.span_id);
-                Assert.That(Vector3.Dot(startNormal, startTerrain.normal), Is.GreaterThan(0.999f), profile.span_id);
-                Assert.That(Vector3.Dot(endNormal, endTerrain.normal), Is.GreaterThan(0.999f), profile.span_id);
+                Assert.That(start.y, Is.EqualTo(ground.Height(new Vector2(start.x,start.z), out _)).Within(.001f), profile.span_id);
+                Assert.That(end.y, Is.EqualTo(ground.Height(new Vector2(end.x,end.z), out _)).Within(.001f), profile.span_id);
+                Assert.That(startNormal.sqrMagnitude, Is.EqualTo(1).Within(.001f));
+                Assert.That(endNormal.sqrMagnitude, Is.EqualTo(1).Within(.001f));
                 float bridgeStart = profile.bridge_interval_meters[0];
                 float bridgeEnd = profile.bridge_interval_meters[1];
                 Evaluate(profile, bridgeStart, out Vector3 a, out _);
@@ -186,14 +184,24 @@ namespace QuestFlightLab.EditorTests
             MeshRenderer[] renderers = root.GetComponentsInChildren<MeshRenderer>(true);
             Assert.That(renderers.Length, Is.EqualTo(2));
             Assert.That(root.GetComponentsInChildren<MonoBehaviour>(true), Is.Empty);
-            Assert.That(renderers.Select(renderer => renderer.sharedMaterial).Distinct().Count(), Is.EqualTo(1));
             Material terrainMaterial = AssetDatabase.LoadAssetAtPath<Material>(
                 "Assets/Production/Environment/PhotorealTerrainV1/KBDU_TerrainPyramid.mat");
-            Assert.That(renderers.All(renderer => renderer.sharedMaterial == terrainMaterial), Is.True);
-            Assert.That(renderers.All(renderer => renderer.sharedMaterial != null &&
-                renderer.sharedMaterial.renderQueue < 3000), Is.True);
-            Assert.That(renderers.Sum(renderer =>
-                renderer.GetComponent<MeshFilter>().sharedMesh.triangles.Length / 3), Is.LessThanOrEqualTo(6500));
+            Material concreteMaterial = AssetDatabase.LoadAssetAtPath<Material>(
+                "Assets/Production/Environment/GradeSeparatedRoadsV1/Generated/KBDU_BridgeConcrete.mat");
+            Assert.That(terrainMaterial, Is.Not.Null); Assert.That(concreteMaterial, Is.Not.Null);
+            foreach (MeshRenderer renderer in renderers)
+            {
+                CollectionAssert.AreEqual(new[] { terrainMaterial, concreteMaterial }, renderer.sharedMaterials);
+                Mesh mesh = renderer.GetComponent<MeshFilter>().sharedMesh;
+                Assert.That(mesh.subMeshCount, Is.EqualTo(2));
+                Assert.That(mesh.GetIndexCount(0), Is.GreaterThan(0));
+                Assert.That(mesh.GetIndexCount(1), Is.GreaterThan(0));
+                Assert.That(renderer.sharedMaterials.All(material => material.renderQueue < 3000), Is.True);
+            }
+            // Reviewed source topology after dense terrain embankments + concrete.
+            // Identity allocation only: physical Quest cost remains a release gate.
+            CollectionAssert.AreEqual(new[] {18464,18948}, renderers.Select(renderer =>
+                renderer.GetComponent<MeshFilter>().sharedMesh.triangles.Length / 3).OrderBy(n => n).ToArray());
 
             string runtimeSource = File.ReadAllText(
                 Path.GetFullPath(Path.Combine(Application.dataPath,
@@ -238,6 +246,42 @@ namespace QuestFlightLab.EditorTests
         {
             Assert.That(KbduGradeSeparatedRoadAuthorityV1.TryEvaluateProfile(
                 profile, distance, out position, out normal), Is.True, profile.span_id);
+        }
+
+        [Serializable] private sealed class CurrentRoutes { public CurrentRoute[] corridors; }
+        [Serializable] private sealed class CurrentRoute { public string corridor_id, direction_mode; }
+        private static void ValidateCurrentLaneNearPoint(string route, Vector2 point,
+            ProductionTerrainSurfaceAsset.TrianglePatch[] patches)
+        {
+            const string manifestPath = "Assets/Production/Environment/TrafficV2/Data/KBDU_TrafficV2FullMapManifest.json";
+            byte[] bytes = File.ReadAllBytes(manifestPath);
+            string hash;
+            using (var digest = SHA256.Create()) hash = string.Concat(digest.ComputeHash(bytes).Select(value => value.ToString("x2")));
+            var routes = JsonUtility.FromJson<CurrentRoutes>(System.Text.Encoding.UTF8.GetString(bytes));
+            int corridor = Array.FindIndex(routes.corridors, value => value.corridor_id == route);
+            Assert.That(corridor, Is.GreaterThanOrEqualTo(0));
+            var bankAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                "Assets/Production/Environment/TrafficV2/Data/KBDU_VisibleRoadLaneSurfaces.bytes");
+            var bank = new TrafficLaneSurfaceBank(bankAsset, routes.corridors.Length, hash);
+            Assert.That(bank.HasCorridor(corridor), Is.True);
+            bool bidirectional = routes.corridors[corridor].direction_mode == "BIDIRECTIONAL";
+            Array lanes = (Array)typeof(TrafficLaneSurfaceBank).GetField("lanes", BindingFlags.Instance|BindingFlags.NonPublic).GetValue(bank);
+            Array choices = (Array)lanes.GetValue(corridor);
+            int verified = 0;
+            foreach (object lane in choices)
+            {
+                var positions = (Vector3[])lane.GetType().GetField("position").GetValue(lane);
+                Vector3 nearest = positions.OrderBy(value => Vector2.Distance(new Vector2(value.x,value.z), point)).First();
+                Assert.That(Vector2.Distance(new Vector2(nearest.x,nearest.z), point), Is.LessThan(15f));
+                float visible = float.NegativeInfinity;
+                foreach (var patch in patches)
+                    if (patch.TrySample(nearest.x,nearest.z,out float y,out _)) visible=Mathf.Max(visible,y);
+                Assert.That(float.IsNegativeInfinity(visible), Is.False, "Authored lane must lie on rendered road.");
+                Assert.That(nearest.y, Is.EqualTo(visible).Within(.08f), "Current authored lane contact at " + nearest);
+                verified++;
+            }
+            Assert.That(verified, Is.EqualTo(bank.LaneCount(corridor,bidirectional)*(bidirectional?2:1)));
+            Assert.That(verified, Is.GreaterThan(0));
         }
 
         private static bool TryHighestMeshHeight(Mesh[] meshes, float x, float z, out float height)

@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe',
-    [string]$ProjectPath = 'C:\Users\ovied\Dev\T2\T2-QuestFlight\QuestFlight',
+    [string]$ProjectPath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'QuestFlight'),
     [string]$ArtifactDir = '',
     [ValidateRange(320, 4096)] [int]$Width = 1920,
     [ValidateRange(320, 4096)] [int]$Height = 1080,
@@ -10,6 +10,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'process_arguments.ps1')
 
 if ([string]::IsNullOrWhiteSpace($ArtifactDir)) {
     $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
@@ -32,7 +33,7 @@ try {
         '-executeMethod', 'QuestFlight.Editor.AerialSceneryVisualQaBatchRunner.RunBatch',
         '-logFile', $log
     )
-    $process = Start-Process -FilePath $UnityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+    $process = Start-Process -FilePath $UnityExe -ArgumentList (ConvertTo-ProcessArgumentString $arguments) -PassThru -WindowStyle Hidden
     if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
         $process.Kill($true)
         throw "Aerial scenery Visual QA exceeded ${TimeoutSeconds}s and was stopped. Log: $log"

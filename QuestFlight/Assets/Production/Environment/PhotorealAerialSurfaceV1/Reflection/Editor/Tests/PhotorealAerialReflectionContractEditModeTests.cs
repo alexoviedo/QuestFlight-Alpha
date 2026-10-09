@@ -130,10 +130,10 @@ namespace QuestFlightLab.Tests.EditMode
             Cubemap cockpitInterior = AssetDatabase.LoadAssetAtPath<Cubemap>(
                 PhotorealAerialReflectionAuthoring.CockpitInteriorReflectionPath);
             Assert.That(window.GetTexture("_CockpitInteriorReflectionCube"), Is.SameAs(cockpitInterior));
-            Assert.That(window.GetFloat("_WindshieldOpacity"), Is.InRange(0.07f, 0.08f));
-            Assert.That(window.GetFloat("_SideWindowOpacity"), Is.InRange(0.085f, 0.095f));
-            Assert.That(window.GetFloat("_ReflectionStrength"), Is.InRange(0.45f, 0.47f));
-            Assert.That(window.GetFloat("_InteriorReflectionStrength"), Is.InRange(0.89f, 0.91f));
+            Assert.That(window.GetFloat("_WindshieldOpacity"), Is.EqualTo(.045f).Within(.0001f));
+            Assert.That(window.GetFloat("_SideWindowOpacity"), Is.EqualTo(.06f).Within(.0001f));
+            Assert.That(window.GetFloat("_ReflectionStrength"), Is.EqualTo(.30f).Within(.0001f));
+            Assert.That(window.GetFloat("_InteriorReflectionStrength"), Is.EqualTo(.48f).Within(.0001f));
             Assert.That(window.GetFloat("_InteriorSkyLeak"), Is.InRange(0.07f, 0.09f));
             Assert.That(window.GetFloat("_DirectGlintStrength"), Is.InRange(0.06f, 0.07f));
             Assert.That(window.GetVector("_CockpitReflectionBoxMax").x,
@@ -141,8 +141,8 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(window.GetVector("_CockpitReflectionBoxMax").y,
                 Is.GreaterThan(window.GetVector("_CockpitReflectionBoxMin").y));
             Assert.That(instrument.GetTexture("_AuthoredReflectionCube"), Is.SameAs(cockpitInterior));
-            Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.InRange(0.45f, 0.47f));
-            Assert.That(instrument.GetFloat("_DirectGlintStrength"), Is.InRange(0.11f, 0.13f));
+            Assert.That(instrument.GetFloat("_ReflectionStrength"), Is.EqualTo(.23f).Within(.0001f));
+            Assert.That(instrument.GetFloat("_DirectGlintStrength"), Is.EqualTo(.065f).Within(.0001f));
 
             foreach (string path in new[]
                      {
@@ -207,6 +207,30 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
+        public void ReflectionOnlyDefaultsPreserveCurrentTrainerTuningAndMeshes()
+        {
+            var windowAsset=AssetDatabase.LoadAssetAtPath<Material>(PhotorealAerialReflectionAuthoring.WindowMaterialPath);
+            var lensAsset=AssetDatabase.LoadAssetAtPath<Material>(PhotorealAerialReflectionAuthoring.InstrumentGlassMaterialPath);
+            var window=new Material(windowAsset); var lens=new Material(lensAsset);
+            try
+            {
+                window.SetFloat("_WindshieldOpacity",.075f); lens.SetFloat("_ReflectionStrength",.46f);
+                var tuning=typeof(PhotorealAerialReflectionAuthoring).GetMethod("ApplyTrainerReflectionTuning",
+                    System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.NonPublic);
+                Assert.That(tuning,Is.Not.Null); tuning.Invoke(null,new object[]{window,lens});
+                foreach(string property in new[]{"_WindshieldOpacity","_SideWindowOpacity","_ReflectionStrength","_InteriorReflectionStrength"})
+                    Assert.That(window.GetFloat(property),Is.EqualTo(windowAsset.GetFloat(property)).Within(.0001f),property);
+                foreach(string property in new[]{"_ReflectionStrength","_DirectGlintStrength","_PerceptualRoughness"})
+                    Assert.That(lens.GetFloat(property),Is.EqualTo(lensAsset.GetFloat(property)).Within(.0001f),property);
+                // These existing-asset guards must preserve mesh bytes rather than replay extraction.
+                foreach(string method in new[]{"EnsureInstrumentLensMeshAsset","EnsureInstrumentDisplayReadoutMeshAsset"})
+                    typeof(PhotorealAerialReflectionAuthoring).GetMethod(method,
+                        System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.NonPublic).Invoke(null,null);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(window);UnityEngine.Object.DestroyImmediate(lens); }
+        }
+
+        [Test]
         public void CockpitViewKeepsExteriorGlazingAndRejectsScreenSpaceOcclusionOverlay()
         {
             GameObject aircraft = AssetDatabase.LoadAssetAtPath<GameObject>(
@@ -262,7 +286,7 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(lens.sharedMaterials, Has.Exactly(1).SameAs(lensMaterial));
             Mesh lensMesh = lens.GetComponent<MeshFilter>().sharedMesh;
             Assert.That(lensMesh.vertexCount, Is.EqualTo(325));
-            Assert.That(lensMesh.triangles.Length, Is.EqualTo(936));
+            Assert.That(lensMesh.triangles.Length, Is.EqualTo(576));
             Renderer displayReadout = authoredRenderers.Single(renderer => renderer.enabled &&
                 string.Equals(renderer.name,
                     PhotorealAerialReflectionAuthoring.InstrumentDisplayReadoutName,
@@ -276,11 +300,11 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(
                 displayReadoutMesh.vertexCount,
                 Is.EqualTo(
-                    (CockpitAvionicsV2PresentationAuthoring.ExpectedGlyphSlots + 140) * 4));
+                    (CockpitAvionicsV2PresentationAuthoring.ExpectedGlyphSlots + 141) * 4));
             Assert.That(
                 displayReadoutMesh.triangles.Length,
                 Is.EqualTo(
-                    (CockpitAvionicsV2PresentationAuthoring.ExpectedGlyphSlots + 140) * 6));
+                    (CockpitAvionicsV2PresentationAuthoring.ExpectedGlyphSlots + 141) * 6));
             Assert.That(aircraft.GetComponentsInChildren<Transform>(true).Any(transform =>
                 string.Equals(transform.name,
                     PhotorealAerialReflectionAuthoring.RejectedGeneratedInstrumentCoverName,

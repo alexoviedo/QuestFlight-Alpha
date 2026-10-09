@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [string]$UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe',
-  [string]$ProjectPath = 'C:\Users\ovied\Dev\T2\T2-QuestFlight\QuestFlight',
+  [string]$ProjectPath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'QuestFlight'),
   [string]$ArtifactDir = '',
   [string]$VisualQaReport = '',
   [ValidateRange(60, 1800)]
@@ -11,6 +11,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'process_arguments.ps1')
+. (Join-Path $PSScriptRoot 'visual_qa_identity.ps1')
 $repoRoot = Split-Path $PSScriptRoot -Parent
 if (-not (Test-Path -LiteralPath $UnityExe)) { throw "Unity not found: $UnityExe" }
 if (-not (Test-Path -LiteralPath $ProjectPath)) { throw "Project not found: $ProjectPath" }
@@ -20,6 +22,11 @@ if ([string]::IsNullOrWhiteSpace($ArtifactDir)) {
 }
 New-Item -ItemType Directory -Force -Path $ArtifactDir | Out-Null
 $ArtifactDir = (Resolve-Path -LiteralPath $ArtifactDir).Path
+$previousSourceIdentity = $env:QFL_VISUAL_QA_SOURCE_IDENTITY_SHA256
+$previousConfigurationIdentity = $env:QFL_VISUAL_QA_CONFIGURATION_SHA256
+try {
+$env:QFL_VISUAL_QA_SOURCE_IDENTITY_SHA256 = Get-VisualQaSourceSha256 -ProjectPath $ProjectPath -ArtifactDir $ArtifactDir
+$env:QFL_VISUAL_QA_CONFIGURATION_SHA256 = Get-VisualQaConfigurationSha256 -ProjectPath $ProjectPath
 
 if (-not $SkipVisualQa) {
   $visualDir = Join-Path $ArtifactDir 'visual_qa'
@@ -50,7 +57,7 @@ try {
     '-executeMethod', 'QuestFlight.Editor.QuestPerformanceBudgetBatchRunner.RunBatch',
     '-logFile', $log
   )
-  $process = Start-Process -FilePath $UnityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+  $process = Start-Process -FilePath $UnityExe -ArgumentList (ConvertTo-ProcessArgumentString $arguments) -PassThru -WindowStyle Hidden
   if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
     Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
     throw "Quest performance audit exceeded ${TimeoutSeconds}s. Log: $log"
@@ -71,3 +78,7 @@ $report = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
 if (-not $report.passed) { throw "Static Quest performance budget failed: $reportPath" }
 Write-Host "Quest static performance classification: $($report.classification)"
 Write-Host "Quest static performance artifacts: $ArtifactDir"
+} finally {
+  $env:QFL_VISUAL_QA_SOURCE_IDENTITY_SHA256 = $previousSourceIdentity
+  $env:QFL_VISUAL_QA_CONFIGURATION_SHA256 = $previousConfigurationIdentity
+}

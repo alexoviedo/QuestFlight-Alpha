@@ -13,6 +13,8 @@ namespace QuestFlightLab.Tests.EditMode
         {
             string[] expected =
             {
+                "wildlife_demo",
+                "wildlife_habitat",
                 "cockpit_neutral",
                 "head_pan",
                 "rear_view",
@@ -26,8 +28,13 @@ namespace QuestFlightLab.Tests.EditMode
             };
 
             CollectionAssert.AreEqual(expected, MetaXrSimulatorQaSessionCatalog.All.Select(item => item.id));
-            Assert.That(MetaXrSimulatorQaSessionCatalog.All.Select(item => item.id).Distinct().Count(), Is.EqualTo(10));
-            Assert.That(MetaXrSimulatorQaSessionCatalog.All.All(item => item.captureDelaySeconds > 0f), Is.True);
+            Assert.That(MetaXrSimulatorQaSessionCatalog.All.Select(item => item.id).Distinct().Count(), Is.EqualTo(12));
+            Assert.That(MetaXrSimulatorQaSessionCatalog.All.Where(item => item.id != "wildlife_demo")
+                .All(item => item.captureDelaySeconds > 0f), Is.True);
+            Assert.That(MetaXrSimulatorQaSessionCatalog.TryGet("wildlife_demo", out var demo), Is.True);
+            Assert.That(demo.captureDelaySeconds, Is.Zero);
+            Assert.That(demo.startAuthoredDemoPilot, Is.True);
+            Assert.That(MetaXrSimulatorQaSessionCatalog.TryGet("unknown-fixture-session", out _), Is.False);
         }
     }
 }

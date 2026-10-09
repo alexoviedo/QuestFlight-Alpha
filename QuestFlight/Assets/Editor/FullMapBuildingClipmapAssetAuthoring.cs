@@ -231,6 +231,7 @@ namespace QuestFlight.Editor
         {
             public string contract_version;
             public string compiler_version;
+            public string source_identity, unity_version, build_target, manifest_bundle_name, manifest_sha256;
             public BundleRecord[] bundles;
         }
 
@@ -239,6 +240,8 @@ namespace QuestFlight.Editor
             public string name;
             public uint crc;
             public string hash;
+            public string sha256;
+            public long bytes;
         }
 
         [Serializable] private sealed class StableShellCompilationReport
@@ -534,13 +537,64 @@ namespace QuestFlight.Editor
         {
             string stampPath = Absolute(StreamingRoot + "/build_stamp.txt");
             string expected = SourceHash();
-            if (File.Exists(stampPath) && string.Equals(File.ReadAllText(stampPath).Trim(), expected, StringComparison.Ordinal) &&
-                Directory.EnumerateFiles(Absolute(StreamingRoot), "qf_buildings_*", SearchOption.TopDirectoryOnly).Any())
-                return;
-            // The product hierarchy is already explicitly authored. A missing or
-            // stale ignored cache needs only deterministic geometry and bundles;
-            // rebuilding the serialized environment would create unrelated ID churn.
-            RebuildGeometryAndBundles();
+            if (!File.Exists(stampPath) || !string.Equals(File.ReadAllText(stampPath).Trim(), expected, StringComparison.Ordinal))
+                throw new InvalidOperationException("Building bundle cache is missing or stale; explicitly author verified Android artifacts before packaging.");
+            ValidateBundleCache(LoadDatabase(), Absolute(StreamingRoot), BuildTarget.Android);
+        }
+
+        private static void ValidateBundleCache(Database database, string directory, BuildTarget target)
+        {
+            string indexPath = Path.Combine(directory, "bundle_index.json");
+            if (!File.Exists(indexPath)) throw new InvalidOperationException("Building bundle index is missing.");
+            var index=JsonUtility.FromJson<BundleIndex>(File.ReadAllText(indexPath));
+            var builds=ExpectedBundleBuilds(database);
+            if (index == null || index.contract_version != AircraftCenteredBuildingClipmapController.ContractVersion ||
+                index.compiler_version != MeshCompilerVersion || index.source_identity != SourceHash(target) ||
+                index.unity_version != Application.unityVersion || index.build_target != target.ToString() ||
+                index.bundles == null || index.bundles.Length != builds.Length ||
+                index.bundles.Select(record=>record.name).Distinct().Count()!=builds.Length)
+                throw new InvalidOperationException("Building bundle input/compiler/editor/target/index identity is stale.");
+            if (string.IsNullOrEmpty(index.manifest_bundle_name) || Path.GetFileName(index.manifest_bundle_name)!=index.manifest_bundle_name ||
+                index.manifest_sha256 != AuthoringBundleVerifier.Sha256(Path.Combine(directory,index.manifest_bundle_name)))
+                throw new InvalidOperationException("Building root manifest identity differs.");
+            var manifestBundle=AssetBundle.LoadFromFile(Path.Combine(directory,index.manifest_bundle_name));
+            if (manifestBundle == null) throw new InvalidOperationException("Building root manifest cannot be loaded.");
+            try
+            {
+            var manifest=manifestBundle.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
+            if (manifest == null || !new HashSet<string>(builds.Select(build=>build.assetBundleName)).SetEquals(manifest.GetAllAssetBundles()))
+                throw new InvalidOperationException("Building root manifest partition differs.");
+            var actual=AuthoringBundleVerifier.Verify(directory,builds,"qf_buildings_",false);
+            foreach (var current in actual)
+                RequireRecordedBundleIntegrity(index.bundles.SingleOrDefault(record=>record.name==current.name),
+                    current,manifest.GetAssetBundleHash(current.name).ToString());
+            }
+            finally { manifestBundle.Unload(true); }
+        }
+
+        private static void RequireRecordedBundleIntegrity(BundleRecord record,
+            AuthoringBundleVerifier.BundleEvidence current,string expectedHash)
+        {
+            if (record == null || record.name != current.name || record.crc != current.crc ||
+                record.sha256 != current.sha256 || record.bytes != current.bytes || record.hash != expectedHash)
+                throw new InvalidOperationException("Building binary/index integrity differs: "+current.name);
+        }
+
+        public static void RepackExistingAndroidBundlesBatch()
+        {
+            try
+            {
+                Database database=LoadDatabase();
+                ValidateAuthoredProduct(database);
+                // Exact input meshes enter SourceHash; this entry point changes no geometry.
+                string staging=BuildBundles(database);
+                ValidateBundleCache(database,staging,BuildTarget.Android);
+                ActivateVerifiedBundleCache(staging);
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                Debug.Log("[QuestFlight][Buildings] Existing authored mesh Android bundle repack verified.");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception error) { Debug.LogException(error); EditorApplication.Exit(1); }
         }
 
         private static void RebuildGeometryAndBundles()
@@ -548,12 +602,13 @@ namespace QuestFlight.Editor
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             Database database = LoadDatabase();
             RebuildMeshAssets(database);
-            BuildBundles(database);
+            string staging=BuildBundles(database);
             RefreshSerializedPageMetadata(database);
-            File.WriteAllText(Absolute(StreamingRoot + "/build_stamp.txt"), SourceHash());
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             AssetDatabase.SaveAssets();
             ValidateAuthoredProduct(database);
+            ValidateBundleCache(database,staging,BuildTarget.Android);
+            ActivateVerifiedBundleCache(staging);
         }
 
         /// <summary>
@@ -615,13 +670,14 @@ namespace QuestFlight.Editor
             Material material = EnsureMaterial();
             AuthorAircraftImageryBinding(material);
             RebuildMeshAssets(database);
-            BuildBundles(database);
+            string staging=BuildBundles(database);
             AuthorEnvironment(database, material);
             BindSceneAircraftReference();
-            File.WriteAllText(Absolute(StreamingRoot + "/build_stamp.txt"), SourceHash());
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             AssetDatabase.SaveAssets();
             ValidateAuthoredProduct(database);
+            ValidateBundleCache(database,staging,BuildTarget.Android);
+            ActivateVerifiedBundleCache(staging);
         }
 
         // Reviewed against the City 2020 WRRF orthophoto, 4049 N 75th Street.
@@ -1936,13 +1992,8 @@ namespace QuestFlight.Editor
             BuildBundles(LoadDatabase(), destination, BuildTarget.StandaloneWindows64);
         }
 
-        private static void BuildBundles(Database database, string externalOutput = null, BuildTarget target = BuildTarget.Android)
+        private static AssetBundleBuild[] ExpectedBundleBuilds(Database database)
         {
-            string streaming = externalOutput ?? Absolute(StreamingRoot);
-            // Only the known generated Android cache may be cleared. External preview
-            // outputs are overwritten by BuildPipeline without recursive deletion.
-            if (externalOutput == null && Directory.Exists(streaming)) Directory.Delete(streaming, true);
-            Directory.CreateDirectory(streaming);
             List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
             for (int regionRow = 0; regionRow < Mathf.CeilToInt(database.rows / (float)BundleRegionCells); regionRow++)
             for (int regionColumn = 0; regionColumn < Mathf.CeilToInt(database.columns / (float)BundleRegionCells); regionColumn++)
@@ -1958,7 +2009,22 @@ namespace QuestFlight.Editor
                     assetNames = paths.ToArray(), addressableNames = addresses.ToArray()
                 });
             }
-            AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(streaming, builds.ToArray(),
+            return builds.ToArray();
+        }
+
+        private static string BuildBundles(Database database, string externalOutput = null, BuildTarget target = BuildTarget.Android)
+        {
+            string streaming = externalOutput ?? Absolute(StreamingRoot);
+            string destination=streaming;
+            string stagingParent=Path.Combine(Directory.GetParent(Application.dataPath).FullName,"Library","QuestFlightBundleStaging");
+            if (externalOutput == null)
+            {
+                Directory.CreateDirectory(stagingParent);
+                streaming=Path.Combine(stagingParent,Path.GetFileName(destination)+".staging-"+Guid.NewGuid().ToString("N"));
+            }
+            Directory.CreateDirectory(streaming);
+            AssetBundleBuild[] builds = ExpectedBundleBuilds(database);
+            AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(streaming, builds,
                 BuildAssetBundleOptions.ChunkBasedCompression | BuildAssetBundleOptions.StrictMode, target);
             if (manifest == null) throw new InvalidOperationException("Building AssetBundle compilation failed.");
             BundleRecord[] records = builds.Select(build =>
@@ -1970,15 +2036,31 @@ namespace QuestFlight.Editor
                 {
                     name = build.assetBundleName,
                     crc = crc,
-                    hash = manifest.GetAssetBundleHash(build.assetBundleName).ToString()
+                    hash = manifest.GetAssetBundleHash(build.assetBundleName).ToString(),
+                    bytes = new FileInfo(path).Length,
+                    sha256 = AuthoringBundleVerifier.Sha256(path)
                 };
             }).ToArray();
             File.WriteAllText(Path.Combine(streaming, "bundle_index.json"), JsonUtility.ToJson(new BundleIndex
             {
                 contract_version = AircraftCenteredBuildingClipmapController.ContractVersion,
                 compiler_version = MeshCompilerVersion,
+                source_identity = SourceHash(target),
+                manifest_bundle_name = Path.GetFileName(streaming),
+                manifest_sha256 = AuthoringBundleVerifier.Sha256(Path.Combine(streaming,Path.GetFileName(streaming))),
+                unity_version = Application.unityVersion,
+                build_target = target.ToString(),
                 bundles = records
             }, true));
+            ValidateBundleCache(database,streaming,target);
+            return streaming;
+        }
+
+        private static void ActivateVerifiedBundleCache(string staging)
+        {
+            string parent=Path.Combine(Directory.GetParent(Application.dataPath).FullName,"Library","QuestFlightBundleStaging");
+            AuthoringBundleVerifier.Activate(staging,Absolute(StreamingRoot),parent);
+            File.WriteAllText(Absolute(StreamingRoot+"/build_stamp.txt"),SourceHash());
         }
 
         private static void AuthorEnvironment(Database database, Material material)
@@ -2174,19 +2256,18 @@ namespace QuestFlight.Editor
         private static T LoadRequired<T>(string path) where T : UnityEngine.Object =>
             AssetDatabase.LoadAssetAtPath<T>(path) ?? throw new InvalidOperationException("Required asset missing: " + path);
         private static string Absolute(string assetPath) => Path.Combine(Directory.GetParent(Application.dataPath)?.FullName ?? throw new InvalidOperationException(), assetPath.Replace('/', Path.DirectorySeparatorChar));
-        private static string SourceHash()
+        private static string SourceHash(BuildTarget target = BuildTarget.Android)
         {
-            using SHA256 sha = SHA256.Create();
-            byte[] database = File.ReadAllBytes(Absolute(DatabasePath));
-            byte[] semanticTowerAuthority = File.ReadAllBytes(
-                Absolute(SemanticTowerAuthorityManifest.AssetPath));
-            byte[] compiler = System.Text.Encoding.UTF8.GetBytes(MeshCompilerVersion);
-            byte[] terrain = File.ReadAllBytes(Absolute(TerrainSurfacePath));
-            sha.TransformBlock(database, 0, database.Length, null, 0);
-            sha.TransformBlock(semanticTowerAuthority, 0, semanticTowerAuthority.Length, null, 0);
-            sha.TransformBlock(terrain, 0, terrain.Length, null, 0);
-            sha.TransformFinalBlock(compiler, 0, compiler.Length);
-            return BitConverter.ToString(sha.Hash).Replace("-", "").ToLowerInvariant();
+            string[] inputs = { DatabasePath, SemanticTowerAuthorityManifest.AssetPath, TerrainSurfacePath,
+                "Assets/Editor/FullMapBuildingClipmapAssetAuthoring.cs", "Assets/Editor/AuthoringBundleVerifier.cs",
+                "Assets/Editor/FullMapBuildingRoofTopology.cs", "Assets/Editor/NeighborhoodRoofReview.cs",
+                "Assets/Editor/SemanticTowerAuthorityManifest.cs", "Assets/Scripts/Environment/ProductionTerrainSurfaceAsset.cs" };
+            string identity = MeshCompilerVersion + "|" + Application.unityVersion + "|" + target +
+                "|ChunkBasedCompression|StrictMode|" + string.Join("|", inputs.Select(path=>path+":"+AuthoringBundleVerifier.Sha256(Absolute(path)))) +
+                "|mesh_inputs|" + string.Join("|", LoadDatabase().pages.OrderBy(page=>page.row).ThenBy(page=>page.column)
+                    .Select(page=>MeshPath(page.column,page.row)+":"+AuthoringBundleVerifier.Sha256(Absolute(MeshPath(page.column,page.row)))));
+            using SHA256 sha=SHA256.Create();
+            return string.Concat(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(identity)).Select(value=>value.ToString("x2")));
         }
 
         private static HashSet<int> LoadValidatedSemanticTowerExclusions(Database database)

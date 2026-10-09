@@ -1055,7 +1055,7 @@
   "limitations": [
     "Not for navigation and not surveyed building geometry.",
     "Lidar building heights are return-structure heuristics; the source has no LAS building class and no surveyed vertical-error study.",
-    "Runtime prisms use a deterministic error-bounded footprint simplification (area ratio 0.90-1.05 and sampled Hausdorff <=10 m) to satisfy the selected-scene triangle ceiling; the source identity and error metrics remain in the manifest.",
+    "Runtime prisms use a deterministic error-bounded footprint simplification (area ratio 0.90-1.05 and sampled Hausdorff <=10 m near / <=30 m outer) to satisfy the selected-scene triangle ceiling; the source identity and error metrics remain in the manifest.",
     "Active AirportCore hero replacement footprints are excluded and remain owned by ProductionHeroObjectLayer.",
     "The runtime binary is an offline-authored data asset and is not integrated into the product scene by this workstream.",
     "Serialized size and total topology are static budgets, not physical Quest performance evidence."
@@ -1370,7 +1370,11 @@
       "sampled_hausdorff_maximum_meters": 29.36718063707148,
       "sampled_hausdorff_p50_meters": 1.5756771943165662,
       "sampled_hausdorff_p95_meters": 5.828129175027414,
-      "vertex_reduction_fraction": 0.3868237412771066
+      "vertex_reduction_fraction": 0.3868237412771066,
+      "sampled_hausdorff_maximum_meters_by_band": {
+        "0-2km": 9.755304412103829,
+        "2-4km": 29.36718063707148
+      }
     },
     "record_count": 9611,
     "total_surface_triangles": 124992,

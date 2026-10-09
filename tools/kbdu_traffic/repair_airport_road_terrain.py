@@ -17,6 +17,49 @@ from pyproj import Transformer
 ROOT = Path(__file__).resolve().parents[2]
 ENV = ROOT / 'QuestFlight/Assets/Production/Environment'
 
+def finalize_float32_heightfield(vertices, triangles, *, exclude_collapsed=False):
+    """Validate the coordinates Unity actually stores, before publishing a payload.
+
+    GEOS operates in doubles. A positive-area source polygon can invert or lose
+    its entire XZ footprint after float32 serialization. Exclusions are allowed
+    only by the upstream compiler's explicit, reported zero-footprint policy;
+    consumers must reject an unreported collapsed payload.
+    """
+    source = np.asarray(vertices, dtype=np.float64)
+    indices = np.asarray(triangles)
+    if source.ndim != 2 or source.shape[1] != 3 or not np.isfinite(source).all():
+        raise ValueError('Terrain vertices must be finite XYZ coordinates')
+    with np.errstate(over='ignore', invalid='ignore'):
+        stored = source.astype('<f4').astype(np.float64)
+    if not np.isfinite(stored).all():
+        raise ValueError('Terrain vertices overflow float32 serialization')
+    if (indices.ndim != 2 or indices.shape[1] != 3 or
+            not np.issubdtype(indices.dtype, np.integer) or not indices.size or
+            indices.min() < 0 or indices.max() >= len(stored)):
+        raise ValueError('Terrain triangle indices are invalid')
+    indices = indices.astype(np.int64, copy=True)
+    cross = np.cross(stored[indices[:, 1]] - stored[indices[:, 0]],
+                     stored[indices[:, 2]] - stored[indices[:, 0]])
+    collapsed = np.flatnonzero(cross[:, 1] == 0)
+    inverted = np.flatnonzero(cross[:, 1] < 0)
+    if len(collapsed) and not exclude_collapsed:
+        raise ValueError('Zero XZ footprint after float32 serialization at faces ' +
+                         ','.join(map(str, collapsed)))
+    report = {
+        'coordinate_policy': 'IEEE754 float32 XYZ before winding validation',
+        'inverted_faces_corrected': inverted.tolist(),
+        'zero_xz_footprint_exclusions': [
+            {'face': int(face), 'vertex_indices': indices[face].tolist(),
+             'reason': 'zero_XZ_footprint_after_float32_serialization'}
+            for face in collapsed],
+    }
+    indices[inverted, 1], indices[inverted, 2] = (
+        indices[inverted, 2].copy(), indices[inverted, 1].copy())
+    keep = cross[:, 1] != 0
+    if not keep.any():
+        raise ValueError('Terrain has no nonzero XZ footprint after float32 serialization')
+    return stored, indices[keep], report
+
 def read_mesh(path):
     s = path.read_text()
     raw = bytes.fromhex(re.search(r'_typelessdata: ([0-9a-fA-F]+)', s)[1])
@@ -103,10 +146,14 @@ def build(baseline, output):
                 newfaces.append(ids)
         ix=np.array(newfaces)
     else: raise RuntimeError('Unwelded road patch edges remain')
+    # Explicit upstream policy: omit only pieces with exactly zero stored XZ
+    # footprint and retain each exclusion in the source report. No height or
+    # vertex is invented to rescue a collapsed piece.
+    vs,ix,float32_report=finalize_float32_heightfield(vs,ix,exclude_collapsed=True)
     output.mkdir(parents=True,exist_ok=True)
     payload={'vertices':vs.reshape(-1).tolist(),'triangles':ix.reshape(-1).tolist()}
     (output/'terrain_payload.json').write_text(json.dumps(payload,separators=(',',':')))
-    report={'source_sha256':hashlib.sha256(baseline.read_bytes()).hexdigest(),'source_triangles':len(faces),'triangles':len(ix),'changed_original_triangles':changed,'roads':len(selected),'source':'USGS public-domain lidar DTM; existing OSM ODbL road context','method':'local pavement-edge and 6m station constrained subdivision'}
+    report={'source_sha256':hashlib.sha256(baseline.read_bytes()).hexdigest(),'source_triangles':len(faces),'triangles':len(ix),'changed_original_triangles':changed,'roads':len(selected),'source':'USGS public-domain lidar DTM; existing OSM ODbL road context','method':'local pavement-edge and 6m station constrained subdivision','float32_serialization':float32_report}
     (output/'terrain_report.json').write_text(json.dumps(report,indent=2));print(json.dumps(report))
 
 if __name__=='__main__':

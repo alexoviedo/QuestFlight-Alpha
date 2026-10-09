@@ -15,6 +15,10 @@ manifest = json.loads((voice / 'KOKORO_SOURCE_MANIFEST.json').read_text(encoding
 timings = json.loads((a.production / 'Training/CaptionTimings.json').read_text(encoding='utf-8'))
 by_id = {c['id']: c for c in timings['clips']}
 records, errors = [], []
+manifest_ids=[c['id'] for c in manifest['clips']]
+timing_ids=[c['id'] for c in timings['clips']]
+if len(set(timing_ids))!=len(timing_ids) or set(timing_ids)!=set(manifest_ids):
+    errors.append('Caption IDs do not match the complete voice manifest')
 for entry in manifest['clips']:
     path = voice / (entry['id'] + '.wav')
     samples, rate = sf.read(path)
@@ -28,7 +32,10 @@ for entry in manifest['clips']:
     if timing:
         previous = -1
         for phrase in timing['phrases']:
-            if not phrase['text'] or phrase['start'] < previous or phrase['end'] > len(samples)/rate + .05:
+            if (not any(c.isalnum() for c in phrase['text'])
+                    or not np.isfinite(phrase['start']) or not np.isfinite(phrase['end'])
+                    or phrase['start'] < 0 or phrase['start'] < previous
+                    or phrase['end'] < phrase['start'] or phrase['end'] > len(samples)/rate + .05):
                 errors.append(entry['id'] + ': invalid phrase boundaries')
             previous = phrase['start']
     records.append({'id': entry['id'], 'seconds': len(samples)/rate, 'peakDbfs': float(20*np.log10(max(peak, 1e-9))), 'rmsDbfs': float(20*np.log10(max(np.sqrt(np.mean(samples*samples)), 1e-9)))})

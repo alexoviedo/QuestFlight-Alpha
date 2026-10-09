@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [string]$UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe',
-  [string]$ProjectPath = 'C:\Users\ovied\Dev\T2\T2-QuestFlight\QuestFlight',
+  [string]$ProjectPath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'QuestFlight'),
   [string]$ArtifactDir = '',
   [ValidateRange(30, 1800)]
   [int]$TimeoutSeconds = 600
@@ -9,6 +9,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'process_arguments.ps1')
 
 if (-not (Test-Path -LiteralPath $UnityExe)) { throw "Unity not found: $UnityExe" }
 if (-not (Test-Path -LiteralPath $ProjectPath)) { throw "Project not found: $ProjectPath" }
@@ -36,7 +37,7 @@ try {
     '-executeMethod', 'QuestFlight.Editor.AirportCoreBenchmarkValidator.ValidateBatch',
     '-logFile', $log
   )
-  $process = Start-Process -FilePath $UnityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+  $process = Start-Process -FilePath $UnityExe -ArgumentList (ConvertTo-ProcessArgumentString $arguments) -PassThru -WindowStyle Hidden
   if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
     Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
     throw "Airport-core V4 validation exceeded ${TimeoutSeconds}s. Log: $log"

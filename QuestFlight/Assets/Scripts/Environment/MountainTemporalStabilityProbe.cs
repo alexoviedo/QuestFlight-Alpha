@@ -8,6 +8,8 @@ using UnityEngine;
 
 namespace QuestFlightLab.Environment
 {
+    public enum MountainViolationCode { Bounds, CameraFacing, DistanceCull, Dither, FallbackSource, LegacySource, Lod, Material, Mesh, Parent, RendererCount, RendererDestroyed, RendererSet, RendererState, Scale, StaticFlag, Transform }
+
     [Serializable]
     public sealed class MountainRendererBaseline
     {
@@ -99,6 +101,7 @@ namespace QuestFlightLab.Environment
         public List<MountainRendererBaseline> rendererBaselines = new List<MountainRendererBaseline>();
         public List<MountainRendererFrameSample> frameSamples = new List<MountainRendererFrameSample>();
         public List<string> violations = new List<string>();
+        public List<string> violationCodes = new List<string>();
         public List<string> limitations = new List<string>();
     }
 
@@ -137,6 +140,7 @@ namespace QuestFlightLab.Environment
         }
 
         private readonly List<RendererBinding> _bindings = new List<RendererBinding>();
+        private readonly HashSet<MountainViolationCode> _violationCodes = new HashSet<MountainViolationCode>();
         private readonly HashSet<string> _violations = new HashSet<string>(StringComparer.Ordinal);
         private Transform _authoritativeRoot;
         private Transform _environmentRoot;
@@ -199,6 +203,7 @@ namespace QuestFlightLab.Environment
             _environmentRoot = environmentRoot != null ? environmentRoot : _authoritativeRoot.parent;
             _bindings.Clear();
             _violations.Clear();
+            _violationCodes.Clear();
 
             Renderer[] renderers = _authoritativeRoot
                 .GetComponentsInChildren<Renderer>(true)
@@ -230,7 +235,7 @@ namespace QuestFlightLab.Environment
 
             if (_bindings.Count < 2)
             {
-                AddViolation($"Expected at least mid/far authoritative terrain renderers; found {_bindings.Count}.");
+                AddViolation(MountainViolationCode.RendererCount, $"Expected at least mid/far authoritative terrain renderers; found {_bindings.Count}.");
             }
             ScanRendererSetAndLegacySources();
             _initialized = true;
@@ -288,6 +293,7 @@ namespace QuestFlightLab.Environment
             LastReport.rendererSampleCount = LastReport.frameSamples.Count;
             LastReport.capturedActiveSeconds = _captureActiveSeconds;
             LastReport.activeLegacyMountainRendererCount = CountActiveLegacyMountainRenderers();
+            LastReport.violationCodes = _violationCodes.Select(value => value.ToString()).OrderBy(value => value, StringComparer.Ordinal).ToList();
             LastReport.violations = _violations.OrderBy(value => value, StringComparer.Ordinal).ToList();
             PopulateClassification(LastReport);
 
@@ -350,7 +356,7 @@ namespace QuestFlightLab.Environment
             Renderer renderer = binding.Renderer;
             if (renderer == null)
             {
-                AddViolation($"Authoritative terrain renderer was destroyed: {binding.Baseline.parentHierarchy}.");
+                AddViolation(MountainViolationCode.RendererDestroyed, $"Authoritative terrain renderer was destroyed: {binding.Baseline.parentHierarchy}.");
                 return;
             }
 
@@ -369,25 +375,25 @@ namespace QuestFlightLab.Environment
             LODGroup currentLod = FindLodGroup(rendererTransform, _authoritativeRoot);
 
             if (matrixHash != binding.Baseline.localToWorldMatrixHash)
-                AddViolation($"Transform/matrix changed for {hierarchy}.");
+                AddViolation(MountainViolationCode.Transform, $"Transform/matrix changed for {hierarchy}.");
             if (rendererTransform.parent != binding.InitialParent)
-                AddViolation($"Parent hierarchy changed for {binding.Baseline.parentHierarchy} -> {hierarchy}.");
+                AddViolation(MountainViolationCode.Parent, $"Parent hierarchy changed for {binding.Baseline.parentHierarchy} -> {hierarchy}.");
             if (meshId != binding.Baseline.meshInstanceId || vertexCount != binding.Baseline.vertexCount)
-                AddViolation($"Mesh identity/vertex count changed for {hierarchy}: {binding.Baseline.meshInstanceId}/{binding.Baseline.vertexCount} -> {meshId}/{vertexCount}.");
+                AddViolation(MountainViolationCode.Mesh, $"Mesh identity/vertex count changed for {hierarchy}: {binding.Baseline.meshInstanceId}/{binding.Baseline.vertexCount} -> {meshId}/{vertexCount}.");
             if (!Approximately(bounds.center, binding.Baseline.boundsCenter) || !Approximately(bounds.size, binding.Baseline.boundsSize))
-                AddViolation($"World bounds changed for {hierarchy}.");
+                AddViolation(MountainViolationCode.Bounds, $"World bounds changed for {hierarchy}.");
             if (materialId != binding.Baseline.materialInstanceId)
-                AddViolation($"Material identity changed for {hierarchy}: {binding.Baseline.materialInstanceId} -> {materialId}.");
+                AddViolation(MountainViolationCode.Material, $"Material identity changed for {hierarchy}: {binding.Baseline.materialInstanceId} -> {materialId}.");
             if (renderer.enabled != binding.Baseline.rendererEnabled ||
                 rendererGameObject.activeSelf != binding.Baseline.activeSelf ||
                 rendererGameObject.activeInHierarchy != binding.Baseline.activeInHierarchy ||
                 renderer.forceRenderingOff != binding.Baseline.forceRenderingOff)
-                AddViolation($"Enabled/active renderer state changed for {hierarchy}.");
+                AddViolation(MountainViolationCode.RendererState, $"Enabled/active renderer state changed for {hierarchy}.");
             if (!Approximately(rendererTransform.localScale, binding.Baseline.localScale) ||
                 !Approximately(rendererTransform.lossyScale, binding.Baseline.lossyScale))
-                AddViolation($"Scale changed for {hierarchy}.");
+                AddViolation(MountainViolationCode.Scale, $"Scale changed for {hierarchy}.");
             if (currentLod != binding.LodGroup)
-                AddViolation($"LODGroup binding changed for {hierarchy}.");
+                AddViolation(MountainViolationCode.Lod, $"LODGroup binding changed for {hierarchy}.");
 
             float cameraDistance = 0f;
             bool insideFarClip = true;
@@ -439,36 +445,36 @@ namespace QuestFlightLab.Environment
             HashSet<int> actual = new HashSet<int>(current.Select(renderer => renderer.GetInstanceID()));
             if (!expected.SetEquals(actual))
             {
-                AddViolation($"Authoritative terrain renderer set changed: expected={expected.Count} actual={actual.Count}.");
+                AddViolation(MountainViolationCode.RendererSet, $"Authoritative terrain renderer set changed: expected={expected.Count} actual={actual.Count}.");
             }
 
             int activeLegacy = CountActiveLegacyMountainRenderers();
             if (activeLegacy > 0)
             {
-                AddViolation($"Detected {activeLegacy} active legacy ridge/snow/haze/impostor renderer(s) while real terrain is authoritative.");
+                AddViolation(MountainViolationCode.LegacySource, $"Detected {activeLegacy} active legacy ridge/snow/haze/impostor renderer(s) while real terrain is authoritative.");
             }
             if (FindActiveProceduralFallback() != null)
             {
-                AddViolation("Procedural fallback root is active at the same time as the real-data mountain root.");
+                AddViolation(MountainViolationCode.FallbackSource, "Procedural fallback root is active at the same time as the real-data mountain root.");
             }
         }
 
         private void ValidateBaseline(MountainRendererBaseline baseline)
         {
             if (baseline.meshInstanceId == 0 || baseline.vertexCount <= 0)
-                AddViolation($"Authoritative terrain has no fixed mesh: {baseline.parentHierarchy}.");
+                AddViolation(MountainViolationCode.Mesh, $"Authoritative terrain has no fixed mesh: {baseline.parentHierarchy}.");
             if (!baseline.activeInHierarchy || !baseline.rendererEnabled || baseline.forceRenderingOff)
-                AddViolation($"Authoritative terrain is not continuously enabled: {baseline.parentHierarchy}.");
+                AddViolation(MountainViolationCode.RendererState, $"Authoritative terrain is not continuously enabled: {baseline.parentHierarchy}.");
             if (baseline.lodGroupPresent)
-                AddViolation($"Terrain LODGroup is forbidden for temporal stability: {baseline.parentHierarchy}.");
+                AddViolation(MountainViolationCode.Lod, $"Terrain LODGroup is forbidden for temporal stability: {baseline.parentHierarchy}.");
             if (baseline.distanceCullerPresent)
-                AddViolation($"Terrain distance culler is forbidden for temporal stability: {baseline.parentHierarchy}.");
+                AddViolation(MountainViolationCode.DistanceCull, $"Terrain distance culler is forbidden for temporal stability: {baseline.parentHierarchy}.");
             if (baseline.cameraFacingOrImpostor)
-                AddViolation($"Camera-facing/billboard/impostor terrain is forbidden: {baseline.parentHierarchy}.");
+                AddViolation(MountainViolationCode.CameraFacing, $"Camera-facing/billboard/impostor terrain is forbidden: {baseline.parentHierarchy}.");
             if (baseline.ditherKeywordOrShader)
-                AddViolation($"Dither/crossfade material path is forbidden on terrain: {baseline.parentHierarchy}.");
+                AddViolation(MountainViolationCode.Dither, $"Dither/crossfade material path is forbidden on terrain: {baseline.parentHierarchy}.");
             if (RequiresAuthoredStaticFlag(Application.isEditor) && !baseline.staticGameObject)
-                AddViolation($"Authoritative terrain object is not marked static: {baseline.parentHierarchy}.");
+                AddViolation(MountainViolationCode.StaticFlag, $"Authoritative terrain object is not marked static: {baseline.parentHierarchy}.");
         }
 
         /// <summary>
@@ -661,38 +667,27 @@ namespace QuestFlightLab.Environment
             return string.Join("/", names.ToArray());
         }
 
-        private void AddViolation(string violation)
+        private void AddViolation(MountainViolationCode code, string violation)
         {
+            _violationCodes.Add(code);
             if (!string.IsNullOrWhiteSpace(violation)) _violations.Add(violation);
         }
 
         private static void PopulateClassification(MountainTemporalStabilityReport report)
         {
-            report.immutableTransforms = !report.violations.Any(value =>
-                value.IndexOf("Transform", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                value.IndexOf("bounds changed", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                value.IndexOf("Scale changed", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                value.IndexOf("Parent hierarchy", StringComparison.OrdinalIgnoreCase) >= 0);
-            report.immutableMeshes = !report.violations.Any(value =>
-                value.IndexOf("Mesh", StringComparison.OrdinalIgnoreCase) >= 0);
-            report.immutableRendererSet = !report.violations.Any(value =>
-                value.IndexOf("renderer set", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                value.IndexOf("renderer state", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                value.IndexOf("destroyed", StringComparison.OrdinalIgnoreCase) >= 0);
-            report.noTerrainLodOrDither = !report.violations.Any(value =>
-                value.IndexOf("LOD", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                value.IndexOf("Dither", StringComparison.OrdinalIgnoreCase) >= 0);
-            report.noCameraFacingOrDistanceScaling = !report.violations.Any(value =>
-                value.IndexOf("camera-facing", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                value.IndexOf("distance culler", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                value.IndexOf("Scale changed", StringComparison.OrdinalIgnoreCase) >= 0);
-            report.oneMountainSource = report.activeLegacyMountainRendererCount == 0 && !report.proceduralFallbackActive &&
-                                       !report.violations.Any(value => value.IndexOf("legacy", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                                                      value.IndexOf("fallback root", StringComparison.OrdinalIgnoreCase) >= 0);
+            bool Has(params MountainViolationCode[] codes) => codes.Any(code => report.violationCodes.Contains(code.ToString()));
+            report.immutableTransforms = !Has(MountainViolationCode.Transform, MountainViolationCode.Parent, MountainViolationCode.Bounds, MountainViolationCode.Scale, MountainViolationCode.StaticFlag);
+            report.immutableMeshes = !Has(MountainViolationCode.Mesh);
+            report.immutableRendererSet = !Has(MountainViolationCode.RendererCount, MountainViolationCode.RendererDestroyed, MountainViolationCode.RendererSet, MountainViolationCode.RendererState, MountainViolationCode.Material);
+            report.noTerrainLodOrDither = !Has(MountainViolationCode.Lod, MountainViolationCode.Dither);
+            report.noCameraFacingOrDistanceScaling = !Has(MountainViolationCode.CameraFacing, MountainViolationCode.DistanceCull, MountainViolationCode.Scale);
+            report.oneMountainSource = report.activeLegacyMountainRendererCount == 0 && !report.proceduralFallbackActive && !Has(MountainViolationCode.LegacySource, MountainViolationCode.FallbackSource);
             report.passed = report.realDataRootActive && report.immutableTransforms && report.immutableMeshes &&
                             report.immutableRendererSet && report.noTerrainLodOrDither &&
                             report.noCameraFacingOrDistanceScaling && report.oneMountainSource &&
-                            report.sampledFrameCount > 0;
+                            report.sampledFrameCount > 0 && report.expectedRendererCount >= 2 &&
+                            report.rendererSampleCount >= report.expectedRendererCount &&
+                            report.violations.Count == 0 && report.violationCodes.Count == 0;
             report.classification = report.passed ? "PASS_MACHINE_INVARIANTS_HUMAN_WITNESS_REQUIRED" : "FAIL";
         }
 

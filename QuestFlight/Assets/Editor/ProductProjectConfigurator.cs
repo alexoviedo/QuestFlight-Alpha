@@ -34,7 +34,9 @@ namespace QuestFlight.Editor
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, AndroidApplicationIdentifier);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel29;
-            PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
+            // Meta immersive manifest policy (2026-09-30): target 34, including
+            // applications created since 2026-03-01. Never depend on installed SDKs.
+            PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel34;
             PlayerSettings.Android.resizeableActivity = false;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.Android, Il2CppCompilerConfiguration.Release);
@@ -168,7 +170,9 @@ namespace QuestFlight.Editor
             AssetDatabase.SaveAssets();
 
             FeatureHelpers.RefreshFeatures(BuildTargetGroup.Android);
-            RequireFeature(MetaQuestFeature.featureId).enabled = true;
+            OpenXRFeature questFeature = RequireFeature(MetaQuestFeature.featureId);
+            questFeature.enabled = true;
+            ConfigureQuest3Devices(new SerializedObject(questFeature));
             EnableOptionalFeature(OculusTouchControllerProfile.featureId);
             EnableOptionalFeature(MetaQuestTouchPlusControllerProfile.featureId);
             EnableOptionalFeature(FoveatedRenderingFeature.featureId);
@@ -180,6 +184,26 @@ namespace QuestFlight.Editor
             EditorUtility.SetDirty(settings);
             foreach (OpenXRFeature feature in settings.GetFeatures().Where(feature => feature != null && feature.enabled))
                 EditorUtility.SetDirty(feature);
+        }
+
+        public static void ConfigureQuest3Devices(SerializedObject feature)
+        {
+            SerializedProperty devices = feature.FindProperty("targetDevices");
+            if (devices == null || !devices.isArray)
+                throw new InvalidOperationException("Meta Quest device settings are unavailable.");
+            int quest3 = 0;
+            for (int i = 0; i < devices.arraySize; i++)
+            {
+                SerializedProperty device = devices.GetArrayElementAtIndex(i);
+                string name = device.FindPropertyRelative("manifestName").stringValue;
+                // The pinned Unity SDK calls Quest 3 'eureka'. The final Gradle
+                // manifest is canonicalized to Meta's current 'quest3' identifier.
+                bool enabled = name == "eureka" || name == "quest3";
+                device.FindPropertyRelative("enabled").boolValue = enabled;
+                if (enabled) quest3++;
+            }
+            if (quest3 != 1) throw new InvalidOperationException("Expected exactly one Quest 3 target device.");
+            feature.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static XRGeneralSettingsPerBuildTarget GetOrCreateXrBuildTargetSettings()

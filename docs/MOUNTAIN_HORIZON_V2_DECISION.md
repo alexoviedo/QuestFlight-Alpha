@@ -44,7 +44,7 @@ Lead integration should:
 6. keep broad realtime world shadows disabled unless measured Quest headroom later authorizes a bounded exception;
 7. use the photographed clouds as the complete cloud renderer: no volumetric clouds, transparent cloud dome, or billboard field.
 
-The inspected product tuning uses sky exposure `0.74`, rotation `0`, sky ambient intensity `0.86`, reflection intensity `0.76`, one directional sun at intensity `1.0`, and water environment reflection strength `0.78`. The serialized scene and final Visual QA provide the authoritative transforms and fog color.
+The historical V2 tuning (before AirportCoreV4 sun alignment) used sky exposure `0.74`, rotation `0`, sky ambient intensity `0.86`, reflection intensity `0.76`, one directional sun at intensity `1.0`, and water environment reflection strength `0.78`. The serialized scene and final Visual QA provide the authoritative transforms and fog color.
 
 ## Required integration evidence
 
@@ -59,3 +59,5 @@ The neutral Meta XR Simulator live stereo capture passed its API/stereo checks, 
 - physical Quest timing remains within the milestone gate.
 
 The 24-view Editor capture set scored sky/clouds `7.8/10` and mountains `6.3/10`, but Alex's later worn Quest 3 review found visible mountain-ridge aliasing and rejected the overall environment at `4/10`. The fixed DEM remains the serialized architecture, not a visually accepted solution. No recorded-replay stereo stability or physical Quest timing claim is made; the three-run timing gate was intentionally not started after the human visual rejection.
+
+Current serialized sun alignment is authored by `AirportCoreV4Authoring`: sky rotation `-64.123046875` degrees, retaining exposure `0.74`. The sky `SOURCE_MANIFEST.json` separates this product integration from the earlier asset-only import record. Current far transition topology is 47,112 vertices and 87,184 triangles; the underlying 241Ã—241 / 100 m USGS grid and two offline smoothing passes are retained. These records establish configuration identity only; visual rejection and outstanding physical Quest gates above remain in effect.

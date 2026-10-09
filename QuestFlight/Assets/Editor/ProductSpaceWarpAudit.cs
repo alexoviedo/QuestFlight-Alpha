@@ -195,7 +195,7 @@ namespace QuestFlight.Editor
                 File.WriteAllBytes(Path.Combine(dir,"render_probe.png"),image.EncodeToPNG());
                 var report=Inspect();report.errors.AddRange(errors);report.passed=report.errors.Count==0;
                 File.WriteAllText(Path.Combine(dir,"render_coverage.json"),JsonUtility.ToJson(report,true));
-                EditorApplication.Exit(errors.Count==0?0:1);
+                EditorApplication.Exit(report.passed?0:1);
             }
             catch(Exception e){Debug.LogException(e);EditorApplication.Exit(1);}
         }

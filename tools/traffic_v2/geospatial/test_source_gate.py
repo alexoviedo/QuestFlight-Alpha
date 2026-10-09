@@ -198,9 +198,9 @@ def test_registry_and_frozen_inputs_are_exact() -> None:
         key: item["path"]
         for key, item in value["authority_model"]["benchmark_approval_witnesses"].items()
     } == {
-        "d_report": "docs/evidence/traffic_v2/TRAFFIC_V2_PHASE3_SOURCE_GATE_VERIFICATION.md",
-        "d_result": "docs/evidence/traffic_v2/TRAFFIC_V2_PHASE3_SOURCE_GATE_VERIFICATION.json",
-        "d_verifier": "tools/traffic_v2/validation/verify_phase3_source_gate.py",
+        "d_report": "docs/evidence/traffic_v2/TRAFFIC_V2_CURRENT_SOURCE_GATE_VERIFICATION.md",
+        "d_result": "docs/evidence/traffic_v2/TRAFFIC_V2_CURRENT_SOURCE_GATE_VERIFICATION.json",
+        "d_verifier": "tools/traffic_v2/validation/verify_current_source_gate.py",
         "lead_inspection": "tools/traffic_v2/schemas/traffic_v2_geospatial_universe_inspection_v1.json",
     }
     assert value["toolchain"]["requirements_lock"] == {
@@ -7424,7 +7424,7 @@ def test_geospatial_gate_directory_is_exactly_six_small_text_files() -> None:
     actual = {
         path.relative_to(source_gate.SCRIPT_DIR).as_posix()
         for path in source_gate.SCRIPT_DIR.rglob("*")
-        if path.is_file()
+        if path.is_file() and "__pycache__" not in path.parts
     }
     assert actual == expected
     assert all((source_gate.SCRIPT_DIR / name).stat().st_size < 1_000_000 for name in expected)

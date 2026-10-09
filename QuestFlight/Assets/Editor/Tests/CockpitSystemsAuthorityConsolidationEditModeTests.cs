@@ -40,6 +40,8 @@ namespace QuestFlightLab.Tests.EditMode
             WithController(controller =>
             {
                 FlightDynamicsState state = State(12.5);
+                state.nativeTelemetryVersion = 1;
+                state.actualFlapNormalized = .25;
                 Assert.That(
                     controller.StepForTest(
                         state,
@@ -73,11 +75,13 @@ namespace QuestFlightLab.Tests.EditMode
                     CockpitInstrumentV2Availability.BrakeHydraulics |
                     CockpitInstrumentV2Availability.ClockUtc |
                     CockpitInstrumentV2Availability.EngineRpm |
-                    CockpitInstrumentV2Availability.FuelSystem |
                     CockpitInstrumentV2Availability.OilSystem |
                     CockpitInstrumentV2Availability.VacuumSuction |
                     CockpitInstrumentV2Availability.TurnAndSlip;
                 Assert.That(instruments.availability, Is.EqualTo(expected));
+                Assert.That(instruments.actualFlapDegrees, Is.EqualTo(7.5f).Within(.001f));
+                Assert.That(instruments.Has(CockpitInstrumentV2Availability.FuelSystem), Is.False,
+                    "Unsupported fuel volume/flow must remain unavailable.");
                 Assert.That(
                     instruments.pitchDegrees,
                     Is.EqualTo((float)state.pitchDegrees).Within(0.001f));

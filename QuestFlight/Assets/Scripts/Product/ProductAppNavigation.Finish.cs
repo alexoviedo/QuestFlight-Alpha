@@ -30,8 +30,7 @@ namespace QuestFlight.Product
                     Choice(1,"Caption background: "+(ProductComfortPreferences.SolidCaptions?"solid":"subtle transparency"),132);
                     Choice(2,"Narration captions: "+(CaptionsEnabled?"on":"off"),14);Choice(7,"Back",5);return true;
                 case Page.ControlDiagram:
-                    heading.text="Your Touch controls";detail.text="Thumbsticks steer and trim; grips hold cockpit controls.";
-                    Choice(0,"Yoke grip: "+(ProductComfortPreferences.ToggleYoke?"press to grab / press to release":"hold to grab"),133);
+                    heading.text="Your Touch controls";detail.text="Thumbsticks steer and trim; hold a grip to grab the yoke and release it to let go. Ignition and fuel selectors are inactive; flights start with the engine running.";
                     Choice(7,"Back",5);return true;
                 case Page.Checklist:
                     heading.text="Cockpit readiness";detail.text=experience?.ChecklistText;

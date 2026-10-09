@@ -64,6 +64,7 @@ EXPECTED_TEXT_ARTIFACTS = (
     "traffic_source_provenance.md",
 )
 EXPECTED_EXTERNAL_ARTIFACT = "traffic_source_coverage.png"
+INDEPENDENT_SUPPORT_REQUIREMENT = "different_noncanonical-evidence_source_shared-correspondence_plus-exact-direct-class-and-lane"
 PACKAGE_INDEX_NAME = "package_index.json"
 OPERATION_LOCK_NAME = ".traffic_v2_geospatial_operation.lock"
 # Compatibility alias for callers of the first source-gate implementation.  It
@@ -7497,9 +7498,7 @@ def independent_lane_km_support(
     return ledger, {
         "by_class": by_class,
         "measurement": "unique_canonical_length_km_times_source_priority_lane_count",
-        "support_requirement": (
-            "different_noncanonical-evidence_source_shared-correspondence_plus_exact-direct-class-and-lane"
-        ),
+        "support_requirement": INDEPENDENT_SUPPORT_REQUIREMENT,
         "unknown_class_centerline_kilometers": round(
             unknown_class_centerline_meters / 1000.0, 6
         ),
@@ -9561,6 +9560,11 @@ def render_coverage_png(
     os.replace(temporary, output)
 
 
+def canonical_coverage_value(canonical: dict[str, Any]) -> dict[str, Any]:
+    """Stable candidate schema retains inline conflicts and the bound direct ledger."""
+    return {key: value for key, value in canonical.items() if key != "unmatched_reference_observations"}
+
+
 def _compile_artifacts_core(
     registry_path: Path,
     external_run_path: Path,
@@ -9857,11 +9861,7 @@ def _compile_artifacts_core(
             "exact_bounds_xz_meters": registry["coordinate_contract"]["bounds_xz_meters"],
             "status": "PASS" if len(cells) == 576 else "FAIL",
         },
-        "canonical_road_universe": {
-            key: value
-            for key, value in canonical.items()
-            if key not in ("conflicts", "unmatched_reference_observations")
-        },
+        "canonical_road_universe": canonical_coverage_value(canonical),
         "class_coverage": class_coverage,
         "coordinate_contract": registry["coordinate_contract"],
         "evidence": {EXPECTED_EXTERNAL_ARTIFACT: png_record},
@@ -10432,9 +10432,7 @@ def _derive_independent_support_summary(
     return {
         "by_class": by_class,
         "measurement": "unique_canonical_length_km_times_source_priority_lane_count",
-        "support_requirement": (
-            "different_noncanonical-evidence_source_shared-correspondence_plus-exact-direct-class-and-lane"
-        ),
+        "support_requirement": INDEPENDENT_SUPPORT_REQUIREMENT,
         "unknown_class_centerline_kilometers": round(unknown_class_length, 6),
         "unknown_class_segment_count": unknown_class_count,
     }

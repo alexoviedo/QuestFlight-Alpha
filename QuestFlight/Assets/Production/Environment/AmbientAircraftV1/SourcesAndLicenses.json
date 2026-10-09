@@ -361,5 +361,56 @@
   "generator": "tools/kbdu_airport_aircraft/build_ambient_aircraft.py",
   "modifications": "Exterior extraction; normalized coordinates; original vertex paint; three decimated LODs; protected C172 glazing; donor textures excluded. Glider wing replaced with original three-panel geometry and fuselage adjusted to manufacturer dimensions. Unity meshes extracted from these exports with persistent GUIDs.",
   "acceptance": "Editor integration, six accelerated traffic scenarios and inspected asset views completed. Stereo simulator, Android and physical Quest acceptance tracked in docs/AMBIENT_AIRCRAFT_IMPLEMENTATION_2026-09-11.md.",
-  "generatedSources": "WindSock.asset is original authored geometry. NearFieldWithWindSockRemoved.asset derives from the project AirportNearFieldV1 generated mesh, with eight static fabric triangles removed and all other geometry preserved; see AirportNearFieldV1 source/provenance records. BoulderWind.asset and six route assets derive from the existing ReconstructionV2 licensed terrain data and original algorithms."
+  "generatedSources": "WindSock.asset is original authored geometry. NearFieldWithWindSockRemoved.asset derives from the project AirportNearFieldV1 generated mesh, with eight static fabric triangles removed and all other geometry preserved; see AirportNearFieldV1 source/provenance records. BoulderWind.asset and six route assets derive from the existing ReconstructionV2 licensed terrain data and original algorithms.",
+  "remediation_M15_20261008": {
+    "finding": "RE-006",
+    "method": "Bounded surgical serialized mesh correction; no broad asset regeneration",
+    "modification": "Only 256 noncontributing zero-area triangle indices removed per existing SuperCub body LOD; original vertex buffers, all contributing triangle order/winding, bounds, material slots and asset GUIDs preserved. Historical GLB outputs above are not regenerated or reidentified.",
+    "repair_tool": ".questflight_codex_audit/status/M15-repair-serialized-meshes.py",
+    "repair_tool_sha256": "e57a73220a128d11bc884b745dd1b7927dead1c894301fdd783907b1156f6fc7",
+    "original_asset_and_meta_backups": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\remediation_M15_20261008\\originals",
+    "outputs": [
+      {
+        "finding": "RE-006",
+        "path": "QuestFlight\\Assets\\Production\\Environment\\AmbientAircraftV1\\Models\\SuperCub_LOD0_Body.asset",
+        "original_sha256": "9f29e75f4f3bf898aae343cdfd699308469cf0b86bc4ad6ba9728e1321a02f1e",
+        "candidate_sha256": "b3a1acc03033c20abf9b3710c3cbc140bdf7143a1bf3e55738947f392b22741d",
+        "removed_zero_area_triangles": 256,
+        "triangles_before": 2800,
+        "triangles_after": 2544,
+        "vertex_buffer_unchanged": true,
+        "valid_triangle_order_and_winding_unchanged": true,
+        "bounds_and_material_slots_unchanged": true,
+        "meta_sha256_preserved": "8044761cac6b647862177c94ee1c5d1f08b67ae8d391eaddec2433309bf20bf0"
+      },
+      {
+        "finding": "RE-006",
+        "path": "QuestFlight\\Assets\\Production\\Environment\\AmbientAircraftV1\\Models\\SuperCub_LOD1_Body.asset",
+        "original_sha256": "56984f33774b4c275bae2d09ffbab6c6bdbda1705ab84aa72508906b4dd37b35",
+        "candidate_sha256": "631f11fe1f1a78951d6cce5feeed2170afd8483bd3d51ede0e7550d2a199f742",
+        "removed_zero_area_triangles": 256,
+        "triangles_before": 838,
+        "triangles_after": 582,
+        "vertex_buffer_unchanged": true,
+        "valid_triangle_order_and_winding_unchanged": true,
+        "bounds_and_material_slots_unchanged": true,
+        "meta_sha256_preserved": "6cc64188366b16515f57df102011d143566c229b7fdba939725ebe2616729672"
+      },
+      {
+        "finding": "RE-006",
+        "path": "QuestFlight\\Assets\\Production\\Environment\\AmbientAircraftV1\\Models\\SuperCub_LOD2_Body.asset",
+        "original_sha256": "ff986d2add8dc7b62e6ea1c97dc43ffbeb0da0c29f8ff917d81080d2d6e9a0fd",
+        "candidate_sha256": "f3d137ef659dd3842de5b265fb608cc9463f77ab0ea1ea15ebb6c02c58294e08",
+        "removed_zero_area_triangles": 256,
+        "triangles_before": 678,
+        "triangles_after": 422,
+        "vertex_buffer_unchanged": true,
+        "valid_triangle_order_and_winding_unchanged": true,
+        "bounds_and_material_slots_unchanged": true,
+        "meta_sha256_preserved": "2f6da11f696d8d4831c1bdf9051273a7111982760cd2c54f432947cb4f15ea8a"
+      }
+    ],
+    "rights": "Existing source/license and distribution restrictions above remain authoritative.",
+    "validation": "Offline buffer/topology preservation evidence only. Unity focused tests, inspected stereo visual QA and final shipping build/device validation remain separate requirements."
+  }
 }

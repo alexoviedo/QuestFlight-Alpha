@@ -8,7 +8,7 @@ Cessna 172P, from JSBSim 1.3.1 revision
 `qfl-c172p-private-fidelity-v2`. The aerodynamic, engine, propeller, landing-gear,
 and flight-control definitions remain those of the pinned upstream model.
 
-This is the private product's sole flight model, not a certified aircraft model
+This is the product's sole flight model, not a certified aircraft model
 and not a claim of flight-training fidelity.
 
 ## Deterministic load
@@ -48,8 +48,9 @@ clamped controls and atmosphere actually submitted to the native ABI.
 
 ## Integrity and promotion status
 
-Every extracted runtime file is SHA-256 checked at preparation time. Native ABI
-version 2 and all binary hashes are pinned. The 2026-08-13 native-only scenario
+Runtime files are checked against the trusted APK hash-manifest identity before
+atomic activation; native ABI version 2 and current binary hashes are recorded
+in `SOURCE_MANIFEST.json`. The historical 2026-08-13 native-only scenario
 run executed 12 scenarios with no failures or errors: three passed every defined
 bound and nine remain honestly `Unproven` pending independent, condition-specific
 C172P envelopes. The Android ARM64 build and 16 KiB alignment pass. Exact-APK
@@ -65,6 +66,8 @@ unmeasured.
 
 JSBSim's engine/library is LGPL-2.1-or-later. The `c172x.xml` file separately
 declares GPL and contains an upstream non-sale statement. That discrepancy is
-an unresolved product-distribution blocker. The derivative may be used only as
-a private development diagnostic until the project owner resolves it; no
-public/commercial redistribution eligibility is claimed.
+preserved separately from the LGPL library record. The project owner authorized
+a free public alpha on 2026-09-18 and removed the project-imposed private-use
+hold; that does not grant additional upstream rights. Independent rights and
+publication compliance remain a release gate (FN-029/M14). No additional
+public/commercial redistribution eligibility is established by this prose.

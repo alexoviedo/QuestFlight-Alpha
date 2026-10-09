@@ -73,22 +73,27 @@ namespace QuestFlightLab.Editor
             try
             {
                 VisualContext context = LoadContext(width, height, report);
-                RenderRequiredShots(context, report, outputDir, width, height);
-                report.mountainSweep = RunMountainSweep(context);
-                report.contactSheetPath = BuildContactSheet(report, outputDir);
-                report.airportCoreBeforeContactSheetPath = BuildContactSheet(
-                    report.shots.Where(shot => shot.id.StartsWith("v4_before_", StringComparison.Ordinal)).ToList(),
-                    outputDir,
-                    "airport_core_before_contact_sheet.png");
-                report.airportCoreAfterContactSheetPath = BuildContactSheet(
-                    report.shots.Where(shot => shot.id.StartsWith("v4_after_", StringComparison.Ordinal)).ToList(),
-                    outputDir,
-                    "airport_core_after_contact_sheet.png");
-                report.photorealSurfaceContactSheetPath = BuildContactSheet(
-                    report.shots.Where(shot => shot.id.StartsWith("pasv1_", StringComparison.Ordinal)).ToList(),
-                    outputDir,
-                    "photoreal_aerial_surface_contact_sheet.png");
-                FinalizeReport(context, report);
+                using (var sdkPreview = new ProductionVisualQaSettledSdkPreview(context.rig.transform))
+                {
+                    report.sdkInputPreviewPolicy = ProductionVisualQaSettledSdkPreview.Policy;
+                    report.sdkInputPreviewSuppressedRendererCount = sdkPreview.SuppressedRendererCount;
+                    RenderRequiredShots(context, report, outputDir, width, height);
+                    report.mountainSweep = RunMountainSweep(context);
+                    report.contactSheetPath = BuildContactSheet(report, outputDir);
+                    report.airportCoreBeforeContactSheetPath = BuildContactSheet(
+                        report.shots.Where(shot => shot.id.StartsWith("v4_before_", StringComparison.Ordinal)).ToList(),
+                        outputDir,
+                        "airport_core_before_contact_sheet.png");
+                    report.airportCoreAfterContactSheetPath = BuildContactSheet(
+                        report.shots.Where(shot => shot.id.StartsWith("v4_after_", StringComparison.Ordinal)).ToList(),
+                        outputDir,
+                        "airport_core_after_contact_sheet.png");
+                    report.photorealSurfaceContactSheetPath = BuildContactSheet(
+                        report.shots.Where(shot => shot.id.StartsWith("pasv1_", StringComparison.Ordinal)).ToList(),
+                        outputDir,
+                        "photoreal_aerial_surface_contact_sheet.png");
+                    FinalizeReport(context, report);
+                }
             }
             catch (Exception exception)
             {
@@ -102,7 +107,7 @@ namespace QuestFlightLab.Editor
                 $"[QuestFlightLab][ProductionVisualQA] shots={report.shots.Count}/{RequiredShotCount} " +
                 $"classification={report.classification} output={outputDir}");
             if (!report.passed)
-                Debug.LogWarning("[QuestFlightLab][ProductionVisualQA] Machine QA did not pass; see visual_qa_summary.md.");
+                throw new InvalidOperationException("[QuestFlightLab][ProductionVisualQA] Machine QA did not pass; report and captures preserved in " + outputDir);
         }
 
         /// <summary>
@@ -961,18 +966,31 @@ namespace QuestFlightLab.Editor
                 "10_stable_mountain_horizon", "Immutable Front Range horizon", "mountain",
                 horizonCamera, LookAt(horizonCamera, westHorizon), 52f, ViewProfile.Environment));
 
-            Vector3 aircraftTarget = aircraft.position + Vector3.up * 1.1f;
-            Vector3 externalCamera = aircraftTarget - aircraft.forward * 12f + aircraft.right * 8f + Vector3.up * 4.5f;
-            Capture(context, report, outputDir, width, height, new ShotDefinition(
-                "11_external_aircraft_static", "External aircraft static", "aircraft",
-                externalCamera, LookAt(externalCamera, aircraftTarget), 52f, ViewProfile.External));
+            // Demo starts slightly before the authored runway threshold. The shadow
+            // correctly hides there; these declared ground views need an inset pose.
+            // This is a QA presentation pose, not a native reset/flight-model change.
+            Pose beforeGroundViews = new Pose(aircraft.position, aircraft.rotation);
+            Pose groundPose = ProductionVisualQaSettledSdkPreview.GroundPresentationPose(context.environment);
+            SetAircraftPose(context, groundPose.position, groundPose.rotation);
+            try
+            {
+                Vector3 aircraftTarget = aircraft.position + Vector3.up * 1.1f;
+                Vector3 externalCamera = aircraftTarget - aircraft.forward * 12f + aircraft.right * 8f + Vector3.up * 4.5f;
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "11_external_aircraft_static", "External aircraft static", "aircraft",
+                    externalCamera, LookAt(externalCamera, aircraftTarget), 52f, ViewProfile.External));
 
-            Capture(context, report, outputDir, width, height, new ShotDefinition(
-                "12_external_control_sweep", "External aircraft control sweep", "aircraft",
-                aircraftTarget - aircraft.forward * 9f - aircraft.right * 10f + Vector3.up * 4f,
-                LookAt(aircraftTarget - aircraft.forward * 9f - aircraft.right * 10f + Vector3.up * 4f, aircraftTarget),
-                50f, ViewProfile.External,
-                new AircraftControlState { aileron = 1f, elevator = 0.65f, flaps = 1f, throttle = 1f, mixture = 1f }));
+                Capture(context, report, outputDir, width, height, new ShotDefinition(
+                    "12_external_control_sweep", "External aircraft control sweep", "aircraft",
+                    aircraftTarget - aircraft.forward * 9f - aircraft.right * 10f + Vector3.up * 4f,
+                    LookAt(aircraftTarget - aircraft.forward * 9f - aircraft.right * 10f + Vector3.up * 4f, aircraftTarget),
+                    50f, ViewProfile.External,
+                    new AircraftControlState { aileron = 1f, elevator = 0.65f, flaps = 1f, throttle = 1f, mixture = 1f }));
+            }
+            finally
+            {
+                SetAircraftPose(context, beforeGroundViews.position, beforeGroundViews.rotation);
+            }
 
             SetAircraftPose(context, Vector3.Lerp(context.runway08, context.runway26, 0.38f) + Vector3.up * 1.25f, runwayRotation);
             CaptureChase(context, report, outputDir, width, height,
@@ -2418,7 +2436,8 @@ namespace QuestFlightLab.Editor
                 ImageStats image = Analyze(texture);
                 QuestRenderBudgetAudit.EditorDiagnosticPath =
                     shot.id == "12_external_control_sweep" || shot.id == "16_approach" ||
-                    shot.id == "pasv1_18_cockpit_side_window"
+                    shot.id == "01_default_cockpit" || shot.id == "cloud_01_ground_scattered" ||
+                    shot.id == "pasv1_18_cockpit_side_window" || shot.id == "40_pilot_left_airport_fence"
                         ? Path.Combine(outputDir, shot.id + "_draws.tsv") : null;
                 RenderBudgetSnapshot budget = QuestRenderBudgetAudit.Capture(context.camera);
                 QuestRenderBudgetAudit.EditorDiagnosticPath = null;
@@ -3310,8 +3329,12 @@ namespace QuestFlightLab.Editor
         {
             public int schemaVersion = 1;
             public string generatedUtc, unityVersion, scenePath, architectureVersion, outputDirectory, contactSheetPath;
+            public string sourceIdentitySha256 = System.Environment.GetEnvironmentVariable("QFL_VISUAL_QA_SOURCE_IDENTITY_SHA256") ?? string.Empty;
+            public string configurationSha256 = System.Environment.GetEnvironmentVariable("QFL_VISUAL_QA_CONFIGURATION_SHA256") ?? string.Empty;
             public string airportCoreBeforeContactSheetPath, airportCoreAfterContactSheetPath;
             public string photorealSurfaceContactSheetPath;
+            public string sdkInputPreviewPolicy;
+            public int sdkInputPreviewSuppressedRendererCount;
             public int renderWidth, renderHeight, requiredShotCount;
             public bool productionEnvironmentContractPassed, authoredHierarchyPassed, singleEnabledXrOrigin, legacyBootstrapAndUiSuppressed;
             public string productionEnvironmentContract;

@@ -9,6 +9,202 @@ namespace QuestFlightLab.Tests.EditMode
 {
     public sealed class ProductSpaceWarpEditModeTests
     {
+        [Test]
+        public void PriorFarBillboardGpuVerticesMatchActualPriorCpuTrs()
+        {
+            Shader shader = UnityEditor.ShaderUtil.CreateShaderAsset(@"Shader ""Hidden/QFLBillboardHistoryProbe"" { SubShader { Pass { Cull Off ZTest Always ZWrite Off
+CGPROGRAM
+#pragma target 4.5
+#pragma vertex vert
+#pragma fragment frag
+#include ""UnityCG.cginc""
+#include ""Assets/Shaders/ProductSpaceWarpMotion.cginc""
+float4 _TestVertex;
+float4 vert(appdata_base v) : SV_POSITION { return float4(v.vertex.xy,0,1); }
+float4 frag() : SV_Target { return QFPreviousVerticalBillboardWorld(_TestVertex); }
+ENDCG
+} } }");
+            var material = new Material(shader);
+            var quad = new Mesh { vertices = new[] { new Vector3(-1,-1,0), new Vector3(1,-1,0), new Vector3(1,1,0), new Vector3(-1,1,0) }, triangles = new[] {0,1,2,0,2,3} };
+            Vector4 oldView = Shader.GetGlobalVector("_QFPreviousGroveViewPosition");
+            try
+            {
+                Assert.That(UnityEditor.ShaderUtil.ShaderHasError(shader), Is.False);
+                foreach (var center in new[] { Vector3.zero, new Vector3(8000,14,-8000) })
+                foreach (var priorOffset in new[] { new Vector3(0,100,600), new Vector3(-300,25,400), new Vector3(0,100,0) })
+                foreach (var local in new[] { new Vector3(1,2,0), new Vector3(-1,.3f,.2f) })
+                {
+                    Vector3 previousView = center + priorOffset;
+                    Vector3 previousFacing = previousView - center; previousFacing.y = 0;
+                    if (previousFacing.sqrMagnitude < .001f) previousFacing = Vector3.forward;
+                    Vector3 currentFacing = previousFacing + new Vector3(1.5f,0,0);
+                    Vector3 scale = new Vector3(3,7,2);
+                    Matrix4x4 actualPrior = Matrix4x4.TRS(center, Quaternion.LookRotation(previousFacing.normalized, Vector3.up), scale);
+                    Matrix4x4 current = Matrix4x4.TRS(center, Quaternion.LookRotation(currentFacing.normalized, Vector3.up), scale);
+                    material.SetVector("_TestVertex", new Vector4(local.x,local.y,local.z,1));
+                    Shader.SetGlobalVector("_QFPreviousGroveViewPosition", previousView);
+                    Color observed = DrawMotionDiagnostic(quad, material, 0, current, null, null, null);
+                    Vector3 expected = actualPrior.MultiplyPoint3x4(local);
+                    Assert.That(Vector3.Distance(new Vector3(observed.r,observed.g,observed.b), expected), Is.LessThan(.002f), "Compiled GPU history must match prior presented CPU LookRotation TRS.");
+                }
+            }
+            finally
+            {
+                Shader.SetGlobalVector("_QFPreviousGroveViewPosition", oldView);
+                Object.DestroyImmediate(quad); Object.DestroyImmediate(material); Object.DestroyImmediate(shader);
+            }
+        }
+
+        [TestCase(-.2f)]
+        [TestCase(.2f)]
+        public void HandMotionFillFrontSurfacePassesMiddleDepthOccluder(float handSide)
+        {
+            // A closed box has distinct front/rear depths. A midpoint occluder
+            // blocks the rear only: the original CullFront produces no coverage.
+            var cameraObject = new GameObject("Isolated hand depth diagnostic camera");
+            var camera = cameraObject.AddComponent<Camera>(); camera.enabled = false;
+            camera.transform.position = new Vector3(0,0,-3);
+            camera.orthographic = true; camera.orthographicSize = 1; camera.nearClipPlane=.1f; camera.farClipPlane=10;
+            var cubeObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var quadObject = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            var hand = new Material(UnityEditor.AssetDatabase.LoadAssetAtPath<Shader>("Assets/Production/Rendering/VendorMotion/OculusHand.shader"));
+            Shader blockerShader = UnityEditor.ShaderUtil.CreateShaderAsset(@"Shader ""Hidden/QFLDepthOccluder"" { SubShader { Pass { Cull Off ZWrite On ZTest LEqual ColorMask 0
+CGPROGRAM
+#pragma vertex vert
+#pragma fragment frag
+#include ""UnityCG.cginc""
+float4x4 _TestVP;
+float4 vert(appdata_base v) : SV_POSITION { return mul(_TestVP,mul(unity_ObjectToWorld,v.vertex)); }
+float4 frag() : SV_Target { return 0; }
+ENDCG
+} } }");
+            var blocker = new Material(blockerShader);
+            Shader colorProjection = null;
+            Material visibleHand = null;
+            Shader depthProbeShader = null;
+            Material depthProbe = null;
+            Shader originalCull = null;
+            Material originalHand = null;
+            try
+            {
+                hand.SetTexture("_FingerGlowMask", Texture2D.whiteTexture);
+                hand.SetFloat("_WristFade",1); hand.SetFloat("_Opacity",.79f); hand.SetFloat("_GenerateGlow",0);
+                blocker.SetColor("_BaseColor",Color.clear); blocker.SetFloat("_ZWrite",1);
+                // This manual command buffer has no camera/provider invert-culling
+                // setup. Use an unflipped projection for both color and motion;
+                // flipping only projection would exchange front/rear surfaces.
+                Matrix4x4 vp = GL.GetGPUProjectionMatrix(camera.projectionMatrix,false) * camera.worldToCameraMatrix;
+                blocker.SetMatrix("_TestVP",vp);
+                // Manual command buffers under URP do not own the camera's
+                // built-in constants. Keep the actual hand color deformation,
+                // fragment/alpha and raster states; inject only the same explicit
+                // projection as the motion/depth probe into a transient clone.
+                string source = System.IO.File.ReadAllText("Assets/Production/Rendering/VendorMotion/OculusHand.shader");
+                string visibleSource = source.Replace("Shader \"QuestFlight/XR/", "Shader \"Hidden/QFLVisible/")
+                    .Replace("CBUFFER_START(UnityPerMaterial)", "float4x4 _QFDiagnosticViewProjection;\nCBUFFER_START(UnityPerMaterial)")
+                    .Replace("UnityObjectToClipPos(v.vertex)", "mul(_QFDiagnosticViewProjection,mul(unity_ObjectToWorld,v.vertex))");
+                Assert.That(visibleSource, Is.Not.EqualTo(source));
+                colorProjection = UnityEditor.ShaderUtil.CreateShaderAsset(visibleSource);
+                Assert.That(UnityEditor.ShaderUtil.ShaderHasError(colorProjection), Is.False);
+                visibleHand = new Material(hand) { shader = colorProjection };
+                visibleHand.SetMatrix("_QFDiagnosticViewProjection", vp);
+                var matrices = new[] {vp,vp};
+                Shader.SetGlobalMatrixArray("_NonJitteredViewProjMatrixStereo",matrices);
+                Shader.SetGlobalMatrixArray("_PrevViewProjMatrixStereo",matrices);
+                Shader.SetGlobalFloat("_QFResetMotion",1); Shader.SetGlobalFloat("_QFPreviousVertices",0);
+                Shader.SetGlobalFloat("_QFHasPreviousModel",0); Shader.SetGlobalFloat("_QFHasPreviousInstances",0);
+                int pass = hand.FindPass("XRMotionVectors"); Assert.That(pass,Is.GreaterThanOrEqualTo(0));
+                Matrix4x4 model = Matrix4x4.TRS(new Vector3(handSide,0,0),Quaternion.identity,Vector3.one);
+                Mesh cube = cubeObject.GetComponent<MeshFilter>().sharedMesh;
+                Mesh quad = quadObject.GetComponent<MeshFilter>().sharedMesh;
+                depthProbeShader = UnityEditor.ShaderUtil.CreateShaderAsset(@"Shader ""Hidden/QFLHandDepthCalibration"" {
+Properties { _Cull(""Cull"",Float)=2 _ZTest(""Depth comparison"",Float)=8 }
+SubShader { Pass { Cull [_Cull] ZWrite Off ZTest [_ZTest]
+CGPROGRAM
+#pragma vertex vert
+#pragma fragment frag
+#include ""UnityCG.cginc""
+float4x4 _TestVP;
+struct output { float4 clip : SV_POSITION; float worldZ : TEXCOORD0; };
+output vert(appdata_base v) { output o; float4 world=mul(unity_ObjectToWorld,v.vertex); o.clip=mul(_TestVP,world); o.worldZ=world.z; return o; }
+float4 frag(output i) : SV_Target { return float4(i.worldZ,0,0,1); }
+ENDCG
+} } }");
+                depthProbe = new Material(depthProbeShader); depthProbe.SetMatrix("_TestVP",vp);
+                Color backDepth = DrawMotionDiagnostic(cube,depthProbe,0,model,camera,null,null);
+                depthProbe.SetFloat("_Cull",1);
+                Color frontDepth = DrawMotionDiagnostic(cube,depthProbe,0,model,camera,null,null);
+                depthProbe.SetFloat("_Cull",0); depthProbe.SetFloat("_ZTest",(float)CompareFunction.LessEqual);
+                Color nearQuad = DrawMotionDiagnostic(quad,depthProbe,0,Matrix4x4.Translate(new Vector3(0,0,-.5f)),camera,quad,blocker);
+                Color farQuad = DrawMotionDiagnostic(quad,depthProbe,0,Matrix4x4.Translate(new Vector3(0,0,.5f)),camera,quad,blocker);
+                TestContext.WriteLine($"Depth calibration: CullBackZ={backDepth.r}, CullFrontZ={frontDepth.r}, nearAlpha={nearQuad.a}, rearAlpha={farQuad.a}, reversedZ={SystemInfo.usesReversedZBuffer}");
+                Assert.That(nearQuad.a,Is.GreaterThan(.9f),"Independent near-depth quad must pass the midpoint blocker.");
+                Assert.That(farQuad.a,Is.LessThan(.001f),"Independent rear-depth quad must fail the midpoint blocker.");
+                Assert.That(Mathf.Abs(backDepth.r),Is.EqualTo(.5f).Within(.001f));
+                Assert.That(frontDepth.r,Is.EqualTo(-backDepth.r).Within(.001f));
+                // The executed depth probes independently establish winding for
+                // this manual target. Apply the camera/provider's missing culling
+                // inversion only when Back actually selected the rear surface.
+                bool invertCulling = backDepth.r > 0;
+                depthProbe.SetFloat("_Cull",2); depthProbe.SetFloat("_ZTest",(float)CompareFunction.Always);
+                Color calibratedFront = DrawMotionDiagnostic(cube,depthProbe,0,model,camera,null,null,invertCulling);
+                Assert.That(calibratedFront.r,Is.EqualTo(-.5f).Within(.001f),"Calibrated Cull Back must select the physical near face.");
+                depthProbe.SetFloat("_Cull",1);
+                Color calibratedRear = DrawMotionDiagnostic(cube,depthProbe,0,model,camera,null,null,invertCulling);
+                Assert.That(calibratedRear.r,Is.EqualTo(.5f).Within(.001f),"Calibrated Cull Front must select the physical rear face.");
+                int colorPass = visibleHand.FindPass("HandFillURP"); Assert.That(colorPass,Is.GreaterThanOrEqualTo(0));
+                Color noBlocker = DrawMotionDiagnostic(cube,visibleHand,colorPass,model,camera,null,null,invertCulling);
+                Assert.That(noBlocker.a,Is.GreaterThan(.5f),"Unoccluded exact hand color/coverage must render before testing depth.");
+                Color visible = DrawMotionDiagnostic(cube,visibleHand,colorPass,model,camera,quad,blocker,invertCulling);
+                Assert.That(visible.a,Is.GreaterThan(.5f),"The same closed mesh has a color-visible front surface.");
+                Color covered = DrawMotionDiagnostic(cube,hand,pass,model,camera,quad,blocker,invertCulling);
+                Assert.That(covered.a,Is.GreaterThan(.5f),"Visible front hand fill must survive midpoint occluder; rear surface cannot.");
+                Assert.That(float.IsNaN(covered.r)||float.IsNaN(covered.g)||float.IsNaN(covered.b),Is.False);
+                string oldSource = System.IO.File.ReadAllText("Assets/Production/Rendering/VendorMotion/OculusHand.shader")
+                    .Replace("Shader \"QuestFlight/XR/", "Shader \"Hidden/QFLNegative/")
+                    .Replace("Cull Back Blend Off ZWrite On", "Cull Front Blend Off ZWrite On");
+                originalCull = UnityEditor.ShaderUtil.CreateShaderAsset(oldSource);
+                originalHand = new Material(hand) { shader = originalCull };
+                Color old = DrawMotionDiagnostic(cube,originalHand,originalHand.FindPass("XRMotionVectors"),model,camera,quad,blocker,invertCulling);
+                Assert.That(old.a,Is.LessThan(.001f),"Executed original CullFront negative control must lose visible-front coverage.");
+                hand.SetFloat("_Opacity",.25f);
+                Color ghost = DrawMotionDiagnostic(cube,hand,pass,model,camera,quad,blocker,invertCulling);
+                Assert.That(ghost.a,Is.LessThan(.001f),"Existing low-opacity ghost policy is retained.");
+            }
+            finally
+            {
+                Shader.SetGlobalFloat("_QFResetMotion",0);
+                Object.DestroyImmediate(hand); Object.DestroyImmediate(blocker);
+                Object.DestroyImmediate(blockerShader);
+                if(visibleHand!=null) Object.DestroyImmediate(visibleHand);
+                if(colorProjection!=null) Object.DestroyImmediate(colorProjection);
+                if(depthProbe!=null) Object.DestroyImmediate(depthProbe);
+                if(depthProbeShader!=null) Object.DestroyImmediate(depthProbeShader);
+                if(originalHand!=null) Object.DestroyImmediate(originalHand);
+                if(originalCull!=null) Object.DestroyImmediate(originalCull);
+                Object.DestroyImmediate(cubeObject); Object.DestroyImmediate(quadObject); Object.DestroyImmediate(cameraObject);
+            }
+        }
+
+        static Color DrawMotionDiagnostic(Mesh mesh, Material material, int pass, Matrix4x4 matrix, Camera camera, Mesh blockerMesh, Material blocker, bool invertCulling = false)
+        {
+            var target = new RenderTexture(16,16,24,RenderTextureFormat.ARGBFloat);
+            var pixels = new Texture2D(16,16,TextureFormat.RGBAFloat,false,true);
+            var commands = new CommandBuffer();
+            RenderTexture old = RenderTexture.active;
+            try
+            {
+                target.Create(); commands.SetRenderTarget(target); commands.ClearRenderTarget(true,true,Color.clear);
+                commands.SetInvertCulling(invertCulling);
+                if(camera!=null) commands.SetViewProjectionMatrices(camera.worldToCameraMatrix,GL.GetGPUProjectionMatrix(camera.projectionMatrix,false));
+                if(blockerMesh!=null) commands.DrawMesh(blockerMesh,Matrix4x4.Scale(new Vector3(2,2,1)),blocker,0,0);
+                commands.DrawMesh(mesh,matrix,material,0,pass); commands.SetInvertCulling(GL.invertCulling); Graphics.ExecuteCommandBuffer(commands);
+                RenderTexture.active=target; pixels.ReadPixels(new Rect(0,0,16,16),0,0); pixels.Apply();
+                return pixels.GetPixel(8,8);
+            }
+            finally { RenderTexture.active=old; commands.Release(); target.Release(); Object.DestroyImmediate(target); Object.DestroyImmediate(pixels); }
+        }
+
         [TestCase(35f, 0f)] [TestCase(-35f, 0f)] [TestCase(0f, 25f)]
         public void AuthoredCameraHeadMotionIsNotApplicationMotion(float yaw, float pitch)
         {

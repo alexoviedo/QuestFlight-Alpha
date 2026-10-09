@@ -1,6 +1,7 @@
 #if UNITY_INCLUDE_TESTS
 using System.Linq;
 using System.Reflection;
+using AlexOviedo.QuestFlight.JSBSim;
 using NUnit.Framework;
 using QuestFlightLab.Aircraft;
 using QuestFlightLab.Flight;
@@ -121,6 +122,102 @@ namespace QuestFlightLab.Tests.PlayMode
         }
 
         [Test]
+        [Description("Synchronous authored menu/native integration; not Android frame or worn-headset acceptance.")]
+        public void ThreeAuthoredMenuNewFlightCyclesMatchFreshNativeLoadingAndFirstSteps()
+        {
+            float previousTimeScale = Time.timeScale;
+            Transform world = LoadProductionWorld();
+            try
+            {
+                var coordinator = ComponentsInWorld<FlightDynamicsCoordinator>(world).Single();
+                var modes = ComponentsInWorld<ProductFlightModeCoordinator>(world).Single();
+                var input = ComponentsInWorld<ProductControlInput>(world).Single();
+                Camera trackedEye = ComponentsInWorld<Camera>(world).Single(camera =>
+                    camera.CompareTag("MainCamera") && camera.enabled &&
+                    camera.gameObject.activeInHierarchy);
+                int simulationRootId = coordinator.simulationRoot.GetInstanceID();
+                Assert.That(coordinator.InitializeSelectedBackend(), Is.True, coordinator.LastError);
+                JSBSimNativeSession native = MenuCycleNativeSession(coordinator);
+                Assert.That(native.IsInitialized, Is.True);
+                modes.SelectFreeFlight();
+                Assert.That(modes.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.FreeFlight), modes.LastError);
+
+                // This baseline is the first, freshly constructed native session in
+                // the actual authored world, before any dirty actuator/fuel history.
+                var states = new JSBSimNativeState[121];
+                var diagnostics = new JSBSimNativeDiagnostics[121];
+                AircraftControlState idle = AircraftControlState.Neutral(.1f);
+                states[0] = native.State;
+                diagnostics[0] = native.Diagnostics;
+                for (int step = 1; step <= 120; step++)
+                {
+                    Assert.That(coordinator.StepForTest(idle, 1d / 120), Is.True, coordinator.LastError);
+                    states[step] = native.State;
+                    diagnostics[step] = native.Diagnostics;
+                }
+
+                for (int cycle = 0; cycle < 3; cycle++)
+                {
+                    AircraftControlState dirty = AircraftControlState.Neutral(.8f);
+                    dirty.flaps = 1;
+                    dirty.trim = .2f;
+                    for (int step = 0; step < 1200; step++)
+                        Assert.That(coordinator.StepForTest(dirty, 1d / 120), Is.True, coordinator.LastError);
+                    Assert.That(native.Diagnostics.flapPosition, Is.GreaterThan(.5));
+                    Assert.That(native.Diagnostics.leftFuelPounds + native.Diagnostics.rightFuelPounds,
+                        Is.LessThan(diagnostics[0].leftFuelPounds + diagnostics[0].rightFuelPounds));
+
+                    // Call the real authored menu and free-flight entry points;
+                    // do not replace them with a direct package Reset invocation.
+                    modes.ReturnToMainMenu();
+                    Assert.That(modes.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Selection), modes.LastError);
+                    Assert.That(input.FlightLessonInputSuppressed, Is.True);
+                    Assert.That(Time.timeScale, Is.Zero);
+                    Assert.That(coordinator.IsInitialized, Is.True, coordinator.LastError);
+                    Assert.That(MenuCycleNativeSession(coordinator), Is.SameAs(native));
+                    Assert.That(coordinator.simulationRoot.GetInstanceID(), Is.EqualTo(simulationRootId));
+                    Assert.That(ComponentsInWorld<Camera>(world).Single(camera =>
+                        camera.CompareTag("MainCamera") && camera.enabled &&
+                        camera.gameObject.activeInHierarchy), Is.SameAs(trackedEye));
+                    modes.SelectFreeFlight();
+                    Assert.That(modes.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.FreeFlight), modes.LastError);
+                    Assert.That(input.FlightLessonInputSuppressed, Is.False);
+                    Assert.That(input.FlightLessonGuidanceActive, Is.False);
+                    Assert.That(Time.timeScale, Is.GreaterThan(0));
+                    AssertMenuCycleNativeValues(native.State, states[0], cycle, 0);
+                    AssertMenuCycleNativeValues(native.Diagnostics, diagnostics[0], cycle, 0);
+                    for (int step = 1; step <= 120; step++)
+                    {
+                        Assert.That(coordinator.StepForTest(idle, 1d / 120), Is.True, coordinator.LastError);
+                        AssertMenuCycleNativeValues(native.State, states[step], cycle, step);
+                        AssertMenuCycleNativeValues(native.Diagnostics, diagnostics[step], cycle, step);
+                    }
+                }
+            }
+            finally { Time.timeScale = previousTimeScale; }
+        }
+
+        private static JSBSimNativeSession MenuCycleNativeSession(FlightDynamicsCoordinator coordinator)
+        {
+            object backend = typeof(FlightDynamicsCoordinator).GetField("_backend",
+                BindingFlags.Instance | BindingFlags.NonPublic).GetValue(coordinator);
+            Assert.That(backend, Is.TypeOf<JSBSimNativeDevelopmentBackend>());
+            return (JSBSimNativeSession)typeof(JSBSimNativeDevelopmentBackend).GetField("_session",
+                BindingFlags.Instance | BindingFlags.NonPublic).GetValue(backend);
+        }
+
+        private static void AssertMenuCycleNativeValues<T>(T actual, T fresh, int cycle, int step)
+        {
+            foreach (FieldInfo field in typeof(T).GetFields())
+            {
+                string context = $"cycle {cycle}, step {step}, {field.Name}";
+                if (field.FieldType == typeof(double))
+                    Assert.That((double)field.GetValue(actual), Is.EqualTo((double)field.GetValue(fresh)).Within(1e-7), context);
+                else Assert.That(field.GetValue(actual), Is.EqualTo(field.GetValue(fresh)), context);
+            }
+        }
+
+        [Test]
         public void AuthoredFlightLessonRecoverySuppressesResetsRestoresAndReenables()
         {
             Transform world = LoadProductionWorld();
@@ -139,7 +236,10 @@ namespace QuestFlightLab.Tests.PlayMode
 
             Assert.That(coordinator.InitializeSelectedBackend(), Is.True,
                 coordinator.LastError);
-            demo.StartDemo();
+            ProductFlightModeCoordinator modes = ComponentsInWorld<ProductFlightModeCoordinator>(world).Single();
+            modes.SelectDemo();
+            Assert.That(modes.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Demo));
+            Assert.That(Time.timeScale, Is.GreaterThan(0f));
             InvokeUnityMessage(recovery, "Start");
             Assert.That(coordinator.IsInitialized, Is.True, coordinator.LastError);
             Assert.That(demo.IsRunning, Is.True);
@@ -148,59 +248,101 @@ namespace QuestFlightLab.Tests.PlayMode
                 ProductTouchControlChannel.PilotYoke,
                 41001,
                 0.35f,
-                -0.2f), Is.True);
-            Assert.That(input.ActiveTouchOverrideCount, Is.EqualTo(1));
+                -0.2f), Is.False, "The automatic demo owns controls; Touch must not compete with it.");
+            Assert.That(input.DemoOwnsControls, Is.True);
+            Assert.That(input.ActiveTouchOverrideCount, Is.Zero);
 
             ProductionTerrainSurfaceAsset terrain = recovery.AuthoredTerrainSurface;
-            const float outsideLessonEastMeters = 9500f;
-            const float outsideLessonNorthMeters = 0f;
+            const float offRunwayEastMeters = 9500f;
+            const float offRunwayNorthMeters = 0f;
             Assert.That(terrain.TrySample(
-                outsideLessonEastMeters,
-                outsideLessonNorthMeters,
+                offRunwayEastMeters,
+                offRunwayNorthMeters,
                 out ProductionTerrainSample outsideTerrain), Is.True);
 
             GeodeticReference origin = GeodeticReference.Kbdu;
             Vector3 outsidePosition = new Vector3(
-                outsideLessonEastMeters,
-                outsideTerrain.heightMeters + 300f,
-                outsideLessonNorthMeters);
+                offRunwayEastMeters,
+                outsideTerrain.heightMeters + 1.25f,
+                offRunwayNorthMeters);
             GeodeticReference outsideGeodetic =
                 FlightFrameConversions.UnityToGeodetic(outsidePosition, origin);
             GeodeticReference outsideTerrainGeodetic =
                 FlightFrameConversions.UnityToGeodetic(
                     new Vector3(
-                        outsideLessonEastMeters,
+                        offRunwayEastMeters,
                         outsideTerrain.heightMeters,
-                        outsideLessonNorthMeters),
+                        offRunwayNorthMeters),
                     origin);
-            FlightDynamicsInitialConditions lessonAreaExit =
+            FlightDynamicsInitialConditions offRunwayContact =
                 new FlightDynamicsInitialConditions
                 {
                     latitudeDegrees = outsideGeodetic.latitudeDegrees,
                     longitudeDegrees = outsideGeodetic.longitudeDegrees,
                     altitudeMslMeters = outsideGeodetic.altitudeMslMeters,
                     terrainElevationMslMeters = outsideTerrainGeodetic.altitudeMslMeters,
-                    calibratedAirspeedKnots = 80d,
+                    calibratedAirspeedKnots = 35d,
                     headingDegrees = 90d,
                     pitchDegrees = 0d,
                     bankDegrees = 0d,
                     flightPathAngleDegrees = 0d,
                     engineRunning = true
                 };
-            Assert.That(coordinator.TryResetToInitialConditions(lessonAreaExit),
+            Assert.That(FlightLessonRecoveryRuntimeAdapter.TryMapTerrainSample(terrain, outsidePosition,
+                out FlightLessonTerrainSample contactSurface), Is.True);
+            Assert.That(contactSurface.isRunwayOrApron, Is.False);
+            Assert.That(contactSurface.isWater, Is.False);
+            // A healthy aircraft9500m from the origin is inside the map. The old
+            // lesson circle is not the current recovery owner and must not fire.
+            FlightDynamicsInitialConditions healthyFarFlight = offRunwayContact;
+            healthyFarFlight.altitudeMslMeters += 300d;
+            healthyFarFlight.calibratedAirspeedKnots = 80d;
+            Assert.That(coordinator.TryResetToInitialConditions(healthyFarFlight), Is.True, coordinator.LastError);
+            InvokeUnityMessage(recovery, "FixedUpdate");
+            Assert.That(recovery.RecoveryPhase, Is.EqualTo(FlightLessonRecoveryPhase.Idle));
+            Assert.That(recovery.LastCrashReason, Is.EqualTo(FlightLessonCrashReason.None));
+            // Drive the existing crash classifier with real native WOW/ground speed
+            // on non-runway ground, rather than reviving the removed circle trigger.
+            Assert.That(coordinator.TryResetToInitialConditions(offRunwayContact),
                 Is.True, coordinator.LastError);
+            Assert.That(coordinator.CurrentState.weightOnWheels, Is.True);
+            Assert.That(coordinator.CurrentState.groundSpeedKnots,
+                Is.GreaterThan(FlightLessonCrashSettings.ConservativeTrainingDefaults.unsafeSurfaceGroundSpeedKnots));
 
             bool sawFadingOut = false;
             bool sawAwaitingReset = false;
             bool sawStabilizing = false;
             bool sawFadingIn = false;
             bool sawSuppression = false;
-            bool sawLeaseCancellation = false;
             bool verifiedCheckpointReset = false;
             bool recoveryStarted = false;
             FlightLessonRouteDefinition route = demo.RouteDefinition;
+            Assert.That(route.recoveryCheckpoints, Has.Length.EqualTo(1),
+                "The authored scenic demo has one departure restart, not an airborne checkpoint per segment.");
             FlightLessonRecoveryCheckpoint expectedCheckpoint =
                 route.recoveryCheckpoints[0];
+            Assert.That(expectedCheckpoint.calibratedAirspeedKnots, Is.Zero);
+            Assert.That(expectedCheckpoint.headingDegreesTrue, Is.EqualTo(90f));
+            Assert.That(FlightLessonRecoveryRuntimeAdapter.TryBuildInitialConditions(
+                expectedCheckpoint, terrain, out FlightDynamicsInitialConditions expectedReset), Is.True);
+            Vector3 expectedResetPosition = FlightFrameConversions.GeodeticToUnity(
+                expectedReset.latitudeDegrees, expectedReset.longitudeDegrees,
+                expectedReset.altitudeMslMeters, origin);
+            // The authored departure point is at the pavement end. Ground recovery
+            // moves exactly 10m east so the whole existing aircraft footprint is safe.
+            Assert.That(expectedResetPosition.x,
+                Is.EqualTo(expectedCheckpoint.positionUnityMeters.x + 10f).Within(0.1f));
+            Assert.That(expectedResetPosition.z,
+                Is.EqualTo(expectedCheckpoint.positionUnityMeters.z).Within(0.1f));
+            for (int footprintX = -1; footprintX <= 1; footprintX++)
+            for (int footprintZ = -1; footprintZ <= 1; footprintZ++)
+            {
+                Assert.That(terrain.TrySample(expectedResetPosition.x + footprintZ * 5f,
+                    expectedResetPosition.z + footprintX * 6.5f,
+                    out ProductionTerrainSample footprint), Is.True);
+                Assert.That(footprint.IsRunwayOrApron, Is.True);
+                Assert.That(Vector3.Angle(footprint.normal, Vector3.up), Is.LessThanOrEqualTo(3f));
+            }
 
             const int recoveryFixedFrameLimit = 360;
             for (int frame = 0; frame < recoveryFixedFrameLimit; frame++)
@@ -217,7 +359,9 @@ namespace QuestFlightLab.Tests.PlayMode
                 sawFadingIn |= phase == FlightLessonRecoveryPhase.FadingIn;
                 sawSuppression |= input.FlightLessonInputSuppressed &&
                                   demo.GuidanceSuppressed;
-                sawLeaseCancellation |= input.ActiveTouchOverrideCount == 0;
+                Assert.That(input.ActiveTouchOverrideCount, Is.Zero);
+                Assert.That(input.TryBeginTouchOverride(ProductTouchControlChannel.PilotYoke,
+                    41003, 0f, 0f), Is.False, "Automatic guidance and recovery keep control ownership exclusive.");
 
                 if (!verifiedCheckpointReset &&
                     phase == FlightLessonRecoveryPhase.Stabilizing)
@@ -230,9 +374,9 @@ namespace QuestFlightLab.Tests.PlayMode
                         reset.altitudeMslMeters,
                         origin);
                     Assert.That(resetPosition.x,
-                        Is.EqualTo(expectedCheckpoint.positionUnityMeters.x).Within(0.1f));
+                        Is.EqualTo(expectedResetPosition.x).Within(0.1f));
                     Assert.That(resetPosition.z,
-                        Is.EqualTo(expectedCheckpoint.positionUnityMeters.z).Within(0.1f));
+                        Is.EqualTo(expectedResetPosition.z).Within(0.1f));
                     Assert.That(reset.calibratedAirspeedKnots,
                         Is.EqualTo(expectedCheckpoint.calibratedAirspeedKnots).Within(0.001d));
                     Assert.That(reset.headingDegrees,
@@ -252,23 +396,30 @@ namespace QuestFlightLab.Tests.PlayMode
             Assert.That(sawStabilizing, Is.True);
             Assert.That(sawFadingIn, Is.True);
             Assert.That(sawSuppression, Is.True);
-            Assert.That(sawLeaseCancellation, Is.True);
+            Assert.That(recovery.LastCrashReason, Is.EqualTo(FlightLessonCrashReason.UnsafeSurfaceContact));
             Assert.That(verifiedCheckpointReset, Is.True);
             Assert.That(recovery.RecoveryPhase, Is.EqualTo(FlightLessonRecoveryPhase.Idle));
             Assert.That(input.FlightLessonInputSuppressed, Is.False);
             Assert.That(demo.GuidanceSuppressed, Is.False);
             Assert.That(demo.IsRunning, Is.True);
 
-            // Reproduce the headset failure condition: a later airborne recovery after
-            // the player reduced throttle, with pause and the coordinator's fail-closed
-            // component gate both latched. Recovery must clear both gates and prove the
-            // same backend advances before releasing the fade.
+            // A later demo crash must clear the input pause/low-throttle latches
+            // and prove that the existing healthy native authority advances before
+            // releasing the fade. A disabled authority has a different fail-closed owner.
             Assert.That(demo.RestoreLessonSegment(1), Is.True);
-            Assert.That(coordinator.TryResetToInitialConditions(lessonAreaExit),
+            Assert.That(demo.ProgressState.currentSegmentIndex, Is.EqualTo(1));
+            int secondCheckpointIndex = FlightLessonRecoverySelector.SelectCheckpointIndex(
+                route, demo.ProgressState);
+            Assert.That(secondCheckpointIndex, Is.Zero);
+            FlightLessonRecoveryCheckpoint secondCheckpoint = route.recoveryCheckpoints[secondCheckpointIndex];
+            Assert.That(secondCheckpoint.id, Is.EqualTo("departure"));
+            Assert.That(secondCheckpoint.resumeSegmentIndex, Is.Zero);
+            Assert.That(secondCheckpoint.calibratedAirspeedKnots, Is.Zero);
+            Assert.That(coordinator.TryResetToInitialConditions(offRunwayContact),
                 Is.True, coordinator.LastError);
             SetAutoProperty(input, nameof(ProductControlInput.Paused), true);
             input.Current.throttle = 0f;
-            coordinator.enabled = false;
+            Assert.That(coordinator.enabled, Is.True);
 
             bool secondRecoveryStarted = false;
             double secondResetSimulationTime = 0d;
@@ -308,15 +459,29 @@ namespace QuestFlightLab.Tests.PlayMode
                     coordinator.CurrentState.positionUnityMeters),
                 Is.GreaterThan(0.05f));
             Assert.That(coordinator.LastResetInitialConditions.calibratedAirspeedKnots,
-                Is.EqualTo(route.recoveryCheckpoints[1].calibratedAirspeedKnots).Within(0.001d));
+                Is.EqualTo(secondCheckpoint.calibratedAirspeedKnots).Within(0.001d));
+            Assert.That(demo.ProgressState.currentSegmentIndex,
+                Is.EqualTo(secondCheckpoint.resumeSegmentIndex));
             Assert.That(input.Current.throttle, Is.GreaterThan(0f),
                 "Low throttle at impact must not leave the recovered aircraft frozen.");
             Assert.That(input.TryBeginTouchOverride(
                 ProductTouchControlChannel.PilotYoke,
                 41002,
                 0f,
-                0f), Is.True,
-                "Cockpit control ownership must be available after the comfort fade completes.");
+                0f), Is.False, "Completed recovery preserves automatic demo ownership.");
+            FlightDynamicsInitialConditions lastReset = coordinator.LastResetInitialConditions;
+            coordinator.enabled = false;
+            InvokeUnityMessage(recovery, "FixedUpdate");
+            Assert.That(coordinator.enabled, Is.False,
+                "The lesson adapter must not resurrect a disabled flight authority.");
+            Assert.That(coordinator.LastResetInitialConditions, Is.EqualTo(lastReset));
+            Assert.That(recovery.RecoveryPhase, Is.EqualTo(FlightLessonRecoveryPhase.Idle));
+            coordinator.enabled = true;
+            demo.TakeUserControl();
+            Assert.That(demo.UserHasControls, Is.True);
+            Assert.That(input.DemoOwnsControls, Is.False);
+            Assert.That(input.TryBeginTouchOverride(ProductTouchControlChannel.PilotYoke,
+                41004, 0f, 0f), Is.False, "An explicit handoff still requires a neutral Touch release.");
         }
 
         [Test]
@@ -355,8 +520,8 @@ namespace QuestFlightLab.Tests.PlayMode
             Renderer[] interiorRenderers = interior.GetComponentsInChildren<Renderer>(true);
             Renderer[] unexpectedDisabledInterior = interiorRenderers
                 .Where(renderer =>
-                    renderer.name !=
-                        "Cessna_Interior_Paddle_MAT_0_Paddle_MAT_0" &&
+                    renderer.name != "Cessna_Interior_Paddle_MAT_0_Paddle_MAT_0" &&
+                    renderer.name != "Static_Display_New_Mat_01_0_New_Mat_01_0" &&
                     !renderer.enabled)
                 .ToArray();
             Assert.That(
@@ -370,6 +535,11 @@ namespace QuestFlightLab.Tests.PlayMode
                 Is.False,
                 "The incomplete frozen three-pedal source must remain replaced " +
                 "by the authored four-pedal renderer.");
+            Assert.That(interiorRenderers.Single(renderer => renderer.name ==
+                "Static_Display_New_Mat_01_0_New_Mat_01_0").enabled, Is.False,
+                "The overlapping imported display must remain replaced by the authored readout mesh.");
+            Assert.That(marker.AircraftRig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true)
+                .Single(renderer => renderer.name == "ProductionInstrumentDisplayReadouts").enabled, Is.True);
             Assert.That(leftAileron.GetComponentsInChildren<Renderer>(true).All(renderer => renderer.enabled), Is.True);
             Assert.That(staticPropeller.enabled, Is.True,
                 "The stopped propeller must remain visible from the cockpit; the RPM-driven presentation controller replaces it with the authored blur disc while running.");

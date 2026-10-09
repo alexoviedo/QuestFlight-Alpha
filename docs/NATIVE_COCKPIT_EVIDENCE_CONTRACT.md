@@ -1,0 +1,11 @@
+# Native cockpit and flight evidence boundaries
+
+The sole native authority supplies actual flap telemetry and true-NED ground velocity through FlightDynamicsState telemetry version1. Version0 or invalid telemetry is unavailable. Flap intent remains a control command; cockpit indication and both authored exterior flap pivots follow actual native actuator position. The authored maximum is30degrees with the existing negative pivot sign. There is no separate Unity flap actuator or independently available fuel burn/quantity model.
+
+GPS BRG and TRK are true directions. Track uses native ground-relative horizontal velocity, with TRK--- below0.5m/s. Heading does not substitute for track. Aerodynamic beta is the native air-relative quantity; evidence records ground track separately. Wind cases compare explicit perpendicular wind with an otherwise identical calm run.
+
+Ignition/start and fuel selectors are inactive in the shipping touch command boundary. Flights start with the engine running; throttle and mixture retain their supported native effects. The existing Controls help page communicates this scope. Preserved switch geometry does not promise cold start, magneto checks, tank feed switching or simulated engine shutdown through those selectors.
+
+Flight evidence v3 records actual loaded native module identities, validated payload/XML identities, source HEAD plus current relevant source digest, platform/tool version and actual session IC/loading/wind/control/time definitions. The Unity configuration hash describes UI/training-reference settings; it does not identify native aerodynamic coefficients. Scenario controller source is included in the relevant source digest. The comparator rejects different input identities instead of comparing incompatible traces as the same experiment. Historical v2 artifacts require explicit migration; missing native identity cannot pass release validation.
+
+The alpha-lift decomposition is unresolved: native execution confirms both alpha contributions are added and positive CLalpha persists above its table domain. Coefficients are preserved pending the product flight-model owner's derivation and approved reference maneuver/envelope. Engineering traces do not establish aircraft fidelity, training credit or certification.

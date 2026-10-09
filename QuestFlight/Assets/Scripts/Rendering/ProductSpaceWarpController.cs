@@ -17,7 +17,8 @@ namespace QuestFlight.Rendering
         [SerializeField] AircraftReferenceFrameRig rig;
         [SerializeField] ProductFlightModeCoordinator modes;
         static readonly List<XRDisplaySubsystem> displays = new List<XRDisplaySubsystem>(1);
-        public static bool Requested => PlayerPrefs.GetInt("QuestFlight.SpaceWarp", 0) != 0;
+        static CaptureRequestScope captureRequest;
+        public static bool Requested => captureRequest != null ? captureRequest.requested : PlayerPrefs.GetInt("QuestFlight.SpaceWarp", 0) != 0;
         public static bool Active { get; private set; }
         public static string Status { get; private set; } = "Not initialized";
         public static uint HistoryGeneration { get; private set; }
@@ -57,6 +58,27 @@ namespace QuestFlight.Rendering
         }
         public static void SetRequested(bool value)
         { PlayerPrefs.SetInt("QuestFlight.SpaceWarp", value ? 1 : 0); PlayerPrefs.Save(); InvalidateHistory(); }
+        // An explicit acceptance capture selects a mode without writing or
+        // later overwriting the user's saved preference. Ordinary play reads
+        // the preference, including a Settings change made during the capture.
+        public static IDisposable OverrideForAcceptanceCapture(bool requested)
+        {
+            if (captureRequest != null) throw new InvalidOperationException("An acceptance quality-mode scope is already active.");
+            captureRequest = new CaptureRequestScope(requested);
+            InvalidateHistory();
+            return captureRequest;
+        }
+        sealed class CaptureRequestScope : IDisposable
+        {
+            public readonly bool requested;
+            public CaptureRequestScope(bool value) { requested = value; }
+            public void Dispose()
+            {
+                if (captureRequest != this) return;
+                captureRequest = null;
+                InvalidateHistory();
+            }
+        }
         // Use the physical display frequency from Meta, not Unity's XR
         // application cadence, which can change when SpaceWarp is enabled.
         public static bool IsSupportedDisplayFrequency(float physicalHz)

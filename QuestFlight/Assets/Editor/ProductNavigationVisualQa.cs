@@ -69,11 +69,12 @@ namespace QuestFlightLab.Editor
                 report.classification="INTERFACE_EDITOR_CAPTURES_REVIEW_REQUIRED";
                 report.requiredShotCount=report.shots.Count;
                 // Existing global scenery audit results remain visible in the report, not silently waived.
-                report.passed=report.shots.All(s=>s.passed);
+                report.passed=report.shots.Count>0&&report.errors.Count==0&&report.shots.All(s=>s.passed);
             }
             catch(Exception e){report.errors.Add(e.ToString());report.classification="FAIL_INTERFACE_CAPTURE";Debug.LogException(e);}
             finally{Time.timeScale=scale;}
             WriteReportFiles(report,output);
+            if(!report.passed)throw new InvalidOperationException("Visual QA capture failed or evaluated no shots; see written report.");
         }
 
         // Presentation-only capture of the outdoor marker at the authored taxi checkpoint.
@@ -110,6 +111,7 @@ namespace QuestFlightLab.Editor
             catch(Exception e) { report.errors.Add(e.ToString()); report.classification="FAIL_OBJECTIVE_EDITOR_CAPTURE"; }
             finally { Time.timeScale=scale; }
             WriteReportFiles(report,output);
+            if(!report.passed)throw new InvalidOperationException("Visual QA capture failed or evaluated no shots; see written report.");
         }
 
         // Narrow standard-pipeline evidence; actual OpenXR stereo remains a separate gate.
@@ -155,6 +157,7 @@ namespace QuestFlightLab.Editor
             catch(Exception e) { report.errors.Add(e.ToString());report.passed=false;report.classification="FAIL_NAVIGATION_MACHINE_QA"; }
             finally { Time.timeScale=scale; }
             WriteReportFiles(report,output);
+            if(!report.passed)throw new InvalidOperationException("Visual QA capture failed or evaluated no shots; see written report.");
             Debug.Log("[NavigationQA] "+report.classification);
         }
     }

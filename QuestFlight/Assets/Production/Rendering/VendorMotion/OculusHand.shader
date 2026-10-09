@@ -534,7 +534,7 @@ ENDCG
         {
             Name "XRMotionVectors"
             Tags { "LightMode"="XRMotionVectors" }
-            Cull Front Blend Off ZWrite On ZTest LEqual ColorMask RGBA
+            Cull Back Blend Off ZWrite On ZTest LEqual ColorMask RGBA
             Stencil { Ref 1 WriteMask 1 Comp Always Pass Replace }
             CGPROGRAM
 

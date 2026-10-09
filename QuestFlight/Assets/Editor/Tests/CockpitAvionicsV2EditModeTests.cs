@@ -87,6 +87,7 @@ namespace QuestFlight.Editor.Tests
                 gpsBearingDegrees = 123f,
                 gpsDistanceNauticalMiles = 12.3f,
                 gpsGroundTrackDegrees = 118f,
+                gpsGroundTrackAvailable = true,
                 gpsAltitudeMslFeet = 5340f,
                 com1ActiveKHz = 118300,
                 com1StandbyKHz = 125700,

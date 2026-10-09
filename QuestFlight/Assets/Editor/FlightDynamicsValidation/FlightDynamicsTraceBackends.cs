@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using AlexOviedo.QuestFlight.JSBSim;
 using QuestFlightLab.Flight;
 using QuestFlightLab.Flight.Backends;
@@ -129,6 +130,24 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         public double NoseGearSteeringDegrees => _session.Diagnostics.gear0SteeringDegrees;
         public bool IsAvailable => _session.IsInitialized;
 
+        public AircraftControlState CaptureSubmittedControls()
+        {
+            JSBSimNativeControls applied = _session.AppliedControls;
+            return new AircraftControlState
+            {
+                aileron = (float)applied.aileron,
+                elevator = (float)applied.elevatorNoseUp,
+                rudder = (float)applied.rudderYawRight,
+                throttle = (float)applied.throttle,
+                mixture = (float)applied.mixture,
+                carbHeat = (float)applied.carbHeat,
+                trim = (float)applied.elevatorTrimNoseUp,
+                flaps = (float)applied.flaps,
+                leftToeBrake = (float)applied.leftBrake,
+                rightToeBrake = (float)applied.rightBrake
+            };
+        }
+
         public bool ConfigureMass(FlightScenarioMassConfiguration configuration)
         {
             bool configured = _session.SetMassConfiguration(new JSBSimNativeMassConfiguration
@@ -178,8 +197,8 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
             {
                 latitudeDegrees = origin.latitudeDegrees,
                 longitudeDegrees = origin.longitudeDegrees,
-                altitudeMslFeet = (initialState.terrainElevationMslMeters +
-                                   Math.Max(0.0, initialState.altitudeAglMeters)) *
+                altitudeMslFeet = FlightFrameConversions.GeodeticAltitudeToNativeRadialMeters(origin.latitudeDegrees,
+                                   initialState.terrainElevationMslMeters + Math.Max(0.0, initialState.altitudeAglMeters)) *
                                   FlightFrameConversions.MetersToFeet,
                 terrainElevationMslFeet = initialState.terrainElevationMslMeters *
                                           FlightFrameConversions.MetersToFeet,
@@ -190,6 +209,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 flightPathAngleDegrees = initialState.flightPathAngleDegrees,
                 engineRunning = initialState.engineRunning ? 1 : 0
             };
+            _session.SetAtmosphere(_atmosphere);
             if (!_session.Reset(native))
             {
                 LastError = _session.LastError;
@@ -227,6 +247,13 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         public bool SetWind(double northMetersPerSecond, double eastMetersPerSecond, double downMetersPerSecond)
         {
             if (!_session.IsInitialized) return false;
+            if (double.IsNaN(northMetersPerSecond) || double.IsInfinity(northMetersPerSecond) ||
+                double.IsNaN(eastMetersPerSecond) || double.IsInfinity(eastMetersPerSecond) ||
+                double.IsNaN(downMetersPerSecond) || double.IsInfinity(downMetersPerSecond))
+            {
+                LastError = "Native evidence wind must be finite.";
+                return false;
+            }
             _atmosphere = new JSBSimNativeAtmosphere
             {
                 windNorthFeetPerSecond = northMetersPerSecond * FlightFrameConversions.MetersToFeet,
@@ -256,12 +283,14 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         private void CaptureState()
         {
             JSBSimNativeState native = _session.State;
+            double altitude = FlightFrameConversions.NativeRadialAltitudeToGeodeticMeters(native.latitudeDegrees,
+                native.altitudeMslFeet * FlightFrameConversions.FeetToMeters);
             State = new FlightDynamicsState
             {
                 simulationTimeSeconds = native.simulationTimeSeconds,
                 latitudeDegrees = native.latitudeDegrees,
                 longitudeDegrees = native.longitudeDegrees,
-                altitudeMslMeters = native.altitudeMslFeet * FlightFrameConversions.FeetToMeters,
+                altitudeMslMeters = altitude,
                 altitudeAglMeters = native.altitudeAglFeet * FlightFrameConversions.FeetToMeters,
                 calibratedAirspeedKnots = native.calibratedAirspeedKnots,
                 groundSpeedKnots = native.groundSpeedKnots,
@@ -273,25 +302,47 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 sideslipDegrees = native.sideslipDegrees,
                 engineRpm = native.engineRpm,
                 loadFactorG = native.loadFactorG,
+                nativeTelemetryVersion = 1,
+                actualFlapNormalized = _session.Diagnostics.flapPosition,
+                groundVelocityNedMetersPerSecond = new Vector3(
+                    (float)(native.velocityNorthFeetPerSecond * FlightFrameConversions.FeetToMeters),
+                    (float)(native.velocityEastFeetPerSecond * FlightFrameConversions.FeetToMeters),
+                    (float)(native.velocityDownFeetPerSecond * FlightFrameConversions.FeetToMeters)),
                 weightOnWheels = native.weightOnWheels != 0,
                 positionUnityMeters = FlightFrameConversions.GeodeticToUnity(
                     native.latitudeDegrees,
                     native.longitudeDegrees,
-                    native.altitudeMslFeet * FlightFrameConversions.FeetToMeters,
+                    altitude,
                     GeodeticReference.Kbdu),
-                rotationUnity = FlightFrameConversions.JsbsimAttitudeToUnity(
+                rotationUnity = FlightFrameConversions.JsbsimAttitudeToProjectedUnity(
                     native.headingDegrees,
                     native.pitchDegrees,
-                    native.bankDegrees),
-                velocityUnityMetersPerSecond = FlightFrameConversions.NedFeetPerSecondToUnityMetersPerSecond(
+                    native.bankDegrees, native.latitudeDegrees, native.longitudeDegrees, GeodeticReference.Kbdu),
+                velocityUnityMetersPerSecond = FlightFrameConversions.NedFeetPerSecondToProjectedMetersPerSecond(
                     native.velocityNorthFeetPerSecond,
                     native.velocityEastFeetPerSecond,
-                    native.velocityDownFeetPerSecond),
+                    native.velocityDownFeetPerSecond, native.latitudeDegrees, native.longitudeDegrees, altitude, GeodeticReference.Kbdu),
                 angularVelocityBodyDegreesPerSecond = FlightFrameConversions.BodyRatesRadiansToUnityDegrees(
                     native.rollRateRadiansPerSecond,
                     native.pitchRateRadiansPerSecond,
                     native.yawRateRadiansPerSecond)
             };
+        }
+
+        public FlightScenarioInputEvidence CaptureScenarioInputs(string scenario, double durationSeconds)
+        {
+            // These are the session's actual configured values, including trim/loading
+            // variants, rather than a hash of the unrelated Unity reference resource.
+            string definition = "{\"initial\":"+NativeFlightEvidenceIdentity.NumericFieldsJson(_session.ConfiguredInitialConditions)+
+                ",\"mass\":"+NativeFlightEvidenceIdentity.NumericFieldsJson(_session.ConfiguredMass)+
+                ",\"windNedFps\":"+NativeFlightEvidenceIdentity.NumericFieldsJson(_session.AppliedAtmosphere)+
+                ",\"initialControls\":"+NativeFlightEvidenceIdentity.NumericFieldsJson(_session.AppliedControls)+
+                ",\"resolvedInitialState\":"+NativeFlightEvidenceIdentity.NumericFieldsJson(_session.State)+
+                ",\"stepSeconds\":"+FlightDynamicsAcceptanceContract.FixedStepSeconds.ToString("R",CultureInfo.InvariantCulture)+
+                ",\"durationSeconds\":"+durationSeconds.ToString("R",CultureInfo.InvariantCulture)+
+                ",\"resolvedWeightPounds\":"+WeightPounds.ToString("R",CultureInfo.InvariantCulture)+
+                ",\"resolvedCgXInches\":"+CgXInches.ToString("R",CultureInfo.InvariantCulture)+"}";
+            return new FlightScenarioInputEvidence {scenario=scenario,definitionJson=definition,definitionSha256=NativeFlightEvidenceIdentity.HashText(definition)};
         }
     }
 }

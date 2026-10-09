@@ -584,6 +584,9 @@ namespace QuestFlightLab.Runtime
                 schemaVersion = 1,
                 generatedUtc = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture),
                 sessionId = _sessionId,
+                runId = System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_RUN_ID") ?? string.Empty,
+                playerSha256 = System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_PLAYER_SHA256") ?? string.Empty,
+                sourceIdentitySha256 = System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_SOURCE_SHA256") ?? string.Empty,
                 sessionDescription = definition != null ? definition.description : "Unknown session",
                 replayPath = System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_REPLAY_PATH") ?? string.Empty,
                 sceneName = SceneManager.GetActiveScene().name,
@@ -987,6 +990,9 @@ namespace QuestFlightLab.Runtime
                 schemaVersion = 1,
                 generatedUtc = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture),
                 sessionId = _sessionId,
+                runId = System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_RUN_ID") ?? string.Empty,
+                playerSha256 = System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_PLAYER_SHA256") ?? string.Empty,
+                sourceIdentitySha256 = System.Environment.GetEnvironmentVariable("QFL_META_XR_SIMULATOR_SOURCE_SHA256") ?? string.Empty,
                 sceneName = SceneManager.GetActiveScene().name,
                 unityVersion = Application.unityVersion,
                 xrLoadedDeviceName = XRSettings.loadedDeviceName,
@@ -1068,6 +1074,7 @@ namespace QuestFlightLab.Runtime
     {
         public int schemaVersion;
         public string generatedUtc, sessionId, sessionDescription, replayPath, sceneName, architectureVersion;
+        public string runId, playerSha256, sourceIdentitySha256;
         public string unityVersion, platform, graphicsDevice, graphicsApi;
         public string openXrRuntimeName, openXrRuntimeVersion, openXrApiVersion, xrLoadedDeviceName;
         public bool xrDeviceActive, stereoEnabled, displayRefreshRateAvailable, environmentContractPassed;

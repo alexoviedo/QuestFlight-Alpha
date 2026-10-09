@@ -27,6 +27,11 @@ function Write-RuntimeEvidenceFixture {
     warmupSeconds = 90.0
     measuredSeconds = 60.0
     sampleCount = 4320
+    requestedQualityMode = 'Native72'
+    native72ModeObserved = $true
+    spaceWarpRequestedSamples = 0
+    spaceWarpActiveSamples = 0
+    spaceWarpSubmissionSamples = 0
     averageFrameMs = 13.8
     p95FrameMs = 13.888
     p99FrameMs = 13.888
@@ -68,6 +73,7 @@ function Write-VrApiFixture {
     [string]$Path,
     [int]$SampleCount,
     [int]$RefreshRateHz = 72,
+    [int]$AppFps = 72,
     [double]$CpuAndGpuMs = 12.0,
     [int]$Stale = 0,
     [int]$Tear = 0,
@@ -94,7 +100,7 @@ function Write-VrApiFixture {
     $fov = $(if (($index % 2) -eq 0) { 0 } else { 2 })
     $cpuAndGpu = $CpuAndGpuMs.ToString('0.00', $invariantCulture)
     $boundaryGpu = $BoundaryGpuMs.ToString('0.00', $invariantCulture)
-    $lines += "$timestamp  4242  4244 I VrApi   : FPS=72/$RefreshRateHz,Tear=$Tear,Stale=$Stale,Fov=$fov,CPU4/GPU=2/2,1382/456MHz,PLS=0,Temp=31.0C/0.0C,App=9.00ms,GD=${boundaryGpu}ms,CPU&GPU=${cpuAndGpu}ms,GPU%=0.70,CPU%=0.30,CFL=13.80/18.00,ICFLp95=17.00,SF=1.00"
+    $lines += "$timestamp  4242  4244 I VrApi   : FPS=$AppFps/$RefreshRateHz,Tear=$Tear,Stale=$Stale,Fov=$fov,CPU4/GPU=2/2,1382/456MHz,PLS=0,Temp=31.0C/0.0C,App=9.00ms,GD=${boundaryGpu}ms,CPU&GPU=${cpuAndGpu}ms,GPU%=0.70,CPU%=0.30,CFL=13.80/18.00,ICFLp95=17.00,SF=1.00"
   }
 
   $endTimestamp = $start.AddSeconds($SampleCount + 1).ToString('MM-dd HH:mm:ss.fff', $invariantCulture)
@@ -106,11 +112,12 @@ function Invoke-ParserFixture {
   param(
     [string]$Logcat,
     [string]$Evidence,
-    [string]$Output
+    [string]$Output,
+    [string]$RequestedQualityMode = 'Native72'
   )
 
   $processOutput = & powershell -NoProfile -ExecutionPolicy Bypass -File $parser `
-    -ParseOnlyLogcat $Logcat -ParseOnlyEvidenceDir $Evidence -OutputDir $Output
+    -ParseOnlyLogcat $Logcat -ParseOnlyEvidenceDir $Evidence -OutputDir $Output -RequestedQualityMode $RequestedQualityMode
   if ($LASTEXITCODE -ne 0) {
     throw "Parser-only process failed with exit code $LASTEXITCODE for '$Logcat': $($processOutput -join [Environment]::NewLine)"
   }
@@ -291,7 +298,32 @@ try {
       $boundary.vrApiAppPidWindow.cpuExecutionTimingAvailable) {
     throw 'Application GPU, boundary GPU, and CPU execution semantics are conflated.'
   }
-  Write-Host 'Quest VrApi parser regression tests passed: product-PID timing/budgets, distinct App/GD semantics, launch dialogs, and thermal events versus telemetry configuration names.'
+  $halfRateLog=Join-Path $testRoot 'half_rate.txt'
+  Write-VrApiFixture -Path $halfRateLog -SampleCount 60 -AppFps 36
+  $halfRate=Invoke-ParserFixture -Logcat $halfRateLog -Evidence $passingEvidence -Output (Join-Path $testRoot 'output_half_rate')
+  if($halfRate.machineGate.passed -or $halfRate.machineGate.nativeApplicationCadencePassed){throw '36/72 application cadence accepted as Native72'}
+  $wrongRequestedMode=Invoke-ParserFixture -Logcat $passingLogcat -Evidence $passingEvidence -Output (Join-Path $testRoot 'output_request_echo_mismatch') -RequestedQualityMode 'SpaceWarp36_72'
+  if($wrongRequestedMode.machineGate.passed -or $wrongRequestedMode.machineGate.native72ModePassed -or $wrongRequestedMode.machineGate.requestedQualityMode -ne 'SpaceWarp36_72'){
+    throw 'Explicit SpaceWarp request accepted mismatched Native72 evidence or lost request echo'
+  }
+  foreach($modeCase in @(
+    @{name='active_spacewarp';field='spaceWarpActiveSamples';value=1},
+    @{name='requested_spacewarp';field='spaceWarpRequestedSamples';value=1},
+    @{name='submitted_spacewarp';field='spaceWarpSubmissionSamples';value=1},
+    @{name='unknown_mode';field='requestedQualityMode';value='Unknown'},
+    @{name='missing_mode';field='native72ModeObserved';value=$null},
+    @{name='slow_delivered_cadence';field='p95FrameMs';value=27.777},
+    @{name='unknown_delivered_cadence';field='p95FrameMs';value=$null}
+  )) {
+    $modeEvidence=Join-Path $testRoot ('evidence_' + $modeCase.name)
+    New-Item -ItemType Directory -Path $modeEvidence | Out-Null
+    $modeJson=Get-Content -LiteralPath (Join-Path $passingEvidence 'quest_temporal_visual_gate_test.json') -Raw | ConvertFrom-Json
+    if($null -eq $modeCase.value){$modeJson.PSObject.Properties.Remove($modeCase.field)}else{$modeJson.($modeCase.field)=$modeCase.value}
+    $modeJson | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $modeEvidence 'quest_temporal_visual_gate_test.json') -Encoding UTF8
+    $modeResult=Invoke-ParserFixture -Logcat $passingLogcat -Evidence $modeEvidence -Output (Join-Path $testRoot ('output_' + $modeCase.name))
+    if($modeResult.machineGate.passed){throw "Invalid Native72/cadence evidence accepted: $($modeCase.name)"}
+  }
+  Write-Host 'Quest VrApi parser regression tests passed: product-PID budgets, Native72 versus 36/72/SpaceWarp/unknown/transition controls, delivered cadence, App/GD semantics and real thermal events.'
 }
 finally {
   Remove-Item -LiteralPath $testRoot -Recurse -Force -ErrorAction SilentlyContinue

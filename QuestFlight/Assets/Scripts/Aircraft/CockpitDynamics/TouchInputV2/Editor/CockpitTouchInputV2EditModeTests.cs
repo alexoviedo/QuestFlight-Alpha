@@ -350,7 +350,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                         Vector3.zero,
                         Quaternion.identity,
                         1f)),
-                Is.True);
+                Is.False);
             FlightDynamicsState ignitionState = State();
             ignitionState.simulationTimeSeconds += 0.1;
             Assert.That(
@@ -366,7 +366,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                 Is.True);
             Assert.That(
                 ignitionStart.ignitionSwitchPosition,
-                Is.EqualTo(CockpitIgnitionSwitchPositionV2.Start));
+                Is.EqualTo(CockpitIgnitionSwitchPositionV2.Both));
             Assert.That(
                 _bridge.TryConsumeCockpitTouchCommand(
                     Command(
@@ -378,7 +378,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                         Vector3.zero,
                         Quaternion.identity,
                         0.75f)),
-                Is.True);
+                Is.False);
             Assert.That(
                 _bridge.TryConsumeCockpitTouchCommand(
                     Command(
@@ -414,7 +414,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                         Vector3.zero,
                         Quaternion.identity,
                         1f)),
-                Is.True);
+                Is.False);
 
             FlightDynamicsState state = State();
             state.simulationTimeSeconds += 1.0;
@@ -445,11 +445,11 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                 Is.EqualTo(0.75f).Within(0.0001f));
             Assert.That(
                 snapshot.fuelSelectorPosition,
-                Is.EqualTo(CockpitFuelSelectorPositionV2.Right));
+                Is.EqualTo(CockpitFuelSelectorPositionV2.Both));
         }
 
         [Test]
-        public void OneColliderToggleBindingsAdvanceSafeDetents()
+        public void UnavailableEngineSelectorsAreInactiveAndFlapDetentStillAdvances()
         {
             Assert.That(
                 _bridge.TryConsumeCockpitTouchCommand(
@@ -461,7 +461,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                         CockpitTouchInteractionV2Operation.Toggle,
                         Vector3.zero,
                         Quaternion.identity)),
-                Is.True);
+                Is.False);
             Assert.That(
                 _bridge.TryConsumeCockpitTouchCommand(
                     Command(
@@ -472,7 +472,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                         CockpitTouchInteractionV2Operation.Toggle,
                         Vector3.zero,
                         Quaternion.identity)),
-                Is.True);
+                Is.False);
             Assert.That(
                 _bridge.TryConsumeCockpitTouchCommand(
                     Command(
@@ -505,10 +505,10 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2.Tests
                 Is.True);
             Assert.That(
                 snapshot.ignitionSwitchPosition,
-                Is.EqualTo(CockpitIgnitionSwitchPositionV2.Off));
+                Is.EqualTo(CockpitIgnitionSwitchPositionV2.Both));
             Assert.That(
                 snapshot.fuelSelectorPosition,
-                Is.EqualTo(CockpitFuelSelectorPositionV2.Right));
+                Is.EqualTo(CockpitFuelSelectorPositionV2.Both));
             Assert.That(
                 snapshot.flapSelectorCommandNormalized,
                 Is.EqualTo(1f / 3f).Within(0.0001f));

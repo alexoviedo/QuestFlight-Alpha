@@ -225,8 +225,8 @@ namespace QuestFlightLab.Aircraft
                 directionalCabinShadowStrength = DefaultDirectionalCabinShadowStrength,
                 strategy = "stable_cockpit_materials_plus_authored_aircraft_local_shadow_map"
             };
-            Dictionary<Material, Material> cockpitClones = new Dictionary<Material, Material>();
-            Dictionary<Material, Material> instrumentClones = new Dictionary<Material, Material>();
+            var cockpitClones = new Dictionary<(Material, float, bool, bool), Material>();
+            var instrumentClones = new Dictionary<(Material, int), Material>();
 
             Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
             foreach (Renderer renderer in renderers)
@@ -266,18 +266,20 @@ namespace QuestFlightLab.Aircraft
                     {
                         Material source = instrumentMaterials[index];
                         if (source == null) continue;
-                        if (!instrumentClones.TryGetValue(source, out Material tuned))
+                        int instrumentProfile = identity.IndexOf("Static_TXT", StringComparison.OrdinalIgnoreCase) >= 0 ? 1 : 2;
+                        var instrumentKey = (source, instrumentProfile);
+                        if (!instrumentClones.TryGetValue(instrumentKey, out Material tuned))
                         {
                             tuned = new Material(source)
                             {
                                 name = CleanMaterialName(source.name) + " Quest Instrument Tuned"
                             };
-                            instrumentClones.Add(source, tuned);
+                            TuneAuthoritativeInstrumentDisplayMaterial(
+                                tuned, identity, displayBaseColor, displayEmission, report);
+                            instrumentClones.Add(instrumentKey, tuned);
                             ownedMaterials.Add(tuned);
                             report.cockpitMaterialCloneCount++;
                         }
-                        TuneAuthoritativeInstrumentDisplayMaterial(
-                            tuned, identity, displayBaseColor, displayEmission, report);
                         instrumentMaterials[index] = tuned;
                         instrumentChanged = true;
                     }
@@ -294,7 +296,10 @@ namespace QuestFlightLab.Aircraft
                 {
                     Material source = materials[index];
                     if (source == null) continue;
-                    if (!cockpitClones.TryGetValue(source, out Material stable))
+                    var treatment = (source, CockpitDepthWeight(identity),
+                        identity.IndexOf("Interior_Body", StringComparison.OrdinalIgnoreCase) >= 0,
+                        IsReadableInstrumentMaterial(identity));
+                    if (!cockpitClones.TryGetValue(treatment, out Material stable))
                     {
                         stable = new Material(source)
                         {
@@ -306,13 +311,15 @@ namespace QuestFlightLab.Aircraft
                         if (stable.HasProperty("_FootwellEnclosureStrength"))
                             stable.SetFloat(FootwellEnclosureStrengthId, DefaultFootwellEnclosureStrength);
                         stable.SetMatrix(WorldToAircraftId, root.transform.worldToLocalMatrix);
-                        cockpitClones.Add(source, stable);
+                        // Tune once from the immutable source, per explicit treatment.
+                        // Renderer sharing/count/order must not multiply an existing tint.
+                        TuneCockpitMaterial(stable, identity, report);
+                        cockpitClones.Add(treatment, stable);
                         ownedMaterials.Add(stable);
                         report.cockpitMaterialCloneCount++;
                         report.cockpitStableShaderMaterialCount++;
                     }
 
-                    TuneCockpitMaterial(stable, identity, report);
                     materials[index] = stable;
                     changed = true;
                 }
@@ -588,12 +595,7 @@ namespace QuestFlightLab.Aircraft
             if (material.HasProperty("baseColorFactor") &&
                 rendererIdentity.IndexOf("Glass", StringComparison.OrdinalIgnoreCase) < 0)
             {
-                float depthWeight =
-                    rendererIdentity.IndexOf("Seats", StringComparison.OrdinalIgnoreCase) >= 0 ? 0.78f :
-                    rendererIdentity.IndexOf("SeatGear", StringComparison.OrdinalIgnoreCase) >= 0 ? 0.70f :
-                    rendererIdentity.IndexOf("Interior_Body", StringComparison.OrdinalIgnoreCase) >= 0 ? 0.62f :
-                    rendererIdentity.IndexOf("Paddle", StringComparison.OrdinalIgnoreCase) >= 0 ? 0.50f :
-                    0.24f;
+                float depthWeight = CockpitDepthWeight(rendererIdentity);
                 Color baseColor = material.GetColor("baseColorFactor");
                 float depth = 1f - report.staticDepthStrength * depthWeight;
                 material.SetColor("baseColorFactor", new Color(
@@ -615,6 +617,16 @@ namespace QuestFlightLab.Aircraft
                 1f));
             material.EnableKeyword(material.shader.name=="Shader Graphs/glTF-pbrMetallicRoughness"?"_EMISSIVE":"_EMISSION");
             report.readableInstrumentMaterialCount++;
+        }
+
+        private static float CockpitDepthWeight(string identity)
+        {
+            if (identity.IndexOf("Glass", StringComparison.OrdinalIgnoreCase) >= 0) return 0f;
+            if (identity.IndexOf("Seats", StringComparison.OrdinalIgnoreCase) >= 0) return 0.78f;
+            if (identity.IndexOf("SeatGear", StringComparison.OrdinalIgnoreCase) >= 0) return 0.70f;
+            if (identity.IndexOf("Interior_Body", StringComparison.OrdinalIgnoreCase) >= 0) return 0.62f;
+            if (identity.IndexOf("Paddle", StringComparison.OrdinalIgnoreCase) >= 0) return 0.50f;
+            return 0.24f;
         }
 
         private static bool IsCockpitRenderer(string identity)

@@ -5,6 +5,34 @@
     "surface_mesh_asset_path": "Assets/Production/Environment/Generated/Terrain_Mid12km_USGS_Mesh.asset",
     "surface_mesh_dependency_hash": "cd362dc05dd426ad200dfabf9715d2d6",
     "placement_manifest_sha256": "eb8e333488b4e55b9851e9c56c711a6156e7f59052af6e5174bd78a5819cb662",
+    "compiler_sha256": "35d5e2d5c5dd5f165a67f4cd7294e560e5645126a8fe499dd81083d9648b155b",
+    "derivative_manifest_sha256": "51d8c19ef5dea7d5633aaa7df872421bb467e368003023af2671464ef8eaa016",
+    "output_meshes": [
+        {
+            "path": "Assets/Production/Environment/ReservoirWatercraftV1/Generated/ReservoirWatercraft_open_water_LOD0.asset",
+            "sha256": "d5a9be6417c78277653dbc1c19fb337a16d65b41c0bd06253d00eb7c99389f97"
+        },
+        {
+            "path": "Assets/Production/Environment/ReservoirWatercraftV1/Generated/ReservoirWatercraft_open_water_LOD1.asset",
+            "sha256": "e2e68703a991575efdcf093bdc4d27c734764c0eebc53b7bd1b2fe2a992dd95a"
+        },
+        {
+            "path": "Assets/Production/Environment/ReservoirWatercraftV1/Generated/ReservoirWatercraft_shore_storage_LOD0.asset",
+            "sha256": "f1609e990706861877622cc92d646306bc8449763554d6496673b6485ea492ae"
+        },
+        {
+            "path": "Assets/Production/Environment/ReservoirWatercraftV1/Generated/ReservoirWatercraft_shore_storage_LOD1.asset",
+            "sha256": "ccd831792bd4e725041d2613531f3da556039751db98e47e4ce46375c8c8aaf6"
+        },
+        {
+            "path": "Assets/Production/Environment/ReservoirWatercraftV1/Generated/ReservoirWatercraft_dry_storage_LOD0.asset",
+            "sha256": "8c416d2c2dda0d830a99dd6c56656f02815f2729f93a20297e3754dd55868617"
+        },
+        {
+            "path": "Assets/Production/Environment/ReservoirWatercraftV1/Generated/ReservoirWatercraft_dry_storage_LOD1.asset",
+            "sha256": "e33349b2f5ae124df07a9cab193f2c959f70ea6b310a507f7272b126b55364f2"
+        }
+    ],
     "maximum_surface_tilt_degrees": 6.0,
     "maximum_plane_residual_meters": 0.03500000014901161,
     "records": [

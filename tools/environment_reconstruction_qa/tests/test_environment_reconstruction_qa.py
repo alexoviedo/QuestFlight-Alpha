@@ -345,7 +345,8 @@ class EnvironmentReconstructionQaTests(unittest.TestCase):
             "evidenceKind": "UNITY_SERIALIZED_PLACEMENT_VALIDATION",
             "fullInventoryCsvSha256": "b" * 64,
             "fullInventoryRowCount": 11,
-            "fullInventoryCategoryCounts": {"Building": 3, "Tree": 1, "ParkedAircraft": 3, "Other": 4},
+            "fullInventoryCategoryCounts": {"Building": 3, "Tree": 1, "ParkedAircraft": 3, "AirportProp":1,"Fence":1,"Road":1,"Water":1},
+            "summaryPassed": True,
             "buildings": 3,
             "trees": 1,
             "parkedAircraft": 3,
@@ -372,7 +373,8 @@ class EnvironmentReconstructionQaTests(unittest.TestCase):
             "evidenceKind": "UNITY_SERIALIZED_PLACEMENT_VALIDATION",
             "fullInventoryCsvSha256": "b" * 64,
             "fullInventoryRowCount": 11,
-            "fullInventoryCategoryCounts": {"Building": 3, "Tree": 1, "ParkedAircraft": 3, "Other": 4},
+            "fullInventoryCategoryCounts": {"Building": 3, "Tree": 1, "ParkedAircraft": 3, "AirportProp":1,"Fence":1,"Road":1,"Water":1},
+            "summaryPassed": True,
             "buildings": 3, "trees": 1, "parkedAircraft": 3,
             "duplicateStableIds": 0, "missingFootprints": 0, "invalidLicenses": 0,
             "unvalidatedVegetationExclusions": 1,
@@ -386,6 +388,26 @@ class EnvironmentReconstructionQaTests(unittest.TestCase):
         }
         report = self.validate(reports)
         self.assertIn("VEGETATION_EXCLUSIONS_UNVALIDATED", self.codes(report))
+
+    def test_aggregate_runway_checks_match_detailed_checks(self) -> None:
+        mutations = {"authoritativeLayerCount": 2, "zFightingDetected": True, "floatingMarkingsDetected": True, "runwayTerrainMaximumGapMeters": 100, "markingRunwayMaximumGapMeters": 100, "colliderSurfaceMaximumDisagreementMeters": 100}
+        expected = {"DUPLICATE_RUNWAY_LAYER", "RUNWAY_Z_FIGHTING", "RUNWAY_FLOATING_MARKINGS", "RUNWAY_TERRAIN_GAP", "RUNWAY_MARKING_GAP", "RUNWAY_COLLIDER_DISAGREEMENT"}
+        for field, bad in mutations.items():
+            with self.subTest(field=field):
+                detailed=passing_reports()
+                detailed["placement"]["runway"][field]=bad
+                aggregate=copy.deepcopy(detailed)
+                aggregate["placement"]["instances"]=[]
+                aggregate["placement"]["aggregateValidation"]={"summaryPassed":True}
+                self.assertEqual(self.codes(self.validate(detailed)) & expected, self.codes(self.validate(aggregate)) & expected)
+
+    def test_aggregate_failed_summary_and_category_totals_rejected(self) -> None:
+        reports=passing_reports()
+        reports["placement"]["instances"]=[]
+        reports["placement"]["aggregateValidation"]={"summaryPassed":False,"fullInventoryCategoryCounts":{"Building":1},"fullInventoryRowCount":11}
+        codes=self.codes(self.validate(reports))
+        self.assertIn("PLACEMENT_SUMMARY_FAILED", codes)
+        self.assertIn("PLACEMENT_CATEGORY_COUNT", codes)
 
     def test_duplicate_stable_id_fails(self) -> None:
         reports = passing_reports()

@@ -75,5 +75,72 @@
     "source_materials_in_project": 0,
     "source_textures_in_project": 0,
     "shipping_material": "Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraft.mat"
+  },
+  "remediation_M15_20261008": {
+    "finding": "FN-027",
+    "method": "Bounded surgical serialized mesh correction; no broad asset regeneration",
+    "modification": "Position-preserving serialized hull topology correction: close omitted six-station strip and orient only proven closed hull components outward. Preserve all original positions, nonhull geometry/attributes, bounds, placements, LOD1 proxies and asset GUIDs. This is not BuildSerializedFeature regeneration; the old alignment artifact remains stale pending exact original derivative FBX restoration and current compiler rebuild.",
+    "repair_tool": ".questflight_codex_audit/status/M15-repair-serialized-meshes.py",
+    "repair_tool_sha256": "e57a73220a128d11bc884b745dd1b7927dead1c894301fdd783907b1156f6fc7",
+    "original_asset_and_meta_backups": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\remediation_M15_20261008\\originals",
+    "outputs": [
+      {
+        "finding": "FN-027",
+        "path": "QuestFlight\\Assets\\Production\\Environment\\ReservoirWatercraftV1\\Generated\\ReservoirWatercraft_dry_storage_LOD0.asset",
+        "original_sha256": "16d30b545b26004fd2501368915696effe00fd80369225acefe38d8a297be445",
+        "candidate_sha256": "d14f656ecd2feff24952df769a4ab37b36c154caba3a2d390bd81ae14800aa27",
+        "closed_six_station_hull_strips": 6,
+        "station_pair_axial_squared_error": [
+          0.0014725648386865178,
+          0.0014766679967823334,
+          0.0014659627867203233,
+          0.006058490527887768,
+          0.006212780048334932,
+          0.0059506337250567875
+        ],
+        "hull_triangles_reoriented_for_outward_closed_volume": 300,
+        "vertices_before": 2004,
+        "vertices_after": 2184,
+        "triangles_before": 1044,
+        "triangles_after": 1104,
+        "boundary_edges_before": 72,
+        "boundary_edges_after": 0,
+        "overconnected_edges_after": 0,
+        "duplicate_triangles_after": 0,
+        "all_old_positions_and_nonhull_indices_attributes_and_bounds_unchanged": true,
+        "meta_sha256_preserved": "40ea9adcb08c1cdbcf6bc90abca2a31a204fd43746e838ca3d0def46858b04ff"
+      },
+      {
+        "finding": "FN-027",
+        "path": "QuestFlight\\Assets\\Production\\Environment\\ReservoirWatercraftV1\\Generated\\ReservoirWatercraft_open_water_LOD0.asset",
+        "original_sha256": "dc597c5a0a72f0636adb8c490d8ff7afae946c4fafe5fb491fd8e5539336b384",
+        "candidate_sha256": "bb91d2c72f7983b446f729514e9214d5c0336a21f12e332ae4550dcab7648ea2",
+        "closed_six_station_hull_strips": 9,
+        "station_pair_axial_squared_error": [
+          0.0012710245065244662,
+          0.001167860636586555,
+          0.0011033130633952143,
+          0.001106363271814914,
+          0.0012208650344245637,
+          0.0012176990689059385,
+          0.005591595290420811,
+          0.0052134564806720005,
+          0.005179839831618365
+        ],
+        "hull_triangles_reoriented_for_outward_closed_volume": 450,
+        "vertices_before": 2694,
+        "vertices_after": 2964,
+        "triangles_before": 1434,
+        "triangles_after": 1524,
+        "boundary_edges_before": 108,
+        "boundary_edges_after": 0,
+        "overconnected_edges_after": 0,
+        "duplicate_triangles_after": 0,
+        "all_old_positions_and_nonhull_indices_attributes_and_bounds_unchanged": true,
+        "meta_sha256_preserved": "d9dcb7bcff2b1904296dfbaaf68a0568eed455ba69de3ff5e9d888d8b85def31"
+      }
+    ],
+    "rights": "Existing source/license and distribution restrictions above remain authoritative.",
+    "validation": "Offline buffer/topology preservation evidence only. Unity focused tests, inspected stereo visual QA and final shipping build/device validation remain separate requirements."
   }
 }

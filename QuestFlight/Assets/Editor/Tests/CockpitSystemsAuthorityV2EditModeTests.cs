@@ -210,7 +210,7 @@ namespace QuestFlightLab.Tests.EditMode
                 Is.EqualTo(0.25f).Within(0.001f),
                 "The single FlightDynamicsCoordinator sample must win.");
             Assert.That(model.Current.actualFlapDegrees,
-                Is.EqualTo(3f).Within(0.001f));
+                Is.Zero);
         }
 
         [Test]
@@ -237,8 +237,6 @@ namespace QuestFlightLab.Tests.EditMode
                 CockpitSystemsAvailabilityV2.MagneticVariation |
                 CockpitSystemsAvailabilityV2.MagneticHeading |
                 CockpitSystemsAvailabilityV2.VacuumSuction |
-                CockpitSystemsAvailabilityV2.FuelQuantity |
-                CockpitSystemsAvailabilityV2.FuelFlow |
                 CockpitSystemsAvailabilityV2.OilPressure |
                 CockpitSystemsAvailabilityV2.OilTemperature |
                 CockpitSystemsAvailabilityV2.GpsDepartureStatus |
@@ -255,11 +253,11 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(model.Current.vacuumInHg,
                 Is.InRange(4.9f, 5.01f));
             Assert.That(model.Current.leftFuelGallons,
-                Is.EqualTo(25f).Within(0.001f));
+                Is.Zero);
             Assert.That(model.Current.rightFuelGallons,
-                Is.EqualTo(25f).Within(0.001f));
+                Is.Zero);
             Assert.That(model.Current.fuelFlowGallonsPerHour,
-                Is.GreaterThan(0f));
+                Is.Zero);
             Assert.That(model.Current.oilPressurePsi,
                 Is.InRange(60f, 75f));
             Assert.That(model.Current.electricalBusVolts, Is.Zero,
@@ -267,7 +265,7 @@ namespace QuestFlightLab.Tests.EditMode
         }
 
         [Test]
-        public void ActuatorsLagAndFuelBurnFollowSimulationTime()
+        public void NativeFlapTelemetryAndUnavailableFuelDoNotFollowCommands()
         {
             CockpitSystemsAuthorityV2Model model =
                 new CockpitSystemsAuthorityV2Model();
@@ -281,10 +279,11 @@ namespace QuestFlightLab.Tests.EditMode
             float initialFuel = model.Current.leftFuelGallons +
                                 model.Current.rightFuelGallons;
             input.flightState.simulationTimeSeconds += 2.0;
+            input.flightState.actualFlapNormalized = 1.0 / 3.0;
             Assert.That(model.Step(input), Is.True);
 
             Assert.That(model.Current.actualFlapDegrees,
-                Is.EqualTo(6f).Within(0.001f));
+                Is.EqualTo(10f).Within(0.001f));
             Assert.That(model.Current.leftBrakePressurePsi,
                 Is.EqualTo(600f).Within(0.001f));
             Assert.That(model.Current.rightBrakePressurePsi,
@@ -292,7 +291,7 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(
                 model.Current.leftFuelGallons +
                 model.Current.rightFuelGallons,
-                Is.LessThan(initialFuel));
+                Is.EqualTo(initialFuel));
         }
 
         [Test]
@@ -380,6 +379,9 @@ namespace QuestFlightLab.Tests.EditMode
                 hasAuthoritativeFlightState = true,
                 flightState = new FlightDynamicsState
                 {
+                    nativeTelemetryVersion = 1,
+                    actualFlapNormalized = 0,
+                    groundVelocityNedMetersPerSecond = new Vector3(46,2,-2.2f),
                     simulationTimeSeconds = 12.5,
                     latitudeDegrees = 40.03936527,
                     longitudeDegrees = -105.22608958,

@@ -16,6 +16,8 @@ param(
   [int]$MeasurementTimeoutSeconds = 90,
   [ValidateSet('production', 'sky_only', 'clouds_off', 'clouds_full_sampling', 'clouds_atlas', 'clouds_volume', 'clouds_volume_skip', 'traffic_off', 'vegetation_off', 'connected_grove_off', 'grove_source_geometry', 'buildings_off', 'water_off', 'buildings_vegetation_off', 'reduced_texture_tier')]
   [string]$IsolationProfile = 'production',
+  [ValidateSet('Native72', 'SpaceWarp36_72')]
+  [string]$RequestedQualityMode = 'Native72',
   [ValidateRange(-1, 4)]
   [int]$DiagnosticFoveationLevel = -1,
   [switch]$SkipInstall,
@@ -380,6 +382,11 @@ function Get-RuntimeEvidenceSummary {
       warmupSeconds = [double](Get-ObjectProperty $report 'warmupSeconds' 0)
       measuredSeconds = [double](Get-ObjectProperty $report 'measuredSeconds' 0)
       sampleCount = [int](Get-ObjectProperty $report 'sampleCount' 0)
+      requestedQualityMode = [string](Get-ObjectProperty $report 'requestedQualityMode' '')
+      native72ModeObserved = [bool](Get-ObjectProperty $report 'native72ModeObserved' $false)
+      spaceWarpRequestedSamples = [int](Get-ObjectProperty $report 'spaceWarpRequestedSamples' -1)
+      spaceWarpActiveSamples = [int](Get-ObjectProperty $report 'spaceWarpActiveSamples' -1)
+      spaceWarpSubmissionSamples = [int](Get-ObjectProperty $report 'spaceWarpSubmissionSamples' -1)
       averageFrameMs = [double](Get-ObjectProperty $report 'averageFrameMs' 0)
       p95FrameMs = [double](Get-ObjectProperty $report 'p95FrameMs' 0)
       p99FrameMs = [double](Get-ObjectProperty $report 'p99FrameMs' 0)
@@ -621,12 +628,15 @@ function Get-BottleneckDiagnosis {
   $gpu95 = [double](Get-ObjectProperty $VrApi 'p95GpuUtilization' 0)
   $cpu95 = [double](Get-ObjectProperty $VrApi 'p95CpuUtilization' 0)
   $combined95 = [double](Get-ObjectProperty $VrApi 'p95CpuAndGpuMs' 0)
-  if ($gpu95 -ge 0.85 -and $cpu95 -lt 0.75) { return 'Likely GPU-limited: VrApi GPU utilization p95 is high while CPU utilization is lower; direct GPU milliseconds remain unavailable.' }
+  $gpuTimingDisclosure = if ([bool](Get-ObjectProperty $VrApi 'directGpuTimingAvailable' $false)) {
+    'VrApi reports application GPU p95=' + ([double](Get-ObjectProperty $VrApi 'p95DirectGpuMs' 0)).ToString('0.000', [Globalization.CultureInfo]::InvariantCulture) + ' ms in one-second aggregates; CPU execution milliseconds remain unmeasured.'
+  } else { 'Direct GPU milliseconds remain unavailable.' }
+  if ($gpu95 -ge 0.85 -and $cpu95 -lt 0.75) { return 'Likely GPU-limited: VrApi GPU utilization p95 is high while CPU utilization is lower. ' + $gpuTimingDisclosure }
   if ($cpu95 -ge 0.85 -and $gpu95 -lt 0.75) { return 'Likely CPU-limited: VrApi CPU utilization p95 is high while GPU utilization is lower; Unity CPU timing may include XR wait.' }
   if ($combined95 -gt $QuestFrameBudgetMs -or [int](Get-ObjectProperty $VrApi 'staleTotal' 0) -gt 0) {
-    return 'Mixed GPU/compositor pacing: direct GPU milliseconds are unavailable; VrApi combined timing/stale frames reach the cadence budget without single-resource saturation.'
+    return 'Mixed GPU/compositor pacing: VrApi combined timing/stale frames reach the cadence budget without single-resource saturation. ' + $gpuTimingDisclosure
   }
-  return 'No single-resource saturation proven: direct GPU milliseconds are unavailable and app-PID VrApi utilization remains below a clear CPU/GPU bound.'
+  return 'No single-resource saturation proven: app-PID VrApi utilization remains below a clear CPU/GPU bound. ' + $gpuTimingDisclosure
 }
 
 function Invoke-Adb {
@@ -782,7 +792,10 @@ function Write-GateSummary {
     [object[]]$PulledEvidence
   )
   $runtimeAvailable = [bool](Get-ObjectProperty $Runtime 'available' $false)
-  $deliveredP95Pass = $runtimeAvailable -and [double](Get-ObjectProperty $Runtime 'p95FrameMs' 999) -le $RequiredP95Ms
+  $deliveredP95 = [double](Get-ObjectProperty $Runtime 'p95FrameMs' 999)
+  $deliveredP95Pass = $runtimeAvailable -and $deliveredP95 -gt 0 -and
+    $deliveredP95 -le $RequiredP95Ms -and [int](Get-ObjectProperty $Runtime 'sampleCount' 0) -gt 0 -and
+    [bool](Get-ObjectProperty $Runtime 'readinessMet' $false)
   $deliveredOverPass = $runtimeAvailable -and [double](Get-ObjectProperty $Runtime 'framesOverBudgetRatio' 1) -le $RequiredOverBudgetRatio
   $drawPass = $runtimeAvailable -and [long](Get-ObjectProperty $Runtime 'drawCalls' ([long]::MaxValue)) -le $RequiredDrawCalls
   $trianglePass = $runtimeAvailable -and [long](Get-ObjectProperty $Runtime 'visibleTriangles' ([long]::MaxValue)) -le $RequiredVisibleTriangles
@@ -832,7 +845,15 @@ function Write-GateSummary {
   $physicalTimingPass = $vrApiWindowPass -and $vrApiTelemetryPass -and $vrApiSampleCountPass -and
     $vrApiCoveragePass -and $refreshRatePass -and $combinedAveragePass -and $combinedP95Pass -and
     $combinedOverPass -and $stalePass -and $tearPass
-  $machinePass = $physicalTimingPass -and $drawPass -and $trianglePass -and $materialPass -and $transparentMaterialPass -and
+  $nativeModePass = $RequestedQualityMode -eq 'Native72' -and $runtimeAvailable -and [string](Get-ObjectProperty $Runtime 'requestedQualityMode' '') -eq $RequestedQualityMode -and
+    [bool](Get-ObjectProperty $Runtime 'native72ModeObserved' $false) -and
+    [int](Get-ObjectProperty $Runtime 'spaceWarpRequestedSamples' -1) -eq 0 -and
+    [int](Get-ObjectProperty $Runtime 'spaceWarpActiveSamples' -1) -eq 0 -and
+    [int](Get-ObjectProperty $Runtime 'spaceWarpSubmissionSamples' -1) -eq 0
+  $nativeAppCadencePass = $vrApiAvailable -and [double](Get-ObjectProperty $VrApi 'averageFps' 0) -ge 71.0 -and
+    [double](Get-ObjectProperty $VrApi 'p05Fps' 0) -ge 70.0 -and
+    [double](Get-ObjectProperty $VrApi 'p95DeliveredIntervalFromFpsMs' 999) -le (1000.0 / 70.0)
+  $machinePass = $nativeModePass -and $nativeAppCadencePass -and $deliveredCadencePass -and $physicalTimingPass -and $drawPass -and $trianglePass -and $materialPass -and $transparentMaterialPass -and
     $isolationProfilePass -and
     $allocationPass -and $durationPass -and $faultFree -and -not $ThermalWarning
 
@@ -965,6 +986,11 @@ function Write-GateSummary {
     }
     machineGate = [ordered]@{
       passed = $machinePass
+      requestedQualityMode = $RequestedQualityMode
+      acceptanceQualityMode = 'Native72'
+      native72ModePassed = $nativeModePass
+      nativeApplicationCadencePassed = $nativeAppCadencePass
+      deliveredCadencePassed = $deliveredCadencePass
       physicalTimingPassed = $physicalTimingPass
       staticRuntimeBudgetsPassed = $drawPass -and $trianglePass -and $materialPass -and $transparentMaterialPass
       transparentMaterialSlotsPassed = $transparentMaterialPass
@@ -1213,6 +1239,7 @@ try {
     schema = 'questflight.acceptance-request.v1'
     expiresUtc = [DateTime]::UtcNow.AddMinutes(10).ToString('O')
     isolationProfile = $IsolationProfile
+    requestedQualityMode = $RequestedQualityMode
     startDemo = -not $StaticEvidenceOnly
   } | ConvertTo-Json | Set-Content -LiteralPath $captureRequestPath -Encoding utf8NoBOM
   # The installed app owns its files directory. Only write the opt-in request;

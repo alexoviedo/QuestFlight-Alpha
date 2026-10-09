@@ -10,6 +10,8 @@ namespace QuestFlight.Rendering
         public static event Camera.CameraCallback Draw;
         public static bool MotionPass { get; private set; }
         public static bool Preparing { get; private set; }
+        public static bool WorldPresentationVisible { get; private set; } = true;
+        public static void SetWorldPresentationVisible(bool visible) { WorldPresentationVisible = visible; }
         static RasterCommandBuffer command;
         static readonly Unity.Profiling.ProfilerMarker ColorMarker =
             new Unity.Profiling.ProfilerMarker("QuestFlight.Procedural.Color");
@@ -21,6 +23,7 @@ namespace QuestFlight.Rendering
         { Preparing=true;try { Draw?.Invoke(camera); } finally { Preparing=false; } }
         public static void Execute(RasterCommandBuffer target, Camera camera, bool motion)
         {
+            if (!WorldPresentationVisible) return;
             using var sample = (motion ? MotionMarker : ColorMarker).Auto();
             command = target; MotionPass = motion;
             try { Draw?.Invoke(camera); }
@@ -31,6 +34,7 @@ namespace QuestFlight.Rendering
             ShadowCastingMode shadows, bool receive, int layer, Camera camera,
             LightProbeUsage probes, LightProbeProxyVolume proxy)
         {
+            if (!WorldPresentationVisible) return;
             if (command == null)
             {
                 if (GraphicsSettings.currentRenderPipeline == null)
@@ -45,6 +49,7 @@ namespace QuestFlight.Rendering
             Bounds bounds, int count, MaterialPropertyBlock properties, ShadowCastingMode shadows,
             bool receive, int layer, Camera camera, LightProbeUsage probes)
         {
+            if (!WorldPresentationVisible) return;
             if (command == null)
             {
                 if (GraphicsSettings.currentRenderPipeline == null)

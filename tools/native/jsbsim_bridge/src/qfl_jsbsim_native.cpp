@@ -1,6 +1,7 @@
 #include "qfl_jsbsim_native.h"
 
 #include <FGFDMExec.h>
+#include <initialization/FGInitialCondition.h>
 #include <initialization/FGTrim.h>
 #include <models/FGGroundReactions.h>
 #include <models/FGLGear.h>
@@ -19,6 +20,7 @@ thread_local std::string g_last_error;
 struct NativeInstance {
   std::unique_ptr<JSBSim::FGFDMExec> fdm;
   std::string data_root, aircraft_name, last_error;
+  qfl_jsbsim_atmosphere atmosphere{};
   bool loaded = false;
 };
 
@@ -127,11 +129,27 @@ int qfl_jsbsim_reset(qfl_jsbsim_handle handle, const qfl_jsbsim_initial_conditio
     set_property(fdm, "ic/long-gc-deg", ic->longitude_degrees);
     set_property(fdm, "ic/h-sl-ft", ic->altitude_msl_feet);
     set_property(fdm, "ic/terrain-elevation-ft", ic->terrain_elevation_msl_feet);
-    set_property(fdm, "ic/vc-kts", std::max(0.0, ic->calibrated_airspeed_knots));
-    set_property(fdm, "ic/gamma-deg", ic->flight_path_angle_degrees);
     set_property(fdm, "ic/psi-true-deg", ic->heading_degrees);
     set_property(fdm, "ic/theta-deg", ic->pitch_degrees);
     set_property(fdm, "ic/phi-deg", ic->bank_degrees);
+    auto initial = fdm.GetIC();
+    const auto& wind = native->atmosphere;
+    initial->SetWindNEDFpsIC(wind.wind_north_feet_per_second,
+                           wind.wind_east_feet_per_second,
+                           wind.wind_down_feet_per_second);
+    initial->SetVcalibratedKtsIC(std::max(0.0, ic->calibrated_airspeed_knots));
+    // The pinned IC setters preserve their historical wind-relative vector
+    // convention, while Auxiliary subtracts physical NED wind at runtime.
+    // Resolve CAS at this altitude with JSBSim, then explicitly construct
+    // ground = air + wind so RunIC returns a coherent physical state.
+    constexpr double degrees_to_radians = 3.14159265358979323846 / 180.0;
+    const double heading = ic->heading_degrees * degrees_to_radians;
+    const double gamma = ic->flight_path_angle_degrees * degrees_to_radians;
+    const double speed = initial->GetVtrueFpsIC();
+    const bool stationary_start = ic->calibrated_airspeed_knots <= 0.0;
+    initial->SetVNorthFpsIC(stationary_start ? 0.0 : speed * std::cos(gamma) * std::cos(heading) + wind.wind_north_feet_per_second);
+    initial->SetVEastFpsIC(stationary_start ? 0.0 : speed * std::cos(gamma) * std::sin(heading) + wind.wind_east_feet_per_second);
+    initial->SetVDownFpsIC(stationary_start ? 0.0 : -speed * std::sin(gamma) + wind.wind_down_feet_per_second);
     if (!fdm.RunIC()) { set_error(native, "JSBSim RunIC failed."); return 0; }
     native->last_error.clear();
     return 1;
@@ -166,10 +184,16 @@ int qfl_jsbsim_set_controls(qfl_jsbsim_handle handle, const qfl_jsbsim_controls*
 int qfl_jsbsim_set_atmosphere(qfl_jsbsim_handle handle, const qfl_jsbsim_atmosphere* a) {
   NativeInstance* native = instance(handle);
   if (!require_loaded(native) || !a) { if (native && !a) set_error(native, "atmosphere is required."); return 0; }
+  if (!std::isfinite(a->wind_north_feet_per_second) ||
+      !std::isfinite(a->wind_east_feet_per_second) ||
+      !std::isfinite(a->wind_down_feet_per_second)) {
+    set_error(native, "atmosphere wind must be finite."); return 0;
+  }
   try {
     set_property(*native->fdm, "atmosphere/wind-north-fps", a->wind_north_feet_per_second);
     set_property(*native->fdm, "atmosphere/wind-east-fps", a->wind_east_feet_per_second);
     set_property(*native->fdm, "atmosphere/wind-down-fps", a->wind_down_feet_per_second);
+    native->atmosphere = *a;
     return 1;
   } catch (...) { return catch_failure(native, "set_atmosphere"); }
 }

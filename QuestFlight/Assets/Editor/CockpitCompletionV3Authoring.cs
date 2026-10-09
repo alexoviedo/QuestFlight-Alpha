@@ -136,8 +136,8 @@ namespace QuestFlight.Editor
                     "without a transform-space offset or scale correction.");
                 Mesh lensMesh = lens.GetComponent<MeshFilter>()?.sharedMesh;
                 Require(lensMesh != null && lensMesh.vertexCount == 13 * 25 &&
-                        lensMesh.triangles.Length / 3 == 13 * 24,
-                    "Principal-instrument glass must contain exactly 13 measured " +
+                        lensMesh.triangles.Length / 3 == 8 * 24,
+                    "Principal-instrument glass must contain exactly eight active measured " +
                     "24-segment aperture lenses in one mesh.");
 
                 error = string.Empty;

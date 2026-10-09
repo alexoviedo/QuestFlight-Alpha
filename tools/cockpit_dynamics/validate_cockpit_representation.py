@@ -14,19 +14,28 @@ DEFAULT_MANIFEST = (
     ROOT / "tools" / "cockpit_dynamics" / "cockpit_representation_manifest_v2.json"
 )
 
-EXPECTED_IMPLEMENTED_IDS = {
-    "pilot_yoke",
-    "copilot_yoke",
-    "throttle",
-    "mixture",
-    "exterior_ailerons",
-    "exterior_elevators",
-    "exterior_flaps",
-    "exterior_rudder",
-    "nose_steering",
-    "airspeed_indicator",
-    "vertical_speed_indicator",
+EXPECTED_MOTION_CHANNELS = {
+    "pilot_yoke": ["aileron", "elevator"], "copilot_yoke": ["aileron", "elevator"],
+    "throttle": ["throttle"], "mixture": ["mixture"],
+    "alt_bat_master": ["batteryMaster", "alternatorMaster"], "primer": ["primer"],
+    "ignition_start_key": ["ignitionPosition", "starterEngaged"],
+    "avionics_master": ["avionicsMaster"], "wing_flap_selector": ["flapCommand"],
+    "fuel_selector": ["fuelSelector"],
+    "exterior_flight_controls": ["aileron", "elevator", "rudder", "flapActual", "groundSteering"],
 }
+EXPECTED_IMPLEMENTED_IDS = set(EXPECTED_MOTION_CHANNELS)
+EXPECTED_PRESENTATION_ITEMS = {
+    "implementedInstrumentPresentation": {
+        "airspeedIndicator", "verticalSpeedIndicator", "directionalGyroCard", "magneticCompassCard",
+        "altimeterTenThousands", "altimeterThousands", "altimeterHundreds", "altimeterBarometricSetting",
+        "flapPositionIndicator", "brakePressureIndicator", "tachometer", "turnCoordinator",
+        "slipSkidBall", "attitudeGyroSphere",
+    },
+    "implementedAvionicsPresentation": {"gpsKbduDepartureStatus", "com1", "com2", "transponder1200AltitudeMode"},
+    "implementedTouchInteraction": {"pilotYoke", "throttle", "mixture", "altBatMaster", "primer",
+        "ignitionStart", "avionicsMaster", "wingFlapSelector", "fuelSelector"},
+}
+
 
 
 def _sha256(path: Path) -> str:
@@ -44,8 +53,8 @@ def validate_manifest(
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     errors: list[str] = []
 
-    if manifest.get("schemaVersion") != 2:
-        errors.append("schemaVersion must be 2")
+    if manifest.get("schemaVersion") != 3:
+        errors.append("schemaVersion must be 3")
     if manifest.get("runtimeHierarchyConstructionAllowed") is not False:
         errors.append("runtime hierarchy construction must remain prohibited")
 
@@ -58,80 +67,87 @@ def validate_manifest(
         if _sha256(source) != manifest.get("sourceSha256"):
             errors.append("source SHA256 does not match the reviewed asset")
 
-    implemented = manifest.get("implementedTargets")
+    architecture = manifest.get("authorityArchitecture")
+    if not isinstance(architecture, dict):
+        errors.append("authorityArchitecture must be an object")
+        architecture = {}
+    for key, expected in (("owner", "ProductionCockpitSystemsController"),
+                          ("flightAuthority", "FlightDynamicsCoordinator"),
+                          ("systemsReducer", "CockpitSystemsAuthorityV2Model"),
+                          ("zeroInventedRuntimeHierarchy", True)):
+        if architecture.get(key) != expected:
+            errors.append(f"authorityArchitecture.{key} does not match the reviewed authority")
+    authoritative_channels = architecture.get("authoritativeOrDeterministicChannels")
+    if (not isinstance(authoritative_channels, list) or not authoritative_channels
+            or not all(isinstance(item, str) for item in authoritative_channels)
+            or not {"flightControlCommands", "engineRpm", "pressureAltitude", "magneticHeading"}.issubset(authoritative_channels)):
+        errors.append("authorityArchitecture requires the authoritative flight channels")
+
+    implemented = manifest.get("implementedMotion")
     if not isinstance(implemented, list) or not implemented:
-        errors.append("implementedTargets must be a non-empty array")
+        errors.append("implementedMotion must be a non-empty array")
         implemented = []
     identifiers = [entry.get("id") for entry in implemented if isinstance(entry, dict)]
+    if len(identifiers) != len(implemented) or any(not isinstance(identifier, str) or not identifier for identifier in identifiers):
+        errors.append("every implemented motion target requires a string id")
+        identifiers = [identifier for identifier in identifiers if isinstance(identifier, str) and identifier]
     if len(identifiers) != len(set(identifiers)):
         errors.append("implemented target ids must be unique")
-    if any(not identifier for identifier in identifiers):
-        errors.append("every implemented target requires an id")
     if set(identifiers) != EXPECTED_IMPLEMENTED_IDS:
-        errors.append(
-            "implemented target ids must exactly match the serialized reviewed baseline"
-        )
-
-    represented = manifest.get("representedCandidates", [])
-    excluded = manifest.get("excludedTargets", [])
-    if not isinstance(represented, list):
-        errors.append("representedCandidates must be an array")
-        represented = []
-    if not isinstance(excluded, list):
-        errors.append("excludedTargets must be an array")
-        excluded = []
-    represented_ids = [
-        entry.get("id") for entry in represented if isinstance(entry, dict)
-    ]
-    excluded_ids = [
-        entry.get("id") for entry in excluded if isinstance(entry, dict)
-    ]
-    if len(represented_ids) != len(set(represented_ids)):
-        errors.append("represented candidate ids must be unique")
-    if len(excluded_ids) != len(set(excluded_ids)):
-        errors.append("excluded target ids must be unique")
-    all_ids = identifiers + represented_ids + excluded_ids
-    if len(all_ids) != len(set(all_ids)):
-        errors.append("target ids must be disjoint across all classifications")
-    for entry in represented:
-        if not isinstance(entry, dict):
-            errors.append("each represented candidate must be an object")
-            continue
-        if not entry.get("id") or not entry.get("status"):
-            errors.append("each represented candidate requires an id and status")
-        authority = entry.get("requiredAuthority")
-        if not isinstance(authority, list) or not authority:
-            errors.append(
-                f"represented candidate {entry.get('id')} requires authority"
-            )
-    for entry in excluded:
-        if not isinstance(entry, dict):
-            errors.append("each excluded target must be an object")
-            continue
-        if not entry.get("id") or not entry.get("reason"):
-            errors.append("each excluded target requires an id and reason")
-
+        errors.append("implemented target ids must exactly match the serialized reviewed baseline")
     for entry in implemented:
         if not isinstance(entry, dict):
-            errors.append("each implemented target must be an object")
+            errors.append("each implemented motion target must be an object")
             continue
-        if not entry.get("owner"):
-            errors.append(f"implemented target {entry.get('id')} has no owner")
-        authority = entry.get("authority")
-        if not isinstance(authority, list) or not authority:
-            errors.append(
-                f"implemented target {entry.get('id')} has no authoritative channels"
-            )
-        for key in (
-            "renderCostDelta",
-            "maximumRendererDelta",
-            "maximumDrawDelta",
-            "maximumMaterialDelta",
-            "maximumTextureDelta",
-        ):
+        identifier = entry.get("id")
+        if not entry.get("geometry"):
+            errors.append(f"implemented target {identifier} has no represented geometry")
+        if not isinstance(identifier, str) or entry.get("channels") != EXPECTED_MOTION_CHANNELS.get(identifier):
+            errors.append(f"implemented target {identifier} has invalid authoritative channels")
+        owner = entry.get("owner", architecture.get("owner"))
+        if not isinstance(owner, str) or owner not in {
+                "ProductionCockpitSystemsController", "ProductionAircraftControlAnimator", "ProductionCockpitDynamicsController"}:
+            errors.append(f"implemented target {identifier} has no reviewed owner")
+        for key in ("renderCostDelta", "maximumRendererDelta", "maximumDrawDelta", "maximumMaterialDelta", "maximumTextureDelta"):
             value = entry.get(key)
-            if value is not None and (not isinstance(value, int) or value < 0):
-                errors.append(f"{entry.get('id')}.{key} must be a non-negative integer")
+            if value is not None and (type(value) is not int or value < 0):
+                errors.append(f"{identifier}.{key} must be a non-negative integer")
+
+    for section, expected in EXPECTED_PRESENTATION_ITEMS.items():
+        presentation = manifest.get(section)
+        if not isinstance(presentation, dict):
+            errors.append(f"{section} must be an object")
+            continue
+        key = "targets" if section == "implementedTouchInteraction" else "items"
+        items = presentation.get(key)
+        if not isinstance(items, list) or not all(isinstance(item, str) for item in items):
+            errors.append(f"{section}.{key} must be a string array")
+        elif len(items) != len(set(items)) or set(items) != expected:
+            errors.append(f"{section}.{key} must match the unique reviewed presentation")
+        if section != "implementedTouchInteraction":
+            for budget in ("rendererCount", "materialCount"):
+                if presentation.get(budget) != 1:
+                    errors.append(f"{section}.{budget} must remain one")
+        elif presentation.get("bindingCount") != 9 or presentation.get("hands") != "left_or_right":
+            errors.append("implementedTouchInteraction must retain nine either-hand bindings")
+
+    represented = manifest.get("representedButBlocked")
+    if not isinstance(represented, list):
+        errors.append("representedButBlocked must be an array")
+        represented = []
+    represented_ids = []
+    for entry in represented:
+        if not isinstance(entry, dict) or not isinstance(entry.get("id"), str) or not entry.get("id") or not entry.get("reason"):
+            errors.append("each represented blocked target requires an id and reason")
+        else:
+            represented_ids.append(entry["id"])
+    excluded = manifest.get("excludedBecauseNotRepresented")
+    if not isinstance(excluded, list) or not all(isinstance(item, str) and item for item in excluded):
+        errors.append("excludedBecauseNotRepresented must be a string array")
+        excluded = []
+    all_ids = identifiers + represented_ids + excluded
+    if len(all_ids) != len(set(all_ids)):
+        errors.append("target ids must be disjoint across motion, blocked and excluded classifications")
 
     if inspection_path is not None:
         inspection = json.loads(inspection_path.read_text(encoding="utf-8"))

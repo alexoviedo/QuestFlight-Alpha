@@ -616,59 +616,26 @@ def vegetation_outputs(
 
 
 def context_recipe_v2(
-    recipe: dict[str, Any],
-    parking: dict[str, Any],
-    building_batches: list[dict[str, Any]],
-    vegetation_batches: list[dict[str, Any]],
+    recipe: dict[str, Any], parking: dict[str, Any], building_batches: list[dict[str, Any]],
+    vegetation_batches: list[dict[str, Any]], current_aircraft_rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Create a legacy-reader-compatible 250 m building/aircraft V2 recipe."""
+    """Compose current owned aircraft rows after historical stand calibration."""
+    if len(current_aircraft_rows) != 35 or len({row["placement_v2"]["stable_id"] for row in current_aircraft_rows}) != 35:
+        raise ValueError("Reconstruction requires the complete current 35-aircraft composing stage")
     value = copy.deepcopy(recipe)
     value["building_batches"] = building_batches
     value["vegetation_batches"] = vegetation_batches
     value["integration"]["building_spatial_batch_cell_meters"] = 250.0
     value["source_context_path"] = "tools/kbdu_environment_reconstruction/KBDU_ReferenceContextV2.json"
-    model = parking["aircraft_model_calibration"]
-    corrected: list[dict[str, Any]] = []
-    for placement in parking["parked_aircraft_placements"]:
-        root_height = float(placement["contact"]["root_height_meters"])
-        corrected.append(
-            {
-                "base_y_meters": root_height,
-                "color_rgba": placement["tint_rgba"],
-                "placement_v2": {
-                    "apron_plane_normal": placement["contact"]["apron_plane_normal"],
-                    "authored_heading_degrees": placement["authored_heading_degrees"],
-                    "contact_metadata_status": model["contact_metadata_status"],
-                    "gear_contact_points_unity_meters": placement["contact"][
-                        "gear_contact_points_unity_meters"
-                    ],
-                    "model_forward_axis_correction_degrees": placement[
-                        "model_forward_axis_correction_degrees"
-                    ],
-                    "root_height_meters": root_height,
-                    "source_model_axes": model["source_model_axes"],
-                    "stable_id": placement["stable_id"],
-                    "stand_id": placement["stand_id"],
-                    "terrain_height_meters": root_height,
-                    "unity_imported_forward_axis_before_correction": model[
-                        "unity_imported_forward_axis_before_correction"
-                    ],
-                    "unity_runtime_axes_after_correction": model[
-                        "unity_runtime_axes_after_correction"
-                    ],
-                },
-                "x_meters": placement["local_enu_meters"]["x"],
-                "yaw_degrees": placement["root_yaw_degrees"],
-                "z_meters": placement["local_enu_meters"]["z"],
-            }
-        )
     if len(value["parked_aircraft_batches"]) != 1:
         raise ValueError("V2 recipe generation expects one parked-aircraft batch")
-    value["parked_aircraft_batches"][0]["placements"] = corrected
+    value["parked_aircraft_batches"] = [{"id":"parked_aircraft_airport", "placements":copy.deepcopy(current_aircraft_rows)}]
     return value
 
 
 def generate(repo_root: Path, config_path: Path, output_dir: Path) -> list[Path]:
+    import sys
+    if str(repo_root) not in sys.path: sys.path.insert(0,str(repo_root))
     config = load_json(config_path)
     inputs = {
         name: repo_root / relative_path for name, relative_path in config["inputs"].items()
@@ -681,6 +648,13 @@ def generate(repo_root: Path, config_path: Path, output_dir: Path) -> list[Path]
     vegetation_species = load_json(inputs["vegetation_species_v2"])
     vegetation_coverage = load_json(inputs["vegetation_coverage_v2"])
     parked_source = load_json(inputs["parked_aircraft_source_manifest"])
+    # The three legacy stands remain calibration history. This current producer
+    # is an explicit composing dependency and is included in final report hashes.
+    from tools.kbdu_airport_aircraft.apply_aircraft_placement_contract import (
+        TerrainSampler as AircraftTerrainSampler, build_placement_rows, validate_orthophoto, placement_manifest_records)
+    aircraft_contract = load_json(inputs["current_aircraft_placements"])
+    current_aircraft_rows = build_placement_rows(aircraft_contract,
+        validate_orthophoto(aircraft_contract), AircraftTerrainSampler(load_json(inputs["terrain_rings"])))
     context_v2 = extended_context(context, building_source)
     coverage, buildings, building_batches = building_outputs(
         context_v2, building_source, terrain, config
@@ -689,7 +663,8 @@ def generate(repo_root: Path, config_path: Path, output_dir: Path) -> list[Path]
     vegetation, vegetation_placements, vegetation_batches = vegetation_outputs(
         vegetation_source, vegetation_species, vegetation_coverage, terrain, config
     )
-    recipe_v2 = context_recipe_v2(recipe, parking, building_batches, vegetation_batches)
+    recipe_v2 = context_recipe_v2(recipe, parking, building_batches, vegetation_batches, current_aircraft_rows)
+    aircraft = placement_manifest_records(current_aircraft_rows,float(config["building_cell_size_meters"]))
     all_placements = buildings + aircraft + vegetation_placements
     stable_ids = [record["stable_id"] for record in all_placements]
     if len(stable_ids) != len(set(stable_ids)):
@@ -702,6 +677,7 @@ def generate(repo_root: Path, config_path: Path, output_dir: Path) -> list[Path]
         "schema_version": 1,
         "source_license_classes": [
             "CC_BY_4_0_KOG_THORNS_ADAPTATION",
+            "CC0_1_0_SAILPLANE_DERIVATIVE",
             "OSM_ODBL_1_0_PRODUCED_WORK",
             "US_GOV_PUBLIC_DOMAIN_NAIP_PLUS_OSM_ODBL_EXCLUSIONS",
         ],
@@ -739,6 +715,10 @@ def generate(repo_root: Path, config_path: Path, output_dir: Path) -> list[Path]
         "input_hashes": {
             name: sha256_file(path) for name, path in sorted(inputs.items())
         },
+        "composing_stages": [{"stage":"current_aircraft_placement", "placements":35,
+            "source_sha256":sha256_file(inputs["current_aircraft_placements"]),
+            "producer_sha256":sha256_file(repo_root/"tools/kbdu_airport_aircraft/apply_aircraft_placement_contract.py")}],
+        "generator_sha256":sha256_file(Path(__file__)),
         "label": "KBDU environment reconstruction tools-only content pipeline",
         "schema_version": 1,
         "unity_assets_modified": False,

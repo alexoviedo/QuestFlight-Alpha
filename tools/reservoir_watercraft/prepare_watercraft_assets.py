@@ -326,10 +326,11 @@ def add_section_hull(
     for station in range(len(stations) - 1):
         start = station * ring
         nxt = (station + 1) * ring
-        for side in range(ring - 1):
-            faces.append((start + side, nxt + side, nxt + side + 1, start + side + 1))
-        # White deck fields leave only the dark cockpit overlay visible.
-        faces.append((start + 2, nxt + 2, nxt + 3, start + 3))
+        for side in range(ring):
+            following = (side + 1) % ring
+            # Stations in the authored derivatives run bow-to-stern (descending
+            # z). Match the end caps' outward winding, including the keel strip.
+            faces.append((start + side, start + following, nxt + following, nxt + side))
     faces.append(tuple(range(ring - 1, -1, -1)))
     last = (len(stations) - 1) * ring
     faces.append(tuple(last + index for index in range(ring)))

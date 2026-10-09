@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [string]$UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe',
-  [string]$ProjectPath = 'C:\Users\ovied\Dev\T2\T2-QuestFlight\QuestFlight',
+  [string]$ProjectPath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'QuestFlight'),
   [string]$ArtifactDir = '',
   [ValidateRange(60, 3600)]
   [int]$TimeoutSeconds = 1200,
@@ -11,6 +11,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'process_arguments.ps1')
+. (Join-Path $PSScriptRoot 'apk_manifest_policy.ps1')
 if (-not (Test-Path -LiteralPath $ProjectPath)) { throw "Project not found: $ProjectPath" }
 $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
 
@@ -368,7 +370,7 @@ try {
     -TransactionRoot $streamingAssetsTransactionRoot
   try {
     $env:QUESTFLIGHT_DEVELOPMENT_BUILD = if ($Development) { '1' } else { '0' }
-    $process = Start-Process -FilePath $UnityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+    $process = Start-Process -FilePath $UnityExe -ArgumentList (ConvertTo-ProcessArgumentString $arguments) -PassThru -WindowStyle Hidden
     if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
       Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
       throw "Product Quest build exceeded ${TimeoutSeconds}s and was stopped. Log: $log"
@@ -393,6 +395,7 @@ if ($exitCode -ne 0) { throw "Product Quest build failed with exit code $exitCod
 
 $apk = Join-Path $ProjectPath 'Builds\Android\QuestFlight-production.apk'
 if (-not (Test-Path -LiteralPath $apk)) { throw "Unity exited without the product APK: $apk" }
+$packagedManifest = Get-Quest3ApkManifestIdentity -Apk $apk -UnityExe $UnityExe -ArtifactDir $ArtifactDir
 & python $payloadTool --apk $apk --inventory $payloadInventory
 if ($LASTEXITCODE -ne 0) { throw 'APK does not contain the authored scenery payload; do not install it.' }
 # Check the packaged player, not just the requested build options. Diagnostic
@@ -412,6 +415,9 @@ $hash = Get-Sha256Hex -LiteralPath $apk
 [ordered]@{
   generatedUtc = [DateTime]::UtcNow.ToString('O')
   applicationIdentifier = 'com.alexoviedo.t2.questflight'
+  targetSdkVersion = $packagedManifest.targetSdkVersion
+  supportedDevices = $packagedManifest.supportedDevices
+  packagedManifestVerified = $true
   scene = 'Assets/Scenes/ProductionVerticalSlice.unity'
   apk = $apk
   bytes = (Get-Item -LiteralPath $apk).Length
@@ -420,8 +426,12 @@ $hash = Get-Sha256Hex -LiteralPath $apk
   sourceChanges = 'source_changes.patch'
   sourceIdentity = 'source_identity.json'
   sourceChangesArchive = 'source_changes.zip'
+  sourceEvidence = @('source_identity.json','source_changes.patch','source_changes.zip','scenery_payload_inventory.json' | ForEach-Object {
+    [ordered]@{file=$_;sha256=(Get-Sha256Hex -LiteralPath (Join-Path $ArtifactDir $_))}
+  })
+  projectPath = $ProjectPath
   sceneryPayloadVerified = $true
-  sceneryPayloadInventory = $payloadInventory
+  sceneryPayloadInventory = 'scenery_payload_inventory.json'
   development = [bool]$Development
   unattendedProfilingDisabled = $true
   nativeJsbsimRequired = $true

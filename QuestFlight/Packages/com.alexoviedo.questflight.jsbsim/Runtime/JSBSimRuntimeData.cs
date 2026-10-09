@@ -20,6 +20,9 @@ namespace AlexOviedo.QuestFlight.JSBSim
         public const string RuntimeManifestFileName = "runtime_manifest.txt";
         public const string RuntimeHashesFileName = "runtime_hashes.sha256";
         private const string SourceRevisionFileName = "SOURCE_REVISION.txt";
+        // Set only from the current APK, never from resident cache metadata.
+        private static string packagedPayloadIdentity = string.Empty;
+        public static string PreparedPayloadIdentity { get; private set; } = string.Empty;
 
         public static string EditorPackageDataRoot => Path.GetFullPath(Path.Combine(
             Application.dataPath,
@@ -31,18 +34,89 @@ namespace AlexOviedo.QuestFlight.JSBSim
 
         public static bool TryGetPreparedDataRoot(out string dataRoot, out string error)
         {
+            try { return TryGetPreparedDataRootUnchecked(out dataRoot, out error); }
+            catch (Exception exception) when (IsStorageFailure(exception))
+            { dataRoot = string.Empty; error = StorageError(exception); return false; }
+        }
+
+        private static bool TryGetPreparedDataRootUnchecked(out string dataRoot, out string error)
+        {
 #if UNITY_EDITOR
             dataRoot = EditorPackageDataRoot;
 #elif UNITY_ANDROID
-            dataRoot = Path.Combine(Application.persistentDataPath, PackageName, DataFolderName);
+            if (string.IsNullOrEmpty(packagedPayloadIdentity))
+            {
+                dataRoot = string.Empty;
+                error = "Current APK JSBSim payload identity has not been read; run Prepare first.";
+                return false;
+            }
+            dataRoot = CacheRoot(packagedPayloadIdentity);
 #else
             dataRoot = Path.Combine(Application.streamingAssetsPath, DataFolderName);
 #endif
-            return ValidateDataRoot(dataRoot, out error);
+            bool valid = ValidateDataRoot(dataRoot, out error);
+#if UNITY_ANDROID && !UNITY_EDITOR
+            valid = valid && ValidatePayloadIdentity(dataRoot, packagedPayloadIdentity, out error);
+#endif
+            if (!valid) dataRoot = string.Empty;
+            else PreparedPayloadIdentity = PayloadIdentity(dataRoot);
+            return valid;
         }
 
         public static IEnumerator Prepare(Action<bool, string, string> completed)
         {
+            // Drive the iterator here so expected synchronous storage failures, including
+            // those after a request yield, complete the same terminal callback exactly once.
+            bool notified = false;
+            Action<bool, string, string> finish = (success, root, error) =>
+            {
+                if (notified) return;
+                notified = true;
+                completed?.Invoke(success, success ? root : string.Empty, error);
+            };
+            using (IEnumeratorPreparation preparation = new IEnumeratorPreparation(PrepareUnchecked(finish)))
+            {
+                while (true)
+                {
+                    bool next = false;
+                    string failure = null;
+                    try { next = preparation.Iterator.MoveNext(); }
+                    catch (Exception exception) when (IsStorageFailure(exception))
+                    { failure = StorageError(exception); }
+                    if (failure != null) { finish(false, string.Empty, failure); yield break; }
+                    if (!next) break;
+                    yield return preparation.Iterator.Current;
+                }
+            }
+            if (!notified) finish(false, string.Empty, "JSBSim data preparation ended without a result.");
+        }
+
+        private sealed class IEnumeratorPreparation : IDisposable
+        {
+            public readonly IEnumerator Iterator;
+            public IEnumeratorPreparation(IEnumerator iterator) { Iterator = iterator; }
+            public void Dispose() { (Iterator as IDisposable)?.Dispose(); }
+        }
+
+        private static IEnumerator PrepareUnchecked(Action<bool, string, string> completed)
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // Reading the packaged hash manifest anchors both its complete file set and
+            // every payload byte to this APK, even when the upstream engine SHA is unchanged.
+            using (UnityWebRequest identityRequest = UnityWebRequest.Get(
+                       CombineStreamingUri(DataFolderName + "/" + RuntimeHashesFileName)))
+            {
+                identityRequest.timeout = 30;
+                yield return identityRequest.SendWebRequest();
+                if (identityRequest.result != UnityWebRequest.Result.Success ||
+                    !TryParseHashes(identityRequest.downloadHandler.text, out _, out _))
+                {
+                    completed?.Invoke(false, string.Empty, "Could not read current APK JSBSim payload identity: " + identityRequest.error);
+                    yield break;
+                }
+                packagedPayloadIdentity = HashBytes(identityRequest.downloadHandler.data);
+            }
+#endif
             if (TryGetPreparedDataRoot(out string preparedRoot, out string preparedError))
             {
                 completed?.Invoke(true, preparedRoot, string.Empty);
@@ -50,10 +124,11 @@ namespace AlexOviedo.QuestFlight.JSBSim
             }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-            string destination = Path.Combine(Application.persistentDataPath, PackageName, DataFolderName);
+            string destination = CacheRoot(packagedPayloadIdentity);
             string manifestUri = CombineStreamingUri(DataFolderName + "/" + RuntimeManifestFileName);
             using (UnityWebRequest manifestRequest = UnityWebRequest.Get(manifestUri))
             {
+                manifestRequest.timeout = 30;
                 yield return manifestRequest.SendWebRequest();
                 if (manifestRequest.result != UnityWebRequest.Result.Success)
                 {
@@ -69,8 +144,7 @@ namespace AlexOviedo.QuestFlight.JSBSim
                     yield break;
                 }
 
-                string temporary = destination + ".extracting";
-                DeleteDirectoryIfPresent(temporary);
+                string temporary = destination + ".extracting-" + Guid.NewGuid().ToString("N");
                 Directory.CreateDirectory(temporary);
                 bool failed = false;
                 string failure = string.Empty;
@@ -79,6 +153,7 @@ namespace AlexOviedo.QuestFlight.JSBSim
                     string sourceUri = CombineStreamingUri(DataFolderName + "/" + relativePath);
                     using (UnityWebRequest request = UnityWebRequest.Get(sourceUri))
                     {
+                        request.timeout = 30;
                         yield return request.SendWebRequest();
                         if (request.result != UnityWebRequest.Result.Success)
                         {
@@ -106,16 +181,16 @@ namespace AlexOviedo.QuestFlight.JSBSim
                     yield break;
                 }
 
-                File.WriteAllText(Path.Combine(temporary, RuntimeManifestFileName), manifest);
-                if (!ValidateDataRoot(temporary, out string validationError))
+                // Preserve the exact packaged manifest bytes: its hash covers encoding too.
+                File.WriteAllBytes(Path.Combine(temporary, RuntimeManifestFileName), manifestRequest.downloadHandler.data);
+                if (!TryActivateCache(temporary, destination, packagedPayloadIdentity, out string validationError))
                 {
                     DeleteDirectoryIfPresent(temporary);
                     completed?.Invoke(false, string.Empty, validationError);
                     yield break;
                 }
 
-                DeleteDirectoryIfPresent(destination);
-                Directory.Move(temporary, destination);
+                PreparedPayloadIdentity = packagedPayloadIdentity;
                 completed?.Invoke(true, destination, string.Empty);
             }
 #else
@@ -124,6 +199,13 @@ namespace AlexOviedo.QuestFlight.JSBSim
         }
 
         public static bool ValidateDataRoot(string dataRoot, out string error)
+        {
+            try { return ValidateDataRootUnchecked(dataRoot, out error); }
+            catch (Exception exception) when (IsStorageFailure(exception))
+            { error = StorageError(exception); return false; }
+        }
+
+        private static bool ValidateDataRootUnchecked(string dataRoot, out string error)
         {
             if (string.IsNullOrWhiteSpace(dataRoot) || !Directory.Exists(dataRoot))
             {
@@ -301,6 +383,64 @@ namespace AlexOviedo.QuestFlight.JSBSim
             return true;
         }
 
+        public static string PayloadIdentity(string dataRoot) =>
+            Sha256(Path.Combine(dataRoot, RuntimeHashesFileName));
+
+        public static bool ValidatePayloadIdentity(string dataRoot, string expectedIdentity, out string error)
+        {
+            try
+            {
+                if (!IsSha256(expectedIdentity) || !string.Equals(PayloadIdentity(dataRoot), expectedIdentity,
+                        StringComparison.Ordinal))
+                {
+                    error = "JSBSim resident payload identity does not match the current APK.";
+                    return false;
+                }
+                error = string.Empty;
+                return true;
+            }
+            catch (Exception exception) when (IsStorageFailure(exception))
+            { error = StorageError(exception); return false; }
+        }
+
+        // Same-filesystem directory rename publishes only a fully verified tree.
+        // Retain a corrupt resident tree for diagnosis; never fall back to an older APK.
+        public static bool TryActivateCache(string staging, string destination, string expectedIdentity, out string error)
+        {
+            try
+            {
+                if (!ValidatePayloadIdentity(staging, expectedIdentity, out error) ||
+                    !ValidateDataRoot(staging, out error)) return false;
+                if (!string.Equals(Path.GetDirectoryName(Path.GetFullPath(staging)),
+                        Path.GetDirectoryName(Path.GetFullPath(destination)), StringComparison.Ordinal))
+                { error = "JSBSim cache activation requires staging on the destination filesystem."; return false; }
+                if (Directory.Exists(destination))
+                    Directory.Move(destination, destination + ".invalid-" + Guid.NewGuid().ToString("N"));
+                Directory.Move(staging, destination);
+                error = string.Empty;
+                return true;
+            }
+            catch (Exception exception) when (IsStorageFailure(exception))
+            { error = StorageError(exception); return false; }
+        }
+
+        private static string CacheRoot(string identity) => Path.Combine(
+            Application.persistentDataPath, PackageName, DataFolderName + "-" + identity);
+
+        private static bool IsStorageFailure(Exception exception) => exception is IOException ||
+            exception is UnauthorizedAccessException || exception is System.Security.SecurityException ||
+            exception is ArgumentException || exception is NotSupportedException;
+
+        private static string StorageError(Exception exception) =>
+            "JSBSim runtime data storage failed (" + exception.GetType().Name +
+            "). Check available storage and app data access, then restart to retry.";
+
+        private static string HashBytes(byte[] bytes)
+        {
+            using (SHA256 sha = SHA256.Create())
+                return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", string.Empty).ToLowerInvariant();
+        }
+
         private static string Sha256(string path)
         {
             using (SHA256 sha = SHA256.Create())
@@ -313,6 +453,9 @@ namespace AlexOviedo.QuestFlight.JSBSim
 
         private static string SafeDestination(string root, string relativePath)
         {
+            if (string.IsNullOrEmpty(relativePath) || relativePath.Contains(":") ||
+                relativePath.StartsWith("/", StringComparison.Ordinal) || relativePath.StartsWith("\\", StringComparison.Ordinal))
+                return null;
             string normalizedRoot = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             string candidate = Path.GetFullPath(Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar)));
             return candidate.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase) ? candidate : null;

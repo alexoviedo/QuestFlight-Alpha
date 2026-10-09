@@ -69,7 +69,10 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
             PutLiteral(row1, "DST ");
             PutTenths(row1 + 4, 5, snapshot.gpsDistanceNauticalMiles);
             PutLiteral(row1 + 10, "TRK ");
-            PutUnsigned(row1 + 14, 3, Round(snapshot.gpsGroundTrackDegrees), true);
+            if (snapshot.gpsGroundTrackAvailable)
+                PutUnsigned(row1 + 14, 3, Round(snapshot.gpsGroundTrackDegrees) % 360, true);
+            else
+                PutLiteral(row1 + 14, "---");
 
             int row2 = Row(2);
             PutLiteral(row2, "ALT ");

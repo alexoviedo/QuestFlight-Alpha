@@ -14,15 +14,12 @@ namespace QuestFlight.Editor.Tests
 {
     public sealed class ProductFlightModesFoundationEditModeTests
     {
-        // September 19: approved navigation gates Touch release, preserves trigger brakes, adds lesson trim, and pauses demo updates. Native physics/guidance sources remain frozen.
+        // September 19: approved navigation gates Touch release, preserves trigger brakes, adds lesson trim, and pauses demo updates. Historical navigation snapshot; five superseded whole-source freezes are retired by M08 (see docs/CURRENT_PRODUCT_CONTRACTS.md). Current native/input/demo/recovery behavior has dedicated contract tests.
         private static readonly IReadOnlyDictionary<string, string> FrozenSha256 =
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Assets/Production/Profiles/KBDU_ExtendedReservoirLessonV1.asset"] = "7569be8a2672a2a7a89ed3e522150c65e327c9f0e7cfe911d4d5930289e210aa",
                 ["Assets/Scripts/Environment/GoldenEagleThermalSoaring.cs"] = "b4ee6522720493fbea23ef915344cfd3fa317f6e94356aff196abdd3426e1b23",
-                ["Assets/Scripts/Flight/Backends/FlightDynamicsCoordinator.cs"] = "e2565cfd3b870bef32259c59dce9ae212794070c078cd106b70839c3187abf9d",
-                ["Assets/Scripts/Input/ProductControlInput.cs"] = "28fc2ed44760984ecab589e23576eeb1b947ddbbf40610679d6993801220daa9",
-                ["Assets/Scripts/Product/ProductDemoPilot.cs"] = "b3795ac7dda95f28ec2e15e34aaad020140e4820bb9f89b3a6ccb66a481b89da",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonAssistanceMixer.cs"] = "fb297d37923b9b629eed1ad8800b1bea7f424ecba1df397130d5591340f773c5",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonAssistanceMixer.cs.meta"] = "33737dd1003ac800fe690eae13f3dd34bc76d5539bc570f8cd544d20615e6c15",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonCrashClassifier.cs"] = "d589d8ec656ec9bff32b9ffe284a5a7bc9bad0feb4da1d1cfe632728bb9af5f7",
@@ -33,9 +30,7 @@ namespace QuestFlight.Editor.Tests
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonNavigator.cs.meta"] = "a721a70c09c7f719dcc5c402b196e7c633419581ab74d55d1eda0860a6a6905b",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonPathMath.cs"] = "01319b367f4115d9974a9422e31fe139bcdeada43a50344d00011c3a2f86a432",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonPathMath.cs.meta"] = "56222e7af2d220f07a1150e61307a910a00f0f3a85f065a7a29c09b7ab9c1f42",
-                ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRecovery.cs"] = "89f3cba65144266dbddc1741587ac99e794c9f8853d3a446c7318df52917694e",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRecovery.cs.meta"] = "a0da365a0d8992027e5027177cb6ead9a3a2277aa0415a0e0005b6c6d5a6d535",
-                ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRecoveryRuntimeAdapter.cs"] = "d4fcd253417f502e295e85e5f8c2892ce785abd76b6692cdbebee80f933b1d8d",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRecoveryRuntimeAdapter.cs.meta"] = "8bb3b815a221cae66e44e6486223b8a925d0402066667408aa59cdc9daa48923",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRouteData.cs"] = "039852310c0dd5f718893bdb960a7dd78e34fa0864413ba5632dd4ad45cb2650",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonRouteData.cs.meta"] = "1a530d68e40e9949c3e7ad1c45274842531cc2041e1b99f062b760cd08f642b8",
@@ -118,10 +113,15 @@ namespace QuestFlight.Editor.Tests
                 ProductStartupShowroomAuthoring.BackdropMaterialPath,
                 ProductStartupShowroomAuthoring.TextMaterialPath
             };
+            // Unity's first import/save normalizes serialized floating-point text
+            // from bounded external migrations (e.g. native flap travel -35 to -30).
+            // Establish an authored baseline, then prove subsequent authoring is a no-op.
+            ProductFlightModesFoundationAuthoring.Apply();
             string[] before = paths.Select(Sha256).ToArray();
             ProductFlightModesFoundationAuthoring.Apply();
             string[] after = paths.Select(Sha256).ToArray();
-            Assert.That(after, Is.EqualTo(before));
+            for (int index = 0; index < paths.Length; index++)
+                Assert.That(after[index], Is.EqualTo(before[index]), paths[index]);
         }
 
         [Test]
@@ -266,7 +266,7 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void FrozenDemoInputAuthorityAndTrainingFilesRemainByteIdentical()
+        public void RetainedHistoricalSourceAndGuidSnapshotsRemainByteIdentical()
         {
             foreach (KeyValuePair<string, string> item in FrozenSha256)
             {

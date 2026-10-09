@@ -47,6 +47,22 @@ float4 QFObjectToMotionClip(float3 position, out float4 world)
 {
     return QFObjectToMotionClip(float4(position, 1), world);
 }
+// Airport far trees use a vertical CPU LookRotation(view-center, up) TRS.
+// Reconstruct that same immutable tree's prior presented orientation without
+// storing history by a compacted instance slot. Preserve its authored scale.
+float4 QFPreviousVerticalBillboardWorld(float4 localVertex)
+{
+    float3 center = float3(unity_ObjectToWorld._m03, unity_ObjectToWorld._m13, unity_ObjectToWorld._m23);
+    float3 facing = _QFPreviousGroveViewPosition.xyz - center;
+    facing.y = 0;
+    facing = dot(facing, facing) < .001 ? float3(0, 0, 1) : normalize(facing);
+    float3 right = float3(facing.z, 0, -facing.x);
+    float3 scale = float3(length(float3(unity_ObjectToWorld._m00, unity_ObjectToWorld._m10, unity_ObjectToWorld._m20)),
+        length(float3(unity_ObjectToWorld._m01, unity_ObjectToWorld._m11, unity_ObjectToWorld._m21)),
+        length(float3(unity_ObjectToWorld._m02, unity_ObjectToWorld._m12, unity_ObjectToWorld._m22)));
+    return float4(center + right * (localVertex.x * scale.x) +
+        float3(0, localVertex.y * scale.y, 0) + facing * (localVertex.z * scale.z), 1);
+}
 float4 QFPreviousWorld(float4 world)
 {
 #if defined(QF_STATIC_WORLD_GEOMETRY) || defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)

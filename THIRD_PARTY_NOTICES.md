@@ -102,9 +102,9 @@ inventory are recorded in
 required by CC0 but is retained as provenance. Use does not imply endorsement
 by RGSDev or OpenGameArt.
 
-## JSBSim (frozen and out of scope)
+## JSBSim (sole product flight authority)
 
-The frozen optional development-gated native flight-dynamics package includes JSBSim
+The product native flight-dynamics package includes JSBSim
 1.3.1 at revision `3b25f25e49b42d0489c04ac805674fc1450ca579`.
 
 - Source: <https://github.com/JSBSim-Team/jsbsim>
@@ -112,7 +112,11 @@ The frozen optional development-gated native flight-dynamics package includes JS
 - Complete license text: `QuestFlight/Packages/com.alexoviedo.questflight.jsbsim/RuntimeData/JSBSim-1.3.1/COPYING.txt`
 - Exact source, binary hashes, architecture, and build flags: `QuestFlight/Packages/com.alexoviedo.questflight.jsbsim/SOURCE_MANIFEST.json`
 
-No JSBSim work or promotion is part of the photoreal standalone environment milestone. JSBSim remains a replaceable shared library. Its inclusion does not establish
-FAA approval, certified fidelity, training credit, or measured Quest hardware
-performance. Release builds remain on the Unity prototype backend until native
-timing and handling are measured on a physical Quest 3.
+JSBSim remains a replaceable shared library and the sole shipping flight
+authority. Initialization and stepping fail closed if native JSBSim is invalid
+or unavailable. A Unity prototype flight model is forbidden from the product
+closure. The `c172x` XML separately declares GPL and a non-sale statement; owner
+free-alpha authorization is a project decision, not additional third-party
+permission. See the package license/source/model records and the independent
+release rights assessment. Inclusion does not establish FAA approval,
+certified fidelity, training credit, or measured Quest hardware performance.

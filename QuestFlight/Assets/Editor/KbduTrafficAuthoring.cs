@@ -84,6 +84,19 @@ namespace QuestFlightLab.Environment.Editor
         [MenuItem("QuestFlight/Traffic V1/Build And Integrate")]
         public static void BuildAndIntegrate()
         {
+            GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            KbduTrafficV2Runtime existingV2 = existing != null ? existing.GetComponent<KbduTrafficV2Runtime>() : null;
+            if (existingV2 == null || !existingV2.TryValidateContract(out string preflight))
+                throw new InvalidOperationException("Current Traffic V2 bindings must validate before asset mutation.");
+            var bindings = new SerializedObject(existingV2);
+            TextAsset road = bindings.FindProperty("gradeSeparatedRoadAuthority").objectReferenceValue as TextAsset;
+            TextAsset bank = bindings.FindProperty("laneSurfaceBank").objectReferenceValue as TextAsset;
+            SerializedProperty contact = bindings.FindProperty("vehicleContactGeometry");
+            if (road == null || bank == null || contact.arraySize != KbduTrafficRuntime.ArchetypeCount)
+                throw new InvalidOperationException("Current traffic road/lane/contact bindings are incomplete.");
+            RequireCurrentTrafficInstance(AssetDatabase.LoadAssetAtPath<GameObject>(ProductEnvironmentPath));
+            Vector4[] contacts = new Vector4[contact.arraySize];
+            for (int index = 0; index < contacts.Length; index++) contacts[index] = contact.GetArrayElementAtIndex(index).vector4Value;
             EnsureFolder(Root);
             EnsureFolder(Root + "/Models");
             EnsureFolder(Root + "/Materials");
@@ -112,11 +125,11 @@ namespace QuestFlightLab.Environment.Editor
             }
             Mesh[] proxyMeshes = BuildProxyMeshes();
 
-            GameObject trafficRoot = new GameObject("TrafficRoot");
+            GameObject trafficRoot = PrefabUtility.LoadPrefabContents(PrefabPath);
             try
             {
                 KbduTrafficRuntime runtime =
-                    trafficRoot.AddComponent<KbduTrafficRuntime>();
+                    trafficRoot.GetComponent<KbduTrafficRuntime>() ?? trafficRoot.AddComponent<KbduTrafficRuntime>();
                 runtime.Configure(
                     manifest,
                     material,
@@ -140,7 +153,8 @@ namespace QuestFlightLab.Environment.Editor
                         "Traffic V2 Gate-2 bindings are missing; refusing to rebuild a V1-only product root.");
                 }
                 KbduTrafficV2Runtime v2 =
-                    trafficRoot.AddComponent<KbduTrafficV2Runtime>();
+                    trafficRoot.GetComponent<KbduTrafficV2Runtime>() ?? trafficRoot.AddComponent<KbduTrafficV2Runtime>();
+                CopyCurrentSurfaceBindings(v2, road, bank, contacts);
                 v2.Configure(
                     v2Manifest,
                     v2Provenance,
@@ -160,7 +174,7 @@ namespace QuestFlightLab.Environment.Editor
             }
             finally
             {
-                UnityEngine.Object.DestroyImmediate(trafficRoot);
+                PrefabUtility.UnloadPrefabContents(trafficRoot);
             }
 
             IntegrateProductEnvironment();
@@ -312,6 +326,20 @@ namespace QuestFlightLab.Environment.Editor
             {
                 triangles.Add(start + boxTriangles[index]);
             }
+        }
+
+        public static void CopyCurrentSurfaceBindings(KbduTrafficV2Runtime runtime, TextAsset road,
+            TextAsset bank, Vector4[] contacts)
+        {
+            if (runtime == null || road == null || bank == null || contacts == null ||
+                contacts.Length != KbduTrafficRuntime.ArchetypeCount)
+                throw new InvalidOperationException("Missing mandatory traffic surface bindings.");
+            var serialized = new SerializedObject(runtime);
+            serialized.FindProperty("gradeSeparatedRoadAuthority").objectReferenceValue = road;
+            serialized.FindProperty("laneSurfaceBank").objectReferenceValue = bank;
+            var geometry = serialized.FindProperty("vehicleContactGeometry"); geometry.arraySize = contacts.Length;
+            for (int index = 0; index < contacts.Length; index++) geometry.GetArrayElementAtIndex(index).vector4Value = contacts[index];
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static Material BuildMaterial()
@@ -552,21 +580,7 @@ namespace QuestFlightLab.Environment.Editor
                 PrefabUtility.LoadPrefabContents(ProductEnvironmentPath);
             try
             {
-                Transform existing = productRoot.transform.Find("TrafficRoot");
-                if (existing != null)
-                {
-                    UnityEngine.Object.DestroyImmediate(existing.gameObject);
-                }
-                GameObject trafficPrefab =
-                    AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
-                GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(
-                    trafficPrefab,
-                    productRoot.transform);
-                instance.name = "TrafficRoot";
-                instance.transform.SetLocalPositionAndRotation(
-                    Vector3.zero,
-                    Quaternion.identity);
-                instance.transform.localScale = Vector3.one;
+                GameObject instance = RequireCurrentTrafficInstance(productRoot);
 
                 ProductionEnvironmentRoot environment =
                     productRoot.GetComponent<ProductionEnvironmentRoot>();
@@ -596,6 +610,15 @@ namespace QuestFlightLab.Environment.Editor
             {
                 PrefabUtility.UnloadPrefabContents(productRoot);
             }
+        }
+
+        public static GameObject RequireCurrentTrafficInstance(GameObject productRoot)
+        {
+            Transform existing = productRoot != null ? productRoot.transform.Find("TrafficRoot") : null;
+            GameObject source = existing != null ? PrefabUtility.GetCorrespondingObjectFromSource(existing.gameObject) : null;
+            if (existing == null || source == null || AssetDatabase.GetAssetPath(source) != PrefabPath)
+                throw new InvalidOperationException("Current authored TrafficRoot prefab instance missing; refuse hierarchy replacement.");
+            return existing.gameObject;
         }
 
         private static void DeleteObsoleteAssets()

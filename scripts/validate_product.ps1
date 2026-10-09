@@ -10,6 +10,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+# Historical frozen extraction verification; current product entrypoint is validate_current_product.ps1.
+. (Join-Path $PSScriptRoot 'process_arguments.ps1')
 $repoRoot = Split-Path $PSScriptRoot -Parent
 if ([string]::IsNullOrWhiteSpace($ArtifactDir)) {
   $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
@@ -31,7 +33,7 @@ function Invoke-UnityMethod {
   param([string]$Method, [string]$LogName)
   $log = Join-Path $ArtifactDir $LogName
   $arguments = @('-batchmode', '-projectPath', $ProjectPath, '-executeMethod', $Method, '-logFile', $log)
-  $process = Start-Process -FilePath $UnityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+  $process = Start-Process -FilePath $UnityExe -ArgumentList (ConvertTo-ProcessArgumentString $arguments) -PassThru -WindowStyle Hidden
   if (-not $process.WaitForExit(900000)) {
     Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
     throw "$Method exceeded 900 seconds; log: $log"
@@ -111,7 +113,10 @@ try {
     '^QuestFlight/Packages/com\.alexoviedo\.questflight\.jsbsim/',
     '^QuestFlight/Assets/Scripts/Flight/Backends/JSBSimNativeDevelopmentBackend\.cs(\.meta)?$',
     '^QuestFlight/Assets/Editor/Tests/JSBSimPromotionEditModeTests\.cs(\.meta)?$',
-    '^docs/NATIVE_JSBSIM_PROMOTION_GATE\.md$'
+    '^docs/NATIVE_JSBSIM_PROMOTION_GATE\.md$',
+    '^docs/evidence/NATIVE_JSBSIM_SOLE_AUTHORITY_V1_2026-08-13\.md$',
+    '^scripts/build_jsbsim_native\.ps1$',
+    '^tools/native/jsbsim_bridge/'
   ) -join '|'
   $legacy = @($tracked | Where-Object {
     $_ -match 'InputLab|QuestFirstViewRuntimeRepair|Usb2Ble|HOTAS|GaussianSplat|SplatSceneryProvider|FlightDynamicsRuntimeBootstrap|ShortPlaytestDemoPilot|FlightTelemetry' -or

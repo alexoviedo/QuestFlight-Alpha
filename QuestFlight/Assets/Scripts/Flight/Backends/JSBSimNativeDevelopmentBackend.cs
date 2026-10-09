@@ -16,6 +16,7 @@ namespace QuestFlightLab.Flight.Backends
         private readonly JSBSimNativeSession _session = new JSBSimNativeSession();
         private readonly bool _libraryAvailable;
         private FlightDynamicsBackendContext _context;
+        private FlightDynamicsAtmosphere _projectedAtmosphere;
 
         public JSBSimNativeDevelopmentBackend(string dataRoot)
         {
@@ -54,6 +55,12 @@ namespace QuestFlightLab.Flight.Backends
         }
 
         public bool Reset(FlightDynamicsInitialConditions initialConditions)
+            => ResetOrRelocate(initialConditions, false);
+
+        public bool Relocate(FlightDynamicsInitialConditions initialConditions)
+            => ResetOrRelocate(initialConditions, true);
+
+        private bool ResetOrRelocate(FlightDynamicsInitialConditions initialConditions, bool preserveOperationalState)
         {
             if (!RequireInitialized()) return false;
             if (!TryTerrainElevationAt(
@@ -66,7 +73,8 @@ namespace QuestFlightLab.Flight.Backends
             {
                 latitudeDegrees = initialConditions.latitudeDegrees,
                 longitudeDegrees = initialConditions.longitudeDegrees,
-                altitudeMslFeet = initialConditions.altitudeMslMeters * FlightFrameConversions.MetersToFeet,
+                altitudeMslFeet = FlightFrameConversions.GeodeticAltitudeToNativeRadialMeters(
+                    initialConditions.latitudeDegrees, initialConditions.altitudeMslMeters) * FlightFrameConversions.MetersToFeet,
                 terrainElevationMslFeet = terrainElevationMslMeters * FlightFrameConversions.MetersToFeet,
                 calibratedAirspeedKnots = initialConditions.calibratedAirspeedKnots,
                 headingDegrees = initialConditions.headingDegrees,
@@ -75,7 +83,9 @@ namespace QuestFlightLab.Flight.Backends
                 flightPathAngleDegrees = initialConditions.flightPathAngleDegrees,
                 engineRunning = initialConditions.engineRunning ? 1 : 0
             };
-            if (!_session.Reset(native)) return Fail(_session.LastError);
+            ApplyAtmosphere(initialConditions.latitudeDegrees, initialConditions.longitudeDegrees, initialConditions.altitudeMslMeters);
+            if (!(preserveOperationalState ? _session.Relocate(native) : _session.Reset(native))) return Fail(_session.LastError);
+            LastError = string.Empty;
             return CaptureState();
         }
 
@@ -99,11 +109,23 @@ namespace QuestFlightLab.Flight.Backends
 
         public void SetAtmosphere(FlightDynamicsAtmosphere atmosphere)
         {
+            // The shared field is authored in projected scenery axes. Resolve its
+            // physical local NED basis at the actual reset/step location.
+            _projectedAtmosphere = atmosphere;
+        }
+
+        private void ApplyAtmosphere(double latitudeDegrees, double longitudeDegrees, double altitudeMslMeters)
+        {
+            Vector3 ned = FlightFrameConversions.ProjectedMetersPerSecondToNed(
+                new Vector3((float)_projectedAtmosphere.windEastMetersPerSecond,
+                    (float)-_projectedAtmosphere.windDownMetersPerSecond,
+                    (float)_projectedAtmosphere.windNorthMetersPerSecond),
+                latitudeDegrees, longitudeDegrees, altitudeMslMeters, _context.localOrigin);
             _session.SetAtmosphere(new JSBSimNativeAtmosphere
             {
-                windNorthFeetPerSecond = atmosphere.windNorthMetersPerSecond * FlightFrameConversions.MetersToFeet,
-                windEastFeetPerSecond = atmosphere.windEastMetersPerSecond * FlightFrameConversions.MetersToFeet,
-                windDownFeetPerSecond = atmosphere.windDownMetersPerSecond * FlightFrameConversions.MetersToFeet
+                windNorthFeetPerSecond = ned.x * FlightFrameConversions.MetersToFeet,
+                windEastFeetPerSecond = ned.y * FlightFrameConversions.MetersToFeet,
+                windDownFeetPerSecond = ned.z * FlightFrameConversions.MetersToFeet
             });
         }
 
@@ -120,6 +142,7 @@ namespace QuestFlightLab.Flight.Backends
                 return Fail(string.IsNullOrWhiteSpace(_session.LastError)
                     ? "Could not update JSBSim from the authored terrain surface."
                     : _session.LastError);
+            ApplyAtmosphere(CurrentState.latitudeDegrees, CurrentState.longitudeDegrees, CurrentState.altitudeMslMeters);
             if (!_session.Advance(fixedDeltaTimeSeconds)) return Fail(_session.LastError);
             return CaptureState();
         }
@@ -154,12 +177,14 @@ namespace QuestFlightLab.Flight.Backends
         private bool CaptureState()
         {
             JSBSimNativeState native = _session.State;
+            double altitudeMslMeters = FlightFrameConversions.NativeRadialAltitudeToGeodeticMeters(
+                native.latitudeDegrees, native.altitudeMslFeet * FlightFrameConversions.FeetToMeters);
             FlightDynamicsState state = new FlightDynamicsState
             {
                 simulationTimeSeconds = native.simulationTimeSeconds,
                 latitudeDegrees = native.latitudeDegrees,
                 longitudeDegrees = native.longitudeDegrees,
-                altitudeMslMeters = native.altitudeMslFeet * FlightFrameConversions.FeetToMeters,
+                altitudeMslMeters = altitudeMslMeters,
                 altitudeAglMeters = native.altitudeAglFeet * FlightFrameConversions.FeetToMeters,
                 calibratedAirspeedKnots = native.calibratedAirspeedKnots,
                 groundSpeedKnots = native.groundSpeedKnots,
@@ -171,20 +196,27 @@ namespace QuestFlightLab.Flight.Backends
                 sideslipDegrees = native.sideslipDegrees,
                 engineRpm = native.engineRpm,
                 loadFactorG = native.loadFactorG,
+                nativeTelemetryVersion = 1,
+                actualFlapNormalized = _session.Diagnostics.flapPosition,
+                groundVelocityNedMetersPerSecond = new Vector3(
+                    (float)(native.velocityNorthFeetPerSecond * FlightFrameConversions.FeetToMeters),
+                    (float)(native.velocityEastFeetPerSecond * FlightFrameConversions.FeetToMeters),
+                    (float)(native.velocityDownFeetPerSecond * FlightFrameConversions.FeetToMeters)),
                 weightOnWheels = native.weightOnWheels != 0,
                 positionUnityMeters = FlightFrameConversions.GeodeticToUnity(
                     native.latitudeDegrees,
                     native.longitudeDegrees,
-                    native.altitudeMslFeet * FlightFrameConversions.FeetToMeters,
+                    altitudeMslMeters,
                     _context.localOrigin),
-                rotationUnity = FlightFrameConversions.JsbsimAttitudeToUnity(
+                rotationUnity = FlightFrameConversions.JsbsimAttitudeToProjectedUnity(
                     native.headingDegrees,
                     native.pitchDegrees,
-                    native.bankDegrees),
-                velocityUnityMetersPerSecond = FlightFrameConversions.NedFeetPerSecondToUnityMetersPerSecond(
+                    native.bankDegrees, native.latitudeDegrees, native.longitudeDegrees, _context.localOrigin),
+                velocityUnityMetersPerSecond = FlightFrameConversions.NedFeetPerSecondToProjectedMetersPerSecond(
                     native.velocityNorthFeetPerSecond,
                     native.velocityEastFeetPerSecond,
-                    native.velocityDownFeetPerSecond),
+                    native.velocityDownFeetPerSecond, native.latitudeDegrees, native.longitudeDegrees,
+                    altitudeMslMeters, _context.localOrigin),
                 angularVelocityBodyDegreesPerSecond = FlightFrameConversions.BodyRatesRadiansToUnityDegrees(
                     native.rollRateRadiansPerSecond,
                     native.pitchRateRadiansPerSecond,

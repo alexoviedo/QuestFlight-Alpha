@@ -40,6 +40,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.V2
         public float gpsBearingDegrees;
         public float gpsDistanceNauticalMiles;
         public float gpsGroundTrackDegrees;
+        public bool gpsGroundTrackAvailable;
         public float gpsAltitudeMslFeet;
 
         public int com1ActiveKHz;

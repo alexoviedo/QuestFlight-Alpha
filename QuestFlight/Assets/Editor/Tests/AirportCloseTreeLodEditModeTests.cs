@@ -458,7 +458,11 @@ namespace QuestFlight.Editor.Tests
 
             ProductionEnvironmentBudget budget = root.CalculateBudget();
             Assert.That(budget.rendererCount, Is.LessThanOrEqualTo(75));
-            Assert.That(budget.triangleCount, Is.LessThanOrEqualTo(650000));
+            // The accepted September road subdivision superseded this old
+            // whole-environment snapshot. Keep the authoritative environment
+            // ceiling; tree geometry/material-specific limits remain above.
+            Assert.That(budget.triangleCount, Is.LessThanOrEqualTo(ProductionEnvironmentRoot.MaximumVisibleTriangles));
+            Assert.That(root.TryValidateContract(out string contractFailure), Is.True, contractFailure);
             Assert.That(budget.materialCount, Is.LessThanOrEqualTo(29));
         }
 

@@ -1,5 +1,8 @@
 #if UNITY_INCLUDE_TESTS
 using System.Linq;
+using System.Collections;
+using System.Reflection;
+using QuestFlightLab.Flight.Backends;
 using NUnit.Framework;
 using QuestFlightLab.Environment;
 using QuestFlightLab.Runtime;
@@ -19,6 +22,7 @@ namespace QuestFlightLab.Tests.PlayMode
         }
 
         [Test]
+        [Description("Synchronous Editor proof of the authored coordinator's actual Start boundary; not a frame or Android startup test.")]
         public void ProductionSceneBecomesReadyWithoutLegacyRepairOrDefaultDebugUi()
         {
             Transform world = LoadProductionWorld();
@@ -33,8 +37,35 @@ namespace QuestFlightLab.Tests.PlayMode
             Assert.That(ComponentsInWorld<Canvas>(world).Count(canvas => canvas.gameObject.activeInHierarchy), Is.Zero,
                 "Production startup must not cover the cockpit with a legacy/debug Canvas.");
 
-            Assert.That(QuestTemporalVisualGateRecorder.EvaluateSceneReadiness(out string status), Is.True, status);
+            FlightDynamicsCoordinator authority = ComponentsInWorld<FlightDynamicsCoordinator>(world).Single();
+            Assert.That(authority.IsInitialized, Is.False,
+                "Instantiation must not label the still-pending Start coroutine ready.");
+            Assert.That(QuestTemporalVisualGateRecorder.EvaluateSceneReadiness(out string status), Is.False);
+            Assert.That(status, Does.Contain("preparing"));
+            // Editor preparation validates the ordinary package directory synchronously.
+            // Exercise the actual Start iterator once; do not emulate asynchronous player frames.
+            Assert.That(Application.isEditor, Is.True, "This fixture proves only synchronous Editor startup.");
+            Assert.That(AlexOviedo.QuestFlight.JSBSim.JSBSimRuntimeData.TryGetPreparedDataRoot(
+                out _, out string preparationError), Is.True, preparationError);
+            MethodInfo startMethod = typeof(FlightDynamicsCoordinator).GetMethod("Start",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(startMethod, Is.Not.Null);
+            IEnumerator startup = startMethod.Invoke(authority, null) as IEnumerator;
+            Assert.That(startup, Is.Not.Null);
+            try
+            {
+                Assert.That(startup.MoveNext(), Is.False,
+                    "Prepared Editor data must complete actual Start without an asynchronous yield.");
+            }
+            finally { (startup as System.IDisposable)?.Dispose(); }
+            Assert.That(QuestTemporalVisualGateRecorder.EvaluateSceneReadiness(out status), Is.True, status);
             Assert.That(status, Does.Contain("authored production hierarchy"));
+            Assert.That(authority.CurrentState.IsFinite, Is.True);
+            authority.enabled = false;
+            Assert.That(QuestTemporalVisualGateRecorder.EvaluateSceneReadiness(out status), Is.False);
+            Assert.That(status, Does.Contain("disabled"));
+            authority.enabled = true;
+            Assert.That(authority.TryGetAuthorityReadiness(out status), Is.True, status);
         }
 
         [Test]

@@ -1678,7 +1678,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9221902502433798446, guid: 3b6f9c2008441944fb08b63e4cd783ad, type: 3}
       propertyPath: bakedTriangleCount
-      value: 689549
+      value: 689694
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

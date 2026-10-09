@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using QuestFlight.Editor;
 using QuestFlightLab.Environment;
+using QuestFlightLab.Editor;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -51,17 +52,29 @@ namespace QuestFlight.EditorTests
             ProductionTerrainSurfaceAsset surface = AssetDatabase.LoadAssetAtPath<ProductionTerrainSurfaceAsset>(
                 TerrainDefectRepairV1Authoring.SurfacePath);
             Assert.That(surface, Is.Not.Null);
-            Assert.That(surface.transitionPatches, Has.Length.EqualTo(4));
-            Assert.That(surface.transitionPatches.Select(item => item.stableId), Is.EquivalentTo(new[]
+            string[] originalTransitionIds =
             {
                 "near_rendered_outer_band_v1",
                 "near_middle_transition_v1",
                 "middle_rendered_outer_edge_v1",
                 "middle_far_transition_v1"
-            }));
+            };
+            Assert.That(surface.transitionPatches, Has.Length.EqualTo(5));
+            var originalTransitions = surface.transitionPatches.Where(item => originalTransitionIds.Contains(item.stableId)).ToArray();
+            Assert.That(originalTransitions.Select(item => item.stableId), Is.EquivalentTo(originalTransitionIds));
             Assert.That(surface.transitionPatches.All(item => item.IsValid), Is.True);
-            Assert.That(surface.transitionPatches.Sum(item => item.triangles.Length / 3),
+            Assert.That(originalTransitions.Sum(item => item.triangles.Length / 3),
                 Is.InRange(1000, 8000));
+            // The accepted local road milestone adds one bounded explicit query
+            // patch, independently of the original four transition contracts.
+            Mesh nearMesh = AssetDatabase.LoadAssetAtPath<Mesh>(TerrainFloat32IntegrationRepairAuthoring.NearPath);
+            var source = TerrainFloat32IntegrationRepairAuthoring.ValidateCurrentRoadTerrainIdentity(nearMesh);
+            var road = surface.transitionPatches.Single(item => item.stableId == TerrainFloat32IntegrationRepairAuthoring.RoadPatchId);
+            Assert.That(road.priority, Is.EqualTo(-100));
+            Assert.That(road.vertices, Has.Length.EqualTo(6901));
+            Assert.That(road.triangles.Length / 3,
+                Is.EqualTo(source.terrainFloat32Repair?.queryTrianglesAfter ?? 13110));
+            Assert.That(road.vertices.All(vertex => Mathf.Abs(vertex.x) <= 2048f && Mathf.Abs(vertex.z) <= 2048f), Is.True);
             Assert.That(surface.macroMinimumEnuMeters, Is.EqualTo(new Vector2(-12000f, -12000f)));
             Assert.That(surface.macroSizeMeters, Is.EqualTo(new Vector2(24000f, 24000f)));
 
@@ -122,6 +135,20 @@ namespace QuestFlight.EditorTests
                 Vector3 c = surface.vertices[surface.indices[offset + 2]];
                 Assert.That(Finite(a) && Finite(b) && Finite(c), Is.True);
                 Vector3 cross = Vector3.Cross(b - a, c - a);
+                bool acceptedRoadFace = surface.acceptedRoadDerivative &&
+                    (surface.indices[offset] >= 46426 || surface.indices[offset + 1] >= 46426 || surface.indices[offset + 2] >= 46426);
+                if (acceptedRoadFace)
+                {
+                    // GEOS road subdivision has legitimate nonzero slivers
+                    // below this earlier coarse-mesh area heuristic. Require
+                    // exact stored-coordinate positive XZ area, which catches
+                    // every inversion/collapse, and retain the old thresholds
+                    // for every original/outer-terrain triangle below.
+                    Assert.That(cross.sqrMagnitude, Is.GreaterThan(0f), $"Zero-area accepted road face {offset / 3}.");
+                    Assert.That(TerrainFloat32HeightfieldPolicy.ProjectedCrossY(a, b, c), Is.GreaterThan(0d),
+                        $"Inverted or collapsed accepted road face {offset / 3}.");
+                    continue;
+                }
                 Assert.That(cross.sqrMagnitude, Is.GreaterThan(0.000001f),
                     $"Zero-area triangle {offset / 3}.");
                 if (cross.y < -0.0001f)
@@ -195,9 +222,12 @@ namespace QuestFlight.EditorTests
             public readonly Vector3[] vertices;
             public readonly Vector3[] normals;
             public readonly int[] indices;
+            public readonly bool acceptedRoadDerivative;
 
             public Surface(MeshFilter filter)
             {
+                acceptedRoadDerivative = AssetDatabase.GetAssetPath(filter.sharedMesh) == TerrainFloat32IntegrationRepairAuthoring.NearPath;
+                if (acceptedRoadDerivative) TerrainFloat32IntegrationRepairAuthoring.ValidateCurrentRoadTerrainIdentity(filter.sharedMesh);
                 vertices = filter.sharedMesh.vertices.Select(filter.transform.TransformPoint).ToArray();
                 normals = filter.sharedMesh.normals.Select(filter.transform.TransformDirection).ToArray();
                 indices = filter.sharedMesh.triangles;

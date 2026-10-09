@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using QuestFlightLab.Environment;
+using QuestFlightLab.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -344,7 +345,11 @@ namespace QuestFlight.Editor.Tests
             ProductionEnvironmentRoot contract = environment.GetComponent<ProductionEnvironmentRoot>();
             ProductionEnvironmentBudget budget = contract.CalculateBudget();
             Assert.That(budget.rendererCount, Is.LessThanOrEqualTo(75));
-            Assert.That(budget.triangleCount, Is.LessThanOrEqualTo(650000));
+            // Accepted 2026-09-18 road subdivision supersedes the earlier
+            // whole-environment snapshot; retain its authoritative 700000
+            // contract and all independent renderer/material bounds.
+            Assert.That(budget.triangleCount, Is.LessThanOrEqualTo(ProductionEnvironmentRoot.MaximumVisibleTriangles));
+            Assert.That(contract.TryValidateContract(out string contractFailure), Is.True, contractFailure);
             Assert.That(budget.materialCount, Is.LessThanOrEqualTo(28));
             Assert.That(contract.bakedRendererCount, Is.EqualTo(budget.rendererCount));
             Assert.That(contract.bakedTriangleCount, Is.EqualTo(budget.triangleCount));
@@ -422,12 +427,32 @@ namespace QuestFlight.Editor.Tests
                 Assert.That(AssetImporter.GetAtPath(nativePath), Is.Not.TypeOf<ModelImporter>(), nativePath);
                 Assert.That(native.isReadable, Is.False,
                     nativePath + " must not retain a duplicate runtime CPU mesh.");
-                Assert.That(native.GetIndexCount(0) / 3u, Is.EqualTo((uint)source.triangleCount), name);
-                if (preserveSourceVertexTopology)
+                bool acceptedRoadDerivative = nativePath == TerrainFloat32IntegrationRepairAuthoring.NearPath;
+                if (acceptedRoadDerivative)
+                {
+                    // The accepted 2026-09-18 local road milestone retains the
+                    // complete original OBJ coordinate prefix, adding only
+                    // constrained road triangles. Bind its real source receipt.
+                    var accepted = TerrainFloat32IntegrationRepairAuthoring.ValidateCurrentRoadTerrainIdentity(native);
+                    Assert.That(native.GetIndexCount(0) / 3u, Is.EqualTo((uint)accepted.nearTriangles));
+                    Assert.That(native.vertices.Take(source.vertexCount), Is.EqualTo(source.vertices));
+                    Assert.That(native.vertices.Skip(source.vertexCount).All(vertex =>
+                        vertex.x >= source.bounds.min.x && vertex.x <= source.bounds.max.x &&
+                        vertex.z >= source.bounds.min.z && vertex.z <= source.bounds.max.z), Is.True);
+                }
+                else Assert.That(native.GetIndexCount(0) / 3u, Is.EqualTo((uint)source.triangleCount), name);
+                if (preserveSourceVertexTopology && !acceptedRoadDerivative)
                     Assert.That(native.vertexCount, Is.EqualTo(source.vertexCount),
                         name + " must preserve source vertex/index topology.");
                 if (maximumTriangleCount > 0)
+                {
                     Assert.That(source.triangleCount, Is.LessThanOrEqualTo(maximumTriangleCount), name);
+                    // This limit belongs to the original OBJ conversion. The
+                    // accepted road derivative is separately constrained above
+                    // by its exact source-bound count and preserved OBJ prefix.
+                    if (!acceptedRoadDerivative)
+                        Assert.That(native.GetIndexCount(0) / 3u, Is.LessThanOrEqualTo((uint)maximumTriangleCount), name);
+                }
                 Assert.That(native.bounds.min.x, Is.EqualTo(source.bounds.min.x).Within(0.0005f), name);
                 Assert.That(native.bounds.min.z, Is.EqualTo(source.bounds.min.z).Within(0.0005f), name);
                 Assert.That(native.bounds.max.x, Is.EqualTo(source.bounds.max.x).Within(0.0005f), name);
@@ -509,6 +534,7 @@ namespace QuestFlight.Editor.Tests
             Vector3 minimum = Vector3.zero;
             Vector3 maximum = Vector3.zero;
             int triangles = 0;
+            var positions = new List<Vector3>();
             foreach (string raw in File.ReadLines(path))
             {
                 string line = raw.Trim();
@@ -530,6 +556,7 @@ namespace QuestFlight.Editor.Tests
                         float.Parse(values[2], CultureInfo.InvariantCulture),
                         float.Parse(values[3], CultureInfo.InvariantCulture));
                     vertexCount++;
+                    positions.Add(value);
                     if (!hasVertex)
                     {
                         minimum = maximum = value;
@@ -551,7 +578,8 @@ namespace QuestFlight.Editor.Tests
             {
                 bounds = new Bounds((minimum + maximum) * 0.5f, maximum - minimum),
                 triangleCount = triangles,
-                vertexCount = vertexCount
+                vertexCount = vertexCount,
+                vertices = positions.ToArray()
             };
         }
 
@@ -560,6 +588,7 @@ namespace QuestFlight.Editor.Tests
             public Bounds bounds;
             public int triangleCount;
             public int vertexCount;
+            public Vector3[] vertices;
         }
     }
 }

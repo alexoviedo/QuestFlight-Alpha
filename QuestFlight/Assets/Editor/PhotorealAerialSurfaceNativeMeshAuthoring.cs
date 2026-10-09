@@ -171,13 +171,9 @@ namespace QuestFlight.Editor
                     normalPolicy, maximumTriangleCount));
             }
 
-            foreach (string guid in AssetDatabase.FindAssets("t:Mesh", new[] { outputRoot }))
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                if (path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase) &&
-                    !expectedOutputs.Contains(path))
-                    AssetDatabase.DeleteAsset(path);
-            }
+            // Only exact source-derived output paths are compiler-owned. Other
+            // meshes in this shared folder retain their identities and references.
+            // A removed source does not authorize destructive asset cleanup.
             return records.ToArray();
         }
 

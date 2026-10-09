@@ -1,5 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Text;
+using UnityEditor;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
@@ -76,6 +80,136 @@ namespace QuestFlightLab.Editor.Tests
                 }
             Assert.That(checkedJoins, Is.GreaterThan(100));
             Debug.Log("Traffic continuity: " + checkedJoins + " directed road joins preserve vehicles without an endpoint fade/reset.");
+        }
+
+        [Test] public void AuthoredSemiAxlesRemainContinuousAcrossThe4125To2630Join()
+        {
+            const int from = 4125, to = 2630, direction = 1;
+            object target = corridors.GetValue(to);
+            double boundary = Field<double>(Field<Array>(target, "streams").GetValue(direction), "phase");
+            var select = typeof(KbduTrafficV2Runtime).GetMethod("SelectArchetype", BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(select.Invoke(null, new[] { corridors.GetValue(from), (object)0L, direction }), Is.EqualTo(5));
+            Assert.That(select.Invoke(null, new[] { target, (object)0L, direction }), Is.EqualTo(5));
+            Assert.That(traffic.TryEvaluateVehicleForVisualQa(from, direction, 0, boundary - .001,
+                out Vector3 a, out _, out int laneA, out float alphaA), Is.True);
+            Assert.That(traffic.TryEvaluateVehicleForVisualQa(to, direction, 0, boundary + .001,
+                out Vector3 b, out _, out int laneB, out float alphaB), Is.True);
+            Assert.That(laneA, Is.EqualTo(laneB));
+            // 8m/s advances16mm in2ms; the existing accepted endpoint allowance is20mm.
+            Assert.That(Vector3.Distance(a, b), Is.LessThan(.05f));
+            Assert.That(alphaB, Is.EqualTo(alphaA).Within(.01f));
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void FootprintSupportTraversesSeveralShortAcceptedSegments(bool reverse)
+        {
+            WithFootprintFixture(new[] { new[] { 0f, 1f }, new[] { 1f, 2f }, new[] { 2f, 3f } }, (runtime, routes) =>
+            {
+                Vector3 sample = SampleFootprint(runtime, routes.GetValue(reverse ? 2 : 0), reverse ? 1 : 0,
+                    .5f, reverse ? -2f : 2f);
+                Assert.That(sample.x, Is.EqualTo(reverse ? .5f : 2.5f).Within(.00001f));
+                Assert.That(sample.y, Is.EqualTo(sample.x * 2f).Within(.00001f));
+            });
+        }
+
+        [Test] public void AcceptedJoinCanReverseTheNextCorridorsAuthoredPointOrder()
+        {
+            WithFootprintFixture(new[] { new[] { 0f, 1f }, new[] { 2f, 1f } }, (runtime, routes) =>
+            {
+                Vector3 sample = SampleFootprint(runtime, routes.GetValue(0), 0, .5f, 1f);
+                Assert.That(sample.x, Is.EqualTo(1.5f).Within(.00001f));
+                Assert.That(sample.y, Is.EqualTo(3f).Within(.00001f));
+            });
+        }
+
+        [Test] public void FootprintSupportKeepsTrueFreeEndsClamped()
+        {
+            WithFootprintFixture(new[] { new[] { 0f, 1f }, new[] { 1f, 2f }, new[] { 2f, 3f } }, (runtime, routes) =>
+            {
+                Assert.That(SampleFootprint(runtime, routes.GetValue(0), 0, 0f, -10f).x, Is.Zero);
+                Assert.That(SampleFootprint(runtime, routes.GetValue(2), 0, 1f, 10f).x, Is.EqualTo(3f));
+                Assert.That(SampleFootprint(runtime, routes.GetValue(0), 1, 0f, -10f).x, Is.Zero);
+                Assert.That(SampleFootprint(runtime, routes.GetValue(2), 1, 1f, 10f).x, Is.EqualTo(3f));
+            });
+        }
+
+        [Test] public void AmbiguousJunctionDoesNotAcquireAnInventedFootprintConnection()
+        {
+            WithFootprintFixture(new[] { new[] { 0f, 1f }, new[] { 1f, 2f }, new[] { 1f, 3f } }, (runtime, routes) =>
+            {
+                Assert.That(SampleFootprint(runtime, routes.GetValue(0), 0, .5f, 2f).x, Is.EqualTo(1f));
+            });
+        }
+
+        private static Vector3 SampleFootprint(KbduTrafficV2Runtime runtime, object route,
+            int direction, float fraction, float offset)
+        {
+            object[] args = { route, direction, 0, fraction, offset, default(Vector3), default(Vector3) };
+            bool sampled = (bool)typeof(KbduTrafficV2Runtime).GetMethod("TrySampleVehicleFootprint",
+                BindingFlags.Instance | BindingFlags.NonPublic).Invoke(runtime, args);
+            Assert.That(sampled, Is.True);
+            return (Vector3)args[5];
+        }
+
+        private static void WithFootprintFixture(float[][] endpoints, Action<KbduTrafficV2Runtime, Array> check)
+        {
+            const string identity = "isolated-footprint-regression";
+            var target = new GameObject("Traffic footprint fixture") { hideFlags = HideFlags.DontSave };
+            target.SetActive(false);
+            TextAsset bankAsset = null;
+            try
+            {
+                var runtime = target.AddComponent<KbduTrafficV2Runtime>();
+                Type manifestType = typeof(KbduTrafficV2Runtime).GetNestedType("Manifest", BindingFlags.NonPublic);
+                Type corridorType = typeof(KbduTrafficV2Runtime).GetNestedType("Corridor", BindingFlags.NonPublic);
+                object manifest = Activator.CreateInstance(manifestType, true);
+                Array routes = Array.CreateInstance(corridorType, endpoints.Length);
+                void Set(object obj, string name, object value) => obj.GetType().GetField(name,
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).SetValue(obj, value);
+                for (int i = 0; i < endpoints.Length; i++)
+                {
+                    object route = Activator.CreateInstance(corridorType, true);float[] p = endpoints[i];
+                    Set(route, "authoredIndex", i);Set(route, "corridor_id", "fixture:" + i);
+                    Set(route, "stableHash", i + 1);Set(route, "direction_mode", "BIDIRECTIONAL");
+                    Set(route, "points_xz_meters", new[] { p[0], 0f, p[1], 0f });
+                    Set(route, "length_meters", Mathf.Abs(p[1] - p[0]));Set(route, "speed_mps", 1f);
+                    Set(route, "headway_seconds", 10f);Set(route, "lane_count", 2);Set(route, "road_class", "residential");
+                    routes.SetValue(route, i);
+                }
+                using var output = new MemoryStream();
+                using (var zip = new GZipStream(output, CompressionMode.Compress, true))
+                using (var writer = new BinaryWriter(zip, Encoding.UTF8))
+                {
+                    writer.Write(TrafficLaneSurfaceBank.Magic);writer.Write(2);writer.Write(endpoints.Length);writer.Write(identity);
+                    foreach (float[] p in endpoints)
+                    {
+                        writer.Write(2);
+                        for (int slot = 0; slot < 2; slot++)
+                        {
+                            writer.Write(2);
+                            for (int point = 0; point < 2; point++)
+                            {
+                                writer.Write(point == 0 ? 0f : Mathf.Abs(p[1] - p[0]));
+                                writer.Write(p[point]);writer.Write(p[point] * 2f);writer.Write(0f);
+                                writer.Write(0f);writer.Write(1f);writer.Write(0f);
+                            }
+                        }
+                    }
+                }
+                // TextAsset(byte[]) is supported by the pinned Unity6000 test toolchain.
+                bankAsset = new TextAsset(output.ToArray());
+                Set(manifest, "corridors", routes);Set(runtime, "parsedManifest", manifest);
+                Set(runtime, "authoredLaneSurfaces", new TrafficLaneSurfaceBank(bankAsset, endpoints.Length, identity));
+                Set(runtime, "gradeSeparatedRoadAuthority", AssetDatabase.LoadAssetAtPath<TextAsset>(
+                    "Assets/Production/Environment/GradeSeparatedRoadsV1/Data/KBDU_GradeSeparatedRoadAuthorityV1.json"));
+                typeof(KbduTrafficV2Runtime).GetMethod("BuildContinuousStreams", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(runtime, null);
+                check(runtime, routes);
+            }
+            finally
+            {
+                if (bankAsset != null) UnityEngine.Object.DestroyImmediate(bankAsset);
+                UnityEngine.Object.DestroyImmediate(target);
+            }
         }
 
         [Test] public void OverlappingBridgeApproachesDoNotChangeVehicleHeightAbruptly()

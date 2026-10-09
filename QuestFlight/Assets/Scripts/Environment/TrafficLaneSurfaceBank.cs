@@ -55,6 +55,21 @@ namespace QuestFlightLab.Environment
             }
         }
 
+        public bool TryGetLaneLength(int corridor, bool bidirectional, int direction,
+            int laneIndex, out float lengthMeters)
+        {
+            lengthMeters = 0f;
+            if ((uint)corridor >= lanes.Length) return false;
+            Lane[] choices = lanes[corridor];
+            int perDirection = bidirectional ? choices.Length / 2 : choices.Length;
+            int slot = laneIndex + (bidirectional ? direction * perDirection : 0);
+            if ((uint)slot >= choices.Length) return false;
+            float length = choices[slot].distance[choices[slot].distance.Length - 1];
+            if (!float.IsFinite(length) || length <= 0f) return false;
+            lengthMeters = length;
+            return true;
+        }
+
         public bool TrySample(int corridor, bool bidirectional, int direction, int laneIndex,
             float fraction, float offsetMeters, out Vector3 position, out Vector3 up)
         {

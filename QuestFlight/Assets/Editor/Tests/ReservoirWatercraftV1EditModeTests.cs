@@ -23,6 +23,21 @@ namespace QuestFlight.Editor.Tests
         private const string SharedMaterialPath =
             "Assets/Production/Environment/PhotorealTerrainV1/KBDU_ParkedAircraft.mat";
 
+        // Exact authored source landmarks captured before the bounded rebuild.
+        // The diagnosed axis-baked output misses these by 1.099m, .942m and .265m.
+        [TestCase("dry_storage",310.63372802734375f,-26.45340919494629f,3334.76220703125f)]
+        [TestCase("open_water",242.32528686523438f,-32.3155517578125f,3590.283935546875f)]
+        [TestCase("shore_storage",264.49090576171875f,-30.517309188842773f,3520.205810546875f)]
+        public void CurrentProducerPreservesHistoricalBowTrailerAndPaddlecraftOrientationLandmarks(
+            string group,float x,float y,float z)
+        {
+            var mesh=AssetDatabase.LoadAssetAtPath<Mesh>(Root+"/Generated/ReservoirWatercraft_"+group+"_LOD0.asset");
+            Assert.That(mesh,Is.Not.Null);
+            var expected=new Vector3(x,y,z);
+            Assert.That(mesh.vertices.Min(vertex=>Vector3.Distance(vertex,expected)),Is.LessThan(0.002f),
+                "Source longitudinal orientation must survive importer changes without rotating placement headings.");
+        }
+
         [Test]
         public void DiscoveryAndDerivativeReportsRemainReviewableAndHashBound()
         {
@@ -42,6 +57,16 @@ namespace QuestFlight.Editor.Tests
             Assert.That(derivatives.derivatives, Has.All.Matches<DerivativeRecord>(item =>
                 item.triangles > 0 && item.triangles <= 1200 && IsSha256(item.fbx_sha256)));
             Assert.That(derivatives.derivatives.Count(item => item.shipping_status == "SELECTED"), Is.EqualTo(6));
+            Assert.That(derivatives.current_derivation, Is.Not.Null);
+            Assert.That(derivatives.current_derivation.blender_version, Is.EqualTo("5.1.2"));
+            Assert.That(derivatives.current_derivation.generator_sha256,
+                Is.EqualTo(Sha256(File.ReadAllBytes("../tools/reservoir_watercraft/prepare_watercraft_assets.py"))));
+            var current = derivatives.current_derivation.derivatives;
+            Assert.That(current.Length, Is.EqualTo(6));
+            Assert.That(current.Select(item => item.id).OrderBy(id => id),
+                Is.EqualTo(derivatives.derivatives.Where(item => item.shipping_status == "SELECTED").Select(item => item.id).OrderBy(id => id)));
+            Assert.That(current, Has.All.Matches<DerivativeRecord>(item => item.triangles > 0 &&
+                IsSha256(item.fbx_sha256) && item.shipping_status == "SELECTED"));
         }
 
         [Test]
@@ -99,6 +124,11 @@ namespace QuestFlight.Editor.Tests
             Assert.That(alignment.placement_manifest_sha256,
                 Is.EqualTo(Sha256(File.ReadAllBytes(Path.GetFullPath(
                     Path.Combine(Application.dataPath, "..", ManifestPath))))));
+            Assert.That(alignment.compiler_sha256, Is.EqualTo(Sha256(File.ReadAllBytes("Assets/Editor/ReservoirWatercraftAuthoring.cs"))));
+            Assert.That(alignment.derivative_manifest_sha256, Is.EqualTo(Sha256(File.ReadAllBytes(DerivativesPath))));
+            Assert.That(alignment.output_meshes, Has.Length.EqualTo(6));
+            foreach (var output in alignment.output_meshes)
+                Assert.That(output.sha256, Is.EqualTo(Sha256(File.ReadAllBytes(output.path))), output.path);
             Assert.That(alignment.records, Has.Length.EqualTo(placements.records.Length));
             Assert.That(alignment.records.Select(record => record.stable_id),
                 Is.EqualTo(placements.records.Select(record => record.stable_id)));
@@ -177,7 +207,11 @@ namespace QuestFlight.Editor.Tests
                 if (path.Contains("_LOD0")) lod0Triangles += triangles;
                 else lod1Triangles += triangles;
             }
-            Assert.That(lod0Triangles, Is.EqualTo(4682));
+            var derivatives = Read<DerivativeDocument>(DerivativesPath).current_derivation.derivatives.ToDictionary(item => item.id);
+            var placements = Read<PlacementDocument>(ManifestPath).records;
+            int producedTriangles = placements.Sum(item => derivatives[item.derivative].triangles);
+            Assert.That(producedTriangles, Is.EqualTo(4832), "25 unchanged placements and the reviewed 15 closed hulls (+10 triangles each).");
+            Assert.That(lod0Triangles, Is.EqualTo(producedTriangles));
             Assert.That(lod1Triangles, Is.EqualTo(75));
             Assert.That(lod0Triangles, Is.LessThan(25000));
             Assert.That(AssetDatabase.IsValidFolder("Assets/__ReservoirWatercraftTemp"), Is.False);
@@ -252,6 +286,7 @@ namespace QuestFlight.Editor.Tests
         [Serializable] private sealed class PlacementRecord
         {
             public string stable_id;
+            public string derivative;
             public float product_x_meters;
             public float product_z_meters;
             public float yaw_degrees;
@@ -264,8 +299,9 @@ namespace QuestFlight.Editor.Tests
         }
         [Serializable] private sealed class SourceDocument { public string distribution_status; public SourceRecord[] sources; }
         [Serializable] private sealed class SourceRecord { public string canonical_id; public string archive_sha256; public string status; }
-        [Serializable] private sealed class DerivativeDocument { public DerivativeRecord[] derivatives; }
-        [Serializable] private sealed class DerivativeRecord { public int triangles; public string fbx_sha256; public string shipping_status; }
+        [Serializable] private sealed class DerivativeDocument { public DerivativeRecord[] derivatives; public CurrentDerivation current_derivation; }
+        [Serializable] private sealed class CurrentDerivation { public string blender_version; public string generator_sha256; public DerivativeRecord[] derivatives; }
+        [Serializable] private sealed class DerivativeRecord { public string id; public int triangles; public string fbx_sha256; public string shipping_status; }
         [Serializable] private sealed class ContextDocument { public float coordinate_quantization_meters; public OsmDocument openstreetmap; }
         [Serializable] private sealed class OsmDocument { public ContextFeature[] features; }
         [Serializable] private sealed class ContextFeature { public string category; public string geometry_type; public ContextTags tags; public int[] points_q; }
@@ -277,10 +313,14 @@ namespace QuestFlight.Editor.Tests
             public string surface_mesh_asset_path;
             public string surface_mesh_dependency_hash;
             public string placement_manifest_sha256;
+            public string compiler_sha256;
+            public string derivative_manifest_sha256;
+            public OutputIdentity[] output_meshes;
             public float maximum_surface_tilt_degrees;
             public float maximum_plane_residual_meters;
             public AlignmentRecord[] records;
         }
+        [Serializable] private sealed class OutputIdentity { public string path; public string sha256; }
         [Serializable] private sealed class AlignmentRecord
         {
             public string stable_id;

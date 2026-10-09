@@ -24,6 +24,10 @@ typedef struct qfl_jsbsim_initial_conditions {
   int engine_running;
 } qfl_jsbsim_initial_conditions;
 
+/* Reset uses the last configured physical NED atmosphere. Positive CAS defines
+   air-relative speed along heading/flight-path angle; zero CAS requests a
+   stationary ground start whose reported airspeed still reflects the wind. */
+
 typedef struct qfl_jsbsim_controls {
   double aileron, elevator, rudder, throttle, mixture;
   double carb_heat, elevator_trim, flaps, left_brake, right_brake;

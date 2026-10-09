@@ -49,28 +49,87 @@ def inside(root, relative):
     return path
 
 
-def checkpoint(repo, output):
-    """Save dirty source state without adding ignored build/cache trees."""
-    paths = subprocess.check_output(
-        ["git", "ls-files", "-z", "--modified", "--others", "--exclude-standard"],
-        cwd=repo).decode("utf-8").split("\0")
-    records = []
-    for name in sorted(set(filter(None, paths))):
-        source = inside(repo, name)
-        if not source.is_file():
-            records.append({"path": name, "deleted": True})
+def checkpoint(repo, output, *, base_ref=None):
+    """Preserve staged/unstaged regular files relative to HEAD; ignored files excluded.
+
+    Binary patches retain index modes, deletes and renames. Separate index bytes
+    preserve files whose staged and working versions differ. Unmerged and changed
+    symlink/submodule states are rejected rather than described as regular files.
+    A finalized destination is immutable; identical retries are read-only.
+    """
+    repo, output = repo.resolve(), output.resolve()
+    if output.is_relative_to(repo):
+        raise ValueError("Checkpoint output must be outside the source repository")
+    def git(*args):
+        return subprocess.check_output(["git", *args], cwd=repo)
+    if git("ls-files", "--unmerged", "-z"):
+        raise ValueError("Resolve unmerged index entries before checkpointing")
+    head = subprocess.run(["git", "rev-parse", "--verify", "HEAD"], cwd=repo,
+                          capture_output=True, check=False)
+    base = head.stdout.decode().strip() if head.returncode == 0 else None
+    base_tree = git("rev-parse", f"{base_ref or base}^{{tree}}").decode().strip() if base_ref or base else None
+    comparison = [base_tree] if base_tree else []
+    staged = git("diff", "--cached", "--binary", "--full-index", *comparison)
+    unstaged = git("diff", "--binary", "--full-index")
+    names = git("diff", "--cached", "--no-renames", "--name-only", "-z", *comparison).split(b"\0")
+    names += git("ls-files", "--modified", "--others", "--exclude-standard", "-z").split(b"\0")
+    index = {}
+    for entry in git("ls-files", "--stage", "-z").split(b"\0"):
+        if not entry:
             continue
-        target = inside(output / "files", name)
-        sha = digest(source)
-        if target.exists() and digest(target) != sha:
-            raise RuntimeError(f"Checkpoint is immutable: {name}")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        if not target.exists():
-            shutil.copy2(source, target)
-        if digest(target) != sha:
-            raise RuntimeError(f"Backup verification failed: {name}")
-        records.append({"path": name, "sha256": sha, "bytes": source.stat().st_size})
-    write_json(output / "checkpoint.json", {"version": VERSION, "files": records})
+        info, name = entry.split(b"\t", 1)
+        mode, oid, stage = info.decode().split()
+        index[name] = (mode, oid)
+    records, payloads = [], {"staged.patch": staged, "unstaged.patch": unstaged}
+    for raw in sorted(set(names) - {b""}):
+        name = raw.decode("utf-8")
+        source = inside(repo, name)
+        if (repo / name).is_symlink():
+            raise ValueError(f"Changed symlinks are unsupported: {name}")
+        record = {"path": name, "deleted": not source.exists(), "index": None}
+        if raw in index:
+            mode, oid = index[raw]
+            if mode not in ("100644", "100755"):
+                raise ValueError(f"Changed index mode is unsupported: {name} ({mode})")
+            content = git("cat-file", "blob", oid)
+            payloads["index/" + name] = content
+            record["index"] = {"mode": mode, "sha256": hashlib.sha256(content).hexdigest(), "bytes": len(content)}
+        if source.exists():
+            if not source.is_file():
+                raise ValueError(f"Changed non-file is unsupported: {name}")
+            content = source.read_bytes()
+            payloads["files/" + name] = content
+            record.update(sha256=hashlib.sha256(content).hexdigest(), bytes=len(content))
+        records.append(record)
+    manifest = {"version": 2, "base_head": base, "base_tree": base_tree, "files": records,
+                "scope": "Staged and unstaged regular source files; ignored files excluded; unmerged/symlink/submodule changes unsupported",
+                "payloads": {name: hashlib.sha256(data).hexdigest() for name, data in sorted(payloads.items())}}
+    serialized = (json.dumps(manifest, indent=2) + "\n").encode("utf-8")
+    if output.exists():
+        if not (output / "checkpoint.json").is_file() or (output / "checkpoint.json").read_bytes() != serialized:
+            raise RuntimeError("Checkpoint is immutable; choose a new output directory")
+        for name, data in payloads.items():
+            target = inside(output, name)
+            if not target.is_file() or target.read_bytes() != data:
+                raise RuntimeError(f"Checkpoint payload is corrupt: {name}")
+        return {"checkpoint_files": len(records)}
+    # Publish only a fully verified snapshot. Rename to a new sibling destination
+    # does not overwrite an existing finalized manifest or individual payload.
+    import tempfile
+    output.parent.mkdir(parents=True, exist_ok=True)
+    staging = Path(tempfile.mkdtemp(prefix=output.name + ".pending-", dir=output.parent))
+    try:
+        for name, data in payloads.items():
+            target = inside(staging, name)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+            if target.read_bytes() != data:
+                raise RuntimeError(f"Backup verification failed: {name}")
+        (staging / "checkpoint.json").write_bytes(serialized)
+        staging.rename(output)
+    finally:
+        if staging.exists():
+            shutil.rmtree(staging)
     return {"checkpoint_files": len(records)}
 
 

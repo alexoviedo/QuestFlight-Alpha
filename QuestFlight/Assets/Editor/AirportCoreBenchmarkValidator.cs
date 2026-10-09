@@ -262,18 +262,15 @@ namespace QuestFlight.Editor
             {
                 TextAsset conformance = AssetDatabase.LoadAssetAtPath<TextAsset>(
                     AirportPatchLidarConformanceAuthoring.OutputReportPath);
-                AirportPatchLidarConformanceAuthoring.ConformanceReport parsed = conformance == null
-                    ? null
-                    : JsonUtility.FromJson<AirportPatchLidarConformanceAuthoring.ConformanceReport>(conformance.text);
-                Require(parsed != null &&
-                        parsed.boundaryProbeCount >= 4000 &&
-                        parsed.maximumBoundaryMismatchMeters <=
-                            AirportPatchLidarConformanceAuthoring.MaximumBoundaryMismatchMeters &&
-                        parsed.interiorOriginalVertexChanges == 0 &&
-                        parsed.runwayProtectedVertexChanges == 0 &&
-                        parsed.sourceLidarMeshUnchanged &&
-                        parsed.authoritativeTerrainQueryUnchanged,
-                    "airport/lidar conformance provenance or dense boundary contract is incomplete", violations);
+                try
+                {
+                    var parsed = AirportPatchLidarConformanceAuthoring.ParseConformanceReport(conformance == null ? null : conformance.text);
+                    AirportPatchLidarConformanceAuthoring.ValidateCompiledAsset(mesh, parsed);
+                }
+                catch (Exception exception)
+                {
+                    violations.Add("airport/lidar conformance provenance or dense boundary contract is incomplete: " + exception.Message);
+                }
             }
             return triangles;
         }

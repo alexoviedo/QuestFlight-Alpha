@@ -39,8 +39,8 @@ namespace QuestFlightLab.Tests.EditMode
             instruments.NeutralizedSourceMesh.GetUVs(3, selectors);
             Assert.That(selectors.Count,
                 Is.EqualTo(instruments.NeutralizedSourceMesh.vertexCount));
-            Assert.That(selectors, Has.All.EqualTo(Vector2.zero),
-                "The neutralized source mesh must never sample the presentation atlas.");
+            Assert.That(CockpitInstrumentV2EditorContract.ValidateSourcePresentationSelectors(
+                instruments.NeutralizedSourceMesh, out string selectorError), Is.True, selectorError);
 
             Assert.That(instruments.StaticOverlayVertexCount,
                 Is.GreaterThan(0));
@@ -71,6 +71,31 @@ namespace QuestFlightLab.Tests.EditMode
                 Is.EqualTo(
                     CockpitAvionicsV2PresentationAuthoring
                         .EstimatedTextureBytes));
+        }
+
+        [Test]
+        public void SourceSelectorsAllowOnlyProvenSphereAndAppendedBlankingOwnership()
+        {
+            var mesh = new Mesh();
+            try
+            {
+                mesh.vertices = new Vector3[998 + 864 + 10];
+                var selectors = Enumerable.Repeat(Vector4.zero, 10)
+                    .Concat(Enumerable.Repeat(new Vector4(0,0,1,0), 998))
+                    .Concat(Enumerable.Repeat(new Vector4(1,3,0,0), 864)).ToList();
+                mesh.SetUVs(3, selectors);
+                Assert.That(CockpitInstrumentV2EditorContract.ValidateSourcePresentationSelectors(mesh, out _), Is.True);
+                selectors[0] = new Vector4(1,3,0,0); mesh.SetUVs(3, selectors);
+                Assert.That(CockpitInstrumentV2EditorContract.ValidateSourcePresentationSelectors(mesh, out _), Is.False,
+                    "A blanking selector cannot enter ordinary frozen source vertices.");
+                selectors[0] = Vector4.zero; selectors[10] = Vector4.zero; mesh.SetUVs(3, selectors);
+                Assert.That(CockpitInstrumentV2EditorContract.ValidateSourcePresentationSelectors(mesh, out _), Is.False,
+                    "A missing owned sphere vertex must fail.");
+                selectors[10] = new Vector4(0,0,1,0); selectors[selectors.Count-1] = Vector4.zero; mesh.SetUVs(3, selectors);
+                Assert.That(CockpitInstrumentV2EditorContract.ValidateSourcePresentationSelectors(mesh, out _), Is.False,
+                    "Blanking plates cannot lose their authored selector.");
+            }
+            finally { Object.DestroyImmediate(mesh); }
         }
 
         [Test]
@@ -116,7 +141,7 @@ namespace QuestFlightLab.Tests.EditMode
                 Mesh lensMesh = lens.GetComponent<MeshFilter>().sharedMesh;
                 Assert.That(lensMesh.vertexCount, Is.EqualTo(13 * 25));
                 Assert.That(lensMesh.triangles.Length / 3,
-                    Is.EqualTo(13 * 24));
+                    Is.EqualTo(8 * 24));
             }
             finally
             {

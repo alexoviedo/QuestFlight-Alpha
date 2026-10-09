@@ -552,6 +552,7 @@ namespace QuestFlight.PlayModeTests
             public FlightDynamicsState CurrentState => default;
             public bool Initialize(FlightDynamicsBackendContext context) => true;
             public bool Reset(FlightDynamicsInitialConditions initialConditions) => true;
+            public bool Relocate(FlightDynamicsInitialConditions initialConditions) => true;
             public void SetControls(AircraftControlState controls) { }
             public void SetAtmosphere(FlightDynamicsAtmosphere atmosphere) { }
             public bool Advance(double fixedDeltaTimeSeconds) => true;

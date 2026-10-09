@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Xml;
 using UnityEditor;
 using UnityEditor.Android;
 using UnityEditor.Build;
@@ -30,10 +31,11 @@ namespace QuestFlight.Editor
             ProductProjectConfigurator.ConfigureProject();
             // The scene owns a fixed renderer pool; only deterministic offline page bundles
             // are generated here. No runtime hierarchy or geometry authoring is permitted.
+            FullMapAerialClipmapAssetAuthoring.EnsureVerifiedBuildArtifacts();
             FullMapBuildingClipmapAssetAuthoring.EnsureBuildArtifacts();
             RefreshSerializedProductClosure();
             ConfigureMetaOpenXrNativePluginSelection();
-            ProductIntegrityReport integrity = ProductIntegrityValidator.Validate();
+            ProductIntegrityReport integrity = ValidateBuildPreflight();
             if (!integrity.passed) throw new InvalidOperationException(integrity.ToString());
 
             AndroidSigningState signingState = AndroidSigningState.Capture();
@@ -82,6 +84,15 @@ namespace QuestFlight.Editor
             Debug.Log(
                 $"[QuestFlight][Build] SUCCESS apk={apkPath}; bytes={report.summary.totalSize}; " +
                 $"duration={report.summary.totalTime}; development={development}");
+        }
+
+        public static ProductIntegrityReport ValidateBuildPreflight()
+        {
+            // A batch executeMethod can run before the first Editor update.
+            // SDK205 may refill the disabled template during its initial load;
+            // sanitize synchronously before validation, not just via update/build callbacks.
+            ProductReleasePolicy.SanitizeAuthoredAgentTemplateBatch();
+            return ProductIntegrityValidator.Validate();
         }
 
         /// <summary>
@@ -332,6 +343,203 @@ namespace QuestFlight.Editor
     /// Remove exactly the redundant Unity dependency from the generated project and
     /// fail closed if the generated dependency shape is not the one we audited.
     /// </summary>
+    /// <summary>Final product boundaries after SDK callbacks; no developer secrets in players.</summary>
+    public sealed class ProductReleasePolicy : IPreprocessBuildWithReport, IPostprocessBuildWithReport,
+        IPostGenerateGradleAndroidProject
+    {
+        public const string DevAgentAssetPath = "Assets/Resources/DevAgentSettings.asset";
+        private const string AndroidNamespace = "http://schemas.android.com/apk/res/android";
+        public int callbackOrder => int.MaxValue - 1;
+        private static double nextAgentCheck;
+
+        [InitializeOnLoadMethod]
+        private static void RegisterAuthoredAgentBoundary()
+        {
+            // SDK205 also repopulates an empty token on Editor load and in its UI,
+            // even while the agent is disabled. Keep the authored product template
+            // safe between builds without changing the pinned SDK or user host.
+            EditorApplication.update += EnforceAuthoredAgentBoundary;
+            EditorApplication.quitting += SanitizeAgentAsset;
+            AssemblyReloadEvents.beforeAssemblyReload += EnforceAuthoredAgentBoundary;
+        }
+
+        private static void EnforceAuthoredAgentBoundary()
+        {
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating ||
+                EditorApplication.timeSinceStartup < nextAgentCheck) return;
+            nextAgentCheck = EditorApplication.timeSinceStartup + 1;
+            UnityEngine.Object template = AssetDatabase.LoadMainAssetAtPath(DevAgentAssetPath);
+            if (template != null && !IsSanitizedAgent(new SerializedObject(template)))
+                SanitizeAgentAsset();
+        }
+
+        public static bool IsSanitizedAgent(SerializedObject asset)
+        {
+            SerializedProperty enabled = asset.FindProperty("enabled");
+            SerializedProperty token = asset.FindProperty("accessToken");
+            SerializedProperty witToken = asset.FindProperty("witClientAccessToken");
+            return enabled != null && token != null && witToken != null && !enabled.boolValue &&
+                string.IsNullOrEmpty(token.stringValue) && string.IsNullOrEmpty(witToken.stringValue);
+        }
+
+        public static void SanitizeAgent(SerializedObject asset)
+        {
+            SerializedProperty enabled = asset.FindProperty("enabled");
+            SerializedProperty token = asset.FindProperty("accessToken");
+            SerializedProperty witToken = asset.FindProperty("witClientAccessToken");
+            if (enabled == null || token == null || witToken == null)
+                throw new BuildFailedException("Development-agent credential boundary changed; inspect SDK (value redacted).");
+            enabled.boolValue = false;
+            token.stringValue = string.Empty;
+            witToken.stringValue = string.Empty;
+            asset.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        public static void SanitizeAuthoredAgentTemplateBatch()
+        {
+            SanitizeAgentAsset();
+            Debug.Log("[QuestFlight][Security] Authored development agent disabled; credential fields empty (values redacted).");
+        }
+
+        [Serializable]
+        public sealed class AgentResourceInspection
+        {
+            public string schema = "questflight.serialized-agent-inspection.v1";
+            public string serialized_file_sha256;
+            public int loaded_objects;
+            public int decoded_agent_templates;
+            public bool verified;
+            public string limitation;
+        }
+
+        public static AgentResourceInspection InspectSerializedAgentResources(string path)
+        {
+            if (!File.Exists(path)) throw new FileNotFoundException("Owned serialized resource input is missing.");
+            RequireEditorSerializedResource(path);
+            var result = new AgentResourceInspection();
+            using (var hash = System.Security.Cryptography.SHA256.Create())
+            using (var stream = File.OpenRead(path))
+                result.serialized_file_sha256 = BitConverter.ToString(hash.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
+            UnityEngine.Object[] objects = UnityEditorInternal.InternalEditorUtility.LoadSerializedFileAndForget(path);
+            result.loaded_objects = objects.Length;
+            bool sanitized = true;
+            foreach (UnityEngine.Object item in objects)
+            {
+                if (item == null || item.GetType().FullName != "Meta.XR.ImmersiveDebugger.DevAgent.RuntimeSettings") continue;
+                result.decoded_agent_templates++;
+                sanitized &= IsSanitizedAgent(new SerializedObject(item));
+            }
+            result.verified = result.decoded_agent_templates > 0 && sanitized;
+            result.limitation = result.decoded_agent_templates == 0
+                ? "Expected agent template was not decoded; absence or compiled-player compatibility is not proven."
+                : "Decoded credential fields and enabled flag inspected without emitting values. Service revocation and runtime network behavior are separate.";
+            // Batch shutdown owns unloading this isolated file. Do not destroy
+            // referenced source assets or any authored product object here.
+            return result;
+        }
+
+        private static void RequireEditorSerializedResource(string path)
+        {
+            // The Editor native loader assumes Editor MonoBehaviour fields. Player
+            // files strip some of those fields and can crash in native code before
+            // a managed catch runs. Only our current-format Editor fixtures are
+            // supported here; inspect packaged players with a bounded decoder.
+            using (var stream = File.OpenRead(path))
+            using (var reader = new BinaryReader(stream))
+            {
+                if (stream.Length < 48)
+                    throw new NotSupportedException("Serialized resource header is unsupported (values redacted).");
+                byte[] header = reader.ReadBytes(48);
+                uint version = (uint)(header[8] << 24 | header[9] << 16 | header[10] << 8 | header[11]);
+                uint metadataBytes = (uint)(header[20] << 24 | header[21] << 16 | header[22] << 8 | header[23]);
+                if (version != 22 || header[16] != 0 || metadataBytes < 8 || metadataBytes > stream.Length - 48)
+                    throw new NotSupportedException("Serialized resource format is unsupported (values redacted).");
+                int limit = (int)Math.Min(metadataBytes - 4, 128);
+                bool terminated = false;
+                for (int i = 0; i < limit; i++)
+                    if (reader.ReadByte() == 0) { terminated = true; break; }
+                if (!terminated || stream.Position + 4 > 48 + metadataBytes ||
+                    reader.ReadInt32() != (int)BuildTarget.NoTarget)
+                    throw new NotSupportedException("Native inspection supports Editor fixtures only; use the bounded packaged-player decoder.");
+            }
+        }
+
+        public static void InspectPlayerAgentResourcesBatch()
+        {
+            string input = Environment.GetEnvironmentVariable("QFL_AGENT_PLAYER_RESOURCES_PATH");
+            string output = Environment.GetEnvironmentVariable("QFL_AGENT_PLAYER_INSPECTION_REPORT");
+            if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(output))
+                throw new InvalidOperationException("Explicit owned input and inspection report paths are required.");
+            try
+            {
+                AgentResourceInspection result = InspectSerializedAgentResources(input);
+                File.WriteAllText(output, JsonUtility.ToJson(result, true) + "\n");
+                Debug.Log("[QuestFlight][Security] Decoded agent templates=" + result.decoded_agent_templates + "; verified=" + result.verified + " (values redacted).");
+                EditorApplication.Exit(result.verified ? 0 : 1);
+            }
+            catch (Exception error)
+            {
+                File.WriteAllText(output, JsonUtility.ToJson(new AgentResourceInspection {
+                    limitation = "Serialized resource inspection failed: " + error.GetType().Name + "; credential values redacted."
+                }, true) + "\n");
+                EditorApplication.Exit(1);
+            }
+        }
+
+        private static void SanitizeAgentAsset()
+        {
+            UnityEngine.Object asset = AssetDatabase.LoadMainAssetAtPath(DevAgentAssetPath);
+            if (asset == null) throw new BuildFailedException("Disabled development-agent template is missing.");
+            SanitizeAgent(new SerializedObject(asset));
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssetIfDirty(asset);
+        }
+
+        public void OnPreprocessBuild(BuildReport report)
+        {
+            if (report.summary.platform != BuildTarget.Android) return;
+            // SDK205 injects a token even for a disabled agent at callback order 1.
+            // Run after it and before resource collection, preserving the host field.
+            SanitizeAgentAsset();
+        }
+
+        public void OnPostprocessBuild(BuildReport report)
+        {
+            if (report.summary.platform == BuildTarget.Android) SanitizeAgentAsset();
+        }
+
+        public static string Quest3Manifest(string source)
+        {
+            var xml = new XmlDocument { XmlResolver = null };
+            xml.LoadXml(source);
+            XmlElement application = xml.SelectSingleNode("/manifest/application") as XmlElement;
+            if (application == null) throw new BuildFailedException("Generated Android manifest has no application.");
+            XmlElement supported = null;
+            foreach (XmlNode node in application.SelectNodes("meta-data"))
+            {
+                var element = (XmlElement)node;
+                if (element.GetAttribute("name", AndroidNamespace) != "com.oculus.supportedDevices") continue;
+                if (supported != null) throw new BuildFailedException("Duplicate supportedDevices metadata.");
+                supported = element;
+            }
+            if (supported == null)
+            {
+                supported = xml.CreateElement("meta-data");
+                supported.SetAttribute("name", AndroidNamespace, "com.oculus.supportedDevices");
+                application.AppendChild(supported);
+            }
+            supported.SetAttribute("value", AndroidNamespace, "quest3");
+            return xml.OuterXml;
+        }
+
+        public void OnPostGenerateGradleAndroidProject(string path)
+        {
+            string manifest = Path.Combine(path, "src", "main", "AndroidManifest.xml");
+            if (!File.Exists(manifest)) throw new BuildFailedException("Generated Android manifest is missing.");
+            File.WriteAllText(manifest, Quest3Manifest(File.ReadAllText(manifest)));
+        }
+    }
+
     internal sealed class MetaOpenXrLoaderGradleDeduplicator : IPostGenerateGradleAndroidProject
     {
         private static readonly Regex UnityLoaderDependency = new Regex(

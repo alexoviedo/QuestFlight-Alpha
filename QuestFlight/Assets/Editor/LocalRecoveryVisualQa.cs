@@ -47,8 +47,9 @@ namespace QuestFlightLab.Editor
                         UnityEngine.Object.DestroyImmediate(frame);
                     }
                 }
-                report.classification="FOCUSED_STANDARD_PIPELINE_EDITOR_REVIEW";report.passed=report.shots.All(s=>s.passed);
-                WriteReportFiles(report,output);EditorApplication.Exit(0);
+                report.classification="CAPTURE_COMPLETE_HUMAN_REVIEW_REQUIRED";report.passed=false;
+                report.humanHeadsetAcceptance="PENDING; four stereo image files captured, no per-shot acceptance evaluated.";
+                WriteReportFiles(report,output);EditorApplication.Exit(2);
             }
             catch(Exception e){Debug.LogException(e);report.errors.Add(e.ToString());WriteReportFiles(report,output);EditorApplication.Exit(1);}
         }

@@ -83,6 +83,37 @@ namespace QuestFlightLab.Tests.EditMode
                 "Assets/Scripts/Environment/AircraftRunwayBlobShadow.cs");
             Assert.That(forbidden.Where(source.Contains), Is.Empty);
         }
+
+        [TestCase(-8f)]
+        [TestCase(-2f)]
+        [TestCase(0f)]
+        [TestCase(2f)]
+        [TestCase(8f)]
+        public void ShadowPreservesAircraftFootprintAcrossAuthoredGradedRunway(float lateral)
+        {
+            var root = PrefabUtility.LoadPrefabContents(WorldPrefabPath);
+            try
+            {
+                var shadow = root.GetComponentInChildren<AircraftRunwayBlobShadow>(true);
+                var environment = shadow.Environment;
+                Vector3 start = environment.transform.TransformPoint(environment.runway08EndLocal);
+                Vector3 end = environment.transform.TransformPoint(environment.runway26EndLocal);
+                Vector3 forward = (end - start).normalized;
+                Vector3 right = Vector3.Cross(environment.transform.up, forward).normalized;
+                Vector3 up = Vector3.Cross(forward, right).normalized;
+                foreach (float along in new[] { .1f, .5f, .9f })
+                foreach (float heading in new[] { 1f, -1f })
+                {
+                    Vector3 footprint = Vector3.Lerp(start, end, along) + right * lateral;
+                    shadow.AircraftSimulationRoot.SetPositionAndRotation(footprint + up * 1.5f, Quaternion.LookRotation(forward * heading, up));
+                    shadow.UpdateShadowPoseNow();
+                    Assert.That(shadow.BlobRenderer.enabled, Is.True);
+                    Assert.That(Vector3.ProjectOnPlane(shadow.transform.position - footprint, up).magnitude, Is.LessThan(.01f));
+                    Assert.That(Vector3.Dot(shadow.transform.up, up), Is.GreaterThan(.99999f));
+                }
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
     }
 }
 #endif

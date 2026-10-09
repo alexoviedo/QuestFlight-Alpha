@@ -2,6 +2,7 @@
 // Keep this fixture under Assets/Editor so Unity's implicit Editor test assembly discovers it.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Security.Cryptography;
 using AlexOviedo.QuestFlight.JSBSim;
@@ -14,18 +15,19 @@ namespace QuestFlightLab.Tests.EditMode
 {
     public sealed class JSBSimPromotionEditModeTests
     {
-        private static readonly IReadOnlyDictionary<string, string> ExpectedBinaryHashes =
-            new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["Runtime/Plugins/Windows/x86_64/JSBSim.dll"] =
-                    "eeb8852bf7aabb33ab2f4527a3a48cc10b952a248e308804803399cc75de5e85",
-                ["Runtime/Plugins/Windows/x86_64/qfl_jsbsim_native.dll"] =
-                    "78bea2ff25aae003e8f866cd32c9b99fb0346ab29dc25a9e368c3465744f8c5b",
-                ["Runtime/Plugins/Android/arm64-v8a/libJSBSim.so"] =
-                    "1f15983e3fcff3a8dfa44180c5beb6ea7b490cb88d831214ed858babc81cac83",
-                ["Runtime/Plugins/Android/arm64-v8a/libqfl_jsbsim_native.so"] =
-                    "432ce6b14b0c3d9b5fc36ae3362937ca9dd3687d59830d71c3da7c84a31f1f6c"
-            };
+        private static readonly string[] ExpectedBinaryPaths =
+        {
+            "Runtime/Plugins/Windows/x86_64/JSBSim.dll",
+            "Runtime/Plugins/Windows/x86_64/qfl_jsbsim_native.dll",
+            "Runtime/Plugins/Android/arm64-v8a/libJSBSim.so",
+            "Runtime/Plugins/Android/arm64-v8a/libqfl_jsbsim_native.so"
+        };
+        [Serializable] private sealed class BinaryRecord { public string path; public long bytes; public string sha256; }
+        [Serializable] private sealed class PackageRecord { public BinaryRecord[] binaries; }
+
+        private static bool BinaryMatches(string path, BinaryRecord record) =>
+            File.Exists(path) && new FileInfo(path).Length == record.bytes &&
+            string.Equals(Sha256(path), record.sha256, StringComparison.Ordinal);
 
         [Test]
         public void ProductCoordinatorDefaultsToNativeJsbsim()
@@ -58,13 +60,32 @@ namespace QuestFlightLab.Tests.EditMode
             Assert.That(manifestText, Does.Contain("GNU LGPL-2.1-or-later"));
             Assert.That(File.Exists(Path.Combine(JSBSimRuntimeData.EditorPackageDataRoot, "COPYING.txt")), Is.True);
 
-            foreach (KeyValuePair<string, string> expected in ExpectedBinaryHashes)
+            PackageRecord manifest = UnityEngine.JsonUtility.FromJson<PackageRecord>(manifestText);
+            Assert.That(manifest.binaries, Has.Length.EqualTo(4));
+            CollectionAssert.AreEquivalent(ExpectedBinaryPaths, manifest.binaries.Select(record => record.path));
+            foreach (BinaryRecord record in manifest.binaries)
             {
-                string path = Path.Combine(packageRoot, expected.Key.Replace('/', Path.DirectorySeparatorChar));
-                Assert.That(File.Exists(path), Is.True, expected.Key);
-                Assert.That(Sha256(path), Is.EqualTo(expected.Value), expected.Key);
-                Assert.That(manifestText, Does.Contain(expected.Value), expected.Key);
+                string path = Path.Combine(packageRoot, record.path.Replace('/', Path.DirectorySeparatorChar));
+                Assert.That(BinaryMatches(path, record), Is.True, record.path);
             }
+
+        }
+
+        [Test]
+        public void BinaryIdentityRejectsModifiedContentAndIncorrectLength()
+        {
+            string path = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllBytes(path, new byte[] { 1, 2, 3, 4 });
+                var record = new BinaryRecord { bytes = 4, sha256 = Sha256(path) };
+                Assert.That(BinaryMatches(path, record), Is.True);
+                File.WriteAllBytes(path, new byte[] { 1, 2, 3, 5 });
+                Assert.That(BinaryMatches(path, record), Is.False);
+                record.sha256 = Sha256(path); record.bytes = 3;
+                Assert.That(BinaryMatches(path, record), Is.False);
+            }
+            finally { File.Delete(path); }
         }
 
         [Test]

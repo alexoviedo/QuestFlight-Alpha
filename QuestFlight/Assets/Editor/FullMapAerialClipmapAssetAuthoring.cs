@@ -62,9 +62,52 @@ namespace QuestFlight.Editor
         [Serializable]
         private sealed class Manifest
         {
+            public string mode;
+            public PageSource source;
             public TierContainer tiers;
             public RuntimeRecord runtime;
             public PageRecord[] pages;
+        }
+
+        [Serializable] private sealed class PageSource { public Item item; }
+        [Serializable] private sealed class Item { public string id; }
+        [Serializable] private sealed class ReviewedSource { public OfflineInputs offline_derivatives; }
+        [Serializable] private sealed class OfflineInputs { public string page_manifest_sha256; }
+        private static string RequireReviewedManifest(string directory)
+        {
+            string project=Directory.GetParent(Application.dataPath).FullName;
+            string generated=Path.Combine(project,GeneratedRoot,"clipmap_manifest.json");
+            string source=File.Exists(generated)?generated:Path.Combine(directory,"clipmap_manifest.json");
+            if (!File.Exists(source)) throw new InvalidOperationException("Reviewed full aerial page manifest is missing.");
+            var reviewed=JsonUtility.FromJson<ReviewedSource>(File.ReadAllText(
+                "Assets/Production/Environment/FullMapAerialClipmapV1/SOURCE_MANIFEST.json"));
+            var manifest=JsonUtility.FromJson<Manifest>(File.ReadAllText(source));
+            if (reviewed?.offline_derivatives?.page_manifest_sha256 != AuthoringBundleVerifier.Sha256(source) ||
+                manifest?.mode != "full" || manifest.pages?.Length != 1873 ||
+                manifest.source?.item?.id != "22b7c93a74394696824258f807f345ba")
+                throw new InvalidOperationException("Full aerial source manifest differs from the reviewed current product.");
+            return source;
+        }
+        public static void VerifyExistingAndroidBundlesBatch()
+        {
+            try
+            {
+                string directory=Path.Combine(Directory.GetParent(Application.dataPath).FullName,StreamingRoot);
+                string source=RequireReviewedManifest(directory);
+                var manifest=JsonUtility.FromJson<Manifest>(File.ReadAllText(source));
+                var builds=manifest.pages.GroupBy(page=>page.bundle_name).Select(group=>new AssetBundleBuild {
+                    assetBundleName=group.Key,addressableNames=group.Select(page=>page.asset_name).ToArray() }).ToArray();
+                var sizes=manifest.pages.ToDictionary(page=>page.asset_name.ToLowerInvariant(),page=>new Vector2Int(page.output_pixels[0],page.output_pixels[1]));
+                var evidence=AuthoringBundleVerifier.Verify(directory,builds,"qf_aerial_",true,sizes);
+                var report=AuthoringBundleVerifier.WriteReport(directory,evidence,BuildTarget.Android,source,
+                    "../QuestFlight/Assets/Editor/FullMapAerialClipmapAssetAuthoring.cs","../QuestFlight/Assets/Editor/AuthoringBundleVerifier.cs");
+                report.operation="verify_existing_loaded_artifacts";
+                File.WriteAllText(Path.Combine(directory,"bundle_verification.json"),JsonUtility.ToJson(report,true)+"\n");
+                EnsureVerifiedBuildArtifacts();
+                Debug.Log("[QuestFlight][Aerial] All existing Android bundles/assets loaded and verified; no source texture regeneration claimed.");
+                EditorApplication.Exit(0);
+            }
+            catch(Exception error) { Debug.LogException(error);EditorApplication.Exit(1); }
         }
 
         public static void BuildAndroidBundlesAndAuthorProductBatch()
@@ -91,6 +134,7 @@ namespace QuestFlight.Editor
             if (!File.Exists(manifestAbsolute))
                 throw new FileNotFoundException("Clipmap manifest was not generated.", manifestAbsolute);
 
+            RequireReviewedManifest(Path.Combine(projectRoot,StreamingRoot));
             Manifest manifest = JsonUtility.FromJson<Manifest>(File.ReadAllText(manifestAbsolute));
             if (manifest?.pages == null || manifest.pages.Length == 0)
                 throw new InvalidOperationException("Clipmap manifest contains no pages.");
@@ -124,8 +168,10 @@ namespace QuestFlight.Editor
             AssetDatabase.SaveAssets();
 
             string streamingAbsolute = Path.Combine(projectRoot, StreamingRoot.Replace('/', Path.DirectorySeparatorChar));
-            if (Directory.Exists(streamingAbsolute)) Directory.Delete(streamingAbsolute, true);
-            Directory.CreateDirectory(streamingAbsolute);
+            string stagingParent=Path.Combine(projectRoot,"Library","QuestFlightBundleStaging");
+            Directory.CreateDirectory(stagingParent);
+            string staging=Path.Combine(stagingParent,Path.GetFileName(streamingAbsolute)+".staging-"+Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(staging);
 
             AssetBundleBuild[] builds = pages
                 .GroupBy(item => item.record.bundle_name, StringComparer.Ordinal)
@@ -138,16 +184,48 @@ namespace QuestFlight.Editor
                 .OrderBy(build => build.assetBundleName, StringComparer.Ordinal)
                 .ToArray();
             AssetBundleManifest built = BuildPipeline.BuildAssetBundles(
-                streamingAbsolute,
+                staging,
                 builds,
                 BuildAssetBundleOptions.ChunkBasedCompression | BuildAssetBundleOptions.StrictMode,
                 BuildTarget.Android);
             if (built == null) throw new InvalidOperationException("Android AssetBundle compilation failed.");
-            File.Copy(manifestAbsolute, Path.Combine(streamingAbsolute, "clipmap_manifest.json"), true);
+            var dimensions=pages.ToDictionary(item=>item.record.asset_name.ToLowerInvariant(),
+                item=>new Vector2Int(item.record.output_pixels[0],item.record.output_pixels[1]));
+            var evidence=AuthoringBundleVerifier.Verify(staging,builds,"qf_aerial_",true,dimensions);
+            File.Copy(manifestAbsolute, Path.Combine(staging, "clipmap_manifest.json"), true);
+            AuthoringBundleVerifier.WriteReport(staging,evidence,BuildTarget.Android,manifestAbsolute,
+                "../QuestFlight/Assets/Editor/FullMapAerialClipmapAssetAuthoring.cs",
+                "../QuestFlight/Assets/Editor/AuthoringBundleVerifier.cs");
+            AuthoringBundleVerifier.Activate(staging,streamingAbsolute,stagingParent);
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 
             AuthorProductComponent(manifest);
             AssetDatabase.SaveAssets();
+        }
+
+        public static void EnsureVerifiedBuildArtifacts()
+        {
+            string directory=Path.Combine(Directory.GetParent(Application.dataPath).FullName,StreamingRoot);
+            string source=RequireReviewedManifest(directory);
+            string reportPath=Path.Combine(directory,"bundle_verification.json");
+            if (!File.Exists(source) || !File.Exists(reportPath))
+                throw new InvalidOperationException("Aerial source pages and byte-bound Unity Android verification are required before packaging.");
+            var report=JsonUtility.FromJson<AuthoringBundleVerifier.Report>(File.ReadAllText(reportPath));
+            if (report == null || !report.verified || report.build_target != BuildTarget.Android.ToString() ||
+                report.unity_version != Application.unityVersion || report.manifest_sha256 != AuthoringBundleVerifier.Sha256(source) ||
+                report.compiler_inputs == null || report.compiler_inputs.Length != 2)
+                throw new InvalidOperationException("Aerial verification identity is stale.");
+            foreach (string path in new[] { "QuestFlight/Assets/Editor/FullMapAerialClipmapAssetAuthoring.cs", "QuestFlight/Assets/Editor/AuthoringBundleVerifier.cs" })
+                if (report.compiler_inputs.Count(record=>record.path==path && record.sha256==AuthoringBundleVerifier.Sha256("../"+path))!=1)
+                    throw new InvalidOperationException("Aerial compiler verification is stale.");
+            var manifest=JsonUtility.FromJson<Manifest>(File.ReadAllText(source));
+            var builds=manifest.pages.GroupBy(page=>page.bundle_name).Select(group=>new AssetBundleBuild {
+                assetBundleName=group.Key, addressableNames=group.Select(page=>page.asset_name).ToArray() }).ToArray();
+            var sizes=manifest.pages.ToDictionary(page=>page.asset_name.ToLowerInvariant(),page=>new Vector2Int(page.output_pixels[0],page.output_pixels[1]));
+            var actual=AuthoringBundleVerifier.Verify(directory,builds,"qf_aerial_",true,sizes);
+            if (report.bundles == null || report.bundles.Length != actual.Length || actual.Any(current=>
+                report.bundles.Count(old=>old.name==current.name && old.sha256==current.sha256 && old.bytes==current.bytes && old.crc==current.crc)!=1))
+                throw new InvalidOperationException("Aerial bundles changed after verification.");
         }
 
         private static void ConfigurePageImporter(PageRecord record, string assetPath)

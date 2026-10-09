@@ -167,8 +167,8 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
         }
 
         /// <summary>
-        /// Rebuilds only the geometry-derived principal gauge lens mesh.  This
-        /// focused entry point deliberately avoids cubemap generation so gauge
+        /// Validates the current trainer lens mesh without overwriting its accepted topology.  This
+        /// legacy entry point deliberately avoids cubemap generation so gauge
         /// aperture corrections remain deterministic in headless build agents.
         /// </summary>
         public static void RebuildInstrumentLensMeshOnlyBatch()
@@ -564,27 +564,29 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             finally { UnityEngine.Object.DestroyImmediate(output); }
             ConfigureReflectionImport(CockpitInteriorReflectionPath);
             Material lens = LoadRequired<Material>(InstrumentGlassMaterialPath);
+            Material window = LoadRequired<Material>(WindowMaterialPath);
+            ApplyTrainerReflectionTuning(window, lens);
+            EditorUtility.SetDirty(lens); EditorUtility.SetDirty(window);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void ApplyTrainerReflectionTuning(Material window, Material lens)
+        {
             lens.SetFloat("_ReflectionStrength", .23f);
             lens.SetFloat("_DirectGlintStrength", .065f);
             lens.SetFloat("_PerceptualRoughness", .28f);
-            EditorUtility.SetDirty(lens);
-            Material window = LoadRequired<Material>(WindowMaterialPath);
             window.SetFloat("_InteriorReflectionStrength", .48f);
             window.SetFloat("_ReflectionStrength", .30f);
             window.SetFloat("_WindshieldOpacity", .045f);
             window.SetFloat("_SideWindowOpacity", .06f);
-            window.SetColor("_WindshieldTint", new Color(.90f, .93f, .95f, 1));
-            window.SetColor("_SideWindowTint", new Color(.87f, .92f, .94f, 1));
-            EditorUtility.SetDirty(window);
-            AssetDatabase.SaveAssets();
+            window.SetColor("_WindshieldTint", new Color(.90f,.93f,.95f,1));
+            window.SetColor("_SideWindowTint", new Color(.87f,.92f,.94f,1));
         }
 
         private static Color[] BuildCockpitInteriorReflectionPixels()
         {
             GameObject aircraftAsset = LoadRequired<GameObject>(AircraftPrefabPath);
-            Scene scene = SceneManager.GetActiveScene();
-            if (!scene.IsValid() || !scene.isLoaded)
-                throw new InvalidOperationException("A loaded editor scene is required for cockpit reflection baking.");
+            Scene scene = EditorSceneManager.NewPreviewScene();
             GameObject instance = null;
             Camera bakeCamera = null;
             Light bakeSun = null;
@@ -621,6 +623,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 var cameraObject = new GameObject("CockpitReflectionBakeCamera_EditorOnly");
                 SceneManager.MoveGameObjectToScene(cameraObject, scene);
                 bakeCamera = cameraObject.AddComponent<Camera>();
+                bakeCamera.scene = scene;
                 cameraObject.transform.SetPositionAndRotation(viewpoint.position, Quaternion.identity);
                 bakeCamera.enabled = false;
                 bakeCamera.clearFlags = CameraClearFlags.SolidColor;
@@ -656,6 +659,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 if (bakeSun != null) UnityEngine.Object.DestroyImmediate(bakeSun.gameObject);
                 if (bakeCamera != null) UnityEngine.Object.DestroyImmediate(bakeCamera.gameObject);
                 if (instance != null) UnityEngine.Object.DestroyImmediate(instance);
+                EditorSceneManager.ClosePreviewScene(scene);
             }
         }
 
@@ -1118,13 +1122,13 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             window.SetTexture("_AuthoredReflectionCube", LoadRequired<Cubemap>(GlobalReflectionPath));
             window.SetTexture("_CockpitInteriorReflectionCube",
                 LoadRequired<Cubemap>(CockpitInteriorReflectionPath));
-            window.SetColor("_WindshieldTint", new Color(0.77f, 0.86f, 0.95f, 1f));
-            window.SetColor("_SideWindowTint", new Color(0.70f, 0.82f, 0.92f, 1f));
-            window.SetFloat("_WindshieldOpacity", 0.075f);
-            window.SetFloat("_SideWindowOpacity", 0.09f);
+            window.SetColor("_WindshieldTint", new Color(.90f, .93f, .95f, 1f));
+            window.SetColor("_SideWindowTint", new Color(.87f, .92f, .94f, 1f));
+            window.SetFloat("_WindshieldOpacity", .045f);
+            window.SetFloat("_SideWindowOpacity", .06f);
             window.SetFloat("_FresnelOpacity", 0.11f);
-            window.SetFloat("_ReflectionStrength", 0.46f);
-            window.SetFloat("_InteriorReflectionStrength", 0.90f);
+            window.SetFloat("_ReflectionStrength", .30f);
+            window.SetFloat("_InteriorReflectionStrength", .48f);
             window.SetFloat("_InteriorSkyLeak", 0.08f);
             window.SetFloat("_DirectGlintStrength", 0.065f);
             window.SetFloat("_PerceptualRoughness", 0.22f);
@@ -1150,14 +1154,16 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             instrument.SetTexture("_AuthoredReflectionCube",
                 LoadRequired<Cubemap>(CockpitInteriorReflectionPath));
             instrument.SetColor("_Tint", new Color(0.90f, 0.94f, 0.98f, 1f));
-            instrument.SetFloat("_ReflectionStrength", 0.46f);
-            instrument.SetFloat("_DirectGlintStrength", 0.12f);
-            instrument.SetFloat("_PerceptualRoughness", 0.22f);
+            instrument.SetFloat("_ReflectionStrength", .23f);
+            instrument.SetFloat("_DirectGlintStrength", .065f);
+            instrument.SetFloat("_PerceptualRoughness", .28f);
             SetSerializedTransformRows(instrument, "_InstrumentToAircraft", instrumentLocalToAircraft);
             instrument.renderQueue = (int)RenderQueue.Transparent + 16;
             instrument.enableInstancing = false;
             instrument.doubleSidedGI = false;
             EditorUtility.SetDirty(instrument);
+
+            ApplyTrainerReflectionTuning(window, instrument);
 
             Shader displayShader = Shader.Find(InstrumentDisplayReadoutShaderName);
             if (displayShader == null)
@@ -1584,11 +1590,17 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 Renderer sourceDisplayRenderer = rig.AircraftVisualRoot
                     .GetComponentsInChildren<Renderer>(true).Single(renderer => string.Equals(
                         renderer.name, InstrumentDisplayRendererName, StringComparison.Ordinal));
-                Renderer instrumentLensArray = BuildInstrumentLensArray(
-                    rig.AircraftVisualRoot, meterRenderer, viewpoint, instrument);
-                Renderer instrumentDisplayReadouts = BuildInstrumentDisplayReadouts(
-                    rig.AircraftVisualRoot, sourceDisplayRenderer, viewpoint,
-                    LoadRequired<Material>(InstrumentDisplayReadoutMaterialPath));
+                EnsureInstrumentLensMeshAsset();
+                EnsureInstrumentDisplayReadoutMeshAsset();
+                Renderer instrumentLensArray = rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true)
+                    .Single(renderer => renderer.name == InstrumentLensArrayName);
+                Renderer instrumentDisplayReadouts = rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true)
+                    .Single(renderer => renderer.name == InstrumentDisplayReadoutName);
+                if (instrumentLensArray.GetComponent<MeshFilter>()?.sharedMesh != LoadRequired<Mesh>(InstrumentLensArrayMeshPath) ||
+                    instrumentDisplayReadouts.GetComponent<MeshFilter>()?.sharedMesh !=
+                    LoadRequired<QuestFlightLab.Aircraft.CockpitDynamics.V2.CockpitAvionicsV2Layout>(
+                        QuestFlight.Editor.CockpitAvionicsV2PresentationAuthoring.LayoutPath).CombinedGlyphMesh)
+                    throw new InvalidOperationException("Reflection integration must preserve the authored trainer mesh bindings.");
                 Matrix4x4 instrumentToAircraft = rig.AircraftVisualRoot.worldToLocalMatrix *
                                                 instrumentLensArray.transform.localToWorldMatrix;
                 SetSerializedTransformRows(instrument, "_InstrumentToAircraft", instrumentToAircraft);
@@ -1692,46 +1704,20 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
 
         private static void EnsureInstrumentLensMeshAsset()
         {
-            GameObject root = PrefabUtility.LoadPrefabContents(AircraftPrefabPath);
-            try
-            {
-                AircraftReferenceFrameRig rig = root.GetComponent<AircraftReferenceFrameRig>();
-                Transform viewpoint = FindDescendant(root.transform, "Main Camera");
-                if (rig == null || rig.AircraftVisualRoot == null || viewpoint == null)
-                    throw new InvalidOperationException(
-                        "Aircraft references are missing while authoring the gauge lens mesh.");
-                Renderer meter = rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true)
-                    .Single(renderer => string.Equals(
-                        renderer.name, InstrumentMeterRendererName, StringComparison.Ordinal));
-                BuildInstrumentLensArray(rig.AircraftVisualRoot, meter, viewpoint,
-                    LoadRequired<Material>(InstrumentGlassMaterialPath));
-            }
-            finally
-            {
-                PrefabUtility.UnloadPrefabContents(root);
-            }
+            Mesh mesh = LoadRequired<Mesh>(InstrumentLensArrayMeshPath);
+            if (mesh.vertexCount != 325 || mesh.triangles.Length != 576)
+                throw new InvalidOperationException(
+                    "Current eight-aperture trainer lens mesh is required. Reauthor through the complete trainer pipeline; reflection-only authoring cannot replace it.");
         }
 
         private static void EnsureInstrumentDisplayReadoutMeshAsset()
         {
-            GameObject root = PrefabUtility.LoadPrefabContents(AircraftPrefabPath);
-            try
-            {
-                AircraftReferenceFrameRig rig = root.GetComponent<AircraftReferenceFrameRig>();
-                Transform viewpoint = FindDescendant(root.transform, "Main Camera");
-                if (rig == null || rig.AircraftVisualRoot == null || viewpoint == null)
-                    throw new InvalidOperationException(
-                        "Aircraft references are missing while authoring instrument readouts.");
-                Renderer display = rig.AircraftVisualRoot.GetComponentsInChildren<Renderer>(true)
-                    .Single(renderer => string.Equals(
-                        renderer.name, InstrumentDisplayRendererName, StringComparison.Ordinal));
-                BuildInstrumentDisplayReadouts(rig.AircraftVisualRoot, display, viewpoint,
-                    LoadRequired<Material>(InstrumentDisplayReadoutMaterialPath));
-            }
-            finally
-            {
-                PrefabUtility.UnloadPrefabContents(root);
-            }
+            // The accepted one-draw V2 presenter owns glyphs and all aperture blanks.
+            var layout = LoadRequired<QuestFlightLab.Aircraft.CockpitDynamics.V2.CockpitAvionicsV2Layout>(
+                QuestFlight.Editor.CockpitAvionicsV2PresentationAuthoring.LayoutPath);
+            if (!layout.Validate(out string error) || layout.CombinedGlyphMesh.vertexCount != 860 ||
+                layout.CombinedGlyphMesh.triangles.Length != 1290)
+                throw new InvalidOperationException("Current V2 readout mesh is required: " + error);
         }
 
         // Derives one bounded lens disc for each round gauge directly from the imported meter
@@ -2239,7 +2225,7 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
             if (instrument.shader == null || instrument.shader.name != InstrumentGlassShaderName ||
                 instrument.passCount != 1 || instrument.renderQueue != (int)RenderQueue.Transparent + 16)
                 throw new InvalidOperationException("Instrument glass is not the restrained single-pass shader.");
-            if (displayReadout.shader == null || displayReadout.shader.name != "Unlit/Texture" ||
+            if (displayReadout.shader == null || displayReadout.shader.name != InstrumentDisplayReadoutShaderName ||
                 displayReadout.passCount != 1 ||
                 displayReadout.GetTexture("_MainTex") !=
                 LoadRequired<Texture2D>(InstrumentDisplayBaseColorPath))
@@ -2317,10 +2303,10 @@ namespace QuestFlightLab.PhotorealAerialSurfaceV1.Reflection.Editor
                 string.Equals(renderer.name, InstrumentDisplayReadoutName, StringComparison.Ordinal));
             Mesh instrumentDisplayReadoutMesh = instrumentDisplayReadout.GetComponent<MeshFilter>()?.sharedMesh;
             if (!instrumentDisplayReadout.enabled || instrumentDisplayReadoutMesh == null ||
-                instrumentDisplayReadoutMesh.vertexCount != 36 ||
-                instrumentDisplayReadoutMesh.triangles.Length != 36 ||
+                instrumentDisplayReadoutMesh.vertexCount != 860 ||
+                instrumentDisplayReadoutMesh.triangles.Length != 1290 ||
                 instrumentDisplayReadout.sharedMaterial !=
-                LoadRequired<Material>(InstrumentDisplayReadoutMaterialPath))
+                LoadRequired<Material>(QuestFlight.Editor.CockpitAvionicsV2PresentationAuthoring.DynamicMaterialPath))
                 throw new InvalidOperationException(
                     "The single opaque instrument display-readout contract is incomplete.");
             Renderer decorativeInstrumentCover = aircraftRenderers.Single(renderer =>

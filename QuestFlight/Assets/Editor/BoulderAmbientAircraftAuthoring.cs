@@ -74,6 +74,7 @@ namespace QuestFlightLab.Editor
                     a.Initialize(8);
                 }
                 Bind(world, wind, director);
+                RebindHabitatTraffic(world, director);
                 BuildWindSock(world, wind, director.player, mat);
                 UpdateMenu(world);
                 PrefabUtility.SaveAsPrefabAsset(world, World);
@@ -98,9 +99,22 @@ namespace QuestFlightLab.Editor
                     PrefabUtility.RecordPrefabInstancePropertyModifications(environment);
                 }
             }
-            EditorSceneManager.SaveScene(scene);
+            foreach (var sceneRoot in sceneRoots) RebindHabitatTraffic(sceneRoot, sceneDirector);
+            if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Ambient scene save failed.");
             AssetDatabase.SaveAssets();
             Debug.Log("[BoulderAmbient] Authored five actors, six complete routes, shared wind and scene references.");
+        }
+
+        public static void RebindHabitatTraffic(GameObject root, AmbientTrafficDirector director)
+        {
+            if (root == null || director == null) throw new ArgumentNullException("Habitat traffic binding");
+            foreach (var habitat in root.GetComponentsInChildren<HabitatBirdDirector>(true))
+            {
+                habitat.traffic = director;
+                if (habitat.traffic != director) throw new InvalidOperationException("Habitat traffic rebind failed.");
+                EditorUtility.SetDirty(habitat);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(habitat);
+            }
         }
 
         static void Bind(GameObject root, BoulderWindFieldProfile wind, AmbientTrafficDirector d)

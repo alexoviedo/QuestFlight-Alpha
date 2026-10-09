@@ -301,6 +301,75 @@ def load_count_observations(
     return observations, STRtree([value["geometry"] for value in observations])
 
 
+COUNT_SOURCE_IDS = ("cdot_traffic_counts", "county_traffic_stations")
+
+
+def validate_frozen_count_inputs(
+    repo_root: Path, external_run: Path, freeze: dict[str, Any], registry: dict[str, Any]
+) -> dict[str, Any]:
+    """Bind every consumed count page, projection and license to the declared freeze."""
+    registry_path = repo_root / "tools/traffic_v2/geospatial/source_registry.json"
+    record = freeze.get("registry") or {}
+    if (record.get("path") != "tools/traffic_v2/geospatial/source_registry.json"
+            or record.get("bytes") != registry_path.stat().st_size
+            or record.get("sha256") != sha256_file(registry_path)
+            or freeze.get("coordinate_contract") != registry.get("coordinate_contract")):
+        raise FullMapCompileError("Frozen registry/projection binding differs from current inputs")
+    sources = freeze.get("sources") or []
+    if not isinstance(sources, list) or len({row.get("id") for row in sources}) != len(sources):
+        raise FullMapCompileError("Frozen source inventory is missing or duplicated")
+    source_by_id = {row.get("id"): row for row in sources}
+    records: list[dict[str, Any]] = []
+    licenses: list[dict[str, str]] = []
+    for source_id in COUNT_SOURCE_IDS:
+        source = source_by_id.get(source_id)
+        if not source or not source.get("license_partition"):
+            raise FullMapCompileError(f"Frozen count source/license missing: {source_id}")
+        expected: dict[str, dict[str, Any]] = {}
+        def walk(value: Any) -> None:
+            if isinstance(value, dict):
+                if {"path", "sha256", "bytes"}.issubset(value):
+                    name = value["path"]
+                    if isinstance(name, str) and name.startswith(f"raw/{source_id}/oid_") and name.endswith(".json"):
+                        if name in expected and expected[name] != value:
+                            raise FullMapCompileError("Contradictory frozen count page records")
+                        expected[name] = value
+                for child in value.values():
+                    walk(child)
+            elif isinstance(value, list):
+                for child in value:
+                    walk(child)
+        walk(source)
+        current = {path.relative_to(external_run).as_posix(): path for path in (external_run / "raw" / source_id).glob("oid_*.json")}
+        if set(expected) != set(current):
+            raise FullMapCompileError(f"Frozen count page membership differs: {source_id}")
+        for name, page in sorted(expected.items()):
+            path = current[name]
+            if not path.resolve().is_relative_to(external_run.resolve()) or path.is_symlink():
+                raise FullMapCompileError("Frozen count page escapes external package")
+            if page["bytes"] != path.stat().st_size or page["sha256"] != sha256_file(path):
+                raise FullMapCompileError(f"Frozen count page bytes/hash differ: {name}")
+            records.append({"path": name, "bytes": page["bytes"], "sha256": page["sha256"], "source_id": source_id})
+        licenses.append({"id": source_id, "license_partition": source["license_partition"]})
+    if not records:
+        raise FullMapCompileError("Frozen count inventory has no consumed count pages")
+    binding = {"registry": record, "coordinate_contract": registry["coordinate_contract"], "count_pages": records, "sources": licenses}
+    return {**binding, "sha256": hashlib.sha256(canonical_json_bytes(binding)).hexdigest()}
+
+
+def complete_cell_inventory(coverage: dict[str, Any]) -> bool:
+    bounds = coverage.get("bounds_evaluation") or {}
+    cells = bounds.get("cells") or []
+    expected = {(column, row) for row in range(24) for column in range(24)}
+    if not isinstance(cells, list) or len(cells) != 576:
+        return False
+    observed = {(cell.get("column"), cell.get("row")) for cell in cells}
+    return (observed == expected and bounds.get("cell_count") == 576
+            and bounds.get("evaluated_cell_count") == 576 and bounds.get("status") == "PASS"
+            and bounds.get("exact_bounds_xz_meters") == [-12000.0, -12000.0, 12000.0, 12000.0]
+            and all(cell.get("evaluated") is True for cell in cells))
+
+
 def direct_count_for_geometry(
     geometry: LineString,
     road_class: str,
@@ -632,6 +701,7 @@ def compile_full_map(
     freeze = read_json(freeze_path)
     registry_path = repo_root / "tools/traffic_v2/geospatial/source_registry.json"
     registry = read_json(registry_path)
+    frozen_count_binding = validate_frozen_count_inputs(repo_root, external_run, freeze, registry)
     coverage: dict[str, Any] = {}
     observations, tree = load_count_observations(
         external_run, registry["coordinate_contract"]["projection"]
@@ -695,8 +765,7 @@ def compile_full_map(
         )
         source_summaries = [
             {"id": "osm_bounded_roads", "license_partition": "ODbL-1.0"},
-            {"id": "cdot_traffic_counts", "license_partition": "US-GOV-PUBLIC-DATA"},
-            {"id": "county_traffic_stations", "license_partition": "US-LOCAL-PUBLIC-DATA"},
+            *frozen_count_binding["sources"],
         ]
         candidate_limitations = [
             "The authority-conflated canonical universe was still compiling; this candidate uses the exact completed current-rule normalized OSM universe.",
@@ -755,6 +824,7 @@ def compile_full_map(
         candidate_source_mode = (
             "CANONICAL_SELECTION_CHECKPOINT_WITH_DISCLOSED_LANE_DEFAULTS"
         )
+    source_summaries = list({row["id"]: row for row in [*source_summaries, *frozen_count_binding["sources"]]}.values())
     runtime_corridor_keys = (
         "corridor_id",
         "direction_mode",
@@ -789,6 +859,7 @@ def compile_full_map(
         "metrics": metrics,
         "schema": SCHEMA,
         "source_freeze_sha256": expected_freeze_sha256,
+        "frozen_count_inputs": frozen_count_binding,
         "source_gate_status": gate_status,
         "status": STATUS,
         "tile_size_meters": TILE_SIZE_METERS,
@@ -829,6 +900,7 @@ def compile_full_map(
         ),
         "schema": "questflight.traffic-v2.full-map-source-and-license.v1",
         "source_freeze_sha256": expected_freeze_sha256,
+        "frozen_count_inputs": frozen_count_binding,
         "source_gate_status": gate_status,
         "source_ids": sorted(
             str(value.get("id"))
@@ -841,11 +913,8 @@ def compile_full_map(
     report = {
         "candidate_source_mode": candidate_source_mode,
         "checks": {
-            "all_576_source_cells_evaluated": (
-                normalized_osm_candidate is not None
-                or canonical_checkpoint_candidate is not None
-                or (coverage.get("bounds_evaluation") or {}).get("status") == "PASS"
-            ),
+            "all_576_source_cells_evaluated": complete_cell_inventory(coverage),
+            "count_inputs_frozen_and_verified": True,
             "canonical_hash_bound": True,
             "continuous_departure_clock": True,
             "corridors_cover_all_eligible_canonical_parts": (

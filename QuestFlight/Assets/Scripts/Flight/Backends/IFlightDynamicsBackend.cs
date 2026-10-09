@@ -18,6 +18,7 @@ namespace QuestFlightLab.Flight.Backends
 
         bool Initialize(FlightDynamicsBackendContext context);
         bool Reset(FlightDynamicsInitialConditions initialConditions);
+        bool Relocate(FlightDynamicsInitialConditions initialConditions);
         void SetControls(AircraftControlState controls);
         void SetAtmosphere(FlightDynamicsAtmosphere atmosphere);
         bool Advance(double fixedDeltaTimeSeconds);

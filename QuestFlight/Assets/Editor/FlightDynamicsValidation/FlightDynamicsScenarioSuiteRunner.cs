@@ -10,14 +10,18 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
     {
         private const double Step = FlightDynamicsAcceptanceContract.FixedStepSeconds;
         private readonly List<FlightTraceSample> _trace = new List<FlightTraceSample>(16384);
+        private readonly List<FlightScenarioInputEvidence> _scenarioInputs = new List<FlightScenarioInputEvidence>();
 
         public IReadOnlyList<FlightTraceSample> Trace => _trace;
 
         public FlightDynamicsEvidenceSuite RunNativeOnly()
         {
+            _trace.Clear();
+            _scenarioInputs.Clear();
             FlightDynamicsEvidenceSuite suite = NewSuite();
             using (NativeJsbsimTraceBackend native = new NativeJsbsimTraceBackend())
             {
+                suite.nativeInputs = NativeFlightEvidenceIdentity.Capture();
                 if (native.IsAvailable)
                     RunBackend(native, suite);
                 else
@@ -26,6 +30,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                         native.Id,
                         native.LastError));
             }
+            suite.scenarioInputs.AddRange(_scenarioInputs);
             return suite;
         }
 
@@ -232,7 +237,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 "ratio",
                 0.0,
                 FlightDynamicsAcceptanceContract.MaximumSideslipDampingRatio,
-                "Beta is independently derived from authoritative velocity and attitude and compared against the backend-neutral degree contract."));
+                "Authoritative native aero/beta-deg amplitude in the 12-14s window divided by the 1-4s peak; the bound is an internal engineering criterion."));
             double yawPeak = run.MaximumAbsoluteYawRate(1.0, 4.0);
             double yawResidual = run.MaximumAbsoluteYawRate(12.0, 14.0);
             result.metrics.Add(FlightEvidenceMetric.Bounded(
@@ -297,10 +302,10 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 FlightScenarioInitialState.Airborne(65.0, 900.0),
                 30.0,
                 (time, state) => time < 10.0
-                    ? Controls(elevator: 0.25f, throttle: 0.25f)
+                    ? Controls(elevator: -0.25f, throttle: 0.25f)
                     : time < 18.0
-                        ? Controls(elevator: 0.75f, throttle: 0.12f)
-                        : Controls(elevator: -0.20f, throttle: 1f));
+                        ? Controls(elevator: -0.75f, throttle: 0.12f)
+                        : Controls(elevator: 0.20f, throttle: 1f));
             if (!run.ok) return Error(result, backend.LastError);
             result.metrics.Add(FlightEvidenceMetric.Classified(
                 "maximum_angle_of_attack",
@@ -642,23 +647,25 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 return result;
             }
 
-            if (!backend.SetWind(0.0, 5.0, 0.0))
-                return Error(result, backend.LastError);
-            RunResult wind = Run(
-                backend,
-                id + "/east_5mps",
-                FlightScenarioInitialState.Airborne(),
-                15.0,
-                (time, state) => Controls(throttle: 0.55f),
-                preserveWind: true);
+            // Explicit east heading: north wind is perpendicular, not an east tailwind.
+            FlightScenarioInitialState initial = FlightScenarioInitialState.Airborne(headingDegrees: 90.0);
+            RunResult calm = Run(backend, id + "/calm", initial, 15.0,
+                (time, state) => Controls(throttle: 0.55f));
+            if (!calm.ok) return Error(result, backend.LastError);
+            if (!backend.SetWind(5.0, 0.0, 0.0)) return Error(result, backend.LastError);
+            RunResult wind = Run(backend, id + "/north_5mps", initial, 15.0,
+                (time, state) => Controls(throttle: 0.55f), preserveWind: true);
             backend.SetWind(0.0, 0.0, 0.0);
             if (!wind.ok) return Error(result, backend.LastError);
+            result.metrics.Add(FlightEvidenceMetric.Bounded("initial_wind_forward_component", 0.0, "m/s", -1e-9, 1e-9,
+                "True heading90 with physical NED north wind5m/s has zero forward dot product."));
+            result.metrics.Add(FlightEvidenceMetric.Bounded("initial_wind_lateral_component", 5.0, "m/s", 4.999, 5.001,
+                "The perpendicular crosswind is explicit; reset receives atmosphere before RunIC."));
             result.metrics.Add(FlightEvidenceMetric.Classified(
-                "crosswind_track_displacement",
-                FlightEvidenceStatus.Unproven,
-                "Wind response is recorded, but a trimmed heading/track reference is not pinned.",
-                wind.end.positionUnityMeters.x - wind.start.positionUnityMeters.x,
-                "m"));
+                "crosswind_track_displacement", FlightEvidenceStatus.Unproven,
+                "Northward displacement minus matched calm displacement, same heading/IC/loading/control schedule. No validated handling envelope is pinned.",
+                (wind.end.positionUnityMeters.z - wind.start.positionUnityMeters.z) -
+                (calm.end.positionUnityMeters.z - calm.start.positionUnityMeters.z), "m"));
             result.ResolveStatus();
             return result;
         }
@@ -730,6 +737,13 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
             AircraftControlState initialControls)
         {
             RunResult run = new RunResult();
+            if (backend is NativeJsbsimTraceBackend native)
+            {
+                _scenarioInputs.Add(native.CaptureScenarioInputs(scenario, durationSeconds));
+                // Report the actual reset/trim submission at t=0. The first
+                // scheduled control is applied only inside the step loop below.
+                initialControls = native.CaptureSubmittedControls();
+            }
             run.ok = true;
             run.start = backend.State;
             run.states.Add(new TimedState(
@@ -802,7 +816,12 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 pitchDegrees = state.pitchDegrees,
                 bankDegrees = state.bankDegrees,
                 angleOfAttackDegrees = state.angleOfAttackDegrees,
-                sideslipDegrees = derivedBeta ?? DerivedBeta(state),
+                sideslipDegrees = state.sideslipDegrees,
+                groundTrackDegrees = state.HasNativeTelemetry
+                    ? (Math.Atan2(state.groundVelocityNedMetersPerSecond.y,state.groundVelocityNedMetersPerSecond.x) * 180.0 / Math.PI + 360.0) % 360.0 : 0.0,
+                groundTrackAvailable = state.HasNativeTelemetry &&
+                    state.groundVelocityNedMetersPerSecond.x * state.groundVelocityNedMetersPerSecond.x +
+                    state.groundVelocityNedMetersPerSecond.y * state.groundVelocityNedMetersPerSecond.y >= 0.25,
                 yawRateDegreesPerSecond = state.angularVelocityBodyDegreesPerSecond.y,
                 weightOnWheels = state.weightOnWheels,
                 weightPounds = backend.WeightPounds,
@@ -815,10 +834,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
 
         private static double DerivedBeta(FlightDynamicsState state)
         {
-            Vector3 local = Quaternion.Inverse(state.rotationUnity) *
-                            state.velocityUnityMetersPerSecond;
-            return Math.Atan2(local.x, Math.Max(0.01, Math.Abs(local.z))) *
-                   FlightFrameConversions.RadiansToDegrees;
+            return state.sideslipDegrees; // Authoritative aerodynamic beta, not ground track.
         }
 
         private static AircraftControlState AxisControls(ControlAxis axis, float value)

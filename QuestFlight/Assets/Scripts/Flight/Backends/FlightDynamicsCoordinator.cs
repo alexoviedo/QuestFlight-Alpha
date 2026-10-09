@@ -46,6 +46,22 @@ namespace QuestFlightLab.Flight.Backends
         public bool RecoveryHold { get; private set; }
         public void SetRecoveryHold(bool hold) => RecoveryHold = hold;
         public bool IsInitialized => _backend != null && _backend.IsInitialized;
+        public string NativePayloadIdentity { get; private set; } = string.Empty;
+        public bool TryGetAuthorityReadiness(out string error)
+        {
+            if (!string.IsNullOrEmpty(LastError)) { error = LastError; return false; }
+            if (!isActiveAndEnabled) { error = "Native JSBSim coordinator is inactive or disabled."; return false; }
+            if (!IsInitialized || !_backend.IsAvailable)
+            { error = "Native JSBSim authority is still preparing or is unavailable."; return false; }
+            if (requestedBackend != FlightDynamicsBackendKind.JSBSimNativeDevelopment ||
+                _backend.Kind != FlightDynamicsBackendKind.JSBSimNativeDevelopment)
+            { error = "The flight authority is not native JSBSim."; return false; }
+            if (!string.IsNullOrEmpty(_backend.LastError)) { error = _backend.LastError; return false; }
+            if (!_currentState.IsFinite || !_backend.CurrentState.IsFinite)
+            { error = "Native JSBSim authority has non-finite state."; return false; }
+            error = string.Empty;
+            return true;
+        }
         public bool CoordinatorOwnsPresentationInterpolation => ShouldCoordinatorInterpolate(simulationRoot, presentationRoot);
         public string LastError { get; private set; } = string.Empty;
         public FlightDynamicsState CurrentState => _currentState;
@@ -131,7 +147,7 @@ namespace QuestFlightLab.Flight.Backends
                 if (!prepared && string.IsNullOrWhiteSpace(_nativePreparationError))
                     _nativePreparationError = "Native JSBSim runtime data preparation failed.";
             }
-            InitializeSelectedBackend();
+            if (!InitializeSelectedBackend()) enabled = false;
         }
 
         public bool InitializeSelectedBackend()
@@ -159,6 +175,8 @@ namespace QuestFlightLab.Flight.Backends
                 return ReleaseAndFail("Native JSBSim initialization failed: " + nativeError);
             }
             CompleteInitialization(fixedStep);
+            NativePayloadIdentity = JSBSimRuntimeData.PreparedPayloadIdentity;
+            Debug.Log("[QuestFlight][FlightAuthority] Loaded native payload SHA256=" + NativePayloadIdentity);
             return true;
         }
 
@@ -220,6 +238,14 @@ namespace QuestFlightLab.Flight.Backends
             return ResetToInitialConditions(initialConditions);
         }
 
+        /// <summary>A new menu flight or lesson restores configured loading and native histories.</summary>
+        public bool TryStartNewFlight(in FlightDynamicsInitialConditions initialConditions)
+        {
+            if (!TryResetToInitialConditions(initialConditions)) return false;
+            enabled = true;
+            return true;
+        }
+
         /// <summary>
         /// Recovery-only reset seam. A prior backend step failure disables this
         /// component to fail closed; an accepted authored checkpoint may revive
@@ -229,17 +255,18 @@ namespace QuestFlightLab.Flight.Backends
         public bool TryRecoverToInitialConditions(
             in FlightDynamicsInitialConditions initialConditions, bool preservePlayerControls = false)
         {
-            if (!TryResetToInitialConditions(initialConditions))
-                return false;
+            if (!IsInitialized) return Fail("Cannot relocate before backend initialization.");
+            if (!InitialConditionsAreFinite(initialConditions)) return Fail("Recovery initial conditions contain a non-finite value.");
+            if (!ResetToInitialConditions(initialConditions, true)) return false;
             enabled = true;
             if (preservePlayerControls && controls != null) ApplyControls(controls.Current);
             return true;
         }
 
-        private bool ResetToInitialConditions(in FlightDynamicsInitialConditions initialConditions)
+        private bool ResetToInitialConditions(in FlightDynamicsInitialConditions initialConditions, bool preserveOperationalState = false)
         {
             if (!SetInitialAtmosphere(_backend, initialConditions, out string windError)) return Fail(windError);
-            if (!_backend.Reset(initialConditions))
+            if (!(preserveOperationalState ? _backend.Relocate(initialConditions) : _backend.Reset(initialConditions)))
                 return Fail(_backend.LastError);
             LastWindUnityMetersPerSecond = windField.Sample(_backend.CurrentState.positionUnityMeters, _backend.CurrentState.simulationTimeSeconds);
             if (!BoulderWindFieldProfile.Finite(LastWindUnityMetersPerSecond) || LastWindUnityMetersPerSecond.sqrMagnitude > 900)
@@ -454,6 +481,7 @@ namespace QuestFlightLab.Flight.Backends
         {
             _backend?.Dispose();
             _backend = null;
+            NativePayloadIdentity = string.Empty;
             LastAppliedControls = FlightDynamicsControlSnapshot.NeutralIdle;
             _authorityLease?.Dispose();
             _authorityLease = null;

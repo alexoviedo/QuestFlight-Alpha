@@ -148,7 +148,9 @@ namespace QuestFlight.Editor
                 estimatedLightmapBytes = textureReport.estimatedLightmapBytes,
                 lodGroupCount = lodReport.lodGroupCount,
                 crossFadeLodGroupCount = lodReport.crossFadeLodGroupCount,
-                overdrawCaptures = overdraw
+                overdrawCaptures = overdraw,
+                overdrawMeasured = false,
+                overdrawStatus = "UNAVAILABLE_URP_COVERAGE_PASS_NOT_IMPLEMENTED"
             };
             report.drawCallsPassed = report.maxEstimatedDrawCalls <= DrawCallTarget;
             report.visibleTrianglesPassed = report.maxEstimatedVisibleTriangles <= VisibleTriangleTarget;
@@ -166,9 +168,10 @@ namespace QuestFlight.Editor
             report.classification = report.passed
                 ? "PASS_STATIC_QUEST_BUDGET_HEADSET_MEASUREMENT_REQUIRED"
                 : "FAIL_STATIC_QUEST_BUDGET";
+            report.warnings.Add("Overdraw is unmeasured: no validated URP diagnostic covers opaque, transparent and procedural submissions.");
             if (!report.transparentSlotsPassed)
                 report.warnings.Add("Transparent material-slot count exceeds the hard target of " +
-                                    TransparentMaterialSlotTarget + "; inspect overdraw captures.");
+                                    TransparentMaterialSlotTarget + "; overdraw remains unmeasured.");
             if (textureReport.unverifiableImporterCount > 0)
                 report.warnings.Add(textureReport.unverifiableImporterCount + " texture sub-assets do not expose a TextureImporter; their platform format is estimated conservatively.");
             if (lodReport.crossFadeLodGroupCount > 0)
@@ -194,8 +197,25 @@ namespace QuestFlight.Editor
         private static ProductionVisualQaBatchRunner.ProductionVisualQaReport ReadVisualQaReport()
         {
             string path = Environment.GetEnvironmentVariable(VisualReportEnvironmentVariable);
-            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return null;
-            return JsonUtility.FromJson<ProductionVisualQaBatchRunner.ProductionVisualQaReport>(File.ReadAllText(path));
+            if (string.IsNullOrWhiteSpace(path)) return null;
+            if (!File.Exists(path)) throw new FileNotFoundException("Explicit Visual QA evidence is missing.", path);
+            var report = JsonUtility.FromJson<ProductionVisualQaBatchRunner.ProductionVisualQaReport>(File.ReadAllText(path));
+            ValidateVisualQaReport(report, Environment.GetEnvironmentVariable("QFL_VISUAL_QA_SOURCE_IDENTITY_SHA256"), Environment.GetEnvironmentVariable("QFL_VISUAL_QA_CONFIGURATION_SHA256"));
+            return report;
+        }
+
+        public static void ValidateVisualQaReport(ProductionVisualQaBatchRunner.ProductionVisualQaReport report, string sourceIdentity, string configurationIdentity)
+        {
+            if (report == null || !report.passed || report.errors == null || report.errors.Count != 0 ||
+                report.scenePath != "Assets/Scenes/ProductionVerticalSlice.unity" || report.unityVersion != Application.unityVersion ||
+                report.requiredShotCount < 56 || report.shots == null || report.shots.Count < report.requiredShotCount ||
+                report.shots.Any(shot => shot == null || !shot.passed || !shot.imageNotBlank || string.IsNullOrEmpty(shot.id)) ||
+                report.shots.Select(shot => shot.id).Distinct(StringComparer.Ordinal).Count() != report.shots.Count ||
+                report.maxEstimatedDrawCalls <= 0 || report.maxEstimatedVisibleTriangles <= 0 || report.sceneMaterialCount <= 0 ||
+                string.IsNullOrEmpty(sourceIdentity) || sourceIdentity.Length != 64 ||
+                string.IsNullOrEmpty(configurationIdentity) || configurationIdentity.Length != 64 ||
+                report.sourceIdentitySha256 != sourceIdentity || report.configurationSha256 != configurationIdentity)
+                throw new InvalidDataException("Supplied Visual QA is failed, incomplete or belongs to another source/configuration; current view counters cannot be replaced.");
         }
 
         private static MaterialShaderReport BuildMaterialShaderReport(
@@ -550,69 +570,11 @@ namespace QuestFlight.Editor
 
         private static List<OverdrawCapture> CaptureOverdraw(Camera source, string directory)
         {
-            Shader shader = Shader.Find("Hidden/QuestFlight/OverdrawHeatmap");
-            if (shader == null) throw new InvalidOperationException("Overdraw replacement shader is missing.");
-            List<OverdrawCapture> captures = new List<OverdrawCapture>();
-            GameObject cameraObject = new GameObject("QuestPerformanceAuditCamera") { hideFlags = HideFlags.HideAndDontSave };
-            Camera camera = cameraObject.AddComponent<Camera>();
-            camera.CopyFrom(source);
-            camera.stereoTargetEye = StereoTargetEyeMask.None;
-            camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = Color.black;
-            camera.transform.SetPositionAndRotation(source.transform.position, source.transform.rotation);
-            try
-            {
-                foreach (OverdrawPose pose in new[]
-                         {
-                             new OverdrawPose("cockpit_forward", 0f),
-                             new OverdrawPose("cockpit_left", -90f),
-                             new OverdrawPose("cockpit_rear", 180f)
-                         })
-                {
-                    camera.transform.rotation = Quaternion.Euler(0f, pose.yawDegrees, 0f) * source.transform.rotation;
-                    captures.Add(RenderOverdraw(camera, shader, directory, pose.id));
-                }
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(cameraObject);
-            }
-            return captures;
-        }
-
-        private static OverdrawCapture RenderOverdraw(Camera camera, Shader shader, string directory, string id)
-        {
-            const int width = 960;
-            const int height = 540;
-            RenderTexture previousTarget = camera.targetTexture;
-            RenderTexture previousActive = RenderTexture.active;
-            RenderTexture target = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32);
-            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            try
-            {
-                camera.targetTexture = target;
-                camera.SetReplacementShader(shader, string.Empty);
-                QuestFlight.Rendering.ProductRenderCapture.Render(camera);
-                camera.ResetReplacementShader();
-                RenderTexture.active = target;
-                texture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-                texture.Apply();
-                string path = Path.Combine(directory, id + ".png");
-                File.WriteAllBytes(path, texture.EncodeToPNG());
-                Color32[] pixels = texture.GetPixels32();
-                float mean = pixels.Length == 0 ? 0f : pixels.Average(pixel => (pixel.r + pixel.g + pixel.b) / (3f * 255f));
-                float peak = pixels.Length == 0 ? 0f : pixels.Max(pixel => Math.Max(pixel.r, Math.Max(pixel.g, pixel.b))) / 255f;
-                return new OverdrawCapture { id = id, path = path, width = width, height = height, meanNormalizedIntensity = mean, peakNormalizedIntensity = peak };
-            }
-            finally
-            {
-                camera.ResetReplacementShader();
-                camera.targetTexture = previousTarget;
-                RenderTexture.active = previousActive;
-                target.Release();
-                UnityEngine.Object.DestroyImmediate(target);
-                UnityEngine.Object.DestroyImmediate(texture);
-            }
+            // Camera replacement shaders are a Built-in pipeline facility. URP
+            // SingleCameraRequest has no override material, so ordinary color must
+            // never be converted into coverage metrics. A future diagnostic must
+            // explicitly include transparent and procedural ProductRenderSubmission draws.
+            return new List<OverdrawCapture>();
         }
 
         private static long EstimateTextureBytes(int width, int height, string format, bool mipmaps)
@@ -668,7 +630,7 @@ namespace QuestFlight.Editor
             builder.AppendLine("## Evidence boundary");
             builder.AppendLine();
             builder.AppendLine("- " + report.headsetPerformanceLimitation);
-            builder.AppendLine("- Overdraw images are qualitative Editor replacement-shader captures, not Quest GPU measurements.");
+            builder.AppendLine("- Overdraw: " + report.overdrawStatus + "; no coverage or intensity measurement is claimed.");
             foreach (string warning in report.warnings) builder.AppendLine("- Warning: " + warning);
             return builder.ToString();
         }
@@ -748,6 +710,8 @@ namespace QuestFlight.Editor
             public int transparentMaterialSlots, shaderCount, shaderKeywordCombinationCount, textureCount, lightmapTextureCount, lodGroupCount, crossFadeLodGroupCount;
             public StaticViewBudget defaultView;
             public List<OverdrawCapture> overdrawCaptures = new List<OverdrawCapture>();
+            public bool overdrawMeasured;
+            public string overdrawStatus;
             public List<string> warnings = new List<string>();
         }
 
@@ -764,7 +728,6 @@ namespace QuestFlight.Editor
         {
             public string id, path;
             public int width, height;
-            public float meanNormalizedIntensity, peakNormalizedIntensity;
         }
 
         [Serializable]

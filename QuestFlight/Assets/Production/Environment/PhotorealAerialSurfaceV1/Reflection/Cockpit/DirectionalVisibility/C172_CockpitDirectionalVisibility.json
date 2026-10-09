@@ -9,6 +9,14 @@
   "channel_order": ["+Z", "+X", "-Z", "-X"],
   "streams": [
     {
+      "renderer_path": "ImportedCockpitInterior/Cessna_Exterior_CockpitEngineCowling",
+      "source_mesh": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_CockpitOriginalEngineCowling.asset",
+      "stream_asset": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Cessna_Exterior_CockpitEngineCowling_16d807dd_Visibility.asset",
+      "stream_sha256": "dad3982106d550afae31ce2c11512ada6e5c331e629094b00c6c7fc94b38d4ed",
+      "vertex_count": 1740,
+      "mean_visibility": 0.50728
+    },
+    {
       "renderer_path": "ImportedCockpitInterior/Cessna_Interior/Cessna_Interior_ButtonPlate_MAT_0/Cessna_Interior_ButtonPlate_MAT_0_ButtonPlate_MAT_0",
       "source_mesh": "Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
       "stream_asset": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Cessna_Interior_ButtonPlate_MAT_0_ButtonPlate_MAT_0_dfd8b5af_Visibility.asset",
@@ -18,7 +26,7 @@
     },
     {
       "renderer_path": "ImportedCockpitInterior/Cessna_Interior/Cessna_Interior_Buttons_MAT_0/Cessna_Interior_Buttons_MAT_0_Buttons_MAT_0",
-      "source_mesh": "Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
+      "source_mesh": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/Trainer_Cessna_Interior_Buttons_MAT_0_Buttons_MAT_0.asset",
       "stream_asset": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Cessna_Interior_Buttons_MAT_0_Buttons_MAT_0_1df28889_Visibility.asset",
       "stream_sha256": "8f05968f9e53e315b042554784801ad0305720e147dbb320c9e56e25f78ec8b1",
       "vertex_count": 26826,
@@ -34,19 +42,11 @@
     },
     {
       "renderer_path": "ImportedCockpitInterior/Cessna_Interior/Cessna_Interior_Meter_01_MAT_0/Cessna_Interior_Meter_01_MAT_0_Meter_01_MAT_0",
-      "source_mesh": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_Meter01_Neutralized.asset",
+      "source_mesh": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_InstrumentV2Neutralized.asset",
       "stream_asset": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Cessna_Interior_Meter_01_MAT_0_Meter_01_MAT_0_fe5a29fe_Visibility.asset",
-      "stream_sha256": "ba0a2767eef1e844240373abbe702c41b9bdaf5c9ff9df353bc8d22e5c3722a3",
-      "vertex_count": 4823,
-      "mean_visibility": 0.210156
-    },
-    {
-      "renderer_path": "ImportedCockpitInterior/Cessna_Interior/Cessna_Interior_Meter_01_MAT_0/Cessna_Interior_Meter_01_MAT_0_Meter_01_MAT_0/ProductionDynamicAnalogInstruments",
-      "source_mesh": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_DynamicAnalogInstruments.asset",
-      "stream_asset": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/ProductionDynamicAnalogInstruments_d412d9e8_Visibility.asset",
-      "stream_sha256": "eb345a23749f3385ca60acc17df20c34d51286654a6c142defd12b33c64e460f",
-      "vertex_count": 120,
-      "mean_visibility": 0.190278
+      "stream_sha256": "2a4e4b317c4b78957914fe382abf7096d856f8a93132790dd4e4710f4ab4b3db",
+      "vertex_count": 5687,
+      "mean_visibility": 0.241618
     },
     {
       "renderer_path": "ImportedCockpitInterior/Cessna_Interior/Cessna_Interior_Paddle_MAT_0/Cessna_Interior_Paddle_MAT_0_Paddle_MAT_0",
@@ -151,6 +151,14 @@
       "stream_sha256": "c668cc1102e2c4f170d6f594b541177add817f4eca43d90e62beaabde4bb09e7",
       "vertex_count": 13726,
       "mean_visibility": 0.111261
+    },
+    {
+      "renderer_path": "ImportedCockpitInterior/Static_Display/_gltfNode_12/Static_Display_New_Mat_01_0/ProductionStaticDisplayHardware",
+      "source_mesh": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/Meshes/C172_StaticDisplayV2Neutralized.asset",
+      "stream_asset": "Assets/Production/Environment/PhotorealAerialSurfaceV1/Reflection/Cockpit/DirectionalVisibility/Static_Display_New_Mat_01_0_New_Mat_01_0_fe8a165d_Visibility.asset",
+      "stream_sha256": "ff968124f3ca1f618efd494ec1adb00375c5434d859bf6f6a67acd756e35b750",
+      "vertex_count": 13290,
+      "mean_visibility": 0.18919
     },
     {
       "renderer_path": "ImportedCockpitInterior/Static_Display/_gltfNode_12/Static_Display_New_Mat_01_0/Static_Display_New_Mat_01_0_New_Mat_01_0",

@@ -28,6 +28,36 @@ ENVIRONMENT_AUTHORING_PATH = (
 )
 
 
+# The immutable USGS samples feed the approved transition-ring repair; this is
+# topology identity, not a performance acceptance budget.
+FAR_MESH_PATH = REPOSITORY_ROOT / "QuestFlight/Assets/Production/Environment/Generated/Terrain_Far24km_Immutable_USGS_Mesh.asset"
+FAR_MESH_GUID = "f7e9defd4f2f8134ea4ed04d496c0495"
+FAR_VERTEX_COUNT = 47112
+FAR_INDEX_COUNT = 261552
+
+
+def validate_far_topology(prefab: str, mesh: str, meta: str, authoring: str) -> list[str]:
+    failures = []
+    require(f"guid: {FAR_MESH_GUID}" in meta and
+            f"m_Mesh: {{fileID: 4300000, guid: {FAR_MESH_GUID}, type: 2}}" in prefab,
+            "Far terrain must reference the preserved transition mesh GUID", failures)
+    require(f"farTerrainSourceVertexCount: {FAR_VERTEX_COUNT}" in prefab and
+            f"farTerrainSourceIndexCount: {FAR_INDEX_COUNT}" in prefab,
+            "Serialized far transition topology differs from the approved repair", failures)
+    require(re.search(r"m_VertexCount: (\d+)", mesh) is not None and
+            int(re.search(r"m_VertexCount: (\d+)", mesh)[1]) == FAR_VERTEX_COUNT,
+            "Stored far mesh vertex count differs from the transition repair", failures)
+    counts = re.findall(r"indexCount: (\d+)", mesh)
+    require(len(counts) == 1 and int(counts[0]) == FAR_INDEX_COUNT,
+            "Stored far mesh must retain one bounded transition submesh", failures)
+    require("farTerrainSmoothingPassCount: 2" in prefab and
+            "ApplyTwoPassFarSmoothing(generated)" in authoring and
+            "TerrainDefectRepairV1Authoring.BuildTransitionMesh(" in authoring and
+            "stored.triangles.Length / 3 != 87184" in authoring,
+            "Offline two-pass far transition authoring contract changed", failures)
+    return failures
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -110,10 +140,10 @@ def main() -> int:
             "Skybox material does not reference the HDR cubemap GUID", failures)
     require("m_Shader: {fileID: 103, guid: 0000000000000000f000000000000000, type: 0}" in material,
             "Skybox material does not use Unity's built-in Skybox/Cubemap shader", failures)
-    expected_exposure = float(manifest["unity_import"]["skybox_exposure"])
-    expected_rotation = float(manifest["unity_import"]["skybox_rotation_degrees"])
-    require(f"- _Exposure: {expected_exposure:g}" in material and
-            f"- _Rotation: {expected_rotation:g}" in material,
+    expected_exposure = float(manifest["product_integration"]["skybox_exposure"])
+    expected_rotation = float(manifest["product_integration"]["skybox_rotation_degrees"])
+    require(math.isclose(float(re.search(r"- _Exposure: ([0-9.eE+-]+)", material)[1]), expected_exposure, abs_tol=1e-5) and
+            math.isclose(float(re.search(r"- _Rotation: ([0-9.eE+-]+)", material)[1]), expected_rotation, abs_tol=1e-5),
             "Reviewed skybox exposure/rotation contract changed", failures)
 
     estimated = astc_mipped_cubemap_bytes(1024, 6)
@@ -125,9 +155,16 @@ def main() -> int:
     decision = DECISION_PATH.read_text(encoding="utf-8")
     require("Option A" in decision and "fixed USGS-derived far DEM mesh" in decision,
             "Mountain V2 decision does not retain the immutable real-DEM mesh", failures)
-    require("iteration scores, not headset acceptance" in decision and
-            "No recorded-replay stereo stability or physical Quest performance claim" in decision,
-            "Decision must preserve the simulator/headset visual-acceptance boundary", failures)
+    # Human-readable decision prose changes across inspected iterations; the
+    # machine-readable provenance carries the acceptance boundary.
+    boundary = manifest.get("acceptance_boundary", "")
+    require("performance are not accepted" in boundary and "Quest/simulator captures" in boundary,
+            "Sky provenance must retain the explicit visual/performance acceptance boundary", failures)
+    integration_authoring = REPOSITORY_ROOT / manifest["product_integration"]["authoring_path"]
+    require('skybox.SetFloat("_Rotation", -64.123046875f)' in integration_authoring.read_text(encoding="utf-8") and
+            math.isclose(expected_rotation, -64.123046875, abs_tol=1e-8),
+            "Product sky rotation must match the reviewed AirportCoreV4 sun alignment", failures)
+
 
     dem = json.loads(DEM_PATH.read_text(encoding="utf-8"))
     grid = dem["grid"]
@@ -148,15 +185,9 @@ def main() -> int:
     prefab = ENVIRONMENT_PREFAB_PATH.read_text(encoding="utf-8")
     require("m_Name: Terrain_Far24km_Immutable_USGS" in prefab,
             "Serialized authoritative far-terrain object is missing", failures)
-    require("farTerrainSourceVertexCount: 63841" in prefab and
-            "farTerrainSourceIndexCount: 267840" in prefab,
-            "Serialized Option A topology budget changed", failures)
-    require("farTerrainSmoothingPassCount: 2" in prefab,
-            "Serialized Option A smoothing contract changed", failures)
     authoring = ENVIRONMENT_AUTHORING_PATH.read_text(encoding="utf-8")
-    require("stored.triangles.Length / 3 != 89280" in authoring and
-            "ApplyTwoPassFarSmoothing(generated)" in authoring,
-            "Offline Option A authoring checks changed", failures)
+    failures.extend(validate_far_topology(prefab, FAR_MESH_PATH.read_text(encoding="utf-8"),
+        FAR_MESH_PATH.with_suffix(".asset.meta").read_text(encoding="utf-8"), authoring))
 
     report = {
         "classification": "PASS" if not failures else "FAIL",
@@ -180,8 +211,8 @@ def main() -> int:
         "mountain_option_a": {
             "source": "USGS 3DEP frozen snapshot 20260710T214309Z",
             "grid": "241x241 at 100 m",
-            "serialized_vertices": 63841,
-            "serialized_triangles": 89280,
+            "serialized_vertices": FAR_VERTEX_COUNT,
+            "serialized_triangles": FAR_INDEX_COUNT // 3,
             "selected": True,
             "visual_acceptance": "PARTIAL_24_VIEW_EDITOR_SCORE_6_3_RECORDED_STEREO_PENDING",
         },

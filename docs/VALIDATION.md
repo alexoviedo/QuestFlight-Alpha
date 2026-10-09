@@ -3,7 +3,7 @@
 Run from the repository root:
 
 ```powershell
-.\scripts\validate_product.ps1
+.\scripts\validate_current_product.ps1
 .\scripts\run_unity_tests.ps1 -TestPlatform EditMode
 .\scripts\run_unity_tests.ps1 -TestPlatform PlayMode
 .\scripts\run_production_visual_qa.ps1
@@ -13,7 +13,7 @@ Run from the repository root:
 .\scripts\run_standalone_quest_gate.ps1
 ```
 
-`validate_product.ps1` is the one-command product gate and includes dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. The current feature candidate captures 81 Visual-QA views; every full-resolution image requires inspection. Historical milestones below retain their original capture counts. `run_quest_performance_budget.ps1` writes the planning report plus material/shader, texture-memory, LOD/culling, and qualitative overdraw evidence. The accepted-baseline hard planning ceilings are 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. Historical and feature-scoped values below are evidence only.
+`validate_current_product.ps1` runs the current dependency, serialization, reference, EditMode, PlayMode, standard Visual QA, static render-budget, and Android build checks. `validate_product.ps1` retains the frozen extraction-baseline assertions for archival comparison. Every current full-resolution Visual-QA image requires inspection; historical milestones below retain their original capture counts. `run_quest_performance_budget.ps1` writes planning estimates for material/shader, texture memory, and LOD/culling. A supported URP overdraw measurement is currently unavailable and is recorded as unavailable. Planning ceilings remain 120 estimated draw calls, 600,000 selected-LOD visible triangles, 25 visible materials, 180 MiB estimated texture memory, and three transparent material slots. These estimates and historical values cannot establish physical Quest acceptance.
 
 Run Android builds from the canonical `QuestFlight` project directory. Do not
 copy or junction its `Library` into a second project root: Unity's AssetDatabase
@@ -748,3 +748,42 @@ Exact evidence:
 
 The budget values are static Editor evidence. They do not establish physical
 Quest frame time, residency, thermals, stale/tear behavior, or worn quality.
+
+## Current source and artifact identity
+
+Use `scripts/validate_current_product.ps1` for the current authored product.
+`scripts/validate_product.ps1` also exercises the historical extraction source
+contract and requires its separate frozen R&D checkout; it is archival validation.
+The dependency closure reports the current source commit separately from
+`extractionBaselineCommit`, which is the frozen extraction manifest reference.
+Release wrappers derive their default project from their own checkout; explicit
+`ProjectPath` and `UnityExe` overrides are forwarded to the build wrapper.
+Tester packaging requires `-BuildManifest` for the exact APK and includes its
+recorded source evidence; packaging-time HEAD never substitutes for build HEAD.
+
+Offline scenery checkpoints preserve staged and unstaged regular source bytes
+and binary index/worktree patches relative to `base_head`. Ignored outputs are
+excluded. Unmerged index, changed symlink and submodule states are rejected.
+Use a new output directory outside the repository for a changed source snapshot;
+a finalized checkpoint is immutable and an identical retry verifies every byte.
+M16 recurring-cost checks keep native diagnostics and finite authority checks
+enabled. `tools/native/profile_observation_cost.py` records a Windows-only,
+order-balanced native observation experiment with exact binary hashes and state
+trace comparison; its simulated 90-second warmup/60-second scenario is not a
+real-time Quest workload or a native allocator measurement. Headset CPU/GPU,
+allocator and thermal attribution still requires the exact current APK.
+
+The existing authored `OvrConcurrentInputTrace` continues to own simultaneous
+hands/controllers activation independently of recording. Recording defaults off
+and requires explicit development opt-in through `ConfigureDiagnosticsRecording`
+or its authored field. The 256 KiB session cap and permanent I/O failures suppress
+further formatting; initial metadata I/O failure leaves input activation intact.
+Recording does not disable the component. For physical comparison, use the same
+current development APK/settings with recording off/on during the same warmed
+two-handed scenario and retain counter, CPU, I/O and allocation calibration data.
+
+The authored showroom visibility state now suppresses procedural color/motion
+submission while preserving the existing preparation/loading callbacks. The
+calibration and instrument-help cockpit previews and first revealed transition
+frame remain eligible. Verify stereo preview/transition frames and paired
+60-second ordinary-menu timing on Quest separately from Editor callback tests.

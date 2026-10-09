@@ -278,6 +278,21 @@ def test_compile_canonical_checkpoint_candidate_is_hash_bound_and_disclosed(
     )
     canonical_sha = hashlib.sha256(canonical.read_bytes()).hexdigest()
 
+    registry_path = REPO_ROOT / "tools/traffic_v2/geospatial/source_registry.json"
+    registry_value = json.loads(registry_path.read_text(encoding="utf-8"))
+    freeze_value = json.loads(freeze.read_text(encoding="utf-8"))
+    count_path = external / "raw/county_traffic_stations/oid_1.json"
+    freeze_value.update({
+        "registry": {"path": "tools/traffic_v2/geospatial/source_registry.json", "bytes": registry_path.stat().st_size, "sha256": full_map.sha256_file(registry_path)},
+        "coordinate_contract": registry_value["coordinate_contract"],
+    })
+    freeze_value["sources"].extend([
+        {"id": "cdot_traffic_counts", "license_partition": "CC-BY-SA-4.0", "pages": []},
+        {"id": "county_traffic_stations", "license_partition": "CC-BY-4.0", "pages": [{"receipt": {"path": count_path.relative_to(external).as_posix(), "bytes": count_path.stat().st_size, "sha256": full_map.sha256_file(count_path)}}]},
+    ])
+    write_json(freeze, freeze_value)
+    freeze_sha = full_map.sha256_file(freeze)
+
     report = full_map.compile_full_map(
         REPO_ROOT,
         external,
@@ -301,7 +316,9 @@ def test_compile_canonical_checkpoint_candidate_is_hash_bound_and_disclosed(
         manifest["metrics"]["headset_development_lane_default_corridor_count"]
         == 1
     )
-    assert provenance["source_ids"] == ["city_street_centerlines"]
+    assert provenance["source_ids"] == ["cdot_traffic_counts", "city_street_centerlines", "county_traffic_stations"]
+    assert report["checks"]["all_576_source_cells_evaluated"] is False
+    assert manifest["frozen_count_inputs"]["count_pages"][0]["sha256"] == full_map.sha256_file(count_path)
     assert "did not complete" in manifest["limitations"][0]
 
     with pytest.raises(full_map.FullMapCompileError, match="SHA-256 mismatch"):

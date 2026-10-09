@@ -54,12 +54,15 @@ namespace QuestFlightLab.Runtime
             return Path.Combine(DirectoryPath(persistentDataRoot, aircraftId), CurrentFileName);
         }
 
-        public static string SaveCurrent(CockpitViewpointCalibrationState state, string persistentDataRoot = null)
+        public static string SaveCurrent(CockpitViewpointCalibrationState state, string persistentDataRoot = null,
+            Action<string> saveBoundary = null)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             state.schemaVersion = SchemaVersion;
             if (string.IsNullOrWhiteSpace(state.aircraftId)) state.aircraftId = DefaultAircraftId;
             if (string.IsNullOrWhiteSpace(state.generatedUtc)) state.generatedUtc = DateTime.UtcNow.ToString("O");
+            if (!Finite(state.calibrationOffset) || !Finite(state.calibrationYawDeg))
+                throw new InvalidDataException("Seat-relative calibration must be finite.");
 
             // Schema 5 deliberately persists only the seat-relative calibration.
             // Tracked pose, model alignment, scenery, and diagnostic fields are
@@ -79,10 +82,21 @@ namespace QuestFlightLab.Runtime
             string currentPath = CurrentPath(persistentDataRoot, state.aircraftId);
             string temporaryPath = currentPath + ".tmp";
             string json = JsonUtility.ToJson(record, true);
+            saveBoundary?.Invoke("before_timestamp_write");
             File.WriteAllText(timestampedPath, json);
+            saveBoundary?.Invoke("before_temporary_write");
             File.WriteAllText(temporaryPath, json);
-            if (File.Exists(currentPath)) File.Delete(currentPath);
-            File.Move(temporaryPath, currentPath);
+            saveBoundary?.Invoke("before_replace");
+            // Match the existing ProductLocalSave replacement contract: retain the
+            // prior committed record as .bak instead of deleting the canonical file.
+            if (File.Exists(currentPath))
+            {
+                // A corrupt canonical record must not overwrite a valid recovery copy.
+                string backup = TryLoadRecord(currentPath, state.aircraftId, out _, out _) ? currentPath + ".bak" : null;
+                File.Replace(temporaryPath, currentPath, backup);
+            }
+            else File.Move(temporaryPath, currentPath);
+            saveBoundary?.Invoke("after_replace");
             return currentPath;
         }
 
@@ -95,17 +109,31 @@ namespace QuestFlightLab.Runtime
         {
             state = null;
             error = string.Empty;
-            path = CurrentPath(persistentDataRoot, aircraftId);
-            if (!File.Exists(path))
+            string current = CurrentPath(persistentDataRoot, aircraftId);
+            string root = string.IsNullOrWhiteSpace(persistentDataRoot)
+                ? Application.persistentDataPath : persistentDataRoot;
+            string legacy = Path.Combine(root, "QuestFlightLab", DirectoryName, CurrentFileName);
+            string firstError = string.Empty;
+            foreach (string candidate in new[] { current, current + ".bak", current + ".tmp", legacy })
             {
-                string root = string.IsNullOrWhiteSpace(persistentDataRoot)
-                    ? Application.persistentDataPath
-                    : persistentDataRoot;
-                string legacyPath = Path.Combine(root, "QuestFlightLab", DirectoryName, CurrentFileName);
-                if (!File.Exists(legacyPath)) return false;
-                path = legacyPath;
+                if (!File.Exists(candidate)) continue;
+                if (TryLoadRecord(candidate, aircraftId, out state, out string candidateError))
+                {
+                    path = candidate;
+                    error = candidate == current ? string.Empty : "Recovered validated seat calibration from " + Path.GetFileName(candidate);
+                    return true;
+                }
+                if (string.IsNullOrEmpty(firstError)) firstError = candidateError;
             }
+            path = current;
+            error = firstError;
+            return false;
+        }
 
+        private static bool TryLoadRecord(string path, string aircraftId, out CockpitViewpointCalibrationState state, out string error)
+        {
+            state = null;
+            error = string.Empty;
             try
             {
                 string json = File.ReadAllText(path);
@@ -145,6 +173,13 @@ namespace QuestFlightLab.Runtime
                 }
 
                 if (string.IsNullOrWhiteSpace(state.aircraftId)) state.aircraftId = aircraftId;
+                if (!string.Equals(SanitizeAircraftId(state.aircraftId), SanitizeAircraftId(aircraftId), StringComparison.Ordinal) ||
+                    !Finite(state.calibrationOffset) || !Finite(state.calibrationYawDeg))
+                {
+                    state = null;
+                    error = "Calibration has a mismatched aircraft or non-finite seat transform.";
+                    return false;
+                }
                 state.schemaVersion = SchemaVersion;
                 state.importedC172PilotViewOffset = state.calibrationOffset;
                 state.importedC172CockpitYawDeg = state.calibrationYawDeg;
@@ -176,6 +211,8 @@ namespace QuestFlightLab.Runtime
                     File.Delete(path);
                     deleted = true;
                 }
+                foreach (string recoveryPath in new[] { path + ".bak", path + ".tmp" })
+                    if (File.Exists(recoveryPath)) { File.Delete(recoveryPath); deleted = true; }
 
                 string root = string.IsNullOrWhiteSpace(persistentDataRoot)
                     ? Application.persistentDataPath
@@ -202,5 +239,8 @@ namespace QuestFlightLab.Runtime
             foreach (char invalid in Path.GetInvalidFileNameChars()) value = value.Replace(invalid, '_');
             return value.Replace(' ', '_').ToLowerInvariant();
         }
+
+        private static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+        private static bool Finite(Vector3 value) => Finite(value.x) && Finite(value.y) && Finite(value.z);
     }
 }

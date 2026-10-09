@@ -17,9 +17,9 @@
       ]
     },
     "benchmark_approval_witnesses": {
-      "d_report": {"path": "docs/evidence/traffic_v2/TRAFFIC_V2_PHASE3_SOURCE_GATE_VERIFICATION.md"},
-      "d_result": {"path": "docs/evidence/traffic_v2/TRAFFIC_V2_PHASE3_SOURCE_GATE_VERIFICATION.json"},
-      "d_verifier": {"path": "tools/traffic_v2/validation/verify_phase3_source_gate.py"},
+      "d_report": {"path": "docs/evidence/traffic_v2/TRAFFIC_V2_CURRENT_SOURCE_GATE_VERIFICATION.md"},
+      "d_result": {"path": "docs/evidence/traffic_v2/TRAFFIC_V2_CURRENT_SOURCE_GATE_VERIFICATION.json"},
+      "d_verifier": {"path": "tools/traffic_v2/validation/verify_current_source_gate.py"},
       "lead_inspection": {"path": "tools/traffic_v2/schemas/traffic_v2_geospatial_universe_inspection_v1.json"}
     },
     "benchmark_camera_contract": {

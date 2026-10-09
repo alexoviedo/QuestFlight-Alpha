@@ -309,10 +309,8 @@ namespace QuestFlightLab.Input
                 externalMapping.invertThrottle);
             snapshot.hasThrottlePosition = true;
             snapshot.throttlePosition = throttle;
-            snapshot.throttlePositionChanged =
-                _hasExternalPositions &&
-                Mathf.Abs(throttle - _previousThrottlePosition) >=
-                externalMapping.positionChangeEpsilon;
+            snapshot.throttlePositionChanged = AcknowledgePositionMovement(throttle,
+                _hasExternalPositions, externalMapping.positionChangeEpsilon, ref _previousThrottlePosition);
 
             snapshot.hasMixturePosition =
                 externalMapping.mixtureAxis != ProductExternalControllerAxis.None;
@@ -322,9 +320,8 @@ namespace QuestFlightLab.Input
                     externalMapping.invertMixture)
                 : 0f;
             snapshot.mixturePositionChanged =
-                snapshot.hasMixturePosition && _hasExternalPositions &&
-                Mathf.Abs(snapshot.mixturePosition - _previousMixturePosition) >=
-                externalMapping.positionChangeEpsilon;
+                snapshot.hasMixturePosition && AcknowledgePositionMovement(snapshot.mixturePosition,
+                    _hasExternalPositions, externalMapping.positionChangeEpsilon, ref _previousMixturePosition);
 
             snapshot.hasFlapsPosition =
                 externalMapping.flapsAxis != ProductExternalControllerAxis.None;
@@ -334,14 +331,19 @@ namespace QuestFlightLab.Input
                     externalMapping.invertFlaps)
                 : 0f;
             snapshot.flapsPositionChanged =
-                snapshot.hasFlapsPosition && _hasExternalPositions &&
-                Mathf.Abs(snapshot.flapsPosition - _previousFlapsPosition) >=
-                externalMapping.positionChangeEpsilon;
-
-            _previousThrottlePosition = snapshot.throttlePosition;
-            _previousMixturePosition = snapshot.mixturePosition;
-            _previousFlapsPosition = snapshot.flapsPosition;
+                snapshot.hasFlapsPosition && AcknowledgePositionMovement(snapshot.flapsPosition,
+                    _hasExternalPositions, externalMapping.positionChangeEpsilon, ref _previousFlapsPosition);
             _hasExternalPositions = true;
+        }
+
+        // Accumulated displacement from the last acknowledged position, not
+        // per-frame velocity. First samples/reconnects establish a quiet baseline.
+        public static bool AcknowledgePositionMovement(float position, bool hasBaseline, float epsilon, ref float acknowledged)
+        {
+            if (!hasBaseline) { acknowledged = position; return false; }
+            if (Mathf.Abs(position - acknowledged) < epsilon) return false;
+            acknowledged = position;
+            return true;
         }
 
         private void PopulateIdentity(

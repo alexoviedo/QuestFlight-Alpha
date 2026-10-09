@@ -17,6 +17,8 @@ namespace QuestFlightLab.Editor
         private const string FeatureRoot = "Assets/Production/Environment/ReservoirWatercraftV1";
         private const string GeneratedRoot = FeatureRoot + "/Generated";
         private const string ManifestPath = FeatureRoot + "/ReservoirWatercraftPlacementsV1.json";
+        private const string DerivativeManifestPath = FeatureRoot + "/ReservoirWatercraftDerivativesV1.json";
+        private const string DerivativeGeneratorPath = "../tools/reservoir_watercraft/prepare_watercraft_assets.py";
         private const string AlignmentReportPath = FeatureRoot + "/ReservoirWatercraftSurfaceAlignmentV1.json";
         private const string TemporaryRoot = "Assets/__ReservoirWatercraftTemp";
         private const string EnvironmentPrefabPath = ProductionEnvironmentRoot.PrefabAssetPath;
@@ -32,6 +34,8 @@ namespace QuestFlightLab.Editor
         public static void BuildSerializedFeature()
         {
             PlacementDocument document = ReadManifest();
+            ValidateDerivativeInputs(document);
+            ValidateExistingFeatureHierarchy();
             Material material = LoadRequired<Material>(SharedMaterialPath);
             if (!string.Equals(document.vertical_surface_authority, "ACTIVE_RENDERED_TERRAIN_MESH",
                     StringComparison.Ordinal))
@@ -54,9 +58,10 @@ namespace QuestFlightLab.Editor
                 SaveMesh(BuildCombinedMesh(records, solutions, true), MeshPath(groupId, 1));
             }
 
-            WriteAlignmentReport(document, surface, solutions);
+            AssetDatabase.SaveAssets();
             AuthorPrefab(material);
             AssetDatabase.SaveAssets();
+            WriteAlignmentReport(document, surface, solutions);
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             Debug.Log($"[QuestFlight][ReservoirWatercraftV1] SUCCESS records={document.records.Length}");
         }
@@ -67,6 +72,9 @@ namespace QuestFlightLab.Editor
         public static void RevalidateExistingSurfaceAlignment()
         {
             var report = JsonUtility.FromJson<AlignmentReport>(File.ReadAllText(AlignmentReportPath));
+            RequireUnchangedPlacementIdentity(report?.placement_manifest_sha256,
+                Sha256(File.ReadAllBytes(ManifestPath)));
+            ValidateOutputIdentity(report);
             var placements = ReadManifest();
             var surface = VisibleSurfaceSampler.Create(EnvironmentPrefabPath);
             foreach (var record in placements.records)
@@ -88,7 +96,7 @@ namespace QuestFlightLab.Editor
                     throw new InvalidOperationException(record.stable_id + " needs surface realignment.");
             }
             report.surface_mesh_dependency_hash = surface.DependencyHash;
-            report.placement_manifest_sha256 = Sha256(File.ReadAllBytes(ManifestPath));
+            // The placement identity remains the identity of the existing geometry.
             File.WriteAllText(AlignmentReportPath, JsonUtility.ToJson(report, true) + "\n", new UTF8Encoding(false));
             AssetDatabase.ImportAsset(AlignmentReportPath, ImportAssetOptions.ForceSynchronousImport);
         }
@@ -106,6 +114,28 @@ namespace QuestFlightLab.Editor
                 return;
             }
             EditorApplication.Exit(0);
+        }
+
+        public static void RequireUnchangedPlacementIdentity(string compiled, string current)
+        {
+            if (string.IsNullOrEmpty(compiled) || !string.Equals(compiled, current, StringComparison.Ordinal))
+                throw new InvalidOperationException("Watercraft placement inputs changed; rebuild geometry before certification.");
+        }
+
+        [Serializable] private sealed class OutputIdentity { public string path; public string sha256; }
+        private static OutputIdentity[] CurrentOutputIdentity() => GroupIds.SelectMany(group =>
+            new[] { MeshPath(group, 0), MeshPath(group, 1) }).Select(path => new OutputIdentity {
+                path = path, sha256 = Sha256(File.ReadAllBytes(path)) }).ToArray();
+        private static void ValidateOutputIdentity(AlignmentReport report)
+        {
+            ReadDerivativeRecords();
+            if (report == null || report.compiler_sha256 != Sha256(File.ReadAllBytes("Assets/Editor/ReservoirWatercraftAuthoring.cs")) ||
+                report.derivative_manifest_sha256 != Sha256(File.ReadAllBytes(DerivativeManifestPath)) ||
+                report.output_meshes == null || report.output_meshes.Length != GroupIds.Length * 2)
+                throw new InvalidOperationException("Watercraft geometry lacks current compiler/output evidence; rebuild required.");
+            foreach (var actual in CurrentOutputIdentity())
+                if (report.output_meshes.Count(item => item.path == actual.path && item.sha256 == actual.sha256) != 1)
+                    throw new InvalidOperationException("Watercraft output changed: " + actual.path);
         }
 
         private static Mesh BuildCombinedMesh(
@@ -336,7 +366,16 @@ namespace QuestFlightLab.Editor
 
         private static Mesh LoadDerivativeMesh(PlacementRecord record)
         {
-            GameObject model = LoadRequired<GameObject>(TemporaryRoot + "/" + record.derivative + ".fbx");
+            DerivativeRecord evidence = ReadDerivativeRecords().Single(item => item.id == record.derivative);
+            string path = TemporaryRoot + "/" + record.derivative + ".fbx";
+            var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+            // The source producer deliberately authors raw mesh coordinates in product axes.
+            // Baking the FBX root conversion reverses longitudinal geometry in pinned Unity.
+            if (importer == null || importer.bakeAxisConversion)
+                throw new InvalidOperationException(record.derivative + " requires the reviewed raw product-axis import contract.");
+            RequireDerivativeIdentity(evidence.fbx_sha256, evidence.triangles,
+                Sha256(File.ReadAllBytes(path)), evidence.triangles);
+            GameObject model = LoadRequired<GameObject>(path);
             MeshFilter[] filters = model.GetComponentsInChildren<MeshFilter>(true)
                 .Where(filter => filter.sharedMesh != null).ToArray();
             if (filters.Length != 1)
@@ -344,7 +383,133 @@ namespace QuestFlightLab.Editor
             Mesh source = filters[0].sharedMesh;
             if (source.subMeshCount != 1)
                 throw new InvalidOperationException(record.derivative + " must have one submesh.");
+            RequireDerivativeIdentity(evidence.fbx_sha256, evidence.triangles,
+                Sha256(File.ReadAllBytes(path)), (int)source.GetIndexCount(0) / 3);
+            if (source.normals.Length != source.vertexCount || source.colors32.Length != source.vertexCount)
+                throw new InvalidOperationException(record.derivative + " requires complete normals and semantic colors.");
+            if (evidence.bounds_size != Vector3.zero &&
+                Vector3.Distance(source.bounds.size, evidence.bounds_size) > 0.001f)
+                throw new InvalidOperationException(record.derivative + " imported bounds " + source.bounds.size.ToString("F6") +
+                    " differ from reviewed current derivative " + evidence.bounds_size.ToString("F6"));
             return source;
+        }
+
+        public static void RequireDerivativeIdentity(string expectedHash, int expectedTriangles,
+            string actualHash, int actualTriangles)
+        {
+            if (string.IsNullOrEmpty(expectedHash) || expectedHash.Length != 64 || expectedTriangles <= 0 ||
+                !string.Equals(expectedHash, actualHash, StringComparison.OrdinalIgnoreCase) ||
+                actualTriangles != expectedTriangles)
+                throw new InvalidOperationException("Watercraft derivative differs from reviewed source/triangle identity.");
+        }
+
+        private static DerivativeRecord[] ReadDerivativeRecords()
+        {
+            var document = JsonUtility.FromJson<DerivativeDocument>(LoadRequired<TextAsset>(DerivativeManifestPath).text);
+            if (document == null || document.schema != "questflight.reservoir-watercraft-derivatives-v1")
+                throw new InvalidOperationException("Invalid watercraft derivative provenance.");
+            if (document.current_derivation != null)
+            {
+                if (string.IsNullOrEmpty(document.current_derivation.blender_version) ||
+                    document.current_derivation.generator_sha256 != Sha256(File.ReadAllBytes(DerivativeGeneratorPath)))
+                    throw new InvalidOperationException("Current watercraft derivative generator/tool evidence differs.");
+                return document.current_derivation.derivatives ?? throw new InvalidOperationException("Current derivatives missing.");
+            }
+            return document.derivatives?.Where(item => item.shipping_status == "SELECTED").ToArray()
+                ?? throw new InvalidOperationException("Selected historical derivatives missing.");
+        }
+
+        private static void ValidateDerivativeInputs(PlacementDocument placements)
+        {
+            DerivativeRecord[] records = ReadDerivativeRecords();
+            var expected = new HashSet<string>(placements.records.Select(item => item.derivative), StringComparer.Ordinal);
+            if (records.Length != expected.Count || records.Any(item => item == null ||
+                item.shipping_status != "SELECTED") || !expected.SetEquals(records.Select(item => item.id)))
+                throw new InvalidOperationException("Selected derivative set differs from current authored placements.");
+            foreach (var placement in placements.records.GroupBy(item => item.derivative).Select(group => group.First()))
+                LoadDerivativeMesh(placement);
+        }
+
+        public static void ValidateCurrentDerivativeImportsBatch()
+        {
+            try
+            {
+                foreach (DerivativeRecord record in ReadDerivativeRecords())
+                {
+                    string path = TemporaryRoot + "/" + record.id + ".fbx";
+                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+                    var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+                    if (importer == null) throw new InvalidOperationException("Derivative importer missing: " + path);
+                    importer.importAnimation = false;
+                    importer.materialImportMode = ModelImporterMaterialImportMode.None;
+                    importer.globalScale = 1f;
+                    importer.bakeAxisConversion = false;
+                    importer.SaveAndReimport();
+                }
+                ValidateDerivativeInputs(ReadManifest());
+                ValidateExistingFeatureHierarchy();
+                Debug.Log("[QuestFlight][ReservoirWatercraftV1] reviewed current derivative import preflight PASS; no product output changed.");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception exception) { Debug.LogException(exception); EditorApplication.Exit(1); }
+        }
+
+        public static void DiagnoseDerivativeAxisConversionBatch()
+        {
+            try
+            {
+                var rows = new List<DerivativeAxisEvidence>();
+                foreach (DerivativeRecord record in ReadDerivativeRecords())
+                {
+                    string path = TemporaryRoot + "/" + record.id + ".fbx";
+                    var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+                    if (importer == null) throw new InvalidOperationException("Derivative importer missing: " + path);
+                    bool original = importer.bakeAxisConversion;
+                    foreach (bool bake in new[] { false, true })
+                    {
+                        importer.bakeAxisConversion = bake;
+                        importer.SaveAndReimport();
+                        var model = LoadRequired<GameObject>(path);
+                        var filter = model.GetComponentsInChildren<MeshFilter>(true).Single(item => item.sharedMesh != null);
+                        rows.Add(new DerivativeAxisEvidence {
+                            derivative = record.id, bake_axis_conversion = bake,
+                            root_euler = model.transform.localEulerAngles,
+                            filter_euler = filter.transform.localEulerAngles,
+                            mesh_to_root = model.transform.worldToLocalMatrix * filter.transform.localToWorldMatrix,
+                            root_matrix = model.transform.localToWorldMatrix,
+                            bounds_center = filter.sharedMesh.bounds.center,
+                            bounds_size = filter.sharedMesh.bounds.size,
+                            vertices = filter.sharedMesh.vertices,
+                            triangles = filter.sharedMesh.triangles
+                        });
+                    }
+                    importer.bakeAxisConversion = original;
+                    importer.SaveAndReimport();
+                }
+                File.WriteAllText("../.questflight_codex_audit/status/M09-watercraft-import-axis-diagnostic.json",
+                    JsonUtility.ToJson(new DerivativeAxisDocument { records = rows.ToArray() }, true) + "\n");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception exception) { Debug.LogException(exception); EditorApplication.Exit(1); }
+        }
+
+        private static void ValidateExistingFeatureHierarchy()
+        {
+            var root = LoadRequired<GameObject>(EnvironmentPrefabPath);
+            var feature = root.transform.Find("ReservoirWatercraftRoot");
+            if (feature == null) throw new InvalidOperationException("Current authored watercraft hierarchy missing.");
+            foreach (string group in GroupIds)
+            {
+                var item = feature.Find(GroupObjectName(group));
+                if (item == null || item.GetComponent<LODGroup>() == null)
+                    throw new InvalidOperationException("Current authored watercraft LOD group missing: " + group);
+                foreach (string lod in new[] { "LOD0", "LOD1" })
+                {
+                    var child = item.Find(lod);
+                    if (child == null || child.GetComponent<MeshFilter>() == null || child.GetComponent<MeshRenderer>() == null)
+                        throw new InvalidOperationException("Current authored watercraft renderer missing: " + group + "/" + lod);
+                }
+            }
         }
 
         private static Color32 PaletteColor(string palette, Color32 marker)
@@ -386,19 +551,31 @@ namespace QuestFlightLab.Editor
             GameObject root = PrefabUtility.LoadPrefabContents(EnvironmentPrefabPath);
             try
             {
-                Transform previous = root.transform.Find("ReservoirWatercraftRoot");
-                if (previous != null) UnityEngine.Object.DestroyImmediate(previous.gameObject);
-                GameObject feature = new GameObject("ReservoirWatercraftRoot");
-                feature.transform.SetParent(root.transform, false);
+                UpdateOwnedFeatureHierarchy(root, material);
+                PrefabUtility.SaveAsPrefabAsset(root, EnvironmentPrefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        public static void UpdateOwnedFeatureHierarchy(GameObject root, Material material)
+        {
+                if (root == null || material == null) throw new ArgumentNullException("Authored root/material missing.");
+                Transform existing = root.transform.Find("ReservoirWatercraftRoot");
+                GameObject feature = existing != null ? existing.gameObject : new GameObject("ReservoirWatercraftRoot");
+                if (existing == null) feature.transform.SetParent(root.transform, false);
                 SetStatic(feature);
                 foreach (string groupId in GroupIds)
                 {
-                    GameObject group = new GameObject(GroupObjectName(groupId));
-                    group.transform.SetParent(feature.transform, false);
+                    Transform existingGroup = feature.transform.Find(GroupObjectName(groupId));
+                    GameObject group = existingGroup != null ? existingGroup.gameObject : new GameObject(GroupObjectName(groupId));
+                    if (existingGroup == null) group.transform.SetParent(feature.transform, false);
                     SetStatic(group);
                     Renderer lod0 = AddRenderer(group.transform, "LOD0", MeshPath(groupId, 0), material);
                     Renderer lod1 = AddRenderer(group.transform, "LOD1", MeshPath(groupId, 1), material);
-                    LODGroup lodGroup = group.AddComponent<LODGroup>();
+                    LODGroup lodGroup = group.GetComponent<LODGroup>() ?? group.AddComponent<LODGroup>();
                     lodGroup.fadeMode = LODFadeMode.None;
                     lodGroup.animateCrossFading = false;
                     lodGroup.SetLODs(new[]
@@ -412,22 +589,17 @@ namespace QuestFlightLab.Editor
                 if (contract == null) throw new InvalidOperationException("ProductionEnvironmentRoot marker missing.");
                 contract.reservoirWatercraftRoot = feature.transform;
                 EditorUtility.SetDirty(contract);
-                PrefabUtility.SaveAsPrefabAsset(root, EnvironmentPrefabPath);
-            }
-            finally
-            {
-                PrefabUtility.UnloadPrefabContents(root);
-            }
         }
 
         private static Renderer AddRenderer(Transform parent, string name, string meshPath, Material material)
         {
-            GameObject child = new GameObject(name);
-            child.transform.SetParent(parent, false);
+            Transform existing = parent.Find(name);
+            GameObject child = existing != null ? existing.gameObject : new GameObject(name);
+            if (existing == null) child.transform.SetParent(parent, false);
             SetStatic(child);
-            MeshFilter filter = child.AddComponent<MeshFilter>();
+            MeshFilter filter = child.GetComponent<MeshFilter>() ?? child.AddComponent<MeshFilter>();
             filter.sharedMesh = LoadRequired<Mesh>(meshPath);
-            MeshRenderer renderer = child.AddComponent<MeshRenderer>();
+            MeshRenderer renderer = child.GetComponent<MeshRenderer>() ?? child.AddComponent<MeshRenderer>();
             renderer.sharedMaterial = material;
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
@@ -481,6 +653,9 @@ namespace QuestFlightLab.Editor
                 surface_mesh_dependency_hash = surface.DependencyHash,
                 placement_manifest_sha256 = Sha256(File.ReadAllBytes(
                     Path.GetFullPath(Path.Combine(Application.dataPath, "..", ManifestPath)))),
+                compiler_sha256 = Sha256(File.ReadAllBytes("Assets/Editor/ReservoirWatercraftAuthoring.cs")),
+                derivative_manifest_sha256 = Sha256(File.ReadAllBytes(DerivativeManifestPath)),
+                output_meshes = CurrentOutputIdentity(),
                 maximum_surface_tilt_degrees = MaximumSurfaceTiltDegrees,
                 maximum_plane_residual_meters = MaximumPlaneResidualMeters,
                 records = document.records.OrderBy(record => record.stable_id, StringComparer.Ordinal)
@@ -535,6 +710,38 @@ namespace QuestFlightLab.Editor
             return asset;
         }
 
+        [Serializable]
+        private sealed class DerivativeAxisDocument { public DerivativeAxisEvidence[] records; }
+        [Serializable] private sealed class DerivativeAxisEvidence
+        {
+            public string derivative;
+            public bool bake_axis_conversion;
+            public Vector3 root_euler, filter_euler, bounds_center, bounds_size;
+            public Matrix4x4 root_matrix, mesh_to_root;
+            public Vector3[] vertices;
+            public int[] triangles;
+        }
+        [Serializable]
+        private sealed class DerivativeDocument
+        {
+            public string schema;
+            public DerivativeRecord[] derivatives;
+            public CurrentDerivation current_derivation;
+        }
+        [Serializable] private sealed class CurrentDerivation
+        {
+            public string generator_sha256;
+            public string blender_version;
+            public DerivativeRecord[] derivatives;
+        }
+        [Serializable] private sealed class DerivativeRecord
+        {
+            public string id;
+            public string fbx_sha256;
+            public int triangles;
+            public string shipping_status;
+            public Vector3 bounds_size;
+        }
         [Serializable]
         private sealed class PlacementDocument
         {
@@ -705,6 +912,9 @@ namespace QuestFlightLab.Editor
             public string surface_mesh_asset_path;
             public string surface_mesh_dependency_hash;
             public string placement_manifest_sha256;
+            public string compiler_sha256;
+            public string derivative_manifest_sha256;
+            public OutputIdentity[] output_meshes;
             public float maximum_surface_tilt_degrees;
             public float maximum_plane_residual_meters;
             public AlignmentRecord[] records;

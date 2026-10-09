@@ -84,7 +84,7 @@ namespace QuestFlightLab.Editor
                     if(mode.AuthoredModeMenuView.ShowroomContentRoot.activeSelf==preview)throw new InvalidOperationException("Showroom preview did not switch visibility for "+page);
                     for(int eye=0;eye<2;eye++)Capture(c,report,output,1440,1080,new ShotDefinition("selection_"+page+(eye==0?"_left":"_right"),page.ToString(),"menu_context",c.rig.PilotSeatAnchor.position+c.rig.AircraftSimulationRoot.right*(eye==0?-.032f:.032f),c.rig.AircraftSimulationRoot.rotation,72,ViewProfile.Cockpit));
                 }
-                report.classification="RELEASE_POLISH_REVIEW_REQUIRED";report.passed=report.shots.All(s=>s.passed);
+                report.classification="RELEASE_POLISH_REVIEW_REQUIRED";report.passed=report.shots.Count>0&&report.errors.Count==0&&report.shots.All(s=>s.passed);
             }
             catch(Exception e){report.errors.Add(e.ToString());Debug.LogException(e);report.classification="FAIL_RELEASE_POLISH";}
             finally
@@ -95,6 +95,7 @@ namespace QuestFlightLab.Editor
                 PlayerPrefs.Save();
             }
             WriteReportFiles(report,output);
+            if(!report.passed)throw new InvalidOperationException("Visual QA capture failed or evaluated no shots; see written report.");
         }
         public static void AuthorAndCaptureReleasePolish()
         {
@@ -120,7 +121,7 @@ namespace QuestFlightLab.Editor
                     foreach(var root in c.scene.GetRootGameObjects())foreach(var t in root.GetComponentsInChildren<TMPro.TextMeshPro>(true))t.ForceMeshUpdate(true,true);
                     for(int eye=0;eye<2;eye++)Capture(c,report,output,1440,1080,new ShotDefinition("fixture_"+page+(eye==0?"_left":"_right"),"Illustrative review fixture", "tester_readiness",c.rig.PilotSeatAnchor.position+c.rig.AircraftSimulationRoot.right*(eye==0?-.032f:.032f),c.rig.AircraftSimulationRoot.rotation,72,ViewProfile.Cockpit));
                 }
-                report.classification="ILLUSTRATIVE_REVIEW_QA";report.passed=report.shots.All(s=>s.passed);
+                report.classification="ILLUSTRATIVE_REVIEW_QA";report.passed=report.shots.Count>0&&report.errors.Count==0&&report.shots.All(s=>s.passed);
             }
             catch(Exception e){report.errors.Add(e.ToString());Debug.LogException(e);}
             finally{Time.timeScale=time;WriteReportFiles(report,output);}

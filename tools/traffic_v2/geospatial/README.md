@@ -184,9 +184,9 @@ artifact hashes, and live structured `{path,bytes,sha256}` witnesses for the
 passing D verifier, D Markdown report, machine-readable D result, and Lead
 full-resolution inspection. Their exact
 registry-owned paths are
-`tools/traffic_v2/validation/verify_phase3_source_gate.py`,
-`docs/evidence/traffic_v2/TRAFFIC_V2_PHASE3_SOURCE_GATE_VERIFICATION.md`, and
-`docs/evidence/traffic_v2/TRAFFIC_V2_PHASE3_SOURCE_GATE_VERIFICATION.json`, and
+`tools/traffic_v2/validation/verify_current_source_gate.py`,
+`docs/evidence/traffic_v2/TRAFFIC_V2_CURRENT_SOURCE_GATE_VERIFICATION.md`, and
+`docs/evidence/traffic_v2/TRAFFIC_V2_CURRENT_SOURCE_GATE_VERIFICATION.json`, and
 `tools/traffic_v2/schemas/traffic_v2_geospatial_universe_inspection_v1.json`.
 Witness paths must be canonical repository-relative paths; live existence,
 byte length, lowercase SHA-256, and content-derived PASS are revalidated during
@@ -206,6 +206,23 @@ only in the lead-owned approval record, external run manifest, and outer
 package index. Repeated pending/approved compiles compare all five bytes and
 fail on divergence. Rebuild-check writes only below `rebuild_check/` and cannot
 create or mutate `approval_candidate/`.
+
+The older `verify_phase3_source_gate.py` and `TRAFFIC_V2_PHASE3_SOURCE_GATE_VERIFICATION.*`
+remain historical failed-freeze investigation records; they are not current
+approval witnesses. The registered current verifier accepts the exact generated
+`--registry/--external-run/--data-dir/--evidence-dir` command, revalidates frozen
+toolchain/input bytes, independently recomputes ledger summaries, and reproduces
+the five candidate artifacts in isolated scratch space. Missing pinned packages,
+changed inputs or non-camera authority blockers produce `FAIL_CLOSED`; the
+verifier does not generate a human full-resolution inspection. A changed source
+tool or registry requires a newly authorized freeze, never relabeling old bytes.
+
+Full-map schedule generation separately verifies exact count-page membership,
+bytes, hashes, coordinate contract, registry and per-source license partitions.
+Count input identity is carried into the generated manifest and provenance.
+Development candidate modes report `all_576_source_cells_evaluated=false` until
+an actual complete unique 24-by-24 evaluated inventory is bound; a candidate path
+does not establish complete review.
 
 OSM semantic interpretations are pinned to the official OSM Wiki access,
 oneway, service, and service-road pages recorded in `source_registry.json`.
@@ -229,3 +246,20 @@ the currently active rejected package under the deterministic
 fresh active bytes. The 128-bit directory prefix stays within the legacy
 Windows path budget; `rejection.json` retains the complete 64-hex freeze hash,
 and any existing prefix target fails closed as a collision.
+### Current compiler diagnostic roundtrip
+
+`tools/traffic_v2/run_diagnostic_compile_roundtrip.py` creates a new external
+test repository and explicitly diagnostic registry/freeze. It binds the actual
+current compiler and pinned runtime, generates labelled synthetic road/view
+fixtures, and runs the real compiler, staged semantic validator and five-artifact
+byte rebuild. `--acquire-naip` acquires the exact public metadata/license inputs;
+`--reuse-naip-freeze` reuses and revalidates already captured real metadata.
+The historical source, product and Lead camera pins remain unchanged.
+
+`tools/traffic_v2/verify_diagnostic_candidate_protocol.py` invokes the exact
+gate-generated registered verifier argv in that external test repository and
+feeds the real output into `validate_d_result_semantics`. Empty and single-road
+fixtures must pass; conflicting lane evidence must remain rejected. Machine
+witnesses live only in the external test repository. These synthetic fixtures
+and images cannot establish shipping traffic source acceptance or authentic
+Lead full-resolution inspection; no human inspection record is generated.

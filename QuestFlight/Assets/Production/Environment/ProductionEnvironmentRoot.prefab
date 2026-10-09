@@ -3698,7 +3698,7 @@ MeshRenderer:
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
-  m_MotionVectors: 2
+  m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 2
@@ -4497,7 +4497,7 @@ MeshRenderer:
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
-  m_MotionVectors: 2
+  m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 2
@@ -5814,7 +5814,7 @@ MeshRenderer:
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
-  m_MotionVectors: 2
+  m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 2
@@ -6174,7 +6174,7 @@ MeshRenderer:
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
-  m_MotionVectors: 2
+  m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 2
@@ -7681,7 +7681,7 @@ MonoBehaviour:
   microDetailSource: 'Poly Haven CC0 1.0: Withered Grass, Sparse Grass, Dry Ground
     01'
   bakedRendererCount: 72
-  bakedTriangleCount: 652145
+  bakedTriangleCount: 652290
   bakedMaterialCount: 13
   bakedTextureCount: 28
   bakeUtc: 2026-09-03T00:00:00.0000000Z
@@ -7903,7 +7903,7 @@ MeshRenderer:
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
-  m_MotionVectors: 2
+  m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 2
@@ -35101,7 +35101,7 @@ MeshRenderer:
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
-  m_MotionVectors: 2
+  m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 2

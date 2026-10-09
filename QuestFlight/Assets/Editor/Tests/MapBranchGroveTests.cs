@@ -136,10 +136,59 @@ namespace QuestFlightLab.Editor.Tests
             }
             finally{grove.ClearForVisualQa();grove.viewingCamera=original;UnityEngine.Object.DestroyImmediate(host);}
         }
+        [Test] public void ClusterProxyCaptureUsesTheSubmittedCameraWithoutMovingTheAuthoredEye()
+        {
+            EditorSceneManager.OpenScene("Assets/Scenes/ProductionVerticalSlice.unity");
+            var grove=UnityEngine.Object.FindFirstObjectByType<MapBranchGroveRenderer>();
+            var authored=grove.viewingCamera;
+            Assert.IsNotNull(authored);
+            Vector3 authoredPosition=authored.transform.position;
+            Quaternion authoredRotation=authored.transform.rotation;
+            var host=new GameObject("Cluster proxy actual-capture camera regression");
+            var capture=host.AddComponent<Camera>();
+            capture.enabled=false;capture.fieldOfView=72;capture.aspect=16f/9;capture.farClipPlane=25000;
+            var flags=BindingFlags.Instance|BindingFlags.NonPublic;
+            try
+            {
+                host.transform.SetPositionAndRotation(new Vector3(-404,100,-1089),Quaternion.Euler(12,0,0));
+                Assert.Greater(Vector3.Distance(authoredPosition,host.transform.position),20,
+                    "Regression requires distinct authored-eye and submitted-capture poses.");
+                Assert.IsTrue(grove.distantClustersEnabled);
+                grove.PrepareForVisualQa(capture);
+                Assert.Greater(grove.ClusterInstances,0,"Exercise actual selected proxy data, not an injected mock count.");
+                var branchProperties=(MaterialPropertyBlock)typeof(MapBranchGroveRenderer).GetField("properties",flags).GetValue(grove);
+                var proxyProperties=(MaterialPropertyBlock)typeof(MapBranchGroveRenderer).GetField("proxyProperties",flags).GetValue(grove);
+                int triangles=grove.SelectedTriangles,cells=grove.SelectedCells,clusters=grove.ClusterInstances;
+                int previousDraws=-1;
+                foreach(Vector3 offset in new[]{Vector3.zero,new Vector3(1.5f,0,.33f)})
+                {
+                    host.transform.position=new Vector3(-404,100,-1089)+offset;
+                    grove.DrawForVisualQa(capture);
+                    Vector3 branchView=branchProperties.GetVector("_GroveViewPosition");
+                    Vector3 proxyView=proxyProperties.GetVector("_GroveViewPosition");
+                    Assert.Less(Vector3.Distance(branchView,host.transform.position),.00001f);
+                    Assert.Less(Vector3.Distance(proxyView,branchView),.00001f,
+                        "Proxy and branch color submissions must share the actual submitted view, not the disabled authored eye.");
+                    Assert.Greater(Vector3.Distance(proxyView,authoredPosition),20,
+                        "Old authored-camera fallback must fail this actual submission regression.");
+                    Assert.Greater(grove.LastDraws,0);
+                    if(previousDraws>=0)Assert.AreEqual(previousDraws,grove.LastDraws);
+                    previousDraws=grove.LastDraws;
+                    Assert.AreEqual(triangles,grove.SelectedTriangles);
+                    Assert.AreEqual(cells,grove.SelectedCells);
+                    Assert.AreEqual(clusters,grove.ClusterInstances);
+                    Assert.AreSame(authored,grove.viewingCamera);
+                    Assert.AreEqual(authoredPosition,authored.transform.position);
+                    Assert.AreEqual(authoredRotation,authored.transform.rotation);
+                }
+            }
+            finally{grove.ClearForVisualQa();UnityEngine.Object.DestroyImmediate(host);}
+        }
         public static void RunBatch()
         {
             var t=new MapBranchGroveTests();t.AuthoredProductUsesOneBoundCameraAndNoOldGroveOverlay();t.EveryPageIsPresentAndHashesValidateAndCorruptionFailsClosed();t.DistanceHandoffIsContinuousAndLeavesFullMiddleCoverage();t.PageSeamAndOuterMapViewsLoadAndDisableRestoresTreeOwnership();t.DenseViewsReserveDistantCoverageWithinTheOriginalTriangleCap();t.OrdinaryPilotViewContainsDistantCanopyAndUsesSubsetMeshes();
             t.PureBankAndReversalRefreshSelectionBeforeTimerExpires();
+            t.ClusterProxyCaptureUsesTheSubmittedCameraWithoutMovingTheAuthoredEye();
             Debug.Log("[MapBranchTests] PASS: authored camera/activation; all 1296 pages; corruption rejection; continuous handoff; edge/seam loading; ownership reset; pure roll/reversal refresh and jitter guard");
         }
 

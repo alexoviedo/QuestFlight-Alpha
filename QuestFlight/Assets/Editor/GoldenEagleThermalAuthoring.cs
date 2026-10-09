@@ -188,21 +188,35 @@ namespace QuestFlightLab.Editor
                 return value;
             }
 
-            AssetDatabase.DeleteAsset(ControllerPath);
-            AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
-            AnimatorStateMachine machine = controller.layers[0].stateMachine;
-            AnimatorState soar = machine.AddState("SoarIdle");
-            soar.motion = RequireClip("SoarIdle");
-            soar.speed = 1f;
-            machine.defaultState = soar;
-            foreach (string stateName in new[] { "FlapLoop", "BankLeft", "BankRight", "GlideTransition" })
-            {
-                AnimatorState state = machine.AddState(stateName);
-                state.motion = RequireClip(stateName);
-                state.speed = 1f;
-            }
-            EditorUtility.SetDirty(controller);
+            string[] names = { "SoarIdle", "FlapLoop", "BankLeft", "BankRight", "GlideTransition" };
+            // Resolve every input before touching the existing controller.
+            AnimationClip[] required = names.Select(RequireClip).ToArray();
+            AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
+            if (controller == null)
+                controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
+            UpdateOwnedAnimationStates(controller, names, required);
             return controller;
+        }
+
+        public static void UpdateOwnedAnimationStates(AnimatorController controller,
+            string[] names, AnimationClip[] clips)
+        {
+            if (controller == null || names == null || clips == null || names.Length != clips.Length ||
+                names.Length == 0 || clips.Any(clip => clip == null) || names.Distinct().Count() != names.Length ||
+                controller.layers.Length == 0)
+                throw new InvalidOperationException("Incomplete Golden Eagle controller inputs.");
+            AnimatorStateMachine machine = controller.layers[0].stateMachine;
+            if (names.Any(name => machine.states.Count(child => child.state.name == name) > 1))
+                throw new InvalidOperationException("Duplicate owned Golden Eagle animation state.");
+            for (int index = 0; index < names.Length; index++)
+            {
+                AnimatorState state = machine.states.Select(child => child.state)
+                    .SingleOrDefault(candidate => candidate.name == names[index]) ?? machine.AddState(names[index]);
+                state.motion = clips[index]; state.speed = 1f;
+                EditorUtility.SetDirty(state);
+                if (index == 0) machine.defaultState = state;
+            }
+            EditorUtility.SetDirty(machine); EditorUtility.SetDirty(controller);
         }
 
         private static GameObject BuildEaglePrefab(

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using NUnit.Framework;
 using QuestFlight.Editor;
+using QuestFlightLab.Editor;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -116,8 +117,9 @@ namespace QuestFlight.EditorTests
                     "Terrain_Far24km_Immutable_USGS").sharedMesh)), Is.EqualTo("f7e9defd4f2f8134ea4ed04d496c0495"));
                 Assert.That(Required(root, "Terrain_AirportPatch_USGS").sharedMesh.triangles.Length / 3,
                     Is.InRange(1, AirportPatchLidarConformanceAuthoring.MaximumOutputTriangles));
-                Assert.That(Required(root, "Terrain_Near4km_USGS").sharedMesh.triangles.Length / 3,
-                    Is.EqualTo(92000));
+                Mesh nearMesh = Required(root, "Terrain_Near4km_USGS").sharedMesh;
+                var acceptedRoadTerrain = TerrainFloat32IntegrationRepairAuthoring.ValidateCurrentRoadTerrainIdentity(nearMesh);
+                Assert.That(nearMesh.triangles.Length / 3, Is.EqualTo(acceptedRoadTerrain.nearTriangles));
                 Assert.That(Required(root, "Terrain_Mid12km_USGS").sharedMesh.triangles.Length / 3, Is.EqualTo(12194));
                 Assert.That(Required(root, "Terrain_Far24km_Immutable_USGS").sharedMesh.triangles.Length / 3, Is.EqualTo(87184));
                 TextAsset conformance = AssetDatabase.LoadAssetAtPath<TextAsset>(

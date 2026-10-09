@@ -89,7 +89,6 @@ namespace QuestFlight.Product
                 case 129:experience?.RetryHistorySave();break;
                 case 130:CurrentPage=Page.Captions;focus=0;break;
                 case 132:ProductComfortPreferences.SetFlag("SolidCaptions",!ProductComfortPreferences.SolidCaptions);break;
-                case 133:ProductComfortPreferences.SetFlag("ToggleYoke",!ProductComfortPreferences.ToggleYoke);input.RequireTouchRelease();break;
                 case 134:CurrentPage=Page.ControlDiagram;focus=0;break;
                 case 135:CurrentPage=Page.Checklist;focus=0;break;
                 case 136:StartActivity(-4);return true;

@@ -529,40 +529,9 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
                                command.normalizedValue);
 
                 case CockpitTouchInteractionV2Target.IgnitionStart:
-                    if (command.operation ==
-                        CockpitTouchInteractionV2Operation.Press)
-                    {
-                        return ApplyDiscrete(
-                            CockpitSystemsCommandKindV2.SetIgnitionSwitch,
-                            (int)CockpitIgnitionSwitchPositionV2.Start);
-                    }
-                    if (command.operation ==
-                        CockpitTouchInteractionV2Operation.Release)
-                    {
-                        return ApplyDiscrete(
-                            CockpitSystemsCommandKindV2.SetIgnitionSwitch,
-                            (int)CockpitIgnitionSwitchPositionV2.Both);
-                    }
-                    if (command.operation ==
-                        CockpitTouchInteractionV2Operation.SetNormalized)
-                    {
-                        return ApplyDiscrete(
-                            CockpitSystemsCommandKindV2.SetIgnitionSwitch,
-                            Mathf.RoundToInt(
-                                Mathf.Clamp01(
-                                    command.normalizedValue) *
-                                (int)CockpitIgnitionSwitchPositionV2.Start));
-                    }
-                    if (command.operation !=
-                            CockpitTouchInteractionV2Operation.Toggle ||
-                        !systemsAuthority
-                            .TryGetCockpitSystemsSnapshotV2(
-                                out CockpitSystemsSnapshotV2 ignition))
-                        return false;
-                    return ApplyDiscrete(
-                        CockpitSystemsCommandKindV2.SetIgnitionSwitch,
-                        (int)NextIgnitionToggle(
-                            ignition.ignitionSwitchPosition));
+                    // API2 has no native magneto/starter command. The authored
+                    // running-engine switch stays inactive instead of faking effects.
+                    return false;
 
                 case CockpitTouchInteractionV2Target.AvionicsPower:
                     if (command.operation !=
@@ -623,28 +592,8 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics.TouchInputV2
                         flapCommand);
 
                 case CockpitTouchInteractionV2Target.FuelSelector:
-                    if (command.operation ==
-                        CockpitTouchInteractionV2Operation.SetNormalized)
-                    {
-                        return ApplyDiscrete(
-                            CockpitSystemsCommandKindV2.SetFuelSelector,
-                            Mathf.RoundToInt(
-                                Mathf.Clamp01(
-                                    command.normalizedValue) *
-                                (int)CockpitFuelSelectorPositionV2.Right));
-                    }
-                    if (command.operation !=
-                            CockpitTouchInteractionV2Operation.Toggle ||
-                        !systemsAuthority
-                            .TryGetCockpitSystemsSnapshotV2(
-                                out CockpitSystemsSnapshotV2 fuel))
-                        return false;
-                    int nextFuel =
-                        ((int)fuel.fuelSelectorPosition + 1) %
-                        ((int)CockpitFuelSelectorPositionV2.Right + 1);
-                    return ApplyDiscrete(
-                        CockpitSystemsCommandKindV2.SetFuelSelector,
-                        nextFuel);
+                    // Native feed selection is unsupported by API2.
+                    return false;
 
                 default:
                     return false;

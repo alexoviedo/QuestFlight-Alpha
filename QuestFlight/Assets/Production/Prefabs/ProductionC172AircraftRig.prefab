@@ -29130,6 +29130,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Aircraft.CockpitDynamics.OvrConcurrentInputTrace
   manager: {fileID: 3276356908761649652}
+  traceRecordingEnabled: 0
 --- !u!1 &3276356908768748562
 GameObject:
   m_ObjectHideFlags: 0
@@ -58651,7 +58652,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
+  m_AdditionalVertexStreams: {fileID: 4300000, guid: 32a5eb1980d35a648a2051eb3096470b, type: 2}
 --- !u!1 &5749660527766488171
 GameObject:
   m_ObjectHideFlags: 0
@@ -90979,7 +90980,7 @@ MonoBehaviour:
     channel: 3
     localRotationAxis: {x: 1, y: 0, z: 0}
     minimumAngleDegrees: 0
-    maximumAngleDegrees: -35
+    maximumAngleDegrees: -30
     localTranslationAxis: {x: 0, y: 0, z: 0}
     minimumTranslationMeters: 0
     maximumTranslationMeters: 0
@@ -90988,7 +90989,7 @@ MonoBehaviour:
     channel: 3
     localRotationAxis: {x: 1, y: 0, z: 0}
     minimumAngleDegrees: 0
-    maximumAngleDegrees: -35
+    maximumAngleDegrees: -30
     localTranslationAxis: {x: 0, y: 0, z: 0}
     minimumTranslationMeters: 0
     maximumTranslationMeters: 0

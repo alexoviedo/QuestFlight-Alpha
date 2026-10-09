@@ -3,6 +3,8 @@ using System.IO;
 using System.Security.Cryptography;
 using QuestFlightLab.Aircraft.CockpitDynamics.V2;
 using UnityEditor;
+using UnityEngine;
+using System.Collections.Generic;
 
 namespace QuestFlight.Editor
 {
@@ -48,6 +50,32 @@ namespace QuestFlight.Editor
         public const int ExpectedAttitudeSphereVertexCount = 998;
         public const int ExpectedAttitudeSphereTriangleCount = 1740;
         public const float MaximumAttitudeSphereFitRms = 0.00006f;
+
+        // Six authored blanking discs are appended to frozen source vertices.
+        // Only the independently partitioned attitude sphere uses the z selector.
+        public static bool ValidateSourcePresentationSelectors(Mesh mesh, out string error)
+        {
+            var selectors = new List<Vector4>();
+            if (mesh != null) mesh.GetUVs(3, selectors);
+            const int blankVertices = 864;
+            int attitude = 0;
+            if (mesh == null || selectors.Count != mesh.vertexCount || selectors.Count < blankVertices)
+            { error = "Source presentation selector channel is missing."; return false; }
+            for (int i = 0; i < selectors.Count; i++)
+            {
+                Vector4 value = selectors[i];
+                if (i >= selectors.Count - blankVertices)
+                {
+                    if (value != new Vector4(1, 3, 0, 0))
+                    { error = "Trainer blanking plate selector ownership changed."; return false; }
+                }
+                else if (value == new Vector4(0, 0, 1, 0)) attitude++;
+                else if (value != Vector4.zero)
+                { error = "Unreviewed atlas sampling in frozen source vertices."; return false; }
+            }
+            error = attitude == ExpectedAttitudeSphereVertexCount ? string.Empty : "Attitude selector partition changed.";
+            return string.IsNullOrEmpty(error);
+        }
 
         public static bool ValidateFrozenSource(out string error)
         {

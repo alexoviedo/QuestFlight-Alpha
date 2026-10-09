@@ -68,7 +68,10 @@ namespace QuestFlightLab.Environment
             float longitudinal = Vector3.Dot(aircraftPosition - runway08, runwayAxis) / runwayLengthSquared;
             float boundedLongitudinal = Mathf.Clamp01(longitudinal);
             Vector3 runwayPoint = Vector3.Lerp(runway08, runway26, boundedLongitudinal);
-            Vector3 runwayUp = environment.transform.up;
+            // Authored grade defines the longitudinal surface plane. Preserve
+            // lateral position when projecting, rather than snapping to centerline.
+            Vector3 runwayRight = Vector3.Cross(environment.transform.up, runwayAxis.normalized).normalized;
+            Vector3 runwayUp = Vector3.Cross(runwayAxis.normalized, runwayRight).normalized;
             Vector3 lateralDelta = Vector3.ProjectOnPlane(aircraftPosition - runwayPoint, runwayUp);
             float halfWidth = environment.runwayWidthMeters * 0.5f + runwayEdgeToleranceMeters;
             bool overRunway = longitudinal >= 0f && longitudinal <= 1f && lateralDelta.magnitude <= halfWidth;
@@ -92,7 +95,7 @@ namespace QuestFlightLab.Environment
             aircraftForward.Normalize();
 
             transform.SetPositionAndRotation(
-                runwayPoint + runwayUp * surfaceOffsetMeters,
+                runwayPoint + lateralDelta + runwayUp * surfaceOffsetMeters,
                 Quaternion.LookRotation(aircraftForward, runwayUp));
             blobRenderer.enabled = true;
             if (_propertyBlock == null) _propertyBlock = new MaterialPropertyBlock();

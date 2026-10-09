@@ -76,7 +76,7 @@ namespace QuestFlightLab.Runtime
             {
                 CalibrationOffset = seatProfile.ClampCalibrationOffset(saved.calibrationOffset);
                 CalibrationYawDegrees = seatProfile.ClampCalibrationYaw(saved.calibrationYawDeg);
-                Status = "loaded " + path;
+                Status = string.IsNullOrWhiteSpace(error) ? "loaded " + path : error;
             }
             else if (!string.IsNullOrWhiteSpace(error))
             {

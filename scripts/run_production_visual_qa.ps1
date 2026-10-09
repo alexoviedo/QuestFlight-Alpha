@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [string]$UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe',
-  [string]$ProjectPath = 'C:\Users\ovied\Dev\T2\T2-QuestFlight\QuestFlight',
+  [string]$ProjectPath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'QuestFlight'),
   [string]$ArtifactDir = '',
   [string]$LegacyBaselineDir = '',
   [ValidateRange(1, 1800)]
@@ -15,6 +15,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'process_arguments.ps1')
+. (Join-Path $PSScriptRoot 'visual_qa_identity.ps1')
 
 if (-not (Test-Path -LiteralPath $UnityExe)) { throw "Unity not found: $UnityExe" }
 if (-not (Test-Path -LiteralPath $ProjectPath)) { throw "Project not found: $ProjectPath" }
@@ -25,6 +27,13 @@ if ([string]::IsNullOrWhiteSpace($ArtifactDir)) {
 
 New-Item -ItemType Directory -Force -Path $ArtifactDir | Out-Null
 $ArtifactDir = (Resolve-Path -LiteralPath $ArtifactDir).Path
+$previousEvidenceEnvironment = @{}
+foreach ($name in @('QFL_VISUAL_QA_SOURCE_IDENTITY_SHA256','QFL_VISUAL_QA_CONFIGURATION_SHA256','QFL_PRODUCTION_VISUAL_QA_DIR','QFL_PRODUCTION_VISUAL_QA_WIDTH','QFL_PRODUCTION_VISUAL_QA_HEIGHT')) {
+  $previousEvidenceEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
+}
+try {
+$env:QFL_VISUAL_QA_SOURCE_IDENTITY_SHA256 = Get-VisualQaSourceSha256 -ProjectPath $ProjectPath -ArtifactDir $ArtifactDir
+$env:QFL_VISUAL_QA_CONFIGURATION_SHA256 = Get-VisualQaConfigurationSha256 -ProjectPath $ProjectPath
 $env:QFL_PRODUCTION_VISUAL_QA_DIR = $ArtifactDir
 $env:QFL_PRODUCTION_VISUAL_QA_WIDTH = "$Width"
 $env:QFL_PRODUCTION_VISUAL_QA_HEIGHT = "$Height"
@@ -45,7 +54,7 @@ $arguments = @(
   '-executeMethod', 'QuestFlightLab.Editor.ProductionVisualQaBatchRunner.RunProductionVisualQa',
   '-logFile', $log
 )
-$process = Start-Process -FilePath $UnityExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+$process = Start-Process -FilePath $UnityExe -ArgumentList (ConvertTo-ProcessArgumentString $arguments) -PassThru -WindowStyle Hidden
 if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
   Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
   throw "Production Visual QA exceeded ${TimeoutSeconds}s and was stopped. Log: $log"
@@ -68,6 +77,12 @@ if (-not (Test-Path -LiteralPath $reportPath)) {
   throw "Unity exited without a production visual report: $reportPath"
 }
 $report = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
+if (-not $report.passed -or @($report.errors).Count -ne 0 -or
+    $report.sourceIdentitySha256 -ne $env:QFL_VISUAL_QA_SOURCE_IDENTITY_SHA256 -or
+    $report.configurationSha256 -ne $env:QFL_VISUAL_QA_CONFIGURATION_SHA256 -or
+    @($report.shots | Where-Object { -not $_.passed }).Count -ne 0) {
+  throw "Production Visual QA produced failed or unbound evidence: $reportPath"
+}
 $shotIds = @($report.shots | ForEach-Object { [string]$_.id })
 $required = @(
   '01_default_cockpit',
@@ -158,3 +173,8 @@ if (-not $SkipPythonAnalysis) {
 Write-Host "Production Visual QA classification: $($report.classification)"
 Write-Host "Production Visual QA artifacts: $ArtifactDir"
 Write-Host "Production contact sheet: $(Join-Path $ArtifactDir 'visual_qa_contact_sheet.png')"
+} finally {
+  foreach ($name in $previousEvidenceEnvironment.Keys) {
+    [Environment]::SetEnvironmentVariable($name, $previousEvidenceEnvironment[$name], 'Process')
+  }
+}

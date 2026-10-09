@@ -27,7 +27,13 @@ namespace QuestFlightLab.Editor
         {
             try
             {
-                BoulderAmbientAircraftAuthoring.Build();
+                // Scenario diagnostics consume committed authored data without rebuilding it.
+                var authored = AssetDatabase.LoadAssetAtPath<GameObject>(
+                    "Assets/Resources/QuestFlightLab/Production/ProductionWorldRoot.prefab");
+                var director = authored != null ? authored.GetComponentInChildren<AmbientTrafficDirector>(true) : null;
+                if (director == null || director.actors == null || director.actors.Length != 5 ||
+                    authored.GetComponentsInChildren<HabitatBirdDirector>(true).Any(bird => bird.traffic != director))
+                    throw new InvalidOperationException("Authored ambient/wildlife traffic references are incomplete.");
                 string output=System.Environment.GetEnvironmentVariable("QFL_AMBIENT_EVIDENCE") ??
                     Path.GetFullPath("../ambient_traffic_evidence");
                 Directory.CreateDirectory(output);

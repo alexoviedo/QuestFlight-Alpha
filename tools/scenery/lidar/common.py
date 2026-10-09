@@ -90,17 +90,28 @@ class GridContract:
     source_query_bounds: tuple[float, float, float, float, float, float]
 
     def flat_indices(self, easting: Any, northing: Any) -> tuple[Any, Any, Any]:
-        """Return inside mask, rows, and columns for NumPy-like arrays."""
+        """Return valid north-up indices: west/north inclusive, east/south exclusive.
+
+        Adjacent tiles assign each shared edge exactly once. Only already-inside
+        coordinates can receive the last-cell rounding correction below.
+        """
         import numpy as np
 
         inside = (
             (easting >= self.min_easting)
             & (easting < self.max_easting)
-            & (northing >= self.min_northing)
-            & (northing < self.max_northing)
+            & (northing > self.min_northing)
+            & (northing <= self.max_northing)
         )
         columns = np.floor((easting[inside] - self.min_easting) / self.pixel_size).astype(np.int32)
         rows = np.floor((self.max_northing - northing[inside]) / self.pixel_size).astype(np.int32)
+        # A strictly interior nextafter coordinate can round its quotient to
+        # width/height. It belongs to the last cell; rejected exterior points
+        # never reach this correction. Larger errors reveal an invalid contract.
+        if np.any((columns < 0) | (columns > self.width) | (rows < 0) | (rows > self.height)):
+            raise ValueError("Inside LiDAR coordinates produced invalid grid indices.")
+        columns = np.minimum(columns, self.width - 1)
+        rows = np.minimum(rows, self.height - 1)
         return inside, rows, columns
 
     def manifest_value(self) -> dict[str, Any]:

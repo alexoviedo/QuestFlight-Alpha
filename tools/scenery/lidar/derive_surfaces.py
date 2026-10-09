@@ -104,6 +104,8 @@ def transformed_points(
     inside, rows, columns = contract.flat_indices(easting, northing)
     if not np.any(inside):
         return {}
+    if np.any((rows < 0) | (rows >= contract.height) | (columns < 0) | (columns >= contract.width)):
+        raise ValueError("Transformed LiDAR samples violate the north-up grid index contract.")
     extra_names = set(laz.point_format.extra_dimension_names)
     if "ClassFlags" in extra_names:
         class_flags = np.asarray(laz["ClassFlags"], dtype=np.uint8)[prefilter][inside]

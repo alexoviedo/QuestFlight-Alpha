@@ -2,8 +2,93 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import subprocess
 
-from offline_scenery_remaster import digest, inside, restore_traffic, traffic_files, write_json, candidate_restore_files, restore_candidate
+from offline_scenery_remaster import checkpoint, digest, inside, restore_traffic, traffic_files, write_json, candidate_restore_files, restore_candidate
+
+
+class CheckpointTests(unittest.TestCase):
+    def git(self, repo, *args, data=None):
+        return subprocess.check_output(["git", "-C", str(repo), *args], input=data)
+
+    def prepare(self, root):
+        repo = root / "repo"
+        repo.mkdir()
+        self.git(repo, "init", "-q")
+        self.git(repo, "config", "core.autocrlf", "false")
+        # Construct a baseline tree without creating a commit or touching user Git.
+        for name in ("modified", "deleted", "renamed", "unstaged"):
+            (repo / name).write_bytes(b"baseline\n")
+        self.git(repo, "add", ".")
+        tree = self.git(repo, "write-tree").decode().strip()
+        # Unborn HEAD fixtures still exercise staged add and differing versions.
+        return repo, root / "checkpoint", tree
+
+    def test_staged_and_unstaged_versions_roundtrip_without_commits(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo, output, tree = self.prepare(Path(directory))
+            (repo / "added").write_bytes(b"staged\n")
+            (repo / "modified").write_bytes(b"staged modification\n")
+            self.git(repo, "add", "added", "modified")
+            self.git(repo, "rm", "--cached", "deleted")
+            (repo / "deleted").unlink()
+            self.git(repo, "mv", "renamed", "new name")
+            (repo / "added").write_bytes(b"different worktree\n")
+            (repo / "unstaged").write_bytes(b"unstaged modification\n")
+            (repo / "untracked").write_bytes(b"untracked\n")
+            checkpoint(repo, output, base_ref=tree)
+            manifest = json.loads((output / "checkpoint.json").read_text())
+            records = {item["path"]: item for item in manifest["files"]}
+            self.assertEqual(records["added"]["index"]["sha256"], digest(output / "index/added"))
+            self.assertNotEqual(records["added"]["index"]["sha256"], records["added"]["sha256"])
+            # Restoring the index patch followed by the worktree patch reconstructs
+            # both staged and unstaged state. Untracked bytes are restored separately.
+            restored = Path(directory) / "restored"
+            restored.mkdir()
+            self.git(restored, "init", "-q")
+            self.git(restored, "config", "core.autocrlf", "false")
+            (restored / ".git/objects/info/alternates").write_bytes((str(repo / ".git/objects").replace("\\", "/") + "\n").encode())
+            self.git(restored, "read-tree", "--reset", "-u", tree)
+            self.git(restored, "apply", "--index", str(output / "staged.patch"))
+            self.git(restored, "apply", str(output / "unstaged.patch"))
+            (restored / "untracked").write_bytes((output / "files/untracked").read_bytes())
+            self.assertEqual(self.git(repo, "diff", "--cached", "--binary", tree), self.git(restored, "diff", "--cached", "--binary", tree))
+            self.assertEqual(self.git(repo, "diff", "--binary"), self.git(restored, "diff", "--binary"))
+            self.assertEqual(self.git(repo, "status", "--porcelain"), self.git(restored, "status", "--porcelain"))
+
+    def test_finalized_manifest_immutable_and_retry_idempotent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo, output, _ = self.prepare(Path(directory))
+            checkpoint(repo, output)
+            original = (output / "checkpoint.json").read_bytes()
+            checkpoint(repo, output)
+            self.assertEqual(original, (output / "checkpoint.json").read_bytes())
+            (repo / "new").write_bytes(b"later work")
+            with self.assertRaises(RuntimeError):
+                checkpoint(repo, output)
+            self.assertEqual(original, (output / "checkpoint.json").read_bytes())
+            self.assertFalse((output / "files/new").exists())
+
+    def test_staged_delete_and_rename_from_recorded_base(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo, output, tree = self.prepare(Path(directory))
+            self.git(repo, "rm", "--cached", "deleted")
+            (repo / "deleted").unlink()
+            self.git(repo, "mv", "renamed", "new name")
+            checkpoint(repo, output, base_ref=tree)
+            records = {item["path"]: item for item in json.loads((output / "checkpoint.json").read_text())["files"]}
+            self.assertTrue(records["deleted"]["deleted"])
+            self.assertEqual(records["new name"]["index"]["mode"], "100644")
+
+    def test_in_repo_output_and_corrupt_payload_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo, output, _ = self.prepare(Path(directory))
+            with self.assertRaises(ValueError):
+                checkpoint(repo, repo / "backup")
+            checkpoint(repo, output)
+            (output / "index/modified").write_bytes(b"corrupt")
+            with self.assertRaises(RuntimeError):
+                checkpoint(repo, output)
 
 
 class RestoreTests(unittest.TestCase):

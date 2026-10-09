@@ -206,12 +206,25 @@ namespace QuestFlightLab.Tests.EditMode
                 Assert.That(oilPressure, Is.GreaterThan(0f));
                 Assert.That(controller.TryGetCockpitPresentationValue(
                     CockpitPresentationChannel.LeftFuelGallons,
-                    out float leftFuel), Is.True);
-                Assert.That(leftFuel, Is.EqualTo(25f).Within(0.001f));
+                    out _), Is.False);
+                Assert.That(controller.TryGetCockpitPresentationValue(
+                    CockpitPresentationChannel.RightFuelGallons,
+                    out _), Is.False);
+                Assert.That(controller.TryGetCockpitPresentationValue(
+                    CockpitPresentationChannel.FuelFlowGallonsPerHour,
+                    out _), Is.False);
+                Assert.That(controller.TryGetCockpitPresentationValue(
+                    CockpitPresentationChannel.ActualFlapDegrees,
+                    out _), Is.False, "Missing native telemetry cannot be replaced by a flap command.");
+                FlightDynamicsState nativeState = RepresentativeState();
+                nativeState.nativeTelemetryVersion = 1;
+                nativeState.actualFlapNormalized = .25;
+                Assert.That(controller.StepForTest(nativeState, RepresentativeControls(),
+                    CockpitElectricalPowerInput.Unavailable, 1f / 72f), Is.True);
                 Assert.That(controller.TryGetCockpitPresentationValue(
                     CockpitPresentationChannel.ActualFlapDegrees,
                     out float actualFlap), Is.True);
-                Assert.That(actualFlap, Is.EqualTo(0f).Within(0.001f));
+                Assert.That(actualFlap, Is.EqualTo(7.5f).Within(0.001f));
                 Assert.That(controller.TryGetCockpitPresentationValue(
                     CockpitPresentationChannel.SlipSkidNormalized,
                     out _), Is.False);

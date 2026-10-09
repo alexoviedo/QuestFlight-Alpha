@@ -88,13 +88,27 @@ namespace QuestFlight.Editor.Tests
 
         [Test] public void ControlConfirmationNeedsBothDirectionsAndCenter()
         {
-            var e=new TrainingEvaluator(); e.BeginAttempt(Air()); e.BeginStage(0);
-            var stage=Level(.5f); stage.task=TrainingTask.RudderControl;
-            for(int i=0;i<20;i++)e.Step(stage,Air(),new FlightDynamicsControlSnapshot{rudder=.8f},.1f,true);
-            Assert.IsFalse(e.Complete);
-            e.Step(stage,Air(),new FlightDynamicsControlSnapshot{rudder=-.8f},.1f,true);
-            for(int i=0;i<6;i++)e.Step(stage,Air(),default,.1f,true);
+            var s=Air();s.weightOnWheels=true;s.groundSpeedKnots=0;
+            var e=new TrainingEvaluator();e.BeginAttempt(s);e.BeginStage(0);
+            var stage=Level(.5f);stage.task=TrainingTask.RudderControl;
+            e.Step(stage,s,new FlightDynamicsControlSnapshot{rudder=.8f},.1f,true);
+            Assert.AreEqual(0,e.ControlPhase,"Positive first must not skip the requested negative motion.");
+            e.Step(stage,s,new FlightDynamicsControlSnapshot{rudder=-.8f},.1f,true);
+            e.Step(stage,s,new FlightDynamicsControlSnapshot{rudder=.8f},.1f,true);
+            Assert.IsFalse(e.Complete,"Both directions without centering are incomplete.");
+            for(int i=0;i<6;i++)e.Step(stage,s,default,.1f,true);
             Assert.IsTrue(e.Complete);
+        }
+
+        [TestCase(false,0f,0f)] [TestCase(true,5f,0f)] [TestCase(true,0f,.8f)]
+        public void GroundControlConfirmationRejectsAirborneMovingAndPoweredAircraft(bool ground,float speed,float throttle)
+        {
+            var s=Air();s.weightOnWheels=ground;s.groundSpeedKnots=speed;
+            var e=new TrainingEvaluator();e.BeginAttempt(s);e.BeginStage(0);
+            var stage=Level(.5f);stage.task=TrainingTask.RudderControl;
+            foreach(float value in new[]{-.8f,.8f,0f,0f,0f,0f,0f,0f})
+                e.Step(stage,s,new FlightDynamicsControlSnapshot{rudder=value,throttle=throttle},.1f,true);
+            Assert.IsFalse(e.Complete);Assert.AreEqual(0,e.ControlPhase);
         }
 
         [Test] public void StableFinalRequiresRunwayGeometryAndAirborneState()
@@ -193,7 +207,7 @@ namespace QuestFlight.Editor.Tests
             finally { PrefabUtility.UnloadPrefabContents(world); }
         }
 
-        [Test] public void NativeRetryRestoresAManageableCheckpointAfterADisturbedFlight()
+        [Test] public void NativeRetryMatchesPristineCheckpointAfterADisturbedFlight()
         {
             var world=AssetDatabase.LoadAssetAtPath<GameObject>(ProductTrainingAuthoring.World);
             var flight=world.GetComponentInChildren<FlightDynamicsCoordinator>(true);
@@ -214,13 +228,23 @@ namespace QuestFlight.Editor.Tests
             }
             backend.SetAtmosphere(FlightDynamicsCoordinator.AtmosphereFromWind(flight.windField.Sample(at,0)));
             Assert.IsTrue(backend.Reset(lesson.start));Advance(960);
+            var pristine=backend.CurrentState;
+            backend.SetAtmosphere(FlightDynamicsCoordinator.AtmosphereFromWind(flight.windField.Sample(at,0)));
+            Assert.IsTrue(backend.Reset(lesson.start));Advance(960);
             controls.elevator=.5f;controls.aileron=.3f;Advance(240);
             backend.SetAtmosphere(FlightDynamicsCoordinator.AtmosphereFromWind(flight.windField.Sample(at,0)));
             Assert.IsTrue(backend.Reset(lesson.start));controls.elevator=controls.aileron=0;Advance(960);
             var restored=backend.CurrentState;
             Assert.IsTrue(restored.IsFinite);Assert.Less(Math.Abs(restored.pitchDegrees),10);
             Assert.Less(Math.Abs(restored.bankDegrees),15);Assert.Greater(restored.calibratedAirspeedKnots,70);
-            Assert.Less(Math.Abs(restored.verticalSpeedFeetPerMinute),900);
+            // Reset must reproduce the actual untouched native checkpoint. This
+            // untrimmed lesson has no pinned <900fpm handling-reference contract;
+            // widening an arbitrary bound or tuning XML would not test recovery.
+            Assert.That(restored.verticalSpeedFeetPerMinute,Is.EqualTo(pristine.verticalSpeedFeetPerMinute).Within(.1));
+            Assert.That(restored.calibratedAirspeedKnots,Is.EqualTo(pristine.calibratedAirspeedKnots).Within(.01));
+            Assert.That(Vector3.Distance(restored.positionUnityMeters,pristine.positionUnityMeters),Is.LessThan(.02));
+            Assert.That(Quaternion.Angle(restored.rotationUnity,pristine.rotationUnity),Is.LessThan(.02));
+            Debug.Log($"Native lesson retry matched pristine after8s: VS={restored.verticalSpeedFeetPerMinute:R}fpm, CAS={restored.calibratedAirspeedKnots:R}kt. Untrimmed handling envelope remains unproven.");
         }
     }
 }

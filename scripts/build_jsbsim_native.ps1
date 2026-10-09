@@ -8,6 +8,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'native_build_identity.ps1')
+if ($SkipWindows -and $SkipAndroid) { throw 'No native platform selected; no build was run.' }
 $Revision = '3b25f25e49b42d0489c04ac805674fc1450ca579'
 $Repository = 'https://github.com/JSBSim-Team/jsbsim.git'
 $RepoRoot = Split-Path -Parent $PSScriptRoot
@@ -29,10 +31,23 @@ $Strip = Join-Path $Ndk 'toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-strip.
 foreach ($required in @($BridgeSource,$PackageRoot,$DataRoot,$CMake,$Ninja,$Toolchain,$ReadElf,$Strip)) {
   if (!(Test-Path $required)) { throw "Required native-build input not found: $required" }
 }
+function Get-BridgeInputIdentities {
+  @(Get-ChildItem -LiteralPath $BridgeSource -Recurse -File | Sort-Object FullName | ForEach-Object {
+    [ordered]@{path=$_.FullName.Substring($RepoRoot.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
+  })
+}
+$BridgeInputs = Get-BridgeInputIdentities
 New-Item -ItemType Directory -Force -Path $ArtifactDir | Out-Null
-if (!(Test-Path (Join-Path $SourceDir '.git'))) { git clone --filter=blob:none --no-checkout $Repository $SourceDir }
+if (!(Test-Path (Join-Path $SourceDir '.git'))) {
+  git clone --filter=blob:none --no-checkout $Repository $SourceDir
+  if ($LASTEXITCODE) { throw "Pinned JSBSim source clone failed: $LASTEXITCODE" }
+} elseif (@(git -C $SourceDir status --porcelain).Count -ne 0) {
+  throw 'Existing JSBSim source checkout is dirty; preserving it without checkout.'
+}
 git -C $SourceDir fetch --depth 1 origin $Revision
+if ($LASTEXITCODE) { throw "Pinned JSBSim source fetch failed: $LASTEXITCODE" }
 git -C $SourceDir checkout --detach $Revision
+if ($LASTEXITCODE) { throw "Pinned JSBSim source selection failed: $LASTEXITCODE" }
 $ActualRevision = (git -C $SourceDir rev-parse HEAD).Trim()
 if ($ActualRevision -ne $Revision) { throw "JSBSim revision mismatch: expected $Revision, got $ActualRevision" }
 if ((git -C $SourceDir status --porcelain).Count -ne 0) { throw 'Pinned JSBSim source checkout is dirty.' }
@@ -63,12 +78,9 @@ if (!$SkipWindows) {
   try { $SmokeJson = (& $Smoke.FullName $DataRoot | Select-Object -Last 1); if($LASTEXITCODE){throw "Native smoke failed: $LASTEXITCODE"} }
   finally { $env:PATH=$OldPath }
   $SmokeJson | Set-Content (Join-Path $ArtifactDir 'windows_native_smoke.json') -Encoding utf8
-  if (!$SkipPackageStaging) {
-    $Destination=Join-Path $PackageRoot 'Runtime\Plugins\Windows\x86_64'
-    Copy-Item $Wrapper.FullName (Join-Path $Destination 'qfl_jsbsim_native.dll') -Force
-    Copy-Item $Jsbsim.FullName (Join-Path $Destination 'JSBSim.dll') -Force
-  }
-  $Results += @{platform='windows-x86_64';smoke=($SmokeJson|ConvertFrom-Json)}
+  $platformResult = Complete-NativePlatformBuild -Platform 'windows-x86_64' -BuiltPaths @($Wrapper.FullName,$Jsbsim.FullName) -Destination (Join-Path $PackageRoot 'Runtime\Plugins\Windows\x86_64') -SkipStaging:$SkipPackageStaging
+  $platformResult.smoke = ($SmokeJson | ConvertFrom-Json)
+  $Results += $platformResult
 }
 
 if (!$SkipAndroid) {
@@ -92,17 +104,15 @@ if (!$SkipAndroid) {
     }
   }
   (& $ReadElf -h -d -s $Wrapper.FullName) | Set-Content (Join-Path $ArtifactDir 'android_wrapper_inspection.txt') -Encoding utf8
-  if (!$SkipPackageStaging) {
-    $Destination=Join-Path $PackageRoot 'Runtime\Plugins\Android\arm64-v8a'
-    Copy-Item $Wrapper.FullName (Join-Path $Destination 'libqfl_jsbsim_native.so') -Force
-    Copy-Item $Jsbsim.FullName (Join-Path $Destination 'libJSBSim.so') -Force
-  }
-  $Results += @{platform='android-arm64';wrapper_bytes=$Wrapper.Length;jsbsim_bytes=$Jsbsim.Length}
+  $Results += Complete-NativePlatformBuild -Platform 'android-arm64' -BuiltPaths @($Wrapper.FullName,$Jsbsim.FullName) -Destination (Join-Path $PackageRoot 'Runtime\Plugins\Android\arm64-v8a') -SkipStaging:$SkipPackageStaging
 }
 
-$PluginHashes = Get-ChildItem (Join-Path $PackageRoot 'Runtime\Plugins') -Recurse -File | Where-Object {$_.Extension -in '.dll','.so'} | ForEach-Object {
+if (($BridgeInputs | ConvertTo-Json -Compress) -cne ((Get-BridgeInputIdentities) | ConvertTo-Json -Compress)) {
+  throw 'Native bridge inputs changed during the build; refusing mixed-source provenance.'
+}
+$ExistingPackageHashes = Get-ChildItem (Join-Path $PackageRoot 'Runtime\Plugins') -Recurse -File | Where-Object {$_.Extension -in '.dll','.so'} | ForEach-Object {
   @{path=$_.FullName.Substring($RepoRoot.Length+1).Replace('\','/');bytes=$_.Length;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 }
-@{generated_utc=[DateTime]::UtcNow.ToString('O');status='PASS';revision=$Revision;api_version=2;results=$Results;plugins=$PluginHashes} |
+@{generated_utc=[DateTime]::UtcNow.ToString('O');status='BUILT';revision=$Revision;api_version=2;unity_root=$UnityRoot;cmake=$CMake;ndk=$Ndk;source_head=(git -C $RepoRoot rev-parse HEAD);bridge_inputs=$BridgeInputs;results=$Results;existing_package_libraries=$ExistingPackageHashes;skipped_platforms=@(@{platform='windows-x86_64';skipped=[bool]$SkipWindows},@{platform='android-arm64';skipped=[bool]$SkipAndroid})} |
   ConvertTo-Json -Depth 8 | Set-Content (Join-Path $ArtifactDir 'jsbsim_native_gate_report.json') -Encoding utf8
 Write-Host "JSBSim native gate artifacts: $ArtifactDir"

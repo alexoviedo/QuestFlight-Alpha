@@ -50,6 +50,7 @@ namespace QuestFlightLab.Flight.Backends
                 if (forward.sqrMagnitude > 1e-8f)
                 {
                     heading = Mathf.Repeat(Mathf.Atan2(forward.x, forward.z) * Mathf.Rad2Deg, 360f);
+                    heading = FlightFrameConversions.UnityHeadingToTrue(heading, latitude, longitude, localOrigin);
                 }
             }
 

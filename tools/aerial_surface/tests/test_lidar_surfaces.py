@@ -576,7 +576,10 @@ class CommittedAssetContractTests(unittest.TestCase):
     def test_full_committed_contract_passes_without_raw_lidar(self) -> None:
         report = validate(RUNTIME_ROOT)
         self.assertEqual(report["status"], "PASS")
-        self.assertEqual(report["building"]["triangle_count"], 128_092)
+        # Pinned source/OBJ/compact-layer conservation is checked by validate;
+        # the core-plus-corridor hero exclusions already reduced this audited
+        # geometry to 124,992 triangles, below its unchanged 130,000 ceiling.
+        self.assertEqual(report["building"]["triangle_count"], 124_992)
         self.assertTrue(29_000 <= report["canopy"]["triangle_count"] <= 59_000)
         self.assertGreater(report["canopy"]["vertex_count"], 0)
         self.assertGreater(report["canopy"]["geometry_component_count"], 0)

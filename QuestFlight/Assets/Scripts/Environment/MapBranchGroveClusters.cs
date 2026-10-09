@@ -153,7 +153,7 @@ namespace QuestFlightLab.Environment
         private void DrawProxies(Camera camera)
         {
             if(!proxiesActive||ClusterInstances==0)return;
-            proxyProperties.SetVector("_GroveViewPosition",viewingCamera!=null?viewingCamera.transform.position:camera.transform.position);
+            proxyProperties.SetVector("_GroveViewPosition",camera.transform.position);
             QuestFlight.Rendering.ProductRenderSubmission.DrawMeshInstancedProcedural(distantClusterMesh,0,distantClusterMaterial,drawBounds,ClusterInstances,proxyProperties,
                 ShadowCastingMode.Off,false,gameObject.layer,camera,LightProbeUsage.Off);LastDraws++;
         }

@@ -5,10 +5,18 @@ source without modifying the source GLB.
 
 - `inspect_cockpit_source.py` imports the GLB in Blender and emits deterministic
   object, material, UV, bounds, and connected-component evidence.
-- `cockpit_representation_manifest_v2.json` is the reviewed identity and
-  authority allowlist. Product authoring and tests may animate only its
-  exact `implementedTargets`. `representedCandidates` require both identity and
-  authority gates before they may move into that set.
+- `cockpit_representation_manifest_v2.json` retains its filename for compatibility
+  and contains the current **schema 3** reviewed identity and authority contract:
+  `implementedMotion`, instrument/avionics presentation, touch interaction,
+  `representedButBlocked`, and `excludedBecauseNotRepresented`. Motion requires
+  the reviewed geometry, channels and owner; blocked/excluded identities cannot
+  also be implemented. The architecture declares the native flight snapshot
+  owner and limited deterministic systems presentation.
+- Run `python tools/cockpit_dynamics/validate_cockpit_representation.py` and
+  `python -m unittest discover -s tools/cockpit_dynamics/tests -v` with the exact
+  source GLB hydrated. The validator verifies source size/hash and current
+  classification/authority, including negative cases. Historical validation
+  strings inside the manifest are milestone records, not fresh execution evidence.
 
 Run Blender inspection outside the Unity project so extracted source images and
 diagnostic JSON remain external artifacts:

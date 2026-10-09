@@ -15,6 +15,27 @@ OUT.mkdir(parents=True, exist_ok=True)
 C172 = REPO/'QuestFlight/Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb'
 records = []
 
+def remove_noncontributing_body_triangles(mesh):
+    """Drop only zero-area triangle faces at the audited meter-unit tolerance.
+
+    Preserve all valid positions, attribute layers and material assignments.
+    Called only for the existing SuperCub body derivatives after triangulation.
+    """
+    bm=bmesh.new();bm.from_mesh(mesh)
+    try:
+        invalid=[]
+        for face in bm.faces:
+            if len(face.verts)!=3:
+                raise ValueError('Body hygiene requires triangulated geometry')
+            a,b,c=[vertex.co for vertex in face.verts]
+            if (b-a).cross(c-a).length_squared<=1e-24:
+                invalid.append(face)
+        removed=len(invalid)
+        if invalid:bmesh.ops.delete(bm,geom=invalid,context='FACES_ONLY')
+        bm.to_mesh(mesh);mesh.update()
+        return removed
+    finally:bm.free()
+
 def color_mesh(o, color):
     attr = o.data.color_attributes.get('COLOR_0') or o.data.color_attributes.new(name='COLOR_0', type='BYTE_COLOR', domain='POINT')
     for c,v in zip(attr.data,o.data.vertices):
@@ -137,12 +158,13 @@ for kind in ['C172','SuperCub','Discus']:
                     g.data.calc_loop_triangles();mod=g.modifiers.new('ProtectedGlazing','DECIMATE');mod.ratio=min(1,[240,120,24][lod]/max(1,len(g.data.loop_triangles)));mod.use_collapse_triangulate=True
                     bpy.context.view_layer.objects.active=g;bpy.ops.object.modifier_apply(modifier=mod.name);pieces.append(g)
                 obj=join(pieces,f'{kind}_LOD{lod}_{part}')
+            removed_degenerate_triangles=remove_noncontributing_body_triangles(obj.data) if kind=='SuperCub' and part=='Body' else 0
             obj.data.validate()
             for poly in obj.data.polygons:poly.use_smooth=True
             obj.data.calc_loop_triangles()
             verts=[v.co for v in obj.data.vertices]
             lo=[min(v[i] for v in verts) for i in range(3)];hi=[max(v[i] for v in verts) for i in range(3)]
-            lod_records.append({'part':part,'triangles':len(obj.data.loop_triangles),'min':lo,'max':hi})
+            lod_records.append({'part':part,'triangles':len(obj.data.loop_triangles),'min':lo,'max':hi,'removed_degenerate_triangles':removed_degenerate_triangles})
             exports.append(obj)
         model_record['lods'].append(lod_records)
     bpy.ops.object.select_all(action='DESELECT')

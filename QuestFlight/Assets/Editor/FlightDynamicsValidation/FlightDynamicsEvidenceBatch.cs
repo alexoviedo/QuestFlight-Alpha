@@ -76,7 +76,7 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
         private static string BuildCsv(IReadOnlyList<FlightTraceSample> trace)
         {
             StringBuilder csv = new StringBuilder(Math.Max(2048, trace.Count * 180));
-            csv.AppendLine("backend,scenario,time_s,aileron,elevator,rudder,throttle,flaps,calibrated_airspeed_kt,true_airspeed_kt,altitude_agl_m,vertical_speed_fpm,heading_deg,pitch_deg,bank_deg,aoa_deg,beta_deg,yaw_rate_deg_s,weight_on_wheels,weight_lb,cg_x_in,gear_vertical_force_lb,gear_compression_ft,nose_gear_steering_deg");
+            csv.AppendLine("backend,scenario,time_s,aileron,elevator,rudder,throttle,flaps,calibrated_airspeed_kt,true_airspeed_kt,altitude_agl_m,vertical_speed_fpm,heading_deg,pitch_deg,bank_deg,aoa_deg,beta_deg,yaw_rate_deg_s,weight_on_wheels,weight_lb,cg_x_in,gear_vertical_force_lb,gear_compression_ft,nose_gear_steering_deg,ground_track_deg,ground_track_available");
             foreach (FlightTraceSample sample in trace)
             {
                 AppendCsv(csv, sample.backend);
@@ -102,7 +102,9 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
                 AppendCsv(csv, sample.cgXInches);
                 AppendCsv(csv, sample.gearVerticalForcePounds);
                 AppendCsv(csv, sample.gearCompressionFeet);
-                csv.Append(sample.noseGearSteeringDegrees.ToString("R", CultureInfo.InvariantCulture)).AppendLine();
+                AppendCsv(csv, sample.noseGearSteeringDegrees);
+                AppendCsv(csv, sample.groundTrackDegrees);
+                csv.Append(sample.groundTrackAvailable ? "true" : "false").AppendLine();
             }
             return csv.ToString();
         }
@@ -133,7 +135,14 @@ namespace QuestFlight.Editor.FlightDynamicsValidation
             text.Append("- Contract: `").Append(suite.contractVersion).AppendLine("`");
             text.Append("- Fixed step: `").Append(suite.fixedStepSeconds.ToString("R", CultureInfo.InvariantCulture)).AppendLine(" s` (120 Hz)");
             text.Append("- Production config status: **").Append(suite.productionConfig.status).AppendLine("**");
-            text.Append("- Effective config SHA-256: `").Append(suite.productionConfig.effectiveParameterSha256).AppendLine("`");
+            text.Append("- Unity UI/training-reference config SHA-256: `").Append(suite.productionConfig.effectiveParameterSha256).AppendLine("`");
+            text.Append("- Native input identity: **").Append(suite.nativeInputs.status).AppendLine("**");
+            text.Append("- Loaded bridge SHA-256: `").Append(suite.nativeInputs.bridgeSha256).AppendLine("`");
+            text.Append("- Loaded JSBSim SHA-256: `").Append(suite.nativeInputs.jsbsimSha256).AppendLine("`");
+            text.Append("- Aircraft XML SHA-256: `").Append(suite.nativeInputs.aircraftXmlSha256).AppendLine("`");
+            text.Append("- Runtime payload SHA-256: `").Append(suite.nativeInputs.payloadSha256).AppendLine("`");
+            text.Append("- Source HEAD: `").Append(suite.nativeInputs.sourceCommit).AppendLine("`");
+            text.Append("- Current relevant source SHA-256: `").Append(suite.nativeInputs.sourceInputsSha256).AppendLine("`");
             text.AppendLine();
             text.AppendLine("| Backend | Scenario | Status | Detail |");
             text.AppendLine("|---|---|---:|---|");

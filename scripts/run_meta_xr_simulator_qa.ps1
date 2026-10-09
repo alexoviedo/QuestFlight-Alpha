@@ -4,6 +4,7 @@ param(
     [string]$ReplayRoot,
     [string[]]$SessionId = @(),
     [switch]$AuditOnly,
+    [switch]$BuildOnly,
     [switch]$RebuildPlayer,
     [switch]$AllowMissingRecordings,
     [switch]$LiveSmokeWhenRecordingsMissing,
@@ -18,6 +19,11 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+if ($BuildOnly -and ($AuditOnly -or $LiveSmokeWhenRecordingsMissing -or
+    -not [string]::IsNullOrWhiteSpace($RecordSession))) {
+    throw "BuildOnly cannot request an audit, live session, or recording."
+}
+. (Join-Path $PSScriptRoot "simulator_evidence_policy.ps1")
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $unityProject = Join-Path $repoRoot "QuestFlight"
@@ -46,6 +52,14 @@ if ([string]::IsNullOrWhiteSpace($ReplayRoot)) {
 $ReplayRoot = [IO.Path]::GetFullPath($ReplayRoot)
 New-Item -ItemType Directory -Path $outputDirectory,$sessionOutputRoot,$logRoot,$replayEvidenceRoot,$ReplayRoot -Force | Out-Null
 New-Item -ItemType Directory -Path $DevelopmentScratchRoot -Force | Out-Null
+$runId = [Guid]::NewGuid().ToString('N')
+$playerIdentityPath = $playerPath + '.identity.json'
+$currentSourceRoot = Join-Path $outputDirectory ('source_' + $runId)
+if (-not $AuditOnly) {
+    & python (Join-Path $repoRoot 'tools/record_source_identity.py') --root $repoRoot --output $currentSourceRoot
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot establish current simulator source identity.' }
+    $currentSourceIdentitySha256 = (Get-FileHash -LiteralPath (Join-Path $currentSourceRoot 'source_identity.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+}
 $developmentCopyPath = $null
 $developmentCopyRemoved = $false
 $developmentCleanupError = $null
@@ -362,6 +376,7 @@ function Build-SimulatorDevelopmentPlayer {
         if ($process.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $playerPath -PathType Leaf)) {
             throw "Meta XR Simulator development player build failed (exit $($process.ExitCode)). See $buildLog"
         }
+        @{sourceIdentitySha256=$currentSourceIdentitySha256;playerSha256=(Get-FileHash -LiteralPath $playerPath -Algorithm SHA256).Hash.ToLowerInvariant();sourceIdentity=(Join-Path $currentSourceRoot 'source_identity.json')} | ConvertTo-Json | Set-Content -LiteralPath $playerIdentityPath -Encoding utf8
     }
     finally {
         $env:QFL_META_XR_SIMULATOR_ALLOW_DEV_COPY = $previous.allow
@@ -412,7 +427,7 @@ function Invoke-SimulatorSession {
         [string]$PersistentPath
     )
     $id = [string]$Session.id
-    $sessionDirectory = Join-Path $sessionOutputRoot $id
+    $sessionDirectory = Join-Path (Join-Path $sessionOutputRoot $runId) $id
     New-Item -ItemType Directory -Path $sessionDirectory -Force | Out-Null
     $playerLog = Join-Path $logRoot ("{0}_player.log" -f $id)
     $persistentExisted = Test-Path -LiteralPath $PersistentPath -PathType Leaf
@@ -422,7 +437,7 @@ function Invoke-SimulatorSession {
         "QFL_META_XR_SIMULATOR_REPLAY_PATH", "QFL_META_XR_SIMULATOR_CAPTURE_DELAY_SECONDS",
         "QFL_META_XR_SIMULATOR_CAPTURE_WIDTH", "QFL_META_XR_SIMULATOR_CAPTURE_HEIGHT",
         "QFL_META_XR_SIMULATOR_START_DEMO", "QFL_META_XR_SIMULATOR_EXIT_AFTER_CAPTURE",
-        "QFL_META_XR_SIMULATOR_EXPECTED_RUNTIME_VERSION"
+        "QFL_META_XR_SIMULATOR_EXPECTED_RUNTIME_VERSION", "QFL_META_XR_SIMULATOR_RUN_ID", "QFL_META_XR_SIMULATOR_PLAYER_SHA256", "QFL_META_XR_SIMULATOR_SOURCE_SHA256"
     )
     $environmentBefore = @{}
     foreach ($name in $envNames) { $environmentBefore[$name] = [Environment]::GetEnvironmentVariable($name, "Process") }
@@ -431,6 +446,9 @@ function Invoke-SimulatorSession {
     $timedOut = $false
     try {
         Set-SessionCaptureConfiguration -PersistentPath $PersistentPath -Mode $Mode -VrsPath $VrsPath
+        $env:QFL_META_XR_SIMULATOR_RUN_ID = $runId
+        $env:QFL_META_XR_SIMULATOR_PLAYER_SHA256 = (Get-FileHash -LiteralPath $playerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        $env:QFL_META_XR_SIMULATOR_SOURCE_SHA256 = $currentSourceIdentitySha256
         $env:XR_RUNTIME_JSON = $Installation.Manifest
         $env:QFL_META_XR_SIMULATOR_EXPECTED_RUNTIME_VERSION = $Installation.Version.ToString()
         $env:QFL_META_XR_SIMULATOR_QA_DIR = $sessionDirectory
@@ -477,7 +495,10 @@ function Invoke-SimulatorSession {
             sessionReportPresent = $null -ne $sessionReport
             productConnected = $null -ne $sessionReport -and [bool]$sessionReport.xrDeviceActive -and [bool]$sessionReport.stereoEnabled
             runtimeName = if ($sessionReport) { [string]$sessionReport.openXrRuntimeName } else { $null }
-            sessionPassed = $null -ne $sessionReport -and [bool]$sessionReport.passed
+            runId = $runId
+            playerSha256 = $env:QFL_META_XR_SIMULATOR_PLAYER_SHA256
+            sourceIdentitySha256 = $currentSourceIdentitySha256
+            sessionPassed = Test-SimulatorSessionEvidence -Report $sessionReport -ExitCode $exitCode -TimedOut $timedOut -RunId $runId -PlayerSha256 $env:QFL_META_XR_SIMULATOR_PLAYER_SHA256 -SourceIdentitySha256 $currentSourceIdentitySha256 -SessionId $id
         }
     }
     finally {
@@ -486,7 +507,14 @@ function Invoke-SimulatorSession {
         # Give its normal shutdown path a chance to complete before any force stop.
         Close-SimulatorProcess -Process $frontend
         foreach ($name in $envNames) {
-            [Environment]::SetEnvironmentVariable($name, $environmentBefore[$name], "Process")
+            if ($null -eq $environmentBefore[$name]) {
+                # Preserve absence: PowerShell can bind a null .NET string argument
+                # as an empty value, which leaves a different process environment.
+                Remove-Item -LiteralPath ("Env:\" + $name) -ErrorAction SilentlyContinue
+            }
+            else {
+                [Environment]::SetEnvironmentVariable($name, $environmentBefore[$name], "Process")
+            }
         }
         if ($persistentExisted) { [IO.File]::WriteAllBytes($PersistentPath, $persistentBytes) }
         elseif (Test-Path -LiteralPath $PersistentPath -PathType Leaf) { Remove-Item -LiteralPath $PersistentPath -Force }
@@ -495,6 +523,7 @@ function Invoke-SimulatorSession {
 
 $installation = Get-MetaXrSimulatorInstallation
 $runtimeBefore = Get-OpenXrRegistrySnapshot
+$previousRuntimeBefore = if ($BuildOnly) { Get-PreviousOpenXrRuntime64 } else { $null }
 $persistentPath = Join-Path $env:APPDATA "MetaXR\MetaXrSimulator\persistent_data.json"
 $persistentInitiallyExisted = Test-Path -LiteralPath $persistentPath -PathType Leaf
 $persistentInitialHash = if ($persistentInitiallyExisted) { Get-Sha256File -LiteralPath $persistentPath } else { $null }
@@ -507,9 +536,11 @@ $caughtError = $null
 $runtimeRestoration = $null
 
 try {
-    if ($null -eq $installation) { throw "Meta XR Simulator is not installed." }
-    & (Join-Path $PSScriptRoot "setup_meta_xr_simulator.ps1") -ArtifactRoot $ArtifactRoot -AuditOnly
-    if ($LASTEXITCODE -ne 0) { throw "Meta XR Simulator setup audit failed." }
+    if (-not $BuildOnly) {
+        if ($null -eq $installation) { throw "Meta XR Simulator is not installed." }
+        & (Join-Path $PSScriptRoot "setup_meta_xr_simulator.ps1") -ArtifactRoot $ArtifactRoot -AuditOnly
+        if ($LASTEXITCODE -ne 0) { throw "Meta XR Simulator setup audit failed." }
+    }
 
     foreach ($session in $sessionCatalog) {
         $vrs = Join-Path $ReplayRoot ("{0}.vrs" -f $session.id)
@@ -519,12 +550,20 @@ try {
         $classification = if ($missingRecordings.Count -eq 0) { "READY_TO_REPLAY" } else { "BLOCKED_MISSING_RECORDINGS" }
     }
     else {
-        if ($RebuildPlayer -or -not $playerBuilt) {
+        $playerIdentityValid = $false
+        if ($playerBuilt -and (Test-Path -LiteralPath $playerIdentityPath -PathType Leaf)) {
+            $identity = Get-Content -LiteralPath $playerIdentityPath -Raw | ConvertFrom-Json
+            $playerIdentityValid = $identity.sourceIdentitySha256 -eq $currentSourceIdentitySha256 -and $identity.playerSha256 -eq (Get-FileHash -LiteralPath $playerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        }
+        if ($RebuildPlayer -or -not $playerIdentityValid) {
             Build-SimulatorDevelopmentPlayer
             $playerBuilt = Test-Path -LiteralPath $playerPath -PathType Leaf
         }
 
-        if (-not [string]::IsNullOrWhiteSpace($RecordSession)) {
+        if ($BuildOnly) {
+            $classification = "BUILD_ONLY_RUNTIME_NOT_EXECUTED"
+        }
+        elseif (-not [string]::IsNullOrWhiteSpace($RecordSession)) {
             $session = $sessionCatalog | Where-Object { $_.id -eq $RecordSession } | Select-Object -First 1
             $recordPath = Join-Path $ReplayRoot ("{0}.vrs" -f $RecordSession)
             Write-Host "Interactive one-time recording: $RecordSession"
@@ -563,13 +602,33 @@ finally {
     # Per-process XR_RUNTIME_JSON remains the intended activation mechanism, but
     # current Meta frontends may still mutate HKLM. Restore the exact snapshot or
     # fail closed with the required UAC/admin error preserved in evidence.
-    $runtimeRestoration = Restore-MetaOpenXrRuntimeSnapshot -Snapshot $runtimeBefore -Installation $installation
+    if ($BuildOnly) {
+        # A build never activates a runtime. Compare state read-only, including
+        # Meta's bookkeeping value; do not try to repair concurrent changes or prompt UAC.
+        $after = Get-OpenXrRegistrySnapshot
+        $previousPreserved = (Get-PreviousOpenXrRuntime64) -eq $previousRuntimeBefore
+        $runtimeRestoration = [pscustomobject][ordered]@{
+            attempted = $false
+            succeeded = $after.runtime64 -eq $runtimeBefore.runtime64 -and
+                $after.runtime32 -eq $runtimeBefore.runtime32 -and $previousPreserved
+            strategy = "ReadOnlyBuildOnlyStateCheck"
+            uacRequired = $false
+            errors = @()
+            beforeRestore = $after
+            afterRestore = $after
+        }
+    }
+    else {
+        $runtimeRestoration = Restore-MetaOpenXrRuntimeSnapshot -Snapshot $runtimeBefore -Installation $installation
+    }
     $runtimeAfter = $runtimeRestoration.afterRestore
     $persistentAfterExists = Test-Path -LiteralPath $persistentPath -PathType Leaf
     $persistentAfterHash = if ($persistentAfterExists) { Get-Sha256File -LiteralPath $persistentPath } else { $null }
     $runtimePreserved = [bool]$runtimeRestoration.succeeded
     $persistentRestored = $persistentInitiallyExisted -eq $persistentAfterExists -and $persistentInitialHash -eq $persistentAfterHash
-    if (-not $runtimePreserved) { $classification = "FAIL_SIMULATOR_STATE_RESTORATION" }
+    if (-not $runtimePreserved -or ($BuildOnly -and -not $persistentRestored)) {
+        $classification = "FAIL_SIMULATOR_STATE_RESTORATION"
+    }
 
     $report = [ordered]@{
         schemaVersion = 2
@@ -582,11 +641,14 @@ finally {
         simulatorRuntimeManifest = if ($installation) { $installation.Manifest } else { $null }
         playerPath = $playerPath
         playerBuilt = $playerBuilt
+        buildOnly = [bool]$BuildOnly
+        runtimeExecuted = $sessionRuns.Count -gt 0
+        sourceIdentitySha256 = if (-not $AuditOnly) { $currentSourceIdentitySha256 } else { $null }
         developmentScratchRoot = $DevelopmentScratchRoot
         developmentProjectRemoved = $developmentCopyRemoved
         developmentCleanupError = $developmentCleanupError
         shippingAndroidConfigurationChanged = $false
-        activationMethod = "Per-process XR_RUNTIME_JSON"
+        activationMethod = if ($BuildOnly) { "NotActivatedBuildOnly" } else { "Per-process XR_RUNTIME_JSON" }
         activeRuntimeBefore = $runtimeBefore
         activeRuntimeAfter = $runtimeAfter
         activeRuntimePreserved = $runtimePreserved
@@ -603,12 +665,15 @@ finally {
         replayEvidenceCopies = $copiedReplays
         sessionRuns = $sessionRuns
         orchestrationError = $caughtError
-        timingEvidenceScope = "Simulator API/stereo/tracking/composition evidence only; never Quest GPU, thermal, or frame-performance evidence."
+        timingEvidenceScope = if ($BuildOnly) {
+            "Isolated Windows development build only; no runtime, stereo, tracking, visual, or performance acceptance."
+        } else { "Simulator API/stereo/tracking/composition evidence only; never Quest GPU, thermal, or frame-performance evidence." }
     }
     $report | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $runReportPath -Encoding utf8
 }
 
 Write-Host "Meta XR Simulator QA run report: $runReportPath"
+if ($classification -eq "BUILD_ONLY_RUNTIME_NOT_EXECUTED") { exit 0 }
 if ($classification -eq "PASS_ALL_RECORDED_SIMULATOR_SESSIONS" -or
     $classification -eq "READY_TO_REPLAY" -or
     $classification -eq "RECORDING_CREATED_REPLAY_NOT_YET_VERIFIED") { exit 0 }

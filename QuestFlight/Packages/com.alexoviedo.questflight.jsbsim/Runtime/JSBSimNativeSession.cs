@@ -20,6 +20,8 @@ namespace AlexOviedo.QuestFlight.JSBSim
         private IntPtr _instance;
         private NativeControls _controls;
         private NativeAtmosphere _atmosphere;
+        private string _dataRoot;
+        private string _aircraftName;
 
         public bool IsInitialized => _instance != IntPtr.Zero;
         public string LastError { get; private set; } = string.Empty;
@@ -75,6 +77,8 @@ namespace AlexOviedo.QuestFlight.JSBSim
                     string error = ReadLastError(_instance, "Could not load JSBSim aircraft."); Dispose(); return Fail(error);
                 }
                 if (!SetMassConfiguration(DefaultMass)) { Dispose(); return false; }
+                _dataRoot = dataRoot;
+                _aircraftName = aircraftName;
                 LastError = string.Empty;
                 return true;
             }
@@ -102,6 +106,20 @@ namespace AlexOviedo.QuestFlight.JSBSim
 
         public bool Reset(JSBSimNativeInitialConditions initial)
         {
+            // New flight: rebuild the native model within the same authority handle,
+            // then restore the explicitly configured loading. This clears all actuator,
+            // filter and propulsion histories without depending on RunIC to reset them.
+            if (!RequireInitialized()) return false;
+            JSBSimNativeMassConfiguration configuredMass = ConfiguredMass;
+            if (NativeMethods.LoadAircraft(_instance, _dataRoot, _aircraftName) == 0)
+            { string error = ReadLastError(_instance, "Could not reload native aircraft for a new flight."); Dispose(); return Fail(error); }
+            if (!SetMassConfiguration(configuredMass)) { Dispose(); return false; }
+            return Relocate(initial);
+        }
+
+        /// <summary>Recovery relocation preserves the native model, fuel and actuator histories.</summary>
+        public bool Relocate(JSBSimNativeInitialConditions initial)
+        {
             if (!RequireInitialized()) return false;
             ConfiguredInitialConditions = initial;
             SetControls(InitialControls(initial.engineRunning != 0));
@@ -113,7 +131,8 @@ namespace AlexOviedo.QuestFlight.JSBSim
                 pitchDegrees=initial.pitchDegrees, bankDegrees=initial.bankDegrees,
                 flightPathAngleDegrees=initial.flightPathAngleDegrees, engineRunning=initial.engineRunning
             };
-            if (NativeMethods.Reset(_instance, ref native) == 0 ||
+            if (NativeMethods.SetAtmosphere(_instance, ref _atmosphere) == 0 ||
+                NativeMethods.Reset(_instance, ref native) == 0 ||
                 NativeMethods.SetControls(_instance, ref _controls) == 0 ||
                 NativeMethods.SetAtmosphere(_instance, ref _atmosphere) == 0)
                 return Fail(ReadLastError(_instance, "JSBSim reset failed."));

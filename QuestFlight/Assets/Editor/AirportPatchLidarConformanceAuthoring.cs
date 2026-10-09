@@ -108,7 +108,9 @@ namespace QuestFlight.Editor
             if (report.outputTriangleCount <= 0 || report.outputTriangleCount > MaximumOutputTriangles ||
                 TriangleCount(mesh) != report.outputTriangleCount)
                 throw new InvalidOperationException("Conformed terrain triangle contract failed.");
-            if (report.boundaryProbeCount < 4000 ||
+            if (report.boundaryProbeCount < 4000 || !float.IsFinite(report.maximumBoundaryMismatchMeters) ||
+                !float.IsFinite(report.meanBoundaryMismatchMeters) || !float.IsFinite(report.p95BoundaryMismatchMeters) ||
+                report.maximumBoundaryMismatchMeters < 0 || report.meanBoundaryMismatchMeters < 0 || report.p95BoundaryMismatchMeters < 0 ||
                 report.maximumBoundaryMismatchMeters > MaximumBoundaryMismatchMeters)
                 throw new InvalidOperationException(
                     $"Airport/lidar boundary mismatch is {report.maximumBoundaryMismatchMeters:0.000000} m.");
@@ -118,8 +120,20 @@ namespace QuestFlight.Editor
                 throw new InvalidOperationException(
                     $"Airport boundary adjustment exceeds {MaximumOriginalBoundaryAdjustmentMeters:0.00} m " +
                     $"({report.maximumOriginalBoundaryAdjustmentMeters:0.000000} m).");
-            if (!report.sourceLidarMeshUnchanged || !report.authoritativeTerrainQueryUnchanged)
-                throw new InvalidOperationException("Conformance changed source/query authority.");
+            ValidateConformanceReceiptScope(report);
+            if (AssetDatabase.GetAssetPath(mesh) == OutputMeshPath && report.outputMeshAssetSha256 != Sha256(OutputMeshPath))
+                throw new InvalidOperationException("Conformance output hash differs from the actual serialized airport mesh.");
+            if (report.terrainFloat32Repair != null)
+            {
+                var current = QuestFlightLab.Editor.TerrainFloat32IntegrationRepairAuthoring.ValidateCurrentRoadTerrainIdentity(LoadRequiredMesh(SourceLidarPath));
+                if (JsonUtility.ToJson(current.terrainFloat32Repair) != JsonUtility.ToJson(report.terrainFloat32Repair) ||
+                    report.outputMeshAssetSha256 != Sha256(OutputMeshPath) || AssetDatabase.GetAssetPath(mesh) != OutputMeshPath)
+                    throw new InvalidOperationException("Conformance repair does not match the actual source/query/airport receipt identities.");
+                Vector3[] vertices = mesh.vertices;
+                for (int index = 0; index < report.terrainFloat32Repair.changedAirportBoundaryVertices.Length; index++)
+                    if (vertices[report.terrainFloat32Repair.changedAirportBoundaryVertices[index]].y != report.terrainFloat32Repair.correctedAirportBoundaryY[index])
+                        throw new InvalidOperationException("Conformance repair recorded boundary heights differ from the serialized airport mesh.");
+            }
             if (!string.Equals(report.lidarManifestSha256, FrozenLidarManifestSha256,
                     StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(report.runwayInputSha256, FrozenRunwayInputSha256,
@@ -127,6 +141,113 @@ namespace QuestFlight.Editor
                 !string.Equals(report.productTerrainManifestSha256, ProductTerrainManifestSha256,
                     StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Frozen lidar/runway provenance changed.");
+        }
+
+        public static ConformanceReport ParseConformanceReport(string json)
+        {
+            var report = JsonUtility.FromJson<ConformanceReport>(json);
+            if (report == null) throw new InvalidOperationException("Conformance JSON is missing.");
+            int token = QuestFlightLab.Editor.TerrainFloat32IntegrationRepairAuthoring.TopLevelPropertyValueOffset(json, "terrainFloat32Repair");
+            if (token < 0) report.terrainFloat32Repair = null;
+            else if (token >= json.Length || json[token] != '{' || report.terrainFloat32Repair == null)
+                throw new InvalidOperationException("Current conformance repair must be an explicit top-level receipt object.");
+            else QuestFlightLab.Editor.TerrainFloat32IntegrationRepairAuthoring.RequireSerializedRepairReceiptFields(json.Substring(token));
+            return report;
+        }
+
+        public static void ValidateConformanceReceiptScope(ConformanceReport report)
+        {
+            if (report == null) throw new InvalidOperationException("Conformance report is missing.");
+            if (report.terrainFloat32Repair == null)
+            {
+                if (!report.sourceLidarMeshUnchanged || !report.authoritativeTerrainQueryUnchanged || report.sampledSupportAndNativeHeightFootprintPreserved ||
+                    report.outputMeshAssetSha256 != QuestFlightLab.Editor.TerrainFloat32IntegrationRepairAuthoring.BeforeAirportSha256)
+                    throw new InvalidOperationException("Conformance source/query changes lack the explicit current bounded repair receipt.");
+                return;
+            }
+            var repair = report.terrainFloat32Repair;
+            QuestFlightLab.Editor.TerrainFloat32IntegrationRepairAuthoring.ValidateRepairReceiptScope(repair);
+            if (report.sourceLidarMeshUnchanged || report.authoritativeTerrainQueryUnchanged || !report.sampledSupportAndNativeHeightFootprintPreserved ||
+                report.sourceLidarAssetSha256 != repair.afterNearSha256 || report.outputMeshAssetSha256 != repair.afterAirportSha256 ||
+                report.boundaryProbeCount != repair.boundaryProbeCount || report.maximumBoundaryMismatchMeters != repair.maximumBoundaryMismatchMeters ||
+                report.meanBoundaryMismatchMeters != repair.meanBoundaryMismatchMeters || report.p95BoundaryMismatchMeters != repair.p95BoundaryMismatchMeters)
+                throw new InvalidOperationException("Conformance current flags/hashes/metrics contradict the explicit bounded repair receipt.");
+        }
+
+        public sealed class ExistingBoundaryResult
+        {
+            public Mesh mesh;
+            public int[] changedVertexIndices;
+            public int[] affectedNormalIndices;
+            public int[] roadSampledBoundaryVertexIndices;
+            public int probeCount;
+            public float maximumBoundaryMismatchMeters;
+            public float meanBoundaryMismatchMeters, p95BoundaryMismatchMeters;
+            public float maximumHeightAdjustmentMeters;
+        }
+
+        /// <summary>
+        /// Reconcile only the already-authored boundary that now intersects
+        /// accepted road-added near triangles. No subdivision or reconstruction.
+        /// </summary>
+        public static ExistingBoundaryResult ReconcileExistingRoadBoundary(Mesh existing, Mesh lidar)
+        {
+            if (existing == null || lidar == null || existing.subMeshCount != 1 || lidar.subMeshCount != 1)
+                throw new InvalidOperationException("Existing airport/near fixed meshes are required.");
+            RequireBounds(existing.bounds);
+            Vector3[] original = existing.vertices;
+            Vector3[] vertices = (Vector3[])original.Clone();
+            int[] nearTriangles = lidar.triangles;
+            SurfaceSampler sampler = new SurfaceSampler(lidar.vertices, nearTriangles, 32f);
+            var changed = new List<int>();
+            var roadSampled = new List<int>();
+            float maximumAdjustment = 0f;
+            for (int index = 0; index < vertices.Length; index++)
+            {
+                Vector3 vertex = vertices[index];
+                if (!IsBoundaryPoint(vertex, existing.bounds)) continue;
+                float height = sampler.HeightAt(vertex.x, vertex.z, out int face);
+                // The documented accepted local road repair preserves the first
+                // 46,426 immutable source vertices; only its added faces changed.
+                int offset = face * 3;
+                if (nearTriangles[offset] < 46426 && nearTriangles[offset + 1] < 46426 && nearTriangles[offset + 2] < 46426)
+                    continue;
+                roadSampled.Add(index);
+                if (height == vertex.y) continue;
+                maximumAdjustment = Mathf.Max(maximumAdjustment, Mathf.Abs(height - vertex.y));
+                vertex.y = height; vertices[index] = vertex; changed.Add(index);
+            }
+            Mesh output = UnityEngine.Object.Instantiate(existing);
+            output.name = existing.name;
+            Bounds preservedBounds = existing.bounds;
+            Vector3[] preservedNormals = existing.normals;
+            output.vertices = vertices;
+            output.RecalculateNormals();
+            Vector3[] recalculatedNormals = output.normals;
+            var changedSet = new HashSet<int>(changed);
+            var adjacent = new HashSet<int>();
+            int[] triangles = existing.triangles;
+            for (int offset = 0; offset < triangles.Length; offset += 3)
+            {
+                int a = triangles[offset], b = triangles[offset + 1], c = triangles[offset + 2];
+                if (!changedSet.Contains(a) && !changedSet.Contains(b) && !changedSet.Contains(c)) continue;
+                adjacent.Add(a); adjacent.Add(b); adjacent.Add(c);
+            }
+            foreach (int index in adjacent) preservedNormals[index] = recalculatedNormals[index];
+            output.normals = preservedNormals;
+            output.bounds = preservedBounds;
+            try
+            {
+                BoundaryMetrics metrics = MeasureBoundary(new SurfaceSampler(output.vertices, output.triangles, 16f), sampler, preservedBounds);
+                if (metrics.maximum > MaximumBoundaryMismatchMeters)
+                    throw new InvalidOperationException($"Existing boundary reconciliation failed: {metrics.maximum} m.");
+                return new ExistingBoundaryResult { mesh = output, changedVertexIndices = changed.ToArray(),
+                    roadSampledBoundaryVertexIndices = roadSampled.ToArray(),
+                    affectedNormalIndices = adjacent.OrderBy(value => value).ToArray(), probeCount = metrics.count,
+                    maximumBoundaryMismatchMeters = metrics.maximum, maximumHeightAdjustmentMeters = maximumAdjustment,
+                    meanBoundaryMismatchMeters = metrics.mean, p95BoundaryMismatchMeters = metrics.p95 };
+            }
+            catch { UnityEngine.Object.DestroyImmediate(output); throw; }
         }
 
         private static CompileResult Compile(Mesh sourcePatch, Mesh lidar)
@@ -456,6 +577,8 @@ namespace QuestFlight.Editor
             public int runwayProtectedVertexChanges;
             public bool sourceLidarMeshUnchanged;
             public bool authoritativeTerrainQueryUnchanged;
+            public bool sampledSupportAndNativeHeightFootprintPreserved;
+            public QuestFlightLab.Editor.TerrainFloat32IntegrationRepairAuthoring.RepairReceipt terrainFloat32Repair;
             public bool realWorldAccuracyEstablished;
             public string[] limitations;
         }
@@ -507,8 +630,11 @@ namespace QuestFlight.Editor
                 }
             }
 
-            public float HeightAt(float x, float z)
+            public float HeightAt(float x, float z) => HeightAt(x, z, out _);
+
+            public float HeightAt(float x, float z, out int sampledTriangle)
             {
+                sampledTriangle = -1;
                 int key = CellZ(z) * width + CellX(x);
                 if (!bins.TryGetValue(key, out List<int> candidates))
                     throw new InvalidOperationException($"Surface has no bin at ({x:0.000}, {z:0.000}).");
@@ -524,6 +650,7 @@ namespace QuestFlight.Editor
                     float wc = 1f - wa - wb;
                     const float epsilon = 0.00015f;
                     if (wa < -epsilon || wb < -epsilon || wc < -epsilon) continue;
+                    sampledTriangle = triangle;
                     return wa * a.y + wb * b.y + wc * c.y;
                 }
                 throw new InvalidOperationException($"Surface has no triangle at ({x:0.000}, {z:0.000}).");

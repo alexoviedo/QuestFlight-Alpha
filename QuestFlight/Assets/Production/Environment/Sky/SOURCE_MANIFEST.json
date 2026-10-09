@@ -155,5 +155,11 @@
     "derivative_preview": "Kloppenheim03_PureSky_2K_tonemapped_preview.png",
     "unity_authoring_log": "unity_sky_asset_authoring.log"
   },
-  "acceptance_boundary": "Asset provenance, linear-radiance conversion, Unity import, and source-wrap continuity are validated. Product sky, sun alignment, cubemap seams, stereo stability, and performance are not accepted until lead-owned scene integration and Quest/simulator captures."
+  "acceptance_boundary": "Asset provenance, linear-radiance conversion, Unity import, and source-wrap continuity are validated. Product sky, sun alignment, cubemap seams, stereo stability, and performance are not accepted until lead-owned scene integration and Quest/simulator captures.",
+  "product_integration": {
+    "skybox_exposure": 0.74,
+    "skybox_rotation_degrees": -64.123046875,
+    "authoring_path": "QuestFlight/Assets/Editor/AirportCoreV4Authoring.cs",
+    "scope": "Current serialized product sun alignment; unity_import rotation is historical asset-only authoring. Physical Quest visual and performance acceptance remains separate."
+  }
 }

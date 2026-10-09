@@ -1,3 +1,7 @@
+using System;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using QuestFlightLab.Environment;
 using QuestFlightLab.Runtime;
@@ -8,6 +12,116 @@ namespace QuestFlight.Editor.Tests
 {
     public sealed class QuestRenderBudgetAuditEditorTests
     {
+        [TestCase(false)]
+        [TestCase(true)]
+        public void EditorDiagnosticsReconcileWithUnchangedAggregateIncludingProceduralAndSkybox(bool forceMeshOff)
+        {
+            string previousPath = QuestRenderBudgetAudit.EditorDiagnosticPath;
+            string path = Path.Combine(Path.GetTempPath(), "QuestFlight-render-budget-" + Guid.NewGuid().ToString("N") + ".tsv");
+            Material previousSkybox = RenderSettings.skybox;
+            GameObject root = new GameObject("QuestRenderBudgetAudit_DiagnosticFixture");
+            GameObject cameraObject = new GameObject("QuestRenderBudgetAudit_DiagnosticCamera");
+            Camera camera = cameraObject.AddComponent<Camera>();
+            camera.cullingMask = 1 << 30;
+            camera.clearFlags = CameraClearFlags.Skybox;
+            Material first = CreateMaterial();
+            Material second = CreateMaterial();
+            first.name = "Diagnostic\tMaterial\nName";
+            Mesh mesh = CreateTwoTriangleSubmeshMesh();
+            Mesh triangle = CreateOneTriangleMesh();
+            Mesh lines = new Mesh { name = "DiagnosticLines" };
+            lines.vertices = new[] { Vector3.zero, Vector3.right };
+            lines.SetIndices(new[] { 0, 1 }, MeshTopology.Lines, 0);
+            try
+            {
+                RenderSettings.skybox = first;
+                GameObject MakeChild(string name)
+                {
+                    var child = new GameObject(name);
+                    child.layer = 30;
+                    child.transform.SetParent(root.transform, false);
+                    child.transform.localPosition = Vector3.forward * 3f;
+                    return child;
+                }
+                var meshObject = MakeChild("EffectiveSubmeshes");
+                meshObject.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var renderer = meshObject.AddComponent<MeshRenderer>();
+                renderer.sharedMaterials = new[] { first, null, second, first };
+                renderer.forceRenderingOff = forceMeshOff;
+                var lineObject = MakeChild("LineTopology");
+                lineObject.AddComponent<MeshFilter>().sharedMesh = lines;
+                lineObject.AddComponent<MeshRenderer>().sharedMaterial = second;
+                var skinned = MakeChild("Skinned").AddComponent<SkinnedMeshRenderer>();
+                skinned.sharedMesh = triangle;
+                skinned.sharedMaterial = first;
+                var text = MakeChild("LegacyText").AddComponent<TextMesh>();
+                text.text = "AB C\nD";
+                text.GetComponent<MeshRenderer>().sharedMaterial = second;
+                var vegetation = MakeChild("ProceduralVegetation").AddComponent<AerialVegetationBatchRenderer>();
+                vegetation.Configure(first, null, new[]
+                {
+                    new AerialVegetationBatchRenderer.Batch("test", 1, triangle,
+                        new[] { Matrix4x4.identity, Matrix4x4.Translate(Vector3.right) },
+                        new[] { Vector4.one, Vector4.one })
+                }, 2);
+                var closeTrees = MakeChild("ConservativeCloseTrees").AddComponent<AirportCloseTreeLodRenderer>();
+                var serializedTrees = new UnityEditor.SerializedObject(closeTrees);
+                serializedTrees.FindProperty("sharedCanopyMaterial").objectReferenceValue = second;
+                serializedTrees.FindProperty("authoredMaximumDrawCount").intValue = 2;
+                serializedTrees.FindProperty("authoredMaximumSelectedTriangleCount").longValue = 11;
+                serializedTrees.ApplyModifiedPropertiesWithoutUndo();
+
+                QuestRenderBudgetAudit.EditorDiagnosticPath = null;
+                RenderBudgetSnapshot plain = QuestRenderBudgetAudit.Capture(camera);
+                QuestRenderBudgetAudit.EditorDiagnosticPath = path;
+                RenderBudgetSnapshot diagnosed = QuestRenderBudgetAudit.Capture(camera);
+                Assert.That(JsonUtility.ToJson(diagnosed), Is.EqualTo(JsonUtility.ToJson(plain)),
+                    "Diagnostic output must not alter any budget counter or its semantics.");
+                string[] allLines = File.ReadAllLines(path);
+                string[] header = allLines[0].Split('\t');
+                var rows = allLines.Skip(1).Select(line => line.Split('\t')).ToArray();
+                Assert.That(rows.All(row => row.Length == header.Length), Is.True,
+                    "Tabs/newlines in material names must not corrupt the TSV.");
+                int drawsColumn = Array.IndexOf(header, "draw_slots");
+                int trianglesColumn = Array.IndexOf(header, "triangles");
+                int kindColumn = Array.IndexOf(header, "kind");
+                Assert.That(rows.Sum(row => int.Parse(row[drawsColumn], CultureInfo.InvariantCulture)),
+                    Is.EqualTo(plain.estimatedInstancedDrawCalls));
+                Assert.That(rows.Sum(row => long.Parse(row[trianglesColumn], CultureInfo.InvariantCulture)),
+                    Is.EqualTo(plain.estimatedFrustumTriangles));
+                Assert.That(rows.Single(row => row[kindColumn] == "aerial_vegetation")[trianglesColumn], Is.EqualTo("2"));
+                var conservative = rows.Single(row => row[kindColumn] == "close_tree_authored_maximum");
+                Assert.That(conservative[drawsColumn], Is.EqualTo("2"));
+                Assert.That(conservative[trianglesColumn], Is.EqualTo("11"));
+                Assert.That(rows.Single(row => row[kindColumn] == "skybox")[trianglesColumn], Is.EqualTo("0"));
+                Assert.That(rows.Single(row => row[0].EndsWith("/LineTopology"))[trianglesColumn], Is.EqualTo("0"));
+                Assert.That(rows.Single(row => row[kindColumn] == "legacy_text")[trianglesColumn], Is.EqualTo("8"));
+                var slots = rows.Where(row => row[0].EndsWith("/EffectiveSubmeshes")).ToArray();
+                Assert.That(slots.Length, Is.EqualTo(forceMeshOff ? 0 : 3));
+                if (!forceMeshOff)
+                {
+                    Assert.That(slots.Select(row => row[Array.IndexOf(header, "material_slot")]),
+                        Is.EqualTo(new[] { "0", "2", "3" }));
+                    Assert.That(slots.Select(row => row[Array.IndexOf(header, "submesh")]),
+                        Is.EqualTo(new[] { "0", "1", "1" }));
+                    Assert.That(slots.All(row => row[trianglesColumn] == "1"), Is.True);
+                }
+            }
+            finally
+            {
+                QuestRenderBudgetAudit.EditorDiagnosticPath = previousPath;
+                RenderSettings.skybox = previousSkybox;
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(cameraObject);
+                Object.DestroyImmediate(mesh);
+                Object.DestroyImmediate(triangle);
+                Object.DestroyImmediate(lines);
+                Object.DestroyImmediate(first);
+                Object.DestroyImmediate(second);
+                if (File.Exists(path)) File.Delete(path);
+            }
+        }
+
         [Test]
         public void MultiSubmeshRendererCountsEachEffectiveSlotWithoutCountingWholeMeshTwice()
         {

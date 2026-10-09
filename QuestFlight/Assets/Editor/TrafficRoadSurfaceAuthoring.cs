@@ -127,11 +127,17 @@ namespace QuestFlightLab.Editor
             if(string.IsNullOrEmpty(output))throw new InvalidOperationException("QFL_ROAD_REPAIR_DIR required");
             Directory.CreateDirectory(output);
             var payload=JsonUtility.FromJson<MeshPayload>(File.ReadAllText(Path.Combine(output,"terrain_payload.json")));
+            if(payload?.vertices==null||payload.vertices.Length==0||payload.vertices.Length%3!=0)
+                throw new InvalidDataException("Terrain payload must contain complete XYZ vertices.");
             Mesh mesh=AssetDatabase.LoadAssetAtPath<Mesh>(Near);
             var points=new Vector3[payload.vertices.Length/3];
             for(int i=0;i<points.Length;i++)points[i]=new Vector3(payload.vertices[3*i],payload.vertices[3*i+1],payload.vertices[3*i+2]);
+            // Validate final stored coordinates before clearing a working asset.
+            // The upstream compiler explicitly records any zero-footprint
+            // exclusion; an unreported collapsed consumer payload fails closed.
+            var validated=TerrainFloat32HeightfieldPolicy.CorrectIndices(points,payload.triangles,false);
             mesh.Clear();mesh.indexFormat=points.Length>65535?IndexFormat.UInt32:IndexFormat.UInt16;
-            mesh.vertices=points;mesh.triangles=payload.triangles;mesh.RecalculateNormals();mesh.RecalculateBounds();EditorUtility.SetDirty(mesh);
+            mesh.vertices=points;mesh.triangles=validated.indices;mesh.RecalculateNormals();mesh.RecalculateBounds();EditorUtility.SetDirty(mesh);
             SyncRepairedGround(mesh);
             AssetDatabase.SaveAssets();
             var ground=new Ground();

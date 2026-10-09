@@ -141,6 +141,41 @@ def block_end(text, start):
             if depth==0:return i
     raise ValueError('unbalanced block')
 
+def effective_pass_cull(source, program_start):
+    """Resolve selected Pass then SubShader defaults; sibling states do not inherit."""
+    # Keep offsets while masking comments: a quoted example or commented Cull
+    # must not become rendering state. The accepted ShaderLab source is balanced.
+    masked = re.sub(r'/\*.*?\*/|//[^\n]*', lambda m: ' ' * len(m[0]), source, flags=re.S)
+    def enclosing(kind):
+        blocks = []
+        for match in re.finditer(r'\b' + kind + r'\s*\{', masked):
+            start = masked.index('{', match.start())
+            end = block_end(masked, start)
+            if start < program_start < end: blocks.append((start, end))
+        if not blocks: raise ValueError('Selected program has no ' + kind + ' scope')
+        return max(blocks)
+    def direct_state(start, end):
+        text, i = [], start + 1
+        while i < end:
+            if masked[i] == '{': i = block_end(masked, i) + 1
+            else: text.append(masked[i]); i += 1
+        matches = re.findall(r'\bCull\s+(Off|Back|Front|\[[^]]+\])', ''.join(text))
+        return matches[-1] if matches else None
+    pass_start, _ = enclosing('Pass')
+    sub_start, sub_end = enclosing('SubShader')
+    return direct_state(pass_start, program_start) or direct_state(sub_start, sub_end) or 'Back'
+
+def previous_far_billboard_vertex(vertex):
+    """Only the far-tree tag changes previous geometry; color vertex is untouched."""
+    marker = 'output.position = QFObjectToMotionClip(input.vertex, qfWorld);'
+    if marker not in vertex: raise ValueError('Far tree projection changed; inspect generator')
+    return vertex.replace(marker, marker + '''
+                UNITY_BRANCH if (_SemanticMode > .5h && input.uv.x >= 5.5h && input.uv.x < 7.5h && input.color.r < .5h)
+                {
+                    qfWorld = QFPreviousVerticalBillboardWorld(input.vertex);
+                    output.position = mul(_NonJitteredViewProjMatrixStereo[QFEye()], qfWorld);
+                }''', 1)
+
 def ensure_stereo(program):
     signature=re.search(r'(\w+)\s+(\w+)\s*\(\s*(\w+)\s+(\w+)\s*\)\s*\{',program)
     vertex=re.search(r'#pragma vertex (\w+)',program)
@@ -289,6 +324,8 @@ def generate(path):
     oldend=oldstart+len(motion_vertex)
     prev=code[oldstart:oldend].replace('QFColorVertex','QFPreviousVertex')
     prev=prev.replace('_GroveViewPosition','_QFPreviousGroveViewPosition').replace('_AttitudeRotation','_QFPreviousAttitudeRotation')
+    if path.name == 'ProductionSemanticSurface.shader':
+        prev = previous_far_billboard_vertex(prev)
     setup='UNITY_SETUP_INSTANCE_ID(v);' if 'UNITY_VERTEX_INPUT_INSTANCE_ID' in body else ''
     previous_depth_bias=''
     if 'authoredDepthLayer' in prev:
@@ -331,7 +368,7 @@ float4 {frag}({varying} v) : SV_Target
             wrapper=wrapper.replace(f'float4 {frag}({varying} v) : SV_Target',f'float4 {frag}({varying} v, fixed facing : VFACE) : SV_Target').replace('QFColorFragment(v).a','QFColorFragment(v, facing).a')
         else:raise ValueError(f'Special fragment required: {path} {fsig}')
     code+=wrapper
-    culls=re.findall(r'\bCull\s+(Off|Back|Front|\[[^]]+\])',source[:prog.start()]); cull=culls[-1] if culls else 'Back'
+    cull=effective_pass_cull(source, prog.start())
     extra='''\n        Pass
         {
             Name "XRMotionVectors"

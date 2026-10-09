@@ -32911,7 +32911,7 @@ PrefabInstance:
       objectReference: {fileID: 5025774026687160251}
     - target: {fileID: 3038420041324740316, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
       propertyPath: bakedTriangleCount
-      value: 652137
+      value: 652282
       objectReference: {fileID: 0}
     - target: {fileID: 3596905944536534433, guid: 0315be09e712c7d49848ec8e1d3e0d0d, type: 3}
       propertyPath: encounterObserver

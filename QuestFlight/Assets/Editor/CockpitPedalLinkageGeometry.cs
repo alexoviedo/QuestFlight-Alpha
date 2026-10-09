@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -76,9 +77,11 @@ namespace QuestFlight.Editor
             }
             void Block(Vector3 center,Vector3 size)
             {
+                if (!TryBlockFaceUnitNormal(size,0,out _))
+                    throw new ArgumentException("Linkage blocks require finite positive dimensions.");
                 Vector3[] p=new Vector3[8];for(int i=0;i<8;i++)p[i]=center+Vector3.Scale(size*.5f,new Vector3((i&1)==0?-1:1,(i&2)==0?-1:1,(i&4)==0?-1:1));
                 int[] faces={0,4,6,2,1,3,7,5,0,1,5,4,2,6,7,3,0,2,3,1,4,5,7,6};
-                for(int f=0;f<24;f+=4){var a=p[faces[f]];var b=p[faces[f+1]];var c=p[faces[f+2]];var d=p[faces[f+3]];var n=Vector3.Cross(b-a,c-a).normalized;Tri(a,b,c,n,PedalBone.Root);Tri(a,c,d,n,PedalBone.Root);}
+                for(int f=0;f<24;f+=4){var a=p[faces[f]];var b=p[faces[f+1]];var c=p[faces[f+2]];var d=p[faces[f+3]];TryBlockFaceUnitNormal(size,f/4,out Vector3 n);Tri(a,b,c,n,PedalBone.Root);Tri(a,c,d,n,PedalBone.Root);}
             }
             for(int pedal=0;pedal<4;pedal++)
             {
@@ -102,6 +105,17 @@ namespace QuestFlight.Editor
             // Conservative skinned bounds include both rudder and toe travel.
             var bounds=mesh.bounds;bounds.Expand(.016f);mesh.bounds=bounds;
             return mesh;
+        }
+
+        public static bool TryBlockFaceUnitNormal(Vector3 size,int face,out Vector3 normal)
+        {
+            normal=Vector3.zero;
+            if (face<0 || face>=6 || !float.IsFinite(size.x) || !float.IsFinite(size.y) || !float.IsFinite(size.z) ||
+                size.x<=0 || size.y<=0 || size.z<=0) return false;
+            // Axis-aligned block geometry provides exact outward directions;
+            // tiny imported faces must not pass through Vector3.kEpsilon.
+            normal=face switch {0=>Vector3.left,1=>Vector3.right,2=>Vector3.down,3=>Vector3.up,4=>Vector3.back,_=>Vector3.forward};
+            return true;
         }
     }
 }

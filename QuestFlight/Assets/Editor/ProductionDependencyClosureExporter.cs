@@ -18,7 +18,19 @@ namespace T2.QuestFlight.Editor
     public static class ProductionDependencyClosureExporter
     {
         public const string ScenePath = "Assets/Scenes/ProductionVerticalSlice.unity";
-        public const string SourceCommit = "cd4131fa7732a6db2d7387921dfef33e2c206970";
+        public const string ExtractionBaselineCommit = "cd4131fa7732a6db2d7387921dfef33e2c206970";
+        private static readonly Lazy<HashSet<string>> CurrentProductPaths =
+            new Lazy<HashSet<string>>(() =>
+            {
+                string path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "tools", "current_product_dependencies.json"));
+                var registry = JsonUtility.FromJson<CurrentProductRegistry>(File.ReadAllText(path));
+                if (registry == null || registry.schemaVersion != 1 || registry.paths == null ||
+                    registry.paths.Length == 0 || registry.paths.Any(item =>
+                        !item.StartsWith("Assets/", StringComparison.Ordinal) ||
+                        item.Contains("..") || item.Contains("\\")))
+                    throw new InvalidDataException("Current product dependency registry is invalid.");
+                return new HashSet<string>(registry.paths, StringComparer.Ordinal);
+            });
 
         private static readonly string[] ForbiddenFragments =
         {
@@ -30,11 +42,12 @@ namespace T2.QuestFlight.Editor
             "SplatSceneryProvider",
             "Usb2Ble",
             "HOTAS",
-            "/Training/",
             "PlaytestHud",
             "JSBSim",
             "FlightDynamicsRuntimeBootstrap",
             "FlightBackendSelector",
+            "UnityPrototype",
+            "SimpleAircraftPhysics",
             "EditorSidecar"
         };
 
@@ -50,6 +63,11 @@ namespace T2.QuestFlight.Editor
                 ["Assets/Scripts/Environment/ProductionPlacementManifest.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Environment/ProductionTerrainSurfaceAsset.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Environment/GoldenEagleThermalSoaring.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Product/Training/ProductTrainingController.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Product/Training/TrainingCoach.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Product/Training/TrainingEvaluator.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Product/Training/TrainingLessonDefinition.cs"] = "approved_product_authored",
+                ["Assets/Scripts/Product/Training/TrainingProgress.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Product/NarrationPlayback.cs"] = "approved_product_authored",
                 ["Assets/Scripts/Product/ProductUiFeedback.cs"] = "approved_product_authored",
                 ["Assets/Production/UI/Interface/Audio/Focus.wav"] = "approved_product_authored",
@@ -125,7 +143,8 @@ namespace T2.QuestFlight.Editor
             ClosureReport report = new ClosureReport
             {
                 schemaVersion = 1,
-                sourceCommit = SourceCommit,
+                sourceCommit = CurrentSourceCommit(),
+                extractionBaselineCommit = ExtractionBaselineCommit,
                 scenePath = ScenePath,
                 dependencies = dependencies
             };
@@ -146,6 +165,24 @@ namespace T2.QuestFlight.Editor
             return report;
         }
 
+        private static string CurrentSourceCommit()
+        {
+            var start = new System.Diagnostics.ProcessStartInfo("git", "rev-parse HEAD")
+            {
+                WorkingDirectory = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..")),
+                UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+            using (var process = System.Diagnostics.Process.Start(start))
+            {
+                string identity = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+                if (process.ExitCode != 0 || identity.Length != 40)
+                    throw new InvalidOperationException("Cannot establish current dependency source identity.");
+                return identity;
+            }
+        }
+
         private static ExtractionManifest LoadManifest()
         {
             string path = Path.GetFullPath(Path.Combine(
@@ -160,7 +197,7 @@ namespace T2.QuestFlight.Editor
             }
 
             ExtractionManifest manifest = JsonUtility.FromJson<ExtractionManifest>(File.ReadAllText(path));
-            if (manifest == null || manifest.schema_version != 1 || manifest.source_ref != SourceCommit)
+            if (manifest == null || manifest.schema_version != 1 || manifest.source_ref != ExtractionBaselineCommit)
             {
                 throw new InvalidDataException("Product extraction manifest schema or pinned source SHA is invalid.");
             }
@@ -174,9 +211,19 @@ namespace T2.QuestFlight.Editor
                 return "unity_package_dependency";
             }
 
+            if (ForbiddenFragments.Any(fragment =>
+                    assetPath.IndexOf(fragment, StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                return "excluded_legacy_dependency";
+            }
+
             if (ProductCleanedOverrides.TryGetValue(assetPath, out string cleanedClassification))
             {
                 return cleanedClassification;
+            }
+            if (CurrentProductPaths.Value.Contains(assetPath))
+            {
+                return "approved_product_authored";
             }
 
             if (assetPath.StartsWith("Assets/Production/Audio/C172/Clips/", StringComparison.Ordinal))
@@ -184,8 +231,8 @@ namespace T2.QuestFlight.Editor
                 return "approved_product_authored";
             }
 
-            if (ForbiddenFragments.Any(fragment =>
-                    assetPath.IndexOf(fragment, StringComparison.OrdinalIgnoreCase) >= 0))
+
+            if (assetPath.IndexOf("/Training/", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 return "excluded_legacy_dependency";
             }
@@ -287,6 +334,7 @@ namespace T2.QuestFlight.Editor
             {
                 schemaVersion = 1,
                 sourceCommit = report.sourceCommit,
+                extractionBaselineCommit = report.extractionBaselineCommit,
                 readyForCleanProduct = report.ready,
                 approved = report.dependencies.Where(item => IsApproved(item.classification)).ToList(),
                 unityPackages = report.dependencies.Where(item => item.classification == "unity_package_dependency").ToList(),
@@ -303,6 +351,7 @@ namespace T2.QuestFlight.Editor
             {
                 schemaVersion = 1,
                 sourceCommit = report.sourceCommit,
+                extractionBaselineCommit = report.extractionBaselineCommit,
                 rejectedDependencies = comparison.rejected
             };
             File.WriteAllText(
@@ -314,6 +363,7 @@ namespace T2.QuestFlight.Editor
             {
                 schemaVersion = 1,
                 sourceCommit = report.sourceCommit,
+                extractionBaselineCommit = report.extractionBaselineCommit,
                 ready = report.ready,
                 approvedProductionDependencies = comparison.approved,
                 unityPackageDependencies = comparison.unityPackages,
@@ -330,6 +380,13 @@ namespace T2.QuestFlight.Editor
         private static string Csv(string value)
         {
             return "\"" + (value ?? string.Empty).Replace("\"", "\"\"") + "\"";
+        }
+
+        [Serializable]
+        private sealed class CurrentProductRegistry
+        {
+            public int schemaVersion;
+            public string[] paths;
         }
 
         [Serializable]
@@ -371,6 +428,7 @@ namespace T2.QuestFlight.Editor
         {
             public int schemaVersion;
             public string sourceCommit;
+            public string extractionBaselineCommit;
             public string scenePath;
             public bool ready;
             public int approvedCount;
@@ -386,6 +444,7 @@ namespace T2.QuestFlight.Editor
         {
             public int schemaVersion;
             public string sourceCommit;
+            public string extractionBaselineCommit;
             public bool readyForCleanProduct;
             public List<ClosureDependency> approved;
             public List<ClosureDependency> unityPackages;
@@ -399,6 +458,7 @@ namespace T2.QuestFlight.Editor
         {
             public int schemaVersion;
             public string sourceCommit;
+            public string extractionBaselineCommit;
             public List<ClosureDependency> rejectedDependencies;
         }
 
@@ -407,6 +467,7 @@ namespace T2.QuestFlight.Editor
         {
             public int schemaVersion;
             public string sourceCommit;
+            public string extractionBaselineCommit;
             public bool ready;
             public List<ClosureDependency> approvedProductionDependencies;
             public List<ClosureDependency> unityPackageDependencies;

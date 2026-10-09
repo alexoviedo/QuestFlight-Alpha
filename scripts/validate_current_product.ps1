@@ -7,6 +7,7 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'process_arguments.ps1')
 $ArtifactDir=[IO.Path]::GetFullPath($ArtifactDir)
 $ProjectPath=[IO.Path]::GetFullPath($ProjectPath)
 if($ArtifactDir.StartsWith($ProjectPath+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Validation artifacts must be outside the Unity project'}
@@ -18,7 +19,7 @@ function Stage([string]$Name,[scriptblock]$Work) {
 }
 function UnityMethod([string]$Method,[string]$Log) {
   if(Get-Process Unity -ErrorAction SilentlyContinue){throw 'Another Unity process is running'}
-  $process=Start-Process $UnityExe -ArgumentList @('-batchmode','-buildTarget','Android','-projectPath',$ProjectPath,'-executeMethod',$Method,'-logFile',(Join-Path $ArtifactDir $Log)) -PassThru -WindowStyle Hidden
+  $process=Start-Process $UnityExe -ArgumentList (ConvertTo-ProcessArgumentString @('-batchmode','-buildTarget','Android','-projectPath',$ProjectPath,'-executeMethod',$Method,'-logFile',(Join-Path $ArtifactDir $Log))) -PassThru -WindowStyle Hidden
   if(-not $process.WaitForExit(1200000)){Stop-Process -Id $process.Id;throw "$Method timed out"}
   if($process.ExitCode -ne 0){throw "$Method failed: $($process.ExitCode)"}
 }

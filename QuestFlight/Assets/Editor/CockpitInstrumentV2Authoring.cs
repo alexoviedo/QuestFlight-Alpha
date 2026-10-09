@@ -1732,7 +1732,14 @@ namespace QuestFlight.Editor
                 seed, center, faceNormal, right, faceUp, radius);
         }
 
-        private static Texture2D BuildAtlas()
+        internal static void RegenerateGlyphAtlasOnly()
+        {
+            Require(File.Exists(AtlasPath) && File.Exists(AtlasPath + ".meta"),
+                "Existing instrument atlas/importer is required for bounded regeneration.");
+            BuildAtlas(true);
+        }
+
+        private static Texture2D BuildAtlas(bool preserveImporter = false)
         {
             var texture = new Texture2D(
                 AtlasWidth, AtlasHeight, TextureFormat.RGBA32, false, false);
@@ -1760,6 +1767,7 @@ namespace QuestFlight.Editor
                 Application.dataPath, "..", AtlasPath));
             File.WriteAllBytes(absolute, png);
             AssetDatabase.ImportAsset(AtlasPath, ImportAssetOptions.ForceUpdate);
+            if (preserveImporter) return AssetDatabase.LoadAssetAtPath<Texture2D>(AtlasPath);
             var importer =
                 (TextureImporter)AssetImporter.GetAtPath(AtlasPath);
             importer.textureType = TextureImporterType.Default;
@@ -1923,13 +1931,13 @@ namespace QuestFlight.Editor
             int startY = centerY - 7 * scale / 2;
             for (int character = 0; character < text.Length; character++)
             {
-                uint bits =
+                ulong bits =
                     CockpitAvionicsV2PresentationAuthoring.GlyphBits(
                         text[character]);
                 for (int row = 0; row < 7; row++)
                 for (int column = 0; column < 5; column++)
                 {
-                    if ((bits & (1u << (row * 5 + column))) == 0) continue;
+                    if ((bits & (1UL << (row * 5 + column))) == 0) continue;
                     for (int py = 0; py < scale; py++)
                     for (int px = 0; px < scale; px++)
                     {

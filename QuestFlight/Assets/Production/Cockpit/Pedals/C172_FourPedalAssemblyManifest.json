@@ -24,8 +24,35 @@
   "rudder_channel": "RudderPedalsNormalized",
   "left_brake_channel": "LeftToeBrakeNormalized",
   "right_brake_channel": "RightToeBrakeNormalized",
-  "hinge_axis_local": [1.0, 0.0, 0.0],
+  "hinge_axis_local": [
+    1.0,
+    0.0,
+    0.0
+  ],
   "mechanical_response_rate_per_second": 5.5,
   "rudder_maximum_visual_travel_degrees": 12,
-  "toe_brake_maximum_visual_travel_degrees": 10
+  "toe_brake_maximum_visual_travel_degrees": 10,
+  "remediation_M15_20261008": {
+    "finding": "RE-009",
+    "method": "Bounded surgical serialized mesh correction; no broad asset regeneration",
+    "modification": "Only 48 referenced zero normal vectors replaced by unit normals of their nondegenerate linkage triangles. Positions, indices, UVs, tangents, skinning, bindposes, bounds, materials and asset GUID preserved.",
+    "repair_tool": ".questflight_codex_audit/status/M15-repair-serialized-meshes.py",
+    "repair_tool_sha256": "e57a73220a128d11bc884b745dd1b7927dead1c894301fdd783907b1156f6fc7",
+    "original_asset_and_meta_backups": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\remediation_M15_20261008\\originals",
+    "outputs": [
+      {
+        "finding": "RE-009",
+        "path": "QuestFlight\\Assets\\Production\\Cockpit\\Pedals\\C172_FourPedalAssembly.asset",
+        "original_sha256": "aa13dd4a58df306ca67c7cc8355006657a458b2c82a98880fd43ba7c030ecdb9",
+        "candidate_sha256": "6981508f61dfbca7a1784f449c7d8704e3264ce181388cfb36eab732962f3262",
+        "repaired_normals": 48,
+        "triangles": 13024,
+        "only_zero_normal_bytes_changed": true,
+        "skinning_bindposes_uvs_colors_tangents_indices_bounds_unchanged": true,
+        "meta_sha256_preserved": "23f76b93ed191fbdc91ae22bc66f5cb80c1c90de764ff49d3c68a5ba12f96647"
+      }
+    ],
+    "rights": "Existing source/license and distribution restrictions above remain authoritative.",
+    "validation": "Offline buffer/topology preservation evidence only. Unity focused tests, inspected stereo visual QA and final shipping build/device validation remain separate requirements."
+  }
 }

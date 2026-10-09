@@ -259,6 +259,33 @@ namespace QuestFlight.Editor
                 report.failures.Add("Android application identifier is not " + ProductProjectConfigurator.AndroidApplicationIdentifier);
             if (PlayerSettings.Android.targetArchitectures != AndroidArchitecture.ARM64)
                 report.failures.Add("Android target architecture must be ARM64 only");
+            if (PlayerSettings.Android.targetSdkVersion != AndroidSdkVersions.AndroidApiLevel34)
+                report.failures.Add("Android target SDK must be explicitly 34");
+            if (PlayerSettings.Android.minSdkVersion != AndroidSdkVersions.AndroidApiLevel29)
+                report.failures.Add("Android minimum SDK must be 29");
+            UnityEngine.XR.OpenXR.OpenXRSettings openXr = UnityEngine.XR.OpenXR.OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+            var quest = openXr != null ? openXr.GetFeature<UnityEngine.XR.OpenXR.Features.MetaQuestSupport.MetaQuestFeature>() : null;
+            if (quest == null || !quest.enabled) report.failures.Add("Android Meta Quest support must be enabled");
+            else
+            {
+                SerializedProperty devices = new SerializedObject(quest).FindProperty("targetDevices");
+                int enabledCount = 0;
+                bool onlyQuest3 = true;
+                if (devices == null) onlyQuest3 = false;
+                else for (int i = 0; i < devices.arraySize; i++)
+                {
+                    SerializedProperty device = devices.GetArrayElementAtIndex(i);
+                    if (!device.FindPropertyRelative("enabled").boolValue) continue;
+                    enabledCount++;
+                    string name = device.FindPropertyRelative("manifestName").stringValue;
+                    onlyQuest3 &= name == "eureka" || name == "quest3";
+                }
+                if (enabledCount != 1 || !onlyQuest3) report.failures.Add("Android device selection must be Quest 3 only");
+            }
+            UnityEngine.Object devAgent = AssetDatabase.LoadMainAssetAtPath(ProductReleasePolicy.DevAgentAssetPath);
+            if (devAgent == null) report.failures.Add("Disabled development-agent template is missing");
+            else if (!ProductReleasePolicy.IsSanitizedAgent(new SerializedObject(devAgent)))
+                report.failures.Add("Development-agent template must be disabled with an empty credential (value redacted)");
             if (PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android) != ScriptingImplementation.IL2CPP)
                 report.failures.Add("Android scripting backend must be IL2CPP");
             if (PlayerSettings.colorSpace != ColorSpace.Linear)

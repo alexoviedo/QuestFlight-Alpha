@@ -48,6 +48,7 @@ namespace QuestFlight.Product
         private bool _worldPresentationHidden;
         private bool _cockpitPreview;
         private bool _selectionPlaced;
+        public bool WorldPresentationEligible => !_worldPresentationHidden;
 
         public void SetSelectionPresentation(bool cockpitPreview, Transform eye)
         {
@@ -556,6 +557,7 @@ namespace QuestFlight.Product
 
         private void HideWorldPresentation()
         {
+            QuestFlight.Rendering.ProductRenderSubmission.SetWorldPresentationVisible(false);
             if (_worldPresentationHidden || worldPresentationRenderers == null)
                 return;
             if (_worldForceRenderingOffStates == null ||
@@ -590,6 +592,7 @@ namespace QuestFlight.Product
 
         private void RestoreWorldPresentation()
         {
+            QuestFlight.Rendering.ProductRenderSubmission.SetWorldPresentationVisible(true);
             if (!_worldPresentationHidden || worldPresentationRenderers == null ||
                 _worldForceRenderingOffStates == null)
                 return;

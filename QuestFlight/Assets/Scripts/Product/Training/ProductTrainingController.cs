@@ -274,7 +274,7 @@ namespace QuestFlight.Product.Training
             float opacity = preparationTime < .25f ? preparationTime / .25f : 1f;
             if (!resetApplied && preparationTime >= .25f)
             {
-                if (!flight.TryRecoverToInitialConditions(Lesson.start)) { SetFade(0); Block("The native lesson checkpoint could not be restored."); return; }
+                if (!flight.TryStartNewFlight(Lesson.start)) { SetFade(0); Block("The native lesson checkpoint could not be restored."); return; }
                 var command = InitialControls();
                 input.PrepareForFlightLessonRecovery(command);
                 evaluator.BeginAttempt(flight.CurrentState);

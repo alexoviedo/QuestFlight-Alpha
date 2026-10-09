@@ -323,7 +323,8 @@ namespace QuestFlight.Product
                 var groundGeo=FlightFrameConversions.UnityToGeodetic(new Vector3(target.x,under.heightMeters,target.z),GeodeticReference.Kbdu);
                 ic=new FlightDynamicsInitialConditions{latitudeDegrees=geo.latitudeDegrees,longitudeDegrees=geo.longitudeDegrees,
                     altitudeMslMeters=geo.altitudeMslMeters,terrainElevationMslMeters=groundGeo.altitudeMslMeters,
-                    calibratedAirspeedKnots=speed,headingDegrees=Mathf.Repeat(heading,360),pitchDegrees=2,bankDegrees=0,flightPathAngleDegrees=0,engineRunning=state.engineRpm>=300};
+                    calibratedAirspeedKnots=speed,headingDegrees=FlightFrameConversions.UnityHeadingToTrue(Mathf.Repeat(heading,360),
+                        geo.latitudeDegrees,geo.longitudeDegrees,GeodeticReference.Kbdu),pitchDegrees=2,bankDegrees=0,flightPathAngleDegrees=0,engineRunning=state.engineRpm>=300};
                 failure="";return true;
             }
             failure+=$" (coverage={missing}, locality={tooFar}, terrain={blocked})";return false;

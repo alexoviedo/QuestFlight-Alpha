@@ -738,6 +738,27 @@ namespace QuestFlight.Editor
                 values.RemoveRange(write, values.Count - write);
         }
 
+        public static void RegenerateGlyphAtlasesBatch()
+        {
+            try
+            {
+                // Correct only the two font consumers. Preserve their existing
+                // references/import settings and every scene/layout/mesh asset.
+                Require(AssetDatabase.LoadAssetAtPath<Texture2D>(GlyphAtlasPath) != null,
+                    "Existing glyph atlas is required for identity-preserving regeneration.");
+                UpsertAtlas();
+                CockpitInstrumentV2Authoring.RegenerateGlyphAtlasOnly();
+                AssetDatabase.SaveAssets();
+                Debug.Log("[QuestFlight][GlyphRemediation] Regenerated exactly two existing atlases.");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorApplication.Exit(1);
+            }
+        }
+
         private static Texture2D UpsertAtlas()
         {
             int width = AtlasColumns * CellPixels;
@@ -824,7 +845,7 @@ namespace QuestFlight.Editor
             char character,
             Color32 color)
         {
-            uint bits = GlyphBits(character);
+            ulong bits = GlyphBits(character);
             int cellX = glyph % AtlasColumns * CellPixels;
             int atlasRow = glyph / AtlasColumns;
             int cellY = atlasHeight - (atlasRow + 1) * CellPixels;
@@ -835,7 +856,7 @@ namespace QuestFlight.Editor
             for (int column = 0; column < 5; column++)
             {
                 int bit = row * 5 + column;
-                if ((bits & (1u << bit)) == 0) continue;
+                if ((bits & (1UL << bit)) == 0) continue;
                 int x0 = cellX + offsetX + column * scale;
                 int y0 = cellY + offsetY + (6 - row) * scale;
                 for (int y = 0; y < scale; y++)
@@ -846,12 +867,12 @@ namespace QuestFlight.Editor
 
         // Row-major 5x7 glyphs. Unsupported punctuation intentionally renders
         // the same unambiguous question mark instead of silently inventing art.
-        internal static uint GlyphBits(char c)
+        internal static ulong GlyphBits(char c)
         {
             if (c >= 'a' && c <= 'z') c = (char)(c - 32);
             switch (c)
             {
-                case ' ': return 0u;
+                case ' ': return 0UL;
                 case '.': return Rows("00000","00000","00000","00000","00000","00110","00110");
                 case '-': return Rows("00000","00000","00000","11111","00000","00000","00000");
                 case '>': return Rows("10000","01000","00100","00010","00100","01000","10000");
@@ -896,13 +917,13 @@ namespace QuestFlight.Editor
             }
         }
 
-        private static uint Rows(params string[] rows)
+        internal static ulong Rows(params string[] rows)
         {
-            uint bits = 0u;
+            ulong bits = 0UL;
             for (int row = 0; row < rows.Length; row++)
             for (int column = 0; column < rows[row].Length; column++)
                 if (rows[row][column] == '1')
-                    bits |= 1u << (row * 5 + column);
+                    bits |= 1UL << (row * 5 + column);
             return bits;
         }
 

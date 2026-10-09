@@ -36,7 +36,7 @@ Generated files remain beside this README:
 The V2 recipe replaces capped building and legacy vegetation batches with the
 bounded 6 km/250 m-cell building derivative and validated vegetation source. Its
 legacy field shapes remain Unity-compatible. Parked-aircraft records additionally
-carry `placement_v2` stand, axis-correction, terrain/root-height, and contact metadata.
+carry the current reviewed 35-aircraft family, resting roll, active City 2020 silhouette alignment and source identity. The final composition invokes the same pure placement producer as `apply_aircraft_placement_contract.py` before emitting its report. The older three-stand `airport_parking_stand_manifest.json` is historical plane/contact calibration only; it must not replace the 17 powered aircraft and 18 sailplanes.
 
 The normalized OSM building derivative is bounded to a 6 km radial zone and is
 covered by ODbL-1.0 with OpenStreetMap attribution. The raw Overpass response,
@@ -49,3 +49,5 @@ exclusions. Raw decoded pixels remain external; only optimized masks, source
 contracts, and project-authored procedural LOD meshes are kept here. The four
 regional species variants use closed crown volumes for stable top and oblique
 views and share one opaque material family.
+
+Current placement dependency: `tools/kbdu_airport_aircraft/airport_aircraft_placements_v1.json` (schema 2 despite its retained filename), verified active orthophoto and terrain rings. `content_pipeline_report.json` hashes all final composing inputs and outputs; a subsequent standalone patch refreshes that final identity record. Full source regeneration still requires the pinned external normalized `osm_buildings_6km_source.json`; unavailable external input is an explicit skip/blocker, never a PASS. Run `test_current_aircraft_composition.py` independently to test current contracts without that historical external input.

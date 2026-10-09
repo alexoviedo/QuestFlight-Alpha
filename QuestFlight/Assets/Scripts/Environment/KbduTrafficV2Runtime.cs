@@ -114,6 +114,8 @@ namespace QuestFlightLab.Environment
         private sealed class Stream
         {
             public int hash, direction, root;
+            // Directed links exist only in streams continued by the accepted join contract.
+            public int predecessor = -1, successor = -1;
             public double phase, ageOffset, lifetime;
         }
 
@@ -683,11 +685,14 @@ namespace QuestFlightLab.Environment
                 }
                 double offset = 0;
                 Corridor root = corridors[id / 2];
-                foreach (int node in chain)
+                for (int chainIndex = 0; chainIndex < chain.Count; chainIndex++)
                 {
+                    int node = chain[chainIndex];
                     Corridor c = corridors[node / 2];
                     c.streams[node % 2] = new Stream { hash = root.stableHash, direction = id % 2, root = id / 2,
-                        phase = root.phase_seconds + offset, ageOffset = offset, lifetime = lifetime };
+                        phase = root.phase_seconds + offset, ageOffset = offset, lifetime = lifetime,
+                        predecessor = chainIndex > 0 ? chain[chainIndex - 1] : -1,
+                        successor = chainIndex + 1 < chain.Count ? chain[chainIndex + 1] : -1 };
                     offset += c.length_meters / (double)c.speed_mps;
                 }
             }
@@ -939,6 +944,42 @@ namespace QuestFlightLab.Environment
             }
         }
 
+        // A continued vehicle spans its accepted road join before its center crosses it.
+        // Query the actual neighboring lane for axle support; never blend support heights
+        // or invent a connection at a free end, ambiguous junction, or independent cycle.
+        private bool TrySampleVehicleFootprint(Corridor corridor, int direction, int laneIndex,
+            float fraction, float offsetMeters, out Vector3 position, out Vector3 up)
+        {
+            position = default;
+            up = Vector3.up;
+            if (!float.IsFinite(fraction) || !float.IsFinite(offsetMeters) ||
+                !authoredLaneSurfaces.TryGetLaneLength(corridor.authoredIndex,
+                    corridor.direction_mode == "BIDIRECTIONAL", direction, laneIndex, out float length))
+                return false;
+            float travel = (direction == 0 ? fraction : 1f - fraction) * length +
+                (direction == 0 ? offsetMeters : -offsetMeters);
+            // Accepted chains are acyclic. The bound also fails closed on corrupted links.
+            for (int visited = 0; visited <= parsedManifest.corridors.Length * 2; visited++)
+            {
+                Stream stream = corridor.streams[direction];
+                int linked = travel < 0f ? stream.predecessor : travel > length ? stream.successor : -1;
+                if (linked < 0)
+                    return authoredLaneSurfaces.TrySample(corridor.authoredIndex,
+                        corridor.direction_mode == "BIDIRECTIONAL", direction, laneIndex,
+                        direction == 0 ? travel / length : 1f - travel / length,
+                        0f, out position, out up);
+                bool before = travel < 0f;
+                if (!before) travel -= length;
+                corridor = parsedManifest.corridors[linked / 2];
+                direction = linked % 2;
+                if (!authoredLaneSurfaces.TryGetLaneLength(corridor.authoredIndex,
+                    corridor.direction_mode == "BIDIRECTIONAL", direction, laneIndex, out length))
+                    return false;
+                if (before) travel += length;
+            }
+            return false;
+        }
+
         private bool TryEvaluateDistance(
             Corridor corridor,
             int direction,
@@ -974,9 +1015,9 @@ namespace QuestFlightLab.Environment
                 float sign = direction == 0 ? 1f : -1f;
                 if (!authoredLaneSurfaces.TrySample(corridor.authoredIndex, twoWay, direction, laneIndex,
                         fraction, 0, out Vector3 center, out Vector3 up) ||
-                    !authoredLaneSurfaces.TrySample(corridor.authoredIndex, twoWay, direction, laneIndex,
+                    !TrySampleVehicleFootprint(corridor, direction, laneIndex,
                         fraction, geometry.x * sign, out Vector3 front, out _) ||
-                    !authoredLaneSurfaces.TrySample(corridor.authoredIndex, twoWay, direction, laneIndex,
+                    !TrySampleVehicleFootprint(corridor, direction, laneIndex,
                         fraction, geometry.y * sign, out Vector3 rear, out _))
                 {
                     position = default; rotation = Quaternion.identity; return false;

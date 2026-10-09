@@ -1499,6 +1499,11 @@ v2f QFPreviousVertex(appdata input, out float4 qfWorld)
                 UNITY_INITIALIZE_OUTPUT(v2f, output);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
                 output.position = QFObjectToMotionClip(input.vertex, qfWorld);
+                UNITY_BRANCH if (_SemanticMode > .5h && input.uv.x >= 5.5h && input.uv.x < 7.5h && input.color.r < .5h)
+                {
+                    qfWorld = QFPreviousVerticalBillboardWorld(input.vertex);
+                    output.position = mul(_NonJitteredViewProjMatrixStereo[QFEye()], qfWorld);
+                }
                 output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
                 output.worldNormal = UnityObjectToWorldNormal(input.normal);
                 output.semanticData = input.color;

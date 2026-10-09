@@ -15,6 +15,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
     public sealed class OvrConcurrentInputTrace : MonoBehaviour
     {
         [SerializeField] private OVRManager manager;
+        [SerializeField] private bool traceRecordingEnabled;
 
         private static OvrConcurrentInputTrace _instance;
         private string _path;
@@ -25,6 +26,11 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
         private long acceptedTraceBytes;
         private float nextTraceFlush;
         private bool traceWriteFailed;
+        private bool traceSaturated;
+        public long FormattedRecordCount { get; private set; }
+        public bool DiagnosticsRecordingEnabled => traceRecordingEnabled && Debug.isDebugBuild;
+        private bool CanRecord => DiagnosticsRecordingEnabled && !traceWriteFailed && !traceSaturated &&
+                                  acceptedTraceBytes < MaximumTraceBytes && !string.IsNullOrEmpty(_path);
 
         public bool SimultaneousEnableResult => _simultaneousEnableResult;
 
@@ -36,25 +42,43 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
         private void Awake()
         {
             _instance = this;
-            _sessionId = Guid.NewGuid().ToString("N");
-            string fileName =
-                "questflight_ovr_concurrent_trace_" +
-                DateTime.UtcNow.ToString("yyyyMMdd_HHmmss") + "_" +
-                _sessionId + ".jsonl";
-            _path = Path.Combine(
-                Application.persistentDataPath,
-                fileName);
-            File.WriteAllText(
-                Path.Combine(
-                    Application.persistentDataPath,
-                    "questflight_ovr_concurrent_trace_latest.txt"),
-                fileName);
+            if (DiagnosticsRecordingEnabled) InitializeTraceStorage();
             if (manager == null)
             {
-                Debug.LogError(
-                    "[QuestFlight][OVRInput] Serialized OVRManager is missing.",
-                    this);
+                Debug.LogError("[QuestFlight][OVRInput] Serialized OVRManager is missing.", this);
                 enabled = false;
+            }
+        }
+
+        // Recording never owns component enablement or the simultaneous-input
+        // lifecycle. Release players keep recording off; support capture is an
+        // explicit development opt-in on the existing authored component.
+        public void ConfigureDiagnosticsRecording(bool requested)
+        {
+            if (!requested) FlushTrace();
+            traceRecordingEnabled = requested && Debug.isDebugBuild;
+            if (DiagnosticsRecordingEnabled && string.IsNullOrEmpty(_path) && !traceWriteFailed)
+                InitializeTraceStorage();
+        }
+
+        private void InitializeTraceStorage(string storageRoot = null)
+        {
+            try
+            {
+                string directory = storageRoot ?? Application.persistentDataPath;
+                _sessionId = Guid.NewGuid().ToString("N");
+                string fileName =
+                    "questflight_ovr_concurrent_trace_" +
+                    DateTime.UtcNow.ToString("yyyyMMdd_HHmmss") + "_" +
+                    _sessionId + ".jsonl";
+                _path = Path.Combine(directory, fileName);
+                File.WriteAllText(Path.Combine(directory,
+                    "questflight_ovr_concurrent_trace_latest.txt"), fileName);
+            }
+            catch (Exception exception)
+            {
+                traceWriteFailed = true;
+                Debug.LogWarning("[QuestFlight][OVRInput] trace initialization failed: " + exception.Message, this);
             }
         }
 
@@ -70,6 +94,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
 
         private void Start()
         {
+            if (!CanRecord) return;
             WriteLine(
                 "{\"type\":\"startup\",\"session\":\"" +
                 _sessionId + "\",\"buildGuid\":\"" +
@@ -116,11 +141,12 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             bool accepted,
             string adapterName)
         {
-            if (_instance == null) return;
+            if (_instance == null || !_instance.CanRecord) return;
             if (accepted &&
                 command.operation ==
                     CockpitTouchInteractionV2Operation.UpdateGrab)
                 return;
+            _instance.FormattedRecordCount++;
             var builder = new StringBuilder(256);
             builder.Append("{\"type\":\"interaction\",\"frame\":")
                 .Append(command.frameNumber)
@@ -143,7 +169,8 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             string pointableName,
             int grabPointCount)
         {
-            if (_instance == null) return;
+            if (_instance == null || !_instance.CanRecord) return;
+            _instance.FormattedRecordCount++;
             var builder = new StringBuilder(320);
             builder.Append("{\"type\":\"pointer\",\"frame\":")
                 .Append(Time.frameCount)
@@ -169,7 +196,8 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             float secondary,
             string reason = "")
         {
-            if (_instance == null) return;
+            if (_instance == null || !_instance.CanRecord) return;
+            _instance.FormattedRecordCount++;
             var builder = new StringBuilder(320);
             builder.Append("{\"type\":\"transformer\",\"frame\":")
                 .Append(Time.frameCount)
@@ -194,7 +222,7 @@ namespace QuestFlightLab.Aircraft.CockpitDynamics
             // memory; interaction callbacks must not open/stat the disk per event.
             if (traceWriteFailed || string.IsNullOrEmpty(_path)) return;
             int bytes = Encoding.UTF8.GetByteCount(line) + Encoding.UTF8.GetByteCount(System.Environment.NewLine);
-            if (acceptedTraceBytes + bytes > MaximumTraceBytes) return;
+            if (acceptedTraceBytes + bytes > MaximumTraceBytes) { traceSaturated = true; return; }
             acceptedTraceBytes += bytes;
             pendingTrace.AppendLine(line);
             if (pendingTrace.Length >= 16384) FlushTrace();

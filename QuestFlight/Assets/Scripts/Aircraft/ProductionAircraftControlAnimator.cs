@@ -120,13 +120,17 @@ namespace QuestFlightLab.Aircraft
             if (coordinator != null)
             {
                 ActiveControlSource = "authoritative backend boundary";
-                return coordinator.LastAppliedControls;
+                FlightDynamicsControlSnapshot controls = coordinator.LastAppliedControls;
+                controls.flaps = NativeFlapNormalized(coordinator.CurrentState);
+                return controls;
             }
 
             if (mapperFallback != null)
             {
                 ActiveControlSource = "input mapper fallback";
-                return FlightDynamicsControlSnapshot.From(mapperFallback.Current);
+                FlightDynamicsControlSnapshot controls = FlightDynamicsControlSnapshot.From(mapperFallback.Current);
+                controls.flaps = 0f; // Actuator telemetry is unavailable at this boundary.
+                return controls;
             }
 
             ActiveControlSource = "neutral";
@@ -154,6 +158,16 @@ namespace QuestFlightLab.Aircraft
                 binding.target.localRotation = binding.restLocalRotation * Quaternion.AngleAxis(angle, axis);
                 binding.target.localPosition = binding.restLocalPosition + binding.localTranslationAxis.normalized * distance;
             }
+        }
+
+        public static float NativeFlapNormalized(in FlightDynamicsState state) =>
+            state.HasNativeTelemetry && state.IsFinite ? (float)state.actualFlapNormalized : 0f;
+
+        public void ApplyAuthorityStateForValidation(in FlightDynamicsState state, FlightDynamicsControlSnapshot controls)
+        {
+            controls.flaps = NativeFlapNormalized(state);
+            LastAnimatedControls = controls;
+            Apply(controls);
         }
 
         private static float ChannelValue(ControlChannel channel, FlightDynamicsControlSnapshot controls)
