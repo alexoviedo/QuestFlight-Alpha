@@ -1,63 +1,59 @@
-# QuestFlight remediation engineering checkpoint — 2026-10-09
+# QuestFlight approved engineering closeout â€” 2026-10-10
 
-The corrected private Quest3 APK was built, inspected and installed in place. This checkpoint preserves the engineering work on local `main`; it does not certify release quality. The owner reported a very short free-flight test looked good. Installed APK readback confirmed the exact current artifact and unchanged sandbox inode; the observation supplies no sustained timing, stereo, comfort or formal scenario evidence.
+The approved session performed one supervised build attempt and preserved the previous verified APK/source evidence. The newer two rig references and paired SDK URP material are now included in the verified APK. All14 reviewed affected paths match original, candidate and immutable source archive. This resolves the build/source delivery gap; standard and stereo visual acceptance remain missing. Complete quality acceptance is not claimed. No push, public release, aircraft-parameter change or new product feature occurred.
 
-**Accounting:** 92 findings, 18 work items, 25 independently assessed gates. 37 findings verified, 26 implemented awaiting acceptance, 2 externally blocked, 26 individually justified nonshipping deferrals, 1 proven inapplicable. Strict tracking exits1 for the open findings; normal schema/count tracking passes.
+## Deliverable and source identity
 
-Full changed-file lists, test references, actual disposition reasons, remaining uncertainty and owners for every original ID are in [the status snapshot](REMEDIATION_STATUS_2026-10-09.json). The complete local evidence ledger remains `.questflight_codex_audit/status/remediation-ledger.json`; the audit input, raw logs, captures, builds and recovery archives stay outside Git.
+APK: `C:\QFRC20261008\QuestFlight\Builds\Android\QuestFlight-production.apk` (1816081341 bytes).
 
-## Implemented work and actual validation
+SHA256: `1704f38a7043c1512df7d0a1c2e76cfe934582b897658836ef28e5b08b6d329e`.
 
-- Trusted APK flight-data identity, validated staging/atomic cache publication and coherent fail-closed native readiness; fresh-flight/reset versus recovery relocation; wind and coordinate contracts; native-driven cockpit state.
-- Guided physical control takeover, interrupted seat-save recovery, input/lifecycle ownership, caption timing; bounded rendering/history/geometry fixes; isolated authoring, geospatial and dependency/provenance validation; truthful QA and process/artifact identity.
-- Unity6000.3.8f1 current retained integration:785 Editor tests,28 PlayMode tests and9 GPU fixture checks passed. Full aerial suite83 checks and default validator passed. These cover their actual scopes and are not headset performance/stereo evidence.
-- Latest focused native/Unity acceptance:7 Editor tests and1 PlayMode test passed, zero skips. Three scenario permutations and three actual authored menu/new-flight cycles matched fresh native state and first120steps. Actual Demonstration/Assisting controls at72/90/120 fixture rates passed accumulated takeover,1.25s hold, smooth guidance reacquisition, free-flight and reconnect. The first new menu fixture counted disabled auxiliary cameras and failed; the corrected enabled/active predicate matches the existing authored contract. Original failure evidence is retained.
-- A real child-process regression found13 absent environment names restored as present empty by the simulator wrapper. Explicit null removal corrected the defect;9 process/restoration controls passed. The unhandled-crash control rejected a timeout124; it did not prove a fast crash exit. Stub sentinels are not stereo images.
-- Current nondevelopment Android build passed, then12 exact packaging checks,20 development-agent parser negative controls and native merge/strip replay passed. Same-private-certificate install-r preserved sandbox inode13256112. Isolated Windows development BuildOnly also succeeded with the same recorded build-source identity; runtime/stereo was not executed.
+Installed status: New verified APK NOT installed: connected device reported stopped=false. Read-only installed APK SHA remains bd87a0dfcf447cbdd7e86ee619ae9cdfd7ccf81484e41112fe5409c3e8d7b8d2; app/data untouched.
 
-APK: `C:/QFRC20261008/QuestFlight/Builds/Android/QuestFlight-production.apk`, SHA256 `bd87a0dfcf447cbdd7e86ee619ae9cdfd7ccf81484e41112fe5409c3e8d7b8d2`, 1816082873bytes. Certificate `0231ace82e88f2b9b62b8bc46b3af5c726e5b97aa645e182cea14f64d77e370b`. Source archive identity `08610ca2e0761b4d8682687356baaade2120cd70c1a72ab50eb5bcc6c58bab0b`; build/inspection receipt `.questflight_codex_audit/status/M18-NV10-successful-artifact-results.json`. Android ARM64/Vulkan/OpenXR, Quest3-only, API2,16KiB native alignment, native JSBSim required; development agent disabled and tokens absent.
+Immutable build evidence: `C:\QFRC20261008-product-extraction-artifacts\M18-newer-material-20261010T191249Z`.
 
-**Source boundary:** the APK is bound to its immutable pre-commit source archive. Subsequent simulator-tooling, tests and documentation changes do not change its runtime inputs. Five corrected mesh derivatives below remain local because source rights are unresolved; the Git checkpoint therefore cannot be presented as the complete clean source tree of this APK. Tests and provenance for those local repairs intentionally retain their true expectations. Preserve the local overlay/recovery archives for exact reproduction; a clean checkout without it has not passed the current complete asset tests. The pre-existing local DevAgent server-address edit is also preserved outside the commit; only token sanitization enters the index.
+`source_identity.json` SHA256: `b0a890cfd6593fe86d0adfbdd384fcd1ec2b0fc068679aa9fe4b3539db20a61d`.
 
-## Remaining demonstrated failures and blockers
+`source_changes.zip` SHA256: `de9e00198674d009e312e77d40dcfab3f1db2231045365f4a33401f9ba5dfd02`.
 
-- **Engineering:** standard QA130shots=105passing/25failing; unchanged ceilings77draws/692871triangles/38materials, maxima86/967513/37. Submission diagnostics did not justify a narrow arbitrary geometry deletion. Historical physical timing failed; current APK sustained timing remains unproven. Current native yaw fixture remains0.7886204147 versus0.55 ceiling; producer2Pass/1Fail/9Unproven. Do not tune thresholds or aircraft coefficients to obtain PASS.
-- **Engineering acceptance:** actual Android startup/cache storage-full/interruption/force-stop, reset/relocation/scenario and lifecycle evidence remains incomplete. Editor QA exit controls and invalid-environment-before-save process controls still need actual isolated Unity execution. QF-ED-003 seven controls are prepared but uncompiled/unexecuted; no PASS claimed.
-- **Tools/inputs:** a supported state-safe Meta simulator runtime/stereo route and `cockpit_neutral.vrs` recording are missing. Original LAZ plus pinned laspy/lazrs and exact frozen normalized OSM inputs are needed for full reconstruction. Build tools themselves are available and the current Android/Windows builds succeeded.
-- **External reference/account:** approved lift/stall/break/recovery reference data, exact source permissions/terms and historical credential authenticity/revocation evidence require the named source/service owners. Private scope excludes public-store publication cases; it does not clear asset rights. Formal entitled-store users are outside private scope; actual private OS-user isolation was not thereby tested.
-- **Physical owner:** worn controls/readability/audio/comfort, valid tracked startup and stereo observation, supported controller samples and sustained72/36 cadence/memory/thermal routes remain unverified. Brief free flight cannot substitute for them.
+Verified scope: nondevelopment Android ARM64/IL2CPP, Vulkan/OpenXR, Quest3-only; native JSBSim/API2, dependency/alignment/flight-data identity, private certificate and packaged disabled development agent with empty credentials. All12 packaging checks are source/artifact-bound. No launch or physical test is inferred from packaging. Existing private certificate: `0231ace82e88f2b9b62b8bc46b3af5c726e5b97aa645e182cea14f64d77e370b`.
 
-## One prepared owner session and exact continuation
+Original main parent: `eada000b8867dded65b6bad759abd361598f74df`. Candidate detached base: `65d35377e16da50b3a7d8d4fb6200a1860272ba3` plus retained overlay. The APK is identified by the immutable archive, not a clean Git HEAD. The approved local follow-up commit contains the reviewed Editor conversion and focused tests plus these two handoff documents; its exact final main SHA is in [the commit receipt](../.questflight_codex_audit/status/APPROVED_CLOSEOUT_commit_20261010.json). Main is the only local branch, so no branch merge/deletion is needed. No push.
 
-Use `.questflight_codex_audit/status/OWNER_HEADSET_SESSION.md` for the single18-case session, three first-use testers, separate worn scenery passes and two separate45-minute sustained routes. The full `HEADSET_CHECKS_FOR_LATER.md` and native matrix retain every criterion/repetition. Preserve settings/data; no uninstall, clear-data, Guardian bypass or public signing.
+The three runtime visual files remain uncommitted until required standard/stereo acceptance. Five unclear-rights mesh corrections and owner settings remain local; all were preserved. Existing mesh corrections already belonged to bd87 and were not newly invented in this session. Recovery: `C:\QFBackup20261008\M18-bd87-before-newer-material-20261010T191249Z`; old immutable evidence remains untouched.
 
-After normal lighting, reacquired tracking, Guardian acknowledgment and genuinely tracked Home are confirmed, the engineer may run:
+## Completed changes and verification
 
-```powershell
-python -B .questflight_codex_audit/status/run_bd87_native72_capture.py --execute --normal-lighting-tracked-home-confirmed
-python -B .questflight_codex_audit/tools/check_tracking.py
-python -B .questflight_codex_audit/tools/check_tracking.py --strict
-```
+- Native trusted-payload cache/atomic activation, fail-closed authority, reset/relocation/frame contracts, actual native cockpit telemetry, controls/lifecycle/persistence and authoring/provenance corrections retain their individual92-ID evidence.
+- Reviewed recent native flap reset test: actual Unity Windows-native1PASS/0skip. Cached-read startup/block/retry integration:2PASS/0skip. SDK local material conversion/idempotence/source preservation:1PASS/0skip, post-import and normal restored-product render probe exit0. Current hashes still match these retained results.
+- Existing785 Editor/28 PlayMode/9 GPU/83 aerial evidence was reused within its pinned scope. No full suite rerun. Current build exit: `0`; new verified artifact: `True`. Actual producer closure, reserve monitoring, packaging and installation outcomes are in [the closeout receipt](../.questflight_codex_audit/status/APPROVED_CLOSEOUT_result_20261010.json).
+- The local commit excludes runtime visual assets, five held mesh assets, owner settings, generated builds/caches and the local audit package. No asset destruction or automatic-review bypass occurred.
 
-The helper prints the exact owned-root `--restore` command before mutations and must restore all seven state actions. It supplies short diagnostics only, not sustained/worn acceptance. User free-flight success does not establish current room/sensor state for unattended execution.
+## Remaining demonstrated failures
 
-QA engineer: inspect `.questflight_codex_audit/status/M18-ED003-process-controls-prepared.json`; first create only its owned fresh clone, exact namespace and guarded inputs. `python -B .questflight_codex_audit/status/run_ed003_process_control.py --case probe_positive` is a validation/print command; append `--execute` only after setup and review. It is not yet directly executable without the clone. Four retained authoring-wrapper controls remain unprepared. No live Unity/Gradle/device test job is being left running.
+Standard Visual QA remains105PASS/25FAIL of130, with ceilings77draw/692871triangles/38materials and maxima86/967513/37. Two current objective shots remain892492/892498triangles. Rendering budgets require an evidence-supported correction; they are not merely owner-test deferrals.
 
-## Cleanup and preserved local work
+Native yaw scenario remains0.7886204147 against0.55; producer2Pass/1Fail/9Unproven. No approved lift/stall/break/recovery reference is available. Do not tune the model or acceptance thresholds to obtain PASS. Historical physical timing failed; the current APK has no sustained performance acceptance. The owner's short free flight is informal evidence only.
 
-Completed guarded cleanup removed110 generated external cache groups while preserving141 deployment/firmware hashes, retired a completed diagnostic APK after recovery checks, and removed original regenerable Bee output. After builds closed, Gradle8.13 transforms cleanup removed20,899 generated descendants /7,024,204,647logical bytes; pinned modules-2 inputs remain. Approximately41.5GiB now free. No source, authored assets, GUIDs, accepted/historical evidence, personal files or installed applications were removed.
+## Consolidated remaining acceptance
 
-Only `main` exists locally; there are no stale local branches to delete. The detached candidate worktree retains the current inspected APK and useful build cache. Removing it would also erase a duplicate APK whose deletion was automatically rejected, so it is retained. The separate guarded owner command is in `.questflight_codex_audit/status/DISK_CLEANUP_FOR_OWNER.md`; no owner cleanup is currently required. Do not retry the rejected deletion through another tool or a parent.
+| Group | Exact missing check / shortest next action | Owner |
+|---|---|---|
+| Current APK update | After the owner ends the flight, establish stopped state and run `pwsh -NoProfile -File .questflight_codex_audit/status/install_approved_closeout_20261010.ps1`; same private certificate, install-r, inode and exact installed-hash readback. The script refuses an unstopped app. | Owner ends flight; Codex/build engineer |
+| Android native/startup | Current exact APK missing-library/invalid-data/storage-full/interrupted activation/read-permission/retry; dirty/fresh reset, relocation and same-frame terrain contact comparisons. Preserve prefs and fail closed. | Codex/native QA |
+| Controls/lifecycle | Android interrupted seat save, force-stop/relaunch, focus/pause/reconnect and supported-control ownership. Worn ergonomics remains separate. | Codex/QA + owner |
+| Editor/tooling | `python -B .questflight_codex_audit/status/run_ed003_post_material_restored_process_control.py --case probe_inspect_only --execute`; complete actual authorer workflow/full-resolution traffic review. Do not repeat unchanged failing objective shots. | Codex/QA + traffic reviewer |
+| Standard/stereo | Use retained contribution tables to choose the smallest budget fix; then affected standard shots and inspected both-eye views. State-safe simulator route and `cockpit_neutral.vrs` remain missing. | Rendering QA + runtime/recording custodian |
+| Source/model/account | Exact LAZ, pinned laspy/lazrs, frozen normalized OSM; approved lift/stall/break/recovery envelope; exact asset terms and historical credential revocation/status. Private use does not establish rights or revocation. | Source/flight-model/service owners |
+| Physical | Prepared18-case worn controls/readability/audio/comfort session, three first-use testers; separate45-minute Native72 and eligible36/72 memory/cadence/thermal routes. Confirm normal lighting/tracked Home/Guardian; never bypass safety. | Owner + QA operator |
 
-Local mesh corrections excluded from the Git checkpoint:
+The [owner session](../.questflight_codex_audit/status/OWNER_HEADSET_SESSION.md) retains exact cases and identifies the prepared current-artifact helper. Its default local-input check passed with no device calls. Install the new APK before executing it; the old bd87 helper is historical. No sustained route or new capture was run here.
 
-- `QuestFlight/Assets/Production/Environment/AmbientAircraftV1/Models/SuperCub_LOD0_Body.asset`
-- `QuestFlight/Assets/Production/Environment/AmbientAircraftV1/Models/SuperCub_LOD1_Body.asset`
-- `QuestFlight/Assets/Production/Environment/AmbientAircraftV1/Models/SuperCub_LOD2_Body.asset`
-- `QuestFlight/Assets/Production/Environment/ReservoirWatercraftV1/Generated/ReservoirWatercraft_dry_storage_LOD0.asset`
-- `QuestFlight/Assets/Production/Environment/ReservoirWatercraftV1/Generated/ReservoirWatercraft_open_water_LOD0.asset`
+## Accounting and preservation
 
-This follows the current `AGENTS.md`: “Keep restricted or unclear-rights aircraft assets local and uncommitted.” Their bytes and paired GUIDs are preserved, with surgical repair/source records and external recovery archives. Source owner clearance is required before including the complete current derivative set in Git.
+92 original findings /18 work items /25 independent gates:39fixed_and_verified,24implemented_pending_validation,2blocked_external,26deferred_nonshipping_with_justification,1not_applicable_proven. Gates2pass(R02/R07),2fail(R13/R14),18unverified,3not applicable(R20/R24/R25). No dispositions were changed to improve counts. Normal tracking output: [approved tracking result](../.questflight_codex_audit/status/APPROVED_CLOSEOUT_TRACKING_20261010.txt).
+
+[Status export](REMEDIATION_STATUS_2026-10-09.json) is bound to [the ledger](../.questflight_codex_audit/status/remediation-ledger.json), preserving all92 evidence/acceptance mappings and25 assessments. [CONTINUE_NEXT.md](../.questflight_codex_audit/status/CONTINUE_NEXT.md) records one consistent closed state. Cleanup: No file deletion needed or performed. Main is the only local branch; retain candidate/diagnostic caches, all source/acceptance/recovery artifacts and held assets. Earlier rejected duplicate-APK deletion not retried.. Current free space: 23.45GiB. No cleanup is needed to retain the artifact; prior rejected deletion was not retried. Do not execute old hash-guarded cleanup commands against changed outputs.
 
 ## All original finding dispositions
 
@@ -71,14 +67,14 @@ This follows the current `AGENTS.md`: “Keep restricted or unclear-rights aircraf
 | FN-029 | M14 | not_applicable_proven |
 | QF-VAL-001 | M18 | implemented_pending_validation |
 | QF-VAL-002 | M18 | implemented_pending_validation |
-| FN-003 | M05 | implemented_pending_validation |
+| FN-003 | M05 | fixed_and_verified |
 | FN-004 | M05 | fixed_and_verified |
 | FN-005 | M02 | implemented_pending_validation |
 | FN-006 | M03 | fixed_and_verified |
 | FN-009 | M05 | fixed_and_verified |
 | FN-013 | M06 | fixed_and_verified |
 | FN-014 | M11 | implemented_pending_validation |
-| FN-015 | M06 | implemented_pending_validation |
+| FN-015 | M06 | fixed_and_verified |
 | FN-018 | M07 | fixed_and_verified |
 | FN-019 | M08 | fixed_and_verified |
 | FN-020 | M12 | fixed_and_verified |
@@ -158,32 +154,30 @@ This follows the current `AGENTS.md`: “Keep restricted or unclear-rights aircraf
 
 ## Independent release gates
 
-| Gate | Current assessment |
-|---|---|
-| R01 | unverified |
-| R02 | pass |
-| R03 | unverified |
-| R04 | unverified |
-| R05 | unverified |
-| R06 | unverified |
-| R07 | pass |
-| R08 | unverified |
-| R09 | unverified |
-| R10 | unverified |
-| R11 | unverified |
-| R12 | unverified |
-| R13 | fail |
-| R14 | fail |
-| R15 | unverified |
-| R16 | unverified |
-| R17 | unverified |
-| R18 | unverified |
-| R19 | unverified |
-| R20 | not applicable |
-| R21 | unverified |
-| R22 | unverified |
-| R23 | unverified |
-| R24 | not applicable |
-| R25 | not applicable |
-
-No full quality/release acceptance is claimed. Open P1 findings are FN-007, QF-VAL-001 and QF-VAL-002. Full source/evidence acceptance remains an explicit continuation, with current paths and owners in the JSON snapshot and local CONTINUE_NEXT.md.
+| Gate | Assessment | Missing check / scope |
+|---|---|---|
+| R01 | unverified | Finish targeted imported/binary/source/license inspection accounting for required inputs; do not repeat the original audit. |
+| R02 | pass | No further wrapper/source-identity blocker for this exact artifact. Identical-byte repeat-build reproducibility, public signing and hardware acceptance are not claimed. |
+| R03 | unverified | Bind current verified APK runtime authority/provider/graphics/IL2CPP diagnostics to exact installed bytes; native CLI and packaging proof remain their own scopes. |
+| R04 | unverified | Complete current-artifact cold/warm/fault/recovery cases, including unexecuted storage and interrupted-activation faults; no fallback. |
+| R05 | unverified | Execute source-bound current Android product dirty/fresh/wind/relocation comparisons and retain unchanged-state evidence. |
+| R06 | unverified | Complete current target coordinate/contact scenarios and inspected stereo landing/terrain views. |
+| R07 | pass | Runtime cardinality, SDK transitions and tracked-pose/seat comfort remain under R03/R09/R10; this static PASS does not accept the player or headset. |
+| R08 | unverified | Complete current target native-value scenarios and worn cockpit control/display inspection; retain unresolved reference limits. |
+| R09 | unverified | Physical QF-HW-05/08/09/10 across supported modalities and ownership transitions. |
+| R10 | unverified | Physical QF-HW-07/12/13, save interruption/restart/update and seat recalibration under a controlled test profile. |
+| R11 | unverified | Complete applicable isolated clean-authoring regeneration and exact current Android aerial/building streaming load checks; retain missing original source blockers. |
+| R12 | unverified | Supply exact missing historical inputs and genuine required human full-resolution approval; no invented approval or changed historical accepted pins. |
+| R13 | fail | Resolve justified measured remaining budget defect without raising ceilings, then standard Visual QA and inspected both-eye simulator/worn-headset captures. |
+| R14 | fail | Complete current corrected Native72 exact-artifact mode/cadence diagnosis, then uninstrumented45-minute physical route at72 app/72 display with actual AppSW off. |
+| R15 | unverified | Physical QF-HW-03/04/17 with distinct requested/eligible/active/submitted states and inspected stereo/hand/transparent motion. |
+| R16 | unverified | Actual current45-minute memory/loading/thermal route and bounded paired native/input/hidden-world attribution, with calibrated allocation controls. |
+| R17 | unverified | Physical listening/readout/caption exercise, seated comfort and QF-HW-11 first-use sessions. |
+| R18 | unverified | Complete current artifact producer/consumer evaluation including missing/stale/partial evidence negatives; supported overdraw or explicit unavailable must never become a fabricated PASS. |
+| R19 | unverified | Current installed-artifact runtime checks remain separate; public distribution needs owner-approved signing/store metadata/file-policy checks if scope later changes. |
+| R20 | not applicable | Reopen exact model/derivative/imagery/audio/font/code grants and source/notice obligations before any public distribution. |
+| R21 | unverified | Development service owner resolves token status/rotation; document actual permission/data handling and any applicable privacy/deletion obligations. |
+| R22 | unverified | Complete current supported private install/update/launch/recovery/support journey; avoid uninstall/clear-data or claims of unobservable preference-byte restoration. |
+| R23 | unverified | Reconcile existing per-batch reviews and restored-input accounting by exact identities/methods; do not re-audit or equate test/build success to content review. |
+| R24 | not applicable | Reopen original per-ID regressions before any Surface Cache/on-tile/SSAO/decal/sample activation. |
+| R25 | not applicable | Reassess only on actual product scope change; applicable multi-OS-user journey remains separate. |

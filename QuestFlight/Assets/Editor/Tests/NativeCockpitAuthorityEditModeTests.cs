@@ -77,6 +77,9 @@ namespace QuestFlight.Editor.Tests
                 using(var backend=new NativeJsbsimTraceBackend())
                 {
                     Assert.That(backend.IsAvailable,Is.True,backend.LastError);
+                    var nativeSession=(JSBSimNativeSession)typeof(NativeJsbsimTraceBackend)
+                        .GetField("_session",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(backend);
+                    Assert.That(nativeSession,Is.Not.Null);
                     Assert.That(backend.Reset(FlightScenarioInitialState.Airborne(80,1000)),Is.True,backend.LastError);
                     var model=new CockpitSystemsAuthorityV2Model();
                     var scenario=new CockpitSystemsScenarioV2 {hasAuthoritativeConfiguration=true,scenarioUtcUnixSeconds=1780000000,
@@ -96,7 +99,10 @@ namespace QuestFlight.Editor.Tests
                             {
                                 input.flightState=backend.State;input.flightControls.flaps=command;
                                 Assert.That(model.Step(input),Is.True);
-                                double actual=backend.State.actualFlapNormalized*30;
+                                double actual=nativeSession.Diagnostics.flapPosition*30;
+                                Assert.That(backend.State.actualFlapNormalized,
+                                    Is.EqualTo(nativeSession.Diagnostics.flapPosition).Within(1e-12),
+                                    "The presentation snapshot must carry the actual native diagnostic.");
                                 Assert.That(actual,Is.EqualTo(expected[Array.IndexOf(ticks,tick)]).Within(.10));
                                 Assert.That(model.Current.Has(CockpitSystemsAvailabilityV2.ActualFlapPosition),Is.True);
                                 Assert.That(model.Current.actualFlapDegrees,Is.EqualTo(actual).Within(.001));
@@ -110,6 +116,49 @@ namespace QuestFlight.Editor.Tests
                     Assert.That(backend.Reset(FlightScenarioInitialState.Airborne()),Is.True);
                     input.flightState=backend.State;Assert.That(model.Reset(scenario,input),Is.True);
                     Assert.That(model.Current.actualFlapDegrees,Is.Zero);
+
+                    // Start from a genuine clean native reset, then move its actuator.
+                    // Reset the SAME cockpit model upward using the actual current
+                    // native snapshot; an opposing command must not supply the angle.
+                    var extend=QuestFlightLab.Runtime.AircraftControlState.Neutral();
+                    extend.flaps=1;extend.throttle=.3f;backend.SetControls(extend);
+                    for(int tick=0;tick<480;tick++)
+                        Assert.That(backend.Step(1.0/120),Is.True,backend.LastError);
+                    Assert.That(model.Current.actualFlapDegrees,Is.Zero,
+                        "The model has not consumed the newly extended native state yet.");
+                    input.flightState=backend.State;input.flightControls.flaps=0;
+                    Assert.That(model.Reset(scenario,input),Is.True);
+                    AssertResetPresentation(30);
+
+                    // Reset the ACTUAL native session while deployed, then reset its
+                    // subordinate presentation downward from30 to0. Keep a full-flap
+                    // command to catch either presentation following commands instead.
+                    Assert.That(backend.Reset(FlightScenarioInitialState.Airborne(80,1000)),Is.True,backend.LastError);
+                    Assert.That(model.Current.actualFlapDegrees,Is.EqualTo(30).Within(.001),
+                        "A backend reset alone must not fabricate a new cockpit sample.");
+                    input.flightState=backend.State;input.flightControls.flaps=1;
+                    Assert.That(model.Reset(scenario,input),Is.True);
+                    AssertResetPresentation(0);
+
+                    void AssertResetPresentation(double expectedDegrees)
+                    {
+                        double actual=nativeSession.Diagnostics.flapPosition*30;
+                        Assert.That(double.IsNaN(actual)||double.IsInfinity(actual),Is.False);
+                        Assert.That(actual,Is.EqualTo(expectedDegrees).Within(.001));
+                        Assert.That(backend.State.HasNativeTelemetry&&backend.State.IsFinite,Is.True);
+                        Assert.That(backend.State.actualFlapNormalized,
+                            Is.EqualTo(nativeSession.Diagnostics.flapPosition).Within(1e-12));
+                        Assert.That(model.Current.Has(CockpitSystemsAvailabilityV2.ActualFlapPosition),Is.True);
+                        Assert.That(model.Current.actualFlapDegrees,Is.EqualTo(actual).Within(.001));
+                        Assert.That(model.Current.Has(CockpitSystemsAvailabilityV2.FuelQuantity|CockpitSystemsAvailabilityV2.FuelFlow),Is.False);
+                        animator.ApplyAuthorityStateForValidation(backend.State,input.flightControls);
+                        foreach(var binding in bindings)
+                        {
+                            var expected=Quaternion.AngleAxis(-(float)actual,binding.localRotationAxis);
+                            Assert.That(Quaternion.Angle(binding.target.localRotation,expected),Is.LessThan(.001),
+                                binding.target.name+" must reset to the signed native angle on its serialized axis.");
+                        }
+                    }
                 }
             }
             finally {UnityEngine.Object.DestroyImmediate(root);}

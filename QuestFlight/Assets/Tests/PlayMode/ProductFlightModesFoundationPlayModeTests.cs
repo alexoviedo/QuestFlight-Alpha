@@ -1,7 +1,11 @@
 #if UNITY_INCLUDE_TESTS
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using AlexOviedo.QuestFlight.JSBSim;
 using NUnit.Framework;
 using QuestFlight.Product;
 using QuestFlightLab.Flight.Backends;
@@ -404,6 +408,163 @@ namespace QuestFlight.PlayModeTests
             Assert.That(Time.timeScale, Is.Zero);
             Assert.That(_demo.IsRunning, Is.False);
             Assert.That(_input.FlightLessonInputSuppressed, Is.True);
+        }
+
+        [TestCase("runtime_manifest.txt")]
+        [TestCase("aircraft/c172x/c172x.xml")]
+        [Description("Synchronous Editor cached-read/actual Start integration. Does not exercise Android extraction, storage-full or interrupted activation.")]
+        public void CachedDataReadFailureCompletesActualStartupBlocksSelectionAndRetries(string relativePath)
+        {
+            Assert.That(JSBSimRuntimeData.TryGetPreparedDataRoot(out string dataRoot, out string dataError),
+                Is.True, dataError);
+            Assert.That(dataRoot, Is.EqualTo(JSBSimRuntimeData.EditorPackageDataRoot));
+            Assert.That(_flight.IsInitialized, Is.False);
+            Assert.That(_flight.enabled, Is.True);
+            Assert.That(_mode.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Selection));
+            Camera trackedCamera = _world.GetComponentsInChildren<Camera>(true).Single(camera =>
+                camera.CompareTag("MainCamera") && camera.enabled && camera.gameObject.activeInHierarchy);
+            Assert.That(TrackedXrCameraPoseDriver.HasRequiredBindings(trackedCamera), Is.True);
+            Assert.That(_world.GetComponentsInChildren<OVRCameraRig>(true)
+                .Count(origin => origin.isActiveAndEnabled), Is.EqualTo(1));
+            int rootId = _flight.simulationRoot.GetInstanceID();
+            Vector3 cameraPosition = trackedCamera.transform.localPosition;
+            Quaternion cameraRotation = trackedCamera.transform.localRotation;
+            string target = Path.Combine(dataRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            byte[] before = File.ReadAllBytes(target);
+            byte[] metaBefore = File.Exists(target + ".meta") ? File.ReadAllBytes(target + ".meta") : null;
+            const string storageError = "JSBSim runtime data storage failed (IOException). Check available storage and app data access, then restart to retry.";
+            const string authorityError = "Native JSBSim data preparation failed: " + storageError;
+            const string selectionError = "Native JSBSim did not initialize: " + authorityError;
+            using (var expectedErrors = new ExpectedStartupErrorLogs(
+                       "[QuestFlight][FlightAuthority] " + authorityError,
+                       "[QuestFlight][FlightModes] " + selectionError))
+            using (var unavailable = new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                Assert.Throws<IOException>(() => File.ReadAllBytes(target),
+                    "The real read-only exclusive lock must induce a storage read exception.");
+                MethodInfo start = typeof(FlightDynamicsCoordinator).GetMethod("Start",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.That(start, Is.Not.Null);
+                int nested = DrainStartupForCachedRead((IEnumerator)start.Invoke(_flight, null));
+                Assert.That(nested, Is.EqualTo(1),
+                    "The actual first cached-read failure must enter and complete nested Prepare.");
+                Assert.That(_flight.IsInitialized, Is.False);
+                Assert.That(_flight.enabled, Is.False);
+                Assert.That(_flight.LastError, Is.EqualTo(authorityError));
+                Assert.That(_flight.NativePayloadIdentity, Is.Empty);
+                Assert.That(_flight.TryGetAuthorityReadiness(out string readinessError), Is.False);
+                Assert.That(readinessError, Is.EqualTo(authorityError));
+                InvokePrivate(_mode, "Update");
+                Assert.That(_mode.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Blocked));
+                Assert.That(_mode.LastError, Is.EqualTo(selectionError));
+                Assert.That(_mode.AuthoredModePanelText.text,
+                    Is.Not.EqualTo(ProductFlightModeCoordinator.PreparingText));
+                Assert.That(_mode.AuthoredModePanelText.text, Does.Contain("try again"));
+                Assert.That(_mode.AuthoredModePanelText.text, Does.Contain("saved progress is kept"));
+                _mode.SelectDemo();
+                _mode.SelectFreeFlight();
+                for (int update = 0; update < 3; update++) InvokePrivate(_mode, "Update");
+                Assert.That(_mode.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Blocked));
+                Assert.That(_demo.IsRunning, Is.False);
+                Assert.That(_input.FlightLessonInputSuppressed, Is.True);
+                Assert.That(Time.timeScale, Is.Zero);
+                expectedErrors.AssertExactlyOnce();
+            }
+            Assert.That(File.ReadAllBytes(target), Is.EqualTo(before), "Exclusive read lock must not change payload bytes.");
+            if (metaBefore != null) Assert.That(File.ReadAllBytes(target + ".meta"), Is.EqualTo(metaBefore));
+            _flight.enabled = true;
+            Assert.That(_flight.InitializeSelectedBackend(), Is.True, _flight.LastError);
+            Assert.That(_flight.LastError, Is.Empty);
+            Assert.That(_flight.TryGetAuthorityReadiness(out string ready), Is.True, ready);
+            Assert.That(_flight.CurrentState.IsFinite, Is.True);
+            Assert.That(_flight.NativePayloadIdentity, Is.Not.Empty);
+            _mode.ReturnToMainMenu();
+            Assert.That(_mode.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Selection));
+            Assert.That(_mode.LastError, Is.Empty);
+            Assert.That(_mode.AuthoredModePanelText.text, Is.EqualTo(ProductFlightModeCoordinator.SelectionText));
+            Assert.That(_mode.AuthoredFlightCoordinator, Is.SameAs(_flight));
+            Assert.That(_flight.simulationRoot.GetInstanceID(), Is.EqualTo(rootId));
+            Assert.That(_world.GetComponentsInChildren<FlightDynamicsCoordinator>(true), Has.Length.EqualTo(1));
+            Assert.That(_world.GetComponentsInChildren<Camera>(true)
+                .Count(camera => camera.enabled && camera.gameObject.activeInHierarchy), Is.EqualTo(1));
+            Assert.That(_world.GetComponentsInChildren<Camera>(true).Single(camera =>
+                camera.CompareTag("MainCamera") && camera.enabled && camera.gameObject.activeInHierarchy), Is.SameAs(trackedCamera));
+            Assert.That(trackedCamera.transform.localPosition, Is.EqualTo(cameraPosition));
+            Assert.That(trackedCamera.transform.localRotation, Is.EqualTo(cameraRotation));
+            _mode.SelectFreeFlight();
+            Assert.That(_mode.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.FreeFlight));
+            Assert.That(_input.FlightLessonInputSuppressed, Is.False);
+            Assert.That(_flight.TryGetAuthorityReadiness(out ready), Is.True, ready);
+            // Free-flight released the mode's pause; leave the unrelated fixture clock unchanged.
+            Time.timeScale = FixtureTimeScale;
+        }
+
+        private static int DrainStartupForCachedRead(IEnumerator startup)
+        {
+            var pending = new Stack<IEnumerator>();
+            pending.Push(startup);
+            int advances = 0;
+            int nested = 0;
+            try
+            {
+                while (pending.Count > 0)
+                {
+                    Assert.That(++advances, Is.LessThanOrEqualTo(16),
+                        "Cached Editor startup must terminate; a lost callback cannot remain Preparing.");
+                    IEnumerator current = pending.Peek();
+                    if (!current.MoveNext())
+                    {
+                        (pending.Pop() as IDisposable)?.Dispose();
+                        continue;
+                    }
+                    Assert.That(current.Current, Is.InstanceOf<IEnumerator>(),
+                        "This synchronous Editor cached-read fixture may only yield nested preparation, not asynchronous player work.");
+                    pending.Push((IEnumerator)current.Current);
+                    nested++;
+                }
+            }
+            finally
+            {
+                while (pending.Count > 0) (pending.Pop() as IDisposable)?.Dispose();
+            }
+            return nested;
+        }
+
+        // The runtime test assembly has no Unity TestRunner dependency. Consume only
+        // these two exact expected errors, assert their counts, and forward all other logs.
+        private sealed class ExpectedStartupErrorLogs : ILogHandler, IDisposable
+        {
+            private readonly ILogHandler _previous;
+            private readonly Dictionary<string, int> _counts;
+
+            public ExpectedStartupErrorLogs(params string[] expected)
+            {
+                _previous = Debug.unityLogger.logHandler;
+                _counts = expected.ToDictionary(message => message, _ => 0);
+                Debug.unityLogger.logHandler = this;
+            }
+
+            public void LogFormat(LogType logType, UnityEngine.Object context, string format, params object[] args)
+            {
+                string message = string.Format(format, args);
+                if (logType == LogType.Error && _counts.ContainsKey(message))
+                {
+                    _counts[message]++;
+                    return;
+                }
+                _previous.LogFormat(logType, context, format, args);
+            }
+
+            public void LogException(Exception exception, UnityEngine.Object context) =>
+                _previous.LogException(exception, context);
+
+            public void AssertExactlyOnce()
+            {
+                foreach (var expected in _counts)
+                    Assert.That(expected.Value, Is.EqualTo(1), expected.Key);
+            }
+
+            public void Dispose() => Debug.unityLogger.logHandler = _previous;
         }
 
         [Test]

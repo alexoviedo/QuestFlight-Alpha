@@ -53,13 +53,16 @@ namespace QuestFlight.Editor
                 if(source==null||source.shader==null)return source;
                 if(replacements.TryGetValue(source,out var existing))return existing;
                 string shader=source.shader.name;
-                if(shader!="Interaction/OculusRayVisual"&&shader!="Interaction/OculusRayCursor"&&shader!="Interaction/OculusHand"&&shader!="Legacy Shaders/Diffuse"&&shader!="Meta/Lit"&&shader!="Unlit/TunnelingEffect"&&shader!="Unlit/Hotspot"&&shader!="Unlit/TransparentVertexTexture"&&shader!="Unlit/TransparentTexture"&&shader!="GUI/Text Shader"&&shader!="UI/Default"&&shader!="Unlit/Transparent")return source;
+                if(shader!="Interaction/OculusRayVisual"&&shader!="Interaction/OculusRayCursor"&&shader!="Interaction/OculusHand"&&shader!="Legacy Shaders/Diffuse"&&shader!="Meta/Lit"&&shader!="Unlit/TunnelingEffect"&&shader!="Unlit/Hotspot"&&shader!="Unlit/TransparentVertexTexture"&&shader!="Unlit/TransparentTexture"&&shader!="GUI/Text Shader"&&shader!="UI/Default"&&shader!="Unlit/Transparent"&&shader!="Unlit/Color")return source;
                 AssetDatabase.TryGetGUIDAndLocalFileIdentifier(source,out string guid,out long id);
                 const string folder="Assets/Production/Rendering/Materials";Directory.CreateDirectory(folder);
                 string path=folder+"/"+guid+"_"+id+".mat";
                 var clone=AssetDatabase.LoadAssetAtPath<Material>(path);
                 if(clone==null){clone=new Material(source);clone.name=source.name+" XR";AssetDatabase.CreateAsset(clone,path);}
-                clone.shader=Shader.Find((shader=="Meta/Lit"||shader=="Legacy Shaders/Diffuse")?"Universal Render Pipeline/Lit":(shader=="GUI/Text Shader"||shader=="UI/Default")?"QuestFlight/Interface/World Text":shader=="Unlit/Transparent"?"QuestFlight/XR/Unlit/TransparentTexture":"QuestFlight/XR/"+shader);
+                // SDK poke visuals use Unlit/Color. Convert only the local clone,
+                // retaining its color/queue through the existing URP converter.
+                if(shader=="Unlit/Color")ConvertMaterial(clone);
+                else clone.shader=Shader.Find((shader=="Meta/Lit"||shader=="Legacy Shaders/Diffuse")?"Universal Render Pipeline/Lit":(shader=="GUI/Text Shader"||shader=="UI/Default")?"QuestFlight/Interface/World Text":shader=="Unlit/Transparent"?"QuestFlight/XR/Unlit/TransparentTexture":"QuestFlight/XR/"+shader);
                 if(shader=="UI/Default")clone.SetFloat("_UseTextureRGB",1);
                 if(clone.shader==null)throw new InvalidOperationException("Missing product XR shader for "+shader);
                 clone.SetFloat("_XRMotionVectorsPass",1);clone.SetShaderPassEnabled("XRMotionVectors",true);
