@@ -2314,6 +2314,48 @@ namespace QuestFlightLab.Editor
                 id, title, tag, cameraPosition, LookAt(cameraPosition, target), fov, ViewProfile.External, controls));
         }
 
+        internal static RenderBudgetSnapshot CaptureBudgetWithContributions(Camera camera, string path)
+        {
+            string previousPath = QuestRenderBudgetAudit.EditorDiagnosticPath;
+            try
+            {
+                QuestRenderBudgetAudit.EditorDiagnosticPath = path;
+                RenderBudgetSnapshot budget = QuestRenderBudgetAudit.Capture(camera);
+                ValidateBudgetContributions(budget, File.ReadLines(path));
+                return budget;
+            }
+            finally
+            {
+                QuestRenderBudgetAudit.EditorDiagnosticPath = previousPath;
+            }
+        }
+
+        internal static void ValidateBudgetContributions(RenderBudgetSnapshot budget, IEnumerable<string> lines)
+        {
+            long draws = 0;
+            long triangles = 0;
+            bool header = true;
+            foreach (string line in lines)
+            {
+                string[] columns = line.Split('\t');
+                if (header)
+                {
+                    if (columns.Length != 11 || columns[1] != "draw_slots" || columns[8] != "triangles")
+                        throw new InvalidDataException("Invalid render-budget contribution header.");
+                    header = false;
+                    continue;
+                }
+                if (columns.Length != 11 ||
+                    !long.TryParse(columns[1], NumberStyles.None, CultureInfo.InvariantCulture, out long rowDraws) ||
+                    !long.TryParse(columns[8], NumberStyles.None, CultureInfo.InvariantCulture, out long rowTriangles))
+                    throw new InvalidDataException("Invalid render-budget contribution row.");
+                checked { draws += rowDraws; triangles += rowTriangles; }
+            }
+            if (header || draws != budget.estimatedInstancedDrawCalls || triangles != budget.estimatedFrustumTriangles)
+                throw new InvalidDataException($"Render-budget contributions disagree: {draws}/{triangles} versus " +
+                    $"{budget.estimatedInstancedDrawCalls}/{budget.estimatedFrustumTriangles}.");
+        }
+
         private static void Capture(
             VisualContext context,
             ProductionVisualQaReport report,
@@ -2434,13 +2476,8 @@ namespace QuestFlightLab.Editor
                 texture = Render(context.camera, width, height, out EditorFrameRenderStats editorStats);
                 File.WriteAllBytes(path, texture.EncodeToPNG());
                 ImageStats image = Analyze(texture);
-                QuestRenderBudgetAudit.EditorDiagnosticPath =
-                    shot.id == "12_external_control_sweep" || shot.id == "16_approach" ||
-                    shot.id == "01_default_cockpit" || shot.id == "cloud_01_ground_scattered" ||
-                    shot.id == "pasv1_18_cockpit_side_window" || shot.id == "40_pilot_left_airport_fence"
-                        ? Path.Combine(outputDir, shot.id + "_draws.tsv") : null;
-                RenderBudgetSnapshot budget = QuestRenderBudgetAudit.Capture(context.camera);
-                QuestRenderBudgetAudit.EditorDiagnosticPath = null;
+                RenderBudgetSnapshot budget = CaptureBudgetWithContributions(
+                    context.camera, Path.Combine(outputDir, shot.id + "_draws.tsv"));
                 ProductionVisualQaShot result = new ProductionVisualQaShot
                 {
                     id = shot.id,
@@ -2563,7 +2600,8 @@ namespace QuestFlightLab.Editor
                 File.WriteAllBytes(path, stereo.EncodeToPNG());
 
                 ImageStats image = Analyze(stereo);
-                RenderBudgetSnapshot budget = QuestRenderBudgetAudit.Capture(context.camera);
+                RenderBudgetSnapshot budget = CaptureBudgetWithContributions(
+                    context.camera, Path.Combine(outputDir, id + "_draws.tsv"));
                 ProductionVisualQaShot result = new ProductionVisualQaShot
                 {
                     id = id,

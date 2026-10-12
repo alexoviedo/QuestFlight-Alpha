@@ -14,6 +14,8 @@ namespace QuestFlightLab.Aircraft
         [SerializeField] private Renderer[] interiorRenderers;
         [SerializeField] private Renderer[] exteriorRenderers;
         [SerializeField] private Renderer[] cockpitOccludingExteriorRenderers;
+        [SerializeField] private Renderer externalBatchRenderer;
+        [SerializeField] private Renderer[] externalBatchSourceRenderers;
         [SerializeField] private bool showInteriorInExternalView;
         [SerializeField] private VisibilityProfile initialProfile = VisibilityProfile.Cockpit;
 
@@ -31,6 +33,12 @@ namespace QuestFlightLab.Aircraft
 
         private void Awake() => ApplyProfile(initialProfile);
 
+        public void ConfigureAuthoredExternalBatch(Renderer combined, Renderer[] sources)
+        {
+            externalBatchRenderer = combined;
+            externalBatchSourceRenderers = sources;
+        }
+
         public void SetCockpitView() => ApplyProfile(VisibilityProfile.Cockpit);
         public void SetExternalView() => ApplyProfile(VisibilityProfile.External);
 
@@ -46,6 +54,14 @@ namespace QuestFlightLab.Aircraft
             else
             {
                 SetEnabled(interiorRenderers, showInteriorInExternalView);
+            }
+            // The optional batch is authored offline. Original geometry remains in
+            // the cockpit profile so its fine-grained culling is unchanged.
+            if (externalBatchRenderer != null)
+            {
+                bool external = profile == VisibilityProfile.External;
+                externalBatchRenderer.enabled = external;
+                SetEnabled(externalBatchSourceRenderers, !external);
             }
         }
 

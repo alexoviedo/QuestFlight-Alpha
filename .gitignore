@@ -48,6 +48,7 @@ __pycache__/
 htmlcov/
 
 # Builds, packages, captures, and machine evidence
+/.questflight_codex_audit/
 *.apk
 *.aab
 *.appx
