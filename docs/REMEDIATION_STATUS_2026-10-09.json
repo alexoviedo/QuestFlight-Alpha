@@ -1,9 +1,9 @@
 {
   "schema": "questflight.remediation.engineering-handoff.v1",
-  "utc": "2026-10-11T18:58:56.977359+00:00",
-  "scope": "Current accounting after approved 2026-10-11 planar early stop; prior visual and artifact evidence retained at their original scopes.",
+  "utc": "2026-10-12T19:29:10.379666+00:00",
+  "scope": "Current independently assessed accounting after clean-main consolidation and exact2352 APK installation.",
   "audited_commit": "65d35377e16da50b3a7d8d4fb6200a1860272ba3",
-  "ledger_sha256": "426714ebe3bccdf72b21a77e78a9d8c9315184f216f2d4b31156a353eb890fff",
+  "ledger_sha256": "b8bca1eb4349b9a6b6b04c8af288ea0785c8e4b1e8c07ab115cbc43581e3e4e6",
   "finding_counts": {
     "fixed_and_verified": 39,
     "implemented_pending_validation": 24,
@@ -19,33 +19,42 @@
   },
   "artifact": {
     "path": "C:\\QFRC20261008\\QuestFlight\\Builds\\Android\\QuestFlight-production.apk",
-    "sha256": "1704f38a7043c1512df7d0a1c2e76cfe934582b897658836ef28e5b08b6d329e",
-    "bytes": 1816081341,
+    "sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+    "bytes": 1816169900,
     "development": false,
     "certificate_sha256": "0231ace82e88f2b9b62b8bc46b3af5c726e5b97aa645e182cea14f64d77e370b",
     "target_sdk": 34,
     "devices": [
       "quest3"
-    ]
+    ],
+    "installed": true,
+    "serial": "2G0YC5ZG8907TD",
+    "installed_sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+    "build_evidence_root": "C:\\QFRC20261008-product-extraction-artifacts\\CLOSEOUT_20261012T185048Z-sanitized-retry",
+    "source_identity_sha256": "9a72ab062ed7fd48fcb7108b91bbe40c8232f293296e1731343f8df8a3e37f4f",
+    "source_archive_sha256": "8b676bac13ea9ff219632189590f1870a019017d92940641f13dcccad226e4da",
+    "scope_note": "Current exact built and installed APK, including prior exterior correction and preserved local assets. Build/packaging/install scope only; known QA failures and missing physical/stereo acceptance retained."
   },
-  "build_source": [
-    {
-      "file": "source_identity.json",
-      "sha256": "b0a890cfd6593fe86d0adfbdd384fcd1ec2b0fc068679aa9fe4b3539db20a61d"
-    },
-    {
-      "file": "source_changes.patch",
-      "sha256": "8d46262e36486cda2ff2ef91fd825d14bafe1f299021b6eafd6d07ddd654d063"
-    },
-    {
-      "file": "source_changes.zip",
-      "sha256": "de9e00198674d009e312e77d40dcfab3f1db2231045365f4a33401f9ba5dfd02"
-    },
-    {
-      "file": "scenery_payload_inventory.json",
-      "sha256": "a5f7aeace1b38053410acb815f3dcfb09b0b951ecbd37097bc0bc204aae57e6e"
-    }
-  ],
+  "build_source": {
+    "utc": "2026-10-12T19:10:00.463113+00:00",
+    "apk": "C:\\QFRC20261008\\QuestFlight\\Builds\\Android\\QuestFlight-production.apk",
+    "sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+    "bytes": 1816169900,
+    "all_12_packaging_checks_passed": true,
+    "certificate_sha256": "0231ace82e88f2b9b62b8bc46b3af5c726e5b97aa645e182cea14f64d77e370b",
+    "agent_negative_controls": 20,
+    "build_manifest": "C:\\QFRC20261008-product-extraction-artifacts\\CLOSEOUT_20261012T185048Z-sanitized-retry\\product_apk_manifest.json",
+    "build_manifest_sha256": "a015be1b37f0972cbadc645ad4e015db78bc220adf24ed2bdb59ca9e6f98dac9",
+    "build_source_head": "65d35377e16da50b3a7d8d4fb6200a1860272ba3",
+    "source_identity_sha256": "9a72ab062ed7fd48fcb7108b91bbe40c8232f293296e1731343f8df8a3e37f4f",
+    "source_archive_sha256": "8b676bac13ea9ff219632189590f1870a019017d92940641f13dcccad226e4da",
+    "main_source_commit": "df59f4bb0ad00aa0740f6e2c81296563253b4f7e",
+    "source_scope": "Staged audited base plus immutable source overlay, including current main exterior source and preserved local authored product. Main commit alone excludes restricted local assets.",
+    "inspection": "C:\\QFRC20261008-product-extraction-artifacts\\CLOSEOUT_20261012T185048Z-sanitized-retry\\inspection\\final_apk_inspection.json",
+    "native_replay_performed": true,
+    "installed": false,
+    "physical_acceptance": false
+  },
   "held_local_assets": [
     {
       "path": "QuestFlight/Assets/Production/Environment/AmbientAircraftV1/Models/SuperCub_LOD0_Body.asset",
@@ -293,7 +302,8 @@
         ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json",
         ".questflight_codex_audit/status/APPROVED_CLOSEOUT_result_20261010.json",
         ".questflight_codex_audit/status/VISUAL_BUDGET_RESULT_20261010.json",
-        ".questflight_codex_audit/status/M18-planar-20261011/result.json"
+        ".questflight_codex_audit/status/M18-planar-20261011/result.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
       "external_owner": "Implementation/target QA engineer; physical owner restores normal tracking.",
       "remaining_uncertainty": "Best installed bd87 has verified immutable source/package identity; newer two poke-material references and new material are absent and need a preserved-output Android rebuild plus packaging and visual acceptance. Current Android build/source/APK/native/F6/agent/installation identity accepted. Managed Android unavailable/invalid/nonfinite fault and scenario checks, complete inspection accounting and stereo acceptance remain; finite native scenario matrix supplies exact procedures.",
@@ -310,6 +320,11 @@
         "evidence": ".questflight_codex_audit/status/M18-planar-20261011/result.json",
         "note": "2026-10-11 approved P admission rejected before minute 15: nine scoped meshes offer only 3,885 optimistic exact-planar interior-vertex triangle savings per failing shot. Even allowing exact collinear boundary removal yields only 14,353-14,359, below every required reduction 39,737-274,642. Nine diagnostic fixtures pass; six distinct source payloads match immutable QA and candidate. No production edits or validation rerun; all 23 failures remain. B was not performed because side-window triangle prerequisite failed. This does not prove all fidelity-preserving optimization impossible or make fidelity reduction mandatory.",
         "status_promoted": false
+      },
+      "consolidation_20261012": {
+        "evidence": ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json",
+        "note": "2026-10-12 main consolidation and actual Android delivery: source implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e; current APK 2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b built successfully, all12 packaging checks and20 bounded agent parser negative controls passed, exact same-certificate install-r readback passed with sandbox inode 13256112 retained. QA input identity exactly matches retained107/130 report;23 failures remain. Owner-run cleanup verified main clean; restricted assets/personal settings preserved externally. No stereo, flight scenario, physical cadence/thermal, experiential, rights or historical credential-revocation acceptance inferred.",
+        "disposition_promoted": false
       }
     },
     "QF-VAL-002": {
@@ -358,7 +373,8 @@
         ".questflight_codex_audit/status/M18-NV10-Windows-build-results.json",
         ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json",
         ".questflight_codex_audit/status/VISUAL_BUDGET_RESULT_20261010.json",
-        ".questflight_codex_audit/status/M18-planar-20261011/result.json"
+        ".questflight_codex_audit/status/M18-planar-20261011/result.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
       "external_owner": "Physical headset owner and implementation/visual/performance QA engineer.",
       "remaining_uncertainty": "Best installed bd87 has verified immutable source/package identity; newer two poke-material references and new material are absent and need a preserved-output Android rebuild plus packaging and visual acceptance. Current bd87 installed; normal physical tracking not demonstrated, worn checks deferred by owner. Native72/eligible optional SpaceWarp sustained, memory/thermal, stereo, readability, controls/audio/comfort unverified. Standard rendering-budget and historical timing failures retained.",
@@ -372,6 +388,11 @@
         "evidence": ".questflight_codex_audit/status/M18-planar-20261011/result.json",
         "note": "2026-10-11 approved P admission rejected before minute 15: nine scoped meshes offer only 3,885 optimistic exact-planar interior-vertex triangle savings per failing shot. Even allowing exact collinear boundary removal yields only 14,353-14,359, below every required reduction 39,737-274,642. Nine diagnostic fixtures pass; six distinct source payloads match immutable QA and candidate. No production edits or validation rerun; all 23 failures remain. B was not performed because side-window triangle prerequisite failed. This does not prove all fidelity-preserving optimization impossible or make fidelity reduction mandatory.",
         "status_promoted": false
+      },
+      "consolidation_20261012": {
+        "evidence": ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json",
+        "note": "2026-10-12 main consolidation and actual Android delivery: source implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e; current APK 2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b built successfully, all12 packaging checks and20 bounded agent parser negative controls passed, exact same-certificate install-r readback passed with sandbox inode 13256112 retained. QA input identity exactly matches retained107/130 report;23 failures remain. Owner-run cleanup verified main clean; restricted assets/personal settings preserved externally. No stereo, flight scenario, physical cadence/thermal, experiential, rights or historical credential-revocation acceptance inferred.",
+        "disposition_promoted": false
       }
     },
     "FN-003": {
@@ -1793,10 +1814,16 @@
         ".questflight_codex_audit/status/M18-integration-milestone.json",
         ".questflight_codex_audit/status/M18-current-full-Editor-results.json",
         ".questflight_codex_audit/status/M18-alpha-disk-and-packaging-followup.json",
-        ".questflight_codex_audit/status/M18-NV10-successful-artifact-results.json"
+        ".questflight_codex_audit/status/M18-NV10-successful-artifact-results.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
       "external_owner": "Implementation/QA engineer; development service owner for token validity/revocation",
-      "remaining_uncertainty": "Current bd87 agent disabled with empty token fields, all APK bytes scanned and20 safe parser negatives PASS. Historical credential validity/revocation remains development service owner evidence."
+      "remaining_uncertainty": "Current bd87 agent disabled with empty token fields, all APK bytes scanned and20 safe parser negatives PASS. Historical credential validity/revocation remains development service owner evidence.",
+      "consolidation_20261012": {
+        "evidence": ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json",
+        "note": "2026-10-12 main consolidation and actual Android delivery: source implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e; current APK 2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b built successfully, all12 packaging checks and20 bounded agent parser negative controls passed, exact same-certificate install-r readback passed with sandbox inode 13256112 retained. QA input identity exactly matches retained107/130 report;23 failures remain. Owner-run cleanup verified main clean; restricted assets/personal settings preserved externally. No stereo, flight scenario, physical cadence/thermal, experiential, rights or historical credential-revocation acceptance inferred.",
+        "disposition_promoted": false
+      }
     },
     "FN-023": {
       "work_item": "M08",
@@ -3765,12 +3792,18 @@
         ".questflight_codex_audit/status/M18-NV10-Windows-build-results.json",
         ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json",
         ".questflight_codex_audit/status/APPROVED_CLOSEOUT_result_20261010.json",
-        ".questflight_codex_audit/status/VISUAL_BUDGET_RESULT_20261010.json"
+        ".questflight_codex_audit/status/VISUAL_BUDGET_RESULT_20261010.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
-      "notes": "PASS for preserved1704APK and its immutable build-source archive. New exterior-batch runtime/prefab/mesh changes are NOT included in that APK;14 final changed source paths match original/candidate/current QA archive. No new build.",
+      "notes": "PASS for exact current2352 APK/source manifest/immutable archive and current same-certificate installation. Main implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e plus declared local authored product overlay. Full source identity9a72 matches retained QA. Main alone excludes restricted local assets.",
       "remaining_owner": "Root implementation/test owner; physical headset reviewer or rights/service owner where named.",
       "shortest_remaining_check": "No further wrapper/source-identity blocker for this exact artifact. Identical-byte repeat-build reproducibility, public signing and hardware acceptance are not claimed.",
-      "historical_assessment_notes": "PASS limited to current wrapper/source/build contracts: selected isolated candidate, pinned toolchain, exact dirty/untracked/ignored authored source identity/archive and current nondevelopment APK254 are bound. Current build preflights and product closure-policy negatives pass; post-build original/candidate reconciliation has only ProjectSettings line endings different. M08 root full aerial validator and83unpatched tests PASS with exact source conservation/unchanged geometric ceilings; no physical/visual/performance promotion. Ownership TextAsset metadata now changed; new Android artifact identity pending, older254 archived. NV10 Android refresh89724 stopped for disk reserve, no new APK/manifest. Earlier254 is historical, source/meta preservation verified after failure. Build/hardware/stereo gates are not promoted; owner disk headroom required. Owner disk blocker recovered by authorized bounded cache cleanup; fresh Android5320 in progress. New build, Windows/stereo and physical gates remain unverified. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion. Fresh isolated Windows development build73187 PASS; same source08610 as Android, no simulator activation/state mutation. Stereo remains unverified."
+      "historical_assessment_notes": "PASS limited to current wrapper/source/build contracts: selected isolated candidate, pinned toolchain, exact dirty/untracked/ignored authored source identity/archive and current nondevelopment APK254 are bound. Current build preflights and product closure-policy negatives pass; post-build original/candidate reconciliation has only ProjectSettings line endings different. M08 root full aerial validator and83unpatched tests PASS with exact source conservation/unchanged geometric ceilings; no physical/visual/performance promotion. Ownership TextAsset metadata now changed; new Android artifact identity pending, older254 archived. NV10 Android refresh89724 stopped for disk reserve, no new APK/manifest. Earlier254 is historical, source/meta preservation verified after failure. Build/hardware/stereo gates are not promoted; owner disk headroom required. Owner disk blocker recovered by authorized bounded cache cleanup; fresh Android5320 in progress. New build, Windows/stereo and physical gates remain unverified. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion. Fresh isolated Windows development build73187 PASS; same source08610 as Android, no simulator activation/state mutation. Stereo remains unverified.",
+      "consolidation_20261012": {
+        "artifact_sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+        "note": "2026-10-12 main consolidation and actual Android delivery: source implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e; current APK 2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b built successfully, all12 packaging checks and20 bounded agent parser negative controls passed, exact same-certificate install-r readback passed with sandbox inode 13256112 retained. QA input identity exactly matches retained107/130 report;23 failures remain. Owner-run cleanup verified main clean; restricted assets/personal settings preserved externally. No stereo, flight scenario, physical cadence/thermal, experiential, rights or historical credential-revocation acceptance inferred.",
+        "status_promoted": false
+      }
     },
     "R03": {
       "audit_status": "unverified",
@@ -3791,12 +3824,18 @@
         ".questflight_codex_audit/status/M18-scratch-recovery-and-alpha-comparison.json",
         ".questflight_codex_audit/status/M18-NV10-successful-artifact-results.json",
         ".questflight_codex_audit/status/M18-NV10-Windows-build-results.json",
-        ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json"
+        ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
       "notes": "Controlled closeout 2026-10-09T08:42:02.044519+00:00: unverified. Retained individual gate evidence and criterion apply to immutable installed APK bd87 / source identity08610; newer poke material/reference source delta has focused verification but no Android or inspected stereo acceptance. Bind completed current APK bd87 runtime authority/provider/graphics/IL2CPP diagnostics to exact installed bytes; retain native CLI proof as its own scope.",
       "remaining_owner": "Root implementation/test owner; physical headset reviewer or rights/service owner where named.",
       "shortest_remaining_check": "Bind current verified APK runtime authority/provider/graphics/IL2CPP diagnostics to exact installed bytes; native CLI and packaging proof remain their own scopes.",
-      "historical_assessment_notes": "Pinned import/current compilation, packaged ARM64 API2/14 exports/dependencies/16KiB ELF and ZIP layout, and exact selected Gradle libc++ merge/strip/reproduction chain PASS. Actual Android CLI loaded the same three library byte identities, but this is not current APK254 IL2CPP/OpenXR loaded-product integration. Current254 Native72 capture95574 was interrupted by GUARDIAN_TRACKING_TOO_DARK_CONTINUE before product readiness, with zero valid runtime/VrApi samples; no current performance verdict. All7 state-restoration checks PASS/currentAPKkept. Illuminate/reacquire tracking and acknowledge Guardian before new-root capture; no system-safety bypass. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion. Fresh isolated Windows development build73187 PASS; same source08610 as Android, no simulator activation/state mutation. Stereo remains unverified."
+      "historical_assessment_notes": "Pinned import/current compilation, packaged ARM64 API2/14 exports/dependencies/16KiB ELF and ZIP layout, and exact selected Gradle libc++ merge/strip/reproduction chain PASS. Actual Android CLI loaded the same three library byte identities, but this is not current APK254 IL2CPP/OpenXR loaded-product integration. Current254 Native72 capture95574 was interrupted by GUARDIAN_TRACKING_TOO_DARK_CONTINUE before product readiness, with zero valid runtime/VrApi samples; no current performance verdict. All7 state-restoration checks PASS/currentAPKkept. Illuminate/reacquire tracking and acknowledge Guardian before new-root capture; no system-safety bypass. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion. Fresh isolated Windows development build73187 PASS; same source08610 as Android, no simulator activation/state mutation. Stereo remains unverified.",
+      "consolidation_20261012": {
+        "artifact_sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+        "note": "2026-10-12 main consolidation and actual Android delivery: source implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e; current APK 2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b built successfully, all12 packaging checks and20 bounded agent parser negative controls passed, exact same-certificate install-r readback passed with sandbox inode 13256112 retained. QA input identity exactly matches retained107/130 report;23 failures remain. Owner-run cleanup verified main clean; restricted assets/personal settings preserved externally. No stereo, flight scenario, physical cadence/thermal, experiential, rights or historical credential-revocation acceptance inferred.",
+        "status_promoted": false
+      }
     },
     "R04": {
       "audit_status": "fail",
@@ -3874,12 +3913,18 @@
         ".questflight_codex_audit/status/M18-current-gate-evidence-review.json",
         ".questflight_codex_audit/status/M18-NV10-successful-artifact-results.json",
         ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json",
-        ".questflight_codex_audit/status/VISUAL_BUDGET_RESULT_20261010.json"
+        ".questflight_codex_audit/status/VISUAL_BUDGET_RESULT_20261010.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
       "notes": "PASS for authored hierarchy/sole native authority/OpenXR source scope. Current exact build packages the reviewed two material-reference changes without reconstructing the hierarchy. Runtime transitions, inspected stereo and comfort remain independent. Final current-source QA: authored hierarchy, one enabled XR origin and environment contract true. Every existing prefab object ID and renderer field preserved; only authored batch and two visibility-owner references added.",
       "remaining_owner": "Root implementation/test owner; physical headset reviewer or rights/service owner where named.",
       "shortest_remaining_check": "Runtime cardinality, SDK transitions and tracked-pose/seat comfort remain under R03/R09/R10; this static PASS does not accept the player or headset.",
-      "historical_assessment_notes": "PASS for the stated static authored graph/source scope: actual FullProductIntegrityGatePasses and hierarchy/sole-authority/no-reconstruction/closure regressions pass in current785-case Editor integration;28 PlayMode cases add Windows-native liveness evidence. Current APK build binds this authored scene and unconditionally requires native JSBSim, with UnityPrototype forbidden. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion."
+      "historical_assessment_notes": "PASS for the stated static authored graph/source scope: actual FullProductIntegrityGatePasses and hierarchy/sole-authority/no-reconstruction/closure regressions pass in current785-case Editor integration;28 PlayMode cases add Windows-native liveness evidence. Current APK build binds this authored scene and unconditionally requires native JSBSim, with UnityPrototype forbidden. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion.",
+      "consolidation_20261012": {
+        "artifact_sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+        "note": "2026-10-12 main consolidation and actual Android delivery: source implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e; current APK 2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b built successfully, all12 packaging checks and20 bounded agent parser negative controls passed, exact same-certificate install-r readback passed with sandbox inode 13256112 retained. QA input identity exactly matches retained107/130 report;23 failures remain. Owner-run cleanup verified main clean; restricted assets/personal settings preserved externally. No stereo, flight scenario, physical cadence/thermal, experiential, rights or historical credential-revocation acceptance inferred.",
+        "status_promoted": false
+      }
     },
     "R08": {
       "audit_status": "fail",
@@ -4009,13 +4054,19 @@
         ".questflight_codex_audit/status/M18-scoped-acceptance-closure-results.json",
         ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json",
         ".questflight_codex_audit/status/VISUAL_BUDGET_RESULT_20261010.json",
-        ".questflight_codex_audit/status/M18-planar-20261011/result.json"
+        ".questflight_codex_audit/status/M18-planar-20261011/result.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
-      "notes": "FAIL: current source-bound standard QA107PASS/23FAIL, no newly failing shots. Two external draws78->63 and86->71; triangles unchanged. Limits77/692871/38 retained; max80draw/967513tri. Exact contributions for all130 shots.23triangle failures (including side-window draw excess) remain engineering work. Current-source stereo/build/physical acceptance not run.",
+      "notes": "FAIL: exact current APK input identity matches retained standard QA107PASS/23FAIL. Side-window remains80draws/907053triangles. Budgets77/692871/38 unchanged. Prior inspected mono captures and focused geometry tests retained. Inspected stereo and worn acceptance remain unverified.",
       "remaining_owner": "Root implementation/test owner; physical headset reviewer or rights/service owner where named.",
       "shortest_remaining_check": "Resolve justified measured remaining budget defect without raising ceilings, then standard Visual QA and inspected both-eye simulator/worn-headset captures.",
       "historical_assessment_notes": "Retain actual standard Visual QA105 PASS/25 FAIL, max86 draws/967,513 triangles against77/692,871; materials37<=38. Preview/shadow corrections and actual GPU/proxy tests pass, but neither current packaging nor785 Editor cases resolves the recorded scene-budget failure or establishes stereo/worn comfort. Current254 Native72 capture95574 was interrupted by GUARDIAN_TRACKING_TOO_DARK_CONTINUE before product readiness, with zero valid runtime/VrApi samples; no current performance verdict. All7 state-restoration checks PASS/currentAPKkept. Illuminate/reacquire tracking and acknowledge Guardian before new-root capture; no system-safety bypass. M08 root full aerial validator and83unpatched tests PASS with exact source conservation/unchanged geometric ceilings; no physical/visual/performance promotion. Ownership TextAsset metadata now changed; new Android artifact identity pending, older254 archived. NV10 Android refresh89724 stopped for disk reserve, no new APK/manifest. Earlier254 is historical, source/meta preservation verified after failure. Build/hardware/stereo gates are not promoted; owner disk headroom required. Fresh isolated Windows development build73187 PASS; same source08610 as Android, no simulator activation/state mutation. Stereo remains unverified. Ten own finding scopes closed by exact reused/native/Editor/tooling evidence and real process negatives. Gate status independently unchanged; physical/stereo/handling/rights not inferred.",
-      "planar_batch_20261011": "2026-10-11 approved P admission rejected before minute 15: nine scoped meshes offer only 3,885 optimistic exact-planar interior-vertex triangle savings per failing shot. Even allowing exact collinear boundary removal yields only 14,353-14,359, below every required reduction 39,737-274,642. Nine diagnostic fixtures pass; six distinct source payloads match immutable QA and candidate. No production edits or validation rerun; all 23 failures remain. B was not performed because side-window triangle prerequisite failed. This does not prove all fidelity-preserving optimization impossible or make fidelity reduction mandatory."
+      "planar_batch_20261011": "2026-10-11 approved P admission rejected before minute 15: nine scoped meshes offer only 3,885 optimistic exact-planar interior-vertex triangle savings per failing shot. Even allowing exact collinear boundary removal yields only 14,353-14,359, below every required reduction 39,737-274,642. Nine diagnostic fixtures pass; six distinct source payloads match immutable QA and candidate. No production edits or validation rerun; all 23 failures remain. B was not performed because side-window triangle prerequisite failed. This does not prove all fidelity-preserving optimization impossible or make fidelity reduction mandatory.",
+      "consolidation_20261012": {
+        "artifact_sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+        "note": "2026-10-12 main consolidation and actual Android delivery: source implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e; current APK 2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b built successfully, all12 packaging checks and20 bounded agent parser negative controls passed, exact same-certificate install-r readback passed with sandbox inode 13256112 retained. QA input identity exactly matches retained107/130 report;23 failures remain. Owner-run cleanup verified main clean; restricted assets/personal settings preserved externally. No stereo, flight scenario, physical cadence/thermal, experiential, rights or historical credential-revocation acceptance inferred.",
+        "status_promoted": false
+      }
     },
     "R14": {
       "audit_status": "unverified",
@@ -4037,7 +4088,12 @@
       "shortest_remaining_check": "Complete current corrected Native72 exact-artifact mode/cadence diagnosis, then uninstrumented45-minute physical route at72 app/72 display with actual AppSW off.",
       "current_candidate_status": "unverified",
       "historical_failure_scope": "Older896 machine gate failed, with actual SpaceWarpON; not a primary Native72 performance measurement. Historical raw failures retained; current254 sustained performance remains unverified.",
-      "historical_assessment_notes": "Retain older exactAPK896 physical timing/mode FAIL as an unresolved release acceptance failure; all AppSW flags were on despite reported Native72. Current APK254 capture is active and not assessed here: its current-candidate sustained cadence status is UNVERIFIED, not claimed failed or passed. Native CLI25.8us diagnostic calls do not establish frame/thermal acceptance. Current254 Native72 capture95574 was interrupted by GUARDIAN_TRACKING_TOO_DARK_CONTINUE before product readiness, with zero valid runtime/VrApi samples; no current performance verdict. All7 state-restoration checks PASS/currentAPKkept. Illuminate/reacquire tracking and acknowledge Guardian before new-root capture; no system-safety bypass. NV10 Android refresh89724 stopped for disk reserve, no new APK/manifest. Earlier254 is historical, source/meta preservation verified after failure. Build/hardware/stereo gates are not promoted; owner disk headroom required. Ten own finding scopes closed by exact reused/native/Editor/tooling evidence and real process negatives. Gate status independently unchanged; physical/stereo/handling/rights not inferred."
+      "historical_assessment_notes": "Retain older exactAPK896 physical timing/mode FAIL as an unresolved release acceptance failure; all AppSW flags were on despite reported Native72. Current APK254 capture is active and not assessed here: its current-candidate sustained cadence status is UNVERIFIED, not claimed failed or passed. Native CLI25.8us diagnostic calls do not establish frame/thermal acceptance. Current254 Native72 capture95574 was interrupted by GUARDIAN_TRACKING_TOO_DARK_CONTINUE before product readiness, with zero valid runtime/VrApi samples; no current performance verdict. All7 state-restoration checks PASS/currentAPKkept. Illuminate/reacquire tracking and acknowledge Guardian before new-root capture; no system-safety bypass. NV10 Android refresh89724 stopped for disk reserve, no new APK/manifest. Earlier254 is historical, source/meta preservation verified after failure. Build/hardware/stereo gates are not promoted; owner disk headroom required. Ten own finding scopes closed by exact reused/native/Editor/tooling evidence and real process negatives. Gate status independently unchanged; physical/stereo/handling/rights not inferred.",
+      "consolidation_20261012": {
+        "artifact_sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+        "note": "Historical physical timing failure retained; this new exact build has no sustained Native72/performance evidence. Installation does not establish cadence.",
+        "status_promoted": false
+      }
     },
     "R15": {
       "audit_status": "unverified",
@@ -4150,13 +4206,19 @@
         ".questflight_codex_audit/status/M18-current254-Native72-device-results.json",
         ".questflight_codex_audit/status/M18-alpha-disk-and-packaging-followup.json",
         ".questflight_codex_audit/status/M18-NV10-successful-artifact-results.json",
-        ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json"
+        ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
       "notes": "Controlled closeout 2026-10-09T08:42:02.044519+00:00: unverified. Retained individual gate evidence and criterion apply to immutable installed APK bd87 / source identity08610; newer poke material/reference source delta has focused verification but no Android or inspected stereo acceptance. Current installed-artifact runtime checks remain separate; public distribution needs owner-approved signing/store metadata/file-policy checks if scope later changes.",
       "remaining_owner": "Root implementation/test owner; physical headset reviewer or rights/service owner where named.",
       "shortest_remaining_check": "Current installed-artifact runtime checks remain separate; public distribution needs owner-approved signing/store metadata/file-policy checks if scope later changes.",
       "current_candidate_status": "unverified",
-      "historical_assessment_notes": "PASS private-artifact static subset: APK254 ARM64, source-bound Vulkan/OpenXR, SDK34, quest3-only, nondevelopment/non-debuggable, exact size,16KiB alignment and cryptographic signature. Existing private Android Debug certificate0231ace8 matches896; this is no public-release signing or dashboard/store metadata acceptance. Current254 Native72 capture95574 was interrupted by GUARDIAN_TRACKING_TOO_DARK_CONTINUE before product readiness, with zero valid runtime/VrApi samples; no current performance verdict. All7 state-restoration checks PASS/currentAPKkept. Illuminate/reacquire tracking and acknowledge Guardian before new-root capture; no system-safety bypass. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion."
+      "historical_assessment_notes": "PASS private-artifact static subset: APK254 ARM64, source-bound Vulkan/OpenXR, SDK34, quest3-only, nondevelopment/non-debuggable, exact size,16KiB alignment and cryptographic signature. Existing private Android Debug certificate0231ace8 matches896; this is no public-release signing or dashboard/store metadata acceptance. Current254 Native72 capture95574 was interrupted by GUARDIAN_TRACKING_TOO_DARK_CONTINUE before product readiness, with zero valid runtime/VrApi samples; no current performance verdict. All7 state-restoration checks PASS/currentAPKkept. Illuminate/reacquire tracking and acknowledge Guardian before new-root capture; no system-safety bypass. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion.",
+      "consolidation_20261012": {
+        "artifact_sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+        "note": "2026-10-12 main consolidation and actual Android delivery: source implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e; current APK 2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b built successfully, all12 packaging checks and20 bounded agent parser negative controls passed, exact same-certificate install-r readback passed with sandbox inode 13256112 retained. QA input identity exactly matches retained107/130 report;23 failures remain. Owner-run cleanup verified main clean; restricted assets/personal settings preserved externally. No stereo, flight scenario, physical cadence/thermal, experiential, rights or historical credential-revocation acceptance inferred.",
+        "status_promoted": false
+      }
     },
     "R20": {
       "audit_status": "unverified",
@@ -4184,12 +4246,18 @@
         ".questflight_codex_audit/status/M18-current-gate-evidence-review.json",
         ".questflight_codex_audit/status/M18-alpha-disk-and-packaging-followup.json",
         ".questflight_codex_audit/status/M18-NV10-successful-artifact-results.json",
-        ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json"
+        ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
       "notes": "Controlled closeout 2026-10-09T08:42:02.044519+00:00: unverified. Retained individual gate evidence and criterion apply to immutable installed APK bd87 / source identity08610; newer poke material/reference source delta has focused verification but no Android or inspected stereo acceptance. Development service owner resolves token status/rotation; document actual permission/data handling and any applicable privacy/deletion obligations.",
       "remaining_owner": "Root implementation/test owner; physical headset reviewer or rights/service owner where named.",
       "shortest_remaining_check": "Development service owner resolves token status/rotation; document actual permission/data handling and any applicable privacy/deletion obligations.",
-      "historical_assessment_notes": "PASS exact packaged subset: all decompressed APK bytes scanned, known baseline credentials absent; actual GUID-bound agent disabled and both token lengths zero; strict compiled-script/SDK parser20 negatives pass. Historical token authenticity/revocation, permission purposes and public data disclosures are not established. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion."
+      "historical_assessment_notes": "PASS exact packaged subset: all decompressed APK bytes scanned, known baseline credentials absent; actual GUID-bound agent disabled and both token lengths zero; strict compiled-script/SDK parser20 negatives pass. Historical token authenticity/revocation, permission purposes and public data disclosures are not established. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion.",
+      "consolidation_20261012": {
+        "artifact_sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+        "note": "2026-10-12 main consolidation and actual Android delivery: source implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e; current APK 2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b built successfully, all12 packaging checks and20 bounded agent parser negative controls passed, exact same-certificate install-r readback passed with sandbox inode 13256112 retained. QA input identity exactly matches retained107/130 report;23 failures remain. Owner-run cleanup verified main clean; restricted assets/personal settings preserved externally. No stereo, flight scenario, physical cadence/thermal, experiential, rights or historical credential-revocation acceptance inferred.",
+        "status_promoted": false
+      }
     },
     "R22": {
       "audit_status": "unverified",
@@ -4208,13 +4276,19 @@
         ".questflight_codex_audit/status/M18-NV10-failed-Android-build-results.json",
         ".questflight_codex_audit/status/M18-resumed-disk-recovery-results.json",
         ".questflight_codex_audit/status/M18-NV10-successful-artifact-results.json",
-        ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json"
+        ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
       "notes": "Controlled closeout 2026-10-09T08:42:02.044519+00:00: unverified. Retained individual gate evidence and criterion apply to immutable installed APK bd87 / source identity08610; newer poke material/reference source delta has focused verification but no Android or inspected stereo acceptance. Complete current supported private install/update/launch/recovery/support journey; avoid uninstall/clear-data or claims of unobservable preference-byte restoration.",
       "remaining_owner": "Root implementation/test owner; physical headset reviewer or rights/service owner where named.",
       "shortest_remaining_check": "Complete current supported private install/update/launch/recovery/support journey; avoid uninstall/clear-data or claims of unobservable preference-byte restoration.",
       "current_candidate_status": "unverified",
-      "historical_assessment_notes": "Older896 same-certificate install and actual A-to-C model-data update/cache recovery pass with restored original app/cache/request states. Current254 package continuity is verified; complete user install/use/recover/update/uninstall/support journey has not been observed here. Current254 Native72 capture95574 was interrupted by GUARDIAN_TRACKING_TOO_DARK_CONTINUE before product readiness, with zero valid runtime/VrApi samples; no current performance verdict. All7 state-restoration checks PASS/currentAPKkept. Illuminate/reacquire tracking and acknowledge Guardian before new-root capture; no system-safety bypass. M08 root full aerial validator and83unpatched tests PASS with exact source conservation/unchanged geometric ceilings; no physical/visual/performance promotion. Ownership TextAsset metadata now changed; new Android artifact identity pending, older254 archived. NV10 Android refresh89724 stopped for disk reserve, no new APK/manifest. Earlier254 is historical, source/meta preservation verified after failure. Build/hardware/stereo gates are not promoted; owner disk headroom required. Owner disk blocker recovered by authorized bounded cache cleanup; fresh Android5320 in progress. New build, Windows/stereo and physical gates remain unverified. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion."
+      "historical_assessment_notes": "Older896 same-certificate install and actual A-to-C model-data update/cache recovery pass with restored original app/cache/request states. Current254 package continuity is verified; complete user install/use/recover/update/uninstall/support journey has not been observed here. Current254 Native72 capture95574 was interrupted by GUARDIAN_TRACKING_TOO_DARK_CONTINUE before product readiness, with zero valid runtime/VrApi samples; no current performance verdict. All7 state-restoration checks PASS/currentAPKkept. Illuminate/reacquire tracking and acknowledge Guardian before new-root capture; no system-safety bypass. M08 root full aerial validator and83unpatched tests PASS with exact source conservation/unchanged geometric ceilings; no physical/visual/performance promotion. Ownership TextAsset metadata now changed; new Android artifact identity pending, older254 archived. NV10 Android refresh89724 stopped for disk reserve, no new APK/manifest. Earlier254 is historical, source/meta preservation verified after failure. Build/hardware/stereo gates are not promoted; owner disk headroom required. Owner disk blocker recovered by authorized bounded cache cleanup; fresh Android5320 in progress. New build, Windows/stereo and physical gates remain unverified. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion.",
+      "consolidation_20261012": {
+        "artifact_sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+        "note": "2026-10-12 main consolidation and actual Android delivery: source implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e; current APK 2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b built successfully, all12 packaging checks and20 bounded agent parser negative controls passed, exact same-certificate install-r readback passed with sandbox inode 13256112 retained. QA input identity exactly matches retained107/130 report;23 failures remain. Owner-run cleanup verified main clean; restricted assets/personal settings preserved externally. No stereo, flight scenario, physical cadence/thermal, experiential, rights or historical credential-revocation acceptance inferred.",
+        "status_promoted": false
+      }
     },
     "R23": {
       "audit_status": "pass",
@@ -4238,12 +4312,18 @@
         ".questflight_codex_audit/status/M18-resumed-disk-recovery-results.json",
         ".questflight_codex_audit/status/M18-NV10-successful-artifact-results.json",
         ".questflight_codex_audit/status/M18-NV10-Windows-build-results.json",
-        ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json"
+        ".questflight_codex_audit/status/M18-controlled-closeout-delivery-gap.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
       "notes": "Controlled closeout 2026-10-09T08:42:02.044519+00:00: unverified. Retained individual gate evidence and criterion apply to immutable installed APK bd87 / source identity08610; newer poke material/reference source delta has focused verification but no Android or inspected stereo acceptance. Reconcile existing per-batch reviews and restored-input accounting by exact identities/methods; do not re-audit or equate test/build success to content review.",
       "remaining_owner": "Root implementation/test owner; physical headset reviewer or rights/service owner where named.",
       "shortest_remaining_check": "Reconcile existing per-batch reviews and restored-input accounting by exact identities/methods; do not re-audit or equate test/build success to content review.",
-      "historical_assessment_notes": "PASS bounded identity subset: current source/archive/APK identities and original/candidate changed-input/meta/ignored-authored reconciliation are exact except declared ProjectSettings line endings. Original source/text review accounting remains historical; this does not supply a complete current primary-reviewer/range/method ledger for all restored and changed content. NV10 Android refresh89724 stopped for disk reserve, no new APK/manifest. Earlier254 is historical, source/meta preservation verified after failure. Build/hardware/stereo gates are not promoted; owner disk headroom required. Owner disk blocker recovered by authorized bounded cache cleanup; fresh Android5320 in progress. New build, Windows/stereo and physical gates remain unverified. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion. Fresh isolated Windows development build73187 PASS; same source08610 as Android, no simulator activation/state mutation. Stereo remains unverified."
+      "historical_assessment_notes": "PASS bounded identity subset: current source/archive/APK identities and original/candidate changed-input/meta/ignored-authored reconciliation are exact except declared ProjectSettings line endings. Original source/text review accounting remains historical; this does not supply a complete current primary-reviewer/range/method ledger for all restored and changed content. NV10 Android refresh89724 stopped for disk reserve, no new APK/manifest. Earlier254 is historical, source/meta preservation verified after failure. Build/hardware/stereo gates are not promoted; owner disk headroom required. Owner disk blocker recovered by authorized bounded cache cleanup; fresh Android5320 in progress. New build, Windows/stereo and physical gates remain unverified. Latest evidence supersedes prior disk/pending-build notes: NV10 Android5320 actualexit0; current bd87 all12 packaging checks and same-cert install28069 PASS, sandbox inode preserved. No target/stereo/physical/reference/rights promotion. Fresh isolated Windows development build73187 PASS; same source08610 as Android, no simulator activation/state mutation. Stereo remains unverified.",
+      "consolidation_20261012": {
+        "artifact_sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+        "note": "2026-10-12 main consolidation and actual Android delivery: source implementation df59f4bb0ad00aa0740f6e2c81296563253b4f7e; current APK 2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b built successfully, all12 packaging checks and20 bounded agent parser negative controls passed, exact same-certificate install-r readback passed with sandbox inode 13256112 retained. QA input identity exactly matches retained107/130 report;23 failures remain. Owner-run cleanup verified main clean; restricted assets/personal settings preserved externally. No stereo, flight scenario, physical cadence/thermal, experiential, rights or historical credential-revocation acceptance inferred.",
+        "status_promoted": false
+      }
     },
     "R24": {
       "audit_status": "not applicable",
@@ -9775,37 +9855,24 @@
     "do_not_repeat": "Objective positive already demonstrates unchanged triangle failure; do not rerun equivalent failure without a material correction."
   },
   "closeout": {
-    "utc": "2026-10-11T18:58:56.977359+00:00",
-    "deadline_utc": "2026-10-11T19:51:51+00:00",
-    "scope": "Approved P planar retessellation feasibility then qualifying fixes only; B only if side-window triangle deficit resolved; early stop if none qualifies. No APK/build/device/commit/cleanup.",
-    "result_evidence": ".questflight_codex_audit/status/M18-planar-20261011/result.json",
+    "utc": "2026-10-12T19:29:10.379666+00:00",
+    "scope": "User-approved main consolidation, clean checkout, private build and preserved-data installation.",
+    "result_evidence": ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json",
     "no_active_owned_job": true,
     "quality_acceptance": false,
-    "production_delta_not_built": [
-      "QuestFlight/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
-      "QuestFlight/Assets/Production/Rendering/ExteriorBatch.meta",
-      "QuestFlight/Assets/Production/Rendering/ExteriorBatch/C172ExteriorBatch.asset",
-      "QuestFlight/Assets/Production/Rendering/ExteriorBatch/C172ExteriorBatch.asset.meta",
-      "QuestFlight/Assets/Production/Rendering/ExteriorBatch/SOURCE_AND_LICENSE.json",
-      "QuestFlight/Assets/Production/Rendering/ExteriorBatch/SOURCE_AND_LICENSE.json.meta",
-      "QuestFlight/Assets/Scripts/Aircraft/AircraftVisibilityProfileController.cs"
-    ],
-    "result": "EARLY_STOP_NO_QUALIFYING_CORRECTION",
-    "delivery": "Deferred by owner; no new product changes in this batch."
+    "source_main_commit": "df59f4bb0ad00aa0740f6e2c81296563253b4f7e",
+    "new_artifact_verified": true,
+    "new_apk_installed": true,
+    "main_clean_before_final_documentation": true,
+    "asset_overlay": "C:\\QFBackup20261008\\CLOSEOUT_20261012T185048Z\\overlay_manifest.json",
+    "pushed": false
   },
   "delivery_gap": {
-    "new_APK_built": false,
+    "new_APK_built": true,
     "preserved_APK_verified": true,
-    "production_deltas_absent_from_new_APK": [
-      "QuestFlight/Assets/Production/Prefabs/ProductionC172AircraftRig.prefab",
-      "QuestFlight/Assets/Production/Rendering/ExteriorBatch.meta",
-      "QuestFlight/Assets/Production/Rendering/ExteriorBatch/C172ExteriorBatch.asset",
-      "QuestFlight/Assets/Production/Rendering/ExteriorBatch/C172ExteriorBatch.asset.meta",
-      "QuestFlight/Assets/Production/Rendering/ExteriorBatch/SOURCE_AND_LICENSE.json",
-      "QuestFlight/Assets/Production/Rendering/ExteriorBatch/SOURCE_AND_LICENSE.json.meta",
-      "QuestFlight/Assets/Scripts/Aircraft/AircraftVisibilityProfileController.cs"
-    ],
-    "scope": "Exterior batch awaits current-source Android build and packaging; preserved1704APK still usable."
+    "current_APK_installed": true,
+    "production_deltas_absent_from_new_APK": [],
+    "scope": "Prior exterior improvement and preserved local authored state are in current APK. Stereo/performance/flight/experience/rights acceptance remains open."
   },
   "new_integration_findings": [
     {
@@ -9862,7 +9929,8 @@
         ".questflight_codex_audit/status/M18-standard-qa-terrain-settled-results.json",
         ".questflight_codex_audit/status/M18-budget-diagnostic-qa-results.json",
         ".questflight_codex_audit/status/VISUAL_BUDGET_RESULT_20261010.json",
-        ".questflight_codex_audit/status/M18-planar-20261011/result.json"
+        ".questflight_codex_audit/status/M18-planar-20261011/result.json",
+        ".questflight_codex_audit/status/CLOSEOUT_20261012/result.json"
       ],
       "correction_status": "implemented_pending_validation for2external shots;23triangle failures unresolved",
       "planar_batch_20261011": {
@@ -11093,6 +11161,10 @@
             "remaining_acceptance": "A separately scoped, sufficient correction with unchanged budgets, preserved appearance and appropriate acceptance evidence."
           }
         ]
+      },
+      "consolidation_20261012": {
+        "current_apk": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+        "standard_qa": "Exact inputs107/130;23 engineering failures remain. Two prior draw corrections now built and installed; stereo and physical acceptance pending."
       }
     },
     {
@@ -11122,19 +11194,13 @@
     }
   ],
   "installed_artifact": {
-    "summary": "New verified APK NOT installed: connected device reported stopped=false. Read-only installed APK SHA remains bd87a0dfcf447cbdd7e86ee619ae9cdfd7ccf81484e41112fe5409c3e8d7b8d2; app/data untouched.",
-    "new_apk_installed": false,
-    "installed_sha256": "bd87a0dfcf447cbdd7e86ee619ae9cdfd7ccf81484e41112fe5409c3e8d7b8d2",
+    "sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
     "serial": "2G0YC5ZG8907TD",
-    "observed_utc": "2026-10-10T19:22:30Z",
-    "stopped": false,
-    "data_inode": 13256112,
-    "blocked_command": "pwsh -NoProfile -File .questflight_codex_audit/status/install_approved_closeout_20261010.ps1",
-    "missing_prerequisite": "Owner has ended flight and app is stopped; no force-stop performed here.",
-    "owner": "Owner ends flight; Codex/build engineer applies guarded same-certificate update.",
-    "observation_scope": "Previous session observation; device not queried or changed in visual-budget session."
+    "receipt": "C:\\QFRC20261008-product-extraction-artifacts\\CLOSEOUT_20261012T185048Z-sanitized-retry\\installation.json",
+    "sandbox_inode": "13256112",
+    "verified": true
   },
-  "build_evidence_root": "C:\\QFRC20261008-product-extraction-artifacts\\M18-newer-material-20261010T191249Z",
+  "build_evidence_root": "C:\\QFRC20261008-product-extraction-artifacts\\CLOSEOUT_20261012T185048Z-sanitized-retry",
   "visual_budget_result": {
     "schema": "questflight.visual-budget-bounded-result.v1",
     "utc": "2026-10-10T20:58:21.067137+00:00",
@@ -17955,6 +18021,141 @@
       "work_items": 18,
       "gates": 25,
       "receipt": "tracking.txt"
+    }
+  },
+  "consolidation_result": {
+    "schema": "questflight.next-phase-consolidation.v1",
+    "utc": "2026-10-12T19:29:10.379666+00:00",
+    "source": {
+      "implementation_commit": "df59f4bb0ad00aa0740f6e2c81296563253b4f7e",
+      "branch": "main",
+      "clean_before_documentation": true,
+      "local_branches": [
+        "main"
+      ],
+      "branches_deleted": [],
+      "pushed": false,
+      "scope": "Reusable source, authoring/tests and remediation accounting committed. Restricted/local authored assets and personal settings preserved in an external overlay; main alone is not the complete built-product source."
+    },
+    "preservation": {
+      "root": "C:\\QFBackup20261008\\CLOSEOUT_20261012T185048Z",
+      "all_local_changes_archive": "C:\\QFBackup20261008\\CLOSEOUT_20261012T185048Z\\all_local_changes_before.zip",
+      "all_local_changes_sha256": "771db7d87ca3e0558d76d110f245d520da75fae407edcbe7e3c2fd8e3d5b2fca",
+      "git_bundle_before": "C:\\QFBackup20261008\\CLOSEOUT_20261012T185048Z\\repository_before.bundle",
+      "local_overlay_manifest": "C:\\QFBackup20261008\\CLOSEOUT_20261012T185048Z\\overlay_manifest.json",
+      "local_overlay_root": "C:\\QFBackup20261008\\CLOSEOUT_20261012T185048Z\\local_product_overlay",
+      "old_verified_apk": {
+        "path": "C:\\QFBackup20261008\\CLOSEOUT_20261012T185048Z\\QuestFlight-production-before.apk",
+        "sha256": "1704f38a7043c1512df7d0a1c2e76cfe934582b897658836ef28e5b08b6d329e",
+        "bytes": 1816081341
+      },
+      "progress_archive": "C:\\QFBackup20261008\\CLOSEOUT_20261012T185048Z\\remediation_progress_20261012.zip",
+      "progress_archive_receipt": "C:\\QFBackup20261008\\CLOSEOUT_20261012T185048Z\\progress_archive_receipt.json",
+      "owner_cleanup_receipt": "C:\\QFBackup20261008\\CLOSEOUT_20261012T185048Z\\owner_cleanup_receipt.json"
+    },
+    "build": {
+      "utc": "2026-10-12T19:10:00.463113+00:00",
+      "apk": "C:\\QFRC20261008\\QuestFlight\\Builds\\Android\\QuestFlight-production.apk",
+      "sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+      "bytes": 1816169900,
+      "all_12_packaging_checks_passed": true,
+      "certificate_sha256": "0231ace82e88f2b9b62b8bc46b3af5c726e5b97aa645e182cea14f64d77e370b",
+      "agent_negative_controls": 20,
+      "build_manifest": "C:\\QFRC20261008-product-extraction-artifacts\\CLOSEOUT_20261012T185048Z-sanitized-retry\\product_apk_manifest.json",
+      "build_manifest_sha256": "a015be1b37f0972cbadc645ad4e015db78bc220adf24ed2bdb59ca9e6f98dac9",
+      "build_source_head": "65d35377e16da50b3a7d8d4fb6200a1860272ba3",
+      "source_identity_sha256": "9a72ab062ed7fd48fcb7108b91bbe40c8232f293296e1731343f8df8a3e37f4f",
+      "source_archive_sha256": "8b676bac13ea9ff219632189590f1870a019017d92940641f13dcccad226e4da",
+      "main_source_commit": "df59f4bb0ad00aa0740f6e2c81296563253b4f7e",
+      "source_scope": "Staged audited base plus immutable source overlay, including current main exterior source and preserved local authored product. Main commit alone excludes restricted local assets.",
+      "inspection": "C:\\QFRC20261008-product-extraction-artifacts\\CLOSEOUT_20261012T185048Z-sanitized-retry\\inspection\\final_apk_inspection.json",
+      "native_replay_performed": true,
+      "installed": false,
+      "physical_acceptance": false
+    },
+    "installation": {
+      "utc": "2026-10-12T19:12:49.8334008Z",
+      "passed": true,
+      "serial": "2G0YC5ZG8907TD",
+      "package": "com.alexoviedo.t2.questflight",
+      "apk": "C:\\QFRC20261008\\QuestFlight\\Builds\\Android\\QuestFlight-production.apk",
+      "sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+      "certificate_sha256": "0231ace82e88f2b9b62b8bc46b3af5c726e5b97aa645e182cea14f64d77e370b",
+      "command": "adb -s 2G0YC5ZG8907TD install -r <exact inspected APK>",
+      "install_exit": 0,
+      "install_output": "Performing Streamed Install\nSuccess",
+      "data_inode_before": "13256112",
+      "data_inode_after": "13256112",
+      "installed_base": "/data/app/~~Hb9xtcftlTsH11LR-TrVgw==/com.alexoviedo.t2.questflight-hHBiHGf3sCMwcnyf_gL9Kw==/base.apk",
+      "installed_sha256_readback": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b  /data/app/~~Hb9xtcftlTsH11LR-TrVgw==/com.alexoviedo.t2.questflight-hHBiHGf3sCMwcnyf_gL9Kw==/base.apk",
+      "package_before": "Activity Resolver Table:\n  Non-Data Actions:\n      android.intent.action.MAIN:\n        2f5b875 com.alexoviedo.t2.questflight/com.unity3d.player.UnityPlayerGameActivity filter 51600a\n          Action: \"android.intent.action.MAIN\"\n          Category: \"android.intent.category.LAUNCHER\"\n          Category: \"com.oculus.intent.category.VR\"\n\nDomain verification status:\n\nPermissions:\n  Permission [com.alexoviedo.t2.questflight.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION] (12d1a68):\n    sourcePackage=com.alexoviedo.t2.questflight\n    uid=10001 gids=[] type=0 prot=signature\n    perm=PermissionInfo{2bdb234 com.alexoviedo.t2.questflight.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION}\n    flags=0x0\n\nRegistered ContentProviders:\n  com.alexoviedo.t2.questflight/androidx.startup.InitializationProvider:\n    Provider{96556a3 com.alexoviedo.t2.questflight/androidx.startup.InitializationProvider}\n\nContentProvider Authorities:\n  [com.alexoviedo.t2.questflight.androidx-startup]:\n    Provider{96556a3 com.alexoviedo.t2.questflight/androidx.startup.InitializationProvider}\n      applicationInfo=ApplicationInfo{2b01e81 com.alexoviedo.t2.questflight}\n\nKey Set Manager:\n  [com.alexoviedo.t2.questflight]\n      Signing KeySets: 116\n\nPackages:\n  Package [com.alexoviedo.t2.questflight] (70e7b26):\n    appId=10001\n    pkg=Package{4e11d1e com.alexoviedo.t2.questflight}\n    codePath=/data/app/~~YdnGxsre5yU_i9-hkQrmkQ==/com.alexoviedo.t2.questflight-UGqLpxQI-1SBl3Ey4cUcLQ==\n    resourcePath=/data/app/~~YdnGxsre5yU_i9-hkQrmkQ==/com.alexoviedo.t2.questflight-UGqLpxQI-1SBl3Ey4cUcLQ==\n    legacyNativeLibraryDir=/data/app/~~YdnGxsre5yU_i9-hkQrmkQ==/com.alexoviedo.t2.questflight-UGqLpxQI-1SBl3Ey4cUcLQ==/lib\n    extractNativeLibs=true\n    primaryCpuAbi=arm64-v8a\n    secondaryCpuAbi=null\n    cpuAbiOverride=null\n    versionCode=2 minSdk=29 targetSdk=34\n    uses-metavr-sdk=[minApiVersion=60, targetApiVersion=205]\n    minExtensionVersions=[]\n    versionName=0.1.0-alpha.2\n    usesNonSdkApi=false\n    splits=[base]\n    apkSigningVersion=2\n    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]\n    privateFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]\n    privateFlagsExt=[ PROFILEABLE ]\n    forceQueryable=false\n    dataDir=/data/user/0/com.alexoviedo.t2.questflight\n    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]\n    usesNativeLibraries:\n      libossdk.oculus.so\n      libhzos.meta.so\n      libhzos_trackingclient.meta.so\n      libhzos_trackedinput.meta.so\n    usesLibraryFiles:\n      libossdk.oculus.so\n      libhzos.meta.so\n      libhzos_trackingclient.meta.so\n      libhzos_trackedinput.meta.so\n    timeStamp=2026-10-09 00:44:02\n    lastUpdateTime=2026-10-09 00:44:19\n    installerPackageName=null\n    installerPackageUid=-1\n    initiatingPackageName=com.android.shell\n    originatingPackageName=null\n    packageSource=1\n    appMetadataFilePath=null\n    signatures=PackageSignatures{5bb1bda version:2, signatures:[3107d3ff], past signatures:[]}\n    installPermissionsFixed=true\n    pkgFlags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]\n    privatePkgFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]\n    apexModuleName=null\n    declared permissions:\n      com.alexoviedo.t2.questflight.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: prot=signature\n    requested permissions:\n      android.permission.INTERNET\n      com.oculus.permission.HAND_TRACKING\n      com.alexoviedo.t2.questflight.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION\n      horizonos.permission.HAND_TRACKING\n      horizonos.permission.internal.ACCESS_HAND_TRACKING\n    install permissions:\n      android.permission.INTERNET: granted=true\n      com.alexoviedo.t2.questflight.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true\n      horizonos.permission.HAND_TRACKING: granted=true\n      com.oculus.permission.HAND_TRACKING: granted=true\n      horizonos.permission.internal.ACCESS_HAND_TRACKING: granted=false\n    User 0: ceDataInode=13256112 installed=true hidden=false suspended=false distractionFlags=0 stopped=false notLaunched=false enabled=0 instant=false virtual=false\n      installReason=0\n      firstInstallTime=2026-07-13 18:45:31\n      uninstallReason=0\n      gids=[3003]\n      runtime permissions:\n\nQueries:\n  system apps queryable: false\n  queries via forceQueryable:\n  queries via package name:\n  queries via component:\n    com.oculus.oemconfig:\n      com.alexoviedo.t2.questflight\n    com.oculus.q4bservice:\n      com.alexoviedo.t2.questflight\n    com.meta.handseducationmodule:\n      com.alexoviedo.t2.questflight\n    com.facebook.orca:\n      com.alexoviedo.t2.questflight\n    com.whatsapp:\n      com.alexoviedo.t2.questflight\n    com.vrchat.oculus.quest:\n      com.alexoviedo.t2.questflight\n  queryable via interaction:\n    User 0:\n      [horizonos.platform,com.oculus.externaldisplayservice,com.android.localtransport,com.oculus.deviceauthserver,com.oculus.companion.server,com.oculus.os.cm,com.oculus.linefrequencyservice,com.oculus.notification_proxy,com.android.location.fused,com.android.server.telecom,com.oculus.bugreportservice,oculus.platform,android,com.oculus.micservice,com.android.settings,com.oculus.appsafety,com.oculus.labservice,com.oculus.bugreportuploader,com.android.inputdevices,com.oculus.connectivity.bluetooth,com.oculus.nux.ota,com.oculus.os.chargecontrol,com.android.keychain,com.oculus.os.vrlockscreen,com.oculus.externalstorage,com.android.providers.settings,com.oculus.preshutdowntaskservice]:\n        com.alexoviedo.t2.questflight\n      com.oculus.vrshell:\n        com.alexoviedo.t2.questflight\n      horizonos.openxr.runtimebroker:\n        com.alexoviedo.t2.questflight\n      com.oculus.systemdriver:\n        com.alexoviedo.t2.questflight\n      com.android.permissioncontroller:\n        com.alexoviedo.t2.questflight\n  queryable via uses-library:\n\nDexopt state:\n  [com.alexoviedo.t2.questflight]\n    path: /data/app/~~YdnGxsre5yU_i9-hkQrmkQ==/com.alexoviedo.t2.questflight-UGqLpxQI-1SBl3Ey4cUcLQ==/base.apk\n      arm64: [status=verify] [reason=install] [primary-abi]\n        [location is /data/app/~~YdnGxsre5yU_i9-hkQrmkQ==/com.alexoviedo.t2.questflight-UGqLpxQI-1SBl3Ey4cUcLQ==/oat/arm64/base.odex]\n\nCompiler stats:\n  [com.alexoviedo.t2.questflight]\n    (No recorded stats)",
+      "package_after": "Activity Resolver Table:\n  Non-Data Actions:\n      android.intent.action.MAIN:\n        6af2ba8 com.alexoviedo.t2.questflight/com.unity3d.player.UnityPlayerGameActivity filter 3d2f6c1\n          Action: \"android.intent.action.MAIN\"\n          Category: \"android.intent.category.LAUNCHER\"\n          Category: \"com.oculus.intent.category.VR\"\n\nDomain verification status:\n\nPermissions:\n  Permission [com.alexoviedo.t2.questflight.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION] (beca726):\n    sourcePackage=com.alexoviedo.t2.questflight\n    uid=10001 gids=[] type=0 prot=signature\n    perm=PermissionInfo{c14ef67 com.alexoviedo.t2.questflight.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION}\n    flags=0x0\n\nRegistered ContentProviders:\n  com.alexoviedo.t2.questflight/androidx.startup.InitializationProvider:\n    Provider{15bf8b9 com.alexoviedo.t2.questflight/androidx.startup.InitializationProvider}\n\nContentProvider Authorities:\n  [com.alexoviedo.t2.questflight.androidx-startup]:\n    Provider{15bf8b9 com.alexoviedo.t2.questflight/androidx.startup.InitializationProvider}\n      applicationInfo=ApplicationInfo{d46645f com.alexoviedo.t2.questflight}\n\nKey Set Manager:\n  [com.alexoviedo.t2.questflight]\n      Signing KeySets: 116\n\nPackages:\n  Package [com.alexoviedo.t2.questflight] (a07deac):\n    appId=10001\n    pkg=Package{3a6775 com.alexoviedo.t2.questflight}\n    codePath=/data/app/~~Hb9xtcftlTsH11LR-TrVgw==/com.alexoviedo.t2.questflight-hHBiHGf3sCMwcnyf_gL9Kw==\n    resourcePath=/data/app/~~Hb9xtcftlTsH11LR-TrVgw==/com.alexoviedo.t2.questflight-hHBiHGf3sCMwcnyf_gL9Kw==\n    legacyNativeLibraryDir=/data/app/~~Hb9xtcftlTsH11LR-TrVgw==/com.alexoviedo.t2.questflight-hHBiHGf3sCMwcnyf_gL9Kw==/lib\n    extractNativeLibs=true\n    primaryCpuAbi=arm64-v8a\n    secondaryCpuAbi=null\n    cpuAbiOverride=null\n    versionCode=2 minSdk=29 targetSdk=34\n    uses-metavr-sdk=[minApiVersion=60, targetApiVersion=205]\n    minExtensionVersions=[]\n    versionName=0.1.0-alpha.2\n    usesNonSdkApi=false\n    splits=[base]\n    apkSigningVersion=2\n    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]\n    privateFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]\n    privateFlagsExt=[ PROFILEABLE ]\n    forceQueryable=false\n    dataDir=/data/user/0/com.alexoviedo.t2.questflight\n    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]\n    usesNativeLibraries:\n      libossdk.oculus.so\n      libhzos.meta.so\n      libhzos_trackingclient.meta.so\n      libhzos_trackedinput.meta.so\n    usesLibraryFiles:\n      libossdk.oculus.so\n      libhzos.meta.so\n      libhzos_trackingclient.meta.so\n      libhzos_trackedinput.meta.so\n    timeStamp=2026-10-12 13:12:30\n    lastUpdateTime=2026-10-12 13:12:47\n    installerPackageName=null\n    installerPackageUid=-1\n    initiatingPackageName=com.android.shell\n    originatingPackageName=null\n    packageSource=1\n    appMetadataFilePath=null\n    signatures=PackageSignatures{5bb1bda version:2, signatures:[3107d3ff], past signatures:[]}\n    installPermissionsFixed=true\n    pkgFlags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]\n    privatePkgFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]\n    apexModuleName=null\n    declared permissions:\n      com.alexoviedo.t2.questflight.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: prot=signature\n    requested permissions:\n      android.permission.INTERNET\n      com.oculus.permission.HAND_TRACKING\n      com.alexoviedo.t2.questflight.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION\n      horizonos.permission.HAND_TRACKING\n      horizonos.permission.internal.ACCESS_HAND_TRACKING\n    install permissions:\n      android.permission.INTERNET: granted=true\n      com.alexoviedo.t2.questflight.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true\n      horizonos.permission.HAND_TRACKING: granted=true\n      com.oculus.permission.HAND_TRACKING: granted=true\n      horizonos.permission.internal.ACCESS_HAND_TRACKING: granted=false\n    User 0: ceDataInode=13256112 installed=true hidden=false suspended=false distractionFlags=0 stopped=true notLaunched=false enabled=0 instant=false virtual=false\n      installReason=0\n      firstInstallTime=2026-07-13 18:45:31\n      uninstallReason=0\n      gids=[3003]\n      runtime permissions:\n\nQueries:\n  system apps queryable: false\n  queries via forceQueryable:\n  queries via package name:\n  queries via component:\n    com.oculus.oemconfig:\n      com.alexoviedo.t2.questflight\n    com.oculus.q4bservice:\n      com.alexoviedo.t2.questflight\n    com.meta.handseducationmodule:\n      com.alexoviedo.t2.questflight\n    com.facebook.orca:\n      com.alexoviedo.t2.questflight\n    com.whatsapp:\n      com.alexoviedo.t2.questflight\n    com.vrchat.oculus.quest:\n      com.alexoviedo.t2.questflight\n  queryable via interaction:\n    User 0:\n  queryable via uses-library:\n\nDexopt state:\n  [com.alexoviedo.t2.questflight]\n    path: /data/app/~~Hb9xtcftlTsH11LR-TrVgw==/com.alexoviedo.t2.questflight-hHBiHGf3sCMwcnyf_gL9Kw==/base.apk\n      arm64: [status=verify] [reason=install] [primary-abi]\n        [location is /data/app/~~Hb9xtcftlTsH11LR-TrVgw==/com.alexoviedo.t2.questflight-hHBiHGf3sCMwcnyf_gL9Kw==/oat/arm64/base.odex]\n\nCompiler stats:\n  [com.alexoviedo.t2.questflight]\n    (No recorded stats)",
+      "scope": "In-place same-certificate private update. No uninstall, clear-data, preference writes or app launch. Sandbox continuity verified; private preference byte hashes unavailable in nondebuggable app."
+    },
+    "source_binding": "C:\\QFRC20261008-product-extraction-artifacts\\CLOSEOUT_20261012T185048Z-sanitized-retry\\reviewed_source_binding.json",
+    "visual_qa": {
+      "passed": 107,
+      "failed": 23,
+      "source_identity": "9a72ab062ed7fd48fcb7108b91bbe40c8232f293296e1731343f8df8a3e37f4f",
+      "exact_prior_qa_source_match": true,
+      "scope": "Retained standard QA and focused tests reused with identical input identity; no stereo, performance or comfort promotion."
+    },
+    "failed_preflight_attempt": {
+      "root": "C:\\QFRC20261008-product-extraction-artifacts\\CLOSEOUT_20261012T185048Z",
+      "reason": "Source-evidence preflight rejected unsanitized staged development-agent credential fields. Unity never started; previous APK unchanged."
+    },
+    "staged_agent_sanitization": {
+      "path": "C:\\QFRC20261008\\QuestFlight\\Assets\\Resources\\DevAgentSettings.asset",
+      "backup": "C:\\QFBackup20261008\\CLOSEOUT_20261012T185048Z\\build_stage_settings_before_sanitization.asset",
+      "before_sha256": "a067836efb4f10f0256ec346857c8d1f6e6676fc675924d0a3584eab5ff99b2c",
+      "after_sha256": "fc7b89938ca013a9c68066ff0f3db9f2028ad1e6402598075eea6c4ad32a7540",
+      "only_fields": [
+        "enabled",
+        "accessToken",
+        "witClientAccessToken"
+      ],
+      "policy": "Existing ProductReleasePolicy.SanitizeAgent: disabled, both credential strings empty. Unrelated bytes/GUID unchanged; original personal settings preserved."
+    },
+    "disk_monitor": {
+      "started_utc": "2026-10-12T19:06:49.1561899Z",
+      "producer_pid": 76864,
+      "parent_pid": 78880,
+      "creation_utc": "2026-10-12T18:58:36.9164210Z",
+      "minimum_free_bytes": 11816370176,
+      "reserve_bytes": 2147483648,
+      "state": "producer_closed",
+      "reason": null,
+      "scope": "Dedicated owned tool session; fresh DriveInfo read each poll. Earlier background monitor closed without producer cancellation; retain its receipt.",
+      "updated_utc": "2026-10-12T19:07:27.6035291Z",
+      "finished_utc": "2026-10-12T19:07:29.6535645Z"
+    },
+    "automatic_review_rejection": {
+      "action": "Restore archived held tracked assets and move held untracked assets out of main checkout.",
+      "reason": "blocked by policy; no further reason supplied",
+      "resolved_by": "Owner executed guarded FinishSourceCleanup.ps1; receipt and clean main independently verified."
+    },
+    "finding_counts": {
+      "fixed_and_verified": 39,
+      "implemented_pending_validation": 24,
+      "not_applicable_proven": 1,
+      "blocked_external": 2,
+      "deferred_nonshipping_with_justification": 26
+    },
+    "gate_counts": {
+      "unverified": 18,
+      "pass": 2,
+      "fail": 2,
+      "not applicable": 3
+    },
+    "no_active_owned_job": true,
+    "quality_goal_complete": false,
+    "task_result": "Main source consolidated and clean; all working local assets preserved; newest verified APK installed in place.",
+    "tracking": {
+      "exit_code": 0,
+      "findings": 92,
+      "work_items": 18,
+      "gates": 25,
+      "receipt": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight\\.questflight_codex_audit\\status\\CLOSEOUT_20261012\\tracking.txt"
     }
   }
 }

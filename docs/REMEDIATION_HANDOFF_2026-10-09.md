@@ -1,66 +1,42 @@
-# QuestFlight remediation handoff - 2026-10-11
+# QuestFlight next-phase handoff - 2026-10-12
 
-Closed the approved 60-minute planar-feasibility batch after 7.1 minutes, before the 15-minute admission cutoff. No owned job remains. Full quality acceptance is incomplete.
+Local main source consolidation and preserved-data headset installation are complete. No owned build/test/install job remains. Full quality acceptance remains incomplete.
 
-## Current result
+## Source and clean checkout
 
-2026-10-11 approved P admission rejected before minute 15: nine scoped meshes offer only 3,885 optimistic exact-planar interior-vertex triangle savings per failing shot. Even allowing exact collinear boundary removal yields only 14,353-14,359, below every required reduction 39,737-274,642. Nine diagnostic fixtures pass; six distinct source payloads match immutable QA and candidate. No production edits or validation rerun; all 23 failures remain. B was not performed because side-window triangle prerequisite failed. This does not prove all fidelity-preserving optimization impossible or make fidelity reduction mandatory.
+Implementation commit `df59f4bb0ad00aa0740f6e2c81296563253b4f7e` on local `main` includes the existing exterior batching source, its focused tests, all-shot budget reconciliation and current remediation accounting. Main was verified clean after the owner executed the guarded cleanup; this handoff/status update forms a separate documentation commit. No push was performed. Main is the only local branch, so there were no stale branches to delete. The detached `C:/QFRC20261008` worktree remains the active preserved product/build stage, not an obsolete branch.
 
-The strict bound preserves every boundary vertex. The relaxed bound also allows removal of exactly collinear boundary vertices. Both weld equal positions across attribute seams and ignore holes, shading, UV and baked-visibility restrictions, so they overestimate available savings. The actual product was not changed. No image, stereo, Android or hardware PASS is inferred.
+All original changes are preserved in `C:/QFBackup20261008/CLOSEOUT_20261012T185048Z`: `all_local_changes_before.zip`, `repository_before.bundle`, `overlay_manifest.json`, `local_product_overlay/`, moved originals and the previous verified1704 APK. The full local audit/progress archive is `remediation_progress_20261012.zip`; its SHA/verification receipt is `progress_archive_receipt.json`. No authored asset or GUID was destroyed. `AGENTS.md` requires unclear-rights derivatives to stay uncommitted, so the generated exterior mesh, dependent rig/material bindings, held model repairs and personal development settings remain in the documented local overlay. Main alone is not the full APK source. [Next-phase source guide](NEXT_PHASE_BASELINE_2026-10-12.md).
 
-[Per-shot result](../.questflight_codex_audit/status/M18-planar-20261011/result.json) | [Diagnostic and nine fixtures](../.questflight_codex_audit/status/M18-planar-20261011/planar-admission.json) | [Immutable source match](../.questflight_codex_audit/status/M18-planar-20261011/source-provenance.json) | [Tracking receipt](../.questflight_codex_audit/status/M18-planar-20261011/tracking.txt)
+Automatic approval review initially rejected agent execution of the held-file cleanup with only "blocked by policy". The owner ran `C:/QFBackup20261008/CLOSEOUT_20261012T185048Z/FinishSourceCleanup.ps1`; its receipt and an empty Git status independently establish completion. Do not replay that completed cleanup script.
 
-## Retained implementation and artifact
+## Current built and installed artifact
 
-The prior exterior batch still improves standard QA from 105/130 to 107/130: control sweep 78 -> 63 draws, approach 86 -> 71, triangles unchanged. Its ten focused tests and three saved-prefab reruns remain evidence. All 14 scoped files match the prior QA snapshot. New build and stereo acceptance of that correction are deferred by the owner; no repeated QA was necessary for this read-only mesh analysis.
+APK `C:/QFRC20261008/QuestFlight/Builds/Android/QuestFlight-production.apk`
 
-Preserved APK `C:\QFRC20261008\QuestFlight\Builds\Android\QuestFlight-production.apk`; SHA-256 `1704f38a7043c1512df7d0a1c2e76cfe934582b897658836ef28e5b08b6d329e` rechecked unchanged. It excludes the prior exterior-batch code/prefab/mesh. Source identity `b0a890cfd6593fe86d0adfbdd384fcd1ec2b0fc068679aa9fe4b3539db20a61d`; source archive SHA-256 `de9e00198674d009e312e77d40dcfab3f1db2231045365f4a33401f9ba5dfd02`. Device state was not queried. The historical installed bd87 APK observation is not a current device observation.
+SHA-256 `2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b`; 1,816,169,900 bytes; private certificate `0231ace82e88f2b9b62b8bc46b3af5c726e5b97aa645e182cea14f64d77e370b`; nondevelopment/nondebuggable; Android ARM64, Vulkan/OpenXR source configuration, target SDK34, Quest3-only manifest. [Build/packaging receipt](C:/QFRC20261008-product-extraction-artifacts/CLOSEOUT_20261012T185048Z-sanitized-retry/verified_artifact.json).
 
-Original main HEAD `6e4a0b6cebc782ea83f4bfcd4e4c6be46c1a7acd`; candidate detached HEAD `65d35377e16da50b3a7d8d4fb6200a1860272ba3` plus existing overlay. No commit, source reset, package change, build, installation or cleanup. Native JSBSim authority, OpenXR camera ownership, authored hierarchy, source assets, GUIDs and user work remain preserved.
+Installed on Quest3 `2G0YC5ZG8907TD` using the same certificate and `adb install -r`. Installed base APK SHA was read back exactly. App sandbox inode `13256112` -> `13256112`; no uninstall, clear-data or preference write. The requested background app stop preserved data and did not interrupt a foreground flight. Private preference byte hashes remain unavailable in this nondebuggable app. [Installation receipt](C:/QFRC20261008-product-extraction-artifacts/CLOSEOUT_20261012T185048Z-sanitized-retry/installation.json).
 
-## All 23 remaining visual-budget failures
+Complete source identity `9a72ab062ed7fd48fcb7108b91bbe40c8232f293296e1731343f8df8a3e37f4f` exactly matches the retained standard QA input identity. Source archive SHA `8b676bac13ea9ff219632189590f1870a019017d92940641f13dcccad226e4da`. Staged Git base remains `65d35377e16da50b3a7d8d4fb6200a1860272ba3` plus the complete immutable source overlay; current main implementation and27 reviewed product/overlay rows are linked by [source binding](C:/QFRC20261008-product-extraction-artifacts/CLOSEOUT_20261012T185048Z-sanitized-retry/reviewed_source_binding.json). The archived source, not Git HEAD alone, defines this APK.
 
-All remain engineering failures. The following optimistic savings were NOT implemented. Each row retains its cause groups and uncertainty in the linked result. The side-window also remains three draws over budget. Thresholds remain 77 draws / 692,871 triangles / 38 materials.
+The actual Unity/Gradle build closed successfully,1912 scenery payloads verified, all12 packaging checks passed and20 safe agent-parser negative controls passed. A first preflight stopped before Unity because SDK-populated staged agent fields were not sanitized. The existing release policy was applied only to the build-stage template; the failed evidence and original personal settings remain preserved. The retry source matches retained QA exactly. The earlier background monitor stopped updating; a dedicated owned monitor completed with a minimum free space of 11.00GiB, above its2GiB reserve. No build cache or evidence was deleted.
 
-| Shot | Required reduction | Strict upper bound | Relaxed upper bound | Excess even after relaxed bound | Disposition |
-|---|---:|---:|---:|---:|---|
-| 01_default_cockpit | 110,708 | 3,885 | 14,353 | 96,355 | Unresolved; planar route insufficient |
-| 02_calibrated_cockpit | 109,048 | 3,885 | 14,353 | 94,695 | Unresolved; planar route insufficient |
-| 03_instrument_yoke | 47,875 | 3,885 | 14,353 | 33,522 | Unresolved; planar route insufficient |
-| 04_runway_from_cockpit | 74,979 | 3,885 | 14,353 | 60,626 | Unresolved; planar route insufficient |
-| 04b_cockpit_engine_cowl | 70,313 | 3,885 | 14,353 | 55,960 | Unresolved; planar route insufficient |
-| 17_sky_horizon_forward | 110,044 | 3,885 | 14,353 | 95,691 | Unresolved; planar route insufficient |
-| cloud_01_ground_scattered | 274,642 | 3,885 | 14,359 | 260,283 | Unresolved; planar route insufficient |
-| 40_pilot_left_airport_fence | 196,514 | 3,885 | 14,359 | 182,155 | Unresolved; planar route insufficient |
-| pasv1_22_cockpit_windshield | 108,516 | 3,885 | 14,353 | 94,163 | Unresolved; planar route insufficient |
-| pasv1_18_cockpit_side_window | 214,182 | 3,885 | 14,359 | 199,823 | Unresolved; planar route insufficient |
-| pasv1_23_instrument_glass | 47,875 | 3,885 | 14,353 | 33,522 | Unresolved; planar route insufficient |
-| pasv1_28_magnetic_compass_000 | 39,737 | 3,885 | 14,353 | 25,384 | Unresolved; planar route insufficient |
-| pasv1_28_magnetic_compass_090 | 39,737 | 3,885 | 14,353 | 25,384 | Unresolved; planar route insufficient |
-| pasv1_28_magnetic_compass_180 | 39,737 | 3,885 | 14,353 | 25,384 | Unresolved; planar route insufficient |
-| pasv1_28_magnetic_compass_270 | 39,737 | 3,885 | 14,353 | 25,384 | Unresolved; planar route insufficient |
-| pasv1_28_magnetic_compass_359 | 39,737 | 3,885 | 14,353 | 25,384 | Unresolved; planar route insufficient |
-| pasv1_28_magnetic_compass_001 | 39,737 | 3,885 | 14,353 | 25,384 | Unresolved; planar route insufficient |
-| pasv1_24_cockpit_ao_only | 66,285 | 3,885 | 14,353 | 51,932 | Unresolved; planar route insufficient |
-| pasv1_26_cockpit_local_shadow_off | 66,285 | 3,885 | 14,353 | 51,932 | Unresolved; planar route insufficient |
-| pasv1_20_cockpit_shadow_candidate | 66,285 | 3,885 | 14,353 | 51,932 | Unresolved; planar route insufficient |
-| pasv1_27_cockpit_shadow_heading_090 | 171,688 | 3,885 | 14,353 | 157,335 | Unresolved; planar route insufficient |
-| pasv1_27_cockpit_shadow_heading_180 | 185,013 | 3,885 | 14,353 | 170,660 | Unresolved; planar route insufficient |
-| pasv1_27_cockpit_shadow_heading_270 | 146,632 | 3,885 | 14,353 | 132,279 | Unresolved; planar route insufficient |
+## Retained verification and open failures
 
-## Remaining work and owners
+The deployed exterior correction reduces control-sweep draws78 ->63 and approach86 ->71, triangles unchanged. Existing ten focused tests and three saved-prefab reruns remain valid for identical reviewed inputs. Standard QA remains107/130 passing,23 failing, with thresholds77draws/692871triangles/38materials unchanged. The side-window remains80draws/907053triangles. [Every23 unresolved shot](../.questflight_codex_audit/status/M18-planar-20261011/result.json). The planar approach was rejected by measured upper bounds; do not repeat it, the duplicate-face probe or insufficient grove-bounds probe.
 
-- Engineering: a different, separately justified optimization is required for the 23 triangle failures. Do not rerun the planar, duplicate-face or insufficient grove-bounds investigations. Do not implement B alone. No sufficient fidelity-preserving fix or production-fix command is established. Density, coarse LOD or decimation changes require an explicit quality tradeoff; this result does not prove such a tradeoff unavoidable.
-- Other engineering failures remain: two objective views at 892,492/892,498 triangles; native yaw 0.7886204147 versus 0.55 with 2 Pass / 1 Fail / 9 Unproven; historical physical timing failure. These are not all headset-observation gaps.
-- Delivery owner: prior exterior correction build/stereo delivery remains deferred. When resumed, safe preflight is `pwsh -File scripts/build_production_quest.ps1 -ProjectPath C:/QFRC20261008/QuestFlight -PreflightOnly`. Preserve the verified APK/archive and establish fresh disk/source guards before any build. Do not replay expired build runbooks.
-- QA and owner: inspected current-source stereo, worn checks and sustained performance/thermal routes remain at their existing scopes. The owner headset session was not changed because its artifact and procedure were unchanged.
-- External reference/account owners: approved lift/stall/break/recovery reference, exact rights, historical credential evidence and remaining named inputs remain unresolved as individually recorded.
+Other demonstrated engineering failures remain: objective views892492/892498triangles; native yaw0.7886204147 versus0.55 with2Pass/1Fail/9Unproven; historical physical timing failure. The current installed candidate has no sustained cadence/thermal evidence. Approved lift/stall/break/recovery reference and remaining external rights/credential evidence remain with their recorded owners. Installation and packaging do not resolve these findings.
+
+## Next phase
+
+The owner can launch the current installed QuestFlight build. QA/owner stereo, readability/controls/audio/comfort and sustained routes remain in the updated [headset session](../.questflight_codex_audit/status/OWNER_HEADSET_SESSION.md). Earlier1704/bd87/254 install/capture helpers are historical and must not be executed against this APK without rebinding and review. No automatic capture or optimisation campaign is active.
+
+For source development, use local main plus explicitly preserved local assets where needed. Keep personal agent configuration outside the shipping template; use the existing disabled/empty-credential release policy before recording a staged build. Fresh build preflight: `pwsh -NoProfile -File scripts/build_production_quest.ps1 -ProjectPath C:/QFRC20261008/QuestFlight -PreflightOnly`. A future build needs a fresh source/artifact manifest, preservation and live disk guard; do not replay completed build runbooks.
 
 ## Accounting
 
-Tracking passed: exactly 92 findings, 18 work items, 25 gates. All individual finding/gate statuses retained: 39 verified / 24 pending validation / 2 externally blocked / 26 justified deferrals / 1 not applicable. Gates: 2 pass / 2 fail / 18 unverified / 3 not applicable. R13 and R14 remain failed.
-
-[Ledger](../.questflight_codex_audit/status/remediation-ledger.json) | [Status export](REMEDIATION_STATUS_2026-10-09.json) | [Checkpoint](../.questflight_codex_audit/status/CONTINUE_NEXT.md)
+Normal tracking passes exactly92findings/18work items/25gates. All original dispositions and independent gate statuses are retained:39verified/24pending/2blocked/26deferred/1not applicable; gates2pass/2fail/18unverified/3not applicable. R13 andR14 remainFAIL. [Current closeout](../.questflight_codex_audit/status/CLOSEOUT_20261012/result.json) | [Ledger](../.questflight_codex_audit/status/remediation-ledger.json) | [Status export](REMEDIATION_STATUS_2026-10-09.json) | [Checkpoint](../.questflight_codex_audit/status/CONTINUE_NEXT.md).
 
 ## All92 original finding dispositions
 

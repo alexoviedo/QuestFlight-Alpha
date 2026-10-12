@@ -50,3 +50,5 @@ Native JSBSim remains the sole flight authority. OpenXR owns the Main Camera.
 The authored hierarchy, standalone Quest 3 target, GUIDs and user data remain
 preserved. No dependency upgrade, renderer rewrite or aircraft parameter change
 is part of this consolidation.
+
+The current APK is built and installed: `2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b`. Packaging12/12 and exact installed hash/sandbox continuity passed. Main checkout cleanup was completed by the owner; its receipt is in the preservation root. The latest handoff records source identity, local overlay, full progress archive and independently open acceptance. Do not replay completed cleanup/install scripts. Personal DevAgentSettings remains archived; shipping/staged settings must follow the existing disabled/empty-credential release policy.
