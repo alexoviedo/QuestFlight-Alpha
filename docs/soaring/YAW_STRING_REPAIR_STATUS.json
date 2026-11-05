@@ -1,0 +1,25 @@
+{
+  "updatedUtc": "2026-10-25T02:41:27.202870+00:00",
+  "status": "IMPLEMENTED_SOFTWARE_AND_ANDROID_ASSETS_VERIFIED_PENDING_INTEGRATED_APK",
+  "software": "33/33 PASS",
+  "editorMicrobenchmark": {
+    "updates": 10000,
+    "milliseconds": 24.366,
+    "managedBytesAllocated": 0,
+    "questTiming": false
+  },
+  "triangles": 7969,
+  "stringTriangles": 24,
+  "stringVerticesBefore": 72,
+  "stringVerticesAfter": 15,
+  "renderers": 3,
+  "materials": 2,
+  "textures": 0,
+  "android": "61 player assemblies and strict mesh/material asset bundle PASS",
+  "visual": "20 final eye-offset editor captures inspected; not live stereo",
+  "standardVisual": "107/130; same23 failures and identical130 resource/warning rows",
+  "simulator": "BLOCKED_MISSING_RECORDED_REPLAYS",
+  "headsetPerformance": "UNMEASURED",
+  "apkInstalledThisTask": false,
+  "artifactRoot": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\yaw_string_20261024"
+}

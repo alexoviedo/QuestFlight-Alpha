@@ -11,17 +11,18 @@ namespace QuestFlight.Product
         public const float CockpitScale = .42f;
         public void ConfigureCockpitClearance(Transform anchor) { cockpitAnchor=anchor; }
         private string lastTitle,lastBody,lastHint;
-        private int lastCount=-1;
+        private int lastCount=-1,lastActions;
         private bool lastCompact;
         private float clearanceHeight,lastTextScale,supplementHeight;
-        private bool cockpitVisible=true;
+        private bool cockpitVisible=true,captureMenuEye=true;
+        private void OnEnable(){captureMenuEye=true;lastCount=-1;}
         private Vector3 menuEyeLocal;
         public void SetPresentationContext(bool cockpit, Transform eye)
         {
             if(cockpitVisible!=cockpit || !gameObject.activeInHierarchy)
                 lastCount=-1;
-            if(cockpitVisible && !cockpit && eye!=null && cockpitAnchor!=null)
-                menuEyeLocal=cockpitAnchor.InverseTransformPoint(eye.position);
+            if((cockpitVisible||captureMenuEye) && !cockpit && eye!=null && cockpitAnchor!=null)
+                {menuEyeLocal=cockpitAnchor.InverseTransformPoint(eye.position);captureMenuEye=false;}
             cockpitVisible=cockpit;
         }
         [SerializeField] private Transform supplement;
@@ -52,23 +53,25 @@ namespace QuestFlight.Product
             // through the panel; this anchor is fixed to the aircraft, not the head.
             ApplyCockpitPose(compact);
             title.Refresh();body.Refresh();hint.Refresh();
-            int count=0; foreach(var button in buttons)if(button.gameObject.activeSelf)count++;
-            if(lastTextScale==ProductComfortPreferences.TextScale&&lastCount==count&&lastTitle==title.Display.text&&lastBody==body.Display.text&&lastHint==hint.Display.text&&lastCompact==compact)return;
-            lastTextScale=ProductComfortPreferences.TextScale;
+            int count=0,signature=17; foreach(var button in buttons)if(button.gameObject.activeSelf){count++;signature=unchecked(signature*31+button.ContentVersion);}
+            if(lastActions==signature&&lastTextScale==ProductComfortPreferences.TextScale&&lastCount==count&&lastTitle==title.Display.text&&lastBody==body.Display.text&&lastHint==hint.Display.text&&lastCompact==compact)return;
+            lastActions=signature;lastTextScale=ProductComfortPreferences.TextScale;
             lastCount=count;lastTitle=title.Display.text;lastBody=body.Display.text;lastHint=hint.Display.text;lastCompact=compact;
             // One coordinate system for visual geometry and ray hit targets. No head following.
-            const float left=-.365f,z=1.03f,width=.73f,row=.052f;
+            const float left=-.365f,z=1.03f,width=.73f;
             float top=compact?.22f:.31f;
             title.transform.localPosition=new Vector3(left,top,z);
-            body.transform.localPosition=new Vector3(left,top-.065f,z);
+            float headingHeight=title.Display.GetPreferredValues(lastTitle,width,10).y;
+            float bodyTop=top-Mathf.Max(.065f,headingHeight+.015f);
+            body.transform.localPosition=new Vector3(left,bodyTop,z);
             float bodyHeight=string.IsNullOrEmpty(lastBody)?0:body.Display.GetPreferredValues(lastBody,width,10).y;
-            if(supplement!=null)supplement.localPosition=new Vector3(0,top-.065f-bodyHeight-.185f,z-.006f);
-            float rowY=top-.065f-bodyHeight-supplementHeight-.044f;
+            if(supplement!=null)supplement.localPosition=new Vector3(0,bodyTop-bodyHeight-.185f,z-.006f);
+            float rowY=bodyTop-bodyHeight-supplementHeight-.044f;
             foreach(var button in buttons)
-                if(button.gameObject.activeSelf) { button.transform.localPosition=new Vector3(0,rowY,z); rowY-=row; }
+                if(button.gameObject.activeSelf) { button.transform.localPosition=new Vector3(0,rowY,z); rowY-=button.ApplyRowLayout(.69f); }
             float footerY=rowY-.016f;
             hint.transform.localPosition=new Vector3(left,footerY,z);
-            float bottom=footerY-.057f;
+            float bottom=footerY-Mathf.Max(.057f,hint.Display.GetPreferredValues(lastHint,width,10).y+.016f);
             // Keep even the longest menu above the rearward-projecting glare
             // shield. Instrument-face depth alone is not a sufficient clearance.
             clearanceHeight=Mathf.Max(0,.025f-bottom*CockpitScale);

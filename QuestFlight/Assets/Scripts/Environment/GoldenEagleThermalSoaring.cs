@@ -129,7 +129,7 @@ namespace QuestFlightLab.Environment
             }
 
             Vector3 wind = windField != null && windAuthority != null
-                ? windField.Sample(position, windAuthority.CurrentState.simulationTimeSeconds, windAuthority.WeatherPreset)
+                ? windAuthority.SampleWind(position, windAuthority.CurrentState.simulationTimeSeconds)
                 : new Vector3(0, thermalField.SampleUpdraftMetersPerSecond(position), 0);
             // Preserve the accepted calm encounter; crab into horizontal wind along its fixed ground track.
             Vector3 airVelocity = velocity - new Vector3(wind.x, 0, wind.z);

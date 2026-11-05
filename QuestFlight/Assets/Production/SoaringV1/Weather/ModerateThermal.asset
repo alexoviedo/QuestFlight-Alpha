@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 553619cdd0df63649917faa2b43148c4, type: 3}
+  m_Name: ModerateThermal
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Soaring.SoaringWeatherDefinition
+  displayName: "MODERATE THERMAL \xB7 REFERENCE"
+  terrainSha256: c6789dfb7ea8e8ffc2b9c8d1c7f31c848711d606b3a56c41203a38f2159daa4e
+  referenceScope: Engineering training conditions; not a Boulder weather observation.
+    No wave/rotor or cloud association.
+  surfaceWind: {x: -2.5, y: 0}
+  upperWind: {x: -5.5, y: 0}
+  gustAmplitude: 0.2
+  ridgeEnabled: 0
+  thermalEnabled: 1
+  differentialAirflow: 1
+  wakeEnabled: 1
+  seaLevelPressurePa: 101325
+  isaOffsetKelvin: 10
+  seed: 233
+  sources:
+  - position: {x: 1700, y: 2600}
+    groundHeight: -30.233332
+    mixingHeight: 1400
+    convectiveScale: 2.56
+    radiusScale: 3
+    lifetime: 1200
+    period: 1500
+    initialAge: 240
+  - position: {x: -5200, y: 1800}
+    groundHeight: 80.06667
+    mixingHeight: 1400
+    convectiveScale: 2.56
+    radiusScale: 3
+    lifetime: 1200
+    period: 1500
+    initialAge: 480

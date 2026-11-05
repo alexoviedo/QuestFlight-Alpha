@@ -92,6 +92,8 @@ namespace QuestFlightLab.Flight.Backends
         public float flaps;
         public float leftToeBrake;
         public float rightToeBrake;
+        public float airbrake;
+        public float wheelBrake;
 
         public static FlightDynamicsControlSnapshot NeutralIdle => new FlightDynamicsControlSnapshot
         {
@@ -113,7 +115,9 @@ namespace QuestFlightLab.Flight.Backends
                 trim = controls.trim,
                 flaps = controls.flaps,
                 leftToeBrake = controls.leftToeBrake,
-                rightToeBrake = controls.rightToeBrake
+                rightToeBrake = controls.rightToeBrake,
+                airbrake = controls.airbrake,
+                wheelBrake = controls.wheelBrake
             };
         }
     }
@@ -192,6 +196,8 @@ namespace QuestFlightLab.Flight.Backends
 
     public sealed class FlightDynamicsBackendContext
     {
+        public bool secondaryNativeTug;
+        public FlightAircraftDefinition aircraftDefinition;
         public Transform simulationRoot;
         public AircraftState aircraftState;
         public ProductionTerrainSurfaceAsset terrainSurface;

@@ -29,7 +29,7 @@ namespace QuestFlight.Product
         public static void SetFlag(string key,bool value) {PlayerPrefs.SetInt("QuestFlight."+key,value?1:0);PlayerPrefs.Save();}
         public static float Adjust(float value,float step,float min,float max) => Mathf.Clamp(value+step,min,max);
         public static string MapInstruction(string text) => string.IsNullOrEmpty(text)?text:
-            text.Replace("right thumbstick",RudderHand+" thumbstick").Replace("right stick: rudder",RudderHand+" stick: rudder");
+            text.Replace("left thumbstick","{trim_hand} thumbstick").Replace("right thumbstick","{rudder_hand} thumbstick").Replace("{trim_hand}",TrimHand).Replace("{rudder_hand}",RudderHand).Replace("right stick: rudder",RudderHand+" stick: rudder");
         public static float Get(string key,float fallback,float min,float max)
         { float v=PlayerPrefs.GetFloat("QuestFlight."+key,fallback);return float.IsNaN(v)||float.IsInfinity(v)?fallback:Mathf.Clamp(v,min,max); }
         public static void Set(string key,float value) { PlayerPrefs.SetFloat("QuestFlight."+key,value);PlayerPrefs.Save(); }

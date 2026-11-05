@@ -1,0 +1,13 @@
+{
+  "scope": "Predeclared before rate comparison. Software engineering criteria, not measured rope or aircraft fidelity.",
+  "production_hz": 240,
+  "reference_hz": 480,
+  "duration_seconds": 90,
+  "convergence_240_480": {"maximum_position_difference_m": 5, "peak_tension_relative_difference": 0.10, "maximum_attitude_difference_deg": 3},
+  "diagnostic_120_480": {"maximum_position_difference_m": 15, "peak_tension_relative_difference": 0.20, "maximum_attitude_difference_deg": 8},
+  "swapped_order": {"maximum_position_difference_m": 0.000001, "peak_tension_difference_N": 0.000001},
+  "isolated_energy": {"maximum_positive_energy_growth_fraction": 0.01, "duration_seconds": 60, "damped_energy_must_decrease": true},
+  "crosswind_test_mps": 3,
+  "ground_abort_seconds": 6,
+  "extra_drag_test_airbrake": 0.5
+}

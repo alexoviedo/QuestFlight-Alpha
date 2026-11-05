@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5caaecf10ae238445afcc22c19aa33c6, type: 3}
+  m_Name: 04_thermal
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
+  lessonId: sgs233.reference.thermal
+  program: 1
+  groundTowPreparation: 0
+  soaringWeather: {fileID: 11400000, guid: 92b614c4163e9f843a2d402f59af42ee, type: 2}
+  displayName: Thermal soaring
+  briefing: SGS 2-33A / PA-18 development reference, 950 lb dual glider loading.
+    These are simulator modules, not a Mile High syllabus or training credit. Physical
+    inspection and crew communication are explained, not scored as performed. A fixed
+    reference source near the northeast practice area has a lift core and surrounding
+    sink. Center by observed energy and coordinated turns, gain20m total-energy height,
+    then leave deliberately. The ordinary VSI includes speed-to-height exchange;
+    an ideal TE aid is separately identified.
+  briefingNarration: {fileID: 0}
+  learningGoal: Thermal soaring using measured controls, native state and sustained
+    conditions.
+  reflection: Which outside cue and instrument supported your decision? What margin
+    would you require before an instructor-reviewed real flight?
+  start:
+    latitudeDegrees: 40.06278017103856
+    longitudeDegrees: -105.21079343323682
+    altitudeMslMeters: 2081.7824
+    terrainElevationMslMeters: 1583.4590662597657
+    calibratedAirspeedKnots: 40
+    headingDegrees: 166
+    pitchDegrees: 4
+    bankDegrees: 0
+    flightPathAngleDegrees: -2.862400417
+    engineRunning: 0
+  initialThrottle: 0
+  initialTrim: 0.10626088
+  initialFlaps: 0
+  allowDemonstration: 0
+  airportExercise: 0
+  goAroundStage: -1
+  stages:
+  - title: Find useful lift
+    instruction: "Enter the reference thermal near the northeast practice area at40\u201345kt.
+      Look for sustained energy gain."
+    narration: {fileID: 0}
+    successFeedback: Find useful lift was observed within the reference practice
+      window.
+    retryAdvice: An ordinary VSI rise during deceleration alone does not prove useful
+      lift.
+    task: 108
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 4
+    timeoutSeconds: 300
+    targetEnu: {x: 1700, y: 2600}
+    captureMeters: 200
+  - title: Center and gain
+    instruction: Circle smoothly at least 270 degrees in one direction in useful
+      thermal lift. Gain 20 m total-energy height while coordinated; leaving the
+      source resets the gain window.
+    narration: {fileID: 0}
+    successFeedback: Center and gain was observed within the reference practice window.
+    retryAdvice: Tighten or widen carefully to center lift; avoid surrounding sink.
+    task: 109
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 3
+    timeoutSeconds: 800
+    targetEnu: {x: 1700, y: 2600}
+    captureMeters: 200
+  - title: Leave deliberately
+    instruction: Leave the lift, level the wings and establish a safe return glide.
+    narration: {fileID: 0}
+    successFeedback: Leave deliberately was observed within the reference practice
+      window.
+    retryAdvice: "Exit the source and settle35\u201365kt; plan landing before margin
+      runs out."
+    task: 110
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 5
+    timeoutSeconds: 300
+    targetEnu: {x: 1700, y: 2600}
+    captureMeters: 200
+  orientation: 

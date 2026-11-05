@@ -29,7 +29,8 @@ namespace QuestFlight.Product
         {status=s;title=t;instruction=i;hint=h;surface=backing;progress=bar;theme=style;}
         public void Present(string ownership,string step,string cue,int index,int count,bool captions,bool urgent,AudioSource spokenAudio=null)
         {
-            if(spokenAudio!=null&&!urgent)
+            captions|=urgent;
+            if(spokenAudio!=null&&!urgent&&captions)
             {if(timeline==null)timeline=new ProductCaptionTimeline(captionTimings);cue=timeline.At(spokenAudio,cue);}
             string controlsHint=ownership.StartsWith("Demo")?"Menu: take control / help · X: repeat":step.StartsWith("Boulder ")&&ownership=="Your controls"?"Menu: pause / let demo fly · X: repeat":"Menu: pause / help · X: repeat";
             if(hint.text!=controlsHint)hint.text=controlsHint;

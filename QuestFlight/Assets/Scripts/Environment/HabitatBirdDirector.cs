@@ -22,7 +22,7 @@ namespace QuestFlightLab.Environment
         private int session=-1;
         private float clock,encounterUntil;
         private Vector3 demoCenter,encounterDirection;
-        private bool demoSession;
+        private bool demoSession,soaringDemo;
         private readonly Plane[] left=new Plane[6],right=new Plane[6];
         private readonly int[] order=new int[24];
         private static readonly ProfilerMarker Tick=new ProfilerMarker("QuestFlight.Wildlife");
@@ -49,12 +49,16 @@ namespace QuestFlightLab.Environment
             session=modes.FlightSessionVersion;clock=0;
             EncounterStarted=false;EncounterFinished=false;
             demoSession=modes.State==ProductFlightModeCoordinator.FlightModeState.Demo;
-            demoCenter=flight.windField.Sample(Vector3.zero,0).x>1?demo26Center:demo08Center;
+            soaringDemo=demoSession&&modes.AuthoredDemoPilot.IsSoaringDemo;
+            demoCenter=flight.SampleWind(Vector3.zero,0).x>1?demo26Center:demo08Center;
+            if(soaringDemo){demoCenter=modes.AuthoredDemoPilot.SoaringProfile.airborneStart;demoCenter.y=modes.AuthoredDemoPilot.ShortShowcase?demoCenter.y+30:200;var source=flight.SoaringAtmosphere.Source(0);var flow=flight.SampleAtmosphereComponents(demoCenter,0).background;var center=QuestFlightLab.Flight.Soaring.SoaringAtmosphereSession.Center(source,demoCenter.y,new Vector2(flow.x,flow.z));demoCenter.x=center.x;demoCenter.z=center.y;}
             for(int i=0;i<birds.Length;i++)
             {
                 var b=birds[i];Vector3 center=demoSession&&b.hero?demoCenter:b.habitatCenter;
+                if(soaringDemo&&b.hero&&!modes.AuthoredDemoPilot.ShortShowcase){center.x+=6500;center.y=650;}
                 flight.windField.SampleGrid(center.x,center.z,out float ground,out _);
                 b.ResetBird(center,ground);order[i]=i;
+                if(soaringDemo&&b.hero&&!modes.AuthoredDemoPilot.ShortShowcase)b.Travelling=true;
                 if(b.leader!=null)
                 {
                     Vector3 f=b.leader.AirVelocity.normalized,r=Vector3.Cross(Vector3.up,f);
@@ -79,10 +83,10 @@ namespace QuestFlightLab.Environment
                     {
                         Vector3 delta=Eagle.transform.position-state.positionUnityMeters;
                         Vector3 direction=Vector3.ProjectOnPlane(state.velocityUnityMetersPerSecond,Vector3.up).normalized;
-                        if(state.altitudeAglMeters>180 && Mathf.Abs((float)state.bankDegrees)<15 && delta.magnitude<650 &&
+                        if((!soaringDemo||pilot.SoaringGuidance.Phase==SoaringDemoGuidance.Stage.Thermal) && state.altitudeAglMeters>180 && Mathf.Abs((float)state.bankDegrees)<(soaringDemo?32:15) && delta.magnitude<650 &&
                            Vector3.Dot(delta.normalized,direction)>.6f)
                         {
-                            EncounterStarted=true;encounterUntil=clock+28;
+                            EncounterStarted=true;encounterUntil=clock+(soaringDemo?300:28);
                             encounterDirection=direction;
                             Debug.Log("[Wildlife] Eagle pass begins at "+Eagle.transform.position+" aircraft="+state.positionUnityMeters);
                         }
@@ -97,7 +101,7 @@ namespace QuestFlightLab.Environment
                     if(clock>=b.NextDecision)
                     {b.NextDecision=clock+.17f+(i%3)*.013f;Decide(b,state);}
                     Vector3 desired;
-                    if(b.hero && EncounterStarted&&!EncounterFinished)
+                    if(b.hero && EncounterStarted&&!EncounterFinished&&!soaringDemo)
                     {
                         // Fixed world heading after release, not aircraft pacing or camera following.
                         desired=encounterDirection*b.airspeed;
@@ -141,8 +145,8 @@ namespace QuestFlightLab.Environment
 
         private void Decide(HabitatBirdActor b,FlightDynamicsState state)
         {
-            b.Wind=flight.windField.Sample(b.transform.position,state.simulationTimeSeconds);
-            b.AvoidanceVelocity=Avoidance(b,state.positionUnityMeters,state.velocityUnityMetersPerSecond,100);
+            b.Wind=flight.SampleWind(b.transform.position,state.simulationTimeSeconds);
+            b.AvoidanceVelocity=Avoidance(b,state.positionUnityMeters,state.velocityUnityMetersPerSecond,soaringDemo&&b.hero?150:100);
             foreach(var plane in traffic.actors)if(!plane.Suppressed)
                 b.AvoidanceVelocity+=Avoidance(b,plane.Position,plane.Velocity,80);
             Vector3 ahead=b.transform.position+b.Velocity*4;
@@ -151,7 +155,12 @@ namespace QuestFlightLab.Environment
                 b.MinimumClimb=Mathf.Clamp((surface.heightMeters+55-b.transform.position.y)*.2f,-3,3);
             b.Lift=b.Wind.y;
             Vector3 center=b.Secondary?b.secondaryCenter:b.habitatCenter;
-            if(b.hero && demoSession&&!EncounterFinished)center=demoCenter;
+            if(b.hero && soaringDemo&&!EncounterFinished)
+            {
+                var source=flight.SoaringAtmosphere.Source(0);var flow=flight.SampleAtmosphereComponents(b.transform.position,state.simulationTimeSeconds).background;
+                var at=QuestFlightLab.Flight.Soaring.SoaringAtmosphereSession.Center(source,b.transform.position.y,new Vector2(flow.x,flow.z));center=new Vector3(at.x,b.transform.position.y,at.y);
+            }
+            else if(b.hero && demoSession&&!EncounterFinished)center=demoCenter;
             else if(b.thermalIndex>=0)
             {
                 var field=flight.windField;
@@ -218,6 +227,11 @@ namespace QuestFlightLab.Environment
             Vector3 delta=Eagle.transform.position-pilotCamera.transform.position;
             float distance=delta.magnitude;
             if(distance<85||distance>320 || Vector3.Dot(pilotCamera.transform.forward,delta.normalized)<.72f)return false;
+            if(soaringDemo)
+            {
+                Vector3 view=pilotCamera.WorldToViewportPoint(Eagle.transform.position);
+                if(view.z<=0||view.x<.08f||view.x>.92f||view.y<.1f||view.y>.85f)return false;
+            }
             Vector3 local=flight.transform.InverseTransformDirection(delta.normalized);
             if(local.z<.65f || local.y<-.12f || local.y>.5f)return false;
             Vector3 relative=Eagle.Velocity-flight.CurrentState.velocityUnityMetersPerSecond;

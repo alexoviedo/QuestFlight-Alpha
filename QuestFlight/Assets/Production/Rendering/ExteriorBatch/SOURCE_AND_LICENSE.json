@@ -1,0 +1,29 @@
+{
+    "source": "Assets/Resources/QuestFlightLab/ImportedAssets/Cessna172KogThorns/cessna172.glb",
+    "sourceSha256": "a22acb34b7611e35dec891c6977e66383c470e6f8f36f014dba54df4f9a83872",
+    "sourceSuffixes": [
+        "002",
+        "003",
+        "004",
+        "005",
+        "006",
+        "007",
+        "009",
+        "010",
+        "011",
+        "018",
+        "020",
+        "022",
+        "023",
+        "024",
+        "025",
+        "026"
+    ],
+    "sourceDraws": 16,
+    "combinedDraws": 1,
+    "triangles": 4457,
+    "vertexCount": 3710,
+    "generator": "Assets/Editor/ProductionAircraftExteriorBatchAuthoring.cs",
+    "rights": "Local derivative of existing Cessna172KogThorns source. Inherits source rights and unresolved distribution restrictions; no new permission or public-distribution claim. Keep local/uncommitted pending existing asset provenance review.",
+    "scope": "External profile only; cockpit retains original renderers. No simplification, removed faces, changed aircraft parameters or runtime hierarchy construction."
+}

@@ -1,0 +1,101 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5caaecf10ae238445afcc22c19aa33c6, type: 3}
+  m_Name: 05_ridge
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
+  lessonId: sgs233.reference.ridge
+  program: 1
+  groundTowPreparation: 0
+  soaringWeather: {fileID: 11400000, guid: 7129446905e0e4c479a968ee557fc828, type: 2}
+  displayName: Ridge soaring
+  briefing: SGS 2-33A / PA-18 development reference, 950 lb dual glider loading.
+    These are simulator modules, not a Mile High syllabus or training credit. Physical
+    inspection and crew communication are explained, not scored as performed. Stronger
+    supported easterly reference flow crosses the terrain. Stay east of the rising
+    ridge, above60m terrain margin and turn outward through east. Exit east early.
+    Wave, rotor, exact local clearance and moderate-ridge sustained acceptance are
+    not established.
+  briefingNarration: {fileID: 0}
+  learningGoal: Ridge soaring using measured controls, native state and sustained
+    conditions.
+  reflection: Which outside cue and instrument supported your decision? What margin
+    would you require before an instructor-reviewed real flight?
+  start:
+    latitudeDegrees: 40.05195143602339
+    longitudeDegrees: -105.29816346914961
+    altitudeMslMeters: 1948.6324061035157
+    terrainElevationMslMeters: 1828.6324061035157
+    calibratedAirspeedKnots: 40
+    headingDegrees: 0
+    pitchDegrees: 0
+    bankDegrees: 0
+    flightPathAngleDegrees: -2.862400417
+    engineRunning: 0
+  initialThrottle: 0
+  initialTrim: 0.10626088
+  initialFlaps: 0
+  allowDemonstration: 0
+  airportExercise: 0
+  goAroundStage: -1
+  stages:
+  - title: Windward track
+    instruction: "Follow the windward side north/south above60m terrain clearance
+      and35\u201365kt."
+    narration: {fileID: 0}
+    successFeedback: Windward track was observed within the reference practice window.
+    retryAdvice: Stay east of the rising terrain; this stronger reference is the
+      sustained test condition.
+    task: 111
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 12
+    timeoutSeconds: 300
+    targetEnu: {x: -6150, y: 1400}
+    captureMeters: 200
+  - title: Turn away from terrain
+    instruction: Reverse heading at least 140 degrees in one direction through the
+      open eastern side, preserving 60 m terrain clearance. Heading oscillation does
+      not count.
+    narration: {fileID: 0}
+    successFeedback: Turn away from terrain was observed within the reference practice
+      window.
+    retryAdvice: Observe the eastward half-circle; do not turn into rising western
+      terrain.
+    task: 112
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 2
+    timeoutSeconds: 300
+    targetEnu: {x: -6150, y: 1400}
+    captureMeters: 200
+  - title: Exit east
+    instruction: Leave the ridge toward the east with at least80m local clearance.
+    narration: {fileID: 0}
+    successFeedback: Exit east was observed within the reference practice window.
+    retryAdvice: Exit early; a ridge can stop supporting flight as wind changes.
+    task: 113
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 5
+    timeoutSeconds: 300
+    targetEnu: {x: -5700, y: 1400}
+    captureMeters: 200
+  orientation: 

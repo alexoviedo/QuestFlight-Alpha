@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "package": "com.alexoviedo.questflight.jsbsim",
-  "packageVersion": "0.3.0",
+  "packageVersion": "0.4.0",
   "upstream": {
     "name": "JSBSim",
     "version": "1.3.1",
@@ -39,20 +39,20 @@
     "repository": "alexoviedo/T2-QuestFlight",
     "frozenCommit": "65d35377e16da50b3a7d8d4fb6200a1860272ba3",
     "headerPath": "tools/native/jsbsim_bridge/include/qfl_jsbsim_native.h",
-    "headerBuildInputSha256": "d245476b07b3d0bcdc7e04d4f6d7672039923e6f885700277121a647a7317824",
-    "headerCanonicalLfSha256": "d245476b07b3d0bcdc7e04d4f6d7672039923e6f885700277121a647a7317824",
+    "headerBuildInputSha256": "d0197a106514cc9ba866c87b3862b79f17d19bb24b52058d007494b24f875b38",
+    "headerCanonicalLfSha256": "d0197a106514cc9ba866c87b3862b79f17d19bb24b52058d007494b24f875b38",
     "implementationPath": "tools/native/jsbsim_bridge/src/qfl_jsbsim_native.cpp",
-    "implementationBuildInputSha256": "3191bab010b3c5a8caec1a87410a24b1c7dcb6f5f7f83cc4de448eaa7f8bd8a6",
-    "implementationCanonicalLfSha256": "3191bab010b3c5a8caec1a87410a24b1c7dcb6f5f7f83cc4de448eaa7f8bd8a6",
+    "implementationBuildInputSha256": "09a6a3b0be5da7aa88d6a1bb3d1a15021c79fa85bef62f41a3b081548ce8a1ae",
+    "implementationCanonicalLfSha256": "978c1b7a7db14a84be0be5c02291b72b3a7b6c21ec35e30a2be21d1004924f75",
     "buildInputTextLineEndings": "LF",
     "canonicalSourceTextLineEndings": "LF",
     "license": "Project-owned",
     "previousBuildFrozenCommit": "9618464b80986e0d442f8907b8de6a841daf1a25",
     "workingTreeModified": true,
-    "identityNote": "Remediation candidate built from this base commit plus the exact header/implementation hashes below; not a clean or committed source identity."
+    "identityNote": "Autonomous V2 ABI3; complete native build inputs include aircraft extension; exact file hashes identify uncommitted candidate."
   },
   "abi": {
-    "version": 2,
+    "version": 3,
     "binariesChangedForModelDerivative": true,
     "managedDiagnostics": [
       "configured initial conditions",
@@ -63,7 +63,8 @@
       "mass, CG, and fuel state",
       "in-flight terrain updates",
       "longitudinal and full trim"
-    ]
+    ],
+    "aircraftCapabilities": "Explicit engine/tank/station/contact counts; SI external loads, ECEF attachment velocity, air data and conditions"
   },
   "build": {
     "windowsArchitecture": "x86_64",
@@ -82,39 +83,52 @@
       },
       {
         "path": "tools/native/jsbsim_bridge/include/qfl_jsbsim_native.h",
-        "sha256": "d245476b07b3d0bcdc7e04d4f6d7672039923e6f885700277121a647a7317824"
+        "sha256": "d0197a106514cc9ba866c87b3862b79f17d19bb24b52058d007494b24f875b38"
+      },
+      {
+        "path": "tools/native/jsbsim_bridge/src/qfl_jsbsim_aircraft_v3.inc",
+        "sha256": "424f02a14e9b377c35b59fe7cb0a614b0951ec9bfda3ce7221c62e16d1120f96"
+      },
+      {
+        "path": "tools/native/jsbsim_bridge/src/qfl_jsbsim_ground_v3.inc",
+        "sha256": "4400b13bcdde10b561162d8cc7366a545d5ff8949e2707013127c4550f0eb6b4"
       },
       {
         "path": "tools/native/jsbsim_bridge/src/qfl_jsbsim_native.cpp",
-        "sha256": "3191bab010b3c5a8caec1a87410a24b1c7dcb6f5f7f83cc4de448eaa7f8bd8a6"
+        "sha256": "09a6a3b0be5da7aa88d6a1bb3d1a15021c79fa85bef62f41a3b081548ce8a1ae"
+      },
+      {
+        "path": "tools/native/jsbsim_bridge/src/qfl_jsbsim_properties_v3.inc",
+        "sha256": "cd8ee9f99ba92b8118d666e38823805a660e8674e7eb65feedf3c4b89c75facb"
       },
       {
         "path": "tools/native/jsbsim_bridge/src/qfl_jsbsim_smoke.cpp",
         "sha256": "ec70a809303241bcc7ac7f491ae1dfc44db97a861d710fca04d3f7d9f062f781"
       }
     ],
-    "upstreamRevision": "3b25f25e49b42d0489c04ac805674fc1450ca579"
+    "upstreamRevision": "3b25f25e49b42d0489c04ac805674fc1450ca579",
+    "soaringBuildReport": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\soaring_autonomous_v2_20261013\\native_v3_coupling\\jsbsim_native_gate_report.json"
   },
   "binaries": [
     {
       "path": "Runtime/Plugins/Windows/x86_64/JSBSim.dll",
       "bytes": 2007040,
-      "sha256": "af02ea3b22e81403fa3230673db199ff99a48756e3dbd77037af7f5dacf747fa"
+      "sha256": "b8bfb0d328ed9dc3e252d66d84c00d3d990abcb0f1dcd0830aaa63aefbbfdabc"
     },
     {
       "path": "Runtime/Plugins/Windows/x86_64/qfl_jsbsim_native.dll",
-      "bytes": 54784,
-      "sha256": "25fc698efc2501109ddbaaf1174ea4b0a96e2560b43857348e4adc35e9db7305"
+      "bytes": 97280,
+      "sha256": "8da29ad94241a00e5e4beb75788f5d57e4c9f539ea736e2f4147d3d067dcfe00"
     },
     {
       "path": "Runtime/Plugins/Android/arm64-v8a/libJSBSim.so",
       "bytes": 2446528,
-      "sha256": "1eca3d8e4428814ceb3534d04372edbbca415e89d2c5f9f4d4072ecd488b2a5c"
+      "sha256": "7bc082cc653e16cbe609afc71754170955199ccbd604861f85777cecfb30826b"
     },
     {
       "path": "Runtime/Plugins/Android/arm64-v8a/libqfl_jsbsim_native.so",
-      "bytes": 60496,
-      "sha256": "48df06f1f250d99acf45c16db894494ae238161255ff075a99732f5b709d3310"
+      "bytes": 95864,
+      "sha256": "596638da5a5aa484366680c3e7b0e0f79742e9db79471f58cc7a2d9dc41d5d4f"
     }
   ],
   "runtimeData": [

@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: 01_taxi
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 01_taxi
+  program: 0
+  groundTowPreparation: 0
+  soaringWeather: {fileID: 0}
   displayName: Cockpit and taxi
   briefing: We start parked with the engine running. Learn roll and pitch as two
     different yoke movements, check steering and brakes, then taxi to the marked
@@ -78,7 +81,7 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Rudder and steering
-    instruction: In the airplane these are foot-pedal inputs. Here, move the right
+    instruction: In the airplane these are foot-pedal inputs. Here, move the steering
       thumbstick left, then right, and let it center. The yoke does not steer the
       nosewheel.
     narration: {fileID: 8300000, guid: 88d4278d6b7140347a552cdaac151313, type: 3}
@@ -96,12 +99,12 @@ MonoBehaviour:
     targetEnu: {x: 0, y: 0}
     captureMeters: 200
   - title: Hold both brakes
-    instruction: Pull the throttle knob fully back to idle. Squeeze both index triggers
-      and keep the airplane stopped. Each trigger applies its side of the wheel brakes.
+    instruction: Pull the throttle to idle. Apply both brakes using the index triggers
+      and stay stopped. Review your brake assignment in Menu, Settings, Controls.
     narration: {fileID: 8300000, guid: bb7845a458be52c4c8653e6cda21c75b, type: 3}
     successFeedback: You held the airplane stopped with both brakes and idle power.
-    retryAdvice: Use both index triggers together. Check that the throttle is fully
-      back.
+    retryAdvice: Apply both brakes using your selected assignment. Check that the
+      throttle is fully back.
     task: 3
     reference: 11
     attitudeOnly: 0

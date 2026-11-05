@@ -1,0 +1,71 @@
+{
+  "updatedUtc": "2026-10-15T22:01:35.600982+00:00",
+  "status": "CANDIDATE_ALPHA4_INSTALLED_ACCEPTANCE_PARTIAL",
+  "scope": "SGS three-view airframe reconstruction, curved cockpit, shaped lifting surfaces and tracked grips; no FDM tuning",
+  "artifactRoot": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\sgs_visual_repair_20261015",
+  "frozenBudgets": {
+    "triangles": 8000,
+    "renderers": 3,
+    "materials": 2,
+    "addedTextures": 0
+  },
+  "authoredActual": {
+    "triangles": 7921,
+    "renderers": 3,
+    "materials": 2,
+    "addedTextures": 0
+  },
+  "completed": [
+    "Original donor, downloads, metadata GUIDs and rollback preserved",
+    "Dimensioned Schweizer-supplied three-view, actual cockpit/exterior photos and manual inspected",
+    "Closed compound nose/canopy/fuselage; tapered NACA43012A wings and shaped ailerons; symmetric reference tail sections",
+    "Split normals, authored seat pose, control pivots, animated grab anchors and inverse arc input repaired",
+    "68/68 focused,31/31 PlayMode,16/16 locked geometry/control checks; integrity/closure/shader audits passed",
+    "Final live simulator14/14 scoped checks and inspected stereo;9 offline SGS stereo pairs; standard130-view resource comparison complete",
+    "Final alpha4/code4 packaged with lint enabled, ARM64/16KiB alignment/signature/native/model/scenery checks pass",
+    "Installed exact APK on Quest3 without clearing data; installed hash and unchanged training save verified",
+    "Exact source snapshot, Blender/model/reference hashes, APK and32 evidence hashes preserved in CANDIDATE_IDENTITY.json"
+  ],
+  "remaining": [
+    "Worn SGS seat recalibration, cockpit/control reach and geometry acceptance",
+    "Actual rendered Quest CPU/GPU/frame-time/memory and thermal measurements",
+    "First-launch/native model-cache/flight handling on focused headset",
+    "Exact operator/cockpit/tail-section references and historical full-scene resource/native fidelity/full simulator acceptance failures remain deferred"
+  ],
+  "rights": "Original donor and generated/reference assets remain local and uncommitted; distribution clearance pending. No downloaded reference photos used as product textures.",
+  "fidelity": "Reference interpretation, not measured replica or photorealism acceptance",
+  "latestUserDirection": "Correct entire airframe silhouette, enclosed front/canopy, wing planform and airfoil sections before candidate build",
+  "threeview": "Martin Simons 1996, from Schweizer Aircraft Corporation supplied data; RCLibrary16826; two-page PDF preserved",
+  "airfoil": "NACA43012A TRUE coordinates from UIUC V5 Appendix A; no FDM changes",
+  "software": "68/68 focused;31/31 PlayMode;16/16 locked geometry/control; integrity/closure/shader pass.",
+  "enclosure": "512/512 nominal-eye rays intersect enclosure; geometric witness only",
+  "eyeCorrection": "Authored SGS seat eye lowered0.52m into three-view enclosure. Native CG/physics unchanged; OpenXR camera never written.",
+  "simulator": "Final51d775ed204946ab94d97505a32a9afc live SGS session14/14 checks true, errors[]; final neutral stereo and both control-eye captures visually inspected. Not formal replay or Quest evidence.",
+  "physical": "Quest connected; mWakefulness=Asleep after install. No worn/runtime/physical timing acceptance.",
+  "geometry": "Three-view reconstruction locked: closed compound nose/canopy, correctly oriented NACA wing/aileron sections, estimated symmetric tail sections, outward normals and streamlined lift struts, corrected brake-blade direction. No further geometry changes planned.",
+  "staticResources": "Full-sceneFAIL retained107/130; all130 draw/triangle/material rows exactly unchanged from alpha3. SGS component7921/8000triangles,3renderers,2materials,no textures.",
+  "buildAttempt1": "Failed during IL2CPP code generation from disk exhaustion; original log/source snapshots preserved under build_attempt_1_disk_full",
+  "retry": "Host-only IL2CPP jobs1/Bee jobs1 and DOTNET_PROCESSOR_COUNT2; no game/resource/physics/quality changes.",
+  "buildAttempt2": "Failed while splitting Android player assets from disk exhaustion and IL2CPP startup from OutOfMemory. Both attempts and source snapshots preserved.",
+  "cleanup": "User removed generated external QA Library using guarded commands after assistant automatic-review rejection. Lossless canonical cache/symbol compression and normal Gradle assembly after Unity exit resolved host peak. No original source/download/build rollback removal.",
+  "next": "No further implementation or builds pending in this repair. Perform focused worn checklist and physical timing when headset can be used; retain existing open acceptance failures.",
+  "installedVersion": "0.1.0-alpha.4/code4 installed; exact installed APK SHA matches preserved candidate; training save unchanged.",
+  "cleanupCompression": "User ran guarded cache removal. External QA Library confirmed absent;11,090,083,840bytes C free before retry. Source/player/captures preserved.",
+  "acceptanceReport": "docs/soaring/SGS_VISUAL_REPAIR_ACCEPTANCE.md",
+  "buildAttempt3": "User cleanup verified. Unity job-worker1 completed native compile but disk exhaustion copying0.79GiB IL2CPP debug symbols; no APK. Source/archive/model hashes verified. All logs preserved final_android_after_cleanup.",
+  "recovery": "Lossless Bee artifact compression completed:5,405,354,101logical bytes stored1,267,956,692bytes; freeC11,150,757,888bytes. Unity startup recreated Temp; its active directory was then marked for NTFS compression. No source/resource/quality reductions.",
+  "activeBuild": "COMPLETE: final_android_incremental/QuestFlight-sgs-threeview-alpha4.apk",
+  "candidate": {
+    "path": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\sgs_visual_repair_20261015\\final_android_incremental\\QuestFlight-sgs-threeview-alpha4.apk",
+    "bytes": 1816561220,
+    "sha256": "78f63129011297ed65b8e85ea9f8c8e541d768d0ffb2848f0be9528233ad4d28",
+    "installedSha256": "78f63129011297ed65b8e85ea9f8c8e541d768d0ffb2848f0be9528233ad4d28",
+    "installedSerial": "2G0YC5ZG8907TD",
+    "versionName": "0.1.0-alpha.4",
+    "versionCode": 4
+  },
+  "candidateIdentity": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\sgs_visual_repair_20261015\\final_android_incremental\\CANDIDATE_IDENTITY.json",
+  "android": "PASS package/install. Normal Gradle assembleRelease with lint enabled succeeds after Unity storage failure; separate postbuild shader audit106materials/errors[]. No content/quality/lint weakening.",
+  "sourceBinding": "311 archived dirty/untracked inputs verified;27 model/reference entries unchanged;3284 generated player asset entries exactly match APK;1912 scenery files verified; native/model payload exact. Postbuild compiled-source/authored inputs unchanged; only progress documentation differs from prebuild snapshot.",
+  "subsequentSourceRepair": "docs/soaring/SGS_AIRBRAKE_STATUS.json (2026-10-16; source only, not the historical alpha4 APK described here)"
+}

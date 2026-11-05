@@ -25,6 +25,7 @@ param(
   [switch]$StaticEvidenceOnly,
   [switch]$SuppressOperatorPrompt,
   [switch]$NoHumanWitness,
+  [switch]$RespectPhysicalPresence,
   [switch]$KeepHeadsetAwake
 )
 
@@ -1181,6 +1182,17 @@ try {
     $foveationOverrideChanged = $true
     Invoke-Adb -Arguments @('shell', 'setprop', 'debug.oculus.foveation.level', "$DiagnosticFoveationLevel") | Out-Null
   }
+  if ($RespectPhysicalPresence) {
+    if ($KeepHeadsetAwake) { throw 'RespectPhysicalPresence cannot be combined with KeepHeadsetAwake.' }
+    $physicalPower = Invoke-Adb -Arguments @('shell', 'dumpsys', 'power')
+    $physicalVrPower = Invoke-Adb -Arguments @('shell', 'dumpsys', 'oculus.internal.power.IVrPowerManager/default')
+    $physicalPower | Set-Content -LiteralPath (Join-Path $OutputDir 'physical_power_before.txt')
+    $physicalVrPower | Set-Content -LiteralPath (Join-Path $OutputDir 'physical_vr_power_before.txt')
+    if ($physicalPower -notmatch 'mWakefulness=Awake' -or $physicalPower -notmatch 'mProximityPositive=true' -or
+        (Get-QuestVirtualProximityState -Dump ($physicalVrPower | Out-String)) -ne 'DISABLED') {
+      throw 'PHYSICAL_PRESENCE_UNAVAILABLE: genuine awake/proximity state with virtual proximity disabled is required. No power or presence override was sent.'
+    }
+  } else {
   $originalStayAwakeSetting = (Invoke-Adb -Arguments @('shell', 'settings', 'get', 'global', 'stay_on_while_plugged_in') -AllowFailure).Trim()
   Set-Content -LiteralPath (Join-Path $OutputDir 'stay_awake_setting_before.txt') -Value $originalStayAwakeSetting -Encoding UTF8
   Invoke-Adb -Arguments @('shell', 'svc', 'power', 'stayon', 'usb') -AllowFailure | Out-Null
@@ -1205,6 +1217,7 @@ try {
   }
   if ($NoHumanWitness -and $powerAfterWake -notmatch 'mWakefulness=Awake') {
     throw 'Quest remained asleep after unattended wake/proximity automation; no app measurement was started.'
+  }
   }
   Invoke-Adb -Arguments @('shell', 'dumpsys', 'thermalservice') -AllowFailure |
     Set-Content -LiteralPath (Join-Path $OutputDir 'thermal_before.txt') -Encoding UTF8

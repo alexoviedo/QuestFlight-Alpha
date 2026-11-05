@@ -10,6 +10,7 @@ param(
   [switch]$Rebuild,
   [switch]$SkipInstall,
   [switch]$Unattended,
+  [switch]$RespectPhysicalPresence,
   [switch]$SkipScreenRecording,
   [switch]$StaticEvidenceOnly
 )
@@ -171,6 +172,7 @@ try {
       OutputDir = $temporalDir
       SuppressOperatorPrompt = [bool]$Unattended
       NoHumanWitness = [bool]$Unattended
+      RespectPhysicalPresence = [bool]$RespectPhysicalPresence
       SkipScreenRecording = $true
       StaticEvidenceOnly = [bool]$StaticEvidenceOnly
       SkipInstall = $runNumber -gt 1

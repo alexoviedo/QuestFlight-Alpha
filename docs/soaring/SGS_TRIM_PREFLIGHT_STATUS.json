@@ -1,0 +1,59 @@
+{
+  "schema": "questflight.sgs-trim-preflight.v1",
+  "startedUtc": "2026-10-17T00:02:16Z",
+  "deadlineUtc": "2026-10-17T00:32:16Z",
+  "status": "IMPLEMENTED_SCOPED_VERIFICATION_COMPLETE;FULL_APK_LIVE_XR_WORN_PENDING",
+  "artifactRoot": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\sgs_trim_preflight_20261016",
+  "before": {
+    "triangles": 7991,
+    "renderers": 3,
+    "materials": 2,
+    "textures": 0
+  },
+  "limits": {
+    "triangles": 8000,
+    "renderers": 3,
+    "materials": 2,
+    "textures": 0
+  },
+  "selectedFit": "Early left-wall four-notch bungee trim. Photographic dimensions, not surveyed factory geometry.",
+  "mapping": "Existing signed continuous native trim and 155mm radius / +/-30-degree reference animation retained. Four-notch hardware modeled; physical latch force, notch calibration and discrete bungee forces not modeled.",
+  "scope": [
+    "Replace green stalk with dark flat bent arm, flattened circular grip and four-notch quadrant below brake.",
+    "Remove arbitrary trim movement checklist gate; explain documented pre-takeoff setting in reference briefing.",
+    "Visible Skip preflight and prepare launch reuses native restaging/reconnection; no fabricated observations or independent checklist credit."
+  ],
+  "headset": "NOT_RUN_USER_DEFERRED",
+  "fullApk": "NOT_BUILT_THIS_CHANGE; existing alpha5 installed unchanged",
+  "verification": {
+    "focusedFinal": "PASS30/30 includes native both-runway skip/reconnect/roll, SDK trim regrab, reach, budgets and lesson credit semantics.",
+    "regression": "PASS2/2 final native menu tests: both08/26 manual checks/reconnect/repeated release/clear/restart and explicit skip after release/reconnect/clear/native roll, using actual button and pointer actions.",
+    "android": "PASS61 player-script assemblies and StrictMode SGS asset bundle; not a full APK or IL2CPP link.",
+    "offlineStereo": "28 final model captures and8 final menu captures generated. Both-eye handle endpoints/intermediate poses, pilot/left controls, first-row skip and skipped-ready at120% text inspected; standard contact sheet inspected. Separate Editor cameras, not live XR.",
+    "standardVisual": "107/130. All130 pass/resource rows exactly match prior baseline;23 retained failures. Contact sheet inspected.",
+    "geometryScope": "All non-trim moving/surface vertex multisets unchanged at10micrometers; onlyTrimPivot/TrimGrip anchors changed. 13/13 previous .meta hashes unchanged.",
+    "reach": {
+      "trimGripMaximumReferenceShoulderDistanceMeters": 0.649250368215176,
+      "brakeTrimMinimumTargetSeparationMeters": 0.11497002020745914,
+      "sampling": "101 trim poses x 101 brake poses; shoulder +/-40mm height/foreaft",
+      "limit": "Engineering geometry only, not human/controller reach acceptance."
+    },
+    "diffCheck": "Scoped git diff --check passes."
+  },
+  "priorBlockersUnchanged": true,
+  "after": {
+    "triangles": 7969,
+    "renderers": 3,
+    "materials": 2,
+    "textures": 0
+  },
+  "completedUtc": "2026-10-17T00:28:04.169695+00:00",
+  "elapsedMinutes": 25.8,
+  "limitations": [
+    "Physical four-notch latch, discrete bungee force/trim calibration remain unmodeled; native signed continuous trim is deliberately unchanged.",
+    "Photo-derived dimensions and reference shoulder reach are engineering estimates, not actual-aircraft survey or worn acceptance.",
+    "Fresh live simulator, complete integrated APK/IL2CPP link and headset comfort/interactions remain pending upcoming integrated work.",
+    "Existing stall/dynamics,23 standard-resource failures and Quest timing acceptance blockers are unchanged."
+  ],
+  "evidenceIdentity": "External SOURCE_MODEL_EVIDENCE_HASHES.json and scoped_source_snapshot.zip; original donor, rollback assets and installed alpha5 preserved."
+}

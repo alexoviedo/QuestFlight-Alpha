@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 898e2915f8c45b54a81a128a6f394586, type: 3}
+  m_Name: ScenicRunway08
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Soaring.BoulderSoaringOperationDefinition
+  operationId: boulder.reference.scenic08
+  displayName: "Boulder soaring tour \xB7 reference"
+  provenance: 'PROVISIONAL_LOCAL_PROCEDURE. GeodeticReference.Kbdu and existing authored
+    paved runway -30m north, true089.972/269.972. City Airport/Traffic Pattern pages
+    inspected2026-10-13: shared08/08G occupancy, inside glider pattern, downwind
+    south of Jay Road, light-wind08 and west-only26. Paved-strip paired launch/landing
+    is development geometry, not verified MHG staging or SOP. Release914.4m above
+    airport and corridor are engineering references; no airspace clearance or TFR
+    assurance.'
+  runwayDirection: 8
+  trueHeading: 89.972
+  centerlineNorth: -30
+  launchEast: -555
+  minimumRunwayEast: -680
+  maximumRunwayEast: 640
+  runwayHalfWidth: 12
+  patternFieldHeight: 308.5
+  minimumTurnFieldHeight: 156.4
+  releaseFieldHeight: 914
+  releaseMinimumTerrainClearance: 300
+  releaseRadius: 2200
+  releaseCenter: {x: 700, y: 2200}
+  supportedMinimum: {x: -7400, y: -3000}
+  supportedMaximum: {x: 6500, y: 6500}
+  towRoute:
+  - {x: 2200, y: -30}
+  - {x: 2800, y: 2200}
+  - {x: 0, y: 3000}
+  - {x: -1000, y: 1700}
+  - {x: 1800, y: 1300}
+  weather: {fileID: 11400000, guid: 7c298d9475b1ee74e8dcd81a6070e8b2, type: 2}
+  terrainVerified: 1
+  terrainSha256: c6789dfb7ea8e8ffc2b9c8d1c7f31c848711d606b3a56c41203a38f2159daa4e

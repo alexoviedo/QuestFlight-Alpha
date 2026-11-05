@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72625e3188bfb8d4a8b6ab0829385896, type: 3}
+  m_Name: BoulderSoaringTour
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.SoaringDemoProfile
+  operation: {fileID: 11400000, guid: 3f68df02493da5340b9f9c1d8374ab44, type: 2}
+  scenicPoints:
+  - {x: -100, y: 3400}
+  - {x: -1800, y: 2500}
+  - {x: -2100, y: 700}
+  - {x: -600, y: -600}
+  - {x: 650, y: 550}
+  shortPoints:
+  - {x: 0, y: 3000}
+  - {x: -1800, y: 900}
+  - {x: 650, y: 550}
+  airborneStart: {x: 1575, y: 750, z: 2600}
+  airborneHeading: 180
+  airborneSpeed: 40
+  thermalRadius: 100
+  thermalGain: 150
+  minimumThermalSeconds: 180
+  maximumThermalSeconds: 480
+  provenance: Inspired by publicly described Mile High local sightseeing/discovery
+    flights; not an operator route or endorsement. Existing development launch/landing
+    surface retained pending verified glider-strip staging. Native SGS reference
+    model; no certified fidelity. POI anchors require stereo inspection.

@@ -157,6 +157,19 @@ namespace QuestFlight.Editor
                 "Assets/Editor/Tests/ProductTrainingEditModeTests.cs.meta",
                 "Assets/Editor/Tests/TrainingCoachingNavigationEditModeTests.cs",
                 "Assets/Editor/Tests/TrainingCoachingNavigationEditModeTests.cs.meta"
+                ,"Assets/Production/SoaringV1/Training"
+                ,"Assets/Production/SoaringV1/Training.meta"
+                ,"Assets/Production/SoaringV1/Training/01_preparation.asset"
+                ,"Assets/Production/SoaringV1/Training/02_aerotow.asset"
+                ,"Assets/Production/SoaringV1/Training/03_glide_energy.asset"
+                ,"Assets/Production/SoaringV1/Training/04_thermal.asset"
+                ,"Assets/Production/SoaringV1/Training/05_ridge.asset"
+                ,"Assets/Production/SoaringV1/Training/06_circuit_landing.asset"
+                ,"Assets/Production/SoaringV1/Training/07_ground_abort.asset"
+                ,"Assets/Editor/SoaringTrainingAuthoring.cs"
+                ,"Assets/Editor/SoaringTrainingAuthoring.cs.meta"
+                ,"Assets/Editor/Tests/SoaringTrainingOperationTests.cs"
+                ,"Assets/Editor/Tests/SoaringTrainingOperationTests.cs.meta"
             };
 
         private static readonly HashSet<string> ApprovedJsbsimProductAssets =
@@ -210,6 +223,16 @@ namespace QuestFlight.Editor
                 Debug.LogException(exception);
                 EditorApplication.Exit(1);
             }
+        }
+
+        // Explicit release preparation is separate from the read-only validator.
+        // ASTC is Editor session state; SDK205 also injects its dummy credential
+        // before the first Editor update. Use the same boundary as the APK build.
+        public static void PrepareAndValidateBatch()
+        {
+            ProductProjectConfigurator.ConfigureProject();
+            ProductReleasePolicy.SanitizeAuthoredAgentTemplateBatch();
+            ValidateBatch();
         }
 
         public static ProductIntegrityReport Validate()

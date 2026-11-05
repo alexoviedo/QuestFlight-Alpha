@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: 05_pattern
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 05_pattern
+  program: 0
+  groundTowPreparation: 0
+  soaringWeather: {fileID: 0}
   displayName: Pattern and approach decisions
   briefing: Begin in the runway zero eight left-hand pattern at sixty-three hundred
     feet, with the runway on your left. Follow the marked practice route through

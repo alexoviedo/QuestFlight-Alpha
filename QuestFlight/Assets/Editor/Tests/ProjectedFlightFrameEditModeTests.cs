@@ -92,6 +92,7 @@ namespace QuestFlight.Editor.Tests
                 {
                     Assert.That(backend.Initialize(new FlightDynamicsBackendContext
                     {
+                        aircraftDefinition = FlightAircraftDefinition.EditorC172,
                         simulationRoot = fixture.transform,
                         aircraftState = fixture.AddComponent<AircraftState>(),
                         terrainSurface = terrain,

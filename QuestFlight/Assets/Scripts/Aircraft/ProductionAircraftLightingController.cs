@@ -257,7 +257,10 @@ namespace QuestFlightLab.Aircraft
                 // that renderer also owns lower-panel artwork, so replacing its shader changes
                 // switch-panel channel semantics. Instrument surfaces are cloned only to tune
                 // their existing PBR/emissive inputs without altering that shader contract.
-                if (!cockpit || IsTransparentGlass(renderer)) continue;
+                // SGS presentation owns its authored vertex-color and canopy
+                // materials. A C172 ancestor name must not retune those meshes.
+                if (renderer.GetComponentInParent<QuestFlight.Product.SoaringInstrumentPresenter>(true)!=null ||
+                    !cockpit || IsTransparentGlass(renderer)) continue;
                 if (IsAuthoritativeInstrumentDisplaySurface(identity))
                 {
                     Material[] instrumentMaterials = renderer.sharedMaterials;

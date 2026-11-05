@@ -2566,10 +2566,9 @@ namespace QuestFlightLab.Editor
             {
                 context.visibility?.SetCockpitView();
                 modeCoordinator.AuthoredModeMenuView.ShowSelectionForVisualQa();
+                modeCoordinator.AuthoredNavigation.OpenMenu();
                 Vector3 centerEye = context.rig.PilotSeatAnchor.position;
-                Vector3 target = modeCoordinator.AuthoredModeMenuView
-                    .ShowroomContentRoot.transform.TransformPoint(
-                        new Vector3(0f, 0.02f, 1.45f));
+                Vector3 target = centerEye+context.rig.PilotSeatAnchor.forward;
                 Vector3 forward = (target - centerEye).normalized;
                 Vector3 eyeRight = Vector3.Cross(Vector3.up, forward).normalized;
                 if (eyeRight.sqrMagnitude < 0.5f)
@@ -2605,7 +2604,7 @@ namespace QuestFlightLab.Editor
                 ProductionVisualQaShot result = new ProductionVisualQaShot
                 {
                     id = id,
-                    title = "Flight Modes Foundation V1 selector (left/right stereo)",
+                    title = "QuestFlight Home (left/right stereo)",
                     category = "flight_mode_selector_stereo",
                     screenshotPath = path,
                     cameraPosition = centerEye,
@@ -2641,7 +2640,7 @@ namespace QuestFlightLab.Editor
                 report.shots.Add(new ProductionVisualQaShot
                 {
                     id = id,
-                    title = "Flight Modes Foundation V1 selector (left/right stereo)",
+                    title = "QuestFlight Home (left/right stereo)",
                     category = "flight_mode_selector_stereo",
                     screenshotPath = path,
                     passed = false,
@@ -2650,6 +2649,8 @@ namespace QuestFlightLab.Editor
             }
             finally
             {
+                typeof(ProductAppNavigation).GetProperty("CurrentPage").SetValue(modeCoordinator.AuthoredNavigation,ProductAppNavigation.Page.None);
+                modeCoordinator.AuthoredNavigation.RefreshMenu();
                 if (left != null) Object.DestroyImmediate(left);
                 if (right != null) Object.DestroyImmediate(right);
                 if (stereo != null) Object.DestroyImmediate(stereo);
@@ -2756,6 +2757,7 @@ namespace QuestFlightLab.Editor
             try
             {
                 camera.targetTexture = target;
+                foreach(var cloud in UnityEngine.Object.FindObjectsByType<BoulderCloudField>(FindObjectsSortMode.None)) cloud.PrepareTransparencyForCamera(camera.transform.position);
                 QuestFlight.Rendering.ProductRenderCapture.Render(camera);
                 stats.available = UnityStats.drawCalls > 0 || UnityStats.triangles > 0;
                 stats.drawCalls = UnityStats.drawCalls;

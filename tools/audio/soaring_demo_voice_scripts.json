@@ -1,0 +1,96 @@
+{
+  "clips": [
+    {
+      "id": "sgs_intro",
+      "text": "Welcome aboard our Schweizer two thirty-three. I will fly while you enjoy the view. This is a simulated local discovery flight. Open Menu whenever you want to pause or finish."
+    },
+    {
+      "id": "sgs_short_intro",
+      "text": "Welcome aboard. This shorter tour starts already airborne. I have the controls. We will look for rising air, enjoy the Boulder panorama, and return for an unpowered landing."
+    },
+    {
+      "id": "sgs_tow",
+      "text": "The towplane is taking us up. Notice the rope ahead and the small control corrections. The sailplane has no engine; the tug supplies the energy for this climb."
+    },
+    {
+      "id": "sgs_release",
+      "text": "We have reached our release area. Releasing now. Watch the towplane separate, and listen as its engine fades away."
+    },
+    {
+      "id": "sgs_thermal",
+      "text": "We are looking for a column of rising air called a thermal. I will turn smoothly to stay with the lift. The sound and instruments will help us tell whether we are climbing."
+    },
+    {
+      "id": "sgs_climbing",
+      "text": "Now we are gaining energy in the rising air. We can climb without an engine because the air is rising faster than the sailplane sinks through it."
+    },
+    {
+      "id": "sgs_sightseeing",
+      "text": "We have gained some height. Let us use it for a look around Boulder. You can keep enjoying the view, or choose Take control from Menu during a stable glide."
+    },
+    {
+      "id": "sgs_descent",
+      "text": "We are returning to the airport with height in reserve. In a sailplane, we plan the landing before that margin gets small."
+    },
+    {
+      "id": "sgs_early_return",
+      "text": "The lift or our remaining height calls for an earlier return. We will shorten the sightseeing and keep a useful landing margin."
+    },
+    {
+      "id": "sgs_circuit",
+      "text": "The airport is ahead. I am arranging our unpowered landing circuit. Airbrakes will help control the descent while pitch controls our speed."
+    },
+    {
+      "id": "sgs_final",
+      "text": "We are lined up for landing. Notice the airbrake handle moving as I adjust the approach. I will round out close to the surface and brake after touchdown."
+    },
+    {
+      "id": "sgs_complete",
+      "text": "We have landed and stopped. The sailplane cannot taxi under its own power. Open Menu to repeat the tour, choose a lesson, or finish the flight."
+    },
+    {
+      "id": "sgs_your_controls",
+      "text": "You have the controls. Make small, coordinated movements and keep a safe airspeed. The pause menu lets you ask me to resume, or return to the airport."
+    },
+    {
+      "id": "sgs_my_controls",
+      "text": "I have the controls. I will continue from our current position, keeping the airport within reach."
+    },
+    {
+      "id": "sgs_reservoir",
+      "text": "Boulder Reservoir is the broad stretch of water to the north. It is a recreation area and a water-storage facility, and a useful landmark for finding the airport."
+    },
+    {
+      "id": "sgs_sanitas",
+      "text": "Mount Sanitas marks part of the foothill edge west of Boulder. Notice how quickly the open plains rise into wooded slopes."
+    },
+    {
+      "id": "sgs_flatirons",
+      "text": "Those tilted rock formations are the Flatirons, with Green Mountain behind them. We are enjoying the panorama from this side of the foothills."
+    },
+    {
+      "id": "sgs_downtown",
+      "text": "Downtown Boulder lies below the foothills. From here, you can see the city spread eastward onto the plains."
+    },
+    {
+      "id": "sgs_cu",
+      "text": "That is the University of Colorado Boulder campus, south of downtown. The campus and the mountain backdrop are familiar landmarks on a local scenic flight."
+    },
+    {
+      "id": "sgs_airport",
+      "text": "There is Boulder Municipal Airport. Keep it in view as we prepare to return. We share the area with other aircraft and gliders."
+    },
+    {
+      "id": "sgs_eagle_left",
+      "text": "Look ahead on the left. A golden eagle is circling in the rising air. We will give it room and enjoy the view."
+    },
+    {
+      "id": "sgs_eagle_right",
+      "text": "Look ahead on the right. A golden eagle is circling in the rising air. We will give it room and enjoy the view."
+    },
+    {
+      "id": "sgs_eagle_ahead",
+      "text": "Look ahead and slightly above us. A golden eagle is using the rising air too. We will give it room."
+    }
+  ]
+}

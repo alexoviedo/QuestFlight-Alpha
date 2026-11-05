@@ -53,7 +53,7 @@ namespace QuestFlight.Editor
                 if(!pilot.IsRunning)throw new Exception("Demo did not initialize");
                 using(var backend=new JSBSimNativeDevelopmentBackend(JSBSimRuntimeData.EditorPackageDataRoot))
                 {
-                    if(!backend.Initialize(new FlightDynamicsBackendContext{simulationRoot=player.simulationRoot,aircraftState=player.aircraftState,terrainSurface=player.terrainSurface}))throw new Exception(backend.LastError);
+                    if(!backend.Initialize(new FlightDynamicsBackendContext{aircraftDefinition=player.aircraftDefinition,simulationRoot=player.simulationRoot,aircraftState=player.aircraftState,terrainSurface=player.terrainSurface}))throw new Exception(backend.LastError);
                     Vector3 position=pilot.RouteDefinition.waypoints[0].positionUnityMeters;
                     player.terrainSurface.TrySample(position.x,position.z,out var ground);position.y=ground.heightMeters+1.4f;
                     var geo=FlightFrameConversions.UnityToGeodetic(position,GeodeticReference.Kbdu);
@@ -133,7 +133,7 @@ namespace QuestFlight.Editor
                 var configure=typeof(ProductDemoPilot).GetMethod("ConfigureCommandForSegment",BindingFlags.NonPublic|BindingFlags.Static);
                 using(var backend=new JSBSimNativeDevelopmentBackend(JSBSimRuntimeData.EditorPackageDataRoot))
                 {
-                    if(!backend.Initialize(new FlightDynamicsBackendContext{simulationRoot=player.simulationRoot,aircraftState=player.aircraftState,terrainSurface=player.terrainSurface}))throw new Exception(backend.LastError);
+                    if(!backend.Initialize(new FlightDynamicsBackendContext{aircraftDefinition=player.aircraftDefinition,simulationRoot=player.simulationRoot,aircraftState=player.aircraftState,terrainSurface=player.terrainSurface}))throw new Exception(backend.LastError);
                     var waypoint=route.waypoints[10];
                     var position=waypoint.positionUnityMeters;
                     position.y=waypoint.altitudeMslFeet*.3048f-(float)GeodeticReference.Kbdu.altitudeMslMeters;

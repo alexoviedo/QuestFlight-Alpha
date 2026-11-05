@@ -86,14 +86,21 @@ namespace QuestFlightLab.Environment
         public Vector3 Sample(Vector3 position, double simulationTime) => SampleComponents(position, simulationTime).Total;
 
         public Components SampleComponents(Vector3 position, double simulationTime)
+            => SampleCore(position,simulationTime,surfaceWindEastNorth,ridgeWindEastNorth,gustAmplitude,true);
+
+        public Components SampleConfiguredFlow(Vector3 position,double time,Vector2 surface,Vector2 upper,float gust)
+            => SampleCore(position,time,surface,upper,gust,false);
+
+        private Components SampleCore(Vector3 position,double simulationTime,Vector2 surface,Vector2 upper,float gustStrength,bool legacyLift)
         {
             using var sampleScope=SampleMarker.Auto();
-            if (!Finite(position) || double.IsNaN(simulationTime) || double.IsInfinity(simulationTime))
+            if (!Finite(position) || !Finite(surface.x) || !Finite(surface.y) ||
+                !Finite(upper.x) || !Finite(upper.y) || double.IsNaN(simulationTime) || double.IsInfinity(simulationTime))
                 return new Components { background = Vector3.one * float.NaN };
             Grid(position.x, position.z, out int i, out float tx, out float tz, out float edge);
             float ground = Bilinear(groundHeights, i, tx, tz);
             float agl = Mathf.Max(0, position.y - ground);
-            Vector2 wind = Vector2.Lerp(surfaceWindEastNorth, ridgeWindEastNorth, Smooth(agl / windTransitionHeight));
+            Vector2 wind = Vector2.Lerp(surface, upper, Smooth(agl / windTransitionHeight));
             wind *= Mathf.Lerp(.65f, 1, Smooth(agl / 15));
             float magnitude = wind.magnitude;
             float sector = Mathf.Repeat(Mathf.Atan2(wind.y, wind.x) * 4 / Mathf.PI, 8);
@@ -110,13 +117,13 @@ namespace QuestFlightLab.Environment
             float x = (position.x - wind.x * time) * .007f;
             float z = (position.z - wind.y * time) * .006f;
             float y = position.y * .009f;
-            float amplitude = gustAmplitude * Mathf.Clamp01(magnitude / 3) * Mathf.Lerp(.3f, 1, exposure) * Smooth(agl / 20);
+            float amplitude = gustStrength * Mathf.Clamp01(magnitude / 3) * Mathf.Lerp(.3f, 1, exposure) * Smooth(agl / 20);
             Vector3 gust = amplitude * new Vector3(
                 .65f * Mathf.Sin(x + z + time * .31f + seed) + .35f * Mathf.Sin(y - z + time * .73f),
                 .45f * Mathf.Sin(x - z + time * .43f + seed) + .2f * Mathf.Sin(y + z + time * 1.13f),
                 .65f * Mathf.Sin(z - y + time * .37f - seed) + .35f * Mathf.Sin(x + y + time * .89f));
             float thermal = 0;
-            if (thermalStrength > 0)
+            if (legacyLift && thermalStrength > 0)
             {
                 thermal = SampleThermal(AirportThermal, position, wind);
                 foreach (Thermal t in foothillThermals) thermal += SampleThermal(t, position, wind);

@@ -14,7 +14,8 @@ Shader "QuestFlightLab/Production Runway Marking"
         Cull Back
         ZWrite On
         ZTest LEqual
-        Offset -1, -1
+        // Paint owns depth ahead of pavement; both were formerly biased equally.
+        Offset -2, -2
         Pass
         {
             Tags { "LightMode"="UniversalForward" }

@@ -1,0 +1,65 @@
+{
+  "schema": "questflight.sgs-panel-view-repair.v1",
+  "startedUtc": "2026-10-16T21:36:37+00:00",
+  "completedUtc": "2026-10-16T22:05:58.107538+00:00",
+  "elapsedMinutes": 29.35,
+  "deadlineUtc": "2026-10-16T22:06:37Z",
+  "status": "IMPLEMENTED_SCOPED_SOFTWARE_ANDROID_ASSETS_VERIFIED;FULL_APK_LIVE_XR_WORN_PENDING",
+  "artifactRoot": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\sgs_panel_view_20261016",
+  "references": "docs/soaring/SGS_VISUAL_REFERENCES.md#front-panel-and-nose-view-correction-2026-10-16",
+  "selectedFit": "Photographed N2930H-style four-instrument reference arrangement; SGS2-33 instrument fits vary; exact target/operator fit not established.",
+  "changes": [
+    "Wider arched panel: altimeter far left, pressure VSI inner left, magnetic compass low centre, MPH ASI inner right; centre fresh-air vent and blank right cutout.",
+    "Closed curved forward coaming, arched nose/canopy seam and raked pitot/static mast replace the open shelf and nose-tip tube.",
+    "Compass card replaces heading needle; fixed window/lubber line; same declared Boulder magnetic variation as C172.",
+    "Matched MPH ASI face/needle through160mph; left-zero pressure VSI in1000FPM; third altimeter hand.",
+    "Editor reauthoring explicitly refreshes static mesh GPU buffers while retaining asset GUIDs."
+  ],
+  "frozenBudgets": {
+    "triangles": 8000,
+    "renderers": 3,
+    "materials": 2,
+    "newTextures": 0
+  },
+  "before": {
+    "triangles": 7985,
+    "renderers": 3,
+    "materials": 2,
+    "newTextures": 0
+  },
+  "after": {
+    "triangles": 7991,
+    "renderers": 3,
+    "materials": 2,
+    "newTextures": 0
+  },
+  "verification": {
+    "editMode": "PASS18/18 final fresh Unity session: instrument scale/compass direction, serialized geometry, previous lever/trim/release, authority, reach, resource and input guards.",
+    "offlineStereo": "24/24 final captures; both-eye panel and nominal/low/high nose-view sheet inspected; full-resolution panel also inspected. Separate Editor cameras, not live XR.",
+    "enclosure": "512/512 outer-shell rays hit; footwell interior retained and visually inspected.",
+    "android": "PASS61 Android player-script assemblies and StrictMode SGS asset bundle. Not a complete APK or IL2CPP link.",
+    "standardVisual": "107/130; all130 resource/pass rows identical to prior baseline;23 pre-existing failures retained. Standard overview inspected.",
+    "scope": "All cockpit control and eye anchors unchanged; brake/trim/release/sticks/pedals and lifting-surface moving geometry unchanged at10micrometre comparison.",
+    "diffCheck": "Scoped git diff --check passes."
+  },
+  "limitations": [
+    "Positions, panel650mm width, nose seam and mast dimensions are photographic reference estimates, not surveyed factory CAD.",
+    "ASI face angles are digitized estimates; native CAS still feeds the indicated display; pneumatic position/error modeling unchanged.",
+    "Pressure VSI reference scale is selected from the photograph; total-energy compensation is not claimed.",
+    "Altimeter remains fixed to standard pressure (STD); adjustable Kollsman control is not implemented.",
+    "Magnetic compass uses existing7.66deg east Boulder reference; dip, acceleration/turning errors and current field variation are not modeled.",
+    "Fresh live simulator stereo, full integrated APK and deferred headset sightline/readability remain unverified. No headset testing or install."
+  ],
+  "visualReviewCorrections": [
+    "Rejected stale static GPU preview; corrected authoring upload and regenerated captures.",
+    "Rejected inner-nose-face removal after footwell opening appeared; restored full inner skin.",
+    "Corrected vent/mask winding and compass bezel occlusion before final captures."
+  ],
+  "remaining": [
+    "Integrate upcoming changes, then full Android candidate and fresh live XR/headset visual check.",
+    "Confirm actual aircraft instrument fit, dimensions and pilot-eye reference from the consolidated deferred-input list."
+  ],
+  "priorBlockersUnchanged": "Stall/dynamics fidelity, retained native training failures, standard scene resource failures and actual Quest timing remain separate unresolved work.",
+  "installedCandidate": "Existing alpha5 unchanged.",
+  "rights": "Local uncommitted derivative and research photos; no photos used as textures; original donor and rollback assets retained."
+}

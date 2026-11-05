@@ -1,0 +1,142 @@
+{
+  "status": "IMPLEMENTED_BUILT_VERIFIED_INSTALLED_ACCEPTANCE_LIMITED",
+  "startedUtc": "2026-10-17T20:29:09Z",
+  "deadlineUtc": "2026-10-17T22:29:09Z",
+  "artifactRoot": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\soaring_demo_20261017",
+  "storage": {
+    "afterUserCleanupBytes": 22161129472,
+    "agentDeletion": "rejected by policy; user ran exact cache cleanup",
+    "deletionsThisImplementation": "No user source or rollback deleted; user ran prior cache cleanup. Generated bindings preserved externally."
+  },
+  "implementation": [
+    "Native glider controls-only full/short demo; physical tow and release",
+    "Authored reference thermal, geographic sightseeing route, unpowered landing",
+    "Shared menus with explicit restart and safe manual handover",
+    "23 generated narration clips, visibility-gated POIs, shared-field eagle"
+  ],
+  "pending": [
+    "Live XR Simulator stereo: blocked by absent replay recordings",
+    "Worn tour narration, visibility, comfort and control handover/landing acceptance",
+    "Actual Quest frame/thermal acceptance, existing SGS handling and retained training/resource failures"
+  ],
+  "acceptance": {
+    "handling": "UNACCEPTED existing SGS stall/control issue",
+    "localProcedure": "REFERENCE existing development paved geometry, not verified MHG staging",
+    "questPerformance": "UNACCEPTED prior timing fail; no new measurement"
+  },
+  "budgets": {
+    "sgsTriangles": 8000,
+    "sgsCurrentTriangles": 7969,
+    "sgsRenderers": 3,
+    "sgsMaterials": 2,
+    "birdsPopulation": 24,
+    "birdsVisible": 16,
+    "birdTrianglesVisible": 30000,
+    "qualityReduction": false
+  },
+  "nativeProgress": {
+    "native04_full": "Tow, release, 150m energy gain, one scenic leg, landed/stopped, tug parked; remaining scenic route shortened by return margin",
+    "native04_short": "150m gain and 3 scenic legs; correctly held at occupied runway; reservation fix under test",
+    "native05": "Production rate limiting, shorter full panorama route, bird simulation in progress",
+    "native08": "72Hz guidance / 120Hz native: full+short+early-return+manual-handback all landed with150m gain; occupied runway correctly held. Default bird cue not yet passed; bounded staging revision under test."
+  },
+  "softwareRegression": {
+    "latestDistinctPassed": 142,
+    "latestDistinctTotal": 142,
+    "finalFocusedRerun": "59/59 PASS",
+    "newTourMenuFlow": "PASS",
+    "record": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\soaring_demo_20261017\\software_regression_summary.json",
+    "note": "Latest result per test across three focused runs, not one exhaustive full-project run. Earlier fixture/startup failures corrected and rerun."
+  },
+  "simulator": "BLOCKED_MISSING_RECORDINGS; audit preserved runtime/configuration; no simulator image claim",
+  "candidateVersion": "0.1.0-alpha.7 / code7",
+  "nativeFinal": {
+    "artifact": "native_10_final",
+    "guidanceHz": 72,
+    "nativeHz": 120,
+    "passed": 5,
+    "total": 5,
+    "scenarios": [
+      "full",
+      "short",
+      "early_return",
+      "handover",
+      "occupied"
+    ],
+    "fullSeconds": 1185.2166666679525,
+    "shortSeconds": 692.9416666662008,
+    "fullTotalEnergyGainMeters": 150.00758361816406,
+    "shortTotalEnergyGainMeters": 150.00921630859375,
+    "fullScenicLegs": 5,
+    "shortScenicLegs": 3,
+    "allSixPoiVisibilityOpportunities": true,
+    "birdCueBothDefaults": true,
+    "nearestBirdMeters": {
+      "full": 84.61956787109375,
+      "short": 71.466064453125
+    },
+    "warning": "Birds remain actual size; small in distant preview. Worn discoverability not accepted. Scenario verification does not establish flight-model fidelity.",
+    "finalFullShortRecheck": "final_visibility:2/2 PASS with camera viewport eagle cue gate"
+  },
+  "resources": {
+    "estimatedInstancedDrawCalls": 72,
+    "estimatedFrustumTriangles": 428124,
+    "uniqueMaterialCount": 22,
+    "birdsObservedVisible": 8,
+    "birdsObservedVisibleTriangles": 5412,
+    "audioRawBytes": 10759012,
+    "guidanceFullMeanWindowsMilliseconds": 0.008704213771841662,
+    "guidanceFullManagedAllocatedBytes": 0,
+    "questTiming": "UNMEASURED, no acceptance claim",
+    "apkGrowthBytesVsAlpha6": 1333132,
+    "apkGrowthScope": "Whole APK delta includes audio, scripts and serialization; not isolated audio resident memory.",
+    "androidResidentAudioMemory": "UNMEASURED"
+  },
+  "updatedUtc": "2026-10-17T21:49:32.192885+00:00",
+  "c172NativeRegression": {
+    "passed": 7,
+    "total": 7,
+    "record": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\soaring_demo_20261017\\c172_regression"
+  },
+  "weakLiftFallback": {
+    "passed": true,
+    "seconds": 414.691666666,
+    "totalEnergyGainMeters": -222.1485,
+    "behavior": "early return and unpowered landing; no sightseeing requirement fabricated",
+    "record": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\soaring_demo_20261017\\final_followup\\weak_lift.json"
+  },
+  "standardVisual": {
+    "passed": 107,
+    "total": 130,
+    "newFailingViews": 0,
+    "classification": "FAIL_MACHINE_QA_RETAINED_BASELINE",
+    "maxDraws": 80,
+    "maxTriangles": 967513,
+    "maxMaterials": 37,
+    "budgetIncrease": false,
+    "comparison": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\soaring_demo_20261017\\standard_visual\\comparison_to_prior.json"
+  },
+  "editorStereo": "INSPECTED full/short menu, eagle pairs, landmark opportunities and landed view; editor cameras, not live simulator evidence",
+  "android": {
+    "status": "FULL_UNITY_ANDROID_BUILD_PASS",
+    "artifact": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\soaring_demo_20261017\\android_alpha7_final",
+    "apk": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\soaring_demo_20261017\\android_alpha7_final\\QuestFlight-alpha7.apk",
+    "bytes": 1817349524,
+    "sha256": "e5fa341db5dec3d5d657ec7823125ffb019cbc55d0e874d76893e246985c52b7",
+    "signature": "APK v2 verification PASS",
+    "zipalign": "16KiB verification PASS",
+    "elf": "All ARM64 PT_LOAD segments >=16KiB PASS",
+    "modelFiles": 19,
+    "sceneryFiles": 1912,
+    "modelPayloadSha256": "0af74469d7c77b6d487d097fef4847633a649e588a9da3fee6d5d79902005ca7",
+    "postbuildRecordedSourceDifferences": [],
+    "install": "PASS_EXACT_INSTALLED_HASH_AND_TRAINING_SAVE_RETENTION",
+    "trainingSaveSha256": "70f9d055ae54ebc9303e63b3412b809b450b1f56a80dcafda47aeded195ef040",
+    "startup": "Launch returned OK and process14351 observed; Quest Asleep, no focused rendering or flight acceptance claimed",
+    "candidateIdentity": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\soaring_demo_20261017\\android_alpha7_final\\CANDIDATE_IDENTITY.json"
+  },
+  "elapsedMinutes": 80.39,
+  "runnableWorkComplete": true,
+  "diskFreeBytesAtFinish": 6464778240,
+  "finalReview": "docs/soaring/SOARING_DEMO_REVIEW_2026-10-17.md"
+}

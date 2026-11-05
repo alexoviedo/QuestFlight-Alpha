@@ -25,7 +25,11 @@ namespace QuestFlight.Editor
                 var player=world.GetComponentInChildren<FlightDynamicsCoordinator>(true);
                 var lessons=world.GetComponentInChildren<ProductTrainingController>(true).Lessons;
                 var results=new List<Result>();
-                foreach(var lesson in lessons) results.Add(Run(player,lesson,output));
+                foreach(var lesson in lessons)
+                {
+                    try { results.Add(Run(player,lesson,output)); }
+                    catch(Exception e) { results.Add(new Result{lesson=lesson.lessonId,failure=e.Message});Debug.LogException(e); }
+                }
                 File.WriteAllText(Path.Combine(output,"native_training.json"),JsonUtility.ToJson(new Report{results=results.ToArray()},true));
                 EditorApplication.Exit(results.TrueForAll(r=>r.checkpointFinite && string.IsNullOrEmpty(r.failure))?0:2);
             }
@@ -36,7 +40,7 @@ namespace QuestFlight.Editor
             var result=new Result{lesson=lesson.lessonId};
             using(var backend=new JSBSimNativeDevelopmentBackend(JSBSimRuntimeData.EditorPackageDataRoot))
             {
-                if(!backend.Initialize(new FlightDynamicsBackendContext{simulationRoot=player.simulationRoot,aircraftState=player.aircraftState,terrainSurface=player.terrainSurface}))
+                if(!backend.Initialize(new FlightDynamicsBackendContext{aircraftDefinition=player.aircraftDefinition,simulationRoot=player.simulationRoot,aircraftState=player.aircraftState,terrainSurface=player.terrainSurface}))
                     throw new InvalidOperationException(backend.LastError);
                 var point=FlightFrameConversions.GeodeticToUnity(lesson.start.latitudeDegrees,lesson.start.longitudeDegrees,lesson.start.altitudeMslMeters,GeodeticReference.Kbdu);
                 backend.SetAtmosphere(FlightDynamicsCoordinator.AtmosphereFromWind(player.windField.Sample(point,0)));
@@ -47,6 +51,7 @@ namespace QuestFlight.Editor
                 if(lesson.start.calibratedAirspeedKnots<1)controls.leftToeBrake=controls.rightToeBrake=1;
                 var evaluator=new TrainingEvaluator();evaluator.BeginAttempt(backend.CurrentState);evaluator.BeginStage(controls.trim);
                 var guidance=new FlightLessonGuidanceController();int index=0;float accumulator=0;
+                var pilotSettings=FlightLessonGuidanceControllerSettings.Default;
                 using(var csv=new StreamWriter(Path.Combine(output,lesson.lessonId+".csv")))
                 {
                     csv.WriteLine("time,stage,altitude_ft,cas,heading,bank,pitch,vs,held,feedback");
@@ -57,7 +62,7 @@ namespace QuestFlight.Editor
                         {
                             var stage=lesson.stages[index];
                             var intent=new FlightLessonGuidanceIntent("native_validation",FlightLessonSegmentKind.Cruise,s.positionUnityMeters,stage.heading,0,stage.altitudeFeet,stage.speedKnots,15,400,0);
-                            if(!guidance.TryStep(intent,ProductDemoPilot.BuildGuidanceAircraftState(s),1f/120,FlightLessonGuidanceControllerSettings.Default,out var command))throw new InvalidOperationException("Invalid guidance");
+                            if(!guidance.TryStep(intent,ProductDemoPilot.BuildGuidanceAircraftState(s),1f/120,pilotSettings,out var command))throw new InvalidOperationException("Invalid guidance");
                             command.trim=lesson.initialTrim;
                             QuestFlightLab.Input.ProductControlInput.CopyFlightLessonCommandInto(command,controls);
                         }

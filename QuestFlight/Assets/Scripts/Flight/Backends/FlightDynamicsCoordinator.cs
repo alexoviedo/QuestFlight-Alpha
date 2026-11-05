@@ -4,6 +4,7 @@ using AlexOviedo.QuestFlight.JSBSim;
 using QuestFlightLab.Environment;
 using QuestFlightLab.Input;
 using QuestFlightLab.Runtime;
+using QuestFlightLab.Flight.Soaring;
 using UnityEngine;
 
 namespace QuestFlightLab.Flight.Backends
@@ -14,7 +15,7 @@ namespace QuestFlightLab.Flight.Backends
     /// fails closed; it can never switch to the Unity prototype.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class FlightDynamicsCoordinator : MonoBehaviour
+    public sealed partial class FlightDynamicsCoordinator : MonoBehaviour
     {
         [Header("Single product authority")]
         public FlightDynamicsBackendKind requestedBackend = FlightDynamicsBackendKind.JSBSimNativeDevelopment;
@@ -23,6 +24,14 @@ namespace QuestFlightLab.Flight.Backends
         public AircraftState aircraftState;
         [Tooltip("Authored C172 reference values used by route guidance only; JSBSim owns all simulation state.")]
         public C172StyleAircraftConfig aircraftConfiguration;
+        public FlightAircraftDefinition aircraftDefinition;
+        public FlightAircraftDefinition tugDefinition;
+        public QuestFlightLab.Flight.Soaring.TowlineDefinition towlineDefinition;
+        public Vector3 developmentGliderStartEnu=new Vector3(-555,0,-30);
+        public QuestFlightLab.Flight.Soaring.AerotowSimulation TowSession { get; private set; }
+        public FlightDynamicsState PreviousTugPresentationState { get; private set; }
+        public double SimulationBacklogSeconds=>_accumulator?.BacklogSeconds ?? 0;
+        private Func<double,bool> _checkedSoaringStep;
         public Rigidbody authoritativeRigidbody;
         public ProductControlInput controls;
         [Tooltip("Offline-authored ENU terrain authority used by physical ground contact. No runtime raycasts or hierarchy discovery.")]
@@ -31,6 +40,12 @@ namespace QuestFlightLab.Flight.Backends
         public ThermalFieldProfile thermalField;
         [Tooltip("Required shared atmosphere, independent of flight mode.")]
         public BoulderWindFieldProfile windField;
+        public SoaringWeatherDefinition soaringWeatherDefinition;
+        public SoaringWeatherDefinition[] soaringWeatherChoices=Array.Empty<SoaringWeatherDefinition>();
+        public SoaringAtmosphereSession SoaringAtmosphere { get; private set; }
+        public readonly SoaringFlightInstruments SoaringInstruments=new SoaringFlightInstruments();
+        public Vector3 SampleWind(Vector3 position,double time)=>SoaringAtmosphere!=null?SoaringAtmosphere.Sample(position,time):windField.Sample(position,time);
+        public BoulderWindFieldProfile.Components SampleAtmosphereComponents(Vector3 position,double time)=>SoaringAtmosphere!=null?SoaringAtmosphere.SampleComponents(position,time):windField.SampleComponents(position,time);
         public BoulderWeatherPreset WeatherPreset => BoulderWeatherPreset.FoothillSoaring;
         public Vector3 LastWindUnityMetersPerSecond { get; private set; }
 
@@ -65,6 +80,11 @@ namespace QuestFlightLab.Flight.Backends
         public bool CoordinatorOwnsPresentationInterpolation => ShouldCoordinatorInterpolate(simulationRoot, presentationRoot);
         public string LastError { get; private set; } = string.Empty;
         public FlightDynamicsState CurrentState => _currentState;
+        public AlexOviedo.QuestFlight.JSBSim.JSBSimNativeDiagnostics NativeDiagnostics =>
+            (_backend as JSBSimNativeDevelopmentBackend)?.NativeSession.Diagnostics ?? default;
+        internal AlexOviedo.QuestFlight.JSBSim.JSBSimNativeSession NativeSession =>
+            (_backend as JSBSimNativeDevelopmentBackend)?.NativeSession;
+        public int NativeSessionVersion { get; private set; }
         public FlightDynamicsControlSnapshot LastAppliedControls { get; private set; } =
             FlightDynamicsControlSnapshot.NeutralIdle;
         public FlightDynamicsInitialConditions LastResetInitialConditions { get; private set; }
@@ -83,6 +103,16 @@ namespace QuestFlightLab.Flight.Backends
         private string _preparedNativeDataRoot = string.Empty;
         private string _nativePreparationError = string.Empty;
         private static readonly AircraftControlState NeutralIdleControls = AircraftControlState.Neutral(0.10f);
+        private readonly AircraftControlState _gliderNeutralControls = new AircraftControlState { mixture=0 };
+        private AircraftControlState AircraftNeutralControls
+        {
+            get
+            {
+                if (aircraftDefinition == null || !aircraftDefinition.IsGlider) return NeutralIdleControls;
+                _gliderNeutralControls.trim = aircraftDefinition.referenceTrimNoseUp;
+                return _gliderNeutralControls;
+            }
+        }
 
         private void Awake()
         {
@@ -100,12 +130,15 @@ namespace QuestFlightLab.Flight.Backends
         public bool HasAuthoredReferences(out string error)
         {
             if (simulationRoot == null || presentationRoot == null || aircraftState == null ||
-                aircraftConfiguration == null || authoritativeRigidbody == null || controls == null ||
+                aircraftDefinition == null || authoritativeRigidbody == null || controls == null ||
                 initialConditionProvider == null || terrainSurface == null || thermalField == null)
             {
                 error = "All flight-authority references must be serialized in the product prefab.";
                 return false;
             }
+            if (!aircraftDefinition.IsValid(out error)) return false;
+            if (aircraftDefinition.kind == FlightAircraftKind.C172 && aircraftConfiguration == null)
+            { error = "C172 guidance requires the authored C172 configuration."; return false; }
             if (!thermalField.IsValid(out string thermalFailure))
             {
                 error = "The serialized thermal profile is invalid: " + thermalFailure;
@@ -154,6 +187,9 @@ namespace QuestFlightLab.Flight.Backends
         {
             ShutdownBackend();
             LastError = string.Empty;
+            if (aircraftDefinition == null || !aircraftDefinition.IsValid(out _)) return Fail("A valid authored aircraft definition is required.");
+            controls.ConfigureAircraft(aircraftDefinition);
+            _checkedSoaringStep=StepBackend;
             RefreshConfiguredInitialConditions();
             if (!FlightDynamicsAuthority.TryAcquire(simulationRoot, this, out _authorityLease, out string authorityError))
                 return Fail(authorityError);
@@ -180,17 +216,33 @@ namespace QuestFlightLab.Flight.Backends
             return true;
         }
 
+#if UNITY_EDITOR
+        // Accelerated native scenarios supply every 120 Hz tick through StepForTest.
+        // Prevent a second Editor wall-clock tick with unrelated device input.
+        // This switch is absent from Android and is never Quest timing evidence.
+        public bool EditorVerificationExternalClock {get;set;}
+#endif
         private void FixedUpdate()
         {
-            if (!IsInitialized || RecoveryHold) return;
+#if UNITY_EDITOR
+            if(EditorVerificationExternalClock)return;
+#endif
+
+            if (!IsInitialized || RecoveryHold || Time.timeScale<=0) return;
+            if(TowSession!=null)PreviousTugPresentationState=TowSession.TugState;
             if (controls != null && controls.ConsumeResetRequest())
             {
                 ResetToConfiguredInitialConditions();
                 return;
             }
             if (controls != null && controls.Paused) return;
-            ApplyControls(controls != null ? controls.Current : NeutralIdleControls);
-            _accumulator.Consume(Time.fixedDeltaTime, _stepBackendAction);
+            ApplyControls(controls != null ? controls.Current : AircraftNeutralControls);
+            if(aircraftDefinition.IsGlider)
+            {
+                if(!_accumulator.ConsumeChecked(Time.fixedDeltaTime,_checkedSoaringStep,out _))
+                {if(_accumulator.CapacityExceeded)Fail("Soaring simulation capacity exceeded; backlog retained and flight paused.");enabled=false;RecoveryHold=true;}
+            }
+            else _accumulator.Consume(Time.fixedDeltaTime, _stepBackendAction);
         }
 
         private void LateUpdate()
@@ -206,16 +258,54 @@ namespace QuestFlightLab.Flight.Backends
         public bool StepForTest(AircraftControlState controlState, double fixedDeltaTimeSeconds)
         {
             if (!IsInitialized || RecoveryHold) return false;
-            ApplyControls(controlState ?? NeutralIdleControls);
+            if(TowSession!=null)PreviousTugPresentationState=TowSession.TugState;
+            ApplyControls(controlState ?? AircraftNeutralControls);
             return StepBackend(fixedDeltaTimeSeconds);
         }
 
         public void RefreshConfiguredInitialConditions()
         {
-            _configuredInitialConditions = initialConditionProvider != null
+            _configuredInitialConditions = aircraftDefinition != null && aircraftDefinition.IsGlider
+                ? aircraftDefinition.airborneReference : initialConditionProvider != null
                 ? initialConditionProvider.Build(GeodeticReference.Kbdu)
                 : FlightDynamicsInitialConditions.KbduRunway();
             _hasConfiguredInitialConditions = true;
+        }
+
+        public bool TryPrepareAircraft(FlightAircraftDefinition definition, in FlightDynamicsInitialConditions initial)
+        {
+            if (Time.timeScale > 0 || definition == null || !definition.IsValid(out _))
+                return Fail("Aircraft preparation requires a paused menu and a valid authored definition.");
+            aircraftDefinition = definition;
+            if (!InitializeSelectedBackend()) return false;
+            if (!TryStartNewFlight(initial)) return false;
+            _configuredInitialConditions = initial;_hasConfiguredInitialConditions = true;
+            return true;
+        }
+
+        public bool TryPrepareGroundTow(BoulderSoaringOperationDefinition operation=null)
+        {
+            if(Time.timeScale>0 || !IsInitialized || !aircraftDefinition.IsGlider || tugDefinition==null || towlineDefinition==null || !towlineDefinition.IsValid)
+                return Fail("Ground tow requires paused, authored glider/tug/line definitions.");
+            var initial=FlightDynamicsInitialConditions.KbduRunway();initial.engineRunning=false;initial.pitchDegrees=0;
+            Vector3 launch=operation!=null?operation.Launch:developmentGliderStartEnu;
+            Vector3 forward=operation!=null?operation.Forward:Vector3.right;
+            if(operation!=null)initial.headingDegrees=operation.trueHeading;
+            if(!terrainSurface.TrySample(launch.x,launch.z,out var ground))return Fail("Launch terrain unavailable.");
+            var location=FlightFrameConversions.UnityToGeodetic(new Vector3(launch.x,ground.heightMeters+.75f,launch.z),GeodeticReference.Kbdu);
+            initial.latitudeDegrees=location.latitudeDegrees;initial.longitudeDegrees=location.longitudeDegrees;initial.altitudeMslMeters=location.altitudeMslMeters;
+            initial.terrainElevationMslMeters=GeodeticReference.Kbdu.altitudeMslMeters+ground.heightMeters;
+            if(!TryStartNewFlight(initial))return false;
+            var tugPosition=launch+forward*(float)(towlineDefinition.naturalLengthMeters+4.6);
+            if(!terrainSurface.TrySample(tugPosition.x,tugPosition.z,out ground))return Fail("Tug launch terrain unavailable.");
+            location=FlightFrameConversions.UnityToGeodetic(new Vector3(tugPosition.x,ground.heightMeters+1.2f,tugPosition.z),GeodeticReference.Kbdu);
+            var tugInitial=initial;tugInitial.engineRunning=true;tugInitial.pitchDegrees=8;
+            tugInitial.latitudeDegrees=location.latitudeDegrees;tugInitial.longitudeDegrees=location.longitudeDegrees;tugInitial.altitudeMslMeters=location.altitudeMslMeters;
+            tugInitial.terrainElevationMslMeters=GeodeticReference.Kbdu.altitudeMslMeters+ground.heightMeters;
+            try {TowSession=new QuestFlightLab.Flight.Soaring.AerotowSimulation(_preparedNativeDataRoot,tugDefinition,towlineDefinition,terrainSurface,tugInitial,120,SoaringAtmosphere);}
+            catch(Exception ex){return Fail("Native tug preparation failed: "+ex.Message);}
+            if(operation!=null){TowSession.ConfigureOperation(operation);Operation=new SoaringOperationSession(operation,aircraftDefinition.referenceTrimNoseUp);}
+            PreviousTugPresentationState=TowSession.TugState;RecoveryHold=false;return true;
         }
 
         public bool ResetToConfiguredInitialConditions()
@@ -265,17 +355,24 @@ namespace QuestFlightLab.Flight.Backends
 
         private bool ResetToInitialConditions(in FlightDynamicsInitialConditions initialConditions, bool preserveOperationalState = false)
         {
+            Operation=null;_nextReturnPlan=0;
+            TowSession?.Dispose();TowSession=null;
+            NativeSession?.ClearExternalLoads();
+            SoaringInstruments.Reset();
             if (!SetInitialAtmosphere(_backend, initialConditions, out string windError)) return Fail(windError);
             if (!(preserveOperationalState ? _backend.Relocate(initialConditions) : _backend.Reset(initialConditions)))
                 return Fail(_backend.LastError);
-            LastWindUnityMetersPerSecond = windField.Sample(_backend.CurrentState.positionUnityMeters, _backend.CurrentState.simulationTimeSeconds);
+            LastWindUnityMetersPerSecond = SampleWind(_backend.CurrentState.positionUnityMeters, _backend.CurrentState.simulationTimeSeconds);
             if (!BoulderWindFieldProfile.Finite(LastWindUnityMetersPerSecond) || LastWindUnityMetersPerSecond.sqrMagnitude > 900)
                 return Fail("Invalid reset atmosphere.");
             _backend.SetAtmosphere(AtmosphereFromWind(LastWindUnityMetersPerSecond));
             LastResetInitialConditions = initialConditions;
-            ApplyControls(NeutralIdleControls);
+            NativeSessionVersion++;
+            controls?.ClearSoaringTransientInput();
+            ApplyControls(AircraftNeutralControls);
             _currentState = _backend.CurrentState;
             _previousState = _currentState;
+            if(aircraftDefinition.IsGlider)SoaringInstruments.Sample(NativeSession.AirData,_currentState.simulationTimeSeconds);
             _accumulator?.Reset();
             ApplyBackendPose(_currentState);
             ApplyLegacyState(_currentState);
@@ -308,7 +405,7 @@ namespace QuestFlightLab.Flight.Backends
             if (windField == null) { error = "Missing shared atmosphere."; return false; }
             Vector3 at = FlightFrameConversions.GeodeticToUnity(initial.latitudeDegrees, initial.longitudeDegrees,
                 initial.altitudeMslMeters, GeodeticReference.Kbdu);
-            Vector3 wind = windField.Sample(at, 0);
+            Vector3 wind = SampleWind(at, 0);
             if (!BoulderWindFieldProfile.Finite(wind) || wind.sqrMagnitude > 900)
             { error = "Invalid initial shared atmosphere."; return false; }
             backend.SetAtmosphere(AtmosphereFromWind(wind));
@@ -326,23 +423,32 @@ namespace QuestFlightLab.Flight.Backends
                 error = candidate.LastError;
                 return false;
             }
+            SoaringAtmosphere=null;SoaringInstruments.Reset();
+            if(context.aircraftDefinition.IsGlider)
+            {
+                try {SoaringAtmosphere=new SoaringAtmosphereSession(windField,soaringWeatherDefinition);}
+                catch(Exception ex){error=ex.Message;return false;}
+                if(!((JSBSimNativeDevelopmentBackend)candidate).NativeSession.SetConditions(SoaringAtmosphere.Conditions))
+                {error=((JSBSimNativeDevelopmentBackend)candidate).NativeSession.LastError;return false;}
+            }
             if (!SetInitialAtmosphere(candidate, initialConditions, out error)) return false;
             if (!candidate.Reset(initialConditions))
             {
                 error = candidate.LastError;
                 return false;
             }
-            Vector3 initialWind = windField.Sample(candidate.CurrentState.positionUnityMeters, candidate.CurrentState.simulationTimeSeconds);
+            Vector3 initialWind = SampleWind(candidate.CurrentState.positionUnityMeters, candidate.CurrentState.simulationTimeSeconds);
             if (!BoulderWindFieldProfile.Finite(initialWind) || initialWind.sqrMagnitude > 900)
             { error = "Invalid initial shared atmosphere."; return false; }
             candidate.SetAtmosphere(AtmosphereFromWind(initialWind));
             LastWindUnityMetersPerSecond = initialWind;
-            candidate.SetControls(NeutralIdleControls);
+            candidate.SetControls(AircraftNeutralControls);
             _backend = candidate;
             LastResetInitialConditions = initialConditions;
-            LastAppliedControls = FlightDynamicsControlSnapshot.From(NeutralIdleControls);
+            LastAppliedControls = FlightDynamicsControlSnapshot.From(AircraftNeutralControls);
             _currentState = candidate.CurrentState;
             _previousState = _currentState;
+            if(aircraftDefinition.IsGlider)SoaringInstruments.Sample(((JSBSimNativeDevelopmentBackend)candidate).NativeSession.AirData,_currentState.simulationTimeSeconds);
             ApplyBackendPose(_currentState);
             ApplyLegacyState(_currentState);
             error = string.Empty;
@@ -362,6 +468,7 @@ namespace QuestFlightLab.Flight.Backends
             return new FlightDynamicsBackendContext
             {
                 simulationRoot = simulationRoot,
+                aircraftDefinition = aircraftDefinition,
                 aircraftState = aircraftState,
                 terrainSurface = terrainSurface,
                 localOrigin = GeodeticReference.Kbdu,
@@ -379,14 +486,35 @@ namespace QuestFlightLab.Flight.Backends
         {
             if (_backend == null || !_backend.IsInitialized) return false;
             _previousState = _currentState;
-            LastWindUnityMetersPerSecond = windField.Sample(_currentState.positionUnityMeters, _currentState.simulationTimeSeconds);
+            LastWindUnityMetersPerSecond = SampleWind(_currentState.positionUnityMeters, _currentState.simulationTimeSeconds);
             if (!BoulderWindFieldProfile.Finite(LastWindUnityMetersPerSecond) ||
                 LastWindUnityMetersPerSecond.sqrMagnitude > 900)
                 return Fail("Shared wind field returned invalid or out-of-envelope air velocity.");
             _backend.SetAtmosphere(AtmosphereFromWind(LastWindUnityMetersPerSecond));
-            if (!_backend.Advance(fixedDeltaTimeSeconds))
-                return Fail(_backend.LastError);
+            bool release=aircraftDefinition.IsGlider && controls!=null && controls.ConsumeTowRelease();
+            if(Operation!=null)
+            {
+                Operation.ObserveChecks(_currentState,LastAppliedControls,release);
+                if(release)Operation.ReconcileConnection(false,false,_currentState);
+                if(!UpdateSoaringSafety())return false;
+            }
+            if(TowSession!=null)
+            {
+                if(!TowSession.Step((JSBSimNativeDevelopmentBackend)_backend,windField,fixedDeltaTimeSeconds,release))
+                    return Fail(TowSession.LastError);
+            }
+            else
+            {
+                if(SoaringAtmosphere!=null && aircraftDefinition.differentialAirflow)
+                {
+                    var incremental=AircraftAirflowSampler.Sample(_currentState,NativeDiagnostics,SoaringAtmosphere,LastWindUnityMetersPerSecond,null,true);
+                    if(!AircraftAirflowSampler.Submit(NativeSession,incremental))return Fail(NativeSession.LastError);
+                }
+                if (!_backend.Advance(fixedDeltaTimeSeconds))return Fail(_backend.LastError);
+            }
             _currentState = _backend.CurrentState;
+            ObserveSoaringOperation((float)fixedDeltaTimeSeconds);
+            if(aircraftDefinition.IsGlider)SoaringInstruments.Sample(NativeSession.AirData,_currentState.simulationTimeSeconds);
             ApplyBackendPose(_currentState);
             ApplyLegacyState(_currentState);
             NativeStepCompleted?.Invoke(_currentState, LastAppliedControls, (float)fixedDeltaTimeSeconds);
@@ -479,6 +607,8 @@ namespace QuestFlightLab.Flight.Backends
 
         private void ShutdownBackend()
         {
+            TowSession?.Dispose();TowSession=null;
+            SoaringAtmosphere=null;SoaringInstruments.Reset();
             _backend?.Dispose();
             _backend = null;
             NativePayloadIdentity = string.Empty;

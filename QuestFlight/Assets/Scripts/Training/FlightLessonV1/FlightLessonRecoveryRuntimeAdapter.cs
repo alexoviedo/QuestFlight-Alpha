@@ -141,7 +141,7 @@ namespace QuestFlightLab.Training.FlightLessonV1
 
         private void FixedUpdate()
         {
-            if (!referencesValidated || !demoPilot.IsRunning || demoPilot.UserHasControls)
+            if (!referencesValidated || demoPilot.IsSoaringDemo || !demoPilot.IsRunning || demoPilot.UserHasControls)
             {
                 // A queued checkpoint must not survive a handoff or a new session.
                 if (recoveryStateMachine.IsActive) RestoreCompositorIdentity();

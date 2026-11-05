@@ -92,6 +92,12 @@ namespace QuestFlight.Editor
         {
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             Material terrainMaterial = LoadRequired<Material>(TerrainMaterialPath);
+            // Preserve single visual ownership when this authoring recipe is rerun.
+            Material runwayReference=LoadRequired<Material>("Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.mat");
+            Vector4 runwayOrigin=runwayReference.GetVector("_RunwayOrigin"), runwayAxis=runwayReference.GetVector("_RunwayAxis"), runwaySize=runwayReference.GetVector("_RunwayLengthWidth");
+            terrainMaterial.SetVector("_RunwayCutoutOriginAxis",new Vector4(runwayOrigin.x,runwayOrigin.y,runwayAxis.x,runwayAxis.y));
+            terrainMaterial.SetVector("_RunwayCutoutSize",new Vector4(runwaySize.x,runwaySize.y,1,0));
+            EditorUtility.SetDirty(terrainMaterial);
             GameObject contextPrefab = LoadRequired<GameObject>(ContextPrefabPath);
             Cubemap skyCubemap = LoadRequired<Cubemap>(SkyCubemapPath);
             Material skyMaterial = LoadRequired<Material>(SkyMaterialPath);
@@ -309,6 +315,12 @@ namespace QuestFlight.Editor
         private static void ValidateIntegratedAssets()
         {
             Material terrainMaterial = LoadRequired<Material>(TerrainMaterialPath);
+            // Preserve single visual ownership when this authoring recipe is rerun.
+            Material runwayReference=LoadRequired<Material>("Assets/Production/Environment/AirportCoreV4/Runway/AirportCoreContinuousRunway.mat");
+            Vector4 runwayOrigin=runwayReference.GetVector("_RunwayOrigin"), runwayAxis=runwayReference.GetVector("_RunwayAxis"), runwaySize=runwayReference.GetVector("_RunwayLengthWidth");
+            terrainMaterial.SetVector("_RunwayCutoutOriginAxis",new Vector4(runwayOrigin.x,runwayOrigin.y,runwayAxis.x,runwayAxis.y));
+            terrainMaterial.SetVector("_RunwayCutoutSize",new Vector4(runwaySize.x,runwaySize.y,1,0));
+            EditorUtility.SetDirty(terrainMaterial);
             Cubemap skyCubemap = LoadRequired<Cubemap>(SkyCubemapPath);
             Material waterMaterial = LoadRequired<Material>(ReservoirWaterMaterialAuthoring.MaterialPath);
             Mesh shadowMesh = LoadRequired<Mesh>(AircraftShadowMeshPath);

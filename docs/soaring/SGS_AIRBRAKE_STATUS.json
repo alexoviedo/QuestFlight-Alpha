@@ -1,0 +1,54 @@
+{
+  "schema": "questflight.sgs-airbrake-repair.v1",
+  "updatedUtc": "2026-10-16T20:47:32.073263+00:00",
+  "startedUtc": "2026-10-16T20:30:44Z",
+  "deadlineUtc": "2026-10-16T21:00:44Z",
+  "status": "IMPLEMENTED_SCOPED_SOFTWARE_AND_ANDROID_ASSETS_VERIFIED;INTEGRATED_XR_ACCEPTANCE_PENDING",
+  "scope": "SGS2-33 visual dive-brake geometry and animation only; no FDM, cockpit control, scenery or quality changes",
+  "artifactRoot": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\sgs_airbrakes_20261016",
+  "references": "docs/soaring/SGS_VISUAL_REFERENCES.md#balanced-dive-brake-correction-2026-10-16",
+  "implementation": [
+    "Four incorrect red slabs replaced by narrow double-sided painted upper/lower sheets with three hinge-edge reliefs per blade.",
+    "Approximate span stations1.905-3.048m; upper50-60%chord/lower40-50%chord. Digitized visual estimates, not factory dimensions.",
+    "Closed sheets conform to existing wing section/incidence/dihedral; actual spanwise hinge axes serialized in both aircraft prefab bindings.",
+    "Upper85deg/lower75deg nominal travel retained from G2EA; corrected lower blade forward placement and rotation direction.",
+    "Native actual airbrake actuator position continues to drive extension and retraction; no alternate simulation or input path."
+  ],
+  "frozenBudgets": {
+    "triangles": 8000,
+    "renderers": 3,
+    "materials": 2,
+    "addedTextures": 0
+  },
+  "before": {
+    "triangles": 7921,
+    "renderers": 3,
+    "materials": 2,
+    "addedTextures": 0
+  },
+  "after": {
+    "triangles": 7993,
+    "renderers": 3,
+    "materials": 2,
+    "addedTextures": 0
+  },
+  "verification": {
+    "focusedEditMode": "PASS11/11 final rerun; source compiles;4brakes/full travel/budget/controls/authority",
+    "offlineStereo": "34/34 captures; closed/half/full/reclosed both-eye closeups inspected; full-resolution upper-left/lower-right also inspected. Separate Editor cameras, not live XR.",
+    "standardVisual": "107/130;23 pre-existing resource failures retained; all130 draw/triangle/material/pass rows exactly equal to alpha5 baseline. Overview inspected.",
+    "android": "PASS61 player script assemblies compiled and SGS Android asset bundle built in StrictMode; production build preflight passed. Not full APK or IL2CPP link.",
+    "scopeComparison": "Only four brake triangle multisets changed and8 recess triangles added; other parts geometrically identical at10micrometer comparison, cockpit anchors unchanged. Blender reordered some sphere triangles.",
+    "gitDiffCheck": "Unrelated pre-existing trailing whitespace at FlightDynamicsCoordinator.cs226; no cleanup of user changes.",
+    "nativePhysics": "UNCHANGED_NOT_REVALIDATED_THIS_VISUAL_TASK"
+  },
+  "remaining": [
+    "Fresh live Meta XR Simulator stereo of the updated product; offline captures do not satisfy that separate repository acceptance gate. No existing source-matched external development project was available for a bounded fresh build.",
+    "Integrate with forthcoming changes, build a complete Android APK and perform deferred headset visual acceptance. No APK built or installed this task.",
+    "Panel reliefs, colors and traced dimensions remain reference estimates; internal linkages and through-wing cavities are not represented."
+  ],
+  "installedCandidate": "Existing alpha5 unchanged; new airbrakes exist in local source/assets only.",
+  "rights": "Research references and model derivatives remain local and uncommitted. No source images used as textures.",
+  "priorBlockersUnchanged": "Stall/control fidelity, native lesson cases, frozen whole-scene resources and actual Quest timing remain separate unresolved work.",
+  "completedUtc": "2026-10-16T20:49:36.439043+00:00",
+  "elapsedMinutes": 18.87
+}

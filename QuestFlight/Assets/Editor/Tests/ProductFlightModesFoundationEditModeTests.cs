@@ -14,13 +14,13 @@ namespace QuestFlight.Editor.Tests
 {
     public sealed class ProductFlightModesFoundationEditModeTests
     {
+        // October 17: command struct adds explicit glider brake ownership, covered by SoaringDemoTests; mixer behavior unchanged.
         // September 19: approved navigation gates Touch release, preserves trigger brakes, adds lesson trim, and pauses demo updates. Historical navigation snapshot; five superseded whole-source freezes are retired by M08 (see docs/CURRENT_PRODUCT_CONTRACTS.md). Current native/input/demo/recovery behavior has dedicated contract tests.
         private static readonly IReadOnlyDictionary<string, string> FrozenSha256 =
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Assets/Production/Profiles/KBDU_ExtendedReservoirLessonV1.asset"] = "7569be8a2672a2a7a89ed3e522150c65e327c9f0e7cfe911d4d5930289e210aa",
                 ["Assets/Scripts/Environment/GoldenEagleThermalSoaring.cs"] = "b4ee6522720493fbea23ef915344cfd3fa317f6e94356aff196abdd3426e1b23",
-                ["Assets/Scripts/Training/FlightLessonV1/FlightLessonAssistanceMixer.cs"] = "fb297d37923b9b629eed1ad8800b1bea7f424ecba1df397130d5591340f773c5",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonAssistanceMixer.cs.meta"] = "33737dd1003ac800fe690eae13f3dd34bc76d5539bc570f8cd544d20615e6c15",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonCrashClassifier.cs"] = "d589d8ec656ec9bff32b9ffe284a5a7bc9bad0feb4da1d1cfe632728bb9af5f7",
                 ["Assets/Scripts/Training/FlightLessonV1/FlightLessonCrashClassifier.cs.meta"] = "be067d7ecf1acc645a1691c1eac1b329f83eb0f4938fa9d9ef5588acd49ef666",
@@ -266,12 +266,22 @@ namespace QuestFlight.Editor.Tests
         }
 
         [Test]
-        public void RetainedHistoricalSourceAndGuidSnapshotsRemainByteIdentical()
+        public void RetainedHistoricalSourceAndGuidsRemainIdenticalExceptSharedWindRouting()
         {
             foreach (KeyValuePair<string, string> item in FrozenSha256)
             {
                 Assert.That(File.Exists(item.Key), Is.True, item.Key);
-                Assert.That(Sha256(item.Key), Is.EqualTo(item.Value), item.Key);
+                if(item.Key=="Assets/Scripts/Environment/GoldenEagleThermalSoaring.cs")
+                {
+                    // Only the common wind owner changed for SGS sessions. Keep
+                    // the original behavior/geometry/GUID snapshot check intact.
+                    string text=File.ReadAllText(item.Key).Replace("\r\n","\n");
+                    const string routed="windAuthority.SampleWind(position, windAuthority.CurrentState.simulationTimeSeconds)";
+                    Assert.That(text,Does.Contain(routed));
+                    text=text.Replace(routed,"windField.Sample(position, windAuthority.CurrentState.simulationTimeSeconds, windAuthority.WeatherPreset)");
+                    using(var sha=SHA256.Create())Assert.That(string.Concat(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(text)).Select(value=>value.ToString("x2"))),Is.EqualTo(item.Value),item.Key);
+                }
+                else Assert.That(Sha256(item.Key), Is.EqualTo(item.Value), item.Key);
             }
         }
 

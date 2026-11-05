@@ -1,0 +1,13 @@
+{
+  "sourceSha256": "96becbb7d6e2e6b47850faa1b2a9429268258e77aa88ec9ba2063551b37ffe07",
+  "rights": "LOCAL_ONLY_REFERENCE_CLEARANCE_PENDING",
+  "geometrySource": "Simons1996 Schweizer-supplied three-view; UIUC V5 TRUE NACA43012A coordinates. Donor inspected but unsuitable surfaces replaced; original donor preserved.",
+  "repairs": "Closed nose/fuselage/front canopy/fixed rear glazing; dimensioned wing planform, dihedral, washout and NACA43012A sections; symmetric estimated tail sections; hinge axes; streamlined lift struts; arched panel/interior; split normals; reachable grips follow handles. Authored seat eye lowered0.52m into enclosure; no tracked-camera or FDM edits. Local/uncommitted.",
+  "airbrakeReference": "2026-10-16: thin balanced upper/lower panels with hinge-edge reliefs; approximate 75-120in span stations and half-chord hinges from Schweizer-supplied three-view, Barre1986 photo202844; G2EA85deg upper/75deg lower travel. See docs/soaring/SGS_VISUAL_REFERENCES.md. No factory CAD or operator-exact fit claimed.",
+  "brakeLeverReference": "2026-10-16: left sidewall shaft with bent inward grip, below panel; manufacturer manual and actual SGS2-33/A cockpit photos. Straight aft travel with initial visual downward unlock, terminal wheel braking. 230mm travel,25deg roll and85/15 input split are reference estimates, not measured rigging. See docs/soaring/SGS_VISUAL_REFERENCES.md.",
+  "panelViewReference": "2026-10-16: N2930H photographed instrument arrangement; altimeter,VSI,magnetic compass,MPH ASI; centre vent/blank cover. Rounded closed nose coaming and raked pitot/static mast from actual cockpit photographs and RCAF2017 AOI figures1-2/1-3/3-1. Dimensions/face angles estimated; static Boulder magnetic variation shared with C172; no exact operator or compass-error fidelity claim. See docs/soaring/SGS_VISUAL_REFERENCES.md.",
+  "staticTriangles": 6148,
+  "movingTriangles": 1623,
+  "canopyTriangles": 198,
+  "yawStringReference": "2026-10-24: original procedural 4-link/24-triangle yarn and tape aligned to existing canopy; FAA GFH ch4 and Soaring Tigers photos, reference fit/response estimates, not operator-exact. No photo textures imported. See docs/soaring/YAW_STRING_REPAIR_2026-10-24.md."
+}

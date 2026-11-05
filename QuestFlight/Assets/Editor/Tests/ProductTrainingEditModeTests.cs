@@ -213,7 +213,7 @@ namespace QuestFlight.Editor.Tests
             var flight=world.GetComponentInChildren<FlightDynamicsCoordinator>(true);
             var lesson=world.GetComponentInChildren<ProductTrainingController>(true).Lessons[1];
             using var backend=new JSBSimNativeDevelopmentBackend(AlexOviedo.QuestFlight.JSBSim.JSBSimRuntimeData.EditorPackageDataRoot);
-            Assert.IsTrue(backend.Initialize(new FlightDynamicsBackendContext{simulationRoot=flight.simulationRoot,aircraftState=flight.aircraftState,terrainSurface=flight.terrainSurface}),backend.LastError);
+            Assert.IsTrue(backend.Initialize(new FlightDynamicsBackendContext{aircraftDefinition=flight.aircraftDefinition,simulationRoot=flight.simulationRoot,aircraftState=flight.aircraftState,terrainSurface=flight.terrainSurface}),backend.LastError);
             var at=FlightFrameConversions.GeodeticToUnity(lesson.start.latitudeDegrees,lesson.start.longitudeDegrees,lesson.start.altitudeMslMeters,GeodeticReference.Kbdu);
             var controls=QuestFlightLab.Runtime.AircraftControlState.Neutral(lesson.initialThrottle);
             controls.mixture=1;controls.trim=lesson.initialTrim;

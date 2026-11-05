@@ -38,6 +38,7 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
         Pass
         {
             Tags { "LightMode"="UniversalForward" }
+            ZTest Always
             CGPROGRAM
             #pragma target 3.5
             #pragma vertex vert
@@ -48,6 +49,7 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
 
             #include "CloudVolumeSampling.cginc"
             sampler2D _DensitySlices;
+            UNITY_DECLARE_SCREENSPACE_TEXTURE(_CameraDepthTexture);
             half4 _LitColor;
             half4 _AmbientColor;
             half4 _UndersideColor;
@@ -181,10 +183,12 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
                 if (volumeParameters.x > 0.5h)
                     densityCoordinate.x = 1.0 - densityCoordinate.x;
                 half4 densityData = SampleDensityVolume(densityCoordinate);
-                half archetype = lerp(densityData.r, densityData.g, volumeParameters.x);
+                // One coherent VDB archetype per formation; blending unrelated shapes creates nested bodies.
+                half shape = step(0.5h, volumeParameters.x);
+                half archetype = densityData.g; // Consistent compact cumulus family; exclude diffuse archetype A.
 
                 half baseRamp = smoothstep(0.015h, 0.10h, normalizedHeight);
-                half topStart = lerp(0.60h, 0.76h, volumeParameters.x);
+                half topStart = 0.76h;
                 half topRamp = 1.0h - smoothstep(topStart, 0.98h, normalizedHeight);
                 half verticalShape = baseRamp * topRamp;
                 half body = smoothstep(0.07h, 0.48h, archetype);
@@ -230,7 +234,11 @@ Shader "QuestFlight/Boulder Sparse Volumetric Cloud Field"
                     discard;
 
                 float rayStart = max(entry, 0.0);
-                float rayEnd = min(exit, _MaximumDistance);
+                float2 depthUv = input.position.xy / _ScreenParams.xy;
+                float rawDepth = UNITY_SAMPLE_SCREENSPACE_TEXTURE(_CameraDepthTexture, depthUv).r;
+                float eyeDepth = LinearEyeDepth(rawDepth);
+                float rayForward = max(0.001, -mul(UNITY_MATRIX_V, float4(rayDirectionWorld, 0)).z);
+                float rayEnd = min(min(exit, _MaximumDistance), eyeDepth / rayForward);
                 float span = rayEnd - rayStart;
                 if (span <= 0.01)
                     discard;
@@ -303,6 +311,7 @@ float4 _QFPreviousCloudDrift; float _CloudMotionOpacity;
 
             #include "CloudVolumeSampling.cginc"
             sampler2D _DensitySlices;
+            UNITY_DECLARE_SCREENSPACE_TEXTURE(_CameraDepthTexture);
             half4 _LitColor;
             half4 _AmbientColor;
             half4 _UndersideColor;
@@ -436,10 +445,12 @@ float4 _QFPreviousCloudDrift; float _CloudMotionOpacity;
                 if (volumeParameters.x > 0.5h)
                     densityCoordinate.x = 1.0 - densityCoordinate.x;
                 half4 densityData = SampleDensityVolume(densityCoordinate);
-                half archetype = lerp(densityData.r, densityData.g, volumeParameters.x);
+                // One coherent VDB archetype per formation; blending unrelated shapes creates nested bodies.
+                half shape = step(0.5h, volumeParameters.x);
+                half archetype = densityData.g; // Consistent compact cumulus family; exclude diffuse archetype A.
 
                 half baseRamp = smoothstep(0.015h, 0.10h, normalizedHeight);
-                half topStart = lerp(0.60h, 0.76h, volumeParameters.x);
+                half topStart = 0.76h;
                 half topRamp = 1.0h - smoothstep(topStart, 0.98h, normalizedHeight);
                 half verticalShape = baseRamp * topRamp;
                 half body = smoothstep(0.07h, 0.48h, archetype);
@@ -485,7 +496,11 @@ float4 _QFPreviousCloudDrift; float _CloudMotionOpacity;
                     discard;
 
                 float rayStart = max(entry, 0.0);
-                float rayEnd = min(exit, _MaximumDistance);
+                float2 depthUv = input.position.xy / _ScreenParams.xy;
+                float rawDepth = UNITY_SAMPLE_SCREENSPACE_TEXTURE(_CameraDepthTexture, depthUv).r;
+                float eyeDepth = LinearEyeDepth(rawDepth);
+                float rayForward = max(0.001, -mul(UNITY_MATRIX_V, float4(rayDirectionWorld, 0)).z);
+                float rayEnd = min(min(exit, _MaximumDistance), eyeDepth / rayForward);
                 float span = rayEnd - rayStart;
                 if (span <= 0.01)
                     discard;

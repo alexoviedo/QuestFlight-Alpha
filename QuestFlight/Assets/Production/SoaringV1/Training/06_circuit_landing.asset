@@ -1,0 +1,131 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5caaecf10ae238445afcc22c19aa33c6, type: 3}
+  m_Name: 06_circuit_landing
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
+  lessonId: sgs233.reference.circuit_landing
+  program: 1
+  groundTowPreparation: 0
+  soaringWeather: {fileID: 11400000, guid: 50d9fcea1d5790f46a7b4432eb0d5b13, type: 2}
+  displayName: Circuit and landing
+  briefing: "SGS 2-33A / PA-18 development reference, 950 lb dual glider loading.
+    These are simulator modules, not a Mile High syllabus or training credit. Physical
+    inspection and crew communication are explained, not scored as performed. Reference08
+    inside circuit: downwind south of the powered900m-north track and Jay Road; base
+    east of the outer -1900m approach. Plan unpowered descent toward the paved centerline30m
+    south of the local reference. Final42\u201358kt is a software practice window.
+    No engine escape or automatic relocation."
+  briefingNarration: {fileID: 0}
+  learningGoal: Circuit and landing using measured controls, native state and sustained
+    conditions.
+  reflection: Which outside cue and instrument supported your decision? What margin
+    would you require before an instructor-reviewed real flight?
+  start:
+    latitudeDegrees: 40.044318495468026
+    longitudeDegrees: -105.2202305683336
+    altitudeMslMeters: 1920.2824
+    terrainElevationMslMeters: 1588.262401449585
+    calibratedAirspeedKnots: 50
+    headingDegrees: 270
+    pitchDegrees: 0
+    bankDegrees: 0
+    flightPathAngleDegrees: -2.862400417
+    engineRunning: 0
+  initialThrottle: 0
+  initialTrim: 0.10626088
+  initialFlaps: 0
+  allowDemonstration: 0
+  airportExercise: 1
+  goAroundStage: -1
+  stages:
+  - title: Inside downwind
+    instruction: Fly west on the inside north-side downwind. Reach the western half
+      above180m field height.
+    narration: {fileID: 0}
+    successFeedback: Inside downwind was observed within the reference practice window.
+    retryAdvice: Plan energy early and stay inside the powered pattern.
+    task: 114
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 3
+    timeoutSeconds: 300
+    targetEnu: {x: -500, y: 575}
+    captureMeters: 200
+  - title: Base turn
+    instruction: Turn south on base between700m and1800m west of the reference.
+    narration: {fileID: 0}
+    successFeedback: Base turn was observed within the reference practice window.
+    retryAdvice: Use airbrakes as needed; preserve a safe speed and landing margin.
+    task: 115
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 2
+    timeoutSeconds: 300
+    targetEnu: {x: -1250, y: 350}
+    captureMeters: 200
+  - title: Stable final
+    instruction: "Align east toward the paved centerline at42\u201358kt with controlled
+      descent."
+    narration: {fileID: 0}
+    successFeedback: Stable final was observed within the reference practice window.
+    retryAdvice: Use pitch and airbrakes; there is no powered go-around.
+    task: 116
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 3
+    timeoutSeconds: 300
+    targetEnu: {x: -1000, y: -30}
+    captureMeters: 200
+  - title: Touchdown
+    instruction: Round out and land on the reference paved strip with wings level.
+    narration: {fileID: 0}
+    successFeedback: Touchdown was observed within the reference practice window.
+    retryAdvice: Reduce sink and bank before contact; a hard or off-runway touchdown
+      needs another attempt.
+    task: 117
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 1
+    timeoutSeconds: 300
+    targetEnu: {x: -400, y: -30}
+    captureMeters: 200
+  - title: Rollout and stop
+    instruction: Apply the last part of the combined lever for wheel braking and
+      stop on the strip.
+    narration: {fileID: 0}
+    successFeedback: Rollout and stop was observed within the reference practice
+      window.
+    retryAdvice: Stay aligned and hold the wheel brake; crew movement is a later
+      explicit action.
+    task: 118
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 3
+    timeoutSeconds: 300
+    targetEnu: {x: -400, y: -30}
+    captureMeters: 200
+  orientation: 

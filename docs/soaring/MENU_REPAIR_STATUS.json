@@ -1,0 +1,39 @@
+{
+  "status": "IMPLEMENTED_BUILT_INSTALLED_ACCEPTANCE_PARTIAL",
+  "updatedUtc": "2026-10-14T21:39:47.869232+00:00",
+  "approval": "User explicitly approved every fix M01-M17 and requested implementation without stopping.",
+  "artifactRoot": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\menu_repair_20261014",
+  "implementation": {
+    "M01": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M02": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M03": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M04": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M05": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M06": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M07": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M08": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M09": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M10": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M11": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M12": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M13": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M14": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M15": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M16": "IMPLEMENTED_SOFTWARE_VERIFIED",
+    "M17": "IMPLEMENTED_SOFTWARE_VERIFIED"
+  },
+  "currentRun": "All runnable menu implementation/validation/build/package/install work completed. See MENU_REPAIR_ACCEPTANCE.md.",
+  "remaining": [
+    "Worn/focused Quest menu and comfort acceptance",
+    "Physical Quest frame/memory/thermal acceptance",
+    "Retained unrelated scenery/fidelity and full simulator gate failures"
+  ],
+  "installedCandidate": {
+    "path": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\menu_repair_20261014\\final_android\\QuestFlight-menu-repair-alpha3.apk",
+    "bytes": 1816543336,
+    "sha256": "3ab4e5065c7399cf21762059d4e43cfba305ebbb98f5da5515efddb37236df86",
+    "installedSha256": "3ab4e5065c7399cf21762059d4e43cfba305ebbb98f5da5515efddb37236df86",
+    "installedSerial": "2G0YC5ZG8907TD"
+  },
+  "reviewPending": []
+}

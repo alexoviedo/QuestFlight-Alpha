@@ -2,6 +2,8 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
 {
     Properties
     {
+        _RunwayCutoutOriginAxis ("Authored runway origin XZ / unit axis XZ", Vector) = (0,0,1,0)
+        _RunwayCutoutSize ("Runway length / width / enabled", Vector) = (0,0,0,0)
         [HideInInspector] _XRMotionVectorsPass("XR motion",Float)=1
 
         _NearAlbedo ("Near 4 km NAIP", 2D) = "gray" {}
@@ -78,6 +80,8 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             #include "../../../Shaders/AerialClipmapSampling.cginc"
             #include "../AerialSceneryV1/Vegetation/Shaders/AerialCanopyMap.cginc"
 
+            float4 _RunwayCutoutOriginAxis;
+            float4 _RunwayCutoutSize;
             sampler2D _NearAlbedo;
             sampler2D _NearSourceNormal;
             sampler2D _MidAlbedo;
@@ -149,6 +153,12 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             fixed4 frag(v2f input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                // One color/depth owner inside the pavement. Collider and terrain geometry remain intact.
+                float2 runwayDelta = input.worldPosition.xz - _RunwayCutoutOriginAxis.xy;
+                float alongRunway = dot(runwayDelta, _RunwayCutoutOriginAxis.zw);
+                float acrossRunway = abs(dot(runwayDelta, float2(-_RunwayCutoutOriginAxis.w, _RunwayCutoutOriginAxis.z)));
+                if (_RunwayCutoutSize.z > .5 && alongRunway > .05 && alongRunway < _RunwayCutoutSize.x-.05 && acrossRunway < _RunwayCutoutSize.y*.5-.05) discard;
+
 
                 float2 world = input.worldPosition.xz;
                 float2 worldDx = ddx(world);
@@ -453,6 +463,8 @@ Shader "QuestFlight/KBDU Terrain Pyramid"
             #include "../../../Shaders/AerialClipmapSampling.cginc"
             #include "../AerialSceneryV1/Vegetation/Shaders/AerialCanopyMap.cginc"
 
+            float4 _RunwayCutoutOriginAxis;
+            float4 _RunwayCutoutSize;
             sampler2D _NearAlbedo;
             sampler2D _NearSourceNormal;
             sampler2D _MidAlbedo;
@@ -528,6 +540,12 @@ UNITY_VERTEX_OUTPUT_STEREO
             fixed4 QFColorFragment(v2f input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                // One color/depth owner inside the pavement. Collider and terrain geometry remain intact.
+                float2 runwayDelta = input.worldPosition.xz - _RunwayCutoutOriginAxis.xy;
+                float alongRunway = dot(runwayDelta, _RunwayCutoutOriginAxis.zw);
+                float acrossRunway = abs(dot(runwayDelta, float2(-_RunwayCutoutOriginAxis.w, _RunwayCutoutOriginAxis.z)));
+                if (_RunwayCutoutSize.z > .5 && alongRunway > .05 && alongRunway < _RunwayCutoutSize.x-.05 && acrossRunway < _RunwayCutoutSize.y*.5-.05) discard;
+
 
                 float2 world = input.worldPosition.xz;
                 float2 worldDx = ddx(world);

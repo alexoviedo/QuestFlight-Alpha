@@ -17,6 +17,7 @@ namespace QuestFlightLab.Flight.Backends
         private readonly bool _libraryAvailable;
         private FlightDynamicsBackendContext _context;
         private FlightDynamicsAtmosphere _projectedAtmosphere;
+        private readonly NativeTerrainPatch _terrainPatch = new NativeTerrainPatch();
 
         public JSBSimNativeDevelopmentBackend(string dataRoot)
         {
@@ -26,7 +27,8 @@ namespace QuestFlightLab.Flight.Backends
         }
 
         public FlightDynamicsBackendKind Kind => FlightDynamicsBackendKind.JSBSimNativeDevelopment;
-        public string DisplayName => "JSBSim 1.3.1 native C172P";
+        public string DisplayName => "JSBSim 1.3.1 native " + (_context?.aircraftDefinition != null ? _context.aircraftDefinition.displayName : "unconfigured aircraft");
+        public JSBSimNativeSession NativeSession => _session;
         public bool IsAvailable => _libraryAvailable;
         public bool IsInitialized => _session.IsInitialized;
         public string LastError { get; private set; } = string.Empty;
@@ -37,19 +39,24 @@ namespace QuestFlightLab.Flight.Backends
             if (!IsAvailable) return Fail(string.IsNullOrWhiteSpace(LastError)
                 ? "Native JSBSim plugin is unavailable on this platform."
                 : LastError);
-            if (context == null || context.simulationRoot == null || context.aircraftState == null)
+            if (context == null || ((!context.secondaryNativeTug || context.aircraftDefinition==null || context.aircraftDefinition.kind!=FlightAircraftKind.Pa18TugReference) &&
+                (context.simulationRoot == null || context.aircraftState == null)))
                 return Fail("Native JSBSim requires the authored simulation root and AircraftState.");
             if (context.terrainSurface == null)
                 return Fail("Native JSBSim requires the serialized production terrain surface.");
+            if (context.aircraftDefinition == null || !context.aircraftDefinition.IsValid(out _))
+                return Fail("Native JSBSim requires a valid serialized aircraft definition.");
             if (!JSBSimRuntimeData.ValidateDataRoot(_dataRoot, out string dataError))
                 return Fail(dataError);
 
             _context = context;
-            if (!_session.Initialize(_dataRoot))
+            if (!_session.Initialize(_dataRoot, context.aircraftDefinition.nativeConfiguration))
             {
                 _context = null;
                 return Fail(_session.LastError);
             }
+            if (!context.aircraftDefinition.Matches(_session.Capabilities, out string mismatch))
+            { _session.Dispose(); _context = null; return Fail(mismatch); }
             LastError = string.Empty;
             return true;
         }
@@ -63,6 +70,7 @@ namespace QuestFlightLab.Flight.Backends
         private bool ResetOrRelocate(FlightDynamicsInitialConditions initialConditions, bool preserveOperationalState)
         {
             if (!RequireInitialized()) return false;
+            if (!PrepareGround(initialConditions.latitudeDegrees, initialConditions.longitudeDegrees, true)) return false;
             if (!TryTerrainElevationAt(
                     initialConditions.latitudeDegrees,
                     initialConditions.longitudeDegrees,
@@ -105,6 +113,8 @@ namespace QuestFlightLab.Flight.Backends
                 leftBrake = controls.leftToeBrake,
                 rightBrake = controls.rightToeBrake
             });
+            if (_context.aircraftDefinition.airbrake && !_session.SetGliderControls(new JSBSimNativeGliderControls
+                { airbrake = controls.airbrake, wheelBrake = controls.wheelBrake })) Fail(_session.LastError);
         }
 
         public void SetAtmosphere(FlightDynamicsAtmosphere atmosphere)
@@ -131,7 +141,12 @@ namespace QuestFlightLab.Flight.Backends
 
         public bool Advance(double fixedDeltaTimeSeconds)
         {
+            return PrepareAdvance() && AdvancePrepared(fixedDeltaTimeSeconds);
+        }
+        public bool PrepareAdvance()
+        {
             if (!RequireInitialized()) return false;
+            if (!PrepareGround(CurrentState.latitudeDegrees, CurrentState.longitudeDegrees, false)) return false;
             if (!TryTerrainElevationAt(
                     CurrentState.latitudeDegrees,
                     CurrentState.longitudeDegrees,
@@ -143,8 +158,18 @@ namespace QuestFlightLab.Flight.Backends
                     ? "Could not update JSBSim from the authored terrain surface."
                     : _session.LastError);
             ApplyAtmosphere(CurrentState.latitudeDegrees, CurrentState.longitudeDegrees, CurrentState.altitudeMslMeters);
-            if (!_session.Advance(fixedDeltaTimeSeconds)) return Fail(_session.LastError);
+            return _session.SubmitPendingInputs() || Fail(_session.LastError);
+        }
+        public bool AdvancePrepared(double fixedDeltaTimeSeconds)
+        {
+            if (!_session.AdvanceSubmitted(fixedDeltaTimeSeconds)) return Fail(_session.LastError);
             return CaptureState();
+        }
+
+        private bool PrepareGround(double latitude, double longitude, bool force)
+        {
+            if (_context.aircraftDefinition.kind == FlightAircraftKind.C172) return true;
+            return _terrainPatch.Prepare(_session, _context.terrainSurface, _context.localOrigin, latitude, longitude, force, out string error) || Fail(error);
         }
 
         private bool TryTerrainElevationAt(
@@ -223,6 +248,7 @@ namespace QuestFlightLab.Flight.Backends
                     native.yawRateRadiansPerSecond)
             };
             if (!state.IsFinite) return Fail("Native JSBSim returned non-finite product state.");
+            if(_context.aircraftDefinition.kind!=FlightAircraftKind.C172 && !_session.CaptureAirData())return Fail(_session.LastError);
             CurrentState = state;
             LastError = string.Empty;
             return true;

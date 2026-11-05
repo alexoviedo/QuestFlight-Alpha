@@ -5,7 +5,7 @@ using UnityEngine;
 namespace QuestFlight.Product
 {
     /// <summary>Authored, bounded narration. Shares the existing instructor source across mutually exclusive modes.</summary>
-    public sealed class ProductDemoNarration : MonoBehaviour
+    public sealed partial class ProductDemoNarration : MonoBehaviour
     {
         [Serializable] public sealed class Cue
         {
@@ -24,6 +24,7 @@ namespace QuestFlight.Product
         [SerializeField] private Cue[] cues=Array.Empty<Cue>();
         [SerializeField] private QuestFlightLab.Environment.HabitatBirdDirector wildlife;
         private bool eagleSpoken;
+        private int narrationSession=-1;
         public void ConfigureWildlife(QuestFlightLab.Environment.HabitatBirdDirector value) => wildlife=value;
         private bool wasDemo,wasManual,paused,repeatHeld;
         private string lastPhase,currentText="",currentId="";
@@ -37,6 +38,8 @@ namespace QuestFlight.Product
         private void Awake() { played=new bool[cues.Length];visible=new float[cues.Length];speech=new NarrationPlayback(voice); }
         private void Update()
         {
+            if(narrationSession!=modes.FlightSessionVersion){if(speech!=null)speech.Stop();wasDemo=false;narrationSession=modes.FlightSessionVersion;}
+            if(pilot.IsSoaringDemo){UpdateSoaring();return;}
             bool demo=modes.State==ProductFlightModeCoordinator.FlightModeState.Demo && pilot.IsRunning;
             if(!demo)
             {
@@ -76,7 +79,7 @@ namespace QuestFlight.Product
                 // View eligibility controls when a fact starts, never whether its sentence finishes.
                 for(int i=0;i<cues.Length;i++)
                 {
-                    var cue=cues[i];if(cue.distance<=0)continue;
+                    var cue=cues[i];if(cue.distance<=0||cue.id.StartsWith("sgs_"))continue;
                     Vector3 delta=cue.landmark-pilotCamera.transform.position;
                     bool inView=sightseeing && delta.magnitude<cue.distance && delta.magnitude>300 && Vector3.Dot(pilotCamera.transform.forward,delta.normalized)>.65f;
                     if(inView)

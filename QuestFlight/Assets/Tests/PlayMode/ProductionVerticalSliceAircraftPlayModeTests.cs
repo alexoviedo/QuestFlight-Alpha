@@ -512,9 +512,14 @@ namespace QuestFlightLab.Tests.PlayMode
             Assert.That(Mathf.Min(propellerBounds.size.y, propellerBounds.size.z), Is.LessThan(0.35f));
 
             visibility.SetExternalView();
-            Assert.That(exterior.GetComponentsInChildren<Renderer>(true).All(renderer => renderer.enabled), Is.True);
-            Assert.That(staticPropeller.enabled, Is.True,
-                "External view must retain the imported static propeller geometry.");
+            var batch=(Renderer)typeof(AircraftVisibilityProfileController).GetField("externalBatchRenderer",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(visibility);
+            var batched=(Renderer[])typeof(AircraftVisibilityProfileController).GetField("externalBatchSourceRenderers",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(visibility)??new Renderer[0];
+            Assert.That(exterior.GetComponentsInChildren<Renderer>(true).All(renderer =>
+                renderer.enabled==(batch==null||!batched.Contains(renderer))), Is.True,
+                "Each original part is drawn individually or by the retained authored exterior batch.");
+            if(batch!=null)Assert.That(batch.enabled,Is.True);
+            Assert.That(staticPropeller.enabled||(batch!=null&&batch.enabled&&batched.Contains(staticPropeller)), Is.True,
+                "External view must retain the propeller individually or in the authored batch.");
             Assert.That(interior.GetComponentsInChildren<Renderer>(true).All(renderer => !renderer.enabled), Is.True);
             visibility.SetCockpitView();
             Renderer[] interiorRenderers = interior.GetComponentsInChildren<Renderer>(true);

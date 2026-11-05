@@ -34,12 +34,15 @@ namespace QuestFlightLab.Tests.EditMode
         [TestCase("Assets/Scripts/Flight/SimpleAircraftPhysics.cs")]
         [TestCase("Assets/Scripts/Flight/FlightBackendSelector.cs")]
         [TestCase("Assets/Production/Training/UnreviewedNewLesson.asset")]
+        [TestCase("Assets/Production/SoaringV1/Training/UnreviewedNewLesson.asset")]
         public void LegacyAndUnreviewedTrainingRemainExcluded(string path)
         {
             Assert.AreEqual("excluded_legacy_dependency", Classify(path));
         }
 
         [TestCase("Assets/Production/Training/01_taxi.asset")]
+        [TestCase("Assets/Production/SoaringV1/Training/01_preparation.asset")]
+        [TestCase("Assets/Production/SoaringV1/Training/07_ground_abort.asset")]
         [TestCase("Assets/Production/Training/CaptionTimings.json")]
         [TestCase("Assets/Production/Materials/StartupShowroomAccent.mat")]
         [TestCase("Assets/Scripts/Product/ProductAppNavigation.cs")]
@@ -52,6 +55,13 @@ namespace QuestFlightLab.Tests.EditMode
         public void UnknownProductContentRequiresExplicitReview()
         {
             Assert.AreEqual("unknown_unclassified_dependency", Classify("Assets/Production/UI/UnreviewedNewContent.asset"));
+        }
+
+        [TestCase("Assets/Production/SoaringV1/Presentation/SGS_Local_Static.asset")]
+        [TestCase("Assets/Production/Rendering/ExteriorBatch/C172ExteriorBatch.asset")]
+        public void RestrictedDerivativesStayLocalOnly(string path)
+        {
+            Assert.AreEqual("approved_local_development_only",Classify(path));
         }
 
         [Test]

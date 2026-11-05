@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: 06_landing
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 06_landing
+  program: 0
+  groundTowPreparation: 0
+  soaringWeather: {fileID: 0}
   displayName: Landing and go-around
   briefing: Begin already established on a practice final, with twenty degrees of
     flaps. Stabilize, land and slow down, or choose a go-around. This is not a straight-in

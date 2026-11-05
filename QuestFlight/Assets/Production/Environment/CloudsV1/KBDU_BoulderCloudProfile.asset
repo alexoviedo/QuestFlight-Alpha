@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: KBDU_BoulderCloudProfile
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Environment.BoulderCloudProfile
   profileId: KBDU_20260814_1055Z_SCT018_V4
-  weatherClass: KBDU SCT018 low cumulus beneath fixed SCT120 high layer
+  weatherClass: Reference low cumulus with retained photographic high cloud backdrop
   airportElevationMslMeters: 1612.6
   declaredBaseAglMeters: 550
   declaredTopAglMeters: 1450
@@ -26,49 +26,49 @@ MonoBehaviour:
   volumes:
   - id: VOLUME_WNW_CONNECTED
     centerLocalMeters: {x: -4800, y: 1000, z: -4480}
-    radiiMeters: {x: 1144, y: 450, z: 880.00006}
+    radiiMeters: {x: 1100, y: 450, z: 880.00006}
     baseMslMeters: 2162.6
     topMslMeters: 3062.6
     interiorDensity: 0.88
   - id: VOLUME_NORTHWEST
     centerLocalMeters: {x: -2560, y: 1000, z: -4800}
-    radiiMeters: {x: 968, y: 450, z: 792.00006}
+    radiiMeters: {x: 1056, y: 450, z: 836}
     baseMslMeters: 2162.6
     topMslMeters: 3062.6
     interiorDensity: 0.7
   - id: VOLUME_NORTH
     centerLocalMeters: {x: 1279.9998, y: 1000, z: -5120}
-    radiiMeters: {x: 1232, y: 450, z: 792.00006}
+    radiiMeters: {x: 1144, y: 450, z: 880.00006}
     baseMslMeters: 2162.6
     topMslMeters: 3062.6
     interiorDensity: 0.82
   - id: VOLUME_NORTHEAST
     centerLocalMeters: {x: 4479.9995, y: 1000, z: -3360.0002}
-    radiiMeters: {x: 1056, y: 450, z: 1056}
+    radiiMeters: {x: 1100, y: 450, z: 924}
     baseMslMeters: 2162.6
     topMslMeters: 3062.6
     interiorDensity: 0.74
   - id: VOLUME_WEST
     centerLocalMeters: {x: -5120, y: 1000, z: 1600.0004}
-    radiiMeters: {x: 1320.0001, y: 450, z: 968}
+    radiiMeters: {x: 1144, y: 450, z: 924}
     baseMslMeters: 2162.6
     topMslMeters: 3062.6
     interiorDensity: 0.82
   - id: VOLUME_RESERVOIR_WEST
     centerLocalMeters: {x: -1920.0001, y: 1000, z: 3520.0005}
-    radiiMeters: {x: 1144, y: 450, z: 880.00006}
+    radiiMeters: {x: 1100, y: 450, z: 880.00006}
     baseMslMeters: 2162.6
     topMslMeters: 3062.6
     interiorDensity: 0.72
   - id: VOLUME_RESERVOIR_EAST
     centerLocalMeters: {x: 2239.9998, y: 1000, z: 2880}
-    radiiMeters: {x: 1408, y: 450, z: 1056}
+    radiiMeters: {x: 1144, y: 450, z: 924}
     baseMslMeters: 2162.6
     topMslMeters: 3062.6
     interiorDensity: 0.86
   - id: VOLUME_SOUTHEAST
     centerLocalMeters: {x: 5439.9995, y: 1000, z: 4479.9995}
-    radiiMeters: {x: 1056, y: 450, z: 792.00006}
+    radiiMeters: {x: 1056, y: 450, z: 836}
     baseMslMeters: 2162.6
     topMslMeters: 3062.6
     interiorDensity: 0.68

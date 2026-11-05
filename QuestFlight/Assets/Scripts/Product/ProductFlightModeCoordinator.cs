@@ -1,4 +1,4 @@
-﻿using QuestFlightLab.Flight.Backends;
+using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Input;
 using QuestFlightLab.Runtime;
 using UnityEngine;
@@ -41,6 +41,46 @@ namespace QuestFlight.Product
         [SerializeField] private ProductFlightModeMenuView modeMenuView;
         [SerializeField] private Training.ProductTrainingController training;
         [SerializeField] private ProductAppNavigation navigation;
+        [SerializeField] private SoaringAircraftPresentation aircraftPresentation;
+        public SoaringAircraftPresentation AircraftPresentation => aircraftPresentation;
+        public bool IsGlider => flightCoordinator!=null && flightCoordinator.aircraftDefinition!=null && flightCoordinator.aircraftDefinition.IsGlider;
+        public void ConfigureAircraftPresentation(SoaringAircraftPresentation value) => aircraftPresentation=value;
+        public bool SelectAircraft(bool glider)
+        {
+            if(State!=FlightModeState.Selection || Time.timeScale>0 || aircraftPresentation==null || !aircraftPresentation.Ready) return false;
+            demoPilot.StopDemo();productInput.DisableFlightLessonGuidance();productInput.SetFlightLessonInputSuppressed(true);
+            demoPilot.enabled=true;
+            var definition=glider?aircraftPresentation.glider:aircraftPresentation.c172;
+            var initial=glider?definition.airborneReference:_startupInitialConditions;
+            if(!flightCoordinator.TryPrepareAircraft(definition,initial) || !aircraftPresentation.Apply(definition))
+            { EnterBlocked("Aircraft preparation failed: "+flightCoordinator.LastError);return false; }
+            productInput.RequireTouchRelease();training?.SelectAircraftCatalog();FlightSessionVersion++;
+            return true;
+        }
+        public bool PrepareGroundTow()
+        {
+            if(!SelectAircraft(true))return false;
+            if(!flightCoordinator.TryPrepareGroundTow()) {EnterBlocked(flightCoordinator.LastError);return false;}
+            FlightSessionVersion++;return true;
+        }
+        public bool PrepareBoulderOperation(int index)
+        {
+            if(!SelectAircraft(true)||index<0||index>=flightCoordinator.soaringOperations.Length)return false;
+            if(!flightCoordinator.TryPrepareSoaringOperation(flightCoordinator.soaringOperations[index]))return false;
+            FlightSessionVersion++;return true;
+        }
+        public bool CanContinueSoaringTrainingFlight(out string reason)
+        {
+            reason=null;
+            if(!IsGlider||State!=FlightModeState.Training||training==null||training.State!=Training.TrainingSessionState.Debrief)reason="Continue is available from SGS lesson results.";
+            else if(!training.CanContinueFlight||!flightCoordinator.IsInitialized||!flightCoordinator.enabled||!flightCoordinator.CurrentState.IsFinite||flightCoordinator.RecoveryHold)reason="This outcome cannot safely continue. Restart the lesson or return Home.";
+            return reason==null;
+        }
+        public bool ContinueSoaringTrainingFlight()
+        {
+            if(!CanContinueSoaringTrainingFlight(out _))return false;
+            training.LeaveTraining();State=FlightModeState.FreeFlight;productInput.SetFlightLessonInputSuppressed(false);Time.timeScale=1;return true;
+        }
         public ProductAppNavigation AuthoredNavigation => navigation;
         public void ConfigureNavigationForAuthoring(ProductAppNavigation value) => navigation = value;
         public Training.ProductTrainingController AuthoredTraining => training;
@@ -166,6 +206,8 @@ namespace QuestFlight.Product
             if (State != FlightModeState.Selection)
                 return;
 
+            if(flightCoordinator!=null && (!flightCoordinator.enabled || !flightCoordinator.IsInitialized&&!string.IsNullOrEmpty(flightCoordinator.LastError)))
+            {EnterBlocked("Native aircraft preparation failed: "+flightCoordinator.LastError);return;}
             if (navigation != null && navigation.IsOpen) return;
 
             if (seatCalibration != null && seatCalibration.IsOpen)
@@ -212,12 +254,13 @@ namespace QuestFlight.Product
         public void SelectShortShowcase()=>SelectDemoCore(true);
         private void SelectDemoCore(bool shortShowcase)
         {
+
             if (!CanSelectInitializedMode())
                 return;
 
             productInput.ReleaseAllTouchOverrides();
-            demoPilot.StartDemo();
-            if (!demoPilot.IsRunning || (shortShowcase&&!demoPilot.StartShortArrival()))
+            if(IsGlider)demoPilot.StartSoaringDemo(shortShowcase);else demoPilot.StartDemo();
+            if (!demoPilot.IsRunning || (!IsGlider&&shortShowcase&&!demoPilot.StartShortArrival()))
             {
                 EnterBlocked(
                     "Demo failed to start through ProductDemoPilot.StartDemo(). Inspect its serialized route and sources.");
@@ -227,8 +270,8 @@ namespace QuestFlight.Product
             State = FlightModeState.Demo;
             RestoreSavedTimeScaleOnce();
             _demoCheckpointAtUnscaledTime = Time.unscaledTime + 3f;
-            _demoCheckpointPending = true;
-            BeginSuccessfulTransition("DEMO FLIGHT");
+            _demoCheckpointPending = !IsGlider;
+            BeginSuccessfulTransition(IsGlider?"BOULDER SOARING TOUR":"DEMO FLIGHT");
         }
 
         private void LogDemoCheckpointWhenDue()
@@ -285,7 +328,8 @@ namespace QuestFlight.Product
 
             State = FlightModeState.FreeFlight;
             RestoreSavedTimeScaleOnce();
-            BeginSuccessfulTransition("FREE FLIGHT");
+            BeginSuccessfulTransition(IsGlider?(flightCoordinator.TowSession!=null?"SGS REFERENCE · GROUND AEROTOW":"SGS REFERENCE · DEVELOPMENT AIRBORNE START"):"FREE FLIGHT");
+            navigation?.BeginFlightStartHandover();
         }
 
         public string WeatherLabel
@@ -293,7 +337,7 @@ namespace QuestFlight.Product
             get
             {
                 if (flightCoordinator == null || flightCoordinator.windField == null) return "WIND UNAVAILABLE";
-                Vector3 w = flightCoordinator.windField.Sample(new Vector3(-555, 10, -30), 0);
+                Vector3 w = flightCoordinator.SampleWind(new Vector3(-555, 10, -30), 0);
                 float knots = new Vector2(w.x, w.z).magnitude * 1.943844f;
                 float from = Mathf.Repeat(Mathf.Atan2(-w.x, -w.z) * Mathf.Rad2Deg, 360);
                 return $"WIND {from:000}° / {knots:0} KT";
@@ -346,6 +390,12 @@ namespace QuestFlight.Product
                 modeMenuView.SelectionContentRoot.SetActive(!visible);
         }
 
+        public bool RetryNativePreparation()
+        {
+            if(Time.timeScale>0 || (State!=FlightModeState.Blocked&&State!=FlightModeState.Selection))return false;
+            if(!flightCoordinator.InitializeSelectedBackend())return false;
+            ReturnToMainMenu();return State==FlightModeState.Selection&&flightCoordinator.IsInitialized;
+        }
         public void ReturnToMainMenu()
         {
             demoPilot.StopDemo();
@@ -353,13 +403,13 @@ namespace QuestFlight.Product
             productInput.DisableFlightLessonGuidance();
             productInput.SetDeterministicMode(false);
             productInput.SetFlightLessonInputSuppressed(true);
-            productInput.PrepareForFlightLessonRecovery(new QuestFlightLab.Training.FlightLessonV1.FlightLessonControlCommand { throttle=.1f,mixture=1 });
+            productInput.PrepareForFlightLessonRecovery(new QuestFlightLab.Training.FlightLessonV1.FlightLessonControlCommand { throttle=IsGlider?0:.1f,mixture=IsGlider?0:1,trim=IsGlider?flightCoordinator.aircraftDefinition.referenceTrimNoseUp:0 });
             productInput.RequireTouchRelease();
             _demoCheckpointPending=false;
             _savedTimeScale=1; _ownsTimeScalePause=true; Time.timeScale=0;
             State=FlightModeState.Selection;
             if (!_hasStartupInitialConditions || !flightCoordinator.TryStartNewFlight(
-                _startupInitialConditions))
+                IsGlider?flightCoordinator.aircraftDefinition.airborneReference:_startupInitialConditions))
             { EnterBlocked("Unable to restore the native initial aircraft state."); return; }
             LastError=string.Empty; _loggedBlockedError=false;
             modeMenuView.ShowMainSelection();
@@ -380,6 +430,9 @@ namespace QuestFlight.Product
                 return "one or more Touch overrides are still leased.";
             if (!flightCoordinator.IsInitialized)
                 return "native JSBSim is no longer initialized.";
+            if(IsGlider)
+                return flightCoordinator.LastResetInitialConditions.engineRunning || flightCoordinator.CurrentState.engineRpm!=0
+                    ? "The glider must remain engine-free." : string.Empty;
             if (flightCoordinator.initialConditionProvider == null ||
                 !flightCoordinator.initialConditionProvider.engineRunning)
                 return "the serialized initial condition is not engine-running.";

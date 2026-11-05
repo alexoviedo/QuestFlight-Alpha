@@ -34,7 +34,7 @@ namespace QuestFlightLab.Editor
             using(var backend=new JSBSimNativeDevelopmentBackend(JSBSimRuntimeData.EditorPackageDataRoot))
             try
             {
-                if(!backend.Initialize(new FlightDynamicsBackendContext{simulationRoot=player.simulationRoot,aircraftState=player.aircraftState,terrainSurface=player.terrainSurface}))throw new Exception(backend.LastError);
+                if(!backend.Initialize(new FlightDynamicsBackendContext{aircraftDefinition=player.aircraftDefinition,simulationRoot=player.simulationRoot,aircraftState=player.aircraftState,terrainSurface=player.terrainSurface}))throw new Exception(backend.LastError);
                 bool takeoff=id.Contains("takeoff"), approach=id=="approach";
                 Vector3 at=takeoff?new Vector3(-555,0,-30):approach?new Vector3(-1800,80,-30):id=="thermal"?new Vector3(1350,450,2600):new Vector3(id=="ridge"?-6200:-7000,0,id=="ridge"?1600:3400);
                 player.terrainSurface.TrySample(at.x,at.z,out var ground);

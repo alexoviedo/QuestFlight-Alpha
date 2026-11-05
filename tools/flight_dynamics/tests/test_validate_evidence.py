@@ -38,7 +38,7 @@ def evidence(status="Unsupported"):
             "effectiveParameterSha256": "a" * 64,
         },
         "nativeInputs": {"status":"Pass", "sourceCommit":"a"*40, "sourceInputsSha256":"a"*64,
-                         "unityVersion":"6000.3.8f1", "platform":"WindowsEditor", "apiVersion":2,
+                         "unityVersion":"6000.3.8f1", "platform":"WindowsEditor", "apiVersion":3,
                          "bridgeSha256":"b"*64,"jsbsimSha256":"c"*64,"payloadSha256":"d"*64,"aircraftXmlSha256":"e"*64},
         "scenarioInputs": [scenario_input()],
         "scenarios": scenarios,

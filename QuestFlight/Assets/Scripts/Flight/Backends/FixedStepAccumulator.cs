@@ -19,6 +19,26 @@ namespace QuestFlightLab.Flight.Backends
         public double StepSeconds => _stepSeconds;
         public double InterpolationAlpha => Math.Max(0.0, Math.Min(1.0, _accumulatedSeconds / _stepSeconds));
         public double DroppedSeconds { get; private set; }
+        public double BacklogSeconds => _accumulatedSeconds;
+        public bool CapacityExceeded { get; private set; }
+
+        // Soaring uses a checked callback. Failure stops this consume immediately;
+        // unintegrated time remains visible and overload blocks the caller. The
+        // established C172 Consume path is unchanged for regression continuity.
+        public bool ConsumeChecked(double elapsedSeconds,Func<double,bool> step,out int completed)
+        {
+            if(step==null)throw new ArgumentNullException(nameof(step));
+            completed=0;CapacityExceeded=false;
+            if(double.IsNaN(elapsedSeconds)||double.IsInfinity(elapsedSeconds)||elapsedSeconds<0)return false;
+            _accumulatedSeconds+=elapsedSeconds;
+            while(_accumulatedSeconds+1e-12>=_stepSeconds && completed<_maxStepsPerTick)
+            {
+                if(!step(_stepSeconds))return false;
+                _accumulatedSeconds-=_stepSeconds;completed++;
+            }
+            CapacityExceeded=_accumulatedSeconds+1e-12>=_stepSeconds;
+            return !CapacityExceeded;
+        }
 
         public int Consume(double elapsedSeconds, Action<double> step)
         {
@@ -47,6 +67,7 @@ namespace QuestFlightLab.Flight.Backends
         {
             _accumulatedSeconds = 0.0;
             DroppedSeconds = 0.0;
+            CapacityExceeded=false;
         }
     }
 }

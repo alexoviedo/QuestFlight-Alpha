@@ -7,9 +7,9 @@ namespace AlexOviedo.QuestFlight.JSBSim
     /// Sole managed owner of the compact qfl_jsbsim_native C ABI. The fixed-step
     /// path uses blittable values and performs no managed allocation.
     /// </summary>
-    public sealed class JSBSimNativeSession : IDisposable
+    public sealed partial class JSBSimNativeSession : IDisposable
     {
-        public const int ExpectedApiVersion = 2;
+        public const int ExpectedApiVersion = 3;
         public const string PinnedVersion = "1.3.1";
         public const string PinnedRevision = "3b25f25e49b42d0489c04ac805674fc1450ca579";
         public const string PinnedAircraftModel = "c172x";
@@ -65,7 +65,20 @@ namespace AlexOviedo.QuestFlight.JSBSim
 
         public bool Initialize(string dataRoot, string aircraftName = PinnedAircraftModel)
         {
+            if (aircraftName != PinnedAircraftModel)
+            {
+                Dispose();
+                return Fail("Non-C172 aircraft require explicit aircraft loading and capabilities.");
+            }
+            return Initialize(dataRoot, JSBSimAircraftConfiguration.C172);
+        }
+
+        public bool Initialize(string dataRoot, JSBSimAircraftConfiguration configuration)
+        {
             Dispose();
+            if (configuration == null) return Fail("Aircraft configuration is required.");
+            if (!configuration.IsValid(out string configurationError)) return Fail(configurationError);
+            string aircraftName = configuration.modelName;
             if (!TryProbe(out string probeError)) return Fail(probeError);
             if (string.IsNullOrWhiteSpace(dataRoot) || string.IsNullOrWhiteSpace(aircraftName)) return Fail("A data root and aircraft name are required.");
             try
@@ -76,7 +89,14 @@ namespace AlexOviedo.QuestFlight.JSBSim
                 {
                     string error = ReadLastError(_instance, "Could not load JSBSim aircraft."); Dispose(); return Fail(error);
                 }
-                if (!SetMassConfiguration(DefaultMass)) { Dispose(); return false; }
+                _configuration = configuration.Copy();
+                ConfiguredMass = configuration.legacyC172Loading ? DefaultMass : default;
+                if (SoaringMethods.Capabilities(_instance, out JSBSimNativeCapabilities capabilities) == 0)
+                { Dispose(); return Fail("Native aircraft capabilities are unavailable."); }
+                Capabilities = capabilities;
+                if (configuration.engineCount != capabilities.engineCount || configuration.tankCount != capabilities.tankCount)
+                { Dispose(); return Fail("Loaded model capabilities differ from the authored aircraft definition."); }
+                if (!ApplyConfiguredLoading()) { Dispose(); return false; }
                 _dataRoot = dataRoot;
                 _aircraftName = aircraftName;
                 LastError = string.Empty;
@@ -110,10 +130,11 @@ namespace AlexOviedo.QuestFlight.JSBSim
             // then restore the explicitly configured loading. This clears all actuator,
             // filter and propulsion histories without depending on RunIC to reset them.
             if (!RequireInitialized()) return false;
-            JSBSimNativeMassConfiguration configuredMass = ConfiguredMass;
             if (NativeMethods.LoadAircraft(_instance, _dataRoot, _aircraftName) == 0)
             { string error = ReadLastError(_instance, "Could not reload native aircraft for a new flight."); Dispose(); return Fail(error); }
-            if (!SetMassConfiguration(configuredMass)) { Dispose(); return false; }
+            if (!ApplyConfiguredLoading()) { Dispose(); return false; }
+            if (_conditionsConfigured && !SetConditions(_conditions)) { Dispose(); return false; }
+            if (_terrainHeights != null && !SetTerrainPatch(_terrainPatch, _terrainHeights)) { Dispose(); return false; }
             return Relocate(initial);
         }
 
@@ -121,7 +142,10 @@ namespace AlexOviedo.QuestFlight.JSBSim
         public bool Relocate(JSBSimNativeInitialConditions initial)
         {
             if (!RequireInitialized()) return false;
+            if (initial.engineRunning != 0 && Capabilities.engineCount == 0)
+                return Fail("Engine-free aircraft cannot start an engine.");
             ConfiguredInitialConditions = initial;
+            _gliderControls = default;
             SetControls(InitialControls(initial.engineRunning != 0));
             NativeInitialConditions native = new NativeInitialConditions
             {
@@ -191,12 +215,31 @@ namespace AlexOviedo.QuestFlight.JSBSim
         public bool Advance(double fixedDeltaTimeSeconds)
         {
             if (!RequireInitialized() || fixedDeltaTimeSeconds <= 0.0) return Fail("Fixed timestep must be positive.");
-            if (NativeMethods.SetControls(_instance, ref _controls) == 0 || NativeMethods.SetAtmosphere(_instance, ref _atmosphere) == 0 || NativeMethods.Advance(_instance, fixedDeltaTimeSeconds) == 0)
-                return Fail(ReadLastError(_instance, "JSBSim fixed step failed."));
+            if(!SubmitPendingInputs())return false;
+            return AdvanceSubmitted(fixedDeltaTimeSeconds);
+        }
+
+        public bool SubmitPendingInputs()
+        {
+            if(!RequireInitialized())return false;
+            if (NativeMethods.SetControls(_instance, ref _controls) == 0 ||
+                (Capabilities.hasAirbrake != 0 && SoaringMethods.GliderControls(_instance, ref _gliderControls) == 0) ||
+                NativeMethods.SetAtmosphere(_instance, ref _atmosphere) == 0)
+                return Fail(ReadLastError(_instance,"JSBSim input submission failed."));
+            return true;
+        }
+        public bool AdvanceSubmitted(double fixedDeltaTimeSeconds)
+        {
+            if(!RequireInitialized() || fixedDeltaTimeSeconds<=0 || double.IsNaN(fixedDeltaTimeSeconds) || double.IsInfinity(fixedDeltaTimeSeconds))return Fail("Invalid fixed timestep.");
+            if(NativeMethods.Advance(_instance,fixedDeltaTimeSeconds)==0)return Fail(ReadLastError(_instance,"JSBSim fixed step failed."));
             return CaptureStateAndDiagnostics();
         }
 
-        public void Dispose() { if (_instance != IntPtr.Zero) { NativeMethods.Destroy(_instance); _instance=IntPtr.Zero; } }
+        public void Dispose()
+        {
+            if (_instance != IntPtr.Zero) { NativeMethods.Destroy(_instance); _instance=IntPtr.Zero; }
+            _configuration = null; _conditionsConfigured = false; _gliderControls = default; Capabilities = default; _terrainHeights = null;
+        }
 
         private bool CaptureStateAndDiagnostics()
         {

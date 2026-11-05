@@ -16,7 +16,7 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3501
+  m_CustomRenderQueue: 4901
   stringTagMap: {}
   disabledShaderPasses: []
   m_LockedProperties: 
@@ -26,7 +26,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _Focus: 0
-    - _ZTest: 4
+    - _ZTest: 8
     - _ZWrite: 0
     m_Colors:
     - _Accent: {r: 0.4699999, g: 0.78, b: 0.91, a: 1}

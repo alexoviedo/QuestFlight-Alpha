@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58352984896119b4895797b65e3b46bd, type: 3}
+  m_Name: ReferenceTowline
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Soaring.TowlineDefinition
+  naturalLengthMeters: 60.96
+  stiffnessNewtonsPerMeter: 8000
+  dampingNewtonSecondsPerMeter: 700
+  maximumExtensionMeters: 2
+  gliderWeakLinkNewtons: 4500
+  tugWeakLinkNewtons: 5000
+  dampingEngagementExtensionMeters: 0.02
+  gliderAttachmentId: 0
+  tugAttachmentId: 0
+  referenceConfiguration: 1
+  source: 'Reference: 200 ft (60.96 m) elastic line, linear stiffness, extension-ramped
+    axial damping. Not measured rope, weak link, or Mile High equipment.'

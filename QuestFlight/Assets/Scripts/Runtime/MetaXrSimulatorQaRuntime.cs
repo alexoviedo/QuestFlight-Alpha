@@ -176,6 +176,13 @@ namespace QuestFlightLab.Runtime
                 yield return null;
             if(atmosphereAuthority==null || !atmosphereAuthority.IsInitialized)
             { _errors.Add("Native flight authority not ready for simulator scenario.");WriteStartupFailure(productRoot,rig);yield break; }
+            var startupMode=Object.FindFirstObjectByType<ProductFlightModeCoordinator>();
+            if(startupMode!=null&&startupMode.AuthoredNavigation.IsOpen)
+            {
+                // Development capture setup only. Functional input traversal is tested separately.
+                typeof(ProductAppNavigation).GetProperty("CurrentPage").SetValue(startupMode.AuthoredNavigation,ProductAppNavigation.Page.None);
+                startupMode.AuthoredNavigation.RefreshMenu();
+            }
             _demoPilot = Object.FindFirstObjectByType<ProductDemoPilot>(FindObjectsInactive.Exclude);
             bool startDemo = ReadBool("QFL_META_XR_SIMULATOR_START_DEMO", definition != null && definition.startAuthoredDemoPilot);
             if (startDemo)
@@ -193,6 +200,10 @@ namespace QuestFlightLab.Runtime
             if (!startDemo && !string.IsNullOrEmpty(trainingView))
             {
                 var mode = Object.FindFirstObjectByType<ProductFlightModeCoordinator>();
+                if(mode.AuthoredNavigation.IsOpen)mode.AuthoredNavigation.Resume();
+                bool soaringView=trainingView.StartsWith("soaring_",StringComparison.Ordinal);
+                if(soaringView&&!mode.SelectAircraft(true))
+                { _errors.Add("Authored SGS selection failed: "+mode.LastError);WriteStartupFailure(productRoot,rig);yield break; }
                 mode.SelectTraining();
                 float readyAt = Time.realtimeSinceStartup;
                 while (mode.AuthoredTraining.State != QuestFlight.Product.Training.TrainingSessionState.Menu && Time.realtimeSinceStartup - readyAt < 15)
@@ -206,12 +217,12 @@ namespace QuestFlightLab.Runtime
                     _mountainProbe.Initialize(_mountainProbe.transform, _mountainProbe.transform.parent);
                     _mountainProbe.BeginCapture(rig.TrackedCamera);
                 }
-                if (trainingView != "menu") mode.AuthoredTraining.SelectLesson(1);
-                if (trainingView == "practice") mode.AuthoredTraining.StartPractice();
+                if (trainingView != "menu" && trainingView != "soaring_menu") mode.AuthoredTraining.SelectLesson(soaringView?2:1);
+                if (trainingView == "practice" || trainingView == "soaring_practice") mode.AuthoredTraining.StartPractice();
                 if (trainingView == "orientation") { mode.AuthoredNavigation.ShowOrientation(); mode.AuthoredTraining.ShowReference(1); }
                 if (trainingView == "app") mode.AuthoredNavigation.OpenMenu();
                 if (trainingView == "calibration") mode.AuthoredNavigation.OpenCalibration();
-                if (trainingView == "polish")
+                if (trainingView == "polish"||trainingView == "soaring_polish")
                 {
                     mode.AuthoredNavigation.OpenMenu();
                     typeof(ProductAppNavigation).GetProperty("CurrentPage").SetValue(mode.AuthoredNavigation,ProductAppNavigation.Page.Controls);
@@ -325,9 +336,36 @@ namespace QuestFlightLab.Runtime
             if (!string.IsNullOrEmpty(trainingView))
             {
                 var training = Object.FindFirstObjectByType<QuestFlight.Product.Training.ProductTrainingController>();
-                string expected = trainingView == "practice" ? "Practice" : trainingView == "menu" ? "Menu" : "Briefing";
+                string expected = trainingView == "practice" || trainingView == "soaring_practice" ? "Practice" : trainingView == "menu" || trainingView == "soaring_menu" ? "Menu" : "Briefing";
                 if (training.State.ToString() != expected) _errors.Add($"Training capture expected {expected}, found {training.State}; focused={Application.isFocused}.");
                 Debug.Log($"[TrainingQA] capture state={training.State} focused={Application.isFocused}");
+            }
+
+            if(trainingView=="soaring_repair")
+            {
+                // Development presentation witness in the native-prepared SGS.
+                // Read real XR eye matrices; only separate QA render cameras turn/lean.
+                var mode=Object.FindFirstObjectByType<ProductFlightModeCoordinator>();
+                var nav=mode.AuthoredNavigation;
+                var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+                mode.AuthoredTraining.enabled=false;nav.enabled=false;
+                ((GameObject)typeof(ProductAppNavigation).GetField("panel",flags).GetValue(nav)).SetActive(false);
+                mode.AuthoredModePanelRoot.SetActive(false);
+                foreach(var ui in Object.FindObjectsByType<ProductUiInstruction>(FindObjectsInactive.Include,FindObjectsSortMode.None))ui.gameObject.SetActive(false);
+                yield return new WaitForEndOfFrame();
+                Camera tracked=rig.TrackedCamera;
+                foreach(var witness in new[]{new Vector3(0,0,0),new Vector3(32,0,0),new Vector3(46,-32,0),new Vector3(10,50,.12f),new Vector3(0,180,0)})
+                {
+                    Vector3 center=tracked.transform.position;
+                    Quaternion turn=rig.AircraftSimulationRoot.rotation*Quaternion.Euler(witness.x,witness.y,0)*Quaternion.Inverse(rig.AircraftSimulationRoot.rotation);
+                    Matrix4x4 delta=Matrix4x4.Translate(center+rig.AircraftSimulationRoot.right*witness.z)*Matrix4x4.Rotate(turn)*Matrix4x4.Translate(-center);
+                    for(int eye=0;eye<2;eye++)
+                    {
+                        var side=(Camera.StereoscopicEye)eye;
+                        var texture=RenderEye(tracked,EyeView(tracked,side)*delta.inverse,EyeProjection(tracked,side),1440,1440);
+                        File.WriteAllBytes(Path.Combine(_outputDirectory,$"sgs_repair_{witness.x}_{witness.y}_{side}.png"),texture.EncodeToPNG());Object.Destroy(texture);
+                    }
+                }
             }
 
             int temporalFrames=Mathf.Clamp(ReadInt("QFL_META_XR_SIMULATOR_TEMPORAL_FRAMES",0),0,30);
@@ -383,7 +421,7 @@ namespace QuestFlightLab.Runtime
                     }
                 }
             }
-            if(trainingView=="polish")
+            if(trainingView=="polish"||trainingView=="soaring_polish")
             {
                 // Development-only presentation witnesses; read tracked eye matrices.
                 var nav=Object.FindFirstObjectByType<ProductAppNavigation>();
@@ -443,7 +481,7 @@ namespace QuestFlightLab.Runtime
                 radio.enabled=true;nav.enabled=true;panel.SetActive(true);
                 var menuModes=Object.FindFirstObjectByType<ProductFlightModeCoordinator>();
                 menuModes.ReturnToMainMenu();
-                foreach(var page in new[]{ProductAppNavigation.Page.None,ProductAppNavigation.Page.Controls,ProductAppNavigation.Page.InstrumentHelp,ProductAppNavigation.Page.Calibration,ProductAppNavigation.Page.App})
+                foreach(var page in new[]{ProductAppNavigation.Page.Home,menuModes.IsGlider?ProductAppNavigation.Page.GliderSetup:ProductAppNavigation.Page.C172Setup,ProductAppNavigation.Page.Help,ProductAppNavigation.Page.Settings,ProductAppNavigation.Page.QuickStart,ProductAppNavigation.Page.Controls,ProductAppNavigation.Page.InstrumentHelp,ProductAppNavigation.Page.Calibration})
                 {
                     typeof(ProductAppNavigation).GetProperty("CurrentPage").SetValue(nav,page);
                     if(page==ProductAppNavigation.Page.InstrumentHelp)typeof(ProductAppNavigation).GetMethod("ShowInstrumentHelp",flags).Invoke(nav,null);

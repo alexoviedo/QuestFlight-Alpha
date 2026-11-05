@@ -14,7 +14,7 @@ namespace QuestFlight.Product
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-100)]
-    public sealed class ProductDemoPilot : MonoBehaviour
+    public sealed partial class ProductDemoPilot : MonoBehaviour
     {
         public const float PrimaryControlRatePerSecond = 0.9f;
         public const float EngineControlRatePerSecond = 0.65f;
@@ -58,7 +58,7 @@ namespace QuestFlight.Product
         public bool HadRecovery { get; private set; }
         public bool ShortShowcase { get; private set; }
         public void RecordRecovery() { HadRecovery=true; }
-        public bool ReservesRunway => IsRunning && !UserHasControls && !NeedsAssistance &&
+        public bool ReservesRunway => IsSoaringDemo ? IsRunning && soaringGuidance.Phase>=SoaringDemoGuidance.Stage.Descent && soaringGuidance.Phase<=SoaringDemoGuidance.Stage.Final : IsRunning && !UserHasControls && !NeedsAssistance &&
             ((landingActive && landing.Phase!=DemoLandingController.LandingPhase.Stopped) || (_routeDefinition != null && _progress.currentSegmentIndex == 0));
         public string OwnershipLabel => NeedsAssistance ? "Demo needs assistance" : UserHasControls ? "Your controls" : landingActive ? "Demo landing" : "Demo flying";
         public void ConfigureTourForAuthoring(AmbientAircraftRoute exit, AmbientTrafficDirector director) { exitRoute=exit; traffic=director; }
@@ -69,7 +69,7 @@ namespace QuestFlight.Product
 
         public bool IsRunning { get; private set; }
         public string Phase { get; private set; } = "ready";
-        public string PresentationPhase => !IsRunning ? "Ready for the next flight" :
+        public string PresentationPhase => IsSoaringDemo ? SoaringPresentationPhase : !IsRunning ? "Ready for the next flight" :
             Phase=="complete_clear_of_runway" ? "Parked clear of the runway" :
             Phase=="stopped_after_recovery" ? "Stopped safely after recovery" :
             landingActive ? landing.Phase==DemoLandingController.LandingPhase.GoAround ? "Going around for another approach" :
@@ -147,6 +147,7 @@ namespace QuestFlight.Product
 
         public void StartDemo()
         {
+            if(flightCoordinator.aircraftDefinition.IsGlider){StartSoaringDemo(false);return;}
             ShortShowcase=false;
             if (!HasAuthoredSources)
             {
@@ -157,7 +158,7 @@ namespace QuestFlight.Product
             activeExitRoute=exitRoute;rejoining=false;
             if(flightCoordinator.IsInitialized && runway26Profile!=null)
             {
-                Vector3 wind=flightCoordinator.windField.Sample(Vector3.zero,0);
+                Vector3 wind=flightCoordinator.SampleWind(Vector3.zero,0);
                 if(new Vector2(wind.x,wind.z).magnitude>8 || Mathf.Abs(wind.z)>4)
                 {Debug.LogError("[Demo] Wind is outside the validated automated-flight envelope.");return;}
                 if(wind.x>1) { _routeDefinition=runway26Profile.Definition;activeExitRoute=runway26Exit; }
@@ -204,6 +205,7 @@ namespace QuestFlight.Product
 
         public bool StartShortArrival()
         {
+            if(IsSoaringDemo)return StartSoaringDemo(true);
             if(!IsRunning||!TryBuildShortArrival(_routeDefinition,flightCoordinator.terrainSurface,out var initial,out int segment))return false;
             if(!flightCoordinator.TryResetToInitialConditions(initial))return false;
             if(!RestoreLessonSegment(segment))return false;
@@ -229,6 +231,7 @@ namespace QuestFlight.Product
 
         public void StopDemo()
         {
+            soaringActive=false;
             IsRunning = false;
             Phase = "ready";
             _guidanceSuppressed = false;
@@ -247,6 +250,7 @@ namespace QuestFlight.Product
 
         private void Update()
         {
+            if(IsSoaringDemo){UpdateSoaringDemo();return;}
             if (Time.timeScale <= 0f) return;
             if (!IsRunning || deterministicInput == null || productInput == null)
                 return;
@@ -285,6 +289,7 @@ namespace QuestFlight.Product
 
         public bool TryEvaluateGuidance(in FlightDynamicsState state,float guidanceDeltaTime,out FlightLessonControlCommand evaluated,out string evaluatedPhase,bool? runwayClearOverride=null)
         {
+            if(IsSoaringDemo)return EvaluateSoaringDemo(guidanceDeltaTime,out evaluated,out evaluatedPhase);
             evaluated=default;evaluatedPhase="guidance_unavailable";
             if(UserHasControls || NeedsAssistance || !state.IsFinite) return false;
             if(rejoining)
@@ -399,12 +404,13 @@ namespace QuestFlight.Product
         private int FindSegment(FlightLessonSegmentKind kind)
         { for(int i=0;i<_routeDefinition.segments.Length;i++)if(_routeDefinition.segments[i].kind==kind)return i;return -1; }
 
-        public void TakeUserControl()
+        public void TakeUserControl(bool requireRelease=true)
         {
             if(!IsRunning)return;
+            if(IsSoaringDemo&&!soaringGuidance.CanTakeControl(flightCoordinator.CurrentState))return;
             var controls=ProductControlInput.ToFlightLessonCommand(flightCoordinator.LastAppliedControls);
             productInput.DemoOwnsControls=false;productInput.DisableFlightLessonGuidance();productInput.SetDeterministicMode(false);
-            productInput.PrepareForFlightLessonRecovery(controls);productInput.SetFlightLessonInputSuppressed(false);productInput.RequireTouchRelease();
+            productInput.PrepareForFlightLessonRecovery(controls);productInput.SetFlightLessonInputSuppressed(false);if(requireRelease)productInput.RequireTouchRelease();
             UserHasControls=true;NeedsAssistance=false;Phase="your_controls";
         }
 
@@ -417,6 +423,7 @@ namespace QuestFlight.Product
 
         public bool TryResumeFromState(in FlightDynamicsState state,in FlightLessonControlCommand applied,bool returnToAirport)
         {
+            if(IsSoaringDemo)return ResumeSoaringDemo(state,applied,returnToAirport);
             if(!IsRunning || !state.IsFinite)return false;
             if(state.weightOnWheels || state.altitudeAglMeters<60 || state.calibratedAirspeedKnots<45 || Mathf.Abs((float)state.bankDegrees)>60)
             { Phase="Cannot safely rejoin here - keep control or restart";return false; }
@@ -475,6 +482,7 @@ namespace QuestFlight.Product
 
         public bool RestoreLessonSegment(int segmentIndex)
         {
+            if(IsSoaringDemo)return false;
             if (UserHasControls) return false;
             if (!EnsureRouteDefinition(out _) ||
                 segmentIndex < 0 ||
@@ -505,6 +513,7 @@ namespace QuestFlight.Product
 
         public void SetGuidanceSuppressed(bool suppressed)
         {
+            if(IsSoaringDemo){_guidanceSuppressed=suppressed;productInput.SetFlightLessonInputSuppressed(suppressed);return;}
             if (_guidanceSuppressed == suppressed)
                 return;
             _guidanceSuppressed = suppressed;
@@ -993,6 +1002,8 @@ namespace QuestFlight.Product
                 current.leftToeBrake, target.leftToeBrake, brakeStep);
             current.rightToeBrake = Mathf.MoveTowards(
                 current.rightToeBrake, target.rightToeBrake, brakeStep);
+            current.airbrake=Mathf.MoveTowards(current.airbrake,target.airbrake,brakeStep);
+            current.wheelBrake=Mathf.MoveTowards(current.wheelBrake,target.wheelBrake,brakeStep);
             current.markerPressed = target.markerPressed;
             current.resetPressed = target.resetPressed;
             current.pausePressed = target.pausePressed;

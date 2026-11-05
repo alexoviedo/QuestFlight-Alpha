@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: 04_takeoff
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 04_takeoff
+  program: 0
+  groundTowPreparation: 0
+  soaringWeather: {fileID: 0}
   displayName: Takeoff and departure
   briefing: Begin stopped and aligned on runway zero eight. This prepared checkpoint
     supplies the engine setup; it is not a full run-up or takeoff checklist. Review
-    the highlighted controls before practice. During the roll, steer with the right
+    the highlighted controls before practice. During the roll, steer with the steering
     thumbstick and watch the airspeed needle.
   briefingNarration: {fileID: 8300000, guid: b353f4945bd486049bdac8e21410ff24, type: 3}
   learningGoal: Stay on the runway, lift off near fifty-five knots and climb straight
@@ -61,8 +64,8 @@ MonoBehaviour:
     captureMeters: 200
   - title: Accelerate on centerline
     instruction: Release both brakes and smoothly move the throttle fully forward.
-      Look along the centerline; steer with the steering thumbstick. Briefly check the
-      airspeed needle. Prepare to lift the nose near fifty-five knots.
+      Look along the centerline; steer with the steering thumbstick. Briefly check
+      the airspeed needle. Prepare to lift the nose near fifty-five knots.
     narration: {fileID: 8300000, guid: adb0aea07660e384f84fd88206a1a662, type: 3}
     successFeedback: You accelerated on the runway with takeoff power and directional
       control.

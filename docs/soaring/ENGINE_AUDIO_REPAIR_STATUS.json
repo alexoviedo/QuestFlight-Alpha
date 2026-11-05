@@ -1,0 +1,14 @@
+{
+  "updatedUtc": "2026-10-20T03:39:25.494857+00:00",
+  "status": "IMPLEMENTED_VALIDATED_PENDING_INTEGRATED_APK",
+  "scope": "Inactive C172 engine leakage and finite positional native-tug audio",
+  "tests": "15/15 including real Play Mode playback lifecycle",
+  "nativeSessionChecks": "20/20",
+  "android": "61 player assemblies compiled; strict audio bundle passed; not full APK/IL2CPP",
+  "visual": "Two editor eye-offset scene previews inspected; no visual asset changes or new simulator claim",
+  "headsetListening": "NOT_RUN",
+  "resources": "No new sources, clips, mixers, or runtime objects; added 10 curve keys and one serialized listener reference; hardware audio cost unmeasured",
+  "range": "8 m reference level; inverse-distance reference curve; taper 600-1200 m; hard silence >=1200 m",
+  "installedApk": "UNCHANGED",
+  "evidence": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\sailplane_engine_audio_20261019"
+}

@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 553619cdd0df63649917faa2b43148c4, type: 3}
+  m_Name: ScenicThermal
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Soaring.SoaringWeatherDefinition
+  displayName: "SCENIC THERMAL \xB7 AUTHORED REFERENCE"
+  terrainSha256: c6789dfb7ea8e8ffc2b9c8d1c7f31c848711d606b3a56c41203a38f2159daa4e
+  referenceScope: Warm-season scripted demonstration, not observed Boulder weather.
+    Existing supported convective strength limit (3.3), light easterly wind; longer-lived
+    sources support a continuous tour.
+  surfaceWind: {x: -1.5, y: 0}
+  upperWind: {x: -2.5, y: 0}
+  gustAmplitude: 0.2
+  ridgeEnabled: 0
+  thermalEnabled: 1
+  differentialAirflow: 1
+  wakeEnabled: 1
+  seaLevelPressurePa: 101325
+  isaOffsetKelvin: 10
+  seed: 233
+  sources:
+  - position: {x: 1700, y: 2600}
+    groundHeight: -30.233332
+    mixingHeight: 2000
+    convectiveScale: 3.3
+    radiusScale: 3.5
+    lifetime: 1800
+    period: 2100
+    initialAge: 240
+  - position: {x: -5200, y: 1800}
+    groundHeight: 80.06667
+    mixingHeight: 2000
+    convectiveScale: 3.3
+    radiusScale: 3.5
+    lifetime: 1800
+    period: 2100
+    initialAge: 240

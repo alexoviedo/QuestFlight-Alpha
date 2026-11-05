@@ -17,6 +17,72 @@ extern "C" {
 
 typedef void* qfl_jsbsim_handle;
 
+/* ABI 3 additions. All legacy layouts below remain unchanged. int is checked
+   as 32 bits on both supported targets; doubles use natural 8-byte alignment. */
+typedef struct qfl_jsbsim_capabilities_v3 {
+  int engine_count, tank_count, station_count, contact_count;
+  int has_airbrake, has_tow_force, has_airflow_force, has_airflow_moment;
+} qfl_jsbsim_capabilities_v3;
+
+typedef struct qfl_jsbsim_station_load_v3 {
+  int index;
+  double pounds;
+} qfl_jsbsim_station_load_v3;
+
+typedef struct qfl_jsbsim_glider_controls_v3 {
+  double airbrake, wheel_brake;
+} qfl_jsbsim_glider_controls_v3;
+
+/* channel 0: hook force, 1: incremental airflow force at loaded CG,
+   2: pure airflow moment. Body FRD newtons or newton meters respectively. */
+typedef struct qfl_jsbsim_external_load_v3 {
+  int channel;
+  double body_x_si, body_y_si, body_z_si;
+} qfl_jsbsim_external_load_v3;
+
+typedef struct qfl_jsbsim_attachment_state_v3 {
+  double position_ecef_x_m, position_ecef_y_m, position_ecef_z_m;
+  double velocity_ecef_x_mps, velocity_ecef_y_mps, velocity_ecef_z_mps;
+  double body_offset_x_m, body_offset_y_m, body_offset_z_m;
+  double body_to_ecef_11, body_to_ecef_12, body_to_ecef_13;
+  double body_to_ecef_21, body_to_ecef_22, body_to_ecef_23;
+  double body_to_ecef_31, body_to_ecef_32, body_to_ecef_33;
+} qfl_jsbsim_attachment_state_v3;
+
+typedef struct qfl_jsbsim_conditions_v3 {
+  double sea_level_pressure_pa, isa_temperature_offset_kelvin;
+} qfl_jsbsim_conditions_v3;
+
+typedef struct qfl_jsbsim_air_data_v3 {
+  double density_kg_m3, pressure_pa, temperature_kelvin;
+  double true_airspeed_mps, equivalent_airspeed_mps, calibrated_airspeed_mps;
+  double pressure_altitude_m, airbrake_position;
+} qfl_jsbsim_air_data_v3;
+
+typedef struct qfl_jsbsim_contact_v3 {
+  double compression_ft, force_body_x_n, force_body_y_n, force_body_z_n;
+  int weight_on_wheels, steer_type;
+} qfl_jsbsim_contact_v3;
+
+/* Immutable bounded geodetic height patch, row-major north/east. Heights are
+   geodetic MSL meters. Prepared by the existing authored terrain sampler. */
+typedef struct qfl_jsbsim_terrain_patch_v3 {
+  double minimum_latitude_degrees, minimum_longitude_degrees;
+  double latitude_step_degrees, longitude_step_degrees;
+  int rows, columns;
+} qfl_jsbsim_terrain_patch_v3;
+QFL_JSBSIM_API int qfl_jsbsim_set_terrain_patch_v3(qfl_jsbsim_handle, const qfl_jsbsim_terrain_patch_v3*, const double*, int);
+
+QFL_JSBSIM_API int qfl_jsbsim_get_capabilities_v3(qfl_jsbsim_handle, qfl_jsbsim_capabilities_v3*);
+QFL_JSBSIM_API int qfl_jsbsim_set_loading_v3(qfl_jsbsim_handle, const qfl_jsbsim_station_load_v3*, int, const qfl_jsbsim_station_load_v3*, int);
+QFL_JSBSIM_API int qfl_jsbsim_set_glider_controls_v3(qfl_jsbsim_handle, const qfl_jsbsim_glider_controls_v3*);
+QFL_JSBSIM_API int qfl_jsbsim_set_external_load_v3(qfl_jsbsim_handle, const qfl_jsbsim_external_load_v3*);
+QFL_JSBSIM_API int qfl_jsbsim_clear_external_loads_v3(qfl_jsbsim_handle);
+QFL_JSBSIM_API int qfl_jsbsim_get_attachment_state_v3(qfl_jsbsim_handle, int, qfl_jsbsim_attachment_state_v3*);
+QFL_JSBSIM_API int qfl_jsbsim_set_conditions_v3(qfl_jsbsim_handle, const qfl_jsbsim_conditions_v3*);
+QFL_JSBSIM_API int qfl_jsbsim_get_air_data_v3(qfl_jsbsim_handle, qfl_jsbsim_air_data_v3*);
+QFL_JSBSIM_API int qfl_jsbsim_get_contact_v3(qfl_jsbsim_handle, int, qfl_jsbsim_contact_v3*);
+
 typedef struct qfl_jsbsim_initial_conditions {
   double latitude_degrees, longitude_degrees, altitude_msl_feet;
   double terrain_elevation_msl_feet, calibrated_airspeed_knots;

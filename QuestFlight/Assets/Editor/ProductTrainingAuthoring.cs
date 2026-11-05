@@ -130,6 +130,7 @@ namespace QuestFlight.Editor
             }
             navigation.Configure(mode,training,input,seat,root.gameObject,root.Find("Backplate"),title,body,hint,choices);
             mode.ConfigureNavigationForAuthoring(navigation); seat.ConfigureAppNavigation(true);
+            MenuRepairAuthoring.ConfigureScope(inputRoot.root.gameObject);
             root.gameObject.SetActive(false);
         }
 
@@ -159,11 +160,11 @@ namespace QuestFlight.Editor
                 EditorUtility.SetDirty(lesson); catalog.Add(lesson); return lesson;
             }
             var taxi = L("01_taxi", "Cockpit and taxi",
-                "Start stopped on taxiway Alpha. Check the yoke, rudder and brakes, then taxi toward runway 08 and stop before entering it. The right thumbstick controls rudder; grasp the cockpit controls to operate them. A pauses, B repeats an instruction. This lesson does not include engine starting or runway entry.",
+                "Start stopped on taxiway Alpha. Check the yoke, rudder and brakes, then taxi toward runway 08 and stop before entering it. The assigned steering stick controls rudder; grasp the cockpit controls to operate them. A pauses, B repeats an instruction. This lesson does not include engine starting or runway entry.",
                 -535,-91,0,0,270,
                 S("Check roll",TrainingTask.RollControl,"At idle, grasp the yoke. Move it left and right, then center it.",dwell:1),
                 S("Check pitch",TrainingTask.PitchControl,"Move the yoke gently forward and back, then center it.",dwell:1),
-                S("Check rudder",TrainingTask.RudderControl,"Move the right thumbstick left and right, then center it. It controls rudder and ground steering.",dwell:1),
+                S("Check rudder",TrainingTask.RudderControl,"Move the assigned steering stick left and right, then center it. It controls rudder and ground steering.",dwell:1),
                 S("Check brakes",TrainingTask.BrakeControl,"Keep the throttle at idle. Press both toe brakes and hold the airplane stopped.",dwell:2),
                 S("Taxi west",TrainingTask.Taxi,"Release the brakes. Add a little power and follow the taxiway west at walking speed, about 3 to 6 knots. Slow near the runway-end connector.",hdg:270,dwell:1,x:-600,z:-91,radius:20),
                 S("Turn toward hold short",TrainingTask.Taxi,"At the connector, turn right toward the runway. Keep the taxi speed low and be ready to stop before the hold-short line.",hdg:0,dwell:1,x:-620,z:-80,radius:14),
@@ -248,8 +249,8 @@ namespace QuestFlight.Editor
             {
                 string[] cues=lesson.lessonId switch
                 {
-                    "01_taxi"=>new[]{"At idle, grip the yoke. Move it left and right, then center it.","Move the yoke gently forward and back, then center it.","Move the right thumbstick left and right, then center it. This controls rudder and ground steering.","With throttle at idle, squeeze both index triggers to apply both brakes.","Release the brakes. Add a little power; follow the taxiway west at walking speed.","Turn right at the connector toward the runway. Keep the taxi speed low.","Close the throttle and brake before the hold-short line. Do not enter the runway."},
-                    "03_climb_descent"=>new[]{"Add climb power, then set a gentle climbing attitude. Aim for seventy to eighty knots.","Approaching seventy-three hundred feet, lower the nose to level flight and adjust power.","Reduce power and establish a gentle descent toward seven thousand feet.","Begin leveling before seven thousand feet. Restore cruise power and settle near ninety knots.","Move the left thumbstick up or down a little to trim. Reduce the yoke input needed to stay level."},
+                    "01_taxi"=>new[]{"At idle, grip the yoke. Move it left and right, then center it.","Move the yoke gently forward and back, then center it.","Move the assigned steering stick left and right, then center it. This controls rudder and ground steering.","With throttle at idle, squeeze both index triggers to apply both brakes.","Release the brakes. Add a little power; follow the taxiway west at walking speed.","Turn right at the connector toward the runway. Keep the taxi speed low.","Close the throttle and brake before the hold-short line. Do not enter the runway."},
+                    "03_climb_descent"=>new[]{"Add climb power, then set a gentle climbing attitude. Aim for seventy to eighty knots.","Approaching seventy-three hundred feet, lower the nose to level flight and adjust power.","Reduce power and establish a gentle descent toward seven thousand feet.","Begin leveling before seven thousand feet. Restore cruise power and settle near ninety knots.","Move the assigned trim stick up or down a little to trim. Reduce the yoke input needed to stay level."},
                     "04_takeoff"=>new[]{"While stopped, check runway alignment and the flap indication. This checkpoint has mixture and carb heat preset.","Release brakes and smoothly apply full power. Keep the centerline with rudder.","At about fifty-five knots, gently raise the nose. Establish the climb as the aircraft lifts off.","Climb straight ahead through six thousand feet. Hold seventy to eighty knots."},
                     "05_pattern"=>new[]{"Keep the runway on your left. Hold sixty-three hundred feet on the north-side downwind.","Abeam the landing end, reduce power. Below flap speed, select ten degrees and begin descending.","Turn gently left onto base. Keep a shallow bank and a comfortable descent.","Align with the runway. Hold sixty to seventy knots on a steady final approach.","Go around. Full power, pitch for climb. Reduce full flaps to twenty degrees.","With positive climb and safe speed, reduce flaps to ten degrees.","Clear of obstacles, retract remaining flaps and climb straight ahead."},
                     "06_landing"=>new[]{"Keep the runway centered. Hold sixty to seventy knots with a steady descent.","Look farther along the runway. Reduce power and gently arrest the descent for touchdown.","Keep directional control and brake smoothly to taxi speed.","Go around. Full power, pitch for climb. Reduce full flaps to twenty degrees.","With positive climb and safe speed, reduce flaps to ten degrees.","Clear of obstacles, retract remaining flaps and climb straight ahead."},
@@ -258,8 +259,8 @@ namespace QuestFlight.Editor
                 for(int n=0;n<Math.Min(cues.Length,lesson.stages.Length);n++) lesson.stages[n].instruction=cues[n];
                 lesson.briefing=lesson.lessonId switch
                 {
-                    "01_taxi"=>"Start stopped. Learn the controls, then taxi slowly and stop before the runway. Both index triggers apply brakes; the right stick steers. Menu pauses.",
-                    "03_climb_descent"=>"Practice a climb, descent and level-off. Learn the instruments first. The left stick adjusts trim; the right stick controls rudder. Menu pauses.",
+                    "01_taxi"=>"Start stopped. Learn the controls, then taxi slowly and stop before the runway. Both index triggers apply brakes; the assigned steering stick steers. Menu pauses.",
+                    "03_climb_descent"=>"Practice a climb, descent and level-off. Learn the instruments first. The assigned sticks adjust trim and rudder. Menu pauses.",
                     "04_takeoff"=>"Start stopped on runway zero eight. Check the aircraft, take off and climb straight ahead. Review the references before starting; instructions become brief during the roll.",
                     "05_pattern"=>"Practice the north-side pattern for runway zero eight. Learn the runway references before starting. A safe go-around is a successful outcome.",
                     _=>"Start at a final-approach checkpoint. Practice a stable approach and landing, or choose a go-around. Review the controls first; do not force an unstable landing."
@@ -358,11 +359,11 @@ namespace QuestFlight.Editor
             Reference(TrainingReference.Altimeter,"Altimeter - feet","This is the altimeter. Its numeric reading and hands show indicated altitude in feet. The level-flight target is seven thousand feet.",CockpitInstrumentV2Function.AltimeterHundredsNeedleDegrees);
             Reference(TrainingReference.Heading,"Heading - top index","Read heading at the top index. Nine means zero nine zero degrees. This simulator's heading indicator uses true heading; use this dial for lesson targets, not the magnetic compass.",CockpitInstrumentV2Function.DirectionalGyroHeadingDegrees);
             Reference(TrainingReference.VerticalSpeed,"Vertical speed","This needle shows climbing or descending in feet per minute. Use it to confirm a trend; make small attitude corrections and allow the indication to settle.",CockpitInstrumentV2Function.IndicatedVerticalSpeedNeedleDegrees);
-            Reference(TrainingReference.Slip,"Slip indicator","The ball shows coordination. Use gentle rudder toward the displaced ball, then ease the input as it centers. The right thumbstick controls rudder.",CockpitInstrumentV2Function.SlipSkidNormalized);
+            Reference(TrainingReference.Slip,"Slip indicator","The ball shows coordination. Use gentle rudder toward the displaced ball, then ease the input as it centers. The assigned steering stick controls rudder.",CockpitInstrumentV2Function.SlipSkidNormalized);
             Reference(TrainingReference.Throttle,"Throttle","Grip the throttle knob to adjust power. Add or reduce power smoothly, then check how airspeed and climb change.");
             Reference(TrainingReference.Yoke,"Yoke","Grip the yoke. Left and right inputs roll the airplane; forward and back inputs change pitch. Release the correcting input as the desired attitude is reached.");
             Reference(TrainingReference.Flaps,"Flap selector","Use the flap selector to choose a position. Confirm the flap indication and keep within the taught airspeed range before extending flaps.");
-            Reference(TrainingReference.Trim,"Trim control","The left thumbstick adjusts trim during manual flight. Use small up or down inputs to reduce the yoke input needed to hold attitude. There is no force feedback.");
+            Reference(TrainingReference.Trim,"Trim control","The assigned trim stick adjusts trim during manual flight. Use small up or down inputs to reduce the yoke input needed to hold attitude. There is no force feedback.");
             Reference(TrainingReference.Runway,"Runway reference","Identify runway zero eight and its paved edges outside. The north-side pattern keeps the runway to your left. For taxi, stay on the taxiway and stop before entering the runway.");
             var lines=new List<TrainingCoachLine>();
             void Cue(TrainingCue id,TrainingReference reference,string text) => lines.Add(new TrainingCoachLine{cue=id,reference=reference,text=text,voice=Voice("coach_"+id.ToString().ToLowerInvariant(),text)});
@@ -383,7 +384,7 @@ namespace QuestFlight.Editor
             Cue(TrainingCue.Power,TrainingReference.Throttle,"Increase power smoothly for this phase. Keep monitoring airspeed and direction.");
             Cue(TrainingCue.Brakes,TrainingReference.Outside,"Squeeze both index triggers to apply both brakes. Keep throttle at idle.");
             Cue(TrainingCue.Yoke,TrainingReference.Yoke,"Grip the yoke and move it through the requested directions, then center it.");
-            Cue(TrainingCue.Rudder,TrainingReference.Slip,"Use the right thumbstick for rudder. Move it both ways, then center it.");
+            Cue(TrainingCue.Rudder,TrainingReference.Slip,"Use the assigned steering stick for rudder. Move it both ways, then center it.");
             Cue(TrainingCue.Trim,TrainingReference.Trim,"Use small left-thumbstick inputs to trim until less yoke input is needed.");
             Cue(TrainingCue.Flaps,TrainingReference.Flaps,"Positive climb established. Reduce flaps to the next instructed setting.");
             Cue(TrainingCue.AlignRunway,TrainingReference.Runway,"Check runway alignment. Use a gentle correction; go around if a safe alignment is not possible.");
@@ -555,7 +556,7 @@ namespace QuestFlight.Editor
                 FlightDynamicsState Probe(float trim)
                 {
                     using var backend=new JSBSimNativeDevelopmentBackend(JSBSimRuntimeData.EditorPackageDataRoot);
-                    if(!backend.Initialize(new FlightDynamicsBackendContext{simulationRoot=flight.simulationRoot,aircraftState=flight.aircraftState,terrainSurface=flight.terrainSurface}))
+                    if(!backend.Initialize(new FlightDynamicsBackendContext{aircraftDefinition=flight.aircraftDefinition,simulationRoot=flight.simulationRoot,aircraftState=flight.aircraftState,terrainSurface=flight.terrainSurface}))
                         throw new InvalidOperationException(backend.LastError);
                     backend.SetAtmosphere(FlightDynamicsCoordinator.AtmosphereFromWind(wind));
                     if(!backend.Reset(lesson.start))throw new InvalidOperationException(backend.LastError);

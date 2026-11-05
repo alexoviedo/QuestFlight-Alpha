@@ -27,6 +27,8 @@ namespace QuestFlight.Editor
                 var feature = ScriptableObject.CreateInstance<ProductSpaceWarpRenderFeature>(); feature.name = "Product procedural and XR motion";
                 AssetDatabase.AddObjectToAsset(feature, renderer); renderer.rendererFeatures.Add(feature); renderer.SetDirty(); EditorUtility.SetDirty(renderer);
             }
+            // Clouds integrate to opaque depth before transparent rendering. Move the existing copy; add no pass.
+            renderer.copyDepthMode = CopyDepthMode.AfterOpaques;
             var productFeature=renderer.rendererFeatures.OfType<ProductSpaceWarpRenderFeature>().Single();
             productFeature.ConfigureDiagnostic(AssetDatabase.LoadAssetAtPath<Shader>(Root+"/SpaceWarpDiagnostic.shader"));EditorUtility.SetDirty(productFeature);
             string pipelinePath = Root + "/ProductQuestURP.asset";

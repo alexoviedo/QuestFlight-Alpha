@@ -7,6 +7,19 @@ namespace QuestFlightLab.Environment
     public sealed class AmbientAircraftActor : MonoBehaviour
     {
         public string aircraftId;
+        public bool ExternallySimulated { get; internal set; }
+        private bool nativeOnGround;
+        private float nativeRpm,nativeFlap;
+        public void SetNativeSnapshot(in QuestFlightLab.Flight.Backends.FlightDynamicsState state,
+            in QuestFlightLab.Flight.Backends.FlightDynamicsState previous,float interpolation)
+        {
+            ExternallySimulated=true;Suppressed=false;Retired=false;Escaping=false;Started=true;
+            Position=state.positionUnityMeters;Velocity=state.velocityUnityMetersPerSecond;Speed=Velocity.magnitude;
+            nativeOnGround=state.weightOnWheels;nativeRpm=(float)state.engineRpm;nativeFlap=(float)state.actualFlapNormalized*50;
+            attitude=Quaternion.Slerp(previous.rotationUnity,state.rotationUnity,interpolation);
+            nativeRenderPosition=Vector3.Lerp(previous.positionUnityMeters,state.positionUnityMeters,interpolation);
+        }
+        private Vector3 nativeRenderPosition;
         public bool sailplane, taildragger;
         public bool mountainSoaring;
         public AmbientSoaringPhase SoaringPhase { get; internal set; }
@@ -31,7 +44,7 @@ namespace QuestFlightLab.Environment
         public int Generation { get; private set; }
         public Vector3 Velocity { get; internal set; }
         public AmbientFlightPhase Phase => Route != null ? Route.segments[SegmentIndex].phase : AmbientFlightPhase.Circuit;
-        public bool OnGround => !sailplane && !Escaping && Route != null && Route.segments[SegmentIndex].onGround;
+        public bool OnGround => ExternallySimulated?nativeOnGround:!sailplane && !Escaping && Route != null && Route.segments[SegmentIndex].onGround;
         public bool Suppressed { get; internal set; }
         public AmbientAircraftRoute Route { get; internal set; }
         public int SegmentIndex { get; internal set; }
@@ -56,6 +69,7 @@ namespace QuestFlightLab.Environment
 
         public void Initialize(int direction, bool returning = false)
         {
+            if(ExternallySimulated)return;
             Generation++; BlockingReason="";
             Velocity=Vector3.zero;
             Route = direction == 26 ? runway26 : runway08;
@@ -88,7 +102,7 @@ namespace QuestFlightLab.Environment
 
         internal void Present(float dt, Vector3 wind, Vector3 observer, Camera camera = null)
         {
-            if (!Suppressed && Velocity.sqrMagnitude > 0.01f)
+            if (!ExternallySimulated && !Suppressed && Velocity.sqrMagnitude > 0.01f)
             {
                 Vector3 air = OnGround ? Velocity : Velocity - wind;
                 if (air.sqrMagnitude < 1) air = Velocity;
@@ -101,8 +115,8 @@ namespace QuestFlightLab.Environment
                 attitude = Started ? Quaternion.RotateTowards(attitude, target, dt * 35) : target;
                 Started = true;
             }
-            transform.SetPositionAndRotation(Position, attitude);
-            if(visual!=null && visual!=transform)visual.localPosition=Vector3.up*(OnGround && taildragger ? Mathf.Lerp(taildraggerRestOffset,0,Speed/20) : 0);
+            transform.SetPositionAndRotation(ExternallySimulated?nativeRenderPosition:Position, attitude);
+            if(visual!=null && visual!=transform)visual.localPosition=Vector3.up*(!ExternallySimulated && OnGround && taildragger ? Mathf.Lerp(taildraggerRestOffset,0,Speed/20) : 0);
             float distance = Mathf.Max(1, Vector3.Distance(observer, Position));
             float projectionScale=1;
             if(camera!=null)
@@ -126,8 +140,10 @@ namespace QuestFlightLab.Environment
                 for (int i = 0; i < lodRoots.Length; i++) if (lodRoots[i] != null) lodRoots[i].SetActive(i == Lod);
             }
             float rpm = sailplane || Phase == AmbientFlightPhase.Parked ? 0 : Phase == AmbientFlightPhase.Starting ? 600 : Phase == AmbientFlightPhase.Shutdown ? 200 : OnGround ? 850 : 2200;
+            if(ExternallySimulated)rpm=nativeRpm;
             foreach (Transform p in propellers) if (p != null && p.gameObject.activeInHierarchy) p.Rotate(Vector3.forward, rpm * 6 * dt, Space.Self);
             float flap = Phase == AmbientFlightPhase.Approach || Phase == AmbientFlightPhase.Landing || Phase == AmbientFlightPhase.Rollout ? 25 : Phase == AmbientFlightPhase.Takeoff ? 10 : 0;
+            if(ExternallySimulated)flap=nativeFlap;
             foreach (Transform f in flaps) if (f != null && f.gameObject.activeInHierarchy) f.localRotation = Quaternion.RotateTowards(f.localRotation, Quaternion.Euler(-flap, 0, 0), 15 * dt);
             SetVisible(!Suppressed);
             motionHistory?.Upload(renderers);

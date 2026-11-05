@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: 03_climb_descent
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 03_climb_descent
+  program: 0
+  groundTowPreparation: 0
+  soaringWeather: {fileID: 0}
   displayName: Climbs, descents and trim
   briefing: Start at seven thousand feet. Climb to seventy-three hundred, level off,
     descend back, then trim. Set attitude and power before trimming. In this simulator

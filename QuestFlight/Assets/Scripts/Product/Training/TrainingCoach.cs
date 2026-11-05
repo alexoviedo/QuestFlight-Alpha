@@ -77,6 +77,7 @@ namespace QuestFlight.Product.Training
         private void Update()
         {
             if(training==null || flight==null) return;
+            if(training.IsSoaringProgram){Hide();return;}
             if(inspecting)return;
             if(training.State==TrainingSessionState.Inactive) { Hide(); return; }
             if(Time.unscaledTime>hideAt)

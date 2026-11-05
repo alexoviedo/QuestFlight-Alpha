@@ -15,6 +15,9 @@ namespace QuestFlightLab.Runtime
         public float flaps;
         public float leftToeBrake;
         public float rightToeBrake;
+        public float airbrake;
+        public float wheelBrake;
+        public bool releasePressed;
 
         public bool markerPressed;
         public bool resetPressed;
@@ -40,10 +43,19 @@ namespace QuestFlightLab.Runtime
             flaps = 0f;
             leftToeBrake = 0f;
             rightToeBrake = 0f;
+            airbrake = 0f;
+            wheelBrake = 0f;
+            releasePressed = false;
             markerPressed = false;
             resetPressed = false;
             pausePressed = false;
             telemetryTogglePressed = false;
+        }
+
+        public void SetGliderNeutral()
+        {
+            SetNeutral(0f);
+            mixture = 0f;
         }
     }
 }

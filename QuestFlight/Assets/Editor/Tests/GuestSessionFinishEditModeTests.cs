@@ -114,7 +114,7 @@ namespace QuestFlight.Editor.Tests
         [TestCase(ProductAppNavigation.Page.Activities, ProductAppNavigation.Page.Tools)]
         [TestCase(ProductAppNavigation.Page.History, ProductAppNavigation.Page.Tools)]
         [TestCase(ProductAppNavigation.Page.Report, ProductAppNavigation.Page.Tools)]
-        [TestCase(ProductAppNavigation.Page.Summary, ProductAppNavigation.Page.App)]
+        [TestCase(ProductAppNavigation.Page.Summary, ProductAppNavigation.Page.Home)]
         [TestCase(ProductAppNavigation.Page.Settings, ProductAppNavigation.Page.Tools)]
         [TestCase(ProductAppNavigation.Page.Guest, ProductAppNavigation.Page.Settings)]
         [TestCase(ProductAppNavigation.Page.ConfirmMain, ProductAppNavigation.Page.App)]
@@ -162,12 +162,16 @@ namespace QuestFlight.Editor.Tests
             navigation.OpenCalibration();
             Assert.IsTrue(modes.AuthoredSeatCalibration.IsOpen);
             navigation.Back();
+            Assert.AreEqual(ProductAppNavigation.Page.SeatExit,navigation.CurrentPage);
+            Assert.IsTrue(modes.AuthoredSeatCalibration.IsOpen,"Back must not silently discard calibration edits.");
+            Call(navigation,"InvokeWorkflowAction",(int)MenuActionId.DiscardSeat);
+            Call(navigation,"Refresh");
             Assert.IsFalse(modes.AuthoredSeatCalibration.IsOpen);
             Assert.AreEqual(ProductAppNavigation.Page.QuickStart,navigation.CurrentPage);
             Assert.AreEqual(2,Get<int>(navigation,"guideStep"));
             navigation.Back();navigation.Back();navigation.Back();
             Assert.AreEqual(ProductAppNavigation.Page.Settings,navigation.CurrentPage);
-            Assert.AreEqual(1,PlayerPrefs.GetInt("QuestFlight.QuickStartSeen",0));
+            Assert.AreEqual(guideKeyValue,PlayerPrefs.GetInt("QuestFlight.QuickStartSeen",0),"Backing out does not fabricate guide completion.");
             Assert.IsTrue(Get<GameObject>(navigation,"panel").activeSelf);
             Assert.IsFalse(modes.AuthoredModeMenuView.SelectionContentRoot.activeSelf);
             var suppressed=Get<Renderer[]>(modes.AuthoredModeMenuView,"aircraftPresentationRenderers");
@@ -176,9 +180,11 @@ namespace QuestFlight.Editor.Tests
             navigation.Back();
             Assert.AreEqual(ProductAppNavigation.Page.Tools,navigation.CurrentPage);
             navigation.OpenQuickStart(true);
-            // This is the same handler the universal Menu button uses inside a guide.
+            // Menu preserves the current guide; explicit Skip returns Home without trying to resume a nonexistent flight.
             navigation.OpenMenu();
-            Assert.AreEqual(ProductAppNavigation.Page.App,navigation.CurrentPage);
+            Assert.AreEqual(ProductAppNavigation.Page.QuickStart,navigation.CurrentPage);
+            Call(navigation,"InvokeWorkflowAction",(int)MenuActionId.SkipGuide);Call(navigation,"Refresh");
+            Assert.AreEqual(ProductAppNavigation.Page.Home,navigation.CurrentPage);
             Assert.IsTrue(Get<GameObject>(navigation,"panel").activeSelf);
         }
     }

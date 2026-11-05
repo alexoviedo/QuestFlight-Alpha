@@ -29,8 +29,7 @@ namespace QuestFlightLab.Editor
         private const string CloudRendererName = "SparseVolumetricCloudLayer";
         private const float AirportMslMeters = 1612.6f;
         private const float FieldWidthMeters = 16000f;
-        // KBDU 141055Z: SCT018. The fixed HDRI represents the separately
-        // reported high layer; this bounded field represents only low cumulus.
+        // Reference low cumulus; retain the photographic high cloud backdrop.
         private const float FieldBaseAglMeters = 550f;
         private const float FieldTopAglMeters = 1450f;
         private const float FormationHorizontalScale = 0.55f;
@@ -97,16 +96,24 @@ namespace QuestFlightLab.Editor
                 EditorApplication.Exit(0);
         }
 
+        public static void RebuildFormationGeometryForVisualRepair()
+        {
+            var formations = BuildFormations();
+            var profile = BuildProfile(formations);
+            BuildVolumeMesh(profile, formations);
+            AssetDatabase.SaveAssets();
+        }
+
         private static Formation[] BuildFormations() => new[]
         {
-            new Formation("VOLUME_WNW_CONNECTED", 0.20f, 0.22f, 0.13f, 0.10f, 0.88f, 0.15f),
-            new Formation("VOLUME_NORTHWEST", 0.34f, 0.20f, 0.11f, 0.09f, 0.70f, 0.32f),
-            new Formation("VOLUME_NORTH", 0.58f, 0.18f, 0.14f, 0.09f, 0.82f, 0.55f),
-            new Formation("VOLUME_NORTHEAST", 0.78f, 0.29f, 0.12f, 0.12f, 0.74f, 0.72f),
-            new Formation("VOLUME_WEST", 0.18f, 0.60f, 0.15f, 0.11f, 0.82f, 0.25f),
-            new Formation("VOLUME_RESERVOIR_WEST", 0.38f, 0.72f, 0.13f, 0.10f, 0.72f, 0.48f),
-            new Formation("VOLUME_RESERVOIR_EAST", 0.64f, 0.68f, 0.16f, 0.12f, 0.86f, 0.66f),
-            new Formation("VOLUME_SOUTHEAST", 0.84f, 0.78f, 0.12f, 0.09f, 0.68f, 0.82f),
+            new Formation("VOLUME_WNW_CONNECTED", 0.20f, 0.22f, 0.125f, 0.100f, 0.88f, 0.15f),
+            new Formation("VOLUME_NORTHWEST", 0.34f, 0.20f, 0.120f, 0.095f, 0.70f, 0.32f),
+            new Formation("VOLUME_NORTH", 0.58f, 0.18f, 0.130f, 0.100f, 0.82f, 0.55f),
+            new Formation("VOLUME_NORTHEAST", 0.78f, 0.29f, 0.125f, 0.105f, 0.74f, 0.72f),
+            new Formation("VOLUME_WEST", 0.18f, 0.60f, 0.130f, 0.105f, 0.82f, 0.25f),
+            new Formation("VOLUME_RESERVOIR_WEST", 0.38f, 0.72f, 0.125f, 0.100f, 0.72f, 0.48f),
+            new Formation("VOLUME_RESERVOIR_EAST", 0.64f, 0.68f, 0.130f, 0.105f, 0.86f, 0.66f),
+            new Formation("VOLUME_SOUTHEAST", 0.84f, 0.78f, 0.120f, 0.095f, 0.68f, 0.82f),
         };
 
         private static BoulderCloudProfile BuildProfile(Formation[] formations)
@@ -142,7 +149,7 @@ namespace QuestFlightLab.Editor
 
             profile.Configure(
                 "KBDU_20260814_1055Z_SCT018_V4",
-                "KBDU SCT018 low cumulus beneath fixed SCT120 high layer",
+                "Reference low cumulus with retained photographic high cloud backdrop",
                 AirportMslMeters,
                 FieldBaseAglMeters,
                 FieldTopAglMeters,
@@ -269,7 +276,7 @@ namespace QuestFlightLab.Editor
             mesh.SetUVs(3, parameters);
             mesh.SetTriangles(triangles, 0, true);
             mesh.RecalculateBounds();
-            mesh.UploadMeshData(true);
+            mesh.UploadMeshData(false); // Readable for index-only back-to-front transparency ordering.
             Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath);
             if (existing == null)
             {

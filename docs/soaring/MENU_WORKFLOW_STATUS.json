@@ -1,0 +1,62 @@
+{
+  "status": "ALPHA5_INSTALLED_HEADSET_SMOKE_PARTIAL_PERFORMANCE_FAIL",
+  "approved": true,
+  "updatedUtc": "2026-10-16T04:03:47.926844+00:00",
+  "plan": "MENU_WORKFLOW_AUDIT_PLAN_2026-10-15.md",
+  "artifactRoot": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\menu_workflow_20261015",
+  "items": {
+    "F01": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F02": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F03": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F04": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F05": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F06": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F07": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F08": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F09": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F10": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F11": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F12": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F13": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F14": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F15": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F16": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F17": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F18": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F19": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F20": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F21": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F22": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F23": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F24": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F25": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F26": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F27": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F28": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F29": "IMPLEMENTED_PENDING_FINAL_VERIFICATION",
+    "F30": "PARTIAL_VERIFIED:82_TESTS_PASS;WORN_TOW_OBSERVED_RELEASE_USER_CONFIRMED;HANDLING_PERFORMANCE_AND_BROAD_ACCEPTANCE_OPEN"
+  },
+  "validation": "82/82 final focused menu/native/input tests PASS. Complete menu-driven aerotow/release/result/landing/restart PASS; both runway ground/reconnect/abort journeys PASS. 64 offline stereo menu previews captured and maximum-text layouts inspected. Standard visual:107/130, all130 resource rows identical to alpha4;23 pre-existing resource failures retained.",
+  "installedCandidateUnchanged": false,
+  "remaining": [
+    "Confirm worn landing and remaining pause/settings/seat returns; tow release now user-confirmed",
+    "Investigate ridge native lesson and retained C172 checkpoint failures before broad training acceptance",
+    "Fresh live stereo simulator and remaining exhaustive plan branch coverage",
+    "Sustained Quest performance/thermal acceptance; current smoke has frame drops"
+  ],
+  "build": "Release build succeeded after user cache cleanup. Android ARM64/native/model/scenery/signature/alignment/version verified. Exact installed APK hash matches preserved file; training save retained.",
+  "candidate": {
+    "version": "0.1.0-alpha.5",
+    "versionCode": 5,
+    "apk": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\menu_workflow_20261015\\final_android_after_cleanup\\QuestFlight-menu-workflow-alpha5.apk",
+    "sha256": "cd6caaebffa597f7d47257eca2d69397028d88832d876a5ed3c9a6c3fae9b99f",
+    "installedSha256": "cd6caaebffa597f7d47257eca2d69397028d88832d876a5ed3c9a6c3fae9b99f"
+  },
+  "hardware": "PARTIAL_PASS:USER_CONFIRMED_ALPHA5_HOME;NATIVE_C172_AND_SGS_INIT;BUTTON_AND_POINTER_ACTIONS;RUNWAY08_8/8_CHECKS_RELEASE_TEST_RECONNECT_CLEARANCE;STEREO_CAPTURE_CONFIRMS_AIRBORNE_TOW. RELEASE_USER_CONFIRMED;LANDING_PENDING;STALL_HANDLING_REPORTED_UNACCEPTABLE",
+  "nativeOutcomes": {
+    "sgs": "4/5 including expected-negative case; ridge outward-turn failure",
+    "c172": "2/6 checkpoint probes pass;4 retained failures; not full lesson-completion evidence"
+  },
+  "physicalTiming": "FAIL_SMOKE:GROUND_MENU99_SAMPLES44\u201370FPS_MEDIAN49;POST_TAKEOFF140_SAMPLES34\u201369FPS_MEDIAN40;TARGET72;POST_UNMOUNT_SAMPLES_EXCLUDED;SUSTAINED_THERMAL_NOT_RUN",
+  "handling": "NOT_ACCEPTED:reported stall/control-response issue; see SGS_DYNAMICS_STATUS.json"
+}

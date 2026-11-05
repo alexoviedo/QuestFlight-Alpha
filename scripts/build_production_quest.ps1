@@ -5,6 +5,8 @@ param(
   [string]$ArtifactDir = '',
   [ValidateRange(60, 3600)]
   [int]$TimeoutSeconds = 1200,
+  [ValidateRange(0, 16)]
+  [int]$UnityJobWorkerCount = 0,
   [switch]$Development,
   [switch]$PreflightOnly
 )
@@ -360,6 +362,10 @@ $arguments = @(
   '-executeMethod', 'QuestFlight.Editor.ProductionBuild.PerformAndroidBuildBatch',
   '-logFile', $log
 )
+if ($UnityJobWorkerCount -gt 0) {
+  # Host build concurrency only; this does not change Android player settings.
+  $arguments += @('-job-worker-count', [string]$UnityJobWorkerCount)
+}
 $previousDevelopment = $env:QUESTFLIGHT_DEVELOPMENT_BUILD
 $process = $null
 $streamingAssetsTransaction = $null

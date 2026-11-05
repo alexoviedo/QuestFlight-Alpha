@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7077d54cd8b35e1418672b86f3f8cb68, type: 3}
+  m_Name: PA18_Tug_Reference
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightAircraftDefinition
+  kind: 2
+  displayName: PA-18 150 hp reference tug
+  nativeConfiguration:
+    modelName: qfl_pa18_tug_ref
+    engineCount: 1
+    tankCount: 2
+    legacyC172Loading: 0
+    stations:
+    - index: 0
+      pounds: 0
+    - index: 1
+      pounds: 170
+    tanks:
+    - index: 0
+      pounds: 60
+    - index: 1
+      pounds: 60
+  airbrake: 0
+  wheelBrake: 0
+  flaps: 1
+  towAttachment: 1
+  differentialAirflow: 1
+  contactCount: 8
+  towHookStructuralInches: {x: 210, y: 0, z: -20}
+  eyeFromCgMeters: {x: 0, y: 0, z: 0}
+  minimumWeightLb: 983
+  maximumWeightLb: 1750
+  minimumCgXIn: 10
+  maximumCgXIn: 23
+  minimumReferenceCasKnots: 40
+  maximumReferenceCasKnots: 90
+  airborneReference:
+    latitudeDegrees: 40.03936527
+    longitudeDegrees: -105.22608958
+    altitudeMslMeters: 2213.0324
+    terrainElevationMslMeters: 1611.7824
+    calibratedAirspeedKnots: 65
+    headingDegrees: 89.972
+    pitchDegrees: 0
+    bankDegrees: 0
+    flightPathAngleDegrees: 0
+    engineRunning: 1
+  provenance: REFERENCE_CONFIGURATION. Isolated 150 hp PA-18 data from wlbragg/J3Cub
+    7d9c8d34; GPL3. Fixed-pitch 75-inch propeller, 20-degree source table. CG limits/inertia/hook
+    are development estimates, no verified Boulder operator assignment.
+  referenceHandlingAccepted: 0

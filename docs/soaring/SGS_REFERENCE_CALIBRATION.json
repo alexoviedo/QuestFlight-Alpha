@@ -1,0 +1,38 @@
+{
+  "schema": "questflight.sgs-reference-calibration.v2",
+  "source_url": "https://soaringtigers.org/SGS-2-33-Manual.pdf",
+  "source_sha256": "02e706c37c9c3d9e8953f642d880ccca20f170c0ccc26c5bf74c79c2da2407dd",
+  "source_revision": "Undated older Schweizer manual scan including supplemental serial 500 controls, page 1-5. Superseded by K&L 2022 manual; not exact current airframe.",
+  "assumptions": [
+    "Reference two-place weight 1040 lb; 210 lb front/220 lb rear with estimated empty CG.",
+    "Manual mph treated as calibrated speed for development; instrument-error curve unavailable.",
+    "Sink reference compared at sea-level ISA, not Boulder TAS."
+  ],
+  "calibration_points": [
+    {
+      "speed_mph": 50,
+      "glide_ratio": 23,
+      "glide_ratio_derivative_per_mph": 0
+    },
+    {
+      "speed_mph": 42,
+      "sink_fps": 3.1
+    }
+  ],
+  "validation_tolerances": {
+    "glide_ratio_fraction": 0.05,
+    "minimum_sink_fraction": 0.1,
+    "best_speed_fraction": 0.1
+  },
+  "airbrake_drag_increment": 0.08,
+  "estimated": [
+    "Cambered profile drag bucket fitted to two glide points including declared best-speed condition; not a measured full polar",
+    "CL peak 1.76 at .285 rad, bounded post-stall continuation",
+    "Airbrake drag .08 and lift -.16; no accepted spoiler polar",
+    "Inertia and stability derivatives retained from approximate source"
+  ],
+  "profile_base": 0.041744874521968664,
+  "profile_linear_cl": -0.0745262303838689,
+  "profile_quadratic_cl": 0.04907018591220798,
+  "induced_drag_k": 0.027
+}

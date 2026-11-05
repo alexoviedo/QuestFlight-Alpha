@@ -1,0 +1,69 @@
+{
+  "schema": "questflight.sgs-brake-lever-repair.v1",
+  "startedUtc": "2026-10-16T20:56:29+00:00",
+  "completedUtc": "2026-10-16T21:17:54.408269+00:00",
+  "elapsedMinutes": 21.42,
+  "deadlineUtc": "2026-10-16T21:26:29Z",
+  "status": "IMPLEMENTED_SCOPED_SOFTWARE_AND_ANDROID_ASSETS_VERIFIED;FULL_APK_AND_LIVE_XR_PENDING",
+  "artifactRoot": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\sgs_brake_lever_20261016",
+  "scope": "Interior combined dive-brake/wheel-brake handle geometry, animation and direct grab mapping; trim position adjusted for clearance. Exterior brakes and native flight model unchanged.",
+  "references": "docs/soaring/SGS_VISUAL_REFERENCES.md#combined-cockpit-brake-handle-correction-2026-10-16",
+  "implementation": [
+    "Replaced blue upright lever with white fore-aft sidewall shaft, bent elbow and inward black grip below left panel; fixed guide sleeve.",
+    "Authored grip/collider follows initial visual downward roll and230mm aft stroke in both prefabs; linear regrab mapping, existing ownership/focus/tracking gates preserved.",
+    "Existing trim handle lowered110mm for trim-below-brake fit and target separation; no trim input or shape change."
+  ],
+  "mapping": {
+    "airbrake": "clamp01(lever/0.85)",
+    "wheelBrake": "clamp01((lever-0.85)/0.15)",
+    "returnSequence": "Wheel brake releases first, then airbrakes retract.",
+    "nativeAuthority": "Existing native JSBSim speedbrake and center-brake commands; no alternative authority.",
+    "referenceEstimates": "230mm stroke,25deg roll during first8%,85/15 split and coordinates are reference choices, not factory measurements; automatic visual unlock, no physical latch-force simulation."
+  },
+  "frozenBudgets": {
+    "triangles": 8000,
+    "renderers": 3,
+    "materials": 2,
+    "addedTextures": 0
+  },
+  "before": {
+    "triangles": 7993,
+    "renderers": 3,
+    "materials": 2,
+    "addedTextures": 0
+  },
+  "after": {
+    "triangles": 7985,
+    "renderers": 3,
+    "materials": 2,
+    "addedTextures": 0
+  },
+  "geometricReach": {
+    "maxReferenceShoulderMeters": 0.5480617231444591,
+    "minBrakeTrimGripSeparationMeters": 0.125802858203281,
+    "humanAcceptance": "NOT_RUN"
+  },
+  "verification": {
+    "editMode": "PASS17/17 final; actual SDK forward/reverse/regrab and published air/wheel inputs, geometry, reach, budgets and existing input guards.",
+    "nativeGround": "PASS10/10 existing production-native ground scenarios.",
+    "sdkNativeMapping": "PASS7/7; replayed measured SDK commands with zero toe brakes. At1s: air-only13.954kt,half-wheel8.116kt,full-wheel3.727kt from15kt reference start; both braked cases below0.1kt by2s. Functional mapping evidence, not braking-fidelity calibration.",
+    "offlineStereo": "30/30 captures;12 brake closeups across6states and full-resolution closed/full examples inspected. Separate Editor cameras; not live XR.",
+    "standardVisual": "107/130; same23 pre-existing failures; all130 resource/pass rows identical to prior brake repair; overview inspected.",
+    "android": "PASS61 Android player-script assemblies and StrictMode SGS asset bundle; build preflight passed. Not full APK/IL2CPP linking.",
+    "scopeComparison": "Only BrakeLever, translated TrimLever and20 static guide triangles changed at10micrometer comparison; all other geometry and other anchors unchanged.",
+    "diffCheck": "Scoped source/doc git diff --check passes."
+  },
+  "evidenceCorrections": [
+    "Initial SDK test tolerance was tightened beyond world-float resolution; final tolerance<0.12mm stroke; mathematical round-trip tolerance unchanged.",
+    "Initial external JSON diagnostic formatting emitted literalR for last field; fixed and reran all17 tests; final trace parses and is hashed.",
+    "Initial diagnostic required brake-strength speed ordering after both cases stopped. Preserved those results; corrected comparison to1s while rolling and separate below0.1kt stopping checks. No dynamics or input thresholds changed."
+  ],
+  "remaining": [
+    "Integrate with upcoming changes and build full Android APK. No build installed in this task.",
+    "Fresh live simulator stereo and deferred worn reach/visual acceptance.",
+    "Operator-exact handle dimensions, finish, rigging and latch-force behavior remain unmeasured."
+  ],
+  "priorBlockersUnchanged": "SGS stall fidelity, native training failures, standard scene resources and Quest timing remain separately unresolved.",
+  "installedCandidate": "Existing alpha5 unchanged.",
+  "rights": "Local/uncommitted reference derivative; original donor and previous assets preserved externally; no downloaded image used as texture."
+}

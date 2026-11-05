@@ -9,8 +9,14 @@ namespace QuestFlight.Product.Training
         RollControl, PitchControl, RudderControl, BrakeControl, Taxi, Stop,
         Level, Turn, Climb, Descend, Trim, TakeoffConfiguration, TakeoffRoll,
         Rotation, Departure, Downwind, Abeam, Base, Final, Landing, Rollout,
-        GoAroundPower, GoAroundClimb, GoAroundClean
+        GoAroundPower, GoAroundClimb, GoAroundClean,
+        SoaringPreparation=100, SoaringLaunch, SoaringTowPosition, SoaringRelease,
+        SoaringSpeed, SoaringTrim, SoaringAirbrake, SoaringSlip, SoaringLift,
+        SoaringEnergyGain, SoaringLiftExit, SoaringRidgeTrack, SoaringOutwardTurn,
+        SoaringRidgeExit, SoaringDownwind, SoaringBase, SoaringFinal,
+        SoaringLanding, SoaringStop, SoaringGroundAbort, SoaringCrewReady
     }
+    public enum TrainingProgramKind { C172, Sgs233Reference }
 
     [Serializable]
     public sealed class TrainingStage
@@ -37,6 +43,9 @@ namespace QuestFlight.Product.Training
     public sealed class TrainingLessonDefinition : ScriptableObject
     {
         public string lessonId;
+        public TrainingProgramKind program;
+        public bool groundTowPreparation;
+        public QuestFlightLab.Flight.Soaring.SoaringWeatherDefinition soaringWeather;
         public string displayName;
         [TextArea] public string briefing;
         public AudioClip briefingNarration;

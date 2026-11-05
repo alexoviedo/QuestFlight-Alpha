@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5caaecf10ae238445afcc22c19aa33c6, type: 3}
+  m_Name: 07_ground_abort
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
+  lessonId: sgs233.reference.ground_abort
+  program: 1
+  groundTowPreparation: 1
+  soaringWeather: {fileID: 11400000, guid: 92b614c4163e9f843a2d402f59af42ee, type: 2}
+  displayName: Supported ground abort
+  briefing: SGS 2-33A / PA-18 development reference, 950 lb dual glider loading.
+    These are simulator modules, not a Mile High syllabus or training credit. Physical
+    inspection and crew communication are explained, not scored as performed. Development
+    ground-abort case only. Perform preparation, start the slow launch, and select
+    Abort ground launch before20kt. Apply the combined lever fully to stop. Airborne
+    cable-break decision training requires additional evidence; no universal turnback
+    is taught.
+  briefingNarration: {fileID: 0}
+  learningGoal: Supported ground abort using measured controls, native state and
+    sustained conditions.
+  reflection: Which outside cue and instrument supported your decision? What margin
+    would you require before an instructor-reviewed real flight?
+  start:
+    latitudeDegrees: 40.05917788542087
+    longitudeDegrees: -105.21202489828113
+    altitudeMslMeters: 2461.7824
+    terrainElevationMslMeters: 1584.9157351135254
+    calibratedAirspeedKnots: 50
+    headingDegrees: 90
+    pitchDegrees: 0
+    bankDegrees: 0
+    flightPathAngleDegrees: -2.862400417
+    engineRunning: 0
+  initialThrottle: 0
+  initialTrim: 0.10626088
+  initialFlaps: 0
+  allowDemonstration: 0
+  airportExercise: 1
+  goAroundStage: -1
+  stages:
+  - title: Prepare abort exercise
+    instruction: Complete the stopped controls and release checks.
+    narration: {fileID: 0}
+    successFeedback: Prepare abort exercise was observed within the reference practice
+      window.
+    retryAdvice: Use every simulated control check before crew preparation.
+    task: 100
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 1
+    timeoutSeconds: 300
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200
+  - title: Abort before20kt
+    instruction: Reconnect and prepare launch in Menu > Launch preparation. Return
+      to cockpit, close brakes and center controls, then Clear and begin launch.
+      During the slow roll, choose Abort ground launch, then pull the combined lever
+      fully and stop.
+    narration: {fileID: 0}
+    successFeedback: Abort before20kt was observed within the reference practice
+      window.
+    retryAdvice: This supported case remains on the ground. Abort early and brake
+      to a complete stop.
+    task: 119
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 3
+    timeoutSeconds: 500
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200
+  orientation: 

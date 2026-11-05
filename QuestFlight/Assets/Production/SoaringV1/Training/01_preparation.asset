@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5caaecf10ae238445afcc22c19aa33c6, type: 3}
+  m_Name: 01_preparation
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
+  lessonId: sgs233.reference.preparation
+  program: 1
+  groundTowPreparation: 1
+  soaringWeather: {fileID: 11400000, guid: 92b614c4163e9f843a2d402f59af42ee, type: 2}
+  displayName: Aircraft and launch preparation
+  briefing: SGS 2-33A / PA-18 development reference, 950 lb dual glider loading.
+    These are simulator modules, not a Mile High syllabus or training credit. Physical
+    inspection and crew communication are explained, not scored as performed. At
+    rest, check stick and rudder both ways, airbrakes through wheel braking
+    and the red release. Use Menu > Launch preparation to request explicit crew reconnection.
+    This restages the pair; the glider does not self-taxi. Menu > Launch preparation
+    also offers Skip preflight (no checklist credit). RCAF 2017 AOI section3
+    paragraph20 lists trim full forward before takeoff; the manufacturer recommends
+    forward bungee trim for solo. This simulator retains its calibrated native
+    reference preset and requires no arbitrary trim sweep.
+  briefingNarration: {fileID: 0}
+  learningGoal: Aircraft and launch preparation using measured controls, native state
+    and sustained conditions.
+  reflection: Which outside cue and instrument supported your decision? What margin
+    would you require before an instructor-reviewed real flight?
+  start:
+    latitudeDegrees: 40.05917788542087
+    longitudeDegrees: -105.21202489828113
+    altitudeMslMeters: 2461.7824
+    terrainElevationMslMeters: 1584.9157351135254
+    calibratedAirspeedKnots: 50
+    headingDegrees: 90
+    pitchDegrees: 0
+    bankDegrees: 0
+    flightPathAngleDegrees: -2.862400417
+    engineRunning: 0
+  initialThrottle: 0
+  initialTrim: 0.10626088
+  initialFlaps: 0
+  allowDemonstration: 0
+  airportExercise: 1
+  goAroundStage: -1
+  stages:
+  - title: Check controls and release
+    instruction: Sweep stick/rudder both ways, pull the left lever fully,
+      then pull the red release / A.
+    narration: {fileID: 0}
+    successFeedback: Check controls and release was observed within the reference
+      practice window.
+    retryAdvice: Finish every simulated control check while stopped; external inspection
+      remains unmodeled.
+    task: 100
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 1
+    timeoutSeconds: 300
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200
+  - title: Crew reconnection
+    instruction: Menu > Launch preparation > Reconnect and prepare launch (already prepared after Skip preflight). Return
+      to cockpit, then close the combined brake lever.
+    narration: {fileID: 0}
+    successFeedback: Crew reconnection was observed within the reference practice
+      window.
+    retryAdvice: Explicitly prepare the crew/rope and close both airbrakes and wheel
+      brake.
+    task: 120
+    reference: 0
+    attitudeOnly: 0
+    heading: 90
+    altitudeFeet: 7000
+    speedKnots: 50
+    dwellSeconds: 2
+    timeoutSeconds: 300
+    targetEnu: {x: 0, y: 0}
+    captureMeters: 200
+  orientation: 

@@ -7,6 +7,7 @@ Shader "TextMeshPro/Mobile/Distance Field" {
 
 Properties {
         [HideInInspector] _XRMotionVectorsPass("XR motion",Float)=1
+        [Enum(UnityEngine.Rendering.CompareFunction)] _ZTestMode("Depth comparison",Float)=4
 
 	_FaceColor          ("Face Color", Color) = (1,1,1,1)
 	_FaceDilate			("Face Dilate", Range(-1,1)) = 0
@@ -77,7 +78,7 @@ SubShader {
 	ZWrite Off
 	Lighting Off
 	Fog { Mode Off }
-	ZTest [unity_GUIZTestMode]
+	ZTest [_ZTestMode]
 	Blend One OneMinusSrcAlpha
 	ColorMask [_ColorMask]
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using QuestFlight.Product;
@@ -119,9 +119,9 @@ namespace QuestFlight.Editor
             var material=AssetDatabase.LoadAssetAtPath<Material>(path);
             if(material==null){material=new Material(source);AssetDatabase.CreateAsset(material,path);}
             material.CopyPropertiesFromMaterial(source);
-            if(text){material.shader=Shader.Find("TextMeshPro/Mobile/Distance Field");material.SetFloat("_ZTestMode",(float)CompareFunction.LessEqual);}
-            else{material.SetFloat("_ZTest",(float)CompareFunction.LessEqual);material.SetFloat("_ZWrite",0);}
-            material.renderQueue=queue;EditorUtility.SetDirty(material);return material;
+            if(text){material.shader=Shader.Find("TextMeshPro/Mobile/Distance Field");material.SetFloat("_ZTestMode",(float)CompareFunction.Always);}
+            else{material.SetFloat("_ZTest",(float)CompareFunction.Always);material.SetFloat("_ZWrite",0);}
+            material.renderQueue=queue+1400;EditorUtility.SetDirty(material);return material;
         }
         static void ModalText(TextMeshPro text,bool bold=false) => text.fontSharedMaterial=bold?modalSemibold:modalRegular;
         static void ModalSurface(ProductUiSurface surface,bool action=false)=>surface.GetComponent<Renderer>().sharedMaterial=action?modalAction:modalSurface;

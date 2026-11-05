@@ -34,6 +34,7 @@ namespace QuestFlightLab.Audio
         [SerializeField] private AudioSource airframeOneShot;
 
         private bool _initialized;
+        private bool _loopsStarted;
         private bool _previousWeightOnWheels;
         private bool _previousStarter;
         private bool _previousBattery;
@@ -116,6 +117,33 @@ namespace QuestFlightLab.Audio
 
         private void OnEnable()
         {
+            // Disabling this behaviour does not stop its separate AudioSources.
+            // Never resume a previous aircraft's mix while selection is changing.
+            SilenceOwnedSources();
+        }
+
+        private void OnDisable() => SilenceOwnedSources();
+
+        private void SilenceOwnedSources()
+        {
+            Stop(engineIdle); Stop(engineCruise); Stop(propeller);
+            Stop(windLow); Stop(windHigh); Stop(groundRoll);
+            Stop(flapMotor); Stop(stallHorn); Stop(cockpitOneShot); Stop(airframeOneShot);
+            _loopsStarted = _initialized = false;
+            _starterCueActive = _starterCueStopping = _starterCuePaused = false;
+            _starterCueGain = _smoothedRpm = _smoothedAirspeed = _smoothedGroundSpeed = 0f;
+            _smoothedAoA = _smoothedRollGain = _smoothedFlapGain = _lastAirborneSinkFeetPerMinute = 0f;
+        }
+
+        private static void Stop(AudioSource source)
+        {
+            if (source == null) return;
+            source.volume = 0f;
+            source.Stop();
+        }
+
+        private void StartContinuousSources()
+        {
             StartLoop(engineIdle);
             StartLoop(engineCruise);
             StartLoop(propeller);
@@ -124,14 +152,22 @@ namespace QuestFlightLab.Audio
             StartLoop(groundRoll);
             StartLoop(flapMotor);
             StartLoop(stallHorn);
+            _loopsStarted = true;
         }
 
         private void Update()
         {
-            if (profile == null || coordinator == null) return;
+            if (profile == null || coordinator == null ||
+                (coordinator.aircraftDefinition != null &&
+                 coordinator.aircraftDefinition.kind != FlightAircraftKind.C172))
+            {
+                SilenceOwnedSources();
+                return;
+            }
 
             FlightDynamicsState state = coordinator.CurrentState;
-            if (!state.IsFinite) return;
+            if (!state.IsFinite) { SilenceOwnedSources(); return; }
+            if (!_loopsStarted && Application.isPlaying) StartContinuousSources();
 
             float dt = Mathf.Max(Time.unscaledDeltaTime, 0.0001f);
             float response = 1f - Mathf.Exp(-5f * dt);

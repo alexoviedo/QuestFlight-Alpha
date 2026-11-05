@@ -28,7 +28,7 @@ $oldClosure=$env:QFL_DEPENDENCY_CLOSURE_DIR
 try {
   $env:QFL_SPACEWARP_ARTIFACTS=$ArtifactDir
   $env:QFL_DEPENDENCY_CLOSURE_DIR=Join-Path $ArtifactDir 'closure'
-  Stage 'production integrity' {UnityMethod 'QuestFlight.Editor.ProductIntegrityValidator.ValidateBatch' 'integrity.log'}
+  Stage 'production integrity' {UnityMethod 'QuestFlight.Editor.ProductIntegrityValidator.PrepareAndValidateBatch' 'integrity.log'}
   Stage 'dependency closure' {UnityMethod 'T2.QuestFlight.Editor.ProductionDependencyClosureExporter.ExportBatch' 'closure.log'}
   Stage 'SpaceWarp coverage' {UnityMethod 'QuestFlight.Editor.ProductSpaceWarpAudit.RunBatch' 'spacewarp_coverage.log'}
   Stage 'EditMode' {& (Join-Path $PSScriptRoot 'run_unity_tests.ps1') -ProjectPath $ProjectPath -UnityExe $UnityExe -TestPlatform EditMode -TestFilter QuestFlight -ArtifactDir (Join-Path $ArtifactDir 'editmode') -TimeoutSeconds 1800}

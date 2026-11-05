@@ -114,6 +114,8 @@ Material:
     - _NearBlendStartEnd: {r: 1800, g: 1980, b: 0, a: 0}
     - _NearSourceNormalFadeStartEnd: {r: 250, g: 3500, b: 0, a: 0}
     - _NearWorldMinInvSize: {r: -2000, g: -2000, b: 0.00025, a: 0.00025}
+    - _RunwayCutoutOriginAxis: {r: -629.757, g: -30.671, b: 0.9999972, a: 0.00049344555}
+    - _RunwayCutoutSize: {r: 1250.3885, g: 22.86, b: 1, a: 0}
     - _Tint: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -70,27 +70,6 @@
       "review": "pending listening"
     },
     {
-      "id": "01_taxi_03",
-      "text": "Pull the throttle knob fully back to idle. Squeeze both index triggers and keep the airplane stopped. Each trigger applies its side of the wheel brakes.",
-      "spoken_text": "Pull the throttle knob fully back to idle. Squeeze both index triggers and keep the airplane stopped. Each trigger applies its side of the wheel brakes.",
-      "voice": "am_michael",
-      "voice_sha256": "9a443b79a4b22489a5b0ab7c651a0bcd1a30bef675c28333f06971abbd47bd37",
-      "speed": 1.0,
-      "model_revision": "f3ff3571791e39611d31c381e3a41a3af07b4987",
-      "packages": {
-        "kokoro": "0.9.4",
-        "misaki": "0.9.4",
-        "torch": "2.14.0",
-        "transformers": "5.17.0",
-        "soundfile": "0.14.0",
-        "spacy": "3.8.16"
-      },
-      "fingerprint": "9e5d007db19cbce886a8984997a71115427f00be0b7c542cbf87b2138d8fd3f9",
-      "seconds": 10.475,
-      "sha256": "cb24e6ae070ee066e955c7cc07bd29a4cd4543455b27075f439d9910e9167de9",
-      "review": "pending listening; refreshed with sample-aligned caption timings"
-    },
-    {
       "id": "01_taxi_04",
       "text": "Release both brakes. Grip the throttle and move it forward slightly. Follow the taxiway ahead toward the marker at walking pace, about three to six knots. Steer with the steering thumbstick.",
       "spoken_text": "Release both brakes. Grip the throttle and move it forward slightly. Follow the taxiway ahead toward the marker at walking pace, about three to six knots. Steer with the steering thumbstick.",
@@ -2251,6 +2230,27 @@
       "fingerprint": "8eeb967a5bd5c38188bfc5326f366c88e8000d21c53a12aac6cafc54bded2cc7",
       "seconds": 14.0,
       "sha256": "3d6d95c0a4c595327b6df929068b736f76b7ef91129ccc198828925db84342d5",
+      "review": "pending listening"
+    },
+    {
+      "id": "01_taxi_03",
+      "text": "Pull the throttle to idle. Apply both brakes using the index triggers and stay stopped. Review your brake assignment in Menu, Settings, Controls.",
+      "spoken_text": "Pull the throttle to idle. Apply both brakes using the index triggers and stay stopped. Review your brake assignment in Menu, Settings, Controls.",
+      "voice": "am_michael",
+      "voice_sha256": "9a443b79a4b22489a5b0ab7c651a0bcd1a30bef675c28333f06971abbd47bd37",
+      "speed": 1.0,
+      "model_revision": "f3ff3571791e39611d31c381e3a41a3af07b4987",
+      "packages": {
+        "kokoro": "0.9.4",
+        "misaki": "0.9.4",
+        "torch": "2.14.0",
+        "transformers": "5.17.0",
+        "soundfile": "0.14.0",
+        "spacy": "3.8.16"
+      },
+      "fingerprint": "83cd70e6142aeb954a1f8c246d755e711bc6f39af0edf321830ab0612ff464ad",
+      "seconds": 10.3,
+      "sha256": "d33ae172dc02ab16aa1c15a70bf7ad04e722f51fdbd27fc268e92fd098ed75a9",
       "review": "pending listening"
     }
   ]

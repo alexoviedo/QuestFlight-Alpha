@@ -123,6 +123,7 @@ namespace QuestFlight.Editor
                 coordinator.presentationRoot = root.transform;
                 coordinator.aircraftState = state;
                 coordinator.aircraftConfiguration = config;
+                coordinator.aircraftDefinition = FlightAircraftDefinition.EditorC172;
                 coordinator.authoritativeRigidbody = body;
                 coordinator.controls = null;
                 coordinator.initialConditionProvider = initial;
@@ -231,6 +232,7 @@ namespace QuestFlight.Editor
                 coordinator.presentationRoot = rig.transform;
                 coordinator.aircraftState = state;
                 coordinator.aircraftConfiguration = config;
+                coordinator.aircraftDefinition = FlightAircraftDefinition.EditorC172;
                 coordinator.authoritativeRigidbody = body;
                 coordinator.controls = productInput;
                 coordinator.thermalField = thermalField;

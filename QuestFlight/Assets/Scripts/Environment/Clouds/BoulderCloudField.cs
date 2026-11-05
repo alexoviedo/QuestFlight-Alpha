@@ -28,6 +28,41 @@ namespace QuestFlightLab.Environment
         [SerializeField] private bool temporalReprojection;
 
         private Camera cachedMainCamera;
+        private Mesh sortedCloudMesh;
+        private Mesh sourceCloudMesh;
+        private MeshFilter cloudMeshFilter;
+        private int[] cloudOrder, cloudIndices;
+        private static readonly int[] BoxTriangles={0,2,1,0,3,2,5,6,4,6,7,4,4,7,0,7,3,0,1,2,5,2,6,5,3,7,2,7,6,2,4,0,5,0,1,5};
+
+        // Preserve the authored vertices and single draw; only reorder transparent proxy indices.
+        public void PrepareTransparencyForCamera(Vector3 observer)
+        {
+            if(profile==null||sectorRenderers.Length!=1)return;
+            if(sortedCloudMesh==null)
+            {
+                cloudMeshFilter=sectorRenderers[0].GetComponent<MeshFilter>();
+                sourceCloudMesh=cloudMeshFilter.sharedMesh;
+                sortedCloudMesh=Instantiate(sourceCloudMesh);sortedCloudMesh.name=sourceCloudMesh.name+"_SortedIndices";
+                cloudMeshFilter.sharedMesh=sortedCloudMesh;
+                cloudOrder=new int[profile.Volumes.Length];cloudIndices=new int[cloudOrder.Length*36];
+                for(int i=0;i<cloudOrder.Length;i++)cloudOrder[i]=i;
+            }
+            Vector3 local=transform.InverseTransformPoint(observer);
+            bool changed=false;
+            // Eight elements; no per-frame allocations and no vertex/texture updates.
+            for(int i=1;i<cloudOrder.Length;i++)for(int j=i;j>0;j--)
+            {
+                Vector3 a=profile.Volumes[cloudOrder[j-1]].centerLocalMeters;
+                Vector3 b=profile.Volumes[cloudOrder[j]].centerLocalMeters;
+                if(cloudWrapActive){a=WrappedCenter(a,cloudDrift,cloudWrapCenter);b=WrappedCenter(b,cloudDrift,cloudWrapCenter);}
+                if((a-local).sqrMagnitude >= (b-local).sqrMagnitude)break;
+                int temp=cloudOrder[j-1];cloudOrder[j-1]=cloudOrder[j];cloudOrder[j]=temp;changed=true;
+            }
+            if(!changed&&cloudIndices[1]!=0)return;
+            for(int i=0;i<cloudOrder.Length;i++)for(int t=0;t<36;t++)cloudIndices[i*36+t]=cloudOrder[i]*8+BoxTriangles[t];
+            sortedCloudMesh.SetTriangles(cloudIndices,0,false);
+        }
+
         public BoulderWindFieldProfile windField;
         public QuestFlightLab.Flight.Backends.FlightDynamicsCoordinator windAuthority;
         private double previousWindTime;
@@ -117,6 +152,12 @@ namespace QuestFlightLab.Environment
             QuestFlight.Rendering.ProductSpaceWarpController.FrameCompleted -= CompleteCloudFrame;
             QuestFlight.Rendering.ProductSpaceWarpController.HistoryInvalidated -= ResetCloudHistory;
             cloudWrapActive=false;
+            if(sortedCloudMesh!=null)
+            {
+                if(cloudMeshFilter!=null)cloudMeshFilter.sharedMesh=sourceCloudMesh;
+                if(Application.isPlaying)Destroy(sortedCloudMesh);else DestroyImmediate(sortedCloudMesh);
+                sortedCloudMesh=null;cloudOrder=null;cloudIndices=null;
+            }
             foreach(var renderer in sectorRenderers)if(renderer!=null){renderer.SetPropertyBlock(null);renderer.ResetLocalBounds();}
             RestoreBaseline();
         }
@@ -136,12 +177,13 @@ namespace QuestFlightLab.Environment
             if (observer == null)
                 return;
 
+            PrepareTransparencyForCamera(observer.position);
             float target = EvaluateInteriorWeight(observer.position);
             currentInteriorWeight = Mathf.MoveTowards(
                 currentInteriorWeight,
                 target,
                 Time.unscaledDeltaTime * 0.85f);
-            Shader.SetGlobalFloat(ExteriorOpacityId, 1f - currentInteriorWeight);
+            Shader.SetGlobalFloat(ExteriorOpacityId, 1f);
             ApplyAtmosphere(currentInteriorWeight);
         }
 
@@ -159,7 +201,7 @@ namespace QuestFlightLab.Environment
             cloudWrapCenter=transform.InverseTransformPoint(windAuthority.CurrentState.positionUnityMeters);
             cloudWrapCenter.y=0;cloudWrapActive=true;
             Vector3 samplePosition=transform.TransformPoint(WrappedCenter(profile.Volumes[0].centerLocalMeters,cloudDrift,cloudWrapCenter));
-            Vector3 wind=windField.Sample(samplePosition,now);
+            Vector3 wind=windAuthority.SampleWind(samplePosition,now);
             Vector3 localWind=transform.InverseTransformVector(new Vector3(wind.x,0,wind.z));
             cloudDrift+=localWind*(float)elapsed;
             cloudDrift.x=Mathf.Repeat(cloudDrift.x+CloudWrapPeriod*.5f,CloudWrapPeriod)-CloudWrapPeriod*.5f;
@@ -213,7 +255,7 @@ namespace QuestFlightLab.Environment
         {
             CaptureBaseline();
             currentInteriorWeight = EvaluateInteriorWeight(worldPosition);
-            Shader.SetGlobalFloat(ExteriorOpacityId, 1f - currentInteriorWeight);
+            Shader.SetGlobalFloat(ExteriorOpacityId, 1f);
             ApplyAtmosphere(currentInteriorWeight);
         }
 
@@ -239,28 +281,10 @@ namespace QuestFlightLab.Environment
 
         private void ApplyAtmosphere(float weight)
         {
-            if (!baselineCaptured)
-                CaptureBaseline();
-            RenderSettings.fogColor = Color.Lerp(
-                baselineFogColor,
-                profile.InteriorFogColor,
-                weight);
-            RenderSettings.fogDensity = Mathf.Lerp(
-                baselineFogDensity,
-                profile.InteriorFogDensity,
-                weight);
-            Light sun = authoredSun != null ? authoredSun : RenderSettings.sun;
-            if (sun != null)
-                sun.intensity = baselineSunIntensity * Mathf.Lerp(
-                    1f,
-                    profile.InteriorSunIntensityMultiplier,
-                    weight);
-            Material sky = RenderSettings.skybox;
-            if (sky != null && sky.HasProperty("_Exposure"))
-                sky.SetFloat("_Exposure", baselineSkyExposure * Mathf.Lerp(
-                    1f,
-                    profile.InteriorSkyExposureMultiplier,
-                    weight));
+            // The ray marcher integrates the same density outside and inside the cloud.
+            // Do not add ellipsoid fog or fade every cloud: that creates a large diffuse
+            // envelope around a smaller VDB body, even in empty parts of the proxy.
+            // Retain containment weight for diagnostics; it is not optical density.
         }
 
         private void RestoreBaseline()

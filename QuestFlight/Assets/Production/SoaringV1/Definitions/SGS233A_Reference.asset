@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7077d54cd8b35e1418672b86f3f8cb68, type: 3}
+  m_Name: SGS233A_Reference
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Backends.FlightAircraftDefinition
+  kind: 1
+  displayName: SGS 2-33A reference
+  nativeConfiguration:
+    modelName: qfl_sgs233_ref
+    engineCount: 0
+    tankCount: 0
+    legacyC172Loading: 0
+    stations:
+    - index: 0
+      pounds: 170
+    - index: 1
+      pounds: 170
+    tanks: []
+  airbrake: 1
+  wheelBrake: 1
+  flaps: 0
+  towAttachment: 1
+  differentialAirflow: 1
+  contactCount: 5
+  towHookStructuralInches: {x: 20, y: 0, z: -12}
+  eyeFromCgMeters: {x: -0.00000008070763, y: 0.7015023, z: 0.65010226}
+  minimumWeightLb: 610
+  maximumWeightLb: 1040
+  minimumCgXIn: 78.2
+  maximumCgXIn: 86.1
+  minimumReferenceCasKnots: 35
+  maximumReferenceCasKnots: 85.1592
+  airborneReference:
+    latitudeDegrees: 40.03936527
+    longitudeDegrees: -105.22608958
+    altitudeMslMeters: 2213.0324
+    terrainElevationMslMeters: 1611.7824
+    calibratedAirspeedKnots: 50
+    headingDegrees: 89.972
+    pitchDegrees: 0.168303819
+    bankDegrees: 0
+    flightPathAngleDegrees: -2.862400417
+    engineRunning: 0
+  referenceTrimNoseUp: 0.10626088
+  provenance: REFERENCE_CONFIGURATION. G2EA Rev4 geometry/loading; older Schweizer
+    flight manual performance and controls. Empty CG/inertia/vertical contacts/hook
+    estimated. Native source and downloaded visual restricted to local development.
+    Not an identified operator airframe.
+  referenceHandlingAccepted: 0

@@ -654,6 +654,12 @@ namespace QuestFlight.PlayModeTests
                 BindingFlags.Instance | BindingFlags.NonPublic).GetValue(navigation), Is.EqualTo(-1));
             Assert.That(_mode.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.Selection));
             Assert.That(_mode.AuthoredTraining.State, Is.EqualTo(QuestFlight.Product.Training.TrainingSessionState.Inactive));
+#if UNITY_EDITOR
+            navigation.EditorVerificationFocus=true;
+#endif
+            // Returning Home intentionally leaves an overlay open. Close it before
+            // exercising the low-level coordinator API; real UI traversal has separate tests.
+            navigation.Resume();
             _mode.SelectFreeFlight();
             Assert.That(_mode.State, Is.EqualTo(ProductFlightModeCoordinator.FlightModeState.FreeFlight));
             Assert.That(Time.timeScale, Is.EqualTo(1f));

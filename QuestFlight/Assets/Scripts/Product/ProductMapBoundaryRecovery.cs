@@ -98,6 +98,7 @@ namespace QuestFlight.Product
             if (Manual)
             {
                 var settings=FlightLessonCrashSettings.ConservativeTrainingDefaults;
+                if(modeCoordinator.IsGlider)settings.lowAirspeedKnots=28; // Reference gross stall33mph, not C17242kt.
                 settings.maximumLessonRadiusMeters=float.MaxValue;
                 FlightLessonRecoveryRuntimeAdapter.TryMapTerrainSample(terrainSurface,state.positionUnityMeters,out var ground);
                 var crash=crashes.Evaluate(FlightLessonRecoveryRuntimeAdapter.BuildSafetyState(state),ground,deltaTime,settings);
@@ -119,6 +120,8 @@ namespace QuestFlight.Product
         public bool RequestLocalRecovery(in FlightDynamicsState state, string trigger)
         {
             if (Phase!=ProductMapBoundaryRecoveryPhase.Idle) return false;
+            if(modeCoordinator.IsGlider)
+            { PauseUnsafe("SGS flight paused here: no verified unpowered recovery corridor is available. Choose an explicit runway restart or return to the menu.");return false; }
             session=modeCoordinator.FlightSessionVersion;
             incident=state; reason=trigger; eventId++; wasManual=Manual;
             WriteTrace("requested",state,"");
@@ -129,7 +132,7 @@ namespace QuestFlight.Product
                 PauseUnsafe("A safe airborne recovery is unavailable here. The aircraft is on the ground or nearby scenery is not ready. Restart at runway or return to the menu.");
                 return false;
             }
-            var wind=flightCoordinator.windField.Sample(state.positionUnityMeters,state.simulationTimeSeconds);
+            var wind=flightCoordinator.SampleWind(state.positionUnityMeters,state.simulationTimeSeconds);
             var planningState=state;
             if(productInput.Current.flaps>.05f) planningState.calibratedAirspeedKnots=Math.Min(80,planningState.calibratedAirspeedKnots);
             if (!ProductMapBoundaryRecoveryPolicy.TryBuildLocalRecovery(planningState,terrainSurface,returnInsetMeters,
@@ -221,12 +224,24 @@ namespace QuestFlight.Product
         }
         public bool RestartAtRunway()
         {
+            if(modeCoordinator.IsGlider)return false; // SGS must prepare an explicit native pair or airborne checkpoint.
+
             // Explicit user choice, never an automatic fallback. Uses the current route's departure profile.
             var checkpoints=modeCoordinator.AuthoredDemoPilot.RouteDefinition?.recoveryCheckpoints;
             if(checkpoints==null||checkpoints.Length==0||!FlightLessonRecoveryRuntimeAdapter.TryBuildInitialConditions(checkpoints[0],terrainSurface,out var ground)||ground.calibratedAirspeedKnots>0)return false;
+            if(modeCoordinator.IsGlider)
+            {
+                ground.engineRunning=false;ground.pitchDegrees=0;ground.bankDegrees=0;ground.flightPathAngleDegrees=0;
+                ground.altitudeMslMeters=ground.terrainElevationMslMeters+.72;
+            }
             modeCoordinator.AuthoredDemoPilot.StopDemo();
-            if(!flightCoordinator.TryRecoverToInitialConditions(ground))return false;
-            productInput.PrepareForFlightLessonRecovery(new FlightLessonControlCommand{throttle=.1f,mixture=1});
+            if(modeCoordinator.IsGlider)
+            {
+                if(!flightCoordinator.TryStartNewFlight(ground))return false;
+                productInput.ConfigureAircraft(flightCoordinator.aircraftDefinition);
+            }
+            else if(!flightCoordinator.TryRecoverToInitialConditions(ground))return false;
+            productInput.PrepareForFlightLessonRecovery(new FlightLessonControlCommand{throttle=modeCoordinator.IsGlider?0:.1f,mixture=modeCoordinator.IsGlider?0:1,trim=modeCoordinator.IsGlider?flightCoordinator.aircraftDefinition.referenceTrimNoseUp:0});
             Cancel();crashes.Reset(true);armed=true;checkpointTime=-100;
             return true;
         }

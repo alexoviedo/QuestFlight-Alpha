@@ -27,7 +27,7 @@ namespace QuestFlightLab.Environment
             if (countdown <= 0)
             {
                 countdown = .1f;
-                Vector3 wind = windField.Sample(transform.position,player.CurrentState.simulationTimeSeconds,player.WeatherPreset);
+                Vector3 wind = player.SampleWind(transform.position,player.CurrentState.simulationTimeSeconds);
                 wind.y=0;
                 if (!BoulderWindFieldProfile.Finite(wind)) return;
                 float yaw=wind.sqrMagnitude>.01f?Mathf.Atan2(wind.x,wind.z)*Mathf.Rad2Deg:target.eulerAngles.y;

@@ -65,5 +65,19 @@
     "extraCameras": 0,
     "temporalReprojection": false,
     "cloudShadows": false
+  },
+  "visualRepair20261017": {
+    "source": "Project-owned code and geometry derivative of existing CC0 VDB sources; original textures and licenses retained",
+    "changes": [
+      "Use compact CC0 density archetype B for all eight comparable-scale formations; preserve original atlas for rollback",
+      "Horizontal proxy dimension ratios <=1.11; centers and layer heights retained",
+      "Remove ellipsoid fog and global cloud fade; actual volumetric density controls entry",
+      "Sort existing proxy triangles back-to-front in one renderer, without runtime hierarchy construction",
+      "Copy existing opaque depth before transparent rendering and limit ray integration against it",
+      "Photographic clouded sky retained per user clarification"
+    ],
+    "reference": "https://www.weather.gov/fgz/cloudscontrails",
+    "acceptance": "Editor views and Android scoped build; worn-headset acceptance deferred",
+    "runtimeCost": "Same 1 cloud draw / 96 triangles / existing textures / 48 maximum samples. One readable mesh copy and 8-element ordering/288-index arrays added; native allocation overhead and Quest timing unmeasured."
   }
 }

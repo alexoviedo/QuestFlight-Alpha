@@ -6891,6 +6891,114 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.ProductUiLabel
   source: {fileID: 1825947904682677858}
   display: {fileID: 2936403726197606325}
+--- !u!1 &2665386692091989254
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1141021090319448084}
+  - component: {fileID: 3410283694575902818}
+  - component: {fileID: 338417277930749090}
+  - component: {fileID: 1522135957459814311}
+  m_Layer: 0
+  m_Name: Rope
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1141021090319448084
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2665386692091989254}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6456399656759157470}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &3410283694575902818
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2665386692091989254}
+  m_Mesh: {fileID: 4300000, guid: afd121aa2d060f8468bdf369c1ef3d4c, type: 2}
+--- !u!23 &338417277930749090
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2665386692091989254}
+  m_Enabled: 0
+  m_CastShadows: 0
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 2cb19f522c00d4f4b85f9d817a7bb113, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &1522135957459814311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2665386692091989254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73d5e8d3604c2434b99c4712108c2535, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Soaring.TowlinePresentation
+  flight: {fileID: 742791276885309778}
+  playerFrame: {fileID: 2514889943979819941}
+  nativeTugVisual: {fileID: 2408012679010250447}
+  ropeMesh: {fileID: 3410283694575902818}
+  ropeRenderer: {fileID: 338417277930749090}
 --- !u!1 &2670447098140630438
 GameObject:
   m_ObjectHideFlags: 0
@@ -8538,6 +8646,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8221288191840687638}
+  - {fileID: 2307108591883003292}
   m_Father: {fileID: 2024466574840665996}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2408012679010250447
@@ -10497,6 +10606,7 @@ Transform:
   - {fileID: 4220967235363127918}
   - {fileID: 836225580629489842}
   - {fileID: 8274046521797732030}
+  - {fileID: 6456399656759157470}
   m_Father: {fileID: 7682851496159033737}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7536508502253317938
@@ -10522,6 +10632,7 @@ MonoBehaviour:
   - {fileID: 8249910285730245999}
   - {fileID: 361761565904769359}
   - {fileID: 4785902840039634874}
+  reservedNativeTug: {fileID: 2408012679010250447}
   trafficEnabled: 1
   logDiagnostics: 0
 --- !u!1 &3906482489401050965
@@ -10802,6 +10913,7 @@ MonoBehaviour:
   runwayHeadingGain: 0.025
   runwayCrossTrackGain: 0.015
   maximumRunwayRudder: 0.14
+  soaringProfile: {fileID: 11400000, guid: 133594a9d03b2a74e9ebac755b01c17c, type: 2}
 --- !u!114 &4392029217008093521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10839,6 +10951,7 @@ MonoBehaviour:
   modeMenuView: {fileID: 220972219065162625}
   training: {fileID: 406945266046702129}
   navigation: {fileID: 6092449085357119746}
+  aircraftPresentation: {fileID: 7995870753173519408}
   lessonsMessageSeconds: 2.5
 --- !u!114 &6510393798299555109
 MonoBehaviour:
@@ -10910,6 +11023,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1b4805cd9cf994047b07b69750b876e2, type: 2}
   - {fileID: 11400000, guid: 33e1ae948c7162141b5d0a0a88052621, type: 2}
   polishedInstruction: {fileID: 52594897756540756}
+  soaringLessons:
+  - {fileID: 11400000, guid: 1cfbac7075de7c448bace45f8a6e631f, type: 2}
+  - {fileID: 11400000, guid: 25f428945a25e7b4e82aec7a415a1994, type: 2}
+  - {fileID: 11400000, guid: 17e7ba16cfbd75043b3e862e766927ff, type: 2}
+  - {fileID: 11400000, guid: ffb1058abaeac8445b7d0ae5cb42557b, type: 2}
+  - {fileID: 11400000, guid: fa807a374c023f140aa6552d83554126, type: 2}
+  - {fileID: 11400000, guid: d944f65d42734d746929d23a7b6bb747, type: 2}
+  - {fileID: 11400000, guid: 3b63137730fae5d419fdcbb841b178d6, type: 2}
 --- !u!114 &6092449085357119746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10953,6 +11074,26 @@ MonoBehaviour:
   setupYoke: {fileID: 1732058706938853192}
   setupThrottle: {fileID: 309139417212982254}
   localRecovery: {fileID: 6510393798299555109}
+  cockpitInteractables:
+  - {fileID: 9167395360761075670}
+  - {fileID: 6388626982748456474}
+  - {fileID: 5692950356067166279}
+  - {fileID: 8509144201615874581}
+  - {fileID: 7442034743034400021}
+  - {fileID: 8828815527119762496}
+  - {fileID: 3607053129208779741}
+  - {fileID: 642593044720068075}
+  - {fileID: 531789709237210792}
+  - {fileID: 7535389003095135982}
+  - {fileID: 631691473583264081}
+  - {fileID: 2799151594957956176}
+  - {fileID: 7543694496029356184}
+  - {fileID: 3126795288895608409}
+  - {fileID: 1682006838278101901}
+  - {fileID: 1488460331299110292}
+  - {fileID: 7191018957743453059}
+  - {fileID: 3022529016606122659}
+  - {fileID: 5808401966789636575}
 --- !u!114 &5151826383245976730
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11053,6 +11194,149 @@ MonoBehaviour:
       pauses the flight and lets you take control.
     clip: {fileID: 8300000, guid: 04f063e87706e9240a533353085a9d4a, type: 3}
     landmark: {x: 900, y: 30, z: -2300}
+    distance: 0
+  - id: sgs_intro
+    text: Welcome aboard our Schweizer two thirty-three. I will fly while you enjoy
+      the view. This is a simulated local discovery flight. Open Menu whenever you
+      want to pause or finish.
+    clip: {fileID: 8300000, guid: 34c52271f478a61459c020f2060f30f0, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_short_intro
+    text: Welcome aboard. This shorter tour starts already airborne. I have the controls.
+      We will look for rising air, enjoy the Boulder panorama, and return for an
+      unpowered landing.
+    clip: {fileID: 8300000, guid: f435434463f9b3b409e673ee26b8d271, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_tow
+    text: The towplane is taking us up. Notice the rope ahead and the small control
+      corrections. The sailplane has no engine; the tug supplies the energy for this
+      climb.
+    clip: {fileID: 8300000, guid: b27b7e19869584e449bb16b417ee5fac, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_release
+    text: We have reached our release area. Releasing now. Watch the towplane separate,
+      and listen as its engine fades away.
+    clip: {fileID: 8300000, guid: 130096815b27f514094cd0963a82d30a, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_thermal
+    text: We are looking for a column of rising air called a thermal. I will turn
+      smoothly to stay with the lift. The sound and instruments will help us tell
+      whether we are climbing.
+    clip: {fileID: 8300000, guid: fd85fa98abb75a846abf0da86d432e9d, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_climbing
+    text: Now we are gaining energy in the rising air. We can climb without an engine
+      because the air is rising faster than the sailplane sinks through it.
+    clip: {fileID: 8300000, guid: c0fbb2bb1203e294a8198f9cabfb6f51, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_sightseeing
+    text: We have gained some height. Let us use it for a look around Boulder. You
+      can keep enjoying the view, or choose Take control from Menu during a stable
+      glide.
+    clip: {fileID: 8300000, guid: 68236b9c21eeb304098314de5f6f9996, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_descent
+    text: We are returning to the airport with height in reserve. In a sailplane,
+      we plan the landing before that margin gets small.
+    clip: {fileID: 8300000, guid: 0f33e6ff6c95c2242b6d1b9faff33c06, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_early_return
+    text: The lift or our remaining height calls for an earlier return. We will shorten
+      the sightseeing and keep a useful landing margin.
+    clip: {fileID: 8300000, guid: f33f03053c326724189765f860824e18, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_circuit
+    text: The airport is ahead. I am arranging our unpowered landing circuit. Airbrakes
+      will help control the descent while pitch controls our speed.
+    clip: {fileID: 8300000, guid: 9d99651f34098e34eb0c990276fe0e47, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_final
+    text: We are lined up for landing. Notice the airbrake handle moving as I adjust
+      the approach. I will round out close to the surface and brake after touchdown.
+    clip: {fileID: 8300000, guid: ad656a4a9f936094287e89c51bcee8bf, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_complete
+    text: We have landed and stopped. The sailplane cannot taxi under its own power.
+      Open Menu to repeat the tour, choose a lesson, or finish the flight.
+    clip: {fileID: 8300000, guid: 08aceeaf8b41c8a439899855a062638b, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_your_controls
+    text: You have the controls. Make small, coordinated movements and keep a safe
+      airspeed. The pause menu lets you ask me to resume, or return to the airport.
+    clip: {fileID: 8300000, guid: 9c6fb20099cfb1c478a44c3e91332bad, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_my_controls
+    text: I have the controls. I will continue from our current position, keeping
+      the airport within reach.
+    clip: {fileID: 8300000, guid: 970fb42d45afedc4db4fadca03655e6e, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_reservoir
+    text: Boulder Reservoir is the broad stretch of water to the north. It is a recreation
+      area and a water-storage facility, and a useful landmark for finding the airport.
+    clip: {fileID: 8300000, guid: 4df872b34f2a67f4e932b8993e8667d8, type: 3}
+    landmark: {x: 250, y: 20, z: 4308}
+    distance: 5500
+  - id: sgs_sanitas
+    text: Mount Sanitas marks part of the foothill edge west of Boulder. Notice how
+      quickly the open plains rise into wooded slopes.
+    clip: {fileID: 8300000, guid: 49640b4a6d372ca46b910e5eb0f275ca, type: 3}
+    landmark: {x: -6800, y: 470, z: -350}
+    distance: 10000
+  - id: sgs_flatirons
+    text: Those tilted rock formations are the Flatirons, with Green Mountain behind
+      them. We are enjoying the panorama from this side of the foothills.
+    clip: {fileID: 8300000, guid: fb1be16e4bdd4a048adee5619ec8be76, type: 3}
+    landmark: {x: -6500, y: 650, z: -4600}
+    distance: 11000
+  - id: sgs_downtown
+    text: Downtown Boulder lies below the foothills. From here, you can see the city
+      spread eastward onto the plains.
+    clip: {fileID: 8300000, guid: 50c9b6f3c31c9e343825dd35e96f7242, type: 3}
+    landmark: {x: -4580, y: 60, z: -2315}
+    distance: 7000
+  - id: sgs_cu
+    text: That is the University of Colorado Boulder campus, south of downtown. The
+      campus and the mountain backdrop are familiar landmarks on a local scenic flight.
+    clip: {fileID: 8300000, guid: abf5d1c7caff5ea4e867390e04354138, type: 3}
+    landmark: {x: -3400, y: 60, z: -3500}
+    distance: 7000
+  - id: sgs_airport
+    text: There is Boulder Municipal Airport. Keep it in view as we prepare to return.
+      We share the area with other aircraft and gliders.
+    clip: {fileID: 8300000, guid: 0b9e5d34bd242d2419ce0bd98960b186, type: 3}
+    landmark: {x: 0, y: 5, z: -30}
+    distance: 5000
+  - id: sgs_eagle_left
+    text: Look ahead on the left. A golden eagle is circling in the rising air. We
+      will give it room and enjoy the view.
+    clip: {fileID: 8300000, guid: 0982cd74d0d9a6b459fedb1d283b4206, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_eagle_right
+    text: Look ahead on the right. A golden eagle is circling in the rising air.
+      We will give it room and enjoy the view.
+    clip: {fileID: 8300000, guid: 9ec691e63f3a47645b0113e744502ae7, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
+    distance: 0
+  - id: sgs_eagle_ahead
+    text: Look ahead and slightly above us. A golden eagle is using the rising air
+      too. We will give it room.
+    clip: {fileID: 8300000, guid: 8a2637b6bdd0e3a498ce200e712eef6e, type: 3}
+    landmark: {x: 0, y: 0, z: 0}
     distance: 0
   wildlife: {fileID: 5758876976948045918}
 --- !u!114 &8533988060168758211
@@ -11623,6 +11907,38 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.ProductUiLabel
   source: {fileID: 7851867946129572920}
   display: {fileID: 5605796034880750861}
+--- !u!1 &4146425779638739560
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6456399656759157470}
+  m_Layer: 0
+  m_Name: NativeTowlinePresentation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6456399656759157470
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4146425779638739560}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1141021090319448084}
+  m_Father: {fileID: 2024466574840665996}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4154729079243592076
 GameObject:
   m_ObjectHideFlags: 0
@@ -13351,12 +13667,12 @@ MonoBehaviour:
     voice: {fileID: 8300000, guid: 2b6c4d73c04d8ab409f8ca5aa4e1ce93, type: 3}
   - cue: 11
     reference: 6
-    text: The slip ball is left of center. Add a little left rudder with the right
+    text: The slip ball is left of center. Add a little left rudder with the steering
       thumbstick, then ease it as the ball centers.
     voice: {fileID: 8300000, guid: d256d82ca81fdb8408b9bdf9ad1f2a1b, type: 3}
   - cue: 12
     reference: 6
-    text: The slip ball is right of center. Add a little right rudder with the right
+    text: The slip ball is right of center. Add a little right rudder with the steering
       thumbstick, then ease it as the ball centers.
     voice: {fileID: 8300000, guid: df46ee5f4a499614b8f1b195f7d1a5d2, type: 3}
   - cue: 13
@@ -13497,7 +13813,7 @@ MonoBehaviour:
   - reference: 6
     marker: {fileID: 1206341969298665581}
     explanation: Find the small ball in the curved tube at the bottom of the turn
-      instrument. Center it with gentle rudder toward the displaced ball. The right
+      instrument. Center it with gentle rudder toward the displaced ball. The steering
       thumbstick supplies rudder input in this simulator.
     voice: {fileID: 8300000, guid: 1e6be9d8ba9364b46837a5c139205555, type: 3}
   - reference: 7
@@ -18840,6 +19156,241 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &5941703471287975563
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2307108591883003292}
+  - component: {fileID: 1594468134608237435}
+  - component: {fileID: 1332821941413718376}
+  m_Layer: 0
+  m_Name: NativeTugEngineAudio
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2307108591883003292
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5941703471287975563}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.000061035156, y: -0.27071738, z: 3.3716736}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3058120383680196403}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &1594468134608237435
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5941703471287975563}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 5482912963600527519, guid: 6b8a3ec15f40f3f4aaf5e8bdaa92d7bb, type: 2}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: d3566e971e71c0748b5bd9578f9858af, type: 3}
+  m_PlayOnAwake: 0
+  m_Volume: 0
+  m_Pitch: 1
+  Loop: 1
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 0
+  MinDistance: 8
+  MaxDistance: 1200
+  Pan2D: 0
+  rolloffMode: 2
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.006666667
+      value: 1
+      inSlope: 0
+      outSlope: -75
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.013333334
+      value: 0.5
+      inSlope: -75
+      outSlope: -18.75
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.026666667
+      value: 0.25
+      inSlope: -18.75
+      outSlope: -4.6875
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.053333335
+      value: 0.125
+      inSlope: -4.6875
+      outSlope: -1.171875
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.10666667
+      value: 0.0625
+      inSlope: -1.171875
+      outSlope: -0.29296875
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.21333334
+      value: 0.03125
+      inSlope: -0.29296875
+      outSlope: -0.07324219
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.42666668
+      value: 0.015625
+      inSlope: -0.07324219
+      outSlope: -0.03125
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 0.013333334
+      inSlope: -0.03125
+      outSlope: -0.035555556
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.6666667
+      value: 0.007407407
+      inSlope: -0.035555556
+      outSlope: -0.032000005
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.8333333
+      value: 0.002074074
+      inSlope: -0.032000005
+      outSlope: -0.012444442
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -0.012444442
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &1332821941413718376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5941703471287975563}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ca76471edbad6d4abef95da82b90219, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Flight.Soaring.NativeTugAudio
+  flight: {fileID: 742791276885309778}
+  engine: {fileID: 1594468134608237435}
+  listener: {fileID: 6472824196421687080}
 --- !u!1 &5993973095884527452
 GameObject:
   m_ObjectHideFlags: 0
@@ -28985,6 +29536,10 @@ PrefabInstance:
       propertyPath: m_Color.rgba
       value: 4293915890
       objectReference: {fileID: 0}
+    - target: {fileID: 297400843088202022, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: input
+      value: 
+      objectReference: {fileID: 1171423066720843826}
     - target: {fileID: 347079313614733921, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.25
@@ -29093,6 +29648,26 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 1f0772af711a62c4cae76b84f2019f6f, type: 2}
+    - target: {fileID: 1495093980399615612, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: parts.Array.data[21].anchor.y
+      value: 0.79542756
+      objectReference: {fileID: 0}
+    - target: {fileID: 1495093980399615612, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: parts.Array.data[21].anchor.z
+      value: 1.0956552
+      objectReference: {fileID: 0}
+    - target: {fileID: 1495093980399615612, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: parts.Array.data[21].vertexCount
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 1495093980399615612, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: parts.Array.data[21].rotationAxis.y
+      value: 0.97513276
+      objectReference: {fileID: 0}
+    - target: {fileID: 1495093980399615612, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: parts.Array.data[21].rotationAxis.z
+      value: 0.22162144
+      objectReference: {fileID: 0}
     - target: {fileID: 1529141798954354610, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: coordinator
       value: 
@@ -29150,12 +29725,16 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2100000, guid: 1f0772af711a62c4cae76b84f2019f6f, type: 2}
     - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: soaringPresentation
+      value: 
+      objectReference: {fileID: 7995870753173519408}
+    - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: worldPresentationRenderers.Array.size
       value: 262
       objectReference: {fileID: 0}
     - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: aircraftPresentationRenderers.Array.size
-      value: 301
+      value: 304
       objectReference: {fileID: 0}
     - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: 'worldPresentationRenderers.Array.data[0]'
@@ -30206,6 +30785,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2629297647409135992}
     - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: 'worldPresentationRenderers.Array.data[262]'
+      value: 
+      objectReference: {fileID: 338417277930749090}
+    - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: 'aircraftPresentationRenderers.Array.data[275]'
       value: 
       objectReference: {fileID: 8682160166251824380}
@@ -30312,15 +30895,15 @@ PrefabInstance:
     - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: 'aircraftPresentationRenderers.Array.data[301]'
       value: 
-      objectReference: {fileID: 1081068735882459178}
+      objectReference: {fileID: 8579456438994226223}
     - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: 'aircraftPresentationRenderers.Array.data[302]'
       value: 
-      objectReference: {fileID: 817470871756316543}
+      objectReference: {fileID: 6352792433342078081}
     - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: 'aircraftPresentationRenderers.Array.data[303]'
       value: 
-      objectReference: {fileID: 244965404186911460}
+      objectReference: {fileID: 3874112631474379072}
     - target: {fileID: 2371956046322335378, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: 'aircraftPresentationRenderers.Array.data[304]'
       value: 
@@ -30429,6 +31012,10 @@ PrefabInstance:
       propertyPath: controls
       value: 
       objectReference: {fileID: 1171423066720843826}
+    - target: {fileID: 3005309151451274305, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: soaringTraffic
+      value: 
+      objectReference: {fileID: 7536508502253317938}
     - target: {fileID: 3017156650949681339, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.005
@@ -30664,6 +31251,10 @@ PrefabInstance:
       propertyPath: coordinator
       value: 
       objectReference: {fileID: 6406045178022147876}
+    - target: {fileID: 5267574839422251847, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: input
+      value: 
+      objectReference: {fileID: 1171423066720843826}
     - target: {fileID: 5373376430260780275, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: m_Mesh
       value: 
@@ -30916,6 +31507,10 @@ PrefabInstance:
       propertyPath: instructorVoice
       value: 
       objectReference: {fileID: 8487570425855855926}
+    - target: {fileID: 8620228648355783870, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+      propertyPath: input
+      value: 
+      objectReference: {fileID: 1171423066720843826}
     - target: {fileID: 8810701661686007587, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
       propertyPath: coordinator
       value: 
@@ -31094,6 +31689,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2860248462228141821, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &531789709237210792 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2637604800089353147, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 317e663e2bb60ea408fe22b908b59295, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.PokeInteractable
 --- !u!1 &575266880625970236 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2594124328303339823, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31121,6 +31727,28 @@ TextMesh:
   m_CorrespondingSourceObject: {fileID: 3139683376234917202, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &631691473583264081 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3116443076473189442, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 317e663e2bb60ea408fe22b908b59295, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.PokeInteractable
+--- !u!114 &642593044720068075 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3103295167043928312, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb86ba9d4c5126e48bfef9b0c9550e9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.RayInteractable
 --- !u!4 &730985592735270312 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3017156650949681339, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31171,6 +31799,28 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4007915341939394919, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1488460331299110292 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3986810144069376135, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9a7676b01585ce43908639a27765dfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1682006838278101901 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3795509972094303902, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9a7676b01585ce43908639a27765dfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &1732058706938853192 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4319636267719217755, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31222,6 +31872,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a918c54035f94e349cf14e449a77b185, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Runtime.AircraftReferenceFrameRig
+--- !u!114 &2799151594957956176 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 370273668432249155, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb86ba9d4c5126e48bfef9b0c9550e9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.RayInteractable
 --- !u!1 &2821099542199729163 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 350545666842220824, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31246,6 +31907,17 @@ TextMesh:
   m_CorrespondingSourceObject: {fileID: 736982966953953621, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &3022529016606122659 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 723322912935004080, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9a7676b01585ce43908639a27765dfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!20 &3067436957052443886 stripped
 Camera:
   m_CorrespondingSourceObject: {fileID: 678449054597659133, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31256,11 +31928,33 @@ TextMesh:
   m_CorrespondingSourceObject: {fileID: 624548478207361306, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &3126795288895608409 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 621346960158683978, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9a7676b01585ce43908639a27765dfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!102 &3341181108330642297 stripped
 TextMesh:
   m_CorrespondingSourceObject: {fileID: 983384503910211178, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &3607053129208779741 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1294010625173321422, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 317e663e2bb60ea408fe22b908b59295, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.PokeInteractable
 --- !u!1 &3663961677962510533 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1234810660112803286, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31299,6 +31993,11 @@ TextMesh:
 --- !u!102 &3854766712831401918 stripped
 TextMesh:
   m_CorrespondingSourceObject: {fileID: 1622718212576311981, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &3874112631474379072 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 1601153442441100371, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &3973196682415541291 stripped
@@ -31480,6 +32179,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7989635431350041477, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &5692950356067166279 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7852730001562209620, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 317e663e2bb60ea408fe22b908b59295, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.PokeInteractable
 --- !u!4 &5697032499014172757 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7850900757688788294, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31496,6 +32206,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70f57bc5d6e834e4f9a09dd6a0b8de12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlightLab.Runtime.ProductionSeatCalibrationController
+--- !u!114 &5808401966789636575 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8313779789170676940, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9a7676b01585ce43908639a27765dfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &5918002190450152259 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8204181761261434448, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31536,6 +32257,22 @@ TextMesh:
   m_CorrespondingSourceObject: {fileID: 8531977238807980610, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!23 &6352792433342078081 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 8922276774509738386, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6388626982748456474 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8886475212062237449, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb86ba9d4c5126e48bfef9b0c9550e9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.RayInteractable
 --- !u!4 &6392988587729751162 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8882111410758756713, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31565,6 +32302,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8826198994699644933, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!81 &6472824196421687080 stripped
+AudioListener:
+  m_CorrespondingSourceObject: {fileID: 8804532001253012027, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6516793239835750418 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8758270473208960257, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31585,6 +32327,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4832103787088867732, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7191018957743453059 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4625282439363679888, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9a7676b01585ce43908639a27765dfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!102 &7273719093812128019 stripped
 TextMesh:
   m_CorrespondingSourceObject: {fileID: 5119076005866097664, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31619,6 +32372,17 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 4967008695331932976, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7442034743034400021 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4952982469307820038, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 317e663e2bb60ea408fe22b908b59295, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.PokeInteractable
 --- !u!1 &7452548961891852582 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4942464954868368437, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31643,6 +32407,28 @@ TextMesh:
   m_CorrespondingSourceObject: {fileID: 4901254638656941024, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7535389003095135982 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5433865787157050365, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb86ba9d4c5126e48bfef9b0c9550e9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.RayInteractable
+--- !u!114 &7543694496029356184 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5425564686095226251, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9a7676b01585ce43908639a27765dfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7660339212007113944 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5311170672902545867, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31667,6 +32453,17 @@ MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 5639347974138158551, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7995870753173519408 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5552065796696283427, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fadfde05b1beab4dae2d518bbe912a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.SoaringAircraftPresentation
 --- !u!1 &8033796433219745504 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5514142285407114227, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31705,6 +32502,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.ProductUiLabel
   source: {fileID: 6168876384134631249}
   display: {fileID: 5402314106324462760}
+--- !u!114 &8509144201615874581 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6191712722008784646, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb86ba9d4c5126e48bfef9b0c9550e9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.RayInteractable
+--- !u!23 &8579456438994226223 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 6119185007271110972, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
 --- !u!102 &8646073256860706148 stripped
 TextMesh:
   m_CorrespondingSourceObject: {fileID: 6054783667485917303, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31725,6 +32538,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6526898003552489025, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8828815527119762496 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6448499953996599635, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb86ba9d4c5126e48bfef9b0c9550e9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.RayInteractable
 --- !u!1 &8872259945140340892 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6402840018435337615, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
@@ -31776,6 +32600,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6811180683348805985, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
   m_PrefabInstance: {fileID: 2592926023598875923}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &9167395360761075670 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6684131268394775237, guid: 9ddca3288e7d32e4a8c09d8c410d9d44, type: 3}
+  m_PrefabInstance: {fileID: 2592926023598875923}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 317e663e2bb60ea408fe22b908b59295, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.PokeInteractable
 --- !u!1001 &3131046868042589110
 PrefabInstance:
   m_ObjectHideFlags: 0

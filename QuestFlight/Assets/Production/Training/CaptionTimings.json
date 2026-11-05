@@ -69,28 +69,6 @@
       ]
     },
     {
-      "id": "01_taxi_03",
-      "sha256": "cb24e6ae070ee066e955c7cc07bd29a4cd4543455b27075f439d9910e9167de9",
-      "seconds": 10.475,
-      "phrases": [
-        {
-          "start": 0.35,
-          "end": 3.2,
-          "text": "Pull the throttle knob fully back to idle."
-        },
-        {
-          "start": 3.2,
-          "end": 7.2125,
-          "text": "Squeeze both index triggers and keep the airplane stopped."
-        },
-        {
-          "start": 7.2125,
-          "end": 10.375,
-          "text": "Each trigger applies its side of the wheel brakes."
-        }
-      ]
-    },
-    {
       "id": "01_taxi_04",
       "sha256": "54b756c01d44c06fff965d6cf7270be2939c0cb42f640d9e964a4280634cbf93",
       "seconds": 13.075,
@@ -2263,6 +2241,23 @@
           "start": 8.9625,
           "end": 13.9,
           "text": "Enjoy the view. Menu pauses the flight and lets you take control."
+        }
+      ]
+    },
+    {
+      "id": "01_taxi_03",
+      "sha256": "d33ae172dc02ab16aa1c15a70bf7ad04e722f51fdbd27fc268e92fd098ed75a9",
+      "seconds": 10.3,
+      "phrases": [
+        {
+          "start": 0.35,
+          "end": 4.8625,
+          "text": "Pull the throttle to idle. Apply both brakes using the index triggers and"
+        },
+        {
+          "start": 4.8625,
+          "end": 10.2,
+          "text": "stay stopped. Review your brake assignment in Menu, Settings, Controls."
         }
       ]
     }

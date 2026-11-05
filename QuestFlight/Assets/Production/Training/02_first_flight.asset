@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: 02_first_flight
   m_EditorClassIdentifier: Assembly-CSharp::QuestFlight.Product.Training.TrainingLessonDefinition
   lessonId: 02_first_flight
+  program: 0
+  groundTowPreparation: 0
+  soaringWeather: {fileID: 0}
   displayName: Level flight and gentle turns
   briefing: Start airborne at seven thousand feet and ninety knots. Use the outside
     horizon first, with short instrument checks. Then make a shallow left turn and

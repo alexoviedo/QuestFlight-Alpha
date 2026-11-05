@@ -17,7 +17,9 @@ namespace QuestFlightLab.Input
         PilotYoke = 1,
         Throttle = 2,
         Mixture = 3,
-        FlapSelector = 4
+        FlapSelector = 4,
+        GliderAirbrakeLever = 5
+        ,GliderTrimLever = 6
     }
 
     /// <summary>
@@ -25,7 +27,7 @@ namespace QuestFlightLab.Input
     /// never changes scene hierarchy. Deterministic input is selected only by an explicit flag.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class ProductControlInput : MonoBehaviour
+    public sealed partial class ProductControlInput : MonoBehaviour
     {
         public const float TouchOverrideLeaseTimeoutSeconds = 0.25f;
 
@@ -44,6 +46,21 @@ namespace QuestFlightLab.Input
 
         public AircraftControlState Current { get; private set; } = AircraftControlState.Neutral(0.10f);
         public bool Paused { get; private set; }
+        public bool FlightInputAwaitingRelease=>_touchControlsRequireRelease;
+        public string MenuInputHoldReason
+        {
+            get
+            {
+                if(!GamepadMenuButtonsReleased(gamepad!=null?gamepad.Current:null))return "External controller: release buttons, triggers and both sticks.";
+                if(OVRInput.Get(OVRInput.RawAxis1D.LHandTrigger)>=.1f||OVRInput.Get(OVRInput.RawAxis1D.RHandTrigger)>=.1f)return "Still held: grip. Let go, then grab the flight control again after handover.";
+                if(OVRInput.Get(OVRInput.RawAxis1D.LIndexTrigger)>=.1f||OVRInput.Get(OVRInput.RawAxis1D.RIndexTrigger)>=.1f)return "Still held: index trigger.";
+                if(OVRInput.Get(OVRInput.RawAxis2D.LThumbstick).sqrMagnitude>=.04f||OVRInput.Get(OVRInput.RawAxis2D.RThumbstick).sqrMagnitude>=.04f)return "Still held: thumbstick. Return both to center.";
+                return _touchControlsRequireRelease?"Release menu/select buttons to continue.":"Inputs released.";
+            }
+        }
+        public static bool GamepadMenuButtonsReleased(GamepadInputSnapshot sample)=>sample==null||!sample.connected||
+            (!sample.buttonSouth&&!sample.buttonEast&&!sample.buttonWest&&!sample.buttonNorth&&!sample.startButton&&
+             Mathf.Abs(sample.leftStickX)<.2f&&Mathf.Abs(sample.leftStickY)<.2f&&Mathf.Abs(sample.rightStickX)<.2f&&Mathf.Abs(sample.rightStickY)<.2f&&sample.leftTrigger<.1f&&sample.rightTrigger<.1f);
         public event System.Action TrainingRestartRequested;
         public bool DeterministicMode => deterministicMode;
         public bool FlightLessonGuidanceActive => _flightLessonGuidanceActive;
@@ -51,7 +68,7 @@ namespace QuestFlightLab.Input
         public static FlightLessonControlCommand ToFlightLessonCommand(QuestFlightLab.Flight.Backends.FlightDynamicsControlSnapshot s)
         {
             return new FlightLessonControlCommand { aileron=s.aileron,elevator=s.elevator,rudder=s.rudder,throttle=s.throttle,
-                mixture=s.mixture,trim=s.trim,flaps=s.flaps,leftToeBrake=s.leftToeBrake,rightToeBrake=s.rightToeBrake };
+                mixture=s.mixture,trim=s.trim,flaps=s.flaps,leftToeBrake=s.leftToeBrake,rightToeBrake=s.rightToeBrake,airbrake=s.airbrake,wheelBrake=s.wheelBrake,controlsGliderBrakes=true };
         }
         public bool FlightLessonInputSuppressed => _flightLessonInputSuppressed;
         public int FlightLessonResetVersion => _flightLessonResetVersion;
@@ -109,7 +126,7 @@ namespace QuestFlightLab.Input
         private ProductFlightModeCoordinator _touchFlightMode;
         private bool _touchRudderArmed;
         private bool _touchControlsRequireRelease;
-        public void RequireTouchRelease() { _touchControlsRequireRelease=true; _touchRudderArmed=false; ReleaseAllTouchOverrides(); }
+        public void RequireTouchRelease() { _touchControlsRequireRelease=true; _touchRudderArmed=false; ClearTowRelease(); ReleaseAllTouchOverrides(); }
 
         public bool CanAcceptTouchOverrides =>
             enabled &&
@@ -122,7 +139,7 @@ namespace QuestFlightLab.Input
         public int ActiveTouchOverrideCount =>
             (_touchYoke.active ? 1 : 0) +
             (_touchThrottle.active ? 1 : 0) +
-            (_touchMixture.active ? 1 : 0);
+            (_touchMixture.active ? 1 : 0) + (_touchAirbrake.active ? 1 : 0) + (_touchGliderTrim.active ? 1 : 0);
 
         /// <summary>
         /// Builds a recovery-only snapshot of every input stage that can replace or
@@ -229,6 +246,7 @@ namespace QuestFlightLab.Input
             _throttle = Mathf.Clamp01(recoveryCommand.throttle);
             _mixture = Mathf.Clamp01(recoveryCommand.mixture);
             _trim = Mathf.Clamp(recoveryCommand.trim, -1f, 1f);
+            if(GliderMode&&recoveryCommand.controlsGliderBrakes)_airbrakeLever=recoveryCommand.wheelBrake>0?.85f+.15f*recoveryCommand.wheelBrake:.85f*recoveryCommand.airbrake;
             _flaps = Mathf.Clamp01(recoveryCommand.flaps);
             _recoverySuppressedCommand = recoveryCommand;
             _hasRecoverySuppressedCommand = true;
@@ -239,6 +257,8 @@ namespace QuestFlightLab.Input
         public int ReleaseAllTouchOverrides()
         {
             int released = 0;
+            if (_touchGliderTrim.active) { ReleaseTouchOverride(ProductTouchControlChannel.GliderTrimLever, ref _touchGliderTrim); released++; }
+            if (_touchAirbrake.active) { ReleaseTouchOverride(ProductTouchControlChannel.GliderAirbrakeLever, ref _touchAirbrake); released++; }
             if (_touchYoke.active)
             {
                 ReleaseTouchOverride(
@@ -275,7 +295,7 @@ namespace QuestFlightLab.Input
             float primary,
             float secondary = 0f)
         {
-            if (!CanAcceptTouchOverrides ||
+            if (!AircraftSupportsTouchChannel(channel) || !CanAcceptTouchOverrides ||
                 ownerToken == 0 ||
                 !TrySanitizeTouchValues(
                     channel,
@@ -306,7 +326,7 @@ namespace QuestFlightLab.Input
             float primary,
             float secondary = 0f)
         {
-            if (!CanAcceptTouchOverrides ||
+            if (!AircraftSupportsTouchChannel(channel) || !CanAcceptTouchOverrides ||
                 ownerToken == 0 ||
                 !TrySanitizeTouchValues(
                     channel,
@@ -355,6 +375,8 @@ namespace QuestFlightLab.Input
                 return 0;
 
             int released = 0;
+            if (_touchAirbrake.active && _touchAirbrake.ownerToken==ownerToken)
+            { ReleaseTouchOverride(ProductTouchControlChannel.GliderAirbrakeLever,ref _touchAirbrake);released++; }
             if (_touchYoke.active &&
                 _touchYoke.ownerToken == ownerToken)
             {
@@ -424,7 +446,7 @@ namespace QuestFlightLab.Input
             int ownerToken,
             float normalizedValue)
         {
-            if (!CanAcceptTouchOverrides ||
+            if (GliderMode || !CanAcceptTouchOverrides ||
                 ownerToken == 0 ||
                 !IsFinite(normalizedValue) ||
                 channel !=
@@ -452,6 +474,8 @@ namespace QuestFlightLab.Input
 
         private void OnDisable()
         {
+            ClearTowRelease();
+            ReleaseTouchOverridesOwnedBy(_touchAirbrake.ownerToken);
             _touchRudderArmed = false;
             Current.rudder = 0f;
             ReleaseTouchOverridesOwnedBy(_touchYoke.ownerToken);
@@ -461,7 +485,7 @@ namespace QuestFlightLab.Input
 
         private void Update()
         {
-            if (_touchControlsRequireRelease &&
+            if (_touchControlsRequireRelease && GamepadMenuButtonsReleased(gamepad!=null?gamepad.Current:null) &&
                 OVRInput.Get(OVRInput.RawAxis1D.LIndexTrigger)<.1f && OVRInput.Get(OVRInput.RawAxis1D.RIndexTrigger)<.1f &&
                 OVRInput.Get(OVRInput.RawAxis1D.LHandTrigger)<.1f && OVRInput.Get(OVRInput.RawAxis1D.RHandTrigger)<.1f &&
                 OVRInput.Get(OVRInput.RawAxis2D.LThumbstick).sqrMagnitude<.04f && OVRInput.Get(OVRInput.RawAxis2D.RThumbstick).sqrMagnitude<.04f &&
@@ -479,6 +503,7 @@ namespace QuestFlightLab.Input
 
             if (_flightLessonInputSuppressed)
             {
+                ClearTowRelease();
                 _touchRudderArmed = false;
                 PublishSuppressedControls();
                 _previousButtonWest = snapshot.buttonWest;
@@ -553,7 +578,7 @@ namespace QuestFlightLab.Input
             Current.rudder = ResolveTouchThumbstickRudder(
                 Current.rudder, touchRudderX, touchRudderAvailable, ref _touchRudderArmed);
             // Each Touch index trigger applies its corresponding toe brake.
-            if(touchFlightControlsAvailable && OVRInput.IsControllerConnected(ProductComfortPreferences.TrimController) &&
+            if(!GliderMode && touchFlightControlsAvailable && OVRInput.IsControllerConnected(ProductComfortPreferences.TrimController) &&
                 OVRInput.GetControllerOrientationTracked(ProductComfortPreferences.TrimController))
             {
                 float trimInput=ProductComfortPreferences.RawTrim;
@@ -573,6 +598,7 @@ namespace QuestFlightLab.Input
             CaptureBaseControls(Current);
             ReleaseStaleTouchOverrides(Time.unscaledTime);
             ApplyTouchOverrides(Current);
+            if (GliderMode) UpdateGliderControls(snapshot, touchFlightControlsAvailable);
             Current.resetPressed = reset;
             Current.pausePressed = pause;
             _previousButtonWest = snapshot.buttonWest;
@@ -615,6 +641,7 @@ namespace QuestFlightLab.Input
         {
             if (!focused)
             {
+                if(GliderMode)ClearSoaringTransientInput();
                 _touchRudderArmed = false;
                 Current.rudder = 0f;
             }
@@ -704,6 +731,8 @@ namespace QuestFlightLab.Input
 
             switch (channel)
             {
+                case ProductTouchControlChannel.GliderTrimLever:
+                    sanitizedPrimary=Mathf.Clamp(primary,-1,1);return true;
                 case ProductTouchControlChannel.PilotYoke:
                     sanitizedPrimary = Mathf.Clamp(
                         primary,
@@ -716,6 +745,7 @@ namespace QuestFlightLab.Input
                     return true;
                 case ProductTouchControlChannel.Throttle:
                 case ProductTouchControlChannel.Mixture:
+                case ProductTouchControlChannel.GliderAirbrakeLever:
                     sanitizedPrimary = Mathf.Clamp01(primary);
                     return true;
                 default:
@@ -726,8 +756,8 @@ namespace QuestFlightLab.Input
         private static bool IsTouchChannel(
             ProductTouchControlChannel channel)
         {
-            return channel >= ProductTouchControlChannel.PilotYoke &&
-                   channel <= ProductTouchControlChannel.Mixture;
+            return channel == ProductTouchControlChannel.GliderTrimLever || channel == ProductTouchControlChannel.GliderAirbrakeLever ||
+                   (channel >= ProductTouchControlChannel.PilotYoke && channel <= ProductTouchControlChannel.Mixture);
         }
 
         private ref TouchOverrideState TouchState(
@@ -741,6 +771,10 @@ namespace QuestFlightLab.Input
                     return ref _touchThrottle;
                 case ProductTouchControlChannel.Mixture:
                     return ref _touchMixture;
+                case ProductTouchControlChannel.GliderAirbrakeLever:
+                    return ref _touchAirbrake;
+                case ProductTouchControlChannel.GliderTrimLever:
+                    return ref _touchGliderTrim;
                 default:
                     throw new System.ArgumentOutOfRangeException(
                         nameof(channel));
@@ -804,6 +838,9 @@ namespace QuestFlightLab.Input
                 controls.throttle = _touchThrottle.primary;
             if (_touchMixture.active)
                 controls.mixture = _touchMixture.primary;
+            if (_touchAirbrake.active) _airbrakeLever = _touchAirbrake.primary;
+            if (_touchGliderTrim.active) { _trim=_touchGliderTrim.primary;controls.trim=_trim; }
+            if (GliderMode) PublishGliderChannels();
         }
 
         private void RestoreBaseForChannel(
@@ -828,6 +865,10 @@ namespace QuestFlightLab.Input
             ProductTouchControlChannel channel,
             ref TouchOverrideState state)
         {
+            if(channel==ProductTouchControlChannel.GliderTrimLever)
+            { _trim=state.primary;Current.trim=_trim;state=default;return; }
+            if (channel == ProductTouchControlChannel.GliderAirbrakeLever)
+            { _airbrakeLever = Mathf.Clamp01(state.primary); state=default; PublishGliderChannels();return; }
             if (_flightLessonGuidanceActive)
             {
                 switch (channel)
@@ -1033,7 +1074,7 @@ namespace QuestFlightLab.Input
                 trim = controls.trim,
                 flaps = controls.flaps,
                 leftToeBrake = controls.leftToeBrake,
-                rightToeBrake = controls.rightToeBrake
+                rightToeBrake = controls.rightToeBrake,airbrake=controls.airbrake,wheelBrake=controls.wheelBrake,controlsGliderBrakes=true
             };
         }
 
@@ -1052,6 +1093,7 @@ namespace QuestFlightLab.Input
             controls.flaps = Mathf.Clamp01(command.flaps);
             controls.leftToeBrake = Mathf.Clamp01(command.leftToeBrake);
             controls.rightToeBrake = Mathf.Clamp01(command.rightToeBrake);
+            if(command.controlsGliderBrakes){controls.airbrake=Mathf.Clamp01(command.airbrake);controls.wheelBrake=Mathf.Clamp01(command.wheelBrake);}
         }
 
         private void ResetFlightLessonHandoverState()
@@ -1079,6 +1121,7 @@ namespace QuestFlightLab.Input
                     Current);
             else
                 Current.SetNeutral(Mathf.Clamp01(defaultThrottle));
+            if (GliderMode) { Current.trim=_trim;PublishGliderChannels(); }
         }
 
         private void ReleaseStaleTouchOverrides(
@@ -1086,6 +1129,10 @@ namespace QuestFlightLab.Input
         {
             if (!IsFinite(unscaledTime))
                 return;
+            if (_touchGliderTrim.active && unscaledTime-_touchGliderTrim.lastRefreshUnscaledTime>TouchOverrideLeaseTimeoutSeconds)
+                ReleaseTouchOverride(ProductTouchControlChannel.GliderTrimLever,ref _touchGliderTrim);
+            if (_touchAirbrake.active && unscaledTime-_touchAirbrake.lastRefreshUnscaledTime>TouchOverrideLeaseTimeoutSeconds)
+                ReleaseTouchOverride(ProductTouchControlChannel.GliderAirbrakeLever,ref _touchAirbrake);
             if (_touchYoke.active &&
                 unscaledTime -
                 _touchYoke.lastRefreshUnscaledTime >

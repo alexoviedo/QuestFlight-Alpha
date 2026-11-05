@@ -1,0 +1,99 @@
+{
+  "schema": "questflight.soaring-native-models.v2",
+  "configuration": "REFERENCE_CONFIGURATION",
+  "fidelity": "UNVERIFIED_PENDING_REFERENCE_CASES",
+  "sgs_source": {
+    "revision": "3b25f25e49b42d0489c04ac805674fc1450ca579",
+    "sha256": "093374ded2c9818f9f3cfda71ad3127c56948275ce8802cdbbfc9a6e56dd7ec0",
+    "rights": "Source explicitly says not to be sold; local reference derivative, no new distribution authorization"
+  },
+  "tug_source": {
+    "revision": "7d9c8d34ffd24aaaab7f1448cd14573d16f3d26e",
+    "sha256": "c69e8afa63391a7fb8fa4c1483551eb076114a3aec40b72f94d104f38318d187",
+    "rights": "GPL-3.0 source copying.txt retained"
+  },
+  "sgs_reference": {
+    "type": "SGS 2-33A reference, no particular serial",
+    "max_weight_lb": 1040,
+    "cg_station_inches": [
+      78.2,
+      86.1
+    ],
+    "front_station_inches": 43.8,
+    "rear_station_inches": 74.7,
+    "estimated_empty_weight_lb": 610,
+    "estimated_empty_cg_station_inches": 94,
+    "dual_load_lb": [
+      170,
+      170
+    ],
+    "manufacturer_controls_degrees": {
+      "elevator": [
+        -23,
+        23
+      ],
+      "rudder": [
+        -30,
+        30
+      ],
+      "ailerons": [
+        -38,
+        18
+      ]
+    },
+    "source": "G2EA Rev4 (2010), K&L I-4427 (2015); upstream aero retained and not independently validated",
+    "estimated": [
+      "inertia",
+      "vertical gear geometry",
+      "hook station 20/0/-12 in",
+      "upstream polar/derivatives"
+    ]
+  },
+  "tug_reference": {
+    "power_hp": 150,
+    "empty_weight_lb": 983,
+    "pilot_lb": 170,
+    "fuel_lb": [
+      60,
+      60
+    ],
+    "fixed_prop_inches": 75,
+    "blade_pitch_degrees": 20,
+    "source": "Pinned PA-18-set.xml engine index2, J3Cub-main.xml 150hp land specification and blade-angle",
+    "estimated": [
+      "inertia scaled from source by empty-mass ratio",
+      "rear hook 210/0/-20 in",
+      "upstream Cub-family aero fidelity"
+    ]
+  },
+  "outputs": [
+    {
+      "path": "RuntimeData/JSBSim-1.3.1/engine/qfl_pa18_o320.xml",
+      "sha256": "56980a4eef62188e538a351e0e345a5dfcd99c2252b97549b34fe19ee8e02a9c"
+    },
+    {
+      "path": "RuntimeData/JSBSim-1.3.1/engine/qfl_pa18_prop75_fixed20.xml",
+      "sha256": "e1f56d20b1cf87b658dfbc18f4fec3af8717ba99626b8101bf6550b4d5e38995"
+    },
+    {
+      "path": "RuntimeData/JSBSim-1.3.1/aircraft/qfl_pa18_tug_ref/COPYING.txt",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+    },
+    {
+      "path": "RuntimeData/JSBSim-1.3.1/aircraft/qfl_pa18_tug_ref/qfl_pa18_tug_ref.xml",
+      "sha256": "1af73b38d42ce8e108c5a4c26a85772d472d4f7d6ca02064fd99974743ddb9da"
+    },
+    {
+      "path": "RuntimeData/JSBSim-1.3.1/aircraft/qfl_sgs233_ref/qfl_sgs233_ref.xml",
+      "sha256": "4ee081a9bf8200bf8f94e7ca9b345500ead4a1a43cf9e45a2395a281cb50973f"
+    }
+  ],
+  "payload_sha256": "0af74469d7c77b6d487d097fef4847633a649e588a9da3fee6d5d79902005ca7",
+  "atmosphere_reference": "docs/soaring/ATMOSPHERE_REFERENCE.md; NASA Allen2006 independent reference checks5/5, NASA Burnham-Hallock kernel; bounded Boulder engineering fields, no meteorological validation",
+  "operations_reference": {
+    "checked": "2026-10-13",
+    "airport": "https://bouldercolorado.gov/government/departments/airport",
+    "pattern": "https://bouldercolorado.gov/services/airport-traffic-pattern",
+    "scope": "City occupancy and general pattern guidance only. Paved paired staging, routes, release envelope and taxi/landing are provisional engineering fixtures. No MHG track/equipment verification."
+  }
+}

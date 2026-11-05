@@ -1,0 +1,138 @@
+{
+  "schema": "questflight.sgs-dynamics-investigation.v1",
+  "updatedUtc": "2026-10-16T04:03:47.926844+00:00",
+  "status": "INVESTIGATED_NOT_FIXED_HANDLING_NOT_ACCEPTED",
+  "artifactRoot": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\sgs_dynamics_20261015",
+  "installedVersion": "0.1.0-alpha.5",
+  "installedApkUnchanged": true,
+  "productionPhysicsChanged": false,
+  "newBuild": false,
+  "engineRequirement": {
+    "status": "VERIFIED_EXISTING",
+    "engine": "Native JSBSim 1.3.1, same package/native library/backend as C172",
+    "c172Model": "c172x",
+    "sgsModel": "qfl_sgs233_ref",
+    "retain": "One authored flight authority; native fail-closed; native tow and incremental airflow loads; no Unity fallback"
+  },
+  "userEvidence": [
+    {
+      "quote": "Release also worked",
+      "scope": "Pilot tow release succeeded; user report, no instrumented release trace",
+      "recordedUtc": "2026-10-16T04:03:47.926844+00:00"
+    },
+    {
+      "quote": "The nose was roughly level. Adjusting the stick didn't help until the last moment. I don't think the air breaks were open",
+      "scope": "Unresolved stall/handling incident; trim, airspeed, actual elevator surface, wind and timeline unknown",
+      "recordedUtc": "2026-10-16T04:03:47.926844+00:00"
+    }
+  ],
+  "findings": [
+    {
+      "id": "D01",
+      "status": "CONFIRMED_VALIDATION_GAP",
+      "finding": "Existing stall test passes all five checks while using a pitch-command controller and promptly commanding recovery. It cannot validate prolonged stalls or pilot control effectiveness."
+    },
+    {
+      "id": "D02",
+      "status": "MEASURED_NOT_INCIDENT_REPLAY",
+      "finding": "24 scripted native cases completed with finite states and eventual alpha below10deg. This is neither settled-recovery acceptance nor aircraft fidelity. A 950lb, brakes-closed, 10s held-input case reaches a -64.63deg flight path while nose attitude is within10deg of level; overall minimum flight path is -74.12deg. This includes a secondary stall after a steep climb caused by held aft input. The -64.63deg near-level sample occurs at45.208s after the script has returned to its original fixed trim, not while forward input is being held. Scripted recovery is intentionally not a competent closed-loop pilot; these excursions alone do not prove erroneous aerodynamics."
+    },
+    {
+      "id": "D03",
+      "status": "MEASURED_LIMITED_NUMERICAL_CHECK",
+      "finding": "Same case at120/240/480Hz retains severe transients; overall minimum flight paths -74.12/-73.88/-73.82deg. Alpha drops below10deg3.59/3.58/3.57s after forward command. This argues against a simple native timestep artifact in this isolated case; it does not exonerate the product input/wind/frame path."
+    },
+    {
+      "id": "D04",
+      "status": "CONFIRMED_MODEL_BEHAVIOR_UNCONFIRMED_INCIDENT_CAUSE",
+      "finding": "Native control sweep confirms full nose-up trim cancels full forward elevator command to neutral surface because pitch trim and stick are added and clipped. Correct SGS bungee/ratchet trim, stick travel and force interpretation need definition; incident trim unknown. Default reference trim is only0.10626088."
+    },
+    {
+      "id": "D05",
+      "status": "CONFIRMED_ESTIMATED_AERODYNAMICS",
+      "finding": "Estimated CL falls from1.76 at16.33deg to1.0 at20.63deg and0.21 at34.38deg. Pitch/yaw/roll stability derivatives and inertia are inherited approximations; no measured SGS post-stall/recovery validation. This shape is a suspect, not a proven root cause."
+    },
+    {
+      "id": "D06",
+      "status": "CONFIRMED_REFERENCE_LIMIT",
+      "finding": "Dual manual calibration points match by construction. Independent solo45mph point is24.172:1 versus23:1 (+5.096%, outside declared5% tolerance); solo38mph sink2.505fps versus2.6fps. Historical manual speeds treated as CAS with assumed780/1040lb loads; these are not measured validation data for this airframe."
+    },
+    {
+      "id": "D07",
+      "status": "CONFIRMED_CUE_GAP",
+      "finding": "SoaringAudio varies generic airflow with airspeed but does not implement an AoA-dependent pre-stall buffet cue. Legacy stall fields are not updated from native SGS data. Any cue must reflect the modeled buffet envelope, not invent a horn or move the OpenXR camera."
+    },
+    {
+      "id": "D08",
+      "status": "REQUIRES_COMPARISON",
+      "finding": "Differential-airflow section forces use a tanh lift approximation without the native post-stall drop. Must compare native baseline plus incremental wind/wake forces around stall before changing either. No proof this caused the headset event."
+    }
+  ],
+  "references": [
+    {
+      "url": "https://www.faasafety.gov/files/events/GL/GL09/2018/GL0983174/schweizer_2_33_manual.pdf",
+      "scope": "Historical manufacturer scan, pages1-5 through1-7: gentle straight-ahead stalls, pre-stall buffet, reference performance. Scan caveat and revision limitations apply; not current operating guidance."
+    },
+    {
+      "url": "https://klsoaring.com/",
+      "scope": "Type-support source lists revised SFM dated2022-02-15 available to order. Current applicable full manual not obtained."
+    },
+    {
+      "url": "https://m-selig.ae.illinois.edu/pubs/Low-Speed-Airfoil-Data-V5.pdf",
+      "scope": "Page2 identifies NACA43012A application but expressly warns tested model shape differs from true airfoil; RC Reynolds numbers. Reject as direct full-scale SGS polar calibration."
+    }
+  ],
+  "repairSequence": [
+    {
+      "order": 1,
+      "task": "Capture an exact diagnostic replay through existing native-step events: raw stick/grab ownership, applied elevator and trim, actual surface, AoA, beta, TAS/CAS, attitude, body rates, force/moment, airbrake, wind/wake, assistance, focus and simulation backlog. Bounded pre/post-event buffer, modest sampling; no per-step disk writes or simulation time loss.",
+      "acceptance": "Show where commanded versus applied input first differs; replay separately through native-only and full product path."
+    },
+    {
+      "order": 2,
+      "task": "Define SGS control semantics from the modeled trim system; fix the full-travel/trim relationship if it violates the documented mechanism. Preserve C172 mapping and all SGS mechanical deflection limits.",
+      "acceptance": "Native control sweep at all trim settings, signs/endpoints/monotonicity/release ownership; show actual forward elevator during stall recovery. No guessed trim-force coefficients labeled real."
+    },
+    {
+      "order": 3,
+      "task": "Replace unsupported SGS lift/drag/pitch schedules only against sourced geometry, mass/inertia/CG and credible aerodynamic evidence; preserve a separate SGS model on native JSBSim. Model wing washout, tail/elevator authority, downwash and stall progression consistently.",
+      "acceptance": "Review coefficient continuity, positive dissipative drag, correct frame/moment signs and stability across permitted CG; label estimates and uncertainty. No forced nose-drop, velocity clamp, hidden lift or autopilot rescue."
+    },
+    {
+      "order": 4,
+      "task": "Validate the complete reference envelope, not two calibration points: clean/braked polar, solo/dual and permitted CG/weight extremes, trim speeds, longitudinal response, roll rate/adverse yaw/rudder/slips, slow/accelerated/turning stalls, prolonged stall and unloading recovery.",
+      "acceptance": "Independent reference points and declared tolerances before fitting; separate repeatability, qualitative handling and measured aircraft matching. No spin-fidelity claim without spin data."
+    },
+    {
+      "order": 5,
+      "task": "Integrate and test atmosphere/wake gradients and post-release operation with the validated native response; add aircraft-appropriate pre-stall cues through authored audio/haptics.",
+      "acceptance": "Still-air zero-increment invariant; no double-counted lift; bounded continuous forces; cue onset corresponds to reference/model; tracked camera never written."
+    },
+    {
+      "order": 6,
+      "task": "Run native scenarios, C172 unchanged regression, tow/release/soaring/landing/training scenarios, visual QA and Android build; preserve APK/source/model hashes and compare final actual Quest behavior.",
+      "acceptance": "All scoped software gates plus independent real SGS pilot/instructor handling review and actual focused Quest timing. Existing72Hz performance failure and other acceptance failures remain separate."
+    }
+  ],
+  "blockedAcceptance": [
+    "Exact incident causality: no time-aligned native state/control trace from the worn event",
+    "Aircraft-specific full-envelope fidelity: current applicable manual, actual loading/CG/inertia and recovery/response measurements not available",
+    "Human control-feel acceptance: reference hardware lacks real stick-force feedback; pilot/instructor review pending"
+  ],
+  "softwareEvidence": {
+    "existing_handling": "5/5 checks pass; weak acceptance scope explicitly retained",
+    "native_cases": 24,
+    "integration_rates_hz": [
+      120,
+      240,
+      480
+    ],
+    "control_sweep_points": 25,
+    "figure": "native_stall_trace.png",
+    "figureInspected": true,
+    "model_sha256": "4ee081a9bf8200bf8f94e7ca9b345500ead4a1a43cf9e45a2395a281cb50973f",
+    "payload_sha256": "0af74469d7c77b6d487d097fef4847633a649e588a9da3fee6d5d79902005ca7",
+    "native_sha256": "8da29ad94241a00e5e4beb75788f5d57e4c9f539ea736e2f4147d3d067dcfe00"
+  },
+  "decision": "Do not retune aerodynamic coefficients or publish a supposedly realistic fix from this evidence. New work this turn is diagnostic tooling and status/evidence only. No defect fix or replacement APK is claimed."
+}

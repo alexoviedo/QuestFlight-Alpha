@@ -65,6 +65,8 @@ namespace QuestFlightLab.Editor
             var go=UnityEngine.Object.Instantiate(source.gameObject);
             var d=go.GetComponent<AmbientTrafficDirector>();
             var wind=UnityEngine.Object.Instantiate(source.windField);d.windField=wind;
+            var originalPlayer=d.player;var originalField=originalPlayer.windField;
+            originalPlayer.windField=wind; // Actor sampling now resolves through the shared authority.
             wind.thermalStrength=0;wind.gustAmplitude=0;
             var player=new FlightDynamicsState{positionUnityMeters=new Vector3(4000,700,3000),rotationUnity=Quaternion.identity};
             d.StepTraffic(player,.1f,BoulderWeatherPreset.FoothillSoaring);
@@ -93,7 +95,7 @@ namespace QuestFlightLab.Editor
                 Debug.Log($"[SharedAtmosphere] loss={loss} pass={pass} ridgeSeconds={ridgeSteps*.1f:F1} turns={a.RidgeTurns} dh={a.Position.y-start:F1} clearance={minClearance:F1} suppressed={a.Suppressed}");
                 return pass;
             }
-            finally{UnityEngine.Object.DestroyImmediate(go);UnityEngine.Object.DestroyImmediate(wind);}
+            finally{originalPlayer.windField=originalField;UnityEngine.Object.DestroyImmediate(go);UnityEngine.Object.DestroyImmediate(wind);}
         }
     }
 }

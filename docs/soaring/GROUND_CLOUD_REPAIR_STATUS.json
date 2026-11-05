@@ -1,0 +1,16 @@
+{
+  "startedUtc": "2026-10-17T22:05:58Z",
+  "deadlineUtc": "2026-10-17T22:35:58Z",
+  "updatedUtc": "2026-10-17T22:36:02.881685+00:00",
+  "status": "IMPLEMENTED_SCOPED_VALIDATION_COMPLETE_HEADSET_DEFERRED",
+  "software": "17/17 focused EditMode PASS",
+  "build": "Android Vulkan stereo shaders and strict Android asset bundle PASS; no new APK",
+  "visual": "40 offset-eye editor captures; final ground angles and cloud approach/edge/interior inspected; not live XR stereo",
+  "simulator": "BLOCKED_MISSING_RECORDINGS",
+  "headset": "DEFERRED_USER_REQUEST",
+  "groundSymptom": "Depth conflict corrected; user-reported head-turn artifact not reproduced on hardware",
+  "clouds": "Clouded sky retained; compact comparable 3D formations, no ellipsoid fog, sorted compositing",
+  "resources": "1 cloud draw/96 triangles/textures unchanged; 8-element index sorting and readable mesh copy added; Quest CPU/GPU/thermal cost unmeasured",
+  "standardQa": "107/130; baseline23 failures retained; inspect comparison report",
+  "artifactRoot": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\ground_cloud_repair_20261017"
+}

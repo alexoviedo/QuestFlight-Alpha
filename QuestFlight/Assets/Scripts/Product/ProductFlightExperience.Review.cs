@@ -41,6 +41,8 @@ namespace QuestFlight.Product
             touchdownObserved=touchdownOnRunway=rolloutObserved=goAroundObserved=approachSeen=false;stopDistance=-1;
         }
         private void BreakFlightPath(){track.Clear();approachSeen=false;approachSeconds=0;approachMinSpeed=float.PositiveInfinity;approachMaxSpeed=approachWorstBank=0;}
+        private bool ReviewOnRunway(Vector3 position)=>modes.IsGlider?
+            (modes.AuthoredFlightCoordinator.Operation?.Definition??modes.AuthoredFlightCoordinator.soaringOperations[0]).OnLandingSurface(position):TrainingEvaluator.OnRunway(position);
         private void SampleFlight(in FlightDynamicsState s,float dt)
         {
             if(track.Count==0||Vector3.Distance(track[track.Count-1],s.positionUnityMeters)>25)
@@ -61,14 +63,14 @@ namespace QuestFlight.Product
                 approachSeen=true;approachSeconds+=dt;approachMinSpeed=Mathf.Min(approachMinSpeed,(float)s.calibratedAirspeedKnots);
                 approachMaxSpeed=Mathf.Max(approachMaxSpeed,(float)s.calibratedAirspeedKnots);approachWorstBank=Mathf.Max(approachWorstBank,Mathf.Abs((float)s.bankDegrees));
             }
-            if(approachSeen&&!s.weightOnWheels&&s.verticalSpeedFeetPerMinute>300&&s.altitudeAglMeters>60)goAroundObserved=true;
+            if(!modes.IsGlider&&approachSeen&&!s.weightOnWheels&&s.verticalSpeedFeetPerMinute>300&&s.altitudeAglMeters>60)goAroundObserved=true;
             if(touchdownObserved&&s.weightOnWheels&&!rolloutObserved)
-            {rolloutOffset=Mathf.Max(rolloutOffset,Mathf.Abs(s.positionUnityMeters.z+30));rolloutStayedOnRunway&=TrainingEvaluator.OnRunway(s.positionUnityMeters);if(s.groundSpeedKnots<8)rolloutObserved=true;}
+            {rolloutOffset=Mathf.Max(rolloutOffset,Mathf.Abs(s.positionUnityMeters.z+30));rolloutStayedOnRunway&=ReviewOnRunway(s.positionUnityMeters);if(s.groundSpeedKnots<8)rolloutObserved=true;}
         }
         private void RecordTouchdown(in FlightDynamicsState s)
         {
             if(!PilotFlying)return;
-            touchdownObserved=true;touchdownOnRunway=TrainingEvaluator.OnRunway(s.positionUnityMeters);
+            touchdownObserved=true;touchdownOnRunway=ReviewOnRunway(s.positionUnityMeters);
             touchdownOffset=Mathf.Abs(s.positionUnityMeters.z+30);
             touchdownHeading=Mathf.Min(Mathf.Abs(Mathf.DeltaAngle((float)s.headingDegrees,90)),Mathf.Abs(Mathf.DeltaAngle((float)s.headingDegrees,270)));
             rolloutOffset=touchdownOffset;rolloutObserved=false;rolloutStayedOnRunway=touchdownOnRunway;
@@ -76,6 +78,17 @@ namespace QuestFlight.Product
         private void CompleteFlightReview()
         {
             active.path=track.ToArray();
+            if(active.aircraftId=="sgs233.reference")
+            {
+                active.recommendedLesson=lessonRun>=0?lessonRun:touchdownObserved||approachSeen?5:0;
+                active.observations=manualSeconds<5?"Observation only; independent handling was not evaluated.":
+                    touchdownObserved?(touchdownOnRunway?"Unpowered runway touchdown observed.":"Touchdown outside the modeled runway; review landing alignment."):
+                    approachSeen?"Unpowered approach observed; no completed touchdown recorded.":"SGS flight recorded; no complete landing segment observed.";
+                active.advice=lessonRun>=0?LessonNextPractice(active.outcome):touchdownObserved||approachSeen?
+                    "Practice an early unpowered circuit and energy plan in Circuit and landing. No powered go-around is available.":
+                    "Review Aircraft and launch preparation, or continue with Glide and energy.";
+                return;
+            }
             active.recommendedLesson=lessonRun>=0?lessonRun:touchdownObserved||approachSeen?5:taxiSeconds>3?0:1;
             if(manualSeconds<5){active.recommendedLesson=0;active.observations="Observation flight; independent handling was not evaluated.";active.advice="Try Cockpit and taxi, then First flight when comfortable.";return;}
             string observation="";
@@ -118,7 +131,18 @@ namespace QuestFlight.Product
             selectedRoute.positionCount=route?.waypoints?.Length??0;
             if(route?.waypoints!=null)for(int i=0;i<route.waypoints.Length;i++)selectedRoute.SetPosition(i,MapPoint(route.waypoints[i].positionUnityMeters,-.004f));
             var t=modes.AuthoredTraining;
-            bool target=!historyMap&&modes.State==ProductFlightModeCoordinator.FlightModeState.Training&&t.CurrentStage.targetEnu!=Vector2.zero;
+            bool target=!historyMap&&!t.WithoutPrompts&&modes.State==ProductFlightModeCoordinator.FlightModeState.Training&&t.CurrentStage.targetEnu!=Vector2.zero;
+            if(!historyMap&&modes.IsGlider&&modes.State==ProductFlightModeCoordinator.FlightModeState.Training&&!t.WithoutPrompts)
+            {
+                var region=SoaringLessonReference.Outline(t.CurrentStage.task,t.CurrentStage.targetEnu);
+                selectedRoute.positionCount=region.Length;
+                for(int n=0;n<region.Length;n++)selectedRoute.SetPosition(n,MapPoint(new Vector3(region[n].x,0,region[n].y),-.004f));
+            }
+            else if(!historyMap&&modes.IsGlider&&modes.AuthoredFlightCoordinator.Operation!=null)
+            {
+                var operation=modes.AuthoredFlightCoordinator.Operation.Definition;selectedRoute.positionCount=operation.towRoute.Length;
+                for(int n=0;n<operation.towRoute.Length;n++)selectedRoute.SetPosition(n,MapPoint(new Vector3(operation.towRoute[n].x,0,operation.towRoute[n].y),-.004f));
+            }
             lessonDestination.positionCount=target?9:0;
             if(target){Vector2 p=t.CurrentStage.targetEnu;Vector3 center=MapPoint(new Vector3(p.x,0,p.y),-.006f);for(int i=0;i<9;i++){float a=i*Mathf.PI/4;lessonDestination.SetPosition(i,center+new Vector3(Mathf.Cos(a),Mathf.Sin(a),0)*.008f);}}
         }

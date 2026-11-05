@@ -57,7 +57,7 @@ def validate(data: dict[str, Any], require_pass: bool = False) -> Counter[str]:
     _require(isinstance(native, dict) and native.get("status") in VALID_STATUSES,
              "nativeInputs identity/status is missing.")
     if native["status"] == "Pass":
-        _require(native.get("apiVersion") == 2, "Native identity does not identify API2.")
+        _require(native.get("apiVersion") == 3, "Native identity does not identify current API3.")
         _require(re.fullmatch(r"[0-9a-fA-F]{40}", str(native.get("sourceCommit", ""))) is not None,
                  "Native evidence source commit is missing or malformed.")
         for name in ("sourceInputsSha256", "bridgeSha256", "jsbsimSha256", "payloadSha256", "aircraftXmlSha256"):

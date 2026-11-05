@@ -51,6 +51,17 @@ namespace T2.QuestFlight.Editor
             "EditorSidecar"
         };
 
+        private static readonly Lazy<HashSet<string>> LocalOnlyProductPaths =
+            new Lazy<HashSet<string>>(() =>
+            {
+                string path=Path.GetFullPath(Path.Combine(Application.dataPath,"..","..","tools","current_product_dependencies.json"));
+                var registry=JsonUtility.FromJson<CurrentProductRegistry>(File.ReadAllText(path));
+                var paths=registry.localOnlyPaths??Array.Empty<string>();
+                if(paths.Any(item=>!item.StartsWith("Assets/",StringComparison.Ordinal)||item.Contains("..")||item.Contains("\\")))
+                    throw new InvalidDataException("Local-only product dependency registry is invalid.");
+                return new HashSet<string>(paths,StringComparer.Ordinal);
+            });
+
         private static readonly IReadOnlyDictionary<string, string> ProductCleanedOverrides =
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -221,6 +232,7 @@ namespace T2.QuestFlight.Editor
             {
                 return cleanedClassification;
             }
+            if(LocalOnlyProductPaths.Value.Contains(assetPath))return "approved_local_development_only";
             if (CurrentProductPaths.Value.Contains(assetPath))
             {
                 return "approved_product_authored";
@@ -387,6 +399,7 @@ namespace T2.QuestFlight.Editor
         {
             public int schemaVersion;
             public string[] paths;
+            public string[] localOnlyPaths;
         }
 
         [Serializable]

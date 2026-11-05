@@ -13,6 +13,8 @@ namespace QuestFlightLab.Training.FlightLessonV1
         public float flaps;
         public float leftToeBrake;
         public float rightToeBrake;
+        public float airbrake,wheelBrake;
+        public bool controlsGliderBrakes;
     }
 
     public struct FlightLessonPlayerInput

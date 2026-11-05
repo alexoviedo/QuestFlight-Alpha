@@ -1,0 +1,51 @@
+{
+  "schema": "questflight.soaring-budget-lock.v2",
+  "frozen_date": "2026-10-13",
+  "baseline_commit": "05a2f721d84030a543fd0b9bc2d3d59d2eb44274",
+  "initial_working_tree": "clean; source-only checkout excludes preserved local overlay",
+  "baseline_overlay": "C:/QFBackup20261008/CLOSEOUT_20261012T185048Z/overlay_manifest.json",
+  "baseline_apk": "C:/QFRC20261008/QuestFlight/Builds/Android/QuestFlight-production.apk",
+  "baseline_apk_sha256": "2352c48108d984cda31a2e1b77227175041f20ebf78bfdffc63a03df0fa2676b",
+  "baseline_complete_source_identity": "9a72ab062ed7fd48fcb7108b91bbe40c8232f293296e1731343f8df8a3e37f4f",
+  "inputs": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\soaring_autonomous_v2_20261013\\baseline_input_hashes.json",
+  "inputs_sha256": "37ad155ef85c4ed25ac700cfdfcdf7eb508408a17a934105f5697695b144e94f",
+  "hard_limits": {
+    "draws": 77,
+    "visible_triangles": 692871,
+    "visible_materials": 38,
+    "texture_bytes": 307507088,
+    "transparent_slots": 18,
+    "msaa": 4
+  },
+  "incremental_planning_ceilings_not_headroom": {
+    "cpu_p95_ms_per_rendered_frame": 0.5,
+    "gpu_added_ms": 0.3,
+    "weather_wake_bytes": 4194304,
+    "steady_state_managed_allocation_bytes": 0
+  },
+  "simulation": {
+    "base_hz": 120,
+    "coupled_dropped_seconds_allowed": 0
+  },
+  "baseline_failures": [
+    "Standard QA 107/130; 23 triangle failures; side view 80 draws/907053 triangles",
+    "Objective views 892492/892498 triangles",
+    "Native yaw 0.7886204147 vs 0.55; 2 pass/1 fail/9 unproven",
+    "Historical hardware timing failure; installed candidate sustained cadence/thermal unmeasured"
+  ],
+  "hardware_measurement_semantics": "Historical October 6 35.59 FPS, GPU mean 23.20 ms/p95 27.27 ms are 1-second aggregates on older APK; no current per-frame acceptance",
+  "preserve": [
+    "render resolution",
+    "refresh",
+    "MSAA",
+    "foveation",
+    "clouds",
+    "scenery",
+    "traffic",
+    "all streamed modes"
+  ],
+  "settings_evidence": "Exact ProjectSettings in hashed input inventory; effective device state not inferred from source",
+  "effective_test_spacewarp": "OFF required; saved user preference preserved",
+  "current_resources": "Existing retained QA; remeasure exact integrated scene and streamed modes; no startup-only claim",
+  "physical_timing": "PENDING_PHYSICAL_QUEST"
+}

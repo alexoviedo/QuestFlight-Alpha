@@ -26,9 +26,9 @@
         },
         {
           "title": "Hold both brakes",
-          "instruction": "Pull the throttle knob fully back to idle. Squeeze both index triggers and keep the airplane stopped. Each trigger applies its side of the wheel brakes.",
+          "instruction": "Pull the throttle to idle. Apply both brakes using the index triggers and stay stopped. Review your brake assignment in Menu, Settings, Controls.",
           "success": "You held the airplane stopped with both brakes and idle power.",
-          "retry": "Use both index triggers together. Check that the throttle is fully back."
+          "retry": "Apply both brakes using your selected assignment. Check that the throttle is fully back."
         },
         {
           "title": "Taxi to the connector",

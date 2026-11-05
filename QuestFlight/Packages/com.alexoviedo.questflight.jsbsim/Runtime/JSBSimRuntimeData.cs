@@ -63,7 +63,22 @@ namespace AlexOviedo.QuestFlight.JSBSim
             return valid;
         }
 
+        private static bool preparing;
         public static IEnumerator Prepare(Action<bool, string, string> completed)
+        {
+            // One owner extracts/publishes. A waiting client reuses the completed
+            // immutable cache, or retries after a cancelled/failed owner.
+            while (preparing) yield return null;
+            preparing = true;
+            try
+            {
+                using (var owner = new IEnumeratorPreparation(PrepareOwned(completed)))
+                    while (owner.Iterator.MoveNext()) yield return owner.Iterator.Current;
+            }
+            finally { preparing = false; }
+        }
+
+        private static IEnumerator PrepareOwned(Action<bool, string, string> completed)
         {
             // Drive the iterator here so expected synchronous storage failures, including
             // those after a request yield, complete the same terminal callback exactly once.

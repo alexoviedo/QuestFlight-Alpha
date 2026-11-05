@@ -113,6 +113,6 @@ if (($BridgeInputs | ConvertTo-Json -Compress) -cne ((Get-BridgeInputIdentities)
 $ExistingPackageHashes = Get-ChildItem (Join-Path $PackageRoot 'Runtime\Plugins') -Recurse -File | Where-Object {$_.Extension -in '.dll','.so'} | ForEach-Object {
   @{path=$_.FullName.Substring($RepoRoot.Length+1).Replace('\','/');bytes=$_.Length;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 }
-@{generated_utc=[DateTime]::UtcNow.ToString('O');status='BUILT';revision=$Revision;api_version=2;unity_root=$UnityRoot;cmake=$CMake;ndk=$Ndk;source_head=(git -C $RepoRoot rev-parse HEAD);bridge_inputs=$BridgeInputs;results=$Results;existing_package_libraries=$ExistingPackageHashes;skipped_platforms=@(@{platform='windows-x86_64';skipped=[bool]$SkipWindows},@{platform='android-arm64';skipped=[bool]$SkipAndroid})} |
+@{generated_utc=[DateTime]::UtcNow.ToString('O');status='BUILT';revision=$Revision;api_version=3;unity_root=$UnityRoot;cmake=$CMake;ndk=$Ndk;source_head=(git -C $RepoRoot rev-parse HEAD);bridge_inputs=$BridgeInputs;results=$Results;existing_package_libraries=$ExistingPackageHashes;skipped_platforms=@(@{platform='windows-x86_64';skipped=[bool]$SkipWindows},@{platform='android-arm64';skipped=[bool]$SkipAndroid})} |
   ConvertTo-Json -Depth 8 | Set-Content (Join-Path $ArtifactDir 'jsbsim_native_gate_report.json') -Encoding utf8
 Write-Host "JSBSim native gate artifacts: $ArtifactDir"
