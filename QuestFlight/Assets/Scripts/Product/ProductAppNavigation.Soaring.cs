@@ -39,14 +39,13 @@ namespace QuestFlight.Product
             }
             bool stopped=flight.CurrentState.weightOnWheels&&flight.CurrentState.groundSpeedKnots<1;
             string rope=flight.TowSession==null?"unavailable":flight.TowSession.RopeState.ToString();
-            detail.text=op.Instruction+"\nRope now: "+rope+(op.PreflightSkipped?" · Preflight SKIPPED · no checklist credit":" · Checks recorded: "+CountBits(op.CheckedControls)+" / 7 · Release test: "+(op.ReleaseChecked?"recorded":"pending"));
+            detail.text=op.Instruction+"\nRope now: "+rope+(op.PreflightSkipped?" · Preflight SKIPPED · no checklist credit":" · Ground checks recorded: "+CountBits(op.CheckedControls)+" / 7");
             if(op.Phase==SoaringOperationPhase.ControlsCheck)
             {
                 string[] checks={"stick left","stick right","stick back","stick forward","rudder left","rudder right","full combined brake"};
                 string missing="";for(int n=0;n<checks.Length;n++)if((op.CheckedControls&(1<<n))==0)missing+=(missing.Length>0?", ":"")+checks[n];
-                if(!op.ReleaseChecked)missing+=(missing.Length>0?", ":"")+"release test";
                 detail.text+="\nRemaining: "+missing+". Checks record only while stopped below 1 kt. Return to cockpit to operate controls.";
-                detail.text+="\nTrim: reference preset; no movement check. Real pre-takeoff trim setting is covered in the lesson briefing.";
+                detail.text+="\nTow release: test only after launch when separation is safe. Trim: reference preset; no movement check. Real pre-takeoff trim setting is covered in the lesson briefing.";
                 Choice(0,"Skip preflight and prepare launch",336);
             }
             if(op.Phase==SoaringOperationPhase.CrewRehook)Choice(0,"Reconnect and prepare launch",306);

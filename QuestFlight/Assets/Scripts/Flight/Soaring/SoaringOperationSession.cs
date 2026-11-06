@@ -16,7 +16,10 @@ namespace QuestFlightLab.Flight.Soaring
         public bool RequiresPause {get;private set;}
         public SoaringReturnEstimate ReturnEstimate {get;private set;}
         public bool PreflightSkipped {get;private set;}
-        public bool PreflightComplete=>!PreflightSkipped&&CheckedControls==127&&ReleaseChecked;
+        // The release handle is an in-flight control check, not a ground
+        // preflight gate. Testing it on the runway disconnects the tow rope
+        // and forces an unnecessary restage, so it remains optional evidence.
+        public bool PreflightComplete=>!PreflightSkipped&&CheckedControls==127;
         public bool PreflightSatisfied=>PreflightComplete||PreflightSkipped;
         public bool LaunchAuthorized=>Phase>=SoaringOperationPhase.Launch&&Phase<SoaringOperationPhase.Landed;
         private bool hadAirborne,previousWheels;
@@ -25,8 +28,8 @@ namespace QuestFlightLab.Flight.Soaring
         public SoaringOperationSession(BoulderSoaringOperationDefinition definition,float referenceTrim=.10626088f){Definition=definition;Phase=SoaringOperationPhase.ControlsCheck;}
         public string Instruction=>Phase switch
         {
-            SoaringOperationPhase.ControlsCheck=>ReleaseChecked?"Release test recorded; rope disconnected. Finish remaining stopped checks, or use Menu > Launch preparation > Skip preflight and prepare launch.":"STOPPED CHECKS · Sweep stick/rudder both ways. Open the combined lever fully. Test the red release once (disconnects rope). Finish checks or skip in Menu > Launch preparation.",
-            SoaringOperationPhase.CrewRehook=>"Checks complete. Rope disconnected. Menu > Launch preparation > Reconnect and prepare launch explicitly restages both aircraft; it is not self-taxi.",
+            SoaringOperationPhase.ControlsCheck=>"STOPPED CHECKS · Sweep stick/rudder both ways and open the combined lever fully. Release testing is optional and is only performed airborne. Finish checks or skip in Menu > Launch preparation.",
+            SoaringOperationPhase.CrewRehook=>"Crew preparation is required because the tow rope is disconnected. Menu > Launch preparation > Reconnect and prepare launch explicitly restages both aircraft; it is not self-taxi.",
             SoaringOperationPhase.Ready=>"Crew prepared. Keep the rope connected. Close the combined brake lever and center stick/rudder, then Menu > Launch preparation > Clear and begin launch. Both strips must be clear.",
             SoaringOperationPhase.Launch=>"YOUR CONTROLS · Wing support ends at 23 kt. Keep the tug aligned; both aircraft lift off physically. A / red handle releases.",
             SoaringOperationPhase.Tow=>"YOUR CONTROLS · Tow reference 55 kt. Follow the tug with small coordinated corrections. Release remains available.",
@@ -45,7 +48,7 @@ namespace QuestFlightLab.Flight.Soaring
             if(c.rudder<-.35f)CheckedControls|=16;if(c.rudder>.35f)CheckedControls|=32;
             if(c.airbrake>.9f&&c.wheelBrake>.8f)CheckedControls|=64;
             ReleaseChecked|=release;
-            if(PreflightComplete)Phase=SoaringOperationPhase.CrewRehook;
+            if(PreflightComplete){CrewReady=true;Phase=SoaringOperationPhase.Ready;}
         }
         public bool TrySkipPreflight(in FlightDynamicsState state)
         {
