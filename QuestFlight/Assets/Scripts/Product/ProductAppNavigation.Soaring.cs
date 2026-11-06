@@ -8,7 +8,7 @@ namespace QuestFlight.Product
 
     {
 
-        private void StartSoaringOperation(int index)
+        private void StartSoaringOperation(int index,bool skipPreflight=false)
 
         {
 
@@ -16,6 +16,8 @@ namespace QuestFlight.Product
 
             if(!modes.PrepareBoulderOperation(index)){Reject("Launch preparation failed. "+modes.AuthoredFlightCoordinator.LastError+" Return Home and retry.");return;}
 
+            if(skipPreflight&&!modes.AuthoredFlightCoordinator.TrySkipSoaringPreflight())
+            {Reject("Could not skip preflight while stopped. Choose Launch preparation to review the aircraft state.");return;}
             NavigateTo(Page.None);pausedTraining=ownsPause=false;Consume();modes.SelectFreeFlight();Refresh();
 
         }
@@ -30,7 +32,8 @@ namespace QuestFlight.Product
             if(modes.State==ProductFlightModeCoordinator.FlightModeState.Selection)
             {
                 detail.text="SGS 2-33A / PA-18 development pairing. Starts stopped with a connected rope; controls and deliberate release test precede explicit crew restaging. Reference routes and 60 m rope are not an operator-approved procedure.";
-                Choice(0,"Runway 08 · easterly reference",303);Choice(1,"Runway 26 · west-wind reference",304);Choice(7,"Back",5);return;
+                Choice(0,"Runway 08 · prepare launch",303);Choice(1,"Runway 26 · prepare launch",304);
+                Choice(2,"Runway 08 · start now (skip preflight)",338);Choice(3,"Runway 26 · start now (skip preflight)",339);Choice(7,"Back",5);return;
             }
             if(op==null)
             {

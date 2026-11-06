@@ -585,6 +585,10 @@ namespace QuestFlight.Product
 
                 case (int)MenuActionId.Runway26: StartSoaringOperation(1);return;
 
+                case (int)MenuActionId.Runway08StartNow: StartSoaringOperation(0,true);return;
+
+                case (int)MenuActionId.Runway26StartNow: StartSoaringOperation(1,true);return;
+
                 case (int)MenuActionId.Soaring: NavigateTo(Page.Soaring);break;
 
                 case (int)MenuActionId.CrewReconnect: OperationResult(modes.AuthoredFlightCoordinator.TryCrewReconnect(),"Rope reconnected; pair restaged. Do not repeat release. Return to cockpit, close the combined lever and center controls, then clear launch.","Crew preparation failed. Stop and review Launch preparation.");break;

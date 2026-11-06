@@ -227,6 +227,7 @@ namespace QuestFlight.Product
         DecreaseSetting = 329, IncreaseSetting = 330, ResetSetting = 331,
         DiscardSeat = 332, ContinueSeat = 333, RepeatActivity = 334, TakeLessonControl = 335,
         SkipSoaringPreflight = 336, SoaringDemo = 337,
+        Runway08StartNow = 338, Runway26StartNow = 339,
 
     }
 
