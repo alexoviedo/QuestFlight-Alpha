@@ -329,7 +329,6 @@ namespace QuestFlight.Product
             State = FlightModeState.FreeFlight;
             RestoreSavedTimeScaleOnce();
             BeginSuccessfulTransition(IsGlider?(flightCoordinator.TowSession!=null?"SGS REFERENCE · GROUND AEROTOW":"SGS REFERENCE · DEVELOPMENT AIRBORNE START"):"FREE FLIGHT");
-            navigation?.BeginFlightStartHandover();
         }
 
         public string WeatherLabel

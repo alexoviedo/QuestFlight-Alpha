@@ -1,4 +1,5 @@
 using QuestFlightLab.Flight.Soaring;
+using UnityEngine;
 
 namespace QuestFlight.Product
 
@@ -8,17 +9,55 @@ namespace QuestFlight.Product
 
     {
 
+        private void SelectSoaringRunway(int index)
+        {
+            pendingSoaringRunway=index;pauseNotice=null;focus=0;Consume();Refresh();
+        }
+
         private void StartSoaringOperation(int index,bool skipPreflight=false)
 
         {
 
             if(modes.State!=ProductFlightModeCoordinator.FlightModeState.Selection){Reject("Return Home before preparing a new launch.");return;}
 
-            if(!modes.PrepareBoulderOperation(index)){Reject("Launch preparation failed. "+modes.AuthoredFlightCoordinator.LastError+" Return Home and retry.");return;}
+            Page returnPage=CurrentPage==Page.None?Page.Home:CurrentPage;
+            CurrentPage=Page.None;Refresh();
+            if(!modes.PrepareBoulderOperation(index))
+            {
+                string reason=string.IsNullOrEmpty(modes.LastError)?modes.AuthoredFlightCoordinator.LastError:modes.LastError;
+                CurrentPage=modes.State==ProductFlightModeCoordinator.FlightModeState.Blocked?Page.Home:returnPage;
+                pauseNotice="Launch preparation failed. "+(string.IsNullOrEmpty(reason)?"The aircraft or tow configuration was unavailable.":reason);
+                focus=0;Refresh();return;
+            }
 
-            if(skipPreflight&&!modes.AuthoredFlightCoordinator.TrySkipSoaringPreflight())
-            {Reject("Could not skip preflight while stopped. Choose Launch preparation to review the aircraft state.");return;}
-            NavigateTo(Page.None);pausedTraining=ownsPause=false;Consume();modes.SelectFreeFlight();Refresh();
+            var flight=modes.AuthoredFlightCoordinator;
+            bool launchCleared=false;
+            string launchBlockReason=null;
+            if(skipPreflight)
+            {
+                if(!flight.TrySkipSoaringPreflight(out var skipReason))
+                {
+                    CurrentPage=returnPage;
+                    Reject("Could not skip preflight. "+skipReason);return;
+                }
+                // Skipping the checklist still obeys native rope, traffic, brake,
+                // control-centering and runway-clearance gates. Start the tow now
+                // when they pass; otherwise enter the cockpit with a staged pair.
+                bool launchReady=flight.CanClearSoaringLaunch(out launchBlockReason);
+                launchCleared=launchReady&&flight.TryClearSoaringLaunch();
+                if(launchReady&&!launchCleared)launchBlockReason="Launch conditions changed before clearance was applied.";
+                if(!launchCleared&&flight.Operation!=null&&flight.Operation.Phase==SoaringOperationPhase.Ready)
+                {
+                    pendingSoaringStartClearance=flight.Operation;
+                    nextSoaringStartClearanceCheck=Time.unscaledTime;
+                }
+            }
+            pendingSoaringRunway=-1;
+            soaringStartNotice=skipPreflight?(launchCleared?"Preflight skipped with no checklist credit. Aerotow launch clearance is active; remain in the cockpit and follow the tug.":"Preflight skipped with no checklist credit. The tow pair is staged; launch clearance will start automatically when safe."+(string.IsNullOrEmpty(launchBlockReason)?"":" Current gate: "+launchBlockReason)):null;
+            pausedTraining=ownsPause=false;Consume();modes.SelectFreeFlight();
+            if(modes.State!=ProductFlightModeCoordinator.FlightModeState.FreeFlight)
+            {soaringStartNotice=null;OpenMenu();if(modes.State!=ProductFlightModeCoordinator.FlightModeState.Blocked)CurrentPage=Page.Soaring;Reject("Free flight could not start. "+(string.IsNullOrEmpty(modes.LastError)?flight.LastError:modes.LastError));return;}
+            Refresh();
 
         }
 
@@ -28,13 +67,20 @@ namespace QuestFlight.Product
 
             var flight=modes.AuthoredFlightCoordinator;var op=flight.Operation;
 
-            heading.text=SoaringPageTitle;
             if(modes.State==ProductFlightModeCoordinator.FlightModeState.Selection)
             {
-                detail.text="SGS 2-33A / PA-18 development pairing. Starts stopped with a connected rope; controls and deliberate release test precede explicit crew restaging. Reference routes and 60 m rope are not an operator-approved procedure.";
-                Choice(0,"Runway 08 · prepare launch",303);Choice(1,"Runway 26 · prepare launch",304);
-                Choice(2,"Runway 08 · start now (skip preflight)",338);Choice(3,"Runway 26 · start now (skip preflight)",339);Choice(7,"Back",5);return;
+                if(pendingSoaringRunway<0)
+                {
+                    heading.text="Ground aerotow · choose runway";
+                    detail.text="SGS 2-33A / PA-18 development pairing. Choose the runway once, then choose a checked start or skip directly to launch. Tow release is tested in flight. Reference runway, weather and towline values are provisional.";
+                    Choice(0,"Runway 08",303);Choice(1,"Runway 26",304);Choice(7,"Back",5);return;
+                }
+                heading.text=$"Runway {(pendingSoaringRunway==0?"08":"26")} · choose start";
+                detail.text="Choose whether to complete the stopped cockpit checks or skip them. Skip records no checklist credit and requests a real launch clearance; traffic, rope, brakes and control gates still apply.";
+                if(!string.IsNullOrEmpty(pauseNotice))detail.text+="\n"+pauseNotice;
+                Choice(0,"Start with preflight checks",338);Choice(1,"Skip preflight and start launch",339);Choice(6,"Choose different runway",340);Choice(7,"Back to flight options",5);return;
             }
+            heading.text=SoaringPageTitle;
             if(op==null)
             {
                 detail.text=flight.CurrentState.weightOnWheels?"No tow operation is attached to this stopped glider. Choose a new ground launch preparation or an explicit airborne start.":"Explicit airborne checkpoint · no tow operation. Follow the lesson or land unpowered. Ground launch preparation starts a new session.";
@@ -49,9 +95,9 @@ namespace QuestFlight.Product
                 string missing="";for(int n=0;n<checks.Length;n++)if((op.CheckedControls&(1<<n))==0)missing+=(missing.Length>0?", ":"")+checks[n];
                 detail.text+="\nRemaining: "+missing+". Checks record only while stopped below 1 kt. Return to cockpit to operate controls.";
                 detail.text+="\nTow release: test only after launch when separation is safe. Trim: reference preset; no movement check. Real pre-takeoff trim setting is covered in the lesson briefing.";
-                Choice(0,"Skip preflight and prepare launch",336);
+                Choice(0,"Skip preflight and start launch",336);
             }
-            if(op.Phase==SoaringOperationPhase.CrewRehook)Choice(0,"Reconnect and prepare launch",306);
+            if(op.Phase==SoaringOperationPhase.CrewRehook)Choice(0,"Reconnect rope and prepare launch",306);
             if(op.Phase==SoaringOperationPhase.Ready)
             {
                 flight.CanClearSoaringLaunch(out var why);

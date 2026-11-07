@@ -116,7 +116,7 @@ namespace QuestFlight.Product
 
             modes.AuthoredTraining.State==TrainingSessionState.Assisting||modes.AuthoredTraining.State==TrainingSessionState.Demonstration||modes.AuthoredTraining.AssistancePaused||modes.AuthoredTraining.DemonstrationPaused?(Time.timeScale>0?"Instructor controls":"Instructor controls on resume"):(Time.timeScale>0?"Your controls":"Your controls on resume");
 
-        public string Briefing => modes.IsGlider?"BOULDER SGS REFERENCE\nGround aerotow: complete controls and release checks, crew preparation and clearance. Runway/weather combinations and routes are provisional. Airborne practice begins in flight. Use the selected lesson targets.\n"+LocalWind:"BOULDER MUNICIPAL · KBDU\n"+LocalWind+" · Runways 08 / 26\n"+
+        public string Briefing => modes.IsGlider?"BOULDER SGS REFERENCE\nGround aerotow: complete the stopped control checks or skip preflight without checklist credit. Tow release is checked in flight. Crew preparation and real launch clearance still apply. Runway/weather combinations and routes are provisional. Airborne practice begins in flight. Use the selected lesson targets.\n"+LocalWind:"BOULDER MUNICIPAL · KBDU\n"+LocalWind+" · Runways 08 / 26\n"+
 
             "Non-towered · COM1 122.725 · pattern 6,300 ft MSL.\n"+
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using QuestFlight.Product.Training;
+using QuestFlightLab.Flight.Backends;
 using QuestFlightLab.Flight.Soaring;
 using UnityEngine;
 
@@ -13,6 +14,9 @@ namespace QuestFlight.Product
         private Page handoverReturn;
         private int lessonReturnFocus, adjustmentAction;
         private bool safetyMenuPresented,commandPending;
+        private string soaringStartNotice;
+        private SoaringOperationSession pendingSoaringStartClearance;
+        private float nextSoaringStartClearanceCheck;
         private readonly Queue<string> actionTrace=new Queue<string>(24);
         public string[] RecentMenuActions=>actionTrace.ToArray();
         public string WorkflowDiagnostic=>$"page={CurrentPage}; focus={focus}; pending={pendingMenuAction}; handover={handoverCompletion!=null}; result={LastActionResult}; operation={modes.AuthoredFlightCoordinator.Operation?.Phase}; rope={modes.AuthoredFlightCoordinator.TowSession?.RopeState}";
@@ -26,8 +30,8 @@ namespace QuestFlight.Product
             TrainingSessionState.Debrief=>"Return to results",
             _=>"Return to lesson status"
         };
-        private string SoaringPageTitle=>modes.AuthoredFlightCoordinator.Operation==null ||
-            modes.AuthoredFlightCoordinator.Operation.Phase>=SoaringOperationPhase.Tow?"Flight status":"Launch preparation";
+        private string SoaringPageTitle=>modes.AuthoredFlightCoordinator.Operation!=null &&
+            modes.AuthoredFlightCoordinator.Operation.Phase<SoaringOperationPhase.Tow?"Launch status":"Flight status";
         private void ReturnLessonView()
         {
             if(!HasLessonReturn){Reject("No lesson view to return to.");return;}
@@ -52,6 +56,24 @@ namespace QuestFlight.Product
             input.RequireTouchRelease();input.SetFlightLessonInputSuppressed(true);Time.timeScale=0;
             CurrentPage=Page.Handover;LastActionResult="PENDING: release inputs to continue";Consume();Refresh();
         }
+        private void SkipSoaringPreflightAndLaunch()
+        {
+            var flight=modes.AuthoredFlightCoordinator;
+            if(!flight.TrySkipSoaringPreflight(out var skipReason))
+            {Reject("Could not skip preflight. "+skipReason);return;}
+            if(!flight.CanClearSoaringLaunch(out var reason))
+            {
+                soaringStartNotice="Preflight skipped with no checklist credit. Launch is not yet clear: "+reason+" Resume to the cockpit, resolve the condition, then request clearance from Launch status.";
+                BeginHandover(CompleteResume);return;
+            }
+            soaringStartNotice="Preflight skipped with no checklist credit. Launch clearance is being requested.";
+            BeginHandover(()=>
+            {
+                if(!flight.TryClearSoaringLaunch())
+                {soaringStartNotice="Preflight skipped with no checklist credit. Launch conditions changed before clearance. Resume to the cockpit, then review Launch status.";CompleteResume();return;}
+                CompleteResume();
+            });
+        }
         public void BeginFlightStartHandover()
         {
             if(!IsOpen)OpenMenu();
@@ -74,6 +96,7 @@ namespace QuestFlight.Product
                 var complete=handoverCompletion;handoverCompletion=null;
                 complete();LastActionResult=actionFailure==null?"COMPLETED: control handover":"UNAVAILABLE: "+actionFailure;
             }
+            UpdatePendingSoaringStartClearance(f);
             bool held=f.RecoveryHold||(!f.enabled&&f.IsInitialized);
             if(!held)safetyMenuPresented=false;
             if(held&&!safetyMenuPresented&&!IsOpen)
@@ -83,6 +106,24 @@ namespace QuestFlight.Product
                 if(string.IsNullOrEmpty(pauseNotice))pauseNotice="Flight held. Choose an explicit restart or Home.";
                 Refresh();
             }
+        }
+        private void UpdatePendingSoaringStartClearance(FlightDynamicsCoordinator flight)
+        {
+            if(pendingSoaringStartClearance==null)return;
+            if(modes.State!=ProductFlightModeCoordinator.FlightModeState.FreeFlight||
+               flight.Operation!=pendingSoaringStartClearance||pendingSoaringStartClearance.Phase!=SoaringOperationPhase.Ready)
+            {pendingSoaringStartClearance=null;return;}
+            if(CurrentPage!=Page.None||Time.timeScale<=0||Time.unscaledTime<nextSoaringStartClearanceCheck)return;
+            nextSoaringStartClearanceCheck=Time.unscaledTime+.1f;
+            if(flight.TryClearSoaringLaunch())
+            {
+                pendingSoaringStartClearance=null;
+                soaringStartNotice="Preflight skipped with no checklist credit. Launch clearance is active; remain in the cockpit and follow the tug.";
+                Debug.Log("[QuestFlight][SoaringStart] Deferred runway clearance passed; physical aerotow launch is starting.",this);
+                return;
+            }
+            if(!flight.CanClearSoaringLaunch(out var reason))
+                soaringStartNotice="Preflight skipped with no checklist credit. Launch remains staged until safe: "+reason+" Stay in the cockpit; clearance will be retried automatically when conditions allow.";
         }
         private bool CanExecuteWorkflow(int action,out string reason)
         {
@@ -128,7 +169,8 @@ namespace QuestFlight.Product
                 case 333:if(!TryPopRoute())CurrentPage=Page.Calibration;break;
                 case 334:RepeatSelectedActivity();break;
                 case 335:BeginHandover(()=>{training.TakeManualControlFromPause();CurrentPage=Page.None;routes.Clear();pausedTraining=ownsPause=false;Refresh();});break;
-                case 336:OperationResult(modes.AuthoredFlightCoordinator.TrySkipSoaringPreflight(),"Preflight skipped. Rope connected and pair prepared. No checklist credit. Close brakes and center controls, then Clear and begin launch.","Could not prepare launch. Stop the aircraft and retry, or restart preparation.");break;
+                case 336:SkipSoaringPreflightAndLaunch();break;
+                case 340:pendingSoaringRunway=-1;pauseNotice=null;focus=0;break;
                 default:return false;
             }
             return true;
@@ -139,6 +181,7 @@ namespace QuestFlight.Product
             {
                 heading.text="Ready to continue";
                 detail.text="Flight is paused. Release A, Menu, both grips, index triggers and thumbsticks. The flight continues after the inputs are released.\n"+input.MenuInputHoldReason;
+                if(!string.IsNullOrEmpty(soaringStartNotice))detail.text+="\n\n"+soaringStartNotice;
                 Choice(7,"Cancel · stay paused",5);return true;
             }
             if(CurrentPage==Page.SeatExit)
@@ -173,7 +216,7 @@ namespace QuestFlight.Product
         {
             if(!experience.TryRepeatActivity(out bool glider,out string recipe,out string lesson,out int runway)){Reject("This record has no repeatable start.");return;}
             experience.FinishFlight("Session replaced by repeat activity");ReturnMain();
-            if(!modes.SelectAircraft(glider)){Reject("Aircraft preparation failed.");return;}
+            if(!TrySelectAircraftWithMenuHandoff(glider,CurrentPage,"Aircraft preparation failed."))return;
             if(recipe=="ground")StartSoaringOperation(runway);
             else StartActivityById(recipe=="lesson"?0:recipe=="demo"?-2:recipe=="showcase"?-4:-3,lesson);
         }

@@ -133,6 +133,24 @@ namespace QuestFlight.PlayModeTests
                 nav.OpenMenu();yield return NextFrame();yield return Choose(MenuActionId.ConfirmHome);yield return Choose(MenuActionId.EndToHome);
             }
         }
+        [UnityTest] public IEnumerator RunwaySkipStartsCockpitDirectlyWithoutResumeMenu()
+        {
+            yield return Choose(MenuActionId.FlySgs);
+            yield return Choose(MenuActionId.Soaring);
+            yield return Choose(MenuActionId.Runway08);
+            yield return Choose(MenuActionId.SoaringStartSkipPreflight);
+
+            Assert.AreEqual(ProductFlightModeCoordinator.FlightModeState.FreeFlight,mode.State,mode.LastError);
+            Assert.AreEqual(ProductAppNavigation.Page.None,nav.CurrentPage,"A runway skip must not route through another menu.");
+            Assert.IsFalse(nav.IsOpen,"A runway skip must enter the cockpit directly without requiring Resume.");
+            Assert.Greater(Time.timeScale,0f,"The selected flight must be running immediately.");
+            Assert.IsTrue(mode.AuthoredFlightCoordinator.Operation.PreflightSkipped);
+            yield return Transition();
+            Assert.IsFalse(mode.AuthoredModeMenuView.gameObject.activeSelf,"The final cockpit transition must complete with the menu closed.");
+            for(int n=0;n<180&&!mode.AuthoredFlightCoordinator.Operation.LaunchAuthorized;n++)yield return NextFrame();
+            mode.AuthoredFlightCoordinator.CanClearSoaringLaunch(out var launchBlock);
+            Assert.IsTrue(mode.AuthoredFlightCoordinator.Operation.LaunchAuthorized,"The runway launch must start automatically after initial ground contact and when all safety gates pass. Remaining gate: "+launchBlock);
+        }
         [UnityTest] public IEnumerator GroundChecksReconnectAndRepeatedReleaseUseRealMenuActions()
         {
             foreach(var runway in new[]{MenuActionId.Runway08,MenuActionId.Runway26})

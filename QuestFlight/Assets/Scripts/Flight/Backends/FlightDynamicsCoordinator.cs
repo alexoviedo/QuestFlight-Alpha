@@ -494,7 +494,7 @@ namespace QuestFlightLab.Flight.Backends
             bool release=aircraftDefinition.IsGlider && controls!=null && controls.ConsumeTowRelease();
             if(Operation!=null)
             {
-                Operation.ObserveChecks(_currentState,LastAppliedControls,release);
+                Operation.ObserveChecks(_currentState,LastAppliedControls,release,TowSession!=null&&TowSession.RopeConnected&&!TowSession.Faulted);
                 if(release)Operation.ReconcileConnection(false,false,_currentState);
                 if(!UpdateSoaringSafety())return false;
             }

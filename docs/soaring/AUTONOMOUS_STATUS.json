@@ -277,5 +277,23 @@
     "trainingSaveRetained": true,
     "launchProcessObserved": true,
     "wornVisualAudioTiming": "UNMEASURED"
+  },
+  "alpha16DirectCockpitStart": {
+    "updatedUtc": "2026-11-07T03:29:20.8097220Z",
+    "status": "RELEASE_CANDIDATE_VALIDATED_PENDING_PUBLISH",
+    "version": "0.1.0-alpha.16",
+    "versionCode": 16,
+    "change": "Skip preflight and start launch enters Free Flight cockpit directly; no intermediate Resume Flight menu. Launch clearance remains gated by the existing physical and safety checks.",
+    "focusedRegression": "PASS 1/1: RunwaySkipStartsCockpitDirectlyWithoutResumeMenu; test asserts menu closed and actual launch authorization after startup settling.",
+    "integratedUnityBuild": "FAILED_DISK_FULL_DURING_GRADLE_ASSET_HASHING",
+    "manualGeneratedGradleProject": "PASS assembleRelease; no build-quality or resource reductions",
+    "apk": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\alpha16-release-source\\QuestFlight-alpha16.apk",
+    "apkSha256": "d4b7a4adaf7ce448a1afbe3087e7df1881eebe2ec2696b1cfa73f40df854b1f0",
+    "manifest": "PASS targetSdk34, quest3, ARM64",
+    "signature": "PASS; certificate matches public Alpha2",
+    "sceneryPayload": "PASS 1912 authored files",
+    "install": "Earlier alpha16 candidate installed; exact release candidate not installed",
+    "headsetWornAcceptance": "PENDING_USER",
+    "evidence": "C:\\Users\\ovied\\Dev\\T2\\T2-QuestFlight-product-artifacts\\alpha16-release-source\\release_candidate_receipt.json"
   }
 }

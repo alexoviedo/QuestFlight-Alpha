@@ -38,19 +38,33 @@ namespace QuestFlightLab.Flight.Backends
             reason=null;
             if(!IsInitialized||!enabled||RecoveryHold||!_currentState.IsFinite)reason="Aircraft held or unavailable. Restart preparation.";
             else if(Operation==null||(Operation.Phase!=SoaringOperationPhase.ControlsCheck&&Operation.Phase!=SoaringOperationPhase.CrewRehook))reason="Skip preflight is available only before launch preparation is complete.";
-            else if(!_currentState.weightOnWheels||_currentState.groundSpeedKnots>=1)reason="Stop the aircraft before skipping preflight.";
+            else if(_currentState.groundSpeedKnots>=1)reason="Stop the aircraft before skipping preflight.";
             return reason==null;
         }
-        public bool TrySkipSoaringPreflight()
+        public bool TrySkipSoaringPreflight()=>TrySkipSoaringPreflight(out _);
+        public bool TrySkipSoaringPreflight(out string reason)
         {
-            if(Time.timeScale>0||!CanSkipSoaringPreflight(out _))return false;
+            reason=null;
+            if(Time.timeScale>0){reason="Pause the flight before skipping preflight.";return false;}
+            if(!CanSkipSoaringPreflight(out reason))return false;
             var previous=Operation;var stoppedState=_currentState;
-            // Reuse the native crew-restaging path. Never clear a disconnected rope
-            // or fabricate observed checks; failed preparation remains fail-closed.
-            if(!TryPrepareGroundTow(previous.Definition))return false;
-            if(!previous.TrySkipPreflight(stoppedState))return false;
+            bool connectedPair=TowSession!=null&&!TowSession.Faulted&&TowSession.RopeConnected&&TowSession.LaunchPhase==GroundLaunchPhase.Staging;
+            // A fresh launch already has a prepared, connected tow pair. Mark it
+            // ready directly; rebuilding the native pair here caused the skip
+            // action to fail and return to the same menu. A disconnected pair
+            // still uses the explicit crew-restaging path.
+            if(connectedPair)
+            {
+                if(!previous.TrySkipPreflight(stoppedState,true)){reason="The glider must be stopped on its wheels before skipping preflight.";return false;}
+                return true;
+            }
+            if(!TryPrepareGroundTow(previous.Definition))
+            {reason=string.IsNullOrEmpty(LastError)?"Crew could not restage the tow pair.":LastError;return false;}
+            if(!previous.TrySkipPreflight(stoppedState))
+            {Operation=previous;reason="The glider must be stopped on its wheels before skipping preflight.";return false;}
             Operation=previous;controls.ConfigureAircraft(aircraftDefinition);
-            return Operation.ConfirmCrewRehook();
+            if(!Operation.ConfirmCrewRehook()){reason="Crew preparation did not complete. Reconnect the rope and retry.";return false;}
+            return true;
         }
         public bool CanReconnectSoaring(out string reason)
         {

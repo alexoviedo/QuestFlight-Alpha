@@ -40,7 +40,7 @@ namespace QuestFlightLab.Flight.Soaring
             SoaringOperationPhase.Landed=>"LANDED AND STOPPED · Menu > Flight status offers summary or another ground launch. The glider cannot self-taxi.",
             _=>StopReason??"LAUNCH ABORTED · Keep control and assess the landing area. No universal turnback is prescribed."
         };
-        public void ObserveChecks(in FlightDynamicsState s,in FlightDynamicsControlSnapshot c,bool release)
+        public void ObserveChecks(in FlightDynamicsState s,in FlightDynamicsControlSnapshot c,bool release,bool ropeConnected=true)
         {
             if(Phase!=SoaringOperationPhase.ControlsCheck||!s.weightOnWheels||s.groundSpeedKnots>1)return;
             if(c.aileron<-.35f)CheckedControls|=1;if(c.aileron>.35f)CheckedControls|=2;
@@ -48,12 +48,16 @@ namespace QuestFlightLab.Flight.Soaring
             if(c.rudder<-.35f)CheckedControls|=16;if(c.rudder>.35f)CheckedControls|=32;
             if(c.airbrake>.9f&&c.wheelBrake>.8f)CheckedControls|=64;
             ReleaseChecked|=release;
-            if(PreflightComplete){CrewReady=true;Phase=SoaringOperationPhase.Ready;}
+            if(PreflightComplete)
+            {
+                CrewReady=ropeConnected;
+                Phase=ropeConnected?SoaringOperationPhase.Ready:SoaringOperationPhase.CrewRehook;
+            }
         }
-        public bool TrySkipPreflight(in FlightDynamicsState state)
+        public bool TrySkipPreflight(in FlightDynamicsState state,bool ropeConnected=false)
         {
-            if((Phase!=SoaringOperationPhase.ControlsCheck&&Phase!=SoaringOperationPhase.CrewRehook)||!state.IsFinite||!state.weightOnWheels||state.groundSpeedKnots>=1)return false;
-            PreflightSkipped=true;Phase=SoaringOperationPhase.CrewRehook;return true;
+            if((Phase!=SoaringOperationPhase.ControlsCheck&&Phase!=SoaringOperationPhase.CrewRehook)||!state.IsFinite||(!ropeConnected&&!state.weightOnWheels)||state.groundSpeedKnots>=1)return false;
+            PreflightSkipped=true;CrewReady=ropeConnected;Phase=ropeConnected?SoaringOperationPhase.Ready:SoaringOperationPhase.CrewRehook;return true;
         }
         public bool ConfirmCrewRehook(){if(!PreflightSatisfied||Phase!=SoaringOperationPhase.CrewRehook)return false;CrewReady=true;Phase=SoaringOperationPhase.Ready;return true;}
         public bool TryClear(bool runwayClear,in FlightDynamicsControlSnapshot controls)

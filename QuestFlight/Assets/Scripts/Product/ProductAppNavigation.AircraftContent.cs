@@ -30,7 +30,7 @@ namespace QuestFlight.Product
         {
             if(experience==null||!experience.TryRecommendedLesson(out bool glider,out string id)){Reject("Choose an aircraft and lesson from Home; this old record has no aircraft identity.");return;}
             experience.FinishFlight("Session replaced by recommended practice");ReturnMain();
-            if(!modes.SelectAircraft(glider)){Reject("The recommended aircraft could not prepare. Choose it from Home.");return;}
+            if(!TrySelectAircraftWithMenuHandoff(glider,CurrentPage,"The recommended aircraft could not prepare. Choose it from Home."))return;
             StartActivityById(0,id);
         }
         private string SgsSetupInstruction(int step)=>step switch

@@ -445,7 +445,7 @@ namespace QuestFlight.Product
 
             else if(CurrentPage==Page.QuickStart) { if(guideStep>0){guideStep--;ResetSetupCheck();}else {FinishQuickStart(false);return;} }
 
-            else if(TryPopRoute()) { pendingMenuAction=0;Consume();Refresh();return; }
+            else if(TryPopRoute()) { if(CurrentPage==Page.Soaring&&modes.State==ProductFlightModeCoordinator.FlightModeState.Selection)pendingSoaringRunway=-1;pendingMenuAction=0;Consume();Refresh();return; }
 
             else if(CurrentPage==Page.Aircraft||CurrentPage==Page.Soaring||CurrentPage==Page.C172Setup||CurrentPage==Page.GliderSetup||CurrentPage==Page.Help)CurrentPage=modes.State==ProductFlightModeCoordinator.FlightModeState.Selection?Page.Home:Page.App;
 
@@ -494,7 +494,7 @@ namespace QuestFlight.Product
             CurrentPage=Page.None;routes.Clear();
             if(training.State==TrainingSessionState.Paused)training.ResumeExercise();
             else if(ownsPause){input.PrepareForFlightLessonRecovery(pausedControls);input.SetFlightLessonInputSuppressed(false);Time.timeScale=savedTimeScale;}
-            pausedTraining=ownsPause=false;pauseNotice=null;
+            pausedTraining=ownsPause=false;pauseNotice=soaringStartNotice;soaringStartNotice=null;
             Consume();Refresh();
         }
 
@@ -502,7 +502,7 @@ namespace QuestFlight.Product
 
         {
 
-            pendingActivity = -1; pendingLessonId=null;pendingMenuAction=0;handoverCompletion=null;
+            pendingActivity = -1; pendingLessonId=null;pendingMenuAction=0;pendingSoaringRunway=-1;soaringStartNotice=null;handoverCompletion=null;
 
             recoveryAssistance = null;
 
@@ -581,13 +581,13 @@ namespace QuestFlight.Product
 
                 case (int)MenuActionId.SelectSgs: SelectMenuAircraft(true);break;
 
-                case (int)MenuActionId.Runway08: StartSoaringOperation(0);return;
+                case (int)MenuActionId.Runway08: SelectSoaringRunway(0);return;
 
-                case (int)MenuActionId.Runway26: StartSoaringOperation(1);return;
+                case (int)MenuActionId.Runway26: SelectSoaringRunway(1);return;
 
-                case (int)MenuActionId.Runway08StartNow: StartSoaringOperation(0,true);return;
+                case (int)MenuActionId.SoaringStartWithChecks: StartSoaringOperation(pendingSoaringRunway,false);return;
 
-                case (int)MenuActionId.Runway26StartNow: StartSoaringOperation(1,true);return;
+                case (int)MenuActionId.SoaringStartSkipPreflight: StartSoaringOperation(pendingSoaringRunway,true);return;
 
                 case (int)MenuActionId.Soaring: NavigateTo(Page.Soaring);break;
 
@@ -807,7 +807,7 @@ namespace QuestFlight.Product
 
                 detail.text="Choose C172 or the SGS 2-33A reference trainer. Soaring setup offers a ground aerotow; Free Flight alone uses an explicit airborne practice start.";
 
-                Choice(0,"C172",301);Choice(1,"SGS 2-33A reference",302);if(modes.IsGlider&&!choosingLessonAircraft)Choice(2,"Soaring setup / ground launch",305);Choice(7,"Back",5);
+                Choice(0,"C172",301);Choice(1,"SGS 2-33A reference",302);Choice(7,"Back",5);
 
             }
 
@@ -970,6 +970,7 @@ namespace QuestFlight.Product
             if(CurrentPage!=Page.Home)footer.text+="\n"+AircraftName+" / "+heading.text;
             if(focus>=0&&focus<8&&actions[focus]!=0&&!CanExecute(actions[focus],out var disabledReason)&&!string.IsNullOrEmpty(disabledReason))detail.text+="\n"+disabledReason;
             if(!string.IsNullOrEmpty(pauseNotice)&&!detail.text.Contains(pauseNotice))detail.text+="\n\n"+pauseNotice;
+            if(!string.IsNullOrEmpty(soaringStartNotice)&&!detail.text.Contains(soaringStartNotice))detail.text+="\n\n"+soaringStartNotice;
 
             Paint();
 

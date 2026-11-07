@@ -41,6 +41,7 @@ namespace QuestFlight.Product
         private int lessonPage, pendingMenuAction;
 
         private bool choosingLessonAircraft,pointerRequiresRelease;
+        private int pendingSoaringRunway=-1;
 
         private string pendingLessonId;
 
@@ -133,10 +134,27 @@ namespace QuestFlight.Product
 
             if(action==20&&modes.AuthoredDemoPilot.IsSoaringDemo&&!modes.AuthoredDemoPilot.SoaringGuidance.CanTakeControl(modes.AuthoredFlightCoordinator.CurrentState)){reason="Take control is available during stable sightseeing glide. Pause, restart or end remain available.";return false;}
             if(action==15&&training.AssistancePaused)return CanTakeManualControl(out reason);
-            if(action==1||action==12||action==15||action==20||action==21||action==22)return CanResume(out reason);
+            // Keep the cockpit return selectable. Resume() reports the exact
+            // focus/controller/readiness reason after the pilot chooses it.
+            if(action==1)return true;
+            if(action==12||action==15||action==20||action==21||action==22)return CanResume(out reason);
 
-            if((action==301||action==302||action==310||action==311||action==313||action==314||action==321||action==303||action==304)&&(!modes.AuthoredFlightCoordinator.IsInitialized||modes.AircraftPresentation==null||!modes.AircraftPresentation.Ready))
+            if((action==301||action==302||action==310||action==311||action==313||action==314||action==321||action==303||action==304||action==338||action==339)&&(!modes.AuthoredFlightCoordinator.IsInitialized||modes.AircraftPresentation==null||!modes.AircraftPresentation.Ready))
             {reason="The native aircraft is preparing or unavailable. Wait, or return Home and retry.";return false;}
+            if(action==303||action==304||action==338||action==339||action==340)
+            {
+                if(modes.State!=ProductFlightModeCoordinator.FlightModeState.Selection||!modes.IsGlider){reason="Choose the SGS sailplane from Home before preparing an aerotow.";return false;}
+                if(action==303||action==304)
+                {if(pendingSoaringRunway>=0){reason="Choose how to start on the selected runway first.";return false;}}
+                else if(pendingSoaringRunway<0){reason="Choose a runway first.";return false;}
+                if(action!=340)
+                {
+                    int runway=action==303?0:action==304?1:pendingSoaringRunway;
+                    var definitions=modes.AuthoredFlightCoordinator.soaringOperations;
+                    if(definitions==null||runway<0||runway>=definitions.Length||definitions[runway]==null||!definitions[runway].IsValid)
+                    {reason="That runway launch configuration is unavailable. Go Back and choose the other runway or return Home.";return false;}
+                }
+            }
             if(action==196){reason="Experimental rendering changes are unavailable in this product profile.";return false;}
 
             if(action==301||action==302||action==310||action==311)
@@ -212,12 +230,29 @@ namespace QuestFlight.Product
 
         {
 
-            if(!modes.SelectAircraft(glider)){Reject(string.IsNullOrEmpty(modes.LastError)?"Aircraft is not ready. Return Home and retry.":modes.LastError);return;}
+            Page source=CurrentPage;
+            int sourceAction=focus>=0&&focus<actions.Length?actions[focus]:0;
+            if(!TrySelectAircraftWithMenuHandoff(glider,source,"Aircraft is not ready. Return Home and retry."))return;
 
             if(choosingLessonAircraft){choosingLessonAircraft=false;OpenCurrentLessons();return;}
 
-            NavigateTo(glider?Page.GliderSetup:Page.C172Setup);
+            routes.Push(new Route{page=source,action=sourceAction,lessonPage=lessonPage});
+            CurrentPage=glider?Page.GliderSetup:Page.C172Setup;focus=0;pauseNotice=null;Refresh();
 
+        }
+
+        private bool TrySelectAircraftWithMenuHandoff(bool glider,Page returnPage,string fallbackReason)
+        {
+            // SelectAircraft is a mode transition and deliberately requires the
+            // product overlay to be closed. Close and refresh before calling it.
+            CurrentPage=Page.None;Refresh();
+            if(modes.SelectAircraft(glider))return true;
+
+            string reason=string.IsNullOrEmpty(modes.LastError)?fallbackReason:modes.LastError;
+            CurrentPage=modes.State==ProductFlightModeCoordinator.FlightModeState.Blocked?Page.Home:
+                returnPage==Page.None?Page.Home:returnPage;
+            pauseNotice=reason;focus=0;Refresh();
+            return false;
         }
 
         private void OpenCurrentLessons()
@@ -308,7 +343,7 @@ namespace QuestFlight.Product
 
                 case Page.GliderSetup:
 
-                    heading.text="SGS sailplane · Choose a flight";detail.text="SGS 2-33A reference configuration. Ground aerotow includes controls checks and launch clearance.";
+                    heading.text="SGS sailplane · Choose a flight";detail.text="SGS 2-33A reference configuration. Ground aerotow lets you choose a runway, then start with checks or skip preflight and request launch.";
 
                     Choice(0,"Ground aerotow",305);Choice(1,"Airborne gliding practice",313);Choice(2,"Soaring lessons",321);Choice(3,"Scenic soaring demo",337);Choice(4,"Seat setup",2);Choice(7,"Back",5);return true;
 
